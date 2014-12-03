@@ -2,7 +2,7 @@
 
 GRAMMAR=../Testcases
 
-GAPC="../../gapc --specialize_grammar"
+GAPC="../../../gapc --specialize_grammar"
 
 check_specialization specialization.gap test2Inst baa
 
@@ -78,7 +78,7 @@ check_specialization specialization.gap test19Inst baa
 
 
 
-GAPC="../../gapc --ambiguity"
+GAPC="../../../gapc --ambiguity"
 
 #The CFG of test1.gapc in connection with the algebra 'test'
 #must accept the empty word only!

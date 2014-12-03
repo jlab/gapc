@@ -57,7 +57,7 @@ fi
 
 cd $TEMP
 
-. ../tool.sh
+. ../../tool.sh
 
 echo include $CONFIG_MF > gapc_local.mf
 printf RT_LDLIBS=\\n $CONFIG_MF >> gapc_local.mf
@@ -188,5 +188,5 @@ cmp_specialization() {
 
 . ../config
 
-. ../stats.sh
+. ../../stats.sh
 
