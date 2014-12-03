@@ -1,0 +1,17 @@
+signature Foo(alphabet, answer) {
+  choice [answer] h([answer]);
+}
+
+
+// simple linear with full and empty table conf
+
+grammar special7 uses Foo(axiom = start)
+{
+
+   start = f (a ,b) ;
+
+   a    = REGION ;
+
+   b    = REGION ;
+
+}

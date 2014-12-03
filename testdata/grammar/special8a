@@ -1,0 +1,24 @@
+signature Foo(alphabet, answer) {
+  choice [answer] h([answer]);
+}
+
+// empty n^3; rt(good ) == rt(full) = n
+// good is not full
+
+grammar special8a uses Foo(axiom = start)
+{
+
+   start = x( CHAR ,start)   |
+               a ;
+
+   a         = x(CHAR ,a)          |
+               b ;
+
+   b         = x(CHAR ,b)          |
+               x(CHAR ,c)          |
+               x(c , CHAR) ;
+
+   c         = REGION ;
+
+
+}

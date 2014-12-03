@@ -1,0 +1,9 @@
+
+
+=== Changes to revision 1717 (14-12-2012, Stefan Janssen) ===
+  1. We now provide five different log levels, mainly to hide some verbose warnings to the normal user, i.e. algebra functions defined in signature but not used in grammar and exponential many answers for pretty print algebras. Log levels are 0 (VERBOSE), 1 (INFO), 2 (NORMAL), 3 (WARNING), 4 (ERROR). Default is 2 (NORMAL). Set them via parameter -l
+  2. By default, automatic table design is now switched _on_. Thus, there is no need to set -t. Of cause, you can still provide the set of non-terminals to be tabulated (--tab) or tabulate everything via --tab-all.
+  3. Extended import mechanism in gapc source code. The new import statement allows a relative path to an include file. The new import statement received a new syntax: the path and file name must be enclosed in double quotes.
+  4. BugFix: fix point iteration of yield size analysis aborted prematurely because of an artificial maximum number of iterations. The maximum of needed iterations is max(nt^2, 4*nt), with nt = number of non-terminals of the grammar.
+  5. Added ambiguity checking to the compiler, by Marco Ruether.
+  6. Many small changes to the test-suite, such that all tests now pass on MacOSX (gcc 4.2.1), Solaris (gcc 4.5.2) and CentOS (gcc 4.4.6).

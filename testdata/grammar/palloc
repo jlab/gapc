@@ -1,0 +1,57 @@
+signature Palin(alphabet, answer) {
+  answer match(alphabet, answer, alphabet);
+  answer empty(int);
+  answer skipl(char, answer);
+  answer skipr(answer, char);
+  choice [answer] h([answer]);
+}
+
+algebra Pretty implements Palin(alphabet = char, answer = string) {
+
+  string match(char a, string b, char c)
+  {
+    string r;
+    append(r, a);
+    append(r, b);
+    return r;
+  }
+
+  string empty(int x)
+  {
+    string r;
+    return r;
+  }
+
+  string skipl(char c, string x)
+  {
+    return x;
+  }
+
+  string skipr(string x, char c)
+  {
+    return x;
+  }
+
+  choice [string] h([string] x)
+  {
+    return x;
+  }
+  
+}
+
+// should warn about missing choice functions
+//   ./list grammar/palloc -i p
+//   or ./gapc grammar/palloc
+
+grammar Pal uses Palin(axiom = sl)
+{
+
+  sl = skipl(CHAR, sl) | sr ;
+
+  sr = skipr(sr, CHAR) | pal ;
+
+  pal = match(CHAR, pal, CHAR) | empty(SEQ1) ;
+
+}
+
+instance p = Pal ( Pretty ) ; 

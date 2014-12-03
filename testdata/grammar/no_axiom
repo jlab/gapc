@@ -1,0 +1,28 @@
+
+
+signature Bill(alphabet, answer) {
+
+  
+  answer f(int);
+  answer add(answer, alphabet, answer);
+  answer mult(answer, alphabet, answer);
+  choice [answer] h([answer]);
+}
+
+
+
+grammar bill uses Bill (axiom=ormula) {
+
+  tabulated { formula, number }
+
+  formula = number  with foo |
+            add(formula, plus, formula) with_overlay bar |
+            mult(formula, times, formula) suchthat blah # h ;
+
+  number = f(INT);
+
+  plus = CHAR('+') ;
+  times = CHAR('*') ;
+
+}
+

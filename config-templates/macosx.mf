@@ -1,0 +1,72 @@
+# Tested with Mac OS X 10.6 (needs mac ports under /opt/local ...)
+
+
+PREFIX ?= /vol/gapc
+
+RTLIB = $(PREFIX)/include/rtlib
+RT_CPPFLAGS = -I$(RTLIB) -I$(RTLIB)/.. -I$(RTLIB)/../librna
+RT_LDFLAGS = -Xlinker -rpath -Xlinker $(PREFIX)/lib -L$(PREFIX)/lib
+RT_LDLIBS = -lrna
+
+BOOST_PREFIX ?= $(PREFIX)
+BOOST_LIB_SUFFIX ?= -mt-1_52
+BOOST_INCLUDE ?= $(PREFIX)/include
+
+
+CXX = g++
+CC = gcc
+
+LD = $(CC)
+SHARED_FLAGS ?= -dynamiclib -install_name @rpath/librna.dylib
+# -fPIC is default (gcc(1))
+PIC_FLAGS ?= 
+SO_SUFFIX = .dylib
+
+LEX = flex
+YACC = bison
+
+# bash should work, too
+KSH = bash
+
+HG = hg
+
+SED = gsed
+
+LIBGSL ?= $(PREFIX)/lib/libgsl.a
+GSLLIBS = -lgsl -lcblas
+
+TRUTHDIR = ../Truth
+
+#CFLAGS_EXTRA ?=
+CFLAGS ?= -Wall -Wno-char-subscripts -Wmissing-prototypes -g -std=c99 \
+  $(CFLAGS_EXTRA)
+CFLAGS_OPT ?= -O3 -DNDEBUG -std=c99
+
+CFLAGS_FP_FAST ?= -O3 -DNDEBUG -ffast-math -std=c99
+
+# -Wconversion
+#  warns about size_t to unsigned char assignments,
+#  but also about e.g. char = char+char assignments, which is too much
+# -Wsign-conversion
+#  bison code, rtlib code way too much noise
+
+#CXXFLAGS_EXTRA ?= -O3 -DNDEBUG
+CXXFLAGS ?= -Wall -Wnon-virtual-dtor -Wno-parentheses   -g $(CXXFLAGS_EXTRA)
+CXXFLAGS_OPENMP ?= -fopenmp
+
+#CPPFLAGS_EXTRA ?=
+
+#LDFLAGS_EXTRA ?= -Xlinker -rpath -Xlinker $(HOME)/local/boost-1.38/lib
+
+LDFLAGS ?=  $(LDFLAGS_EXTRA) $(RTLIB_LDFLAGS) \
+-L$(BOOST_PREFIX)/lib
+
+CPPFLAGS ?= $(CPPFLAGS_EXTRA) $(RTLIB_CPPFLAGS) \
+-I$(BOOST_PREFIX)/$(BOOST_INCLUDE)
+
+#YFLAGS ?= 
+
+#LDLIBS_EXTRA ?= 
+LDLIBS ?= $(LDLIBS_EXTRA) $(RTLIB_LDLIBS)
+
+

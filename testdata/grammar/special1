@@ -1,0 +1,20 @@
+signature Foo(alphabet, answer) {
+  choice [answer] h([answer]);
+}
+
+// runtime by width -> n^4; rt(full table) == rt(empty table) == n^3
+
+grammar special1 uses Foo(axiom = start)
+{
+
+
+   start =  f(a,b) ;
+
+   a         = g(c, a) |
+               c ;
+
+   b         = h (REGION , REGION  ,REGION) ;
+
+   c         = REGION ;
+
+}

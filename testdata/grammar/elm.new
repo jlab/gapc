@@ -1,0 +1,112 @@
+import rnalib
+
+type spair = (string left, string right)
+
+
+signature Bill(alphabet, answer) {
+
+  
+  answer f(int);
+  answer add(answer, alphabet, answer);
+  answer mult(answer, alphabet, answer);
+  choice [answer] h([answer]);
+}
+
+
+// types scoreing, synoptic, classification, printing, pretty printing
+
+synoptic algebra count(int k = 2) implements Bill
+  (alphabet = char /* blah blah */,
+   answer = int) {
+
+  int f(int i) { return 1; }
+
+  int add(int i, char c, int j)
+  {
+    return i * j;
+  }
+
+  int mult(int i, char c, int j)
+  {
+    return i * j;
+  }
+
+  choice [int] h([int] i)
+  {
+    return int_list(sum(i));
+  }
+
+}
+
+
+scoring algebra buyer implements Bill(alphabet = char, answer = int) {
+
+  int f(int i) { return i; }
+
+  int add(int i, char c, int j)
+  {
+    return i + j;
+  }
+
+  int mult(int i, char c, int j)
+  {
+    return i * j;
+  }
+
+  choice [int] h([int] i)
+  {
+    return int_list(minimum(i));
+  }
+}
+
+algebra seller extends buyer {
+  choice [int] h([int] i)
+  {
+    return int_list(maximum(j));
+  }
+}
+
+pretty algebra pretty implements Bill(alphabet = char, answer = string) 
+{
+  string f(int i) {
+    return int2string(i);
+  }
+
+  string add(string i, char c, string j)
+  {
+    return string_concat(string_concat(i, char_to_string(c)), j);
+  }
+
+  string mult(string i, char c, string j)
+  {
+    return string_concat(string_concat(i, char_to_string(c)), j);
+  }
+
+  choice [string] h([string] i)
+  {
+    return i;
+  }
+}
+
+
+grammar bill uses Bill (axiom=formula) {
+
+  tabulated { formula, number }
+
+  formula = number  with foo |
+            add(formula, plus, formula) with_overlay bar |
+            mult(formula, times, formula) suchthat blah # h ;
+
+  number = f(INT);
+
+  plus = CHAR('+') ;
+  times = CHAR('*') ;
+
+}
+
+instance foo = bill ( buyer ) ;
+
+instance bar(k) = bill (  (buyer / pretty) {k = 3} ) ;
+
+instance inst(k) = bill ( seller {k = 3} ) ;
+

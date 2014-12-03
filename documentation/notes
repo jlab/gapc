@@ -1,0 +1,6 @@
+TODO
+- max yield-size analysis: f(maxsize(3), maxsize(3)) -> max-ys(f) := 6 ?
+
+- name-collisions verhindern: z.B. append als algebra fn vs. append als
+  rtlib/string.hh Funktion
+

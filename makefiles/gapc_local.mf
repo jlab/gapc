@@ -1,0 +1,7 @@
+CXX = CC
+CPPFLAGS = -I/vol/gapc/include -I/vol/gapc/include/librna
+CXXFLAGS = -library=stlport4 -m64 -fast -features=tmplife
+LDFLAGS = -L/vol/gapc/lib -m64 -library=stlport4 -R/vol/gapc/lib
+RTLIB = /vol/gapc/include/rtlib
+
+# for benchmarks do not forget to add -DNDEBUG to CPPFLAGS ...

@@ -1,0 +1,19 @@
+signature Foo(alphabet, answer) {
+  choice [answer] h([answer]);
+}
+
+// rt(all tabulated) == rt(no tabulated) -- n^4
+
+grammar special2 uses Foo(axiom = start)
+{
+
+   start = f ( a ,b) ;
+
+   a         = g ( c ,a ,REGION) | c ;
+
+   b         =  h ( REGION ,REGION ,REGION) ;
+
+   c         =  REGION ;
+
+
+}

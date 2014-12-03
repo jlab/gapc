@@ -1,0 +1,16 @@
+signature Foo(alphabet, answer) {
+  choice [answer] h([answer]);
+}
+
+// testcase for use of accumulated # calls in rt-computation
+// expected: 2^n   wrong: n^2     tab = {}
+
+grammar special1 uses Foo(axiom = start)
+{
+
+
+   start =  f(REGION, start) |
+            g(CHAR) ;
+
+
+}

@@ -1,0 +1,78 @@
+
+
+signature align(alphabet, answer) {
+
+  answer r(alphabet, answer, alphabet);
+  answer d(string, answer);
+  answer i(answer, string);
+  answer l(string, string, string, answer, string);
+  answer s(string, answer, string, string, string);
+  answer e(void);
+
+  choice [answer] h([answer]);
+}
+
+scoring algebra score implements align(alphabet = char, answer = int) {
+
+  int r(char a, int x, char b) {
+    return x + match(a, b);
+  }
+
+  int d(string r, int x) {
+    return x + open + region_length(r) * extend;
+  }
+
+  // ...
+
+  bool dup(string a, string b, string c)
+  {
+    return str_eq(a, b) == true && str_eq(b, c) == true;
+  }
+
+  bool maximal(string r)
+  {
+    if (r.l == 0 || r.r == n)
+      return true;
+    if (s[r.l-1] == '$' || s[r.r+1] == '$')
+      return true;
+    return (is_basepair(s[r.l-1], s[r.r-1]) == false);
+  }
+
+  bool s_dup_maximal(string r1, int a, string r2, string u, string r3)
+  {
+    return dup(r1, r2, r3) == true && maximal(r1) == true;
+  }
+
+  bool s_dup_maximal(string r1, string u, string r2, int a, string r3)
+  {
+    return dup(r1, r2, r3) == true && maximal(r1) == true;
+  }
+
+}
+
+grammar recomb uses align(axiom = ali)
+{
+  tabulated { ali, noDel, noIns, match }
+
+  ali = match |
+        d(REGION, noDel) |
+        i(noIns, REGION) # h;
+
+  noDel = match |
+          i(match, REGION) # h;
+
+  noIns = match |
+          d(REGION, match) # h;
+
+
+  match = e(EMPTY) |
+        //r(xbase, ali, ybase) |
+          r(CHAR, ali, CHAR) |
+        //s(REGION, noIns, REGION, UREGION, REGION) with_overlay s_dup_maximal |
+          s(REGION, noIns, REGION, REGION, REGION) with_overlay s_dup_maximal |
+        //l(REGION, UREGION, REGION, noDel, REGION) with_overlay l_dup_maximal # h ;
+          l(REGION, REGION, REGION, noDel, REGION) with_overlay l_dup_maximal # h ;
+
+}
+
+

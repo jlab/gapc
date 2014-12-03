@@ -1,0 +1,17 @@
+input < raw, raw >
+
+signature Foo(alphabet, answer) {
+  choice [answer] h([answer]);
+}
+
+
+grammar Loop uses Foo(axiom = A)
+{
+
+  A = foo ( < P, Q > )  with < maxsize(23), maxsize(42) > ;
+
+  P = STRING ;
+  Q = STRING ;
+
+
+}

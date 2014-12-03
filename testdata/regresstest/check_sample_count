@@ -1,0 +1,15 @@
+set -e
+set -u
+
+export LC_ALL=C
+
+if [ $# != 1 ]; then
+echo $0 outputfile
+exit 23
+fi
+
+wc -l $1 | grep 2
+
+# not needed with set -e
+exit $?
+

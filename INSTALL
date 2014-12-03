@@ -1,0 +1,61 @@
+Before installing you can check out the domain specific language
+GAP-L and it's compiler GAP-C via:
+
+    http://gapc.eu/
+
+## Binary Install ##
+
+It is recommended to install gapc from the distribution's package manager,
+unless you want to develop gapc.
+
+### Ubuntu ###
+
+https://launchpad.net/~g-sauthoff/+archive/ppa
+
+### Fedora Core ###
+
+https://build.opensuse.org/package/show?package=bellmansgapc&project=home%3Agsauthof
+
+### Other ###
+
+For other .rpm or .deb based distributions write me an email or check out the
+linked .spec file or source package.
+
+
+## Compile and Install ##
+
+1. look into doc/deps and install the missing dependencies
+
+   (you can also consult the corresponding source package for up-to-date
+    distribution specific dependencies)
+
+2. copy a config file template from config/ to config.mf and adjust the settings
+
+   set at least the PREFIX var
+
+   example templates:
+
+      config/example_local.mf - standard Linux system with
+                                or without local boost installation
+      config/solaris.mf - Solaris 10 with custom GCC
+      config/sun.mf - Solaris 10 with Sun CC
+                         Sun CC 12 with current patches is needed
+                         not recommended for performance reasons
+      ...
+
+3. make
+4. make install
+
+
+Optional:
+
+3.5. make test-unit  (quick, no codegen test)
+3.6. make test-paral (takes time, needs ghc, comprehensive codegen test)
+
+
+## Feedback ##
+
+For questions, comments or to contribute new config files write to:
+
+gsauthof@techfak.uni-bielefeld.de
+

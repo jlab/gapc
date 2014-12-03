@@ -1,0 +1,20 @@
+signature Foo(alphabet, answer) {
+  choice [answer] h([answer]);
+}
+
+
+grammar special1 uses Foo(axiom = start)
+{
+
+
+   start =  A | f(REGION) ;
+
+
+   A = f(CHAR, start) |
+       B ;
+
+   B = f(CHAR, CHAR, start) ;
+
+
+
+}

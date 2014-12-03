@@ -1,0 +1,20 @@
+signature Foo(alphabet, answer) {
+  choice [answer] h([answer]);
+}
+
+// testcase for importance of use of active_list in runtime computation
+// expected: 2^n  (tab = {})   wrong: n^3 (tab = {})
+
+grammar special1 uses Foo(axiom = A)
+{
+   
+   A = f(REGION, X) | f(REGION) ;
+
+   X = f(CHAR, B) ;
+ 
+   B = f(A) |  f(C) ; //, REGION) ;
+
+   C = f(CHAR, X) | f(REGION) ;
+
+
+}

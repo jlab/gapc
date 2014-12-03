@@ -1,0 +1,19 @@
+
+input <raw, raw>
+
+signature Foo(alphabet, answer) {
+  choice [answer] h([answer]);
+}
+
+// keine Loop!
+
+grammar Loop uses Foo(axiom = A)
+{
+
+  A = foo(P, A, Q) | <CHAR, CHAR> ;
+
+  P = <STRING, CHAR> ;
+
+  Q = <STRING, STRING> ;
+
+}

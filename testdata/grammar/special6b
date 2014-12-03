@@ -1,0 +1,27 @@
+signature Foo(alphabet, answer) {
+  choice [answer] h([answer]);
+}
+
+// empty == n^2
+// full == good(2) == n
+
+grammar special6b uses Foo(axiom = start)
+{
+
+   start =
+                 f ( c ,a)           |
+                 f ( c ,b) ;
+
+   a         =
+                 g ( a, CHAR)     |
+                 c ;
+
+   b         = 
+                 g ( b, CHAR)     |
+                 c;
+
+   c         = 
+                 REGION ;
+
+
+}

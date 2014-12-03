@@ -1,0 +1,17 @@
+signature Foo(alphabet, answer) {
+  choice [answer] h([answer]);
+}
+
+
+// the point is: after the analysis P should have (0, 23),
+// since the effective maxsize of 42 of the call is reduced bei 7 and 12
+
+grammar Loop uses Foo(axiom = A)
+{
+
+  A = foo(REGION with minsize(12), P , REGION with minsize(7)) with maxsize(42);
+
+  P = STRING;
+
+
+}

@@ -1,0 +1,19 @@
+signature Foo(alphabet, answer) {
+  choice [answer] h([answer]);
+}
+
+
+// rt(full) == rt(empty) == n
+
+grammar special10 uses Foo(axiom = start)
+{
+
+   start = x(CHAR ,a)            |
+               x(a ,CHAR)            |
+               x(CHAR ,a ,CHAR) ;
+
+   a         = x(REGION ,b) ;
+
+   b         = REGION ;
+
+}

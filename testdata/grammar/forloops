@@ -1,0 +1,61 @@
+import rnalib
+
+type spair = (string left, string right)
+
+
+signature Bill(alphabet, answer) {
+
+  
+  answer f(int);
+  answer add(answer, alphabet, answer, alphabet, answer);
+  answer mult(answer, alphabet, answer);
+  choice [answer] h([answer]);
+}
+
+
+scoring algebra buyer implements Bill(alphabet = char, answer = int) {
+
+  int f(int i) { return i; }
+
+  int add(int i, char c, int j, char d, int a)
+  {
+    return i + j;
+  }
+
+  int mult(int i, char c, int j)
+  {
+    return i * j;
+  }
+
+  choice [int] h([int] i)
+  {
+    return int_list(minimum(i));
+  }
+}
+
+algebra seller extends buyer {
+  choice [int] h([int] i)
+  {
+    return int_list(maximum(j));
+  }
+}
+
+
+
+grammar bill uses Bill (axiom=formula) {
+
+  tabulated { formula, number }
+
+  formula = number  with foo |
+            add(formula, plus, formula, plus, formula) with_overlay bar |
+            mult(formula, times, formula) suchthat blah # h ;
+
+  number = f(INT);
+
+  plus = CHAR('+') ;
+  times = CHAR('*') ;
+
+}
+
+instance foo = bill ( buyer ) ;
+

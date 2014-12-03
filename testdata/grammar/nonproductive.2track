@@ -1,0 +1,24 @@
+
+signature Bill(alphabet, answer) {
+
+  choice [answer] h([answer]);
+  
+}
+
+
+grammar bill uses Bill (axiom=S) {
+
+
+  S = m( < CHAR, CHAR >, S ) |
+      ins ( < fold, EMPTY >, S ) |
+      nil ( <EMPTY, EMPTY > ) # h ;
+
+  fold = f ( CHAR, fold, CHAR )
+         ;
+         //|
+         //g ( CHAR, CHAR );
+
+
+
+}
+

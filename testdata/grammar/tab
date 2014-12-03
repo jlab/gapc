@@ -1,0 +1,28 @@
+signature Foo(alphabet, answer) {
+  choice [answer] h([answer]);
+}
+
+// asm opt runtime is n^4
+// tabulate(vail, honk) is n^6
+// -> compiler should warn ...
+
+grammar vail uses Foo(axiom = vail)
+{
+
+   tabulated { vail, honk }
+
+   vail = f(warg, honk) |
+          f(plotz, vail, honk) ;
+
+   warg = f(honk, CHAR, vail) |
+          f(EMPTY) ;
+
+   honk = f(CHAR, honk, CHAR) |
+          f(CHAR, plotz, CHAR) |
+          f(EMPTY) ;
+
+   plotz = f(CHAR, vail, honk, vail) ;
+
+
+
+}

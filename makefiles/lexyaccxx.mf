@@ -1,0 +1,28 @@
+
+# disable _this_ implicit rule
+%.c: %.y
+
+%.cc: %.y
+	# $(YACC) $(YFLAGS) -o $@ $<
+	mkdir -p bisontmp ; \
+	  rm -f bisontmp/* ; \
+	  cd bisontmp ; \
+	  x=`$(YACC) $(YFLAGS) -o $(notdir $@) ../$< 2>&1` ; \
+	  r=$$? ; \
+	  printf "$$x\n" ; \
+	  if [ "$$r" != 0 ]; then \
+            echo Bison exit status: $$r ; \
+            rm -f ../$@; \
+            exit 1;\
+          fi ; \
+	  y=`echo $$x | grep -v conflict` ; \
+	  r=$$? ; \
+	  if [ "$$r" != 0 ]; then rm -f ../$@; exit 2; fi ; \
+	  for i in *; do cmp $$i ../$(dir $@)/$$i; if [ "$$?" != 0 ]; then echo copying $$i; cp $$i ../$(dir $@)$$i; fi; done ; \
+	  touch ../$@
+
+
+%.c: %.l
+
+%.cc: %.l
+	$(LEX) -o $@ $(LFAGS) $<

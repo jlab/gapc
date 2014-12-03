@@ -1,0 +1,27 @@
+
+signature Bill(alphabet, answer) {
+
+  choice [answer] h([answer]);
+  
+}
+
+
+grammar bill uses Bill (axiom=S) {
+
+  S = foo(A, B) | foo(D, E) ;
+
+  A = char('a');
+
+  B = foo(char('b'), C);
+
+  C = char('c');
+
+  D = foo(char('d'), F);
+
+  E = char('e');
+
+  F = foo(char('f'), D);
+
+
+}
+

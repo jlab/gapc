@@ -1,0 +1,4 @@
+--catch_system_errors=no
+--log_level=test_suite
+--report_level=no
+               short

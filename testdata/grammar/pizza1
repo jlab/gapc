@@ -1,0 +1,12 @@
+signature Foo(alphabet, answer) {
+  choice [answer] h([answer]);
+}
+
+// rt no tables: n
+// rt all tab: n
+// approx analy: {}
+
+grammar Pizza uses Foo(axiom = formula)
+{
+   formula = f(CHAR, formula) | g(CHAR, STRING ) # h ;
+}

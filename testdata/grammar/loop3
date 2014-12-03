@@ -1,0 +1,16 @@
+signature Foo(alphabet, answer) {
+  choice [answer] h([answer]);
+}
+
+// easiest loop test
+// -> compiler should detect this, like in productive testing phase
+//    A, B are non-productive ...
+
+grammar Loop uses Foo(axiom = A)
+{
+  A = f(B) ;
+
+  B = f(A) ;
+
+
+}

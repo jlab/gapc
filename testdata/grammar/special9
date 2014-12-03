@@ -1,0 +1,25 @@
+signature Foo(alphabet, answer) {
+  choice [answer] h([answer]);
+}
+
+// rt(full) == rt(good) == n^2; #good < #full; rt(empty)  == n^5
+
+grammar special9 uses Foo(axiom = start)
+{
+
+   start = x(CHAR ,start) |
+               a ;
+
+   a         = x(CHAR ,a)          |
+               b ;
+
+   b         = x(CHAR ,b)          |
+               x(CHAR ,c)          |
+               x(c , CHAR ) ;
+
+   c         = x( REGION ,d ) ;
+
+   d         = x (REGION ,REGION ) ;
+
+
+}

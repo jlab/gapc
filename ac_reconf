@@ -1,0 +1,1 @@
+ACLOCAL="aclocal -I /usr/share/autoconf-archive -I ac_local" autoreconf -I/usr/share/autoconf-archive -Iac_local

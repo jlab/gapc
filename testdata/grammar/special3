@@ -1,0 +1,25 @@
+signature Foo(alphabet, answer) {
+  choice [answer] h([answer]);
+}
+
+// rt(all tabulated) > rt (non tabulated)   -- constant factors
+
+grammar special3 uses Foo(axiom = start)
+{
+
+   start = f1 ( b ,c) ;
+
+   b         = f2 ( CHAR ,d)  |
+                 f4 ( CHAR ,e ) ;
+
+   c         = REGION ;
+
+   d         = f3 ( CHAR ,b) |
+                 nil ( EMPTY ) ;
+
+   e         = f4 ( CHAR ,e ) |
+                 nil ( EMPTY ) ;
+
+
+
+}

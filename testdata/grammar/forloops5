@@ -1,0 +1,12 @@
+signature FS (alphabet, comp) {
+  comp il(Subsequence, Subsequence, Subsequence, Subsequence, Subsequence, Subsequence, Subsequence);
+
+  choice [comp] h([comp]);
+}
+
+grammar fold uses FS(axiom = iloop) {
+
+  iloop = il( BASE, BASE, REGION with maxsize(30), REGION,
+              REGION with maxsize(30), BASE, BASE) # h ;
+
+}
