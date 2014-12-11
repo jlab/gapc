@@ -60,10 +60,10 @@ do
   install -m 644 $i "$SHARE"/librna
 done
 
-for i in grammar/elm.gap grammar/adpf.gap paraltest/adpf_filter.hh \
-  grammar/adpf_nonamb.gap paraltest/pf_filter.hh paraltest/nonamb_answer.hh \
-  grammar/nussinov2.gap \
-  grammar/affinelocsim2.gap; do
+for i in testdata/grammar/elm.gap testdata/grammar/adpf.gap testdata/gapc_filter/adpf_filter.hh \
+  testdata/grammar/adpf_nonamb.gap testdata/gapc_filter/pf_filter.hh testdata/gapc_filter/nonamb_answer.hh \
+  testdata/grammar/nussinov2.gap \
+  testdata/grammar/affinelocsim2.gap; do
   install -m 644 $i "$EXAMPLES"
 done
 
