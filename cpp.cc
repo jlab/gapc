@@ -2262,7 +2262,8 @@ void Printer::Cpp::prelude(const Options &opts, const AST &ast)
 
 
 static const char deps[] =
-"ifneq ($(filter $(CXX),g++ icc),)\n"
+"basenameCXX=$(shell basename $(CXX))\n"
+"ifneq ($(filter $(basenameCXX),g++ icc),)\n"
 "-include $(DEPS)\n"
 "\n"
 "%.o : %.cc\n"
