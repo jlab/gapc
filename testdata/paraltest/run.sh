@@ -5,23 +5,24 @@ set -u
 NO_CONFIG_MF="foo"
 export NO_CONFIG_MF
 
-GAPC=../../../gapc
+DIR_BASE=../../..
+GAPC=$DIR_BASE/gapc
 GHC=ghc
 MAKE=make
-MAKEFLAGS="-I../../.. -I../../gapc_filter"
+MAKEFLAGS="-I$DIR_BASE/testdata/gapc_filter"
 
 TEMP=./temp
-GRAMMAR=../../grammar
+GRAMMAR=$DIR_BASE/testdata/grammar
 LHS_DIR=..
-RTLIB=../../../rtlib
-CPPFLAGS_EXTRA="-I../../.. -I../../../librna -I.. -I../../gapc_filter"
-LDLIBS_EXTRA=""
+RTLIB=$DIR_BASE/rtlib
+CPPFLAGS_EXTRA="-I$DIR_BASE -I$DIR_BASE/librna -I$DIR_BASE/testdata/gapc_filter -I$RTLIB"
+LDLIBS_EXTRA="$DIR_BASE/librna/librna.a"
 RUN_CPP_FLAGS=""
 
-if [ -e ../../config.mf ]; then
-  CONFIG_MF=config.mf
+if [ -e $DIR_BASE/testdata/config.mf ]; then
+  CONFIG_MF=$DIR_BASE/testdata/config.mf
 else
-  CONFIG_MF=config/generic.mf
+  CONFIG_MF=$DIR_BASE/config.mf
 fi
 
 err_count=0
@@ -46,7 +47,7 @@ cd $TEMP
 echo include $CONFIG_MF > gapc_local.mf
 printf RT_LDLIBS=\\n $CONFIG_MF >> gapc_local.mf
 
-. ../../tool.sh
+. $DIR_BASE/testdata/tool.sh
 
 . ../config
 
