@@ -2293,12 +2293,11 @@ void Printer::Cpp::makefile(const Options &opts)
 			<< "-include " << mf << endl
 			<< "endif" << endl << endl;
 	}
-	std::string mf = std::string(gapc::prefix) + "/share/gapc/config" + std::string(gapc::systemsuffix) + ".mf";
 	stream << "-include gapc_local.mf" << endl << endl;
 	stream << "ifdef MF" << endl
-		<< "$(info Including extra makefile " << mf << ")" << endl
-		<< "include " << mf << endl
-		<< "endif" << endl << endl;
+           << "$(info Including extra makefile $(MF))" << endl
+           << "include $(MF)" << endl
+		   << "endif" << endl << endl;
 	
 	std::string base = opts.class_name; //basename(opts.out_file);
 	std::string out_file = remove_dir(opts.out_file);
