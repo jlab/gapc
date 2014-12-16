@@ -1,6 +1,6 @@
 # use as a template and copy it to ../config.mf
 
-PREFIX = /vol/gapc
+PREFIX = /vol/gapc/
 BOOST_PREFIX = /vol/gapc
 BOOST_LIB_SUFFIX = -gcc45-mt-1_52
 
@@ -25,7 +25,7 @@ LIB_RT = rtlib
 LIB_RNA = librna
 LIB_GENERAL = 
 LIB_BOOST = $(BOOST_PREFIX)/include/boost-1_52
-LIB_GSL = /vol/gapc/include
+LIB_GSL = /vol/gapc/
 
 l_GSL = -lgsl -lgslcblas
 l_RNA = -lrna
@@ -40,6 +40,7 @@ BISON_VERSION_FLAG := $(shell if [ "$(versionnumber)" -ge 30 ]; then echo " -DBI
 CPPFLAGS = -I$(PREFIX)$(INCLUDE_PATH)/$(LIB_GENERAL) -I$(LIB_BOOST) $(CPPFLAGS_EXTRA)
 CPPFLAGS += $(shell test -d $(PREFIX)$(INCLUDE_PATH)/$(LIB_RT) && echo "-I$(PREFIX)$(INCLUDE_PATH)/$(LIB_RT)")
 CPPFLAGS += $(shell test -d $(PREFIX)$(INCLUDE_PATH)/$(LIB_RNA) && echo "-I$(PREFIX)$(INCLUDE_PATH)/$(LIB_RNA)")
+CPPFLAGS += $(shell test -d $(LIB_GSL)$(INCLUDE_PATH) && echo "-I$(LIB_GSL)$(INCLUDE_PATH)")
 
 #for compiler
 CXXFLAGS_EXTRA ?= -O3 -DNDEBUG
@@ -52,12 +53,13 @@ LDFLAGS = $(64FLAGS) $(LDFLAGS_EXTRA) \
 	-L/vol/gcc-4.5/lib/amd64 -R/vol/gcc-4.5/lib/amd64
 LDFLAGS += $(shell test -d $(PREFIX)$(LIB_PATH)/$(LIB_RT) && echo "-L$(PREFIX)$(LIB_PATH)/$(LIB_RT) -R$(PREFIX)$(LIB_PATH)/$(LIB_RT)")
 LDFLAGS += $(shell test -d $(PREFIX)$(LIB_PATH)/$(LIB_RNA) && echo "-L$(PREFIX)$(LIB_PATH)/$(LIB_RNA) -R$(PREFIX)$(LIB_PATH)/$(LIB_RNA)")
+LDFLAGS += $(shell test -d $(LIB_GSL)$(LIB_PATH) && echo "-L$(LIB_GSL)$(LIB_PATH) -R$(LIB_GSL)$(LIB_PATH)")
 
 	
 # ============== VARS GEORG ==================
 SHARED_FLAGS = -shared -m64
 PIC_FLAGS = -fpic
-LIBGSL = $(PREFIX)/lib/libgsl.a
+LIBGSL = $(LIB_GSL)$(LIB_PATH)/libgsl.a
 POSIXLIBS = -lrt
 CFLAGS = --std=c99 -m64 $(CFLAGS_EXTRA)
 CFLAGS_OPT ?= --std=c99 -m64 -O3 -DNDEBUG
