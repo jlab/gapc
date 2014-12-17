@@ -22,7 +22,7 @@ ifeq ($(wildcard config.mf), config.mf)
 else
   $(info ################################################################################)
   $(info ################################################################################)
-  $(error Copy config/generic.mf to ./config.mf and adjust settings!)
+  $(error Copy config-templates/generic.mf to ./config.mf and adjust settings!)
 endif
 
 
@@ -214,7 +214,7 @@ include makefiles/lexyaccxx.mf
 .PHONY: clean
 clean:
 	rm -f $(TEMP)
-	$(MAKE) -C config -f config.mf clean
+	$(MAKE) -f config.mf clean
 
 # test target: only triggers dependency tracking
 .PHONY: depend
