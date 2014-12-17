@@ -1,6 +1,6 @@
 # use as a template and copy it to ../config.mf
 
-PREFIX ?= /stefan
+PREFIX ?= /usr
 BOOST_PREFIX ?= $(HOME)/local/boost-1.38
 BOOST_LIB_SUFFIX ?= -mt
 
