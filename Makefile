@@ -214,7 +214,7 @@ include makefiles/lexyaccxx.mf
 .PHONY: clean
 clean:
 	rm -f $(TEMP)
-	$(MAKE) -f config.mf clean
+	$(MAKE) -C testdata/config-tests/ -f config.mf clean
 
 # test target: only triggers dependency tracking
 .PHONY: depend
