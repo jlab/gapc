@@ -1,8 +1,8 @@
 # use as a template and copy it to ../config.mf
 
 PREFIX ?= /usr
-BOOST_PREFIX ?= $(HOME)/local/boost-1.38
-BOOST_LIB_SUFFIX ?= -mt
+BOOST_PREFIX ?= /usr
+BOOST_LIB_SUFFIX ?=
 
 #bash should work, too
 KSH = bash
@@ -24,7 +24,7 @@ LIB_PATH=/lib
 LIB_RT = rtlib
 LIB_RNA = librna
 LIB_GENERAL = 
-LIB_BOOST = $(BOOST_PREFIX)/include/boost-1.38
+LIB_BOOST = $(BOOST_PREFIX)/include/boost
 LIB_GSL = /usr/
 
 l_GSL = -lgsl -lgslcblas
