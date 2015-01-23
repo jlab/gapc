@@ -1,18 +1,18 @@
 # use as a template and copy it to ../config.mf
 
-PREFIX = /vol/gapc/
-BOOST_PREFIX = /vol/gapc
-BOOST_LIB_SUFFIX = -gcc48-mt-1_52
+PREFIX=/vol/gapc
+BOOST_PREFIX = /usr/
+BOOST_LIB_SUFFIX = 
 
 #bash should work, too
 KSH = /vol/gnu/bin/bash 
-CXX = /vol/gcc-4.8/bin/g++ 
-CC = /vol/gcc-4.8/bin/gcc 
+CXX = /usr/bin/g++ 
+CC = /usr/bin/gcc 
 LD = $(CC)
 LEX = flex
 YACC = bison
 HG = hg
-SED = sed
+SED = /usr/bin/sed
 
 TRUTHDIR = ../Truth
 SYSTEM_SUFFIX := _linux_gcc48
@@ -24,7 +24,7 @@ LIB_PATH=/lib
 LIB_RT = rtlib
 LIB_RNA = librna
 LIB_GENERAL = 
-LIB_BOOST = $(BOOST_PREFIX)/include/boost-1_52
+LIB_BOOST = $(BOOST_PREFIX)/include/boost
 LIB_GSL = /vol/gapc/
 
 l_GSL = -lgsl -lgslcblas
@@ -49,7 +49,7 @@ CXXFLAGS = $(64FLAGS) -MMD -MP -D_XOPEN_SOURCE=500 -g -Wall -Wnon-virtual-dtor -
 #for linker
 LDFLAGS = $(64FLAGS) $(LDFLAGS_EXTRA) \
 	-L$(PREFIX)$(LIB_PATH)/$(LIB_GENERAL) -Xlinker -rpath -Xlinker $(PREFIX)$(LIB_PATH)/$(LIB_GENERAL) \
-	-L$(BOOST_PREFIX)/lib -Xlinker -rpath -Xlinker $(BOOST_PREFIX)/lib
+#	-L$(BOOST_PREFIX)/lib -Xlinker -rpath -Xlinker $(BOOST_PREFIX)/lib
 LDFLAGS += $(shell test -d $(PREFIX)$(LIB_PATH)/$(LIB_RT) && echo "-L$(PREFIX)$(LIB_PATH)/$(LIB_RT) -Xlinker -rpath -Xlinker $(PREFIX)$(LIB_PATH)/$(LIB_RT)")
 LDFLAGS += $(shell test -d $(PREFIX)$(LIB_PATH)/$(LIB_RNA) && echo "-L$(PREFIX)$(LIB_PATH)/$(LIB_RNA) -Xlinker -rpath -Xlinker $(PREFIX)$(LIB_PATH)/$(LIB_RNA)")
 LDFLAGS += $(shell test -d $(LIB_GSL)$(LIB_PATH) && echo "-L$(LIB_GSL)$(LIB_PATH) -Xlinker -rpath -Xlinker $(LIB_GSL)$(LIB_PATH)")
