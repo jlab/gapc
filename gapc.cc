@@ -230,7 +230,7 @@ class Main {
 		
 		Code::Gen code_;
 		
-		
+		// classified product are replaced by times product
 		void conv_classified_product(Options &opts)
 		{
 			Instance *instance = driver.ast.instance(opts.instance);
@@ -328,6 +328,8 @@ class Main {
 			// suboptimal designs and present a message to the user.
 			driver.ast.warn_user_table_conf_suboptimal();
 			
+                        // find what type of input is read
+                        // chars, sequence of ints etc.
 			driver.ast.derive_temp_alphabet();
 			
 			r = driver.ast.check_signature();
@@ -338,12 +340,13 @@ class Main {
 			if (!r) {
 				throw LogError("Seen algebra errors.");
 			}
+                        // apply this to identify standard functions like Min, Max, Exp etc.
 			driver.ast.derive_roles();
 		}
 	
 	
 		/*
-		 * The back-end of the compiler. If the instance is a product,
+		 * The back-end of the compiler. If the instance is a classified product,
 		 * this method gets called twice: once for the first algebra
 		 * of the product, then for both algebras of the product.
 		 */
@@ -370,6 +373,8 @@ class Main {
 					throw LogError("Seen instance errors.");
 				}
 			}
+                        
+                        // set the alphabet type in all VAR_DECL
 			driver.ast.update_seq_type(*instance);
 			
 			if (opts.no_coopt) {
@@ -384,18 +389,27 @@ class Main {
 				throw LogError ("Instance inserting errors.");
 			}
 			
+                        // no many results for single backtrace 
+                        // or overlay does not define backtrace
 			driver.ast.check_backtrack(opts);
 			
+                        // remove lists in the definitions where-ever possible
+                        // for example for Min or max choice functions
 			driver.ast.instance_grammar_eliminate_lists(instance);
+                        
 			Grammar *grammar = driver.ast.grammar();
 			grammar->init_list_sizes();
 			driver.ast.warn_missing_choice_fns(instance);
+                        
+                        // inlining will remove sub NTs when possible by bringing
+                        // the subcontent to the original grammar role
 			if (opts.inline_nts) {
 				grammar->inline_nts();
 			}
+                        
 			grammar->init_indices();
 			grammar->init_decls();
-			// for cyk
+			// for cyk (ordering of NT for parsing, see page 101 of the thesis)
 			grammar->dep_analysis();
 			
 			

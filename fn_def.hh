@@ -167,6 +167,7 @@ class Fn_Def : public Fn_Decl
 		void codegen(Fn_Def &a, Fn_Def &b, Product::Two &product);
 		void codegen_choice(Fn_Def &a, Fn_Def &b, Product::Two &product);
 		void codegen_times(Fn_Def &a, Fn_Def &b, Product::Two &product);
+                void codegen_pareto(Fn_Def &a, Fn_Def &b, Product::Two &product);
 		void codegen_nop(Fn_Def &a, Fn_Def &b, Product::Two &product);
 		void codegen_cartesian(Fn_Def &a, Fn_Def &b, Product::Two &product);
 		void codegen_takeone(Fn_Def &a, Fn_Def &b, Product::Two &product);

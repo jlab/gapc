@@ -142,6 +142,8 @@ const char * Expr::Fn_Call::map_builtin_to_string[] = {
   "is_tabulated",
   "get", //"get_tabulated",
   "isEmpty",
+  "get_front",
+  "erase_element",
   "minimum",
   "maximum",
   "sum",

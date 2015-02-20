@@ -860,6 +860,8 @@ void Grammar::init_indices()
 	Clear_Loops cl;
 	traverse(cl);
 	for (size_t track = 0; track < axiom->tracks(); ++track) {
+            
+                // variable access for all possible boundaries
 		std::ostringstream i, j, lm, rm;
 		i << "t_" << track << "_i";
 		j << "t_" << track << "_j";
@@ -869,7 +871,10 @@ void Grammar::init_indices()
 		Expr::Vacc *right = new Expr::Vacc(new std::string(j.str()));
 		Expr::Vacc *left_most = new Expr::Vacc(new std::string(lm.str()));
 		Expr::Vacc *right_most = new Expr::Vacc(new std::string(rm.str()));
+                
+                
 		for (std::list<Symbol::NT*>::iterator i = nt_list.begin(); i != nt_list.end(); ++i) {
+                        // remove moving boundaries whenever possible
 			size_t idx = (*i)->tracks() == 1 ? 0 : track;
 			const Table &table = (*i)->tables()[idx];
 			Expr::Vacc *l = table.delete_left_index() ? left_most : left;
@@ -881,6 +886,7 @@ void Grammar::init_indices()
 			
 			unsigned k = 0;
 			
+                        // built up loops and boundaries to loop over inductively
 			(*i)->init_indices(l, r, k, idx);
 		}
 	}

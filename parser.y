@@ -356,7 +356,7 @@ YY_DECL;
 %left AND
 %left '<' '>' LT GT EQ NEQ
 %left '-' '+'
-%left '*' '/' '|' '%' '.'
+%left '*' '/' '|' '%' '.' '^'
 %right NOT WITH SUCHTHAT
 //%right '(' /* because of shift reduce in product (defaults rule) */
 %right '{' /* because of shift reduce in product (defaults rule) */
@@ -1797,7 +1797,6 @@ i_lhs: ident
            $$ = new std::pair<std::string*,hashtable<std::string, Arg*>*>
                   ($1, $3);
          } ;
-
 /**{
 **/
 product: product '*' product { $$ = new Product::Times($1, $3, @2); } |
@@ -1813,6 +1812,12 @@ The interleaved product.
 /**{
 **/
          product '%' product { $$ = new Product::Cartesian($1, $3, @2); } |
+/**}
+The cartesian product.
+**/
+/**{
+**/
+         product '^' product { $$ = new Product::Pareto($1, $3, @2); } |
 /**}
 The cartesian product.
 **/

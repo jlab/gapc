@@ -289,7 +289,7 @@ break { return token::BREAK; }
  /* special characters */
  /* ------------------------------------------------------------------------ */
 
-[%$.<>'\"#:|=(),{};\[\]*/+-] { return yy::Parser::token_type(yytext[0]); }
+[%$.<>'\"#:|=(),{};\[\]*/+^-] { return yy::Parser::token_type(yytext[0]); }
 
 \n+ { yylloc->lines(yyleng-1); new_line(yylloc); }
 

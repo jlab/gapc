@@ -236,6 +236,28 @@ unique(std::pair<Iterator, Iterator> &p)
 }
 */
 
+//template <typename Iterator>
+//inline
+//List_Ref<typename std::iterator_traits<Iterator>::value_type>
+//unique(std::pair<Iterator, Iterator> &p)
+//{
+//  typedef typename std::iterator_traits<Iterator>::value_type type;
+//
+//  Hash::Set<type> set;
+//  for (; p.first != p.second; ++p.first)
+//    set.add(*p.first);
+//  set.finalize();
+//  List_Ref<type> l;
+//  for (typename Hash::Set<type>::iterator j = set.begin(); j!=set.end(); ++j)
+//    move(l.ref().push_back_ref(), *j);
+//
+//  return l;
+//}
+
+
+#include <iostream>
+#include <set>
+
 template <typename Iterator>
 inline
 List_Ref<typename std::iterator_traits<Iterator>::value_type>
@@ -243,17 +265,17 @@ unique(std::pair<Iterator, Iterator> &p)
 {
   typedef typename std::iterator_traits<Iterator>::value_type type;
 
-  Hash::Set<type> set;
+  std::set<type> set;
   for (; p.first != p.second; ++p.first)
-    set.add(*p.first);
-  set.finalize();
+    set.insert(*p.first);
+  
   List_Ref<type> l;
-  for (typename Hash::Set<type>::iterator j = set.begin();
-       j!=set.end(); ++j)
+  for (typename std::set<type>::iterator j = set.begin(); j!=set.end(); ++j)
     move(l.ref().push_back_ref(), *j);
 
   return l;
 }
+
 
 template <typename Iterator>
 inline

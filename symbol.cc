@@ -727,8 +727,7 @@ void Symbol::NT::init_indices(Expr::Vacc *left, Expr::Vacc *right,
   left_indices[track] = left;
   right_indices[track] = right;
 
-  for (std::list<Alt::Base*>::iterator i = alts.begin();
-      i != alts.end(); ++i)
+  for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i)
     (*i)->init_indices(left, right, k, track);
 }
 

@@ -26,6 +26,7 @@
 
 #include "statement.hh"
 #include "expr.hh"
+#include "const.hh"
 
 #include "log.hh"
 
@@ -37,6 +38,8 @@
 
 #include <cassert>
 
+
+// join two Function definitions into one
 Fn_Def::Fn_Def(Fn_Def &a, Fn_Def &b)
   : adaptor(NULL),
     choice_fn_type_(Expr::Fn_Call::NONE)
@@ -44,6 +47,10 @@ Fn_Def::Fn_Def(Fn_Def &a, Fn_Def &b)
   //assert(a.in_use() == b.in_use());
   set_in_use(a.in_use() || b.in_use());
   choice_fn = a.choice_fn;
+  
+  // set return type (LIST, Single for Left and Right choice function)
+  // new return type is a tuple of both choice functions
+  // names are the same for both choice functions
   if (choice_fn) {
     Type::Base *x = 0;
     if (a.return_type->is(Type::LIST))
@@ -70,29 +77,43 @@ Fn_Def::Fn_Def(Fn_Def &a, Fn_Def &b)
 
   return_type = new Type::Tuple(a.return_type, b.return_type);
 
+  // iterate over both parameter list at the same time
   std::list<Para_Decl::Base*>::iterator j = b.paras.begin();
-  for (std::list<Para_Decl::Base*>::iterator i = a.paras.begin();
-      i != a.paras.end(); ++i, ++j) {
+  for (std::list<Para_Decl::Base*>::iterator i = a.paras.begin(); i != a.paras.end(); ++i, ++j) {
+    
+      
+    // try if parameter is a single track (Simple) parameter  
     Para_Decl::Simple *p = dynamic_cast<Para_Decl::Simple*>(*i);
     if (p) {
       Para_Decl::Simple *u = dynamic_cast<Para_Decl::Simple*>(*j);
       assert(u);
 
       assert(p->type()->is_terminal() == u->type()->is_terminal());
+      
+      
       if (p->type()->is_terminal()) {
+          
+        //type is a terminal and terminals are the same 
         assert(p->type()->is_eq(*u->type()));
         types.push_back(p->type());
         std::string *n = new std::string("p_" + *p->name());
         names.push_back(n);
         paras.push_back(new Para_Decl::Simple(p->type(), n));
+        
       } else  {
+        
+        //type is single track variable (non-terminal)
         Type::Base *t = new Type::Tuple(p->type(), u->type());
         types.push_back(t);
         std::string *n = new std::string("p_" + *p->name());
         names.push_back(n);
         paras.push_back(new Para_Decl::Simple(t, n));
+        
       }
+      
     } else {
+        
+      // parameter has to be a multi track parameter 
       Para_Decl::Multi *p = dynamic_cast<Para_Decl::Multi*>(*i);
       assert(p);
       Para_Decl::Multi *u = dynamic_cast<Para_Decl::Multi*>(*j);
@@ -101,20 +122,25 @@ Fn_Def::Fn_Def(Fn_Def &a, Fn_Def &b)
       std::list<Para_Decl::Simple*> s;
 
       std::list<Type::Base*> l;
+      
+      //loop over both parameter tracks at the same time and add content of each track 
       std::list<Para_Decl::Simple*>::const_iterator b = u->list().begin();
-      for (std::list<Para_Decl::Simple*>::const_iterator a = p->list().begin();
-          a != p->list().end(); ++a, ++b)
+      for (std::list<Para_Decl::Simple*>::const_iterator a = p->list().begin(); a != p->list().end(); ++a, ++b)
+          
         if ((*a)->type()->is_terminal()) {
+          //a,b are terminal and terminals are the same   
           assert((*a)->type()->is_eq(*(*b)->type()));
           l.push_back((*a)->type());
-          s.push_back(new Para_Decl::Simple((*a)->type(),
-                new std::string("p_" + *(*a)->name())));
+          s.push_back(new Para_Decl::Simple((*a)->type(), new std::string("p_" + *(*a)->name())));
+          
         } else {
+            
+          //a,b are variables (non-terminal)
           Type::Base *t = new Type::Tuple((*a)->type(), (*b)->type());
-            l.push_back(t);
-          s.push_back(new Para_Decl::Simple(t,
-                new std::string("p_" + *(*a)->name())));
+          l.push_back(t);
+          s.push_back(new Para_Decl::Simple(t, new std::string("p_" + *(*a)->name())));
         }
+      
       Type::Base *t = new Type::Multi(l);
       types.push_back(t);
       std::string *n = new std::string("p_MULTI");
@@ -133,6 +159,7 @@ Fn_Def::Fn_Def(Fn_Def &a, Fn_Def &b)
 
 #include <sstream>
 
+// create definition from declaration
 Fn_Def::Fn_Def(const Fn_Decl &other)
   : Fn_Decl()
 {
@@ -141,6 +168,8 @@ Fn_Def::Fn_Def(const Fn_Decl &other)
   name = other.name;
   choice_fn = other.is_Choice_Fn();
   adaptor = NULL;
+  
+  // creates names as simple index numerations with a prefix
   std::string pref("param_");
   for (unsigned int i = 0; i < types.size(); i++) {
     std::ostringstream o;
@@ -148,40 +177,50 @@ Fn_Def::Fn_Def(const Fn_Decl &other)
     names.push_back(new std::string(o.str()));
   }
 
+  // loop over names and types simultaneously
   std::list<std::string*>::iterator j = names.begin();
-  for (std::list<Type::Base*>::iterator i = types.begin();
-       i != types.end(); ++i, ++j) {
-    if ((*i)->is(Type::MULTI)) {
+  for (std::list<Type::Base*>::iterator i = types.begin(); i != types.end(); ++i, ++j) {
+      
+    if ((*i)->is(Type::MULTI)) { // is this a multi track?
+        
       Type::Multi *m = dynamic_cast<Type::Multi*>(*i);
       std::list<Para_Decl::Simple*> l;
       unsigned track = 0;
-      for (std::list<Type::Base*>::const_iterator k = m->types().begin();
-           k != m->types().end(); ++k, ++track) {
+      
+      // loop over types while keeping a track counter
+      for (std::list<Type::Base*>::const_iterator k = m->types().begin(); k != m->types().end(); ++k, ++track) {
         std::ostringstream o;
         o << **j << "_" << track;
         l.push_back(new Para_Decl::Simple(*k, new std::string(o.str())));
       }
+      // add parameter as a multitrack of all encountered types
       paras.push_back(new Para_Decl::Multi(l));
-    } else {
+      
+    } else { // single track
       paras.push_back(new Para_Decl::Simple(*i, *j));
     }
   }
 
+  // copy non-terminal types over
   nttypes_ = other.nttypes();
+  
+  // create non-terminal parameters from types (named by indexing them)
   unsigned a = 0;
-  for (std::list<Type::Base*>::iterator i = nttypes_.begin();
-       i != nttypes_.end(); ++i, ++a) {
+  for (std::list<Type::Base*>::iterator i = nttypes_.begin(); i != nttypes_.end(); ++i, ++a) {
     std::ostringstream o;
     o << "ntp_" << a;
     ntparas_.push_back(new Para_Decl::Simple(*i, new std::string(o.str())));
   }
 }
 
+
 void Fn_Def::set_paras(const std::list<Para_Decl::Base*> &l)
 {
+  // add parameters to list  
   paras.insert(paras.end(), l.begin(), l.end());
-  for (std::list<Para_Decl::Base*>::const_iterator i = l.begin();
-       i != l.end(); ++i) {
+  
+  // loop over new parameters and add their types and names to the lists
+  for (std::list<Para_Decl::Base*>::const_iterator i = l.begin(); i != l.end(); ++i) {
     Para_Decl::Simple *p = dynamic_cast<Para_Decl::Simple*>(*i);
 
     if (!p) {
@@ -206,15 +245,20 @@ void Fn_Def::set_paras(const std::list<Para_Decl::Base*> &l)
   }
 }
 
+// copy over terminal status from given function to current function
 void Fn_Def::annotate_terminal_arguments(Fn_Decl &d)
 {
   assert(types_equal(d));
 
+  // loop over all types of the given function together with types of the current function
   std::list<Type::Base*>::iterator j = types.begin();
-  for (std::list<Type::Base*>::iterator i = d.types.begin();
-      i != d.types.end() && j != types.end(); ++i, ++j) {
+  for (std::list<Type::Base*>::iterator i = d.types.begin(); i != d.types.end() && j != types.end(); ++i, ++j) {
+     
+    // new type is terminal, set current terminal
+      
     if ((*i)->is_terminal())
       (*j)->set_terminal();
+    
     if ((*i)->is(Type::MULTI)) {
       Type::Multi *a = dynamic_cast<Type::Multi*>(*i);
       assert(a);
@@ -230,14 +274,15 @@ void Fn_Def::annotate_terminal_arguments(Fn_Decl &d)
   }
 }
 
+// add new parameter to all lists
 void Fn_Def::add_para(Type::Base *type, std::string *n)
 {
   names.push_back(n);
   types.push_back(type);
-  hashtable<std::string, Type::Base*>::iterator i =
-    parameters.find(*n);
+  hashtable<std::string, Type::Base*>::iterator i = parameters.find(*n);
   if (i != parameters.end())
     std::cerr << "Parameter already there: " << *n << '\n';
+  
   assert(i == parameters.end());
   parameters[*n] = type;
   paras.push_back(new Para_Decl::Simple(type, n));
@@ -254,6 +299,7 @@ void Fn_Def::add_paras(const std::list<Statement::Var_Decl*> &l)
 #include "expr/vacc.hh"
 #include "var_acc.hh"
 
+// add a nonterminal
 void Fn_Def::add_para(Symbol::NT &nt)
 {
   Type::Base *t = new Type::Size();
@@ -264,12 +310,14 @@ void Fn_Def::add_para(Symbol::NT &nt)
 
   std::vector<Expr::Base*>::iterator j = left.begin();
   std::vector<Expr::Base*>::iterator k = right.begin();
-  for (std::vector<Table>::const_iterator i = tables.begin(); i != tables.end();
-       ++i, ++j, ++k) {
+  for (std::vector<Table>::const_iterator i = tables.begin(); i != tables.end(); ++i, ++j, ++k) {
+      
+    // only add the   
     if (!(*i).delete_left_index())
       add_para(t, (*j)->vacc()->name());
     if (!(*i).delete_right_index())
       add_para(t, (*k)->vacc()->name());
+    
   }
 
   set_paras(nt.ntargs());
@@ -460,6 +508,9 @@ void Fn_Def::codegen_choice(Fn_Def &a, Fn_Def &b, Product::Two &product)
       break;
     case Product::TAKEONE :
       codegen_takeone(a, b, product);
+      break;
+    case Product::PARETO:  
+      codegen_pareto(a, b, product);  
       break;
     default:
       assert(false);
@@ -652,6 +703,136 @@ void Fn_Def::times_cg_without_rhs_choice
   }
 }
 
+void Fn_Def::codegen_pareto(Fn_Def &a, Fn_Def &b, Product::Two &product)
+{
+    
+  // create  a variable to put all answers in 
+  assert(stmts.empty());
+  Statement::Var_Decl *answers = new Statement::Var_Decl(
+      return_type, "answers");
+  stmts.push_back(answers);
+  stmts.push_back(new Statement::Fn_Call(Statement::Fn_Call::EMPTY, *answers));
+
+  // first main loop, loop over raw answers
+  Statement::Var_Decl *input_list = new Statement::Var_Decl(
+      types.front(), names.front(), new Expr::Vacc(names.front()));
+  
+  Statement::Var_Decl *tupel = new Statement::Var_Decl(return_type->component(), "tupel");
+
+  Statement::Foreach *loop = new Statement::Foreach(tupel, input_list);
+  loop->set_itr(true);
+  stmts.push_back(loop);
+  std::list<Statement::Base*> *loop_body = &loop->statements;
+    
+  // set the first variables, tuple to insert into the answer list
+  Statement::Var_Decl *u = new Statement::Var_Decl(return_type->left(), "u",  new Expr::Vacc(tupel->left()));
+  Statement::Var_Decl *v = new Statement::Var_Decl(return_type->right(), "v",  new Expr::Vacc(tupel->right()));
+  
+  loop_body->push_back(u);
+  loop_body->push_back(v);
+  
+  // create a boolean variable
+  Statement::Var_Decl *add = new Statement::Var_Decl( new Type::Bool() , "add", new Expr::Const(new Const::Bool(true)));
+  loop_body->push_back(add);
+  
+  
+  Statement::Var_Decl *answer = new Statement::Var_Decl(return_type, "answer");
+  Statement::Var_Decl *answers_list = new Statement::Var_Decl(
+      return_type, "answers", new Expr::Vacc(new std::string("answer")));
+  
+  Statement::Foreach *loop2 = new Statement::Foreach(answer, answers_list);
+  loop2->set_itr(true);
+  loop_body->push_back(loop2);
+  std::list<Statement::Base*> *loop_body2 = &loop2->statements;
+  
+  Statement::Var_Decl *tmp = new Statement::Var_Decl(return_type->component(), "tmp",  new Expr::Vacc(*answer));
+  Statement::Var_Decl *x = new Statement::Var_Decl(return_type->left(), "x",  new Expr::Vacc(tmp->left()));
+  Statement::Var_Decl *y = new Statement::Var_Decl(return_type->right(), "y",  new Expr::Vacc(tmp->right()));
+  loop_body2->push_back(tmp);
+  loop_body2->push_back(x);
+  loop_body2->push_back(y);
+  
+  Statement::Var_Decl *left_candidates = new Statement::Var_Decl(new Type::List(return_type->left()), "left_candidates");
+  loop_body2->push_back(left_candidates);
+  loop_body2->push_back(new Statement::Fn_Call(Statement::Fn_Call::EMPTY, *left_candidates));
+  
+  Statement::Var_Decl *right_candidates = new Statement::Var_Decl(new Type::List(return_type->right()), "right_candidates");
+  loop_body2->push_back(right_candidates);
+  loop_body2->push_back(new Statement::Fn_Call(Statement::Fn_Call::EMPTY, *right_candidates));
+  
+  Statement::Fn_Call *push_backu = new Statement::Fn_Call(Statement::Fn_Call::PUSH_BACK);
+  push_backu->add_arg(*left_candidates);
+  push_backu->add_arg(*u);
+  loop_body2->push_back(push_backu);
+  
+  Statement::Fn_Call *push_backx = new Statement::Fn_Call(Statement::Fn_Call::PUSH_BACK);
+  push_backx->add_arg(*left_candidates);
+  push_backx->add_arg(*x);
+  loop_body2->push_back(push_backx);
+  
+  Statement::Fn_Call *push_backv = new Statement::Fn_Call(Statement::Fn_Call::PUSH_BACK);
+  push_backv->add_arg(*right_candidates);
+  push_backv->add_arg(*v);
+  loop_body2->push_back(push_backv);
+  
+  Statement::Fn_Call *push_backy = new Statement::Fn_Call(Statement::Fn_Call::PUSH_BACK);
+  push_backy->add_arg(*right_candidates);
+  push_backy->add_arg(*y);
+  loop_body2->push_back(push_backy);
+  
+  
+  Expr::Fn_Call *h_left = new Expr::Fn_Call(new std::string(a.target_name()));
+  h_left->add_arg(*left_candidates);
+  
+  Statement::Var_Decl *left_answer;
+  if (product.left_mode(*name).number == Mode::ONE) {
+        left_answer = new Statement::Var_Decl(return_type->left(), "left_answer", h_left);
+        loop_body2->push_back(left_answer);
+  } else {
+        
+       Statement::Var_Decl *left_answer_list = new Statement::Var_Decl(a.return_type, "left_answer_list", h_left);
+       
+       Expr::Fn_Call *left_first = new Expr::Fn_Call(Expr::Fn_Call::GET_FRONT);
+       left_first->add_arg(*left_answer_list);
+       
+       left_answer = new Statement::Var_Decl(return_type->left(), "left_answer", left_first);
+       loop_body2->push_back(left_answer_list);
+       loop_body2->push_back(left_answer);
+  }
+  
+  Expr::Fn_Call *h_right = new Expr::Fn_Call(new std::string(b.target_name()));
+  h_right->add_arg(*right_candidates);
+  
+  Statement::Var_Decl *right_answer;
+  if (product.right_mode(*name).number == Mode::ONE) {
+        right_answer = new Statement::Var_Decl(return_type->right(), "right_answer", h_right);
+        loop_body2->push_back(right_answer);
+  } else {
+        
+       Statement::Var_Decl *right_answer_list = new Statement::Var_Decl(b.return_type, "right_answer_list", h_right);
+       
+       Expr::Fn_Call *right_first = new Expr::Fn_Call(Expr::Fn_Call::GET_FRONT);
+       right_first->add_arg(*right_answer_list);
+       
+       right_answer = new Statement::Var_Decl(return_type->right(), "right_answer", right_first);
+       loop_body2->push_back(right_answer_list);
+       loop_body2->push_back(right_answer);
+  }
+
+  Expr::Eq *eq_1_1 = new Expr::Eq( new Expr::Vacc(*u) , new Expr::Vacc(*left_answer));
+  Expr::Eq *eq_1_2 = new Expr::Eq( new Expr::Vacc(*v) , new Expr::Vacc(*right_answer));
+  
+  Statement::If *if_case1 = new Statement::If(new Expr::And(eq_1_1, eq_1_2));
+  loop_body2->push_back(if_case1);
+ 
+  Expr::Eq *eq_2_1 = new Expr::Eq( new Expr::Vacc(*x) , new Expr::Vacc(*left_answer));
+  Expr::Eq *eq_2_2 = new Expr::Eq( new Expr::Vacc(*y) , new Expr::Vacc(*right_answer));
+  
+  Statement::If *if_case2 = new Statement::If(new Expr::And(eq_2_1, eq_2_2));
+  if_case1->els.push_back(if_case2);
+  
+}
+
 void Fn_Def::codegen_takeone(Fn_Def &a, Fn_Def &b, Product::Two &product)
 {
   assert(product.left_mode(*name).number == Mode::ONE);
@@ -735,6 +916,8 @@ void Fn_Def::remove_return_list()
   delete list;
 }
 
+
+// set the kind of function (predefined types, modes, yield type)
 Mode Fn_Def::derive_role() const
 {
   Mode r;
@@ -781,6 +964,7 @@ Mode Fn_Def::derive_role() const
   return r;
 }
 
+// find type of the choice function
 Expr::Fn_Call::Builtin Fn_Def::choice_fn_type() const
 {
   if (!choice_fn) {
@@ -858,12 +1042,11 @@ void Fn_Def::install_choice_filter(Filter &filter)
     return;
   }
   std::string *orig = new std::string(*fn->names.front() + "_orig");
-  Statement::Var_Decl *cont = new Statement::Var_Decl(fn->types.front(),
-      orig);
+  Statement::Var_Decl *cont = new Statement::Var_Decl(fn->types.front(), orig);
+  
   Expr::Fn_Call *filter_fn = new Expr::Fn_Call(filter);
   filter_fn->add_arg(*cont);
-  Statement::Var_Decl *v = new Statement::Var_Decl(fn->types.front(),
-      fn->names.front(), filter_fn);
+  Statement::Var_Decl *v = new Statement::Var_Decl(fn->types.front(), fn->names.front(), filter_fn);
   fn->names.erase(fn->names.begin());
 
   Para_Decl::Simple *s = dynamic_cast<Para_Decl::Simple*>(fn->paras.front());
@@ -881,18 +1064,15 @@ void Fn_Def::optimize_classify()
   std::list<Statement::Base*> s;
   s.push_back(stmts.front());
 
-  Statement::Var_Decl *answers = dynamic_cast<Statement::Var_Decl*>
-    (stmts.front());
+  Statement::Var_Decl *answers = dynamic_cast<Statement::Var_Decl*> (stmts.front());
   assert(answers);
 
-  Statement::Fn_Call *app =
-    new Statement::Fn_Call(Statement::Fn_Call::APPEND_FILTER);
+  Statement::Fn_Call *app = new Statement::Fn_Call(Statement::Fn_Call::APPEND_FILTER);
   app->add_arg(*answers);
   app->add_arg(new Expr::Vacc(names.front()));
   s.push_back(app);
 
-  Statement::Fn_Call *fin =
-    new Statement::Fn_Call(Statement::Fn_Call::FINALIZE);
+  Statement::Fn_Call *fin = new Statement::Fn_Call(Statement::Fn_Call::FINALIZE);
   fin->add_arg(*answers);
   s.push_back(fin);
 
@@ -927,8 +1107,7 @@ void Fn_Def::add_choice_specialization()
     return;
   }
 
-  for (Statement::iterator i = Statement::begin(x->stmts); i != Statement::end();
-       ++i) {
+  for (Statement::iterator i = Statement::begin(x->stmts); i != Statement::end(); ++i) {
     Statement::Base *s = *i;
     if (s->is(Statement::VAR_DECL)) {
       Statement::Var_Decl *v = dynamic_cast<Statement::Var_Decl*>(s);

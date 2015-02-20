@@ -52,7 +52,8 @@ namespace Expr {
 		public:
 			
 			enum Builtin { NONE, NOT_EMPTY, SPLICE_LEFT, GET_RANGE,
-				IS_TABULATED, GET_TABULATED, IS_EMPTY,
+				IS_TABULATED, GET_TABULATED, IS_EMPTY, GET_FRONT,
+                                ERASE_ELEMENT,
 				// algebra choice fns
 				MINIMUM,
 				MAXIMUM,

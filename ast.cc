@@ -597,15 +597,20 @@ void AST::derive_temp_alphabet()
 	set_tracks();
 	
 	Char_Visitor v;
+        
+        // traverse will go through all reachable non-terminals
+        // Char_Vistor will count CHAR types
+        // this code will make sure only one datatype has been set for reading
+        // the input (CHAR is type to read one char from inpustream)
 	grammar()->traverse(v);
 	const std::list<Type::Base*> &list = v.list();
 	Type::Base *res = 0;
 	switch (list.size()) {
 	case 0 :
-		res = new Type::Char();
+		res = new Type::Char(); // use default input
 		break;
 	case 1 :
-		res = list.front();
+		res = list.front(); // use found type
 		char_type = res;
 		break;
 	default:
@@ -617,7 +622,7 @@ void AST::derive_temp_alphabet()
 	update_alphabet_types(res);
 }
 
-
+// set the type of the input to read
 void AST::update_alphabet_types(Type::Base *res)
 {
 	hashtable<std::string, Type::Base*>::iterator i = types.find("alphabet");

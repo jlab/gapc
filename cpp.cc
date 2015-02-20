@@ -102,9 +102,7 @@ void Printer::Cpp::print(const Statement::Var_Decl &stmt)
   assert(stmt.name);
 
   //std::cerr << "JJJ " << *stmt.type << '\n';
-  if (stmt.type->is(::Type::MULTI)
-      || (stmt.type->is(::Type::LIST) && stmt.type->component()->is(::Type::MULTI))
-      ) {
+  if (stmt.type->is(::Type::MULTI) || (stmt.type->is(::Type::LIST) && stmt.type->component()->is(::Type::MULTI)) ) {
     ::Type::Base  *tbase = stmt.type;
     if (stmt.type->is(::Type::LIST))
       tbase = stmt.type->component();

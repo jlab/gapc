@@ -24,6 +24,7 @@
 #ifndef REF_HH
 #define REF_HH
 
+#include <boost/shared_ptr.hpp>
 
 namespace Ref {
 
@@ -31,35 +32,27 @@ namespace Ref {
     class Lazy 
     {
       public:
-        T *l;
+      
+      boost::shared_ptr<T> l;
+      
       protected:
-        void del()
-        {
-          if (!l)
-            return;
-          assert(l->ref_count);
-          l->ref_count--;
-          if (!l->ref_count)
-            delete l;
-        }
+
         void lazy()
         {
-          if (!l)
-            l = new T();
+          if (!l.use_count()) l.reset(new T());
         }
+        
         void copy(const Lazy &r)
         {
           l = r.l;
-          if (l)
-            l->ref_count ++;
         }
       public:
+          
         typedef T Type;
 
         typedef typename T::iterator iterator;
 
         Lazy()
-          : l(0)
         {
         }
 
@@ -70,20 +63,21 @@ namespace Ref {
 
         ~Lazy()
         {
-          del();
+          
         }
 
         Lazy &operator=(const Lazy &r)
         {
-          del();
           copy(r);
           return *this;
         }
 
-        T *operator->() { lazy(); return l; }
-        T &ref() { lazy(); return *l; }
-        //const List<T, pos_int> &ref() const { assert(l);  return *l; } 
-        const T &const_ref() const { assert(l);  return *l; } 
+        T *operator->() { lazy(); return l.get(); }
+        
+        T &ref() { lazy(); return *l.get(); }
+        
+
+        const T &const_ref() const { assert(l.use_count());  return *l.get(); } 
     };
 
 }

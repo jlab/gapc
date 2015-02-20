@@ -54,11 +54,12 @@ Product::Single::Single(Algebra *a)
   algebra_ = a;
 }
 
+// if the choice function return type is a LIST, but in fact only 1 element is returned
+// the LIST will be reduced to BASE
 void Product::Base::reduce_return_type()
 {
-  for (hashtable<std::string, Fn_Def*>::iterator i =
-      algebra_->choice_fns.begin();
-      i != algebra_->choice_fns.end(); ++i) {
+  for (hashtable<std::string, Fn_Def*>::iterator i = algebra_->choice_fns.begin(); i != algebra_->choice_fns.end(); ++i) {
+      
     Fn_Def *fn = i->second;
     if (fn->choice_mode().number == 1) {
       fn->reduce_return_type();
@@ -66,7 +67,8 @@ void Product::Base::reduce_return_type()
   }
 }
 
-
+// looks for all choice function that don't need LIST as return type,
+// because only 1 Element is returned
 void Product::Single::eliminate_lists()
 {
   if (eliminate_lists_computed)
@@ -77,6 +79,8 @@ void Product::Single::eliminate_lists()
   eliminate_lists_computed = true;
 }
 
+// looks for all choice function that don't need LIST as return type,
+// because only 1 Element is returned
 void Product::Two::eliminate_lists()
 {
   if (eliminate_lists_computed)
@@ -94,6 +98,7 @@ bool Product::Single::init()
   return true;
 }
 
+//l, r are subproducts, so init them as well and then join the grammar
 bool Product::Two::init()
 {
   bool x = true;
@@ -116,20 +121,26 @@ bool Product::Times::init()
   if (l->is(OVERLAY))
     return true;
   
-  for (hashtable<std::string, Fn_Def*>::iterator i =
-      l->algebra()->choice_fns.begin();
-      i != l->algebra()->choice_fns.end(); ++i) {
+  // iterate over left algebra choice functions
+  for (hashtable<std::string, Fn_Def*>::iterator i = l->algebra()->choice_fns.begin(); i != l->algebra()->choice_fns.end(); ++i) {
+    
+    // choice function in left algebra
     Fn_Def *fn_l = i->second;
-    hashtable<std::string, Fn_Def*>::iterator j =
-      r->algebra()->choice_fns.find(i->first);
+    
+    // choice function in right algebra
+    // i->first guarantees same named choice function is for all  algebras if multiple choice functions exist
+    hashtable<std::string, Fn_Def*>::iterator j = r->algebra()->choice_fns.find(i->first);
     assert(j != r->algebra()->choice_fns.end());
+    
+    // choice function in joined algebra
+    // i->first guarantees same named choice function is for all  algebras if multiple choice functions exist
     Fn_Def *fn_r = j->second;
-    hashtable<std::string, Fn_Def*>::iterator k = 
-      algebra_->choice_fns.find(i->first);
+    hashtable<std::string, Fn_Def*>::iterator k =  algebra_->choice_fns.find(i->first);
     assert(k != algebra_->choice_fns.end());
     Fn_Def *fn = k->second;
 
 
+    // set the mode for the joined algebra
     if (fn_l->choice_mode() == Mode::SYNOPTIC) {
       // FIXME error or not
       Log::instance()->warning(location,
@@ -200,20 +211,24 @@ bool Product::Times::init()
 bool Product::Klass::init()
 {
   bool x = Two::init();
-  for (hashtable<std::string, Fn_Def*>::iterator i =
-      l->algebra()->choice_fns.begin();
-      i != l->algebra()->choice_fns.end(); ++i) {
+  
+  // iterate over left algebra choice functions
+  for (hashtable<std::string, Fn_Def*>::iterator i = l->algebra()->choice_fns.begin(); i != l->algebra()->choice_fns.end(); ++i) {
+     
+     // choice function in left algebra   
     Fn_Def *fn_l = i->second;
-    hashtable<std::string, Fn_Def*>::iterator j =
-      r->algebra()->choice_fns.find(i->first);
+    
+    // choice function in right algebra   
+    hashtable<std::string, Fn_Def*>::iterator j = r->algebra()->choice_fns.find(i->first);
     assert(j != r->algebra()->choice_fns.end());
     Fn_Def *fn_r = j->second;
-    hashtable<std::string, Fn_Def*>::iterator k = 
-      algebra_->choice_fns.find(i->first);
+    
+    // choice function in joined algebra 
+    hashtable<std::string, Fn_Def*>::iterator k = algebra_->choice_fns.find(i->first);
     assert(k != algebra_->choice_fns.end());
     Fn_Def *fn = k->second;
 
-
+    // set the mode for the joined algebra
     if (fn_l->choice_mode() != Mode::CLASSIFY) {
       Log::instance()->error(location, "LHS is not a classifying algebra.");
       x = x && false;
@@ -233,22 +248,25 @@ bool Product::Klass::init()
 bool Product::Cartesian::init()
 {
   bool x = Two::init();
-  for (hashtable<std::string, Fn_Def*>::iterator i =
-      l->algebra()->choice_fns.begin();
-      i != l->algebra()->choice_fns.end(); ++i) {
+  
+  // iterate over left algebra choice functions
+  for (hashtable<std::string, Fn_Def*>::iterator i = l->algebra()->choice_fns.begin(); i != l->algebra()->choice_fns.end(); ++i) {
+      
+    // choice function in left algebra   
     Fn_Def *fn_l = i->second;
-    hashtable<std::string, Fn_Def*>::iterator j =
-      r->algebra()->choice_fns.find(i->first);
+    
+    // choice function in right algebra 
+    hashtable<std::string, Fn_Def*>::iterator j = r->algebra()->choice_fns.find(i->first);
     assert(j != r->algebra()->choice_fns.end());
     Fn_Def *fn_r = j->second;
-    hashtable<std::string, Fn_Def*>::iterator k = 
-      algebra_->choice_fns.find(i->first);
+    
+    // choice function in joined algebra 
+    hashtable<std::string, Fn_Def*>::iterator k = algebra_->choice_fns.find(i->first);
     assert(k != algebra_->choice_fns.end());
     Fn_Def *fn = k->second;
 
-
-
-
+    // set the mode for the joined algebra
+    
     if (fn_l->choice_mode().number > 1) {
       Log::instance()->error(location, "LHS has more than one solution.");
       x = x && false;
@@ -270,12 +288,64 @@ bool Product::Cartesian::init()
   return x;
 }
 
+bool Product::Pareto::init()
+{
+  bool x = Two::init();
+
+  
+  // iterate over left algebra choice functions
+  for (hashtable<std::string, Fn_Def*>::iterator i = l->algebra()->choice_fns.begin(); i != l->algebra()->choice_fns.end(); ++i) {
+    
+    // choice function in left algebra
+    Fn_Def *fn_l = i->second;
+    
+    // choice function in right algebra
+    // i->first guarantees same named choice function is for all  algebras if multiple choice functions exist
+    hashtable<std::string, Fn_Def*>::iterator j = r->algebra()->choice_fns.find(i->first);
+    assert(j != r->algebra()->choice_fns.end());
+    
+    // choice function in joined algebra
+    // i->first guarantees same named choice function is for all  algebras if multiple choice functions exist
+    Fn_Def *fn_r = j->second;
+    hashtable<std::string, Fn_Def*>::iterator k =  algebra_->choice_fns.find(i->first);
+    assert(k != algebra_->choice_fns.end());
+    Fn_Def *fn = k->second;
+
+
+    // set the mode for the joined algebra
+    
+    // filter out synoptic products, since they produce objects not found directly in search space
+    if (fn_l->choice_mode() == Mode::SYNOPTIC) {
+        Log::instance()->error(location, "LHS Cannot be synoptic for Pareto Products.");
+        x = x && false;
+        continue;
+    }
+    if (fn_r->choice_mode() == Mode::SYNOPTIC) {
+        Log::instance()->error(location, "RHS Cannot be synoptic for Pareto Products.");
+        x = x && false;
+        continue;
+    }
+    
+    // warn if choice functions are not scoring, ideally they should only yield on result each
+    if(fn_l->choice_mode() != Mode::SCORING || fn_r->choice_mode() != Mode::SCORING) {
+        Log::instance()->warning(location, "For Pareto Product choice functions should yield only one result. Only the first element of the result list will be used.");
+    }
+    
+    fn->choice_mode().set(Mode::KSCORING);
+    fn->choice_mode().set(Yield::Poly(Yield::UP));
+  }
+  return x;
+}
+
+
+// set the target_name of all contained functions by adding p as suffix to the function name
 void Product::Single::init_fn_suffix(const std::string &p)
 {
   algebra_->init_fn_suffix(p);
   fn_suffix = p;
 }
 
+// set the target_name of all contained functions by adding p as suffix to the function name
 void Product::Two::init_fn_suffix(const std::string &p)
 {
   algebra_->init_fn_suffix(p);
@@ -413,18 +483,21 @@ Product::Base *Product::Two::optimize_shuffle_products()
 }
 
 
+//make impossible product combinations a NOP and remove this original product
 Product::Base *Product::Times::optimize_shuffle_products()
 {
   l = l->optimize_shuffle_products();
   r = r->optimize_shuffle_products();
 
   bool x = true;
-  for (hashtable<std::string, Fn_Def*>::iterator i =
-      l->algebra()->choice_fns.begin();
-      i != l->algebra()->choice_fns.end(); ++i) {
+  //loop over left algebra
+  for (hashtable<std::string, Fn_Def*>::iterator i = l->algebra()->choice_fns.begin(); i != l->algebra()->choice_fns.end(); ++i) {
+      
+    // left algebra choice function
     Fn_Def *fn_l = i->second;
-    hashtable<std::string, Fn_Def*>::iterator j =
-      r->algebra()->choice_fns.find(i->first);
+    
+    // right algebra choice function (i->first = same name if multiple choice functions exist)
+    hashtable<std::string, Fn_Def*>::iterator j = r->algebra()->choice_fns.find(i->first);
     assert(j != r->algebra()->choice_fns.end());
     Fn_Def *fn_r = j->second;
 
@@ -468,16 +541,14 @@ Product::Base *Product::Times::optimize_shuffle_products()
 
 Mode & Product::Two::left_mode(const std::string &s)
 {
-  hashtable<std::string, Fn_Def*>::iterator i =
-    l->algebra()->choice_fns.find(s);
+  hashtable<std::string, Fn_Def*>::iterator i = l->algebra()->choice_fns.find(s);
   assert(i != l->algebra()->choice_fns.end());
   return i->second->choice_mode();
 }
 
 Mode & Product::Two::right_mode(const std::string &s)
 {
-  hashtable<std::string, Fn_Def*>::iterator i =
-    r->algebra()->choice_fns.find(s);
+  hashtable<std::string, Fn_Def*>::iterator i = r->algebra()->choice_fns.find(s);
   assert(i != r->algebra()->choice_fns.end());
   return i->second->choice_mode();
 }
@@ -486,26 +557,27 @@ Product::Nop::Nop(Times &times)
   : Two(NOP, times.left(), times.right())
 {
   set_filter(times.filter());
+  
+  // loop over joined algebra and set mode and yield for all
   algebra_ = new Algebra(*l->algebra(), *r->algebra());
-  for (hashtable<std::string, Fn_Def*>::iterator i =
-      algebra_->choice_fns.begin();
-      i != algebra_->choice_fns.end(); ++i) {
+  for (hashtable<std::string, Fn_Def*>::iterator i = algebra_->choice_fns.begin(); i != algebra_->choice_fns.end(); ++i) {
+      
     Fn_Def *fn = i->second;
     fn->choice_mode().set(Mode::PRETTY);
     fn->choice_mode().set(Yield::UP);
   }
 }
 
-void Product::Base::collect_fns(std::list<Fn_Def*> &l,
-    const std::string &name)
+// add function found in algebra by name to list l
+void Product::Base::collect_fns(std::list<Fn_Def*> &l, const std::string &name)
 {
   assert(algebra_);
   Fn_Def *fn = algebra_->fn_def(name);
   l.push_back(fn);
 }
 
-void Product::Two::collect_fns(std::list<Fn_Def*> &list,
-    const std::string &name)
+// add function found in left and right algebra by name to list list
+void Product::Two::collect_fns(std::list<Fn_Def*> &list, const std::string &name)
 {
   Base::collect_fns(list, name);
   l->collect_fns(list, name);
@@ -519,6 +591,8 @@ bool Product::Overlay::contains_only_times()
 }
 
 
+// overlay product uses different algebras for forward (algebra_)
+// and backtracing (bt_score_algebra_))
 bool Product::Overlay::init()
 {
   bool x = true;
@@ -531,7 +605,9 @@ bool Product::Overlay::init()
   return x;
 }
 
-
+// returns the backtrace algebra
+// for overlay product this is different
+// for all other it's the same
 Algebra *Product::Base::bt_score_algebra()
 {
   if (bt_score_algebra_)
@@ -540,6 +616,8 @@ Algebra *Product::Base::bt_score_algebra()
     return algebra_;
 }
 
+// looks for all choice function that don't need LIST as return type,
+// because only 1 Element is returned
 void Product::Overlay::eliminate_lists()
 {
   l->eliminate_lists();
@@ -557,6 +635,7 @@ void Product::Overlay::print_code(Printer::Base &s)
   algebra_->print_code(s);
 }
 
+// set the target_name of all contained functions by adding p as suffix to the function name
 void Product::Overlay::init_fn_suffix(const std::string &p)
 {
   algebra_->init_fn_suffix(p);
@@ -590,20 +669,23 @@ void Product::Two::set_in_use(const Fn_Decl &f)
 bool Product::Takeone::init()
 {
   bool x = Two::init();
-  for (hashtable<std::string, Fn_Def*>::iterator i =
-      l->algebra()->choice_fns.begin();
-      i != l->algebra()->choice_fns.end(); ++i) {
+  // loop over left algebra choice functions
+  for (hashtable<std::string, Fn_Def*>::iterator i = l->algebra()->choice_fns.begin(); i != l->algebra()->choice_fns.end(); ++i) {
+      
+    // left algebra choice function  
     Fn_Def *fn_l = i->second;
-    hashtable<std::string, Fn_Def*>::iterator j =
-      r->algebra()->choice_fns.find(i->first);
+    
+    // right algebra choice function (same named choice functions by i->first, in cause multiple)
+    hashtable<std::string, Fn_Def*>::iterator j = r->algebra()->choice_fns.find(i->first);
     assert(j != r->algebra()->choice_fns.end());
     Fn_Def *fn_r = j->second;
-    hashtable<std::string, Fn_Def*>::iterator k = 
-      algebra_->choice_fns.find(i->first);
+    
+    // joined algebra choice function (same named choice functions by i->first, in cause multiple)
+    hashtable<std::string, Fn_Def*>::iterator k = algebra_->choice_fns.find(i->first);
     assert(k != algebra_->choice_fns.end());
     Fn_Def *fn = k->second;
 
-
+    // set mode of joined algebra
     if (fn_l->choice_mode().number > 1) {
       Log::instance()->error(location, "LHS has more than one solution.");
       x = x && false;
@@ -628,17 +710,21 @@ bool Product::Takeone::init()
 Product::Base *Product::Base::left() { assert(0); return 0; }
 Product::Base *Product::Base::right() { assert(0); return 0; }
 
+
+// vaccs print a string representation to an output stream
 void Product::Base::init_vacc(Var_Acc::Base *src, Var_Acc::Base *dst)
 {
   assert(0); std::abort();
 }
 
+// vaccs print a string representation to an output stream
 void Product::Single::init_vacc(Var_Acc::Base *src, Var_Acc::Base *dst)
 {
   src_vacc = src;
   dst_vacc = dst;
 }
 
+// vaccs print a string representation to an output stream
 void Product::Two::init_vacc(Var_Acc::Base *src, Var_Acc::Base *dst)
 {
   src_vacc = src;
@@ -662,8 +748,8 @@ void Product::Base::generate_filter_decl(
         new ::Type::External(filter_->name),
         *filter_->name + "_" + fn_suffix
         );
-    Statement::Fn_Call *update =
-      new Statement::Fn_Call(Statement::Fn_Call::UPDATE);
+    Statement::Fn_Call *update = new Statement::Fn_Call(Statement::Fn_Call::UPDATE);
+    
     update->add_arg(*filter_decl);
     update->add_arg(new Expr::Vacc(src_vacc));
     hash_code.push_back(update);
@@ -707,9 +793,7 @@ void Product::Single::generate_hash_decl(const Fn_Def &fn_def,
     case Expr::Fn_Call::MINIMUM :
       {
       Expr::Base *cexpr = new Expr::Less(e, f);
-      Statement::If *cond = new Statement::If(
-          cexpr,
-          new Statement::Var_Assign(dst_vacc, e));
+      Statement::If *cond = new Statement::If( cexpr, new Statement::Var_Assign(dst_vacc, e));
       hash_code.push_back(cond);
 
       equal_score_code.push_back(new Statement::Return(new Expr::Eq(e, f)));
@@ -719,9 +803,7 @@ void Product::Single::generate_hash_decl(const Fn_Def &fn_def,
     case Expr::Fn_Call::MAXIMUM :
       {
       Expr::Base *cexpr = new Expr::Greater(e, f);
-      Statement::If *cond = new Statement::If(
-          cexpr,
-          new Statement::Var_Assign(dst_vacc, e));
+      Statement::If *cond = new Statement::If(cexpr, new Statement::Var_Assign(dst_vacc, e));
       hash_code.push_back(cond);
 
       equal_score_code.push_back(new Statement::Return(new Expr::Eq(e, f)));
@@ -843,6 +925,27 @@ void Product::Cartesian::generate_hash_decl(const Fn_Def &fn,
   r->generate_hash_decl(fn, b, filters, finalize_code, init_code, equal_score_code, compare_code);
   generate_filter_decl(hash_code, filters);
 
+  hash_code.insert(hash_code.end(), a.begin(), a.end());
+  hash_code.insert(hash_code.end(), b.begin(), b.end());
+}
+
+
+
+void Product::Pareto::generate_hash_decl(const Fn_Def &fn,
+    std::list<Statement::Base*> &hash_code,
+    std::list<Statement::Var_Decl*> &filters,
+    std::list<Statement::Base*> &finalize_code,
+    std::list<Statement::Base*> &init_code,
+    std::list<Statement::Base*> &equal_score_code,
+    std::list<Statement::Base*> &compare_code
+    ) const
+{
+  std::list<Statement::Base*> a, b;
+  l->generate_hash_decl(fn, a, filters, finalize_code, init_code, equal_score_code, compare_code);
+  r->generate_hash_decl(fn, b, filters, finalize_code, init_code, equal_score_code, compare_code);
+  generate_filter_decl(hash_code, filters);
+
+  // TODO: Is this really the real insert condition? Testing needed.
   hash_code.insert(hash_code.end(), a.begin(), a.end());
   hash_code.insert(hash_code.end(), b.begin(), b.end());
 }

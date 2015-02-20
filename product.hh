@@ -47,7 +47,7 @@ class Filter;
 namespace Product {
 	
 	
-	enum Type { SINGLE, TIMES, KLASS, CARTESIAN, NOP, OVERLAY, TAKEONE};
+	enum Type { SINGLE, TIMES, KLASS, CARTESIAN, NOP, OVERLAY, TAKEONE, PARETO};
 	
 	
 	class Base {
@@ -380,6 +380,26 @@ namespace Product {
 			
 	};
 	
+        
+        class Pareto : public Two {
+			
+		private:
+
+		public:
+			
+			Pareto(Base *a, Base *b, const Loc &l) : Two(PARETO, l, a, b) {}
+			bool init();
+                        
+                        void generate_hash_decl(const Fn_Def &fn,
+				std::list<Statement::Base*> &hash_code,
+				std::list<Statement::Var_Decl*> &filters,
+				std::list<Statement::Base*> &finalize_code,
+				std::list<Statement::Base*> &init_code,
+				std::list<Statement::Base*> &equal_score_code,
+				std::list<Statement::Base*> &compare_code
+				) const;
+	
+	};
 	
 	typedef Tree::Iterator<Base, Two> iterator;
 	
