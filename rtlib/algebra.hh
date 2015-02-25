@@ -271,7 +271,7 @@ unique(std::pair<Iterator, Iterator> &p)
   
   List_Ref<type> l;
   for (typename std::set<type>::iterator j = set.begin(); j!=set.end(); ++j)
-    move(l.ref().push_back_ref(), *j);
+    l.ref().push_back(*j);
 
   return l;
 }

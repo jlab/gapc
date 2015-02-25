@@ -112,13 +112,13 @@ inline void push_back(List_Ref<T, pos_int> &x, const T &e)
 }
 
 template<class T, typename pos_int>
-inline void append(List_Ref<T, pos_int> &x, List_Ref<T, pos_int> &e)
+inline void append(const List_Ref<T, pos_int> &x, List_Ref<T, pos_int> &e)
 {
   if (isEmpty(e))
     return;
   assert(&x.ref() != &e.ref());
   
-  std::copy(e.ref().begin(), e.ref().end(), std::back_inserter(x)); 
+  std::copy(e.ref().begin(), e.ref().end(), std::back_inserter(x.ref())); 
 }
 
 template<class T, typename pos_int>
