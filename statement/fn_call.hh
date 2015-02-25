@@ -47,7 +47,8 @@ namespace Statement {
 			     UPDATE,
 			     MARK,
 			     FINALIZE,
-			     INNER
+			     INNER,
+                             ERASE_ELEMENT
 			};
 			
 			
@@ -93,6 +94,7 @@ namespace Statement {
 			
 			
 			std::string name() const;
+                        void add_arg(Expr::Vacc *vdecl);
 			void add_arg(Var_Decl &vdecl);
 			void add_arg(Table_Decl &vdecl);
 			void add(Table_Decl &vdecl);

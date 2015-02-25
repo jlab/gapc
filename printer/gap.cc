@@ -568,6 +568,11 @@ void Printer::GapPrinter::print (Statement::Base* b) {
 			print (brk);
 			break;
 		}
+                case Statement::DECREASE: {
+			Statement::Decrease* c = dynamic_cast<Statement::Decrease*> (b);
+			print (c);
+			break;
+		}
 		case Statement::CONTINUE: {
 			Statement::Continue* c = dynamic_cast<Statement::Continue*> (b);
 			print (c);
@@ -655,6 +660,9 @@ void Printer::GapPrinter::print (Statement::Break* b) {
 	oStream << indention() << "break;" << std::endl;
 }
 
+void Printer::GapPrinter::print (Statement::Decrease* c) {
+	oStream << indention() << *c->name << "--;" << std::endl;
+}
 
 void Printer::GapPrinter::print (Statement::Continue* c) {
 	oStream << indention() << "continue;" << std::endl;

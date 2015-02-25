@@ -94,6 +94,10 @@ void Statement::Break::print(Printer::Base &p) const
 	p.print(*this);
 }
 
+void Statement::Decrease::print(Printer::Base &p) const
+{
+	p.print(*this);
+}
 
 void Statement::Continue::print(Printer::Base &p) const
 {
@@ -390,6 +394,11 @@ Statement::Base *Statement::Continue::copy() const
 	return o;
 }
 
+Statement::Base *Statement::Decrease::copy() const
+{
+	Decrease *o = new Decrease(*this);
+	return o;
+}
 
 Statement::Base *Statement::If::copy() const
 {

@@ -831,6 +831,40 @@ void Fn_Def::codegen_pareto(Fn_Def &a, Fn_Def &b, Product::Two &product)
   Statement::If *if_case2 = new Statement::If(new Expr::And(eq_2_1, eq_2_2));
   if_case1->els.push_back(if_case2);
   
+  Statement::Fn_Call *erase = new Statement::Fn_Call(Statement::Fn_Call::ERASE_ELEMENT);
+  erase->add_arg(*answers);
+  erase->add_arg(new std::string(*answer->name));
+  
+  if_case1->then.push_back(erase);
+  Statement::Decrease *decrease = new Statement::Decrease(answer->name);
+  if_case1->then.push_back(decrease);
+  
+  Statement::Var_Assign *add_false = new Statement::Var_Assign(*add, new Expr::Const(new Const::Bool(false)));
+  if_case2->then.push_back(add_false);
+  
+  Statement::Break *ansbreak = new Statement::Break();
+  if_case2->then.push_back(ansbreak);
+  
+  Statement::If *if_add = new Statement::If(new Expr::Eq(new Expr::Vacc(*add) , new Expr::Const(new Const::Bool(true))));
+  loop_body->push_back(if_add);
+  
+  
+  Statement::Fn_Call *pb = new Statement::Fn_Call(Statement::Fn_Call::PUSH_BACK);
+  
+  Statement::Var_Decl *temp_elem = new Statement::Var_Decl(return_type->component(), "temp_elem");
+  if_add->then.push_back(temp_elem);
+  
+  Statement::Var_Assign *l_ass = new Statement::Var_Assign(temp_elem->left(), *u);
+  if_add->then.push_back(l_ass);
+  Statement::Var_Assign *r_ass = new Statement::Var_Assign(temp_elem->right(), *v);
+  if_add->then.push_back(r_ass);
+  pb->add_arg(*answers);
+  pb->add_arg(*temp_elem);
+  
+  if_add->then.push_back(pb);
+ 
+  Statement::Return *ret = new Statement::Return(*answers);
+  stmts.push_back(ret);
 }
 
 void Fn_Def::codegen_takeone(Fn_Def &a, Fn_Def &b, Product::Two &product)

@@ -112,7 +112,7 @@ inline void push_back(List_Ref<T, pos_int> &x, const T &e)
 }
 
 template<class T, typename pos_int>
-inline void append(const List_Ref<T, pos_int> &x, List_Ref<T, pos_int> &e)
+inline void append(List_Ref<T, pos_int> &x, List_Ref<T, pos_int> &e)
 {
   if (isEmpty(e))
     return;
@@ -128,7 +128,7 @@ inline T get_front(List_Ref<T, pos_int> &x)
 }
 
 template<class T, typename pos_int>
-inline void erase_element(List_Ref<T, pos_int> &x, const T &e)
+inline void erase_element(List_Ref<T, pos_int> &x, typename List_Ref<T, pos_int>::iterator e)
 {
   if (isEmpty(e))
     return;

@@ -165,6 +165,11 @@ void Printer::Cpp::print(const Statement::Continue &stmt)
   stream << indent() << "continue;";
 }
 
+void Printer::Cpp::print(const Statement::Decrease &stmt)
+{
+  stream << indent() << *stmt.name << "--;";
+}
+
 void Printer::Cpp::print(const Statement::Foreach &stmt)
 {
   std::string itr(*stmt.elem->name + "_itr");

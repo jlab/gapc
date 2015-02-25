@@ -48,7 +48,8 @@ const char * Statement::Fn_Call::map_builtin_to_string[] = {
   "update_filter",
   "mark",
   "finalize",
-  "INNER"
+  "INNER",
+  "erase_element"
 };
 
 
@@ -63,6 +64,11 @@ std::string Statement::Fn_Call::name() const
     return *name_;
   else
     return std::string(map_builtin_to_string[builtin]);
+}
+
+void Statement::Fn_Call::add_arg(Expr::Vacc *vdecl)
+{
+  args.push_back(vdecl);
 }
 
 void Statement::Fn_Call::add_arg(Var_Decl &vdecl)

@@ -44,6 +44,7 @@ namespace Statement {
 
   class Break;
   class Continue;
+  class Decrease;
 
   class Marker_Decl;
 

@@ -184,6 +184,30 @@ namespace Statement {
 			
 			
 	};
+        
+        class Decrease : public Base {
+            
+            public:
+		
+                std::string *name;
+                
+                Decrease() : Base(DECREASE)
+                {
+                }
+                
+                Decrease(std::string *n) : Base(DECREASE), name(n)
+                {
+                }
+                
+                Decrease(const Loc &l) : Base(DECREASE, l)
+			{
+			}
+                
+                void print(Printer::Base &p) const;
+			
+		Base *copy() const;
+            
+        };
 	
 	
 	class Var_Decl : public Base {

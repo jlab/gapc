@@ -131,7 +131,7 @@ inline void push_back_min_subopt(List_Ref<T, pos_int> &x, T &e,
   // or keep only min/max for marking purposes:
 
   List<T, pos_int> &l = x.ref();
-  if (l.isEmpty()) {
+  if (l.empty()) {
     l.push_back(e);
     return;
   }
