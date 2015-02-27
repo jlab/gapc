@@ -128,9 +128,9 @@ inline T get_front(List_Ref<T, pos_int> &x)
 }
 
 template<class T, typename pos_int>
-inline void erase_element(List_Ref<T, pos_int> &x, typename List_Ref<T, pos_int>::iterator e)
+inline typename List_Ref<T, pos_int>::iterator erase_element(List_Ref<T, pos_int> &x, typename List_Ref<T, pos_int>::iterator e)
 {
-  x.ref().erase(e);
+  return x.ref().erase(e);
 }
 
 #include "algebra.hh"

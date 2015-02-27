@@ -105,6 +105,7 @@ namespace Printer {
 		virtual void print(const Statement::If &stmt);
 		virtual void print(const Statement::Return &stmt);
 		virtual void print(const Statement::Break &stmt);
+                virtual void print(const Statement::Increase &stmt);
                 virtual void print(const Statement::Decrease &stmt);
 		virtual void print(const Statement::Continue &stmt);
 		virtual void print(const Statement::Foreach &stmt);
@@ -206,6 +207,7 @@ namespace Printer {
 	Base &operator<<(Base &p, const Statement::If &b);
 	Base &operator<<(Base &p, const Statement::Return &b);
 	Base &operator<<(Base &p, const Statement::Break &b);
+        Base &operator<<(Base &p, const Statement::Increase &b);
         Base &operator<<(Base &p, const Statement::Decrease &b);
 	Base &operator<<(Base &p, const Statement::Continue &b);
 	Base &operator<<(Base &p, const Statement::Var_Assign &b);

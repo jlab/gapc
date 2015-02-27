@@ -742,6 +742,7 @@ void Fn_Def::codegen_pareto(Fn_Def &a, Fn_Def &b, Product::Two &product)
   
   Statement::Foreach *loop2 = new Statement::Foreach(answer, answers_list);
   loop2->set_itr(true);
+  loop2->set_iteration(false);
   loop_body->push_back(loop2);
   std::list<Statement::Base*> *loop_body2 = &loop2->statements;
   
@@ -831,13 +832,12 @@ void Fn_Def::codegen_pareto(Fn_Def &a, Fn_Def &b, Product::Two &product)
   Statement::If *if_case2 = new Statement::If(new Expr::And(eq_2_1, eq_2_2));
   if_case1->els.push_back(if_case2);
   
-  Statement::Fn_Call *erase = new Statement::Fn_Call(Statement::Fn_Call::ERASE_ELEMENT);
+  Expr::Fn_Call *erase = new Expr::Fn_Call(Expr::Fn_Call::ERASE_ELEMENT);
   erase->add_arg(*answers);
   erase->add_arg(new std::string(*answer->name));
   
-  if_case1->then.push_back(erase);
-  Statement::Decrease *decrease = new Statement::Decrease(answer->name);
-  if_case1->then.push_back(decrease);
+  Statement::Var_Assign *newAnswer = new Statement::Var_Assign(*answer, erase);
+  if_case1->then.push_back(newAnswer);
   
   Statement::Var_Assign *add_false = new Statement::Var_Assign(*add, new Expr::Const(new Const::Bool(false)));
   if_case2->then.push_back(add_false);
@@ -845,9 +845,11 @@ void Fn_Def::codegen_pareto(Fn_Def &a, Fn_Def &b, Product::Two &product)
   Statement::Break *ansbreak = new Statement::Break();
   if_case2->then.push_back(ansbreak);
   
+  Statement::Increase *increase = new Statement::Increase(answer->name);
+  if_case1->els.push_back(increase);
+  
   Statement::If *if_add = new Statement::If(new Expr::Eq(new Expr::Vacc(*add) , new Expr::Const(new Const::Bool(true))));
   loop_body->push_back(if_add);
-  
   
   Statement::Fn_Call *pb = new Statement::Fn_Call(Statement::Fn_Call::PUSH_BACK);
   

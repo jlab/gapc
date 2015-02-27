@@ -170,6 +170,11 @@ void Printer::Cpp::print(const Statement::Decrease &stmt)
   stream << indent() << *stmt.name << "--;";
 }
 
+void Printer::Cpp::print(const Statement::Increase &stmt)
+{
+  stream << indent() << *stmt.name << "++;";
+}
+
 void Printer::Cpp::print(const Statement::Foreach &stmt)
 {
   std::string itr(*stmt.elem->name + "_itr");
@@ -190,7 +195,11 @@ void Printer::Cpp::print(const Statement::Foreach &stmt)
     stream
       << itr
       << " = " << *stmt.container->name << ".first; " << itr << " != " 
-      << *stmt.container->name << ".second; ++" << itr << ") {" << endl;
+      << *stmt.container->name << ".second; ";
+      if (stmt.iteration) {      
+            stream << "++" << itr;
+      }
+     stream <<  ") {" << endl;
     inc_indent();
     if (!stmt.elem->is_itr()) {
       stream << indent() << *range->element_type << ' ' << *stmt.elem->name
@@ -203,7 +212,12 @@ void Printer::Cpp::print(const Statement::Foreach &stmt)
     stream << indent()
       << "for (typename " << *stmt.container->type << "::iterator " << itr
       << " = " << *stmt.container->name << "->begin(); "
-      << itr << " != " << *stmt.container->name << "->end(); ++ " << itr << ")";
+      << itr << " != " << *stmt.container->name << "->end(); ";
+    if (stmt.iteration) {      
+          stream << "++" << itr;
+    }
+    stream <<  ")";
+
     pointer_as_itr = false;
     stream << " {" << endl;
     inc_indent();
@@ -230,7 +244,12 @@ void Printer::Cpp::print(const Statement::Foreach &stmt)
     stream << indent() << "} else " << endl << indent()
       << "for (typename Backtrace_List<Value, pos_int>::iterator " << itr
       << " = " << t << "->begin(); "
-      << itr << " != " << t << "->end(); ++ " << itr << ")";
+      << itr << " != " << t << "->end(); ";
+
+      if (stmt.iteration) {      
+            stream << "++" << itr;
+      }
+    stream <<  ")";
     pointer_as_itr = false;
     stream << " {" << endl;
     inc_indent();
@@ -252,7 +271,11 @@ void Printer::Cpp::print(const Statement::Foreach &stmt)
       pure_list_type = true;
       stream << indent() << "for (" << *stmt.container->type << "::iterator "
         << itr << " = " << *stmt.container->name << ".ref().begin(); "
-        << itr << "!=" << *stmt.container->name << ".ref().end(); ++" << itr << ")";
+        << itr << "!=" << *stmt.container->name << ".ref().end(); ";
+      if (stmt.iteration) {      
+            stream << "++" << itr;
+      }
+     stream <<  ")";
       pure_list_type = false;
       stream << '{' << endl;
       inc_indent();

@@ -47,8 +47,7 @@ namespace Statement {
 			     UPDATE,
 			     MARK,
 			     FINALIZE,
-			     INNER,
-                             ERASE_ELEMENT
+			     INNER
 			};
 			
 			

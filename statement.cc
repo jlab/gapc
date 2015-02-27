@@ -99,6 +99,11 @@ void Statement::Decrease::print(Printer::Base &p) const
 	p.print(*this);
 }
 
+void Statement::Increase::print(Printer::Base &p) const
+{
+	p.print(*this);
+}
+
 void Statement::Continue::print(Printer::Base &p) const
 {
 	p.print(*this);
@@ -336,7 +341,7 @@ Statement::Iterator &Statement::Iterator::operator++()
 
 
 Statement::Foreach::Foreach(Var_Decl *i, Var_Decl *l)
-	: Block_Base(FOREACH), elem(i), container(l)
+	: Block_Base(FOREACH), elem(i), container(l), iteration(true)
 {
 	assert(elem);
 	assert(container);
@@ -347,6 +352,11 @@ void Statement::Foreach::set_itr(bool x)
 {
 	//elem = elem->clone();
 	elem->set_itr(x);
+}
+
+void Statement::Foreach::set_iteration(bool b)
+{
+    iteration = b;
 }
 
 
@@ -397,6 +407,12 @@ Statement::Base *Statement::Continue::copy() const
 Statement::Base *Statement::Decrease::copy() const
 {
 	Decrease *o = new Decrease(*this);
+	return o;
+}
+
+Statement::Base *Statement::Increase::copy() const
+{
+	Increase *o = new Increase(*this);
 	return o;
 }
 

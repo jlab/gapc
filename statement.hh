@@ -208,6 +208,30 @@ namespace Statement {
 		Base *copy() const;
             
         };
+        
+        class Increase : public Base {
+            
+            public:
+		
+                std::string *name;
+                
+                Increase() : Base(INCREASE)
+                {
+                }
+                
+                Increase(std::string *n) : Base(INCREASE), name(n)
+                {
+                }
+                
+                Increase(const Loc &l) : Base(INCREASE, l)
+			{
+			}
+                
+                void print(Printer::Base &p) const;
+			
+		Base *copy() const;
+            
+        };
 	
 	
 	class Var_Decl : public Base {
@@ -331,6 +355,8 @@ namespace Statement {
 			
 			Var_Decl *elem;
 			Var_Decl *container;
+                        bool iteration;
+                        
 			Foreach(Var_Decl *i, Var_Decl *l);
 			void print(Printer::Base &p) const;
 			
@@ -338,6 +364,7 @@ namespace Statement {
 			
 			void set_itr(bool b);
 			
+                        void set_iteration(bool b);
 			
 	};
 	

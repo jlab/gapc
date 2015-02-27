@@ -81,6 +81,7 @@ namespace Printer {
 			void print (Statement::Var_Decl* i);
 			void print (Statement::Block* b);
 			void print (Statement::Break* b);
+                        void print (Statement::Increase* c);
                         void print (Statement::Decrease* c);
 			void print (Statement::Continue* c);
 			void print (Statement::For* f);

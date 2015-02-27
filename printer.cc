@@ -56,6 +56,7 @@ void Printer::Base::print(const Statement::Var_Decl &stmt) {}
 void Printer::Base::print(const Statement::If &stmt) {}
 void Printer::Base::print(const Statement::Return &stmt) {}
 void Printer::Base::print(const Statement::Break &stmt) {}
+void Printer::Base::print(const Statement::Increase &stmt) {}
 void Printer::Base::print(const Statement::Decrease &stmt) {}
 void Printer::Base::print(const Statement::Continue &stmt) {}
 void Printer::Base::print(const Statement::Foreach &stmt) {}
@@ -218,6 +219,12 @@ namespace Printer {
 	}
 	
         Base &operator<<(Base &p, const Statement::Decrease &b)
+	{
+		p.print(b);
+		return p;
+	}
+        
+        Base &operator<<(Base &p, const Statement::Increase &b)
 	{
 		p.print(b);
 		return p;
