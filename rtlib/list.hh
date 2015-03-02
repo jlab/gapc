@@ -133,6 +133,14 @@ inline typename List_Ref<T, pos_int>::iterator erase_element(List_Ref<T, pos_int
   return x.ref().erase(e);
 }
 
+template<class T, typename pos_int>
+inline typename List_Ref<T, pos_int>::iterator insert_element(List_Ref<T, pos_int> &x, typename List_Ref<T, pos_int>::iterator e, T i)
+{
+  return x.ref().insert(e, i);
+}
+
+
+
 #include "algebra.hh"
 
 template<class T, typename pos_int>

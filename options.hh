@@ -54,7 +54,8 @@ struct Options {
 			ambiguityCheck (false),
 			specializeGrammar (false),
 			verbose_mode (false),
-			logLevel (3)
+			logLevel (3),
+                        pareto(0)
 	{
 	}
 	
@@ -118,6 +119,8 @@ struct Options {
 	// the log-level used for the Log-class.
 	int logLevel;
 	
+        // switch for different pareto implementations
+        int pareto; 
 	
 	
 	bool is_stdout()

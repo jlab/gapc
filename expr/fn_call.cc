@@ -144,6 +144,7 @@ const char * Expr::Fn_Call::map_builtin_to_string[] = {
   "isEmpty",
   "get_front",
   "erase_element",
+  "insert_element",
   "minimum",
   "maximum",
   "sum",

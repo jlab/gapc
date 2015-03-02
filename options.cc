@@ -96,6 +96,9 @@ bool Options::check()
 		
 	if (logLevel < 0 || logLevel > 4)
 		Log::instance()->error("Log-level must be in the range of 0 to 4.");
+        
+        if (pareto < 0 || pareto > 2)
+		Log::instance()->error("Pareto version must be in the range of 0 to 2.");
 	
 	if (ambiguityCheck && specializeGrammar)
 		Log::instance()->error("options '--ambiguity' and '--specialize_grammar' do not work together.");

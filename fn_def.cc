@@ -36,8 +36,10 @@
 
 #include "type/multi.hh"
 
-#include <cassert>
+#include "expr/fn_call.hh"
 
+#include <cassert>
+#include "expr/fn_call.hh"
 
 // join two Function definitions into one
 Fn_Def::Fn_Def(Fn_Def &a, Fn_Def &b)
@@ -496,6 +498,7 @@ void Fn_Def::codegen_choice(Fn_Def &a, Fn_Def &b, Product::Two &product)
   if (!product.is(Product::NOP))
     init_range_iterator();
 
+  Product::Pareto* p;
   switch (product.type()) {
     case Product::TIMES :
       codegen_times(a, b, product);
@@ -509,8 +512,19 @@ void Fn_Def::codegen_choice(Fn_Def &a, Fn_Def &b, Product::Two &product)
     case Product::TAKEONE :
       codegen_takeone(a, b, product);
       break;
-    case Product::PARETO:  
-      codegen_pareto(a, b, product);  
+    case Product::PARETO:
+      p = dynamic_cast<Product::Pareto*>(&product);
+      switch(p->get_pareto_type()) {
+          case Product::Pareto::NoSort:
+              codegen_pareto_nosort(a, b, product);
+              break;
+          case Product::Pareto::Sort:
+              codegen_pareto_sort(a, b, product);
+              break;
+          case Product::Pareto::ISort:
+              codegen_pareto_isort(a, b, product);
+              break;
+      } 
       break;
     default:
       assert(false);
@@ -703,7 +717,7 @@ void Fn_Def::times_cg_without_rhs_choice
   }
 }
 
-void Fn_Def::codegen_pareto(Fn_Def &a, Fn_Def &b, Product::Two &product)
+void Fn_Def::codegen_pareto_nosort(Fn_Def &a, Fn_Def &b, Product::Two &product)
 {
     
   // create  a variable to put all answers in 
@@ -753,71 +767,115 @@ void Fn_Def::codegen_pareto(Fn_Def &a, Fn_Def &b, Product::Two &product)
   loop_body2->push_back(x);
   loop_body2->push_back(y);
   
-  Statement::Var_Decl *left_candidates = new Statement::Var_Decl(new Type::List(return_type->left()), "left_candidates");
-  loop_body2->push_back(left_candidates);
-  loop_body2->push_back(new Statement::Fn_Call(Statement::Fn_Call::EMPTY, *left_candidates));
+      
+  Statement::Var_Decl *left_answer = new Statement::Var_Decl(return_type->left(), "left_answer");
+  loop_body2->push_back(left_answer);
+  if(product.left_choice_fn_type(*name) == Expr::Fn_Call::MINIMUM) {
+    
+    Statement::If *if_case_min = new Statement::If(new Expr::Less( new Expr::Vacc(*u) , new Expr::Vacc(*x)));
+    loop_body2->push_back(if_case_min);
+    Statement::Var_Assign* la = new Statement::Var_Assign(*left_answer, *u);
+    if_case_min->then.push_back(la);
+    Statement::Var_Assign* la2 = new Statement::Var_Assign(*left_answer, *x);
+    if_case_min->els.push_back(la2);
+    
+  } else if (product.left_choice_fn_type(*name) == Expr::Fn_Call::MAXIMUM) {
+      
+    Statement::If *if_case_min = new Statement::If(new Expr::Greater( new Expr::Vacc(*u) , new Expr::Vacc(*x)));
+    loop_body2->push_back(if_case_min);
+    Statement::Var_Assign* la = new Statement::Var_Assign(*left_answer, *u);
+    if_case_min->then.push_back(la);
+    Statement::Var_Assign* la2 = new Statement::Var_Assign(*left_answer, *x);
+    if_case_min->els.push_back(la2);
+      
+  } else { 
   
-  Statement::Var_Decl *right_candidates = new Statement::Var_Decl(new Type::List(return_type->right()), "right_candidates");
-  loop_body2->push_back(right_candidates);
-  loop_body2->push_back(new Statement::Fn_Call(Statement::Fn_Call::EMPTY, *right_candidates));
+    Statement::Var_Decl *left_candidates = new Statement::Var_Decl(new Type::List(return_type->left()), "left_candidates");
+    loop_body2->push_back(left_candidates);
+    loop_body2->push_back(new Statement::Fn_Call(Statement::Fn_Call::EMPTY, *left_candidates));
+      
+    Statement::Fn_Call *push_backu = new Statement::Fn_Call(Statement::Fn_Call::PUSH_BACK);
+    push_backu->add_arg(*left_candidates);
+    push_backu->add_arg(*u);
+    loop_body2->push_back(push_backu);
+
+    Statement::Fn_Call *push_backx = new Statement::Fn_Call(Statement::Fn_Call::PUSH_BACK);
+    push_backx->add_arg(*left_candidates);
+    push_backx->add_arg(*x);
+    loop_body2->push_back(push_backx);
+    
+    Expr::Fn_Call *h_left = new Expr::Fn_Call(new std::string(a.target_name()));
+    h_left->add_arg(*left_candidates);
   
-  Statement::Fn_Call *push_backu = new Statement::Fn_Call(Statement::Fn_Call::PUSH_BACK);
-  push_backu->add_arg(*left_candidates);
-  push_backu->add_arg(*u);
-  loop_body2->push_back(push_backu);
-  
-  Statement::Fn_Call *push_backx = new Statement::Fn_Call(Statement::Fn_Call::PUSH_BACK);
-  push_backx->add_arg(*left_candidates);
-  push_backx->add_arg(*x);
-  loop_body2->push_back(push_backx);
-  
-  Statement::Fn_Call *push_backv = new Statement::Fn_Call(Statement::Fn_Call::PUSH_BACK);
-  push_backv->add_arg(*right_candidates);
-  push_backv->add_arg(*v);
-  loop_body2->push_back(push_backv);
-  
-  Statement::Fn_Call *push_backy = new Statement::Fn_Call(Statement::Fn_Call::PUSH_BACK);
-  push_backy->add_arg(*right_candidates);
-  push_backy->add_arg(*y);
-  loop_body2->push_back(push_backy);
-  
-  
-  Expr::Fn_Call *h_left = new Expr::Fn_Call(new std::string(a.target_name()));
-  h_left->add_arg(*left_candidates);
-  
-  Statement::Var_Decl *left_answer;
-  if (product.left_mode(*name).number == Mode::ONE) {
-        left_answer = new Statement::Var_Decl(return_type->left(), "left_answer", h_left);
-        loop_body2->push_back(left_answer);
-  } else {
-        
-       Statement::Var_Decl *left_answer_list = new Statement::Var_Decl(a.return_type, "left_answer_list", h_left);
-       
-       Expr::Fn_Call *left_first = new Expr::Fn_Call(Expr::Fn_Call::GET_FRONT);
-       left_first->add_arg(*left_answer_list);
-       
-       left_answer = new Statement::Var_Decl(return_type->left(), "left_answer", left_first);
-       loop_body2->push_back(left_answer_list);
-       loop_body2->push_back(left_answer);
+    if (product.left_mode(*name).number == Mode::ONE) {
+          Statement::Var_Assign* la = new Statement::Var_Assign(*left_answer, h_left);
+          loop_body2->push_back(la);
+    } else {
+
+         Statement::Var_Decl *left_answer_list = new Statement::Var_Decl(a.return_type, "left_answer_list", h_left);
+
+         Expr::Fn_Call *left_first = new Expr::Fn_Call(Expr::Fn_Call::GET_FRONT);
+         left_first->add_arg(*left_answer_list);
+
+         Statement::Var_Assign* la = new Statement::Var_Assign(*left_answer, left_first);
+         loop_body2->push_back(left_answer_list);
+         loop_body2->push_back(la);
+    }
   }
   
-  Expr::Fn_Call *h_right = new Expr::Fn_Call(new std::string(b.target_name()));
-  h_right->add_arg(*right_candidates);
   
-  Statement::Var_Decl *right_answer;
-  if (product.right_mode(*name).number == Mode::ONE) {
-        right_answer = new Statement::Var_Decl(return_type->right(), "right_answer", h_right);
-        loop_body2->push_back(right_answer);
-  } else {
-        
-       Statement::Var_Decl *right_answer_list = new Statement::Var_Decl(b.return_type, "right_answer_list", h_right);
-       
-       Expr::Fn_Call *right_first = new Expr::Fn_Call(Expr::Fn_Call::GET_FRONT);
-       right_first->add_arg(*right_answer_list);
-       
-       right_answer = new Statement::Var_Decl(return_type->right(), "right_answer", right_first);
-       loop_body2->push_back(right_answer_list);
-       loop_body2->push_back(right_answer);
+  Statement::Var_Decl *right_answer = new Statement::Var_Decl(return_type->right(), "right_answer");
+  loop_body2->push_back(right_answer);
+  if(product.right_choice_fn_type(*name) == Expr::Fn_Call::MINIMUM) {
+    
+    Statement::If *if_case_min = new Statement::If(new Expr::Less( new Expr::Vacc(*v) , new Expr::Vacc(*y)));
+    loop_body2->push_back(if_case_min);
+    Statement::Var_Assign* la = new Statement::Var_Assign(*right_answer, *v);
+    if_case_min->then.push_back(la);
+    Statement::Var_Assign* la2 = new Statement::Var_Assign(*right_answer, *y);
+    if_case_min->els.push_back(la2);
+    
+  } else if (product.right_choice_fn_type(*name) == Expr::Fn_Call::MAXIMUM) {
+      
+    Statement::If *if_case_min = new Statement::If(new Expr::Greater( new Expr::Vacc(*v) , new Expr::Vacc(*y)));
+    loop_body2->push_back(if_case_min);
+    Statement::Var_Assign* la = new Statement::Var_Assign(*right_answer, *v);
+    if_case_min->then.push_back(la);
+    Statement::Var_Assign* la2 = new Statement::Var_Assign(*right_answer, *y);
+    if_case_min->els.push_back(la2);
+      
+  } else { 
+    Statement::Var_Decl *right_candidates = new Statement::Var_Decl(new Type::List(return_type->right()), "right_candidates");
+    loop_body2->push_back(right_candidates);
+    loop_body2->push_back(new Statement::Fn_Call(Statement::Fn_Call::EMPTY, *right_candidates));
+
+    Statement::Fn_Call *push_backv = new Statement::Fn_Call(Statement::Fn_Call::PUSH_BACK);
+    push_backv->add_arg(*right_candidates);
+    push_backv->add_arg(*v);
+    loop_body2->push_back(push_backv);
+
+    Statement::Fn_Call *push_backy = new Statement::Fn_Call(Statement::Fn_Call::PUSH_BACK);
+    push_backy->add_arg(*right_candidates);
+    push_backy->add_arg(*y);
+    loop_body2->push_back(push_backy); 
+
+    Expr::Fn_Call *h_right = new Expr::Fn_Call(new std::string(b.target_name()));
+    h_right->add_arg(*right_candidates);
+
+    if (product.right_mode(*name).number == Mode::ONE) {
+          Statement::Var_Assign* la = new Statement::Var_Assign(*right_answer, h_right);
+          loop_body2->push_back(la);
+    } else {
+
+         Statement::Var_Decl *right_answer_list = new Statement::Var_Decl(b.return_type, "right_answer_list", h_right);
+
+         Expr::Fn_Call *right_first = new Expr::Fn_Call(Expr::Fn_Call::GET_FRONT);
+         right_first->add_arg(*right_answer_list);
+
+         Statement::Var_Assign* la = new Statement::Var_Assign(*right_answer, right_first);
+         loop_body2->push_back(right_answer_list);
+         loop_body2->push_back(la);
+    }
   }
 
   Expr::Eq *eq_1_1 = new Expr::Eq( new Expr::Vacc(*u) , new Expr::Vacc(*left_answer));
@@ -867,6 +925,296 @@ void Fn_Def::codegen_pareto(Fn_Def &a, Fn_Def &b, Product::Two &product)
  
   Statement::Return *ret = new Statement::Return(*answers);
   stmts.push_back(ret);
+}
+
+void Fn_Def::codegen_pareto_isort(Fn_Def &a, Fn_Def &b, Product::Two &product)
+{
+    
+  // create  a variable to put all answers in 
+  assert(stmts.empty());
+  Statement::Var_Decl *answers = new Statement::Var_Decl(
+      return_type, "answers");
+  stmts.push_back(answers);
+  stmts.push_back(new Statement::Fn_Call(Statement::Fn_Call::EMPTY, *answers));
+
+  // first main loop, loop over raw answers
+  Statement::Var_Decl *input_list = new Statement::Var_Decl(
+      types.front(), names.front(), new Expr::Vacc(names.front()));
+  
+  Statement::Var_Decl *tupel = new Statement::Var_Decl(return_type->component(), "tupel");
+
+  Statement::Foreach *loop = new Statement::Foreach(tupel, input_list);
+  loop->set_itr(true);
+  stmts.push_back(loop);
+  std::list<Statement::Base*> *loop_body = &loop->statements;
+    
+  // set the first variables, tuple to insert into the answer list
+  Statement::Var_Decl *u = new Statement::Var_Decl(return_type->left(), "u",  new Expr::Vacc(tupel->left()));
+  Statement::Var_Decl *v = new Statement::Var_Decl(return_type->right(), "v",  new Expr::Vacc(tupel->right()));
+  
+  loop_body->push_back(u);
+  loop_body->push_back(v);
+  
+  // create a boolean variable if the new element is added
+  Statement::Var_Decl *add = new Statement::Var_Decl( new Type::Bool() , "add", new Expr::Const(new Const::Bool(true)));
+  loop_body->push_back(add);
+  
+  // create a boolean variable set for removing following elements
+  Statement::Var_Decl *erase = new Statement::Var_Decl( new Type::Bool() , "erase", new Expr::Const(new Const::Bool(false)));
+  loop_body->push_back(erase);
+  
+  Statement::Var_Decl *answer = new Statement::Var_Decl(return_type, "answer");
+  Statement::Var_Decl *answers_list = new Statement::Var_Decl(
+      return_type, "answers", new Expr::Vacc(new std::string("answer")));
+  
+  Statement::Foreach *loop2 = new Statement::Foreach(answer, answers_list);
+  loop2->set_itr(true);
+  loop2->set_iteration(false);
+  loop_body->push_back(loop2);
+  std::list<Statement::Base*> *loop_body2 = &loop2->statements;
+  
+  Statement::Var_Decl *tmp = new Statement::Var_Decl(return_type->component(), "tmp",  new Expr::Vacc(*answer));
+  Statement::Var_Decl *x = new Statement::Var_Decl(return_type->left(), "x",  new Expr::Vacc(tmp->left()));
+  Statement::Var_Decl *y = new Statement::Var_Decl(return_type->right(), "y",  new Expr::Vacc(tmp->right()));
+  loop_body2->push_back(tmp);
+  loop_body2->push_back(x);
+  loop_body2->push_back(y);
+   
+  
+  // get right answer with optimization
+  Statement::Var_Decl *right_answer = new Statement::Var_Decl(return_type->right(), "right_answer");
+  loop_body2->push_back(right_answer);
+  if(product.right_choice_fn_type(*name) == Expr::Fn_Call::MINIMUM) {
+    
+    Statement::If *if_case_min = new Statement::If(new Expr::Less( new Expr::Vacc(*v) , new Expr::Vacc(*y)));
+    loop_body2->push_back(if_case_min);
+    Statement::Var_Assign* la = new Statement::Var_Assign(*right_answer, *v);
+    if_case_min->then.push_back(la);
+    Statement::Var_Assign* la2 = new Statement::Var_Assign(*right_answer, *y);
+    if_case_min->els.push_back(la2);
+    
+  } else if (product.right_choice_fn_type(*name) == Expr::Fn_Call::MAXIMUM) {
+      
+    Statement::If *if_case_min = new Statement::If(new Expr::Greater( new Expr::Vacc(*v) , new Expr::Vacc(*y)));
+    loop_body2->push_back(if_case_min);
+    Statement::Var_Assign* la = new Statement::Var_Assign(*right_answer, *v);
+    if_case_min->then.push_back(la);
+    Statement::Var_Assign* la2 = new Statement::Var_Assign(*right_answer, *y);
+    if_case_min->els.push_back(la2);
+      
+  } else { 
+    Statement::Var_Decl *right_candidates = new Statement::Var_Decl(new Type::List(return_type->right()), "right_candidates");
+    loop_body2->push_back(right_candidates);
+    loop_body2->push_back(new Statement::Fn_Call(Statement::Fn_Call::EMPTY, *right_candidates));
+
+    Statement::Fn_Call *push_backv = new Statement::Fn_Call(Statement::Fn_Call::PUSH_BACK);
+    push_backv->add_arg(*right_candidates);
+    push_backv->add_arg(*v);
+    loop_body2->push_back(push_backv);
+
+    Statement::Fn_Call *push_backy = new Statement::Fn_Call(Statement::Fn_Call::PUSH_BACK);
+    push_backy->add_arg(*right_candidates);
+    push_backy->add_arg(*y);
+    loop_body2->push_back(push_backy); 
+
+    Expr::Fn_Call *h_right = new Expr::Fn_Call(new std::string(b.target_name()));
+    h_right->add_arg(*right_candidates);
+
+    if (product.right_mode(*name).number == Mode::ONE) {
+          Statement::Var_Assign* la = new Statement::Var_Assign(*right_answer, h_right);
+          loop_body2->push_back(la);
+    } else {
+
+         Statement::Var_Decl *right_answer_list = new Statement::Var_Decl(b.return_type, "right_answer_list", h_right);
+
+         Expr::Fn_Call *right_first = new Expr::Fn_Call(Expr::Fn_Call::GET_FRONT);
+         right_first->add_arg(*right_answer_list);
+
+         Statement::Var_Assign* la = new Statement::Var_Assign(*right_answer, right_first);
+         loop_body2->push_back(right_answer_list);
+         loop_body2->push_back(la);
+    }
+  }
+  
+  
+  Statement::If *if_erase = new Statement::If(new Expr::Eq(new Expr::Vacc(*erase) , new Expr::Const(new Const::Bool(false))));
+  loop_body2->push_back(if_erase);
+  
+  // not erasing
+  
+  // left answer only needed in case of not erasing
+  Statement::Var_Decl *left_answer = new Statement::Var_Decl(return_type->left(), "left_answer");
+  if_erase->then.push_back(left_answer);
+  if(product.left_choice_fn_type(*name) == Expr::Fn_Call::MINIMUM) {
+    
+    Statement::If *if_case_min = new Statement::If(new Expr::Less( new Expr::Vacc(*u) , new Expr::Vacc(*x)));
+    if_erase->then.push_back(if_case_min);
+    Statement::Var_Assign* la = new Statement::Var_Assign(*left_answer, *u);
+    if_case_min->then.push_back(la);
+    Statement::Var_Assign* la2 = new Statement::Var_Assign(*left_answer, *x);
+    if_case_min->els.push_back(la2);
+    
+  } else if (product.left_choice_fn_type(*name) == Expr::Fn_Call::MAXIMUM) {
+      
+    Statement::If *if_case_min = new Statement::If(new Expr::Greater( new Expr::Vacc(*u) , new Expr::Vacc(*x)));
+    if_erase->then.push_back(if_case_min);
+    Statement::Var_Assign* la = new Statement::Var_Assign(*left_answer, *u);
+    if_case_min->then.push_back(la);
+    Statement::Var_Assign* la2 = new Statement::Var_Assign(*left_answer, *x);
+    if_case_min->els.push_back(la2);
+      
+  } else { 
+  
+    Statement::Var_Decl *left_candidates = new Statement::Var_Decl(new Type::List(return_type->left()), "left_candidates");
+    if_erase->then.push_back(left_candidates);
+    if_erase->then.push_back(new Statement::Fn_Call(Statement::Fn_Call::EMPTY, *left_candidates));
+      
+    Statement::Fn_Call *push_backu = new Statement::Fn_Call(Statement::Fn_Call::PUSH_BACK);
+    push_backu->add_arg(*left_candidates);
+    push_backu->add_arg(*u);
+    if_erase->then.push_back(push_backu);
+
+    Statement::Fn_Call *push_backx = new Statement::Fn_Call(Statement::Fn_Call::PUSH_BACK);
+    push_backx->add_arg(*left_candidates);
+    push_backx->add_arg(*x);
+    if_erase->then.push_back(push_backx);
+    
+    Expr::Fn_Call *h_left = new Expr::Fn_Call(new std::string(a.target_name()));
+    h_left->add_arg(*left_candidates);
+  
+    if (product.left_mode(*name).number == Mode::ONE) {
+          Statement::Var_Assign* la = new Statement::Var_Assign(*left_answer, h_left);
+          if_erase->then.push_back(la);
+    } else {
+
+         Statement::Var_Decl *left_answer_list = new Statement::Var_Decl(a.return_type, "left_answer_list", h_left);
+
+         Expr::Fn_Call *left_first = new Expr::Fn_Call(Expr::Fn_Call::GET_FRONT);
+         left_first->add_arg(*left_answer_list);
+
+         Statement::Var_Assign* la = new Statement::Var_Assign(*left_answer, left_first);
+         if_erase->then.push_back(left_answer_list);
+         if_erase->then.push_back(la);
+    }
+  }
+  
+  // not erase, two cases
+  // case 1.1
+  Expr::Eq *eq_1_1_1 = new Expr::Eq( new Expr::Vacc(*u) , new Expr::Vacc(*x));
+  Expr::Eq *eq_1_1_2 = new Expr::Eq( new Expr::Vacc(*y) , new Expr::Vacc(*right_answer));
+  Expr::And *eq_1_1 = new Expr::And(eq_1_1_1, eq_1_1_2);
+  
+  // case 1.2
+  Expr::Eq *eq_1_2_1 = new Expr::Eq( new Expr::Vacc(*x) , new Expr::Vacc(*left_answer));
+  Expr::Not_Eq *eq_1_2_2 = new Expr::Not_Eq( new Expr::Vacc(*u) , new Expr::Vacc(*left_answer));
+  Expr::Eq *eq_1_2_3 = new Expr::Eq( new Expr::Vacc(*y) , new Expr::Vacc(*right_answer));
+  Expr::And *eq_1_2 = new Expr::And(new Expr::And(eq_1_2_1,  eq_1_2_2), eq_1_2_3);
+  
+  //full 1
+  Expr::Or *eq_1 = new Expr::Or(eq_1_1, eq_1_2); 
+  
+  // case 2.1
+  Expr::Eq *eq_2_1_1 = new Expr::Eq( new Expr::Vacc(*u) , new Expr::Vacc(*left_answer));
+  Expr::Not_Eq *eq_2_1_2 = new Expr::Not_Eq( new Expr::Vacc(*x) , new Expr::Vacc(*left_answer));
+  Expr::And *eq_2_1 = new Expr::And(eq_2_1_1, eq_2_1_2);
+  
+  // case 2.2
+  Expr::Eq *eq_2_2_1 = new Expr::Eq( new Expr::Vacc(*u) , new Expr::Vacc(*x));
+  Expr::Eq *eq_2_2_2 = new Expr::Eq( new Expr::Vacc(*v) , new Expr::Vacc(*right_answer));
+  Expr::Not_Eq *eq_2_2_3 = new Expr::Not_Eq( new Expr::Vacc(*y) , new Expr::Vacc(*right_answer));
+  Expr::And *eq_2_2 = new Expr::And(new Expr::And(eq_2_2_2,  eq_2_2_3), eq_2_2_1);
+  
+  //full 2
+  Expr::Or *eq_2 = new Expr::Or(eq_2_1, eq_2_2); 
+  
+  // now create the ifs
+  // if 1
+  Statement::If *if_case1 = new Statement::If(eq_1);
+  if_erase->then.push_back(if_case1);
+  
+  // if 1 content
+  Statement::Var_Assign *add_false = new Statement::Var_Assign(*add, new Expr::Const(new Const::Bool(false)));
+  if_case1->then.push_back(add_false);
+  
+  Statement::Break *ansbreak = new Statement::Break();
+  if_case1->then.push_back(ansbreak);
+  
+  // else if 2
+  Statement::If *if_case2 = new Statement::If(eq_2);
+  if_case1->els.push_back(if_case2);
+  
+  // else if 2 content
+  Statement::Var_Assign *add_false2 = new Statement::Var_Assign(*add, new Expr::Const(new Const::Bool(false)));
+  if_case2->then.push_back(add_false2);
+  Statement::Var_Assign *erase_true = new Statement::Var_Assign(*erase, new Expr::Const(new Const::Bool(true)));
+  if_case2->then.push_back(erase_true);
+  
+  Statement::Var_Decl *temp_elem = new Statement::Var_Decl(return_type->component(), "temp_elem");
+  if_case2->then.push_back(temp_elem);
+  
+  Statement::Var_Assign *l_ass = new Statement::Var_Assign(temp_elem->left(), *u);
+  if_case2->then.push_back(l_ass);
+  Statement::Var_Assign *r_ass = new Statement::Var_Assign(temp_elem->right(), *v);
+  if_case2->then.push_back(r_ass);
+  
+  Expr::Fn_Call *insert = new Expr::Fn_Call(Expr::Fn_Call::INSERT_ELEMENT);
+  insert->add_arg(*answers);
+  insert->add_arg(new std::string(*answer->name));
+  insert->add_arg(*temp_elem);
+  
+  Statement::Var_Assign *newAnswer = new Statement::Var_Assign(*answer, insert);
+  if_case2->then.push_back(newAnswer);
+  
+  Statement::Increase *increase = new Statement::Increase(answer->name);
+  if_erase->then.push_back(increase);
+  
+  // erasing
+  
+  // break condition
+  Expr::Eq *eq_erase_1 = new Expr::Eq( new Expr::Vacc(*y) , new Expr::Vacc(*right_answer));
+  Expr::Not_Eq *eq_erase_2 = new Expr::Not_Eq( new Expr::Vacc(*v) , new Expr::Vacc(*right_answer));
+  Statement::If *if_erase_break = new Statement::If(new Expr::And(eq_erase_1, eq_erase_2));
+  if_erase->els.push_back(if_erase_break);
+  
+  // content break condition
+  Statement::Break *erasebreak = new Statement::Break();
+  if_erase_break->then.push_back(erasebreak);
+  
+  // else erase
+  Expr::Fn_Call *erase_f = new Expr::Fn_Call(Expr::Fn_Call::ERASE_ELEMENT);
+  erase_f->add_arg(*answers);
+  erase_f->add_arg(new std::string(*answer->name));
+  
+  Statement::Var_Assign *newAnswer2 = new Statement::Var_Assign(*answer, erase_f);
+  if_erase_break->els.push_back(newAnswer2);
+  
+  
+  // base condition for empty list
+  Statement::If *if_add = new Statement::If(new Expr::Eq(new Expr::Vacc(*add) , new Expr::Const(new Const::Bool(true))));
+  loop_body->push_back(if_add);
+  
+  Statement::Fn_Call *pb = new Statement::Fn_Call(Statement::Fn_Call::PUSH_BACK);
+  
+  Statement::Var_Decl *temp_elem2 = new Statement::Var_Decl(return_type->component(), "temp_elem");
+  if_add->then.push_back(temp_elem2);
+  
+  Statement::Var_Assign *l_ass2 = new Statement::Var_Assign(temp_elem->left(), *u);
+  if_add->then.push_back(l_ass2);
+  Statement::Var_Assign *r_ass2 = new Statement::Var_Assign(temp_elem->right(), *v);
+  if_add->then.push_back(r_ass2);
+  pb->add_arg(*answers);
+  pb->add_arg(*temp_elem2);
+  
+  if_add->then.push_back(pb);
+ 
+  // return condition
+  Statement::Return *ret = new Statement::Return(*answers);
+  stmts.push_back(ret);
+  
+}
+
+void Fn_Def::codegen_pareto_sort(Fn_Def &a, Fn_Def &b, Product::Two &product)
+{
 }
 
 void Fn_Def::codegen_takeone(Fn_Def &a, Fn_Def &b, Product::Two &product)

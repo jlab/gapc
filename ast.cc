@@ -442,6 +442,15 @@ void AST::optimize_classify(Instance &inst)
 	}
 }
 
+void AST::set_pareto_version(Instance &inst, int version) {
+    for (Product::iterator i = Product::begin(inst.product); i != Product::end(); ++i) {
+        Product::Pareto *p = dynamic_cast<Product::Pareto*>(*i);
+        if(!p) {
+            continue;
+        }
+        p->set_pareto_type(version);
+    }
+}
 
 void AST::backtrack_gen(Backtrack_Base &bt)
 {

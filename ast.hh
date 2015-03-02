@@ -214,7 +214,10 @@ class AST {
 		
 		void set_code_mode(const Code::Mode &m) { cg_mode = m; }
 	
-	
+                // different versions of Pareto have been implemented
+                // this function is the switch
+                void set_pareto_version(Instance &inst, int version);
+                
 	private:
 	
 		// FIXME

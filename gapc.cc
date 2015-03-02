@@ -103,6 +103,7 @@ static void parse_options(int argc, char **argv, Options &rec)
 		("log-level,l", po::value<int>(), "the log level, valid values are 0 (VERBOSE), 1 (INFO),  2 (NORMAL), 3 (WARNING), 4 (ERROR). Default is 2 (NORMAL).")
 		("include,I", po::value< std::vector<std::string> >(), "include path")
 		("version,v", "version string")
+                ("pareto-version,P", po::value<int>(), "Implementation of Pareto Product to use 0 (NoSort), 1 (Sort),  2 (ISort)")
 		;
 	po::options_description hidden("");
 	hidden.add_options()
@@ -199,6 +200,10 @@ static void parse_options(int argc, char **argv, Options &rec)
 	if (vm.count ("log-level")) {
 		int level = vm["log-level"].as<int>();
 		rec.logLevel = level;
+	}
+        if (vm.count ("pareto-version")) {
+		int pareto = vm["pareto-version"].as<int>();
+		rec.pareto = pareto;
 	}
 	
 	bool r = rec.check();
@@ -373,6 +378,10 @@ class Main {
 					throw LogError("Seen instance errors.");
 				}
 			}
+                        
+                        if (opts.pareto > 0) {
+                            driver.ast.set_pareto_version(*instance, opts.pareto);
+                        }
                         
                         // set the alphabet type in all VAR_DECL
 			driver.ast.update_seq_type(*instance);

@@ -337,6 +337,20 @@ bool Product::Pareto::init()
   return x;
 }
 
+void Product::Pareto::set_pareto_type(int i) {
+    switch (i) {
+        case 1:
+            pareto_type = Product::Pareto::Sort;
+            break;
+        case 2:
+            pareto_type = Product::Pareto::ISort;
+            break;
+        default:
+            pareto_type = Product::Pareto::NoSort;
+            break;
+    }
+}
+
 
 // set the target_name of all contained functions by adding p as suffix to the function name
 void Product::Single::init_fn_suffix(const std::string &p)
@@ -546,11 +560,25 @@ Mode & Product::Two::left_mode(const std::string &s)
   return i->second->choice_mode();
 }
 
+Expr::Fn_Call::Builtin Product::Two::left_choice_fn_type(const std::string &s) const
+{
+  hashtable<std::string, Fn_Def*>::iterator i = l->algebra()->choice_fns.find(s);
+  assert(i != l->algebra()->choice_fns.end());
+  return i->second->choice_fn_type();
+}
+
 Mode & Product::Two::right_mode(const std::string &s)
 {
   hashtable<std::string, Fn_Def*>::iterator i = r->algebra()->choice_fns.find(s);
   assert(i != r->algebra()->choice_fns.end());
   return i->second->choice_mode();
+}
+
+Expr::Fn_Call::Builtin Product::Two::right_choice_fn_type(const std::string &s) const
+{
+  hashtable<std::string, Fn_Def*>::iterator i = r->algebra()->choice_fns.find(s);
+  assert(i != r->algebra()->choice_fns.end());
+  return i->second->choice_fn_type();
 }
 
 Product::Nop::Nop(Times &times)

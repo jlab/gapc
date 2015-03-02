@@ -39,6 +39,7 @@
 
 #include "bool.hh"
 
+#include "expr/fn_call.hh"
 
 class Default;
 class Filter;
@@ -260,7 +261,10 @@ namespace Product {
 			
 			Mode & left_mode(const std::string &s);
 			Mode & right_mode(const std::string &s);
-			
+                        
+                        Expr::Fn_Call::Builtin right_choice_fn_type(const std::string &s) const;
+			Expr::Fn_Call::Builtin left_choice_fn_type(const std::string &s) const;
+                        
 			void collect_fns(std::list<Fn_Def*> &l, const std::string &name);
 			
 			bool contains(Type t);
@@ -382,13 +386,21 @@ namespace Product {
 	
         
         class Pareto : public Two {
-			
+                public: 
+                    enum ParetoType {NoSort, Sort, ISort};
+            
 		private:
 
+                    ParetoType pareto_type;
+                    
 		public:
-			
-			Pareto(Base *a, Base *b, const Loc &l) : Two(PARETO, l, a, b) {}
+                    			
+			Pareto(Base *a, Base *b, const Loc &l) :
+                           Two(PARETO, l, a, b), pareto_type(NoSort) {}
+                           
 			bool init();
+                        
+                        void set_pareto_type(int i);
                         
                         void generate_hash_decl(const Fn_Def &fn,
 				std::list<Statement::Base*> &hash_code,
@@ -398,6 +410,10 @@ namespace Product {
 				std::list<Statement::Base*> &equal_score_code,
 				std::list<Statement::Base*> &compare_code
 				) const;
+                        
+                        ParetoType get_pareto_type() {
+                            return pareto_type;
+                        };
 	
 	};
 	
