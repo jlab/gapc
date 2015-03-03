@@ -156,6 +156,8 @@ inline void sort_list(Iterator begin, Iterator end, bool (*c)(T,T))
 #include <iostream>
 #include <set>
 
+#include "hash.hh"
+
 template <typename Iterator>
 inline
 List_Ref<typename std::iterator_traits<Iterator>::value_type>
@@ -163,16 +165,36 @@ unique(std::pair<Iterator, Iterator> &p)
 {
   typedef typename std::iterator_traits<Iterator>::value_type type;
 
-  std::set<type> set;
+  Hash::Set<type> set;
   for (; p.first != p.second; ++p.first)
-    set.insert(*p.first);
-  
+    set.add(*p.first);
+  set.finalize();
   List_Ref<type> l;
-  for (typename std::set<type>::iterator j = set.begin(); j!=set.end(); ++j)
+  for (typename Hash::Set<type>::iterator j = set.begin();
+       j!=set.end(); ++j)
     l.ref().push_back(*j);
 
   return l;
 }
+
+
+//template <typename Iterator>
+//inline
+//List_Ref<typename std::iterator_traits<Iterator>::value_type>
+//unique(std::pair<Iterator, Iterator> &p)
+//{
+//  typedef typename std::iterator_traits<Iterator>::value_type type;
+//
+//  Hash::set<type> set;
+//  for (; p.first != p.second; ++p.first)
+//    set.insert(*p.first);
+//  
+//  List_Ref<type> l;
+//  for (typename Hash::set<type>::iterator j = set.begin(); j!=set.end(); ++j)
+//    l.ref().push_back(*j);
+//
+//  return l;
+//}
 
 #include "algebra.hh"
 
