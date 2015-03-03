@@ -128,6 +128,12 @@ inline T get_front(List_Ref<T, pos_int> &x)
 }
 
 template<class T, typename pos_int>
+inline T get_back(List_Ref<T, pos_int> &x)
+{
+    return x.ref().back();
+}
+
+template<class T, typename pos_int>
 inline typename List_Ref<T, pos_int>::iterator erase_element(List_Ref<T, pos_int> &x, typename List_Ref<T, pos_int>::iterator e)
 {
   return x.ref().erase(e);
@@ -140,6 +146,33 @@ inline typename List_Ref<T, pos_int>::iterator insert_element(List_Ref<T, pos_in
 }
 
 
+template<class T, typename Iterator>
+inline void sort_list(Iterator begin, Iterator end, bool (*c)(T,T))
+{
+   std::sort(begin, end, c);
+}
+
+
+#include <iostream>
+#include <set>
+
+template <typename Iterator>
+inline
+List_Ref<typename std::iterator_traits<Iterator>::value_type>
+unique(std::pair<Iterator, Iterator> &p)
+{
+  typedef typename std::iterator_traits<Iterator>::value_type type;
+
+  std::set<type> set;
+  for (; p.first != p.second; ++p.first)
+    set.insert(*p.first);
+  
+  List_Ref<type> l;
+  for (typename std::set<type>::iterator j = set.begin(); j!=set.end(); ++j)
+    l.ref().push_back(*j);
+
+  return l;
+}
 
 #include "algebra.hh"
 
@@ -147,7 +180,7 @@ template<class T, typename pos_int>
 inline List_Ref<T, pos_int> unique(List_Ref<T, pos_int> &x)
 {
   typedef typename List_Ref<T, pos_int>::iterator itr;
-  std::pair<itr, itr> p = std::make_pair(x->begin(), x->end());
+  std::pair<itr, itr> p = std::make_pair(x.ref().begin(), x.ref().end());
   return unique(p);
 }
 
