@@ -255,28 +255,6 @@ unique(std::pair<Iterator, Iterator> &p)
 //}
 
 
-#include <iostream>
-#include <set>
-
-template <typename Iterator>
-inline
-List_Ref<typename std::iterator_traits<Iterator>::value_type>
-unique(std::pair<Iterator, Iterator> &p)
-{
-  typedef typename std::iterator_traits<Iterator>::value_type type;
-
-  std::set<type> set;
-  for (; p.first != p.second; ++p.first)
-    set.insert(*p.first);
-  
-  List_Ref<type> l;
-  for (typename std::set<type>::iterator j = set.begin(); j!=set.end(); ++j)
-    l.ref().push_back(*j);
-
-  return l;
-}
-
-
 template <typename Iterator>
 inline
 List_Ref<typename std::iterator_traits<Iterator>::value_type>
