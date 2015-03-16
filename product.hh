@@ -64,13 +64,16 @@ namespace Product {
 			Algebra *algebra_;
 			Algebra *bt_score_algebra_;
 			
+                        // set to true if sorting needs to be generated for the 
+                        // choice funtion
+                        bool sorted_choice;
 			
 		public:
 			
 			Algebra *algebra() { return algebra_; }
 			Algebra *bt_score_algebra();
-			
-			
+                        Base *bt_score_product();
+						
 		protected:
 			
 			std::string fn_suffix;
@@ -127,6 +130,9 @@ namespace Product {
 			void set_filter(Filter *f) { assert(!filter_); filter_ = f; }
 			Filter *filter() { return filter_; }
 			
+                        void set_sorted_choice();
+                        
+                        bool get_sorted_choice();
 			
 			//FIXME protected:
 		public:
@@ -179,6 +185,14 @@ namespace Product {
 			
 			virtual Base *replace_classified(bool &x) = 0;
 			
+                        
+                // extension for sorting with kbacktrack!
+                public:
+                        Base* sort_product;
+                        
+                        void set_sort_product(Base *sp) {
+                            sort_product = sp;
+                        }
 			
 	};
 	
@@ -264,6 +278,9 @@ namespace Product {
                         
                         Expr::Fn_Call::Builtin right_choice_fn_type(const std::string &s) const;
 			Expr::Fn_Call::Builtin left_choice_fn_type(const std::string &s) const;
+                        
+                        Fn_Def* left_choice_function(const std::string &s);
+                        Fn_Def* right_choice_function(const std::string &s);
                         
 			void collect_fns(std::list<Fn_Def*> &l, const std::string &name);
 			
@@ -369,6 +386,7 @@ namespace Product {
 			void codegen();
 			void print_code(Printer::Base &s);
 			void init_fn_suffix(const std::string &p);
+                        Base *bt_score_product();
 			
 			
 	};

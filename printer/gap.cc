@@ -593,6 +593,11 @@ void Printer::GapPrinter::print (Statement::Base* b) {
 			print (f);
 			break;
 		}
+                case Statement::SORTER: {
+			Statement::Foreach* f = dynamic_cast<Statement::Foreach*> (b);
+			print (f);
+			break;
+		}
 		case Statement::VAR_ASSIGN: {
 			Statement::Var_Assign* v = dynamic_cast<Statement::Var_Assign*> (b);
 			print (v);
@@ -696,6 +701,9 @@ void Printer::GapPrinter::print (Statement::Foreach* f) {
 	oStream << indention() << "/* implement foreach () now! */" << std::endl;
 }
 
+void Printer::GapPrinter::print (Statement::Sorter* f) {
+	oStream << indention() << "/* implement foreach () now! */" << std::endl;
+}
 
 void Printer::GapPrinter::print (Statement::Var_Assign* a) {
 	oStream << indention();

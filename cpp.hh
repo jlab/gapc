@@ -129,6 +129,7 @@ namespace Printer {
       void print(const Statement::Increase &stmt);
       void print(const Statement::Decrease &stmt);
       void print(const Statement::Foreach &stmt);
+      void print(const Statement::Sorter &stmt);
       void print(const Statement::Var_Assign &stmt);
       void print(const Statement::Fn_Call &stmt);
       void print(const Statement::Block &stmt);

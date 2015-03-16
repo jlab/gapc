@@ -143,6 +143,7 @@ const char * Expr::Fn_Call::map_builtin_to_string[] = {
   "get", //"get_tabulated",
   "isEmpty",
   "get_front",
+  "get_back",
   "erase_element",
   "insert_element",
   "minimum",

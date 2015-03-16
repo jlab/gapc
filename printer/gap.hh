@@ -86,6 +86,7 @@ namespace Printer {
 			void print (Statement::Continue* c);
 			void print (Statement::For* f);
 			void print (Statement::Foreach* r);
+                        void print (Statement::Sorter* r);
 			void print (Statement::Var_Assign* a);
 			void print (Statement::Fn_Call* f);
 			

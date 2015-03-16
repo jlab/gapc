@@ -60,6 +60,7 @@ void Printer::Base::print(const Statement::Increase &stmt) {}
 void Printer::Base::print(const Statement::Decrease &stmt) {}
 void Printer::Base::print(const Statement::Continue &stmt) {}
 void Printer::Base::print(const Statement::Foreach &stmt) {}
+void Printer::Base::print(const Statement::Sorter &stmt) {}
 void Printer::Base::print(const Statement::Var_Assign &stmt) {}
 void Printer::Base::print(const Statement::Fn_Call &stmt) {}
 void Printer::Base::print(const Statement::Block &stmt) {}
@@ -201,6 +202,12 @@ namespace Printer {
 	}
 	
 	Base &operator<<(Base &p, const Statement::Foreach &b)
+	{
+		p.print(b);
+		return p;
+	}
+        
+        Base &operator<<(Base &p, const Statement::Sorter &b)
 	{
 		p.print(b);
 		return p;

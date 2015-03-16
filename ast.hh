@@ -113,7 +113,7 @@ class AST {
 		std::list<Grammar*> *grammars_;
 		Grammar *selected_grammar;
 		
-	
+                bool back_track_paretosort;
 	public:
 	
 		AST();
@@ -218,6 +218,9 @@ class AST {
                 // this function is the switch
                 void set_pareto_version(Instance &inst, int version);
                 
+                void set_back_track_paretosort() {
+                    back_track_paretosort = true;
+                }
 	private:
 	
 		// FIXME
@@ -262,6 +265,10 @@ class AST {
 		
 		std::list<std::pair<Filter*, Expr::Fn_Call*> > sf_filter_code;
 		
+                Product::Base * get_backtrack_product() {
+                    return backtrack_product;
+                }
+                
 			
 };
 

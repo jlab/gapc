@@ -127,6 +127,11 @@ void Statement::Foreach::print(Printer::Base &p) const
 	p.print(*this);
 }
 
+void Statement::Sorter::print(Printer::Base &p) const
+{
+	p.print(*this);
+}
+
 
 void Statement::Var_Assign::print(Printer::Base &p) const
 {

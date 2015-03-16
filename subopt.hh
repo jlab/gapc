@@ -38,6 +38,8 @@ class Subopt : public Backtrack_Base {
     void add_subopt_fn_args(Fn_Def *fn);
   public:
     void gen_instance(Algebra *score);
+    void gen_instance(Algebra *score, bool sort);
+    void gen_instance(Algebra *score, Product::Base *base, bool sort);
     void gen_backtrack(AST &ast);
     void gen_instance_code(AST &ast);
 

@@ -34,16 +34,16 @@
 
 Product::Base::Base(Type t, const Loc &l)
   : type_(t), location(l), algebra_(NULL),
-    bt_score_algebra_(0),
+    bt_score_algebra_(0), sorted_choice(false),
     filter_(0),
-    src_vacc(0), dst_vacc(0)
+    src_vacc(0), dst_vacc(0), sort_product(0)
 { }
 
 Product::Base::Base(Type t)
   : type_(t), algebra_(NULL),
-    bt_score_algebra_(0),
-    filter_(0),
-    src_vacc(0), dst_vacc(0)
+    bt_score_algebra_(0), sorted_choice(false),
+    filter_(0), 
+    src_vacc(0), dst_vacc(0), sort_product(0)
 { }
 
 Product::Base::~Base() {}
@@ -53,6 +53,14 @@ Product::Single::Single(Algebra *a)
 {
   algebra_ = a;
 }
+
+void Product::Base::set_sorted_choice(){
+    sorted_choice = true;
+};
+
+bool Product::Base::get_sorted_choice(){
+    return sorted_choice;
+};
 
 // if the choice function return type is a LIST, but in fact only 1 element is returned
 // the LIST will be reduced to BASE
@@ -567,6 +575,13 @@ Expr::Fn_Call::Builtin Product::Two::left_choice_fn_type(const std::string &s) c
   return i->second->choice_fn_type();
 }
 
+Fn_Def* Product::Two::left_choice_function(const std::string &s)
+{
+  hashtable<std::string, Fn_Def*>::iterator i = l->algebra()->choice_fns.find(s);
+  assert(i != l->algebra()->choice_fns.end());
+  return i->second;
+}
+
 Mode & Product::Two::right_mode(const std::string &s)
 {
   hashtable<std::string, Fn_Def*>::iterator i = r->algebra()->choice_fns.find(s);
@@ -579,6 +594,13 @@ Expr::Fn_Call::Builtin Product::Two::right_choice_fn_type(const std::string &s) 
   hashtable<std::string, Fn_Def*>::iterator i = r->algebra()->choice_fns.find(s);
   assert(i != r->algebra()->choice_fns.end());
   return i->second->choice_fn_type();
+}
+
+Fn_Def* Product::Two::right_choice_function(const std::string &s)
+{
+  hashtable<std::string, Fn_Def*>::iterator i = l->algebra()->choice_fns.find(s);
+  assert(i != r->algebra()->choice_fns.end());
+  return i->second;
 }
 
 Product::Nop::Nop(Times &times)
@@ -642,6 +664,16 @@ Algebra *Product::Base::bt_score_algebra()
     return bt_score_algebra_;
   else
     return algebra_;
+}
+
+// for all types except Overlay backtrace is calculated using the normal product
+Product::Base *Product::Base::bt_score_product() {
+    return this;
+}
+
+// for Overlay the backtrace is calculated using the right product
+Product::Base *Product::Overlay::bt_score_product() {
+    return r;
 }
 
 // looks for all choice function that don't need LIST as return type,
@@ -947,7 +979,7 @@ void Product::Cartesian::generate_hash_decl(const Fn_Def &fn,
     std::list<Statement::Base*> &equal_score_code,
     std::list<Statement::Base*> &compare_code
     ) const
-{
+{ 
   std::list<Statement::Base*> a, b;
   l->generate_hash_decl(fn, a, filters, finalize_code, init_code, equal_score_code, compare_code);
   r->generate_hash_decl(fn, b, filters, finalize_code, init_code, equal_score_code, compare_code);

@@ -109,6 +109,10 @@ namespace Statement {
 		
 		public:
 		
+                        Continue() : Base(CONTINUE)
+			{
+			}
+                    
 			Continue(const Loc &l) : Base(CONTINUE, l)
 			{
 			}
@@ -367,8 +371,28 @@ namespace Statement {
                         void set_iteration(bool b);
 			
 	};
+        
+        
+        class Sorter : public Block_Base {
+            
+                public:
+                        Var_Decl *comp1;
+			Var_Decl *comp2;
+                        Var_Decl *list;
+                        std::string *name;
+                        std::string *sort_var;
+                        
+                
+                        Sorter(Var_Decl *c1, Var_Decl *c2, Var_Decl *l, const std::string &n, const std::string &s)
+                            : Block_Base(SORTER), comp1(c1), comp2(c2),list(l)
+                        {
+                            name = new std::string(n);
+                            sort_var = new std::string(s);
+                        }
+                        void print(Printer::Base &p) const;
+            
+        };
 	
-
 	class Var_Assign : public Base {
 		
 		private:

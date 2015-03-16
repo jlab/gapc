@@ -64,6 +64,10 @@ class Backtrack_Base {
 
 
     virtual void gen_instance(Algebra *score) = 0;
+    virtual void gen_instance(Algebra *score, bool sort) = 0;
+    
+    virtual void gen_instance(Algebra *score, Product::Base *base, bool sort) = 0;
+    
     virtual void apply_filter(Filter *f) {}
     virtual void gen_backtrack(AST &ast) = 0;
     virtual void gen_instance_code(AST &ast) = 0;

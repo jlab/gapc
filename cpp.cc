@@ -175,6 +175,34 @@ void Printer::Cpp::print(const Statement::Increase &stmt)
   stream << indent() << *stmt.name << "++;";
 }
 
+void Printer::Cpp::print(const Statement::Sorter &stmt) {
+    
+    stream << indent();
+    stream << "struct " << *stmt.name << " {" << endl;
+    stream << indent() << "   static bool "  << *stmt.sort_var << "(";
+    stream << *stmt.comp1->type << " " << *stmt.comp1->name << ", ";
+    stream << *stmt.comp2->type << " " << *stmt.comp2->name << ") {" << endl;       
+    
+    for (std::list<Statement::Base*>::const_iterator i = stmt.statements.begin(); i != stmt.statements.end(); ++i) {
+        stream << indent() << "    " << **i << endl;       
+    }
+    
+    stream << indent() << "   }" << endl;
+    stream << indent() << "};" << endl;
+    
+    stream << indent() << "sort_list(";
+    if (stmt.list->type->simple()->is(Type::RANGE)) {
+        stream << *stmt.list->name << ".first, ";
+        stream << *stmt.list->name << ".second ";
+    } else if (stmt.list->type->simple()->is(Type::LIST))  {
+        stream << *stmt.list->name << ".ref().begin(), ";
+        stream << *stmt.list->name << ".ref().end() ";
+    } else {
+        // TODO: Implement if needed
+    }
+    stream << ", " << *stmt.name << "::" << *stmt.sort_var << ");" << endl;
+}
+
 void Printer::Cpp::print(const Statement::Foreach &stmt)
 {
   std::string itr(*stmt.elem->name + "_itr");

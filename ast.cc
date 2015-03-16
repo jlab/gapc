@@ -54,6 +54,7 @@ AST::AST()
 	:	product_(0),
 		grammars_(0),
 		selected_grammar(0),
+                back_track_paretosort(false),
 		signature(NULL),
 		first_instance(NULL), instance_(0),
 		backtrack_product(0),
@@ -456,7 +457,7 @@ void AST::backtrack_gen(Backtrack_Base &bt)
 {
 	assert(instance_);
 	Algebra *score = instance_->product->bt_score_algebra();
-	
+        	
 	bt.gen_backtraces(backtrack_product, *score);
 	bt.gen_nt_decls(grammar()->nts());
 	
@@ -466,7 +467,9 @@ void AST::backtrack_gen(Backtrack_Base &bt)
 	assert(!alph->simple()->is(Type::ALPHABET));
 	bt.gen_algebra(*signature, alph->temp ? alph->temp : new Type::Char());
 	
-	bt.gen_instance(score);
+       //bt.gen_instance(score, back_track_paretosort);
+        bt.gen_instance(score, instance_->product->bt_score_product(), back_track_paretosort);
+	
 	//bt.gen_nt_decls(grammar()->nts());
 	bt.apply_filter(backtrack_filter);
 	if (original_product &&

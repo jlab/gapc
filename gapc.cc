@@ -381,11 +381,19 @@ class Main {
                         
                         if (opts.pareto > 0) {
                             driver.ast.set_pareto_version(*instance, opts.pareto);
+                            
+                            if (opts.pareto == 1) {
+                                if ((opts.backtrack || opts.subopt || opts.kbacktrack)) {
+                                    driver.ast.set_back_track_paretosort();
+                                }
+                                
+                                instance->product->set_sorted_choice();
+                            }
                         }
-                        
+                                              
                         // set the alphabet type in all VAR_DECL
 			driver.ast.update_seq_type(*instance);
-			
+			                       
 			if (opts.no_coopt) {
 				driver.ast.instance_->product->set_no_coopt();
 			}
@@ -397,7 +405,7 @@ class Main {
 			if (!r) {
 				throw LogError ("Instance inserting errors.");
 			}
-			
+                        
                         // no many results for single backtrace 
                         // or overlay does not define backtrace
 			driver.ast.check_backtrack(opts);
@@ -423,7 +431,7 @@ class Main {
 			
 			
 			driver.ast.codegen();
-			
+			                        
 			instance->codegen();
 			
 			driver.ast.optimize_choice(*instance);

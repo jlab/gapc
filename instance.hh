@@ -65,6 +65,8 @@ class Instance {
 		Instance(std::string *n, Product::Base *p, const Loc &l);
 		Instance(std::string *n, Product::Base *p, Grammar *g);
 		Instance(Algebra *a, Algebra *b);
+                Instance(Product::Base *a, Algebra *b);
+               
 		
 		const Loc &loc() const { return location; }
 		

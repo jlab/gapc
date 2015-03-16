@@ -51,6 +51,15 @@ Instance::Instance(Algebra *a, Algebra *b)
 	assert(r);
 }
 
+Instance::Instance(Product::Base *a, Algebra *b)
+{
+	Product::Base *x = a;
+	Product::Single *y = new Product::Single(b);
+	Product::Times *times = new Product::Times(x, y);
+	product = times;
+	bool r = product->init();
+	assert(r);
+}
 
 bool Instance::init(Instance *instance)
 {

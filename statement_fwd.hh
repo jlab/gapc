@@ -32,6 +32,7 @@ namespace Statement {
   class For;
   class While;
   class Foreach;
+  class Sorter;
   class If;
   class Return;
   class Var_Assign;

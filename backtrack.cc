@@ -42,15 +42,30 @@
 #include "printer.hh"
 
 
-void Backtrack::gen_instance(Algebra *score)
+void Backtrack::gen_instance(Algebra *score) {
+     gen_instance(score, false);
+}
+
+void Backtrack::gen_instance(Algebra *score, bool sort)
 {
   Instance *i = new Instance(score, algebra);
+  if(sort) {
+    i->product->set_sorted_choice();
+  }
   i->product = i->product->optimize_shuffle_products();
   i->product->init_fn_suffix("_bt");
   Product::Two *t = dynamic_cast<Product::Two*>(i->product);
   assert(t);
   t->left()->init_fn_suffix("");
   instance = i;
+}
+
+void Backtrack::gen_instance(Algebra *score, Product::Base *base, bool sort) {
+     
+  gen_instance(score,  sort);  
+    
+  instance->product->set_sort_product(base);
+    
 }
 
 void Backtrack::apply_filter(Filter *f)
