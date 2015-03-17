@@ -722,7 +722,7 @@ void Fn_Def::codegen_sort(Fn_Def &a, Fn_Def &b, Product::Two &product){
     }
   }
   
-  Statement::Return *sort_ret = new Statement::Return(new Expr::Eq(new Expr::Vacc(*u) , new Expr::Vacc(*left_answer)));
+  Statement::Return *sort_ret = new Statement::Return(new Expr::And(new Expr::Eq(new Expr::Vacc(*u) , new Expr::Vacc(*left_answer)), new Expr::Not_Eq(new Expr::Vacc(*x) , new Expr::Vacc(*left_answer))));
   sorter->push_back(sort_ret);
 }
 
