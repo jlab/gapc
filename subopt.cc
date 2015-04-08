@@ -65,7 +65,7 @@ void Subopt::gen_instance(Algebra *score, Product::Base *base, bool sort) {
      
   gen_instance(score,  sort);  
     
-  instance->product->set_sort_product(base);
+  instance->product->set_sort_product((new Instance(base, algebra))->product);
     
 }
 
