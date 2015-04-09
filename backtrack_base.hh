@@ -28,7 +28,7 @@
 
 #include "symbol_fwd.hh"
 #include "type_fwd.hh"
-#include "product_fwd.hh"
+#include "product.hh"
 #include "printer_fwd.hh"
 
 class AST;
@@ -64,9 +64,9 @@ class Backtrack_Base {
 
 
     virtual void gen_instance(Algebra *score) = 0;
-    virtual void gen_instance(Algebra *score, bool sort) = 0;
+    virtual void gen_instance(Algebra *score, Product::Sort_Type sort) = 0;
     
-    virtual void gen_instance(Algebra *score, Product::Base *base, bool sort) = 0;
+    virtual void gen_instance(Algebra *score, Product::Base *base, Product::Sort_Type sort) = 0;
     
     virtual void apply_filter(Filter *f) {}
     virtual void gen_backtrack(AST &ast) = 0;

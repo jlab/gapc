@@ -54,6 +54,7 @@
 #include "expr_fwd.hh"
 #include "statement_fwd.hh"
 #include "printer_fwd.hh"
+#include "product.hh"
 
 
 class Signature;
@@ -113,7 +114,7 @@ class AST {
 		std::list<Grammar*> *grammars_;
 		Grammar *selected_grammar;
 		
-                bool back_track_paretosort;
+                Product::Sort_Type back_track_paretosort;
 	public:
 	
 		AST();
@@ -218,8 +219,10 @@ class AST {
                 // this function is the switch
                 void set_pareto_version(Instance &inst, int version);
                 
-                void set_back_track_paretosort() {
-                    back_track_paretosort = true;
+                void set_pareto_dim(Instance &inst, bool dim);
+                
+                void set_back_track_paretosort(Product::Sort_Type st) {
+                    back_track_paretosort = st;
                 }
 	private:
 	

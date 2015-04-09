@@ -34,14 +34,14 @@
 
 Product::Base::Base(Type t, const Loc &l)
   : type_(t), location(l), algebra_(NULL),
-    bt_score_algebra_(0), sorted_choice(false),
+    bt_score_algebra_(0), sorted_choice(NONE),
     filter_(0),
     src_vacc(0), dst_vacc(0), sort_product(0)
 { }
 
 Product::Base::Base(Type t)
   : type_(t), algebra_(NULL),
-    bt_score_algebra_(0), sorted_choice(false),
+    bt_score_algebra_(0), sorted_choice(NONE),
     filter_(0), 
     src_vacc(0), dst_vacc(0), sort_product(0)
 { }
@@ -54,11 +54,11 @@ Product::Single::Single(Algebra *a)
   algebra_ = a;
 }
 
-void Product::Base::set_sorted_choice(){
-    sorted_choice = true;
+void Product::Base::set_sorted_choice(Product::Sort_Type st){
+    sorted_choice = st;
 };
 
-bool Product::Base::get_sorted_choice(){
+Product::Sort_Type Product::Base::get_sorted_choice(){
     return sorted_choice;
 };
 
@@ -336,7 +336,7 @@ bool Product::Pareto::init()
     
     // warn if choice functions are not scoring, ideally they should only yield on result each
     if(fn_l->choice_mode() != Mode::SCORING || fn_r->choice_mode() != Mode::SCORING) {
-        Log::instance()->warning(location, "For Pareto Product choice functions should yield only one result. Only the first element of the result list will be used.");
+        Log::instance()->warning(location, "!! (Ignore for option -P1 --multi-dim-pareto) !! For Pareto product, choice functions should yield only one result. Only the first element of the result list will be used.");
     }
     
     fn->choice_mode().set(Mode::KSCORING);

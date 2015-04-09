@@ -43,15 +43,15 @@
 
 
 void KBacktrack::gen_instance(Algebra *score) {
-    gen_instance(score, false);
+    gen_instance(score, Product::NONE);
 }
 
-void KBacktrack::gen_instance(Algebra *score, bool sort)
+void KBacktrack::gen_instance(Algebra *score, Product::Sort_Type sort)
 {
 
   Instance *i = new Instance(score, algebra);
-  if(sort) {
-    i->product->set_sorted_choice();
+  if(sort != Product::NONE) {
+    i->product->set_sorted_choice(sort);
   }
   i->product = i->product->optimize_shuffle_products();
   i->product->init_fn_suffix("_bt");
@@ -61,7 +61,7 @@ void KBacktrack::gen_instance(Algebra *score, bool sort)
   instance = i;
 }
 
-void KBacktrack::gen_instance(Algebra *score, Product::Base *base, bool sort) {
+void KBacktrack::gen_instance(Algebra *score, Product::Base *base, Product::Sort_Type sort) {
      
   gen_instance(score,  sort);  
     

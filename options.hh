@@ -55,7 +55,7 @@ struct Options {
 			specializeGrammar (false),
 			verbose_mode (false),
 			logLevel (3),
-                        pareto(0)
+                        pareto(0), multiDimPareto(false)
 	{
 	}
 	
@@ -122,7 +122,9 @@ struct Options {
         // switch for different pareto implementations
         int pareto; 
 	
-	
+        // multi dimensional pareto switch
+	bool multiDimPareto;
+        
 	bool is_stdout()
 	{
 		return out_file.empty();

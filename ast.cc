@@ -54,7 +54,7 @@ AST::AST()
 	:	product_(0),
 		grammars_(0),
 		selected_grammar(0),
-                back_track_paretosort(false),
+                back_track_paretosort(Product::NONE),
 		signature(NULL),
 		first_instance(NULL), instance_(0),
 		backtrack_product(0),
@@ -450,6 +450,16 @@ void AST::set_pareto_version(Instance &inst, int version) {
             continue;
         }
         p->set_pareto_type(version);
+    }
+}
+
+void AST::set_pareto_dim(Instance &inst, bool dim) {
+    for (Product::iterator i = Product::begin(inst.product); i != Product::end(); ++i) {
+        Product::Pareto *p = dynamic_cast<Product::Pareto*>(*i);
+        if(!p) {
+            continue;
+        }
+        p->set_multi_dim(dim);
     }
 }
 

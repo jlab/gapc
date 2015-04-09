@@ -42,8 +42,8 @@ class KBacktrack : public Backtrack_Base {
   public:
 
     void gen_instance(Algebra *score);
-    void gen_instance(Algebra *score, bool sort);
-    void gen_instance(Algebra *score, Product::Base *base, bool sort);
+    void gen_instance(Algebra *score, Product::Sort_Type sort);
+    void gen_instance(Algebra *score, Product::Base *base, Product::Sort_Type sort);
     
     void apply_filter(Filter *f);
     void gen_backtrack(AST &ast);

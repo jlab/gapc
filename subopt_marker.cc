@@ -45,15 +45,15 @@
 #include "printer.hh"
 
 void Subopt_Marker::gen_instance(Algebra *score) {
-    gen_instance(score,false);
+    gen_instance(score, Product::NONE);
 }
 
-void Subopt_Marker::gen_instance(Algebra *score, bool sort)
+void Subopt_Marker::gen_instance(Algebra *score, Product::Sort_Type sort)
 { 
   score_algebra = score;
   Instance *i = new Instance(score, algebra);
-  if(sort) {
-    i->product->set_sorted_choice();
+  if(sort != Product::NONE) {
+    i->product->set_sorted_choice(sort);
   }
   i->product->init_fn_suffix("_bt");
   Product::Two *t = dynamic_cast<Product::Two*>(i->product);
@@ -62,7 +62,7 @@ void Subopt_Marker::gen_instance(Algebra *score, bool sort)
   instance = i;
 }
 
-void Subopt_Marker::gen_instance(Algebra *score, Product::Base *base, bool sort) {
+void Subopt_Marker::gen_instance(Algebra *score, Product::Base *base, Product::Sort_Type sort) {
      
   gen_instance(score,  sort);  
     

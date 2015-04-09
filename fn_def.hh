@@ -145,7 +145,11 @@ class Fn_Def : public Fn_Decl
 		void times_cg_without_rhs_choice (Fn_Def &a, Fn_Def &b, Product::Two &product, Statement::Var_Decl *answer, std::list<Statement::Base*> *loop_body, Statement::Var_Decl *elem);
 		
                 bool get_sort_grab_list(std::list<bool> &o, Product::Base &product);
-		
+		void get_pareto_dimensions(Product::Base &product, std::list<Statement::Base*> &base,
+                    int *i, int *D, Statement::Var_Decl *last_decl, std::string prefix,
+                    std::list<std::pair<Product::Base*, bool> > &products,
+                    std::list<Statement::Var_Decl*> &decls );
+                
 	public:
 		
 		void add_simple_choice_fn_adaptor();
@@ -167,10 +171,12 @@ class Fn_Def : public Fn_Decl
 		void codegen();
 		void codegen(Fn_Def &a, Fn_Def &b, Product::Two &product);
                 void codegen_sort(Fn_Def &a, Fn_Def &b, Product::Two &product);
+                void codegen_multi_sort(Fn_Def &a, Fn_Def &b, Product::Two &product);
 		void codegen_choice(Fn_Def &a, Fn_Def &b, Product::Two &product);
 		void codegen_times(Fn_Def &a, Fn_Def &b, Product::Two &product);
                 void codegen_pareto_nosort(Fn_Def &a, Fn_Def &b, Product::Two &product);
                 void codegen_pareto_isort(Fn_Def &a, Fn_Def &b, Product::Two &product);
+                void codegen_pareto_multi_lex(Fn_Def &a, Fn_Def &b, Product::Two &product);
                 void codegen_pareto_lex(Fn_Def &a, Fn_Def &b, Product::Two &product);
 		void codegen_nop(Fn_Def &a, Fn_Def &b, Product::Two &product);
 		void codegen_cartesian(Fn_Def &a, Fn_Def &b, Product::Two &product);

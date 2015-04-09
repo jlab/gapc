@@ -104,6 +104,7 @@ static void parse_options(int argc, char **argv, Options &rec)
 		("include,I", po::value< std::vector<std::string> >(), "include path")
 		("version,v", "version string")
                 ("pareto-version,P", po::value<int>(), "Implementation of Pareto Product to use 0 (NoSort), 1 (Sort),  2 (ISort)")
+                ("multi-dim-pareto", "Use multi-dimensional Pareto. Only works with option -P 1.")
 		;
 	po::options_description hidden("");
 	hidden.add_options()
@@ -205,6 +206,10 @@ static void parse_options(int argc, char **argv, Options &rec)
 		int pareto = vm["pareto-version"].as<int>();
 		rec.pareto = pareto;
 	}
+        
+        if (vm.count("multi-dim-pareto")) {
+                rec.multiDimPareto = true;
+        }
 	
 	bool r = rec.check();
 	if (!r) {
@@ -384,12 +389,30 @@ class Main {
                             
                             if (opts.pareto == 1) {
                                 if ((opts.backtrack || opts.subopt || opts.kbacktrack)) {
-                                    driver.ast.set_back_track_paretosort();
+                                    if(opts.multiDimPareto) {
+                                        driver.ast.set_back_track_paretosort(Product::MULTI);
+                                    } else {
+                                        driver.ast.set_back_track_paretosort(Product::STANDARD);
+                                    }
                                 }
                                 
-                                instance->product->set_sorted_choice();
+                                if(opts.multiDimPareto) {
+                                    instance->product->set_sorted_choice(Product::MULTI);
+                                } else {
+                                    instance->product->set_sorted_choice(Product::STANDARD);
+                                }
+                                
                             }
                         }
+                        
+                        if(opts.multiDimPareto) {
+                             if (opts.pareto == 1) {
+                                 driver.ast.set_pareto_dim(*instance, true);
+                             } else {
+                                throw LogError ("Multi-Dimensional Pareto only works for sorted Pareto implementation.");
+                             }
+                        }
+                        
                                               
                         // set the alphabet type in all VAR_DECL
 			driver.ast.update_seq_type(*instance);

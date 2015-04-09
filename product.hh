@@ -50,6 +50,7 @@ namespace Product {
 	
 	enum Type { SINGLE, TIMES, KLASS, CARTESIAN, NOP, OVERLAY, TAKEONE, PARETO};
 	
+        enum Sort_Type { NONE, STANDARD, MULTI};
 	
 	class Base {
 			
@@ -64,9 +65,9 @@ namespace Product {
 			Algebra *algebra_;
 			Algebra *bt_score_algebra_;
 			
-                        // set to true if sorting needs to be generated for the 
+                        // set to value when sorting needs to be generated for the 
                         // choice funtion
-                        bool sorted_choice;
+                        Sort_Type sorted_choice;
 			
 		public:
 			
@@ -130,9 +131,9 @@ namespace Product {
 			void set_filter(Filter *f) { assert(!filter_); filter_ = f; }
 			Filter *filter() { return filter_; }
 			
-                        void set_sorted_choice();
+                        void set_sorted_choice(Sort_Type st);
                         
-                        bool get_sorted_choice();
+                        Sort_Type get_sorted_choice();
 			
 			//FIXME protected:
 		public:
@@ -410,11 +411,12 @@ namespace Product {
 		private:
 
                     ParetoType pareto_type;
+                    bool multi_dim;
                     
 		public:
                     			
 			Pareto(Base *a, Base *b, const Loc &l) :
-                           Two(PARETO, l, a, b), pareto_type(NoSort) {}
+                           Two(PARETO, l, a, b), pareto_type(NoSort), multi_dim(false) {}
                            
 			bool init();
                         
@@ -432,6 +434,14 @@ namespace Product {
                         ParetoType get_pareto_type() {
                             return pareto_type;
                         };
+                        
+                        void set_multi_dim(bool b) {
+                            multi_dim = b;
+                        }
+                        
+                        bool get_multi_dim() {
+                            return multi_dim;
+                        }
 	
 	};
 	
