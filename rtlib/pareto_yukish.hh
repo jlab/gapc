@@ -436,7 +436,7 @@ void y_marry(std::deque<T*> &answers , std::deque<T*> &x, typename std::deque<T*
     // flattened trees to store splits
     std::deque<y_split<T> > raw_splits_x;
     std::deque<y_split<T> > raw_splits_y;
-    y_medianDoubleSplit(raw_splits_x, raw_splits_y, x, y_begin, y_end, c, s, blocksize, dim);
+    y_medianDoubleSplit(raw_splits_x, raw_splits_y, x, y_begin, y_end, c, s, dim, blocksize);
     
     // apply brute solving to all on base level
     typename std::deque<y_split<T> >::iterator s_x = raw_splits_x.begin();
