@@ -40,14 +40,14 @@ get_range(List_Ref<T> &x)
 
 template<typename Pair>
 struct select1st : public std::unary_function<Pair,typename Pair::first_type> {
-  const typename Pair::first_type & operator() (const Pair &p) const {
+   typename Pair::first_type & operator() ( Pair &p)  {
     return p.first;
   }
 };
 
 template<typename Pair>
 struct select2nd : public std::unary_function<Pair,typename Pair::second_type> {
-  const typename Pair::second_type & operator() (const Pair &p) const {
+   typename Pair::second_type & operator() ( Pair &p)  {
     return p.second;
   }
 };
@@ -75,11 +75,11 @@ class Iterator {
       return *this;
     }
 
-    const typename Fn::result_type &operator*()
+     typename Fn::result_type &operator*()
     {
       return Fn()(*curr);
     }
-
+    
     /*
     const typename Fn::result_type & operator*() const
     {

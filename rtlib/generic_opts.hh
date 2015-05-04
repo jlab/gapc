@@ -40,6 +40,8 @@
 #include <unistd.h>
 #include <cstdlib>
 
+#include "rtlib/pareto_yukish.hh"
+
 namespace gapc {
 
 class OptException : public std::exception {

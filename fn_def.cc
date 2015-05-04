@@ -43,7 +43,7 @@
 
 // join two Function definitions into one
 Fn_Def::Fn_Def(Fn_Def &a, Fn_Def &b)
-  : adaptor(NULL),
+  : is_comperator(false), adaptor(NULL), comparator(NULL),
     choice_fn_type_(Expr::Fn_Call::NONE)
 {
   //assert(a.in_use() == b.in_use());
@@ -170,6 +170,8 @@ Fn_Def::Fn_Def(const Fn_Decl &other)
   name = other.name;
   choice_fn = other.is_Choice_Fn();
   adaptor = NULL;
+  comparator = NULL;
+  is_comperator = false;
   
   // creates names as simple index numerations with a prefix
   std::string pref("param_");
@@ -500,6 +502,26 @@ void Fn_Def::init_range_iterator()
   adaptor->stmts.push_back(ret);
 }
 
+//generates function header used for multi-dimension P 4
+void Fn_Def::init_comperator_adaptor() {
+    
+    comparator = new Fn_Def();
+    comparator->stmts.clear();
+    
+    comparator->is_comperator = true;
+    
+    comparator->name = new std::string(target_name_);
+    comparator->name->append("_comparator");
+    comparator->return_type = new Type::Int();
+    comparator->paras.clear();
+    
+    comparator->paras.push_back(new Para_Decl::Simple(return_type->component(), new std::string("e1")));
+    comparator->paras.push_back(new Para_Decl::Simple(return_type->component(), new std::string("e2")));
+    comparator->paras.push_back(new Para_Decl::Simple(new Type::Int(), new std::string("d")));
+}
+ 
+
+
 void Fn_Def::add_simple_choice_fn_adaptor()
 {
   assert(adaptor);
@@ -544,6 +566,10 @@ void Fn_Def::codegen_choice(Fn_Def &a, Fn_Def &b, Product::Two &product)
               break;
           case Product::Pareto::ISort:
               codegen_pareto_isort(a, b, product);
+              break;
+          case Product::Pareto::MultiDimOpt:
+              init_comperator_adaptor();
+              codegen_pareto_multi_yukish(a, b, product);
               break;
       } 
       break;
@@ -1937,6 +1963,177 @@ void Fn_Def::codegen_pareto_multi_lex(Fn_Def &a, Fn_Def &b, Product::Two &produc
   Statement::Return *ret = new Statement::Return(*answers);
   stmts.push_back(ret);
 }
+
+
+// generates the comperator element needed for advanced multi-dim pareto
+void Fn_Def::codegen_pareto_multi_yukish(Fn_Def &a, Fn_Def &b, Product::Two &product) {
+  
+  Statement::Var_Decl *c1 = new Statement::Var_Decl(
+  return_type->component(), "c1", new Expr::Vacc(new std::string("e1"))); 
+  comparator->stmts.push_back(c1);
+  
+  Statement::Var_Decl *c2 = new Statement::Var_Decl(
+  return_type->component(), "c2", new Expr::Vacc(new std::string("e2"))); 
+  comparator->stmts.push_back(c2);
+
+  Statement::Var_Decl *dim = new Statement::Var_Decl(
+  new Type::Int(), "dim", new Expr::Vacc(new std::string("d"))); 
+  comparator->stmts.push_back(dim);  
+  
+    // create access for all dimensions
+  int i = 0;
+  int D = 0;
+  std::list<std::pair<Product::Base*, bool> > c_1_products;
+  std::list<Statement::Var_Decl*> c_1_decl;
+  get_pareto_dimensions(product, comparator->stmts, &i, &D, c1, std::string("c1"), c_1_products, c_1_decl);
+   
+  i = 0;
+  D = 0;
+  std::list<std::pair<Product::Base*, bool> > c_2_products;
+  std::list<Statement::Var_Decl*> c_2_decl;
+  get_pareto_dimensions(product, comparator->stmts, &i, &D, c2, std::string("c2"), c_2_products, c_2_decl);
+    
+  
+  std::list<Statement::Base*> *cur_stmts = &comparator->stmts;
+  
+  // loop over all dimensions
+  int d = 1;
+  std::list<Statement::Var_Decl*>::iterator it_c1 = c_1_decl.begin();
+  std::list<Statement::Var_Decl*>::iterator it_c2 = c_2_decl.begin();
+  std::list<std::pair<Product::Base*, bool> >::iterator it = c_1_products.begin();
+ 
+  for (; it != c_1_products.end(); ++it, ++it_c1, ++it_c2, ++d) {
+      
+      
+       // test if add
+        Statement::If *if_case_add = new Statement::If(new Expr::Eq( new Expr::Vacc(*dim) , new Expr::Const(new Const::Int(d))));
+        cur_stmts->push_back(if_case_add);
+        cur_stmts = &if_case_add->then;
+        
+        Statement::Var_Decl *u = *it_c1;
+        Statement::Var_Decl *x = *it_c2;
+
+        std::pair<Product::Base*, bool> pairt = *it;
+        Product::Two prod = *dynamic_cast<Product::Two*>(pairt.first);
+        bool left = pairt.second;     
+        
+        Type::Base *type;
+        if (left) {
+           type = u->type;
+        } else {
+           type = x->type;
+        }
+        
+        // apply choice function 
+        Statement::Var_Decl *answer = new Statement::Var_Decl(type, "answer");
+        cur_stmts->push_back(answer);
+        if( (left && prod.left_choice_fn_type(*name) == Expr::Fn_Call::MINIMUM) 
+                || (!left && prod.right_choice_fn_type(*name) == Expr::Fn_Call::MINIMUM)) {
+
+          Statement::If *if_case_min = new Statement::If(new Expr::Less( new Expr::Vacc(*u) , new Expr::Vacc(*x)));
+          cur_stmts->push_back(if_case_min);
+          Statement::Var_Assign* la = new Statement::Var_Assign(*answer, *u);
+          if_case_min->then.push_back(la);
+          Statement::Var_Assign* la2 = new Statement::Var_Assign(*answer, *x);
+          if_case_min->els.push_back(la2);
+
+        } else if ( (left && prod.left_choice_fn_type(*name) == Expr::Fn_Call::MAXIMUM)
+            ||  (!left && prod.right_choice_fn_type(*name) == Expr::Fn_Call::MAXIMUM)){
+
+          Statement::If *if_case_min = new Statement::If(new Expr::Greater( new Expr::Vacc(*u) , new Expr::Vacc(*x)));
+          cur_stmts->push_back(if_case_min);
+          Statement::Var_Assign* la = new Statement::Var_Assign(*answer, *u);
+          if_case_min->then.push_back(la);
+          Statement::Var_Assign* la2 = new Statement::Var_Assign(*answer, *x);
+          if_case_min->els.push_back(la2);
+
+        } else { 
+
+          Statement::Var_Decl *candidates = new Statement::Var_Decl(new Type::List(type), "candidates");
+          cur_stmts->push_back(candidates);
+          cur_stmts->push_back(new Statement::Fn_Call(Statement::Fn_Call::EMPTY, *candidates));
+
+          Statement::Fn_Call *push_backu = new Statement::Fn_Call(Statement::Fn_Call::PUSH_BACK);
+          push_backu->add_arg(*candidates);
+          push_backu->add_arg(*u);
+          cur_stmts->push_back(push_backu);
+
+          Statement::Fn_Call *push_backx = new Statement::Fn_Call(Statement::Fn_Call::PUSH_BACK);
+          push_backx->add_arg(*candidates);
+          push_backx->add_arg(*x);
+          cur_stmts->push_back(push_backx);
+
+          Fn_Def c;
+          if (left) {
+              c = *prod.left_choice_function(*name);
+          } else {
+              c = *prod.right_choice_function(*name);
+          }
+          
+          Expr::Fn_Call *h = new Expr::Fn_Call(new std::string(c.target_name()));
+          h->add_arg(*candidates);
+
+          if (prod.left_mode(*name).number == Mode::ONE) {
+                Statement::Var_Assign* la = new Statement::Var_Assign(*answer, h);
+                cur_stmts->push_back(la);
+          } else {
+
+               Statement::Var_Decl *answer_list = new Statement::Var_Decl(c.return_type, "answer_list", h);
+
+               Expr::Fn_Call *first = new Expr::Fn_Call(Expr::Fn_Call::GET_FRONT);
+               first->add_arg(*answer_list);
+
+               Statement::Var_Assign* la = new Statement::Var_Assign(*answer, first);
+               cur_stmts->push_back(answer_list);
+               cur_stmts->push_back(la);
+          }
+        }
+        
+        
+        // test strict lesser
+        Statement::If *if_strict_greater = new Statement::If(new Expr::And(new Expr::Eq(new Expr::Vacc(*u) , new Expr::Vacc(*answer)), new Expr::Not_Eq(new Expr::Vacc(*x) , new Expr::Vacc(*answer))));
+        cur_stmts->push_back(if_strict_greater);
+        Statement::Return *ret_greater = new Statement::Return(new Expr::Const(new Const::Int(1)));
+        if_strict_greater->then.push_back(ret_greater);
+        
+        Statement::If *if_equal = new Statement::If(new Expr::Eq(new Expr::Vacc(*u) , new Expr::Vacc(*x)));
+        Statement::Return *ret_equal = new Statement::Return(new Expr::Const(new Const::Int(0)));
+        Statement::Return *ret_lesser = new Statement::Return(new Expr::Const(new Const::Int(-1)));
+        if_strict_greater->els.push_back(if_equal);
+        
+        if_equal->then.push_back(ret_equal);
+        if_equal->els.push_back(ret_lesser);
+        
+        cur_stmts = &if_case_add->els;
+  }
+  
+  Statement::Return *ret_cond = new Statement::Return(new Expr::Const(new Const::Int(-1)));
+  comparator->stmts.push_back(ret_cond);
+  
+  
+  
+    // real implementation is in rtlib, this just calls the function passing the comparator
+
+    std::ostringstream D_str;
+    D_str << D;
+  
+    std::string* first = new std::string(*names.front());
+    first->append(".first");
+    std::string* second = new std::string(*names.front());
+    second->append(".second");
+    
+    Expr::Fn_Call *pareto = new Expr::Fn_Call(Expr::Fn_Call::PARETO_YUKISH);
+    pareto->add_arg(first);
+    pareto->add_arg(second);
+    pareto->add_arg(comparator->name);
+    pareto->add_arg(new std::string(D_str.str()));
+    pareto->add_arg(new std::string("10"));
+    
+    Statement::Return *ret = new Statement::Return(pareto);
+    stmts.push_back(ret);  
+}
+
+
 
 
 void Fn_Def::codegen_pareto_lex(Fn_Def &a, Fn_Def &b, Product::Two &product)

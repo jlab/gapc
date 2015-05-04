@@ -103,7 +103,7 @@ static void parse_options(int argc, char **argv, Options &rec)
 		("log-level,l", po::value<int>(), "the log level, valid values are 0 (VERBOSE), 1 (INFO),  2 (NORMAL), 3 (WARNING), 4 (ERROR). Default is 2 (NORMAL).")
 		("include,I", po::value< std::vector<std::string> >(), "include path")
 		("version,v", "version string")
-                ("pareto-version,P", po::value<int>(), "Implementation of Pareto Product to use 0 (NoSort), 1 (Sort),  2 (ISort)")
+                ("pareto-version,P", po::value<int>(), "Implementation of Pareto Product to use 0 (NoSort), 1 (Sort),  2 (ISort), 3 (MultiDimOptimized)")
                 ("multi-dim-pareto", "Use multi-dimensional Pareto. Only works with option -P 1.")
 		;
 	po::options_description hidden("");
@@ -406,7 +406,7 @@ class Main {
                         }
                         
                         if(opts.multiDimPareto) {
-                             if (opts.pareto == 1) {
+                             if (opts.pareto == 1 || opts.pareto == 3) {
                                  driver.ast.set_pareto_dim(*instance, true);
                              } else {
                                 throw LogError ("Multi-Dimensional Pareto only works for sorted Pareto implementation.");

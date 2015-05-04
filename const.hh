@@ -153,7 +153,11 @@ namespace Const {
 			
 			int i;
 			
-			
+			Int(int n) : Number(INT) {
+				i = n;
+				datatype = new ::Type::Int();
+			}
+                        
 			Int(const std::string &n, const Loc &l) : Number(n, INT, l) {
 				std::istringstream(n) >> i;
 				datatype = new ::Type::Int();

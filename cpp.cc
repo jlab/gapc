@@ -608,7 +608,14 @@ void Printer::Cpp::print(const Fn_Def &fn_def)
 	
 	if (fn_def.adaptor)
 		stream << *fn_def.adaptor;
-	
+	if (fn_def.comparator) {
+            
+            if(fwd_decls) {
+                stream << "static ";
+            }
+            
+            stream << *fn_def.comparator;
+        }
 
 	if (fn_def.choice_fn && fn_def.types.front()->is(Type::RANGE)) {
 		assert(fn_def.types.size() == 1 || fn_def.types.size() == 2);
@@ -631,7 +638,7 @@ void Printer::Cpp::print(const Fn_Def &fn_def)
 		}
 	stream << ')' << endl;
 	}
-	else {
+	else {          
 		stream << indent() << *fn_def.return_type << ' ';
 		if (!fwd_decls && !in_class) {
 			stream << class_name << "::";
@@ -645,6 +652,11 @@ void Printer::Cpp::print(const Fn_Def &fn_def)
 		if (!fn_def.choice_fn) {
 			in_fn_head = true;
 		}
+                
+                if (fn_def.is_comperator) {
+                        in_fn_head = false;
+                }
+                
 		stream << '(';
 		print(fn_def.paras);
 		if (!fn_def.paras.empty() && !fn_def.ntparas().empty()) {

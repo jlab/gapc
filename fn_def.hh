@@ -65,7 +65,7 @@ class Fn_Def : public Fn_Decl
 	friend class Printer::CC;
 	friend class Printer::Cpp;
 	
-        	
+              	
 	public:
 		
 		// The list of statements as defined in the function
@@ -77,6 +77,7 @@ class Fn_Def : public Fn_Decl
 		// source code.
 		std::list<std::string*> names;
 		
+                bool is_comperator;
 		
 	private:
 		
@@ -97,13 +98,13 @@ class Fn_Def : public Fn_Decl
 		
 		
 		Fn_Def(Type::Base *r, std::string *n, const Loc &l)
-			: Fn_Decl(r, n, l), adaptor(NULL), choice_fn_type_(Expr::Fn_Call::NONE)
+			: Fn_Decl(r, n, l), is_comperator(false), adaptor(NULL), comparator(NULL), choice_fn_type_(Expr::Fn_Call::NONE)
 		{
 		}
 		
 		
 		Fn_Def(Type::Base *r, std::string *n)
-			: Fn_Decl(r, n), adaptor(NULL), choice_fn_type_(Expr::Fn_Call::NONE)
+			: Fn_Decl(r, n), is_comperator(false), adaptor(NULL), comparator(NULL), choice_fn_type_(Expr::Fn_Call::NONE)
 		{
 		}
 		
@@ -112,7 +113,7 @@ class Fn_Def : public Fn_Decl
 		
 		
 		Fn_Def()
-			: Fn_Decl(), adaptor(NULL), choice_fn_type_(Expr::Fn_Call::NONE)
+			: Fn_Decl(), is_comperator(false), adaptor(NULL), comparator(NULL), choice_fn_type_(Expr::Fn_Call::NONE)
 		{
 		}
 		
@@ -140,7 +141,8 @@ class Fn_Def : public Fn_Decl
 		
 		void init_var_decls(Fn_Def &a, Fn_Def &b);
 		Fn_Def *adaptor;
-		
+		Fn_Def *comparator;
+                
 		void times_cg_with_rhs_choice (Fn_Def &a, Fn_Def &b, Product::Two &product, Statement::Var_Decl *answer, std::list<Statement::Base*> *loop_body, Statement::Var_Decl *elem);
 		void times_cg_without_rhs_choice (Fn_Def &a, Fn_Def &b, Product::Two &product, Statement::Var_Decl *answer, std::list<Statement::Base*> *loop_body, Statement::Var_Decl *elem);
 		
@@ -177,11 +179,13 @@ class Fn_Def : public Fn_Decl
                 void codegen_pareto_nosort(Fn_Def &a, Fn_Def &b, Product::Two &product);
                 void codegen_pareto_isort(Fn_Def &a, Fn_Def &b, Product::Two &product);
                 void codegen_pareto_multi_lex(Fn_Def &a, Fn_Def &b, Product::Two &product);
+                void codegen_pareto_multi_yukish(Fn_Def &a, Fn_Def &b, Product::Two &product);
                 void codegen_pareto_lex(Fn_Def &a, Fn_Def &b, Product::Two &product);
 		void codegen_nop(Fn_Def &a, Fn_Def &b, Product::Two &product);
 		void codegen_cartesian(Fn_Def &a, Fn_Def &b, Product::Two &product);
 		void codegen_takeone(Fn_Def &a, Fn_Def &b, Product::Two &product);
 		void init_range_iterator();
+                void init_comperator_adaptor();
                 void init_range_iterator(Fn_Def &a, Fn_Def &b, Product::Two &product);
 		
 		void remove_return_list();

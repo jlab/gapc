@@ -353,6 +353,9 @@ void Product::Pareto::set_pareto_type(int i) {
         case 2:
             pareto_type = Product::Pareto::ISort;
             break;
+        case 3:
+            pareto_type = Product::Pareto::MultiDimOpt;
+            break;
         default:
             pareto_type = Product::Pareto::NoSort;
             break;

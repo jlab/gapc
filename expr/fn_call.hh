@@ -53,7 +53,7 @@ namespace Expr {
 			
 			enum Builtin { NONE, NOT_EMPTY, SPLICE_LEFT, GET_RANGE,
 				IS_TABULATED, GET_TABULATED, IS_EMPTY, GET_FRONT,
-                                GET_BACK, ERASE_ELEMENT, INSERT_ELEMENT,
+                                GET_BACK, ERASE_ELEMENT, INSERT_ELEMENT, PARETO_YUKISH,
                                 
 				// algebra choice fns
 				MINIMUM,
