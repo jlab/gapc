@@ -653,10 +653,6 @@ void Printer::Cpp::print(const Fn_Def &fn_def)
 			in_fn_head = true;
 		}
                 
-                if (fn_def.is_comperator) {
-                        in_fn_head = false;
-                }
-                
 		stream << '(';
 		print(fn_def.paras);
 		if (!fn_def.paras.empty() && !fn_def.ntparas().empty()) {
@@ -2416,7 +2412,8 @@ void Printer::Cpp::imports (const AST &ast)
 		}
 	}
 	stream << endl;
-	stream << "#include <rtlib/generic_opts.hh>\n\n";
+	stream << "#include <rtlib/generic_opts.hh>\n";
+        stream << "#include \"rtlib/pareto_yukish.hh\"\n\n";
 	
 }
 

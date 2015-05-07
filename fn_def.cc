@@ -2117,20 +2117,31 @@ void Fn_Def::codegen_pareto_multi_yukish(Fn_Def &a, Fn_Def &b, Product::Two &pro
     std::ostringstream D_str;
     D_str << D;
   
+    
+    // create  a variable to put all answers in 
+    assert(stmts.empty());
+    Statement::Var_Decl *answers = new Statement::Var_Decl(
+        return_type, "answers");
+    stmts.push_back(answers);
+    stmts.push_back(new Statement::Fn_Call(Statement::Fn_Call::EMPTY, *answers));
+    
     std::string* first = new std::string(*names.front());
     first->append(".first");
     std::string* second = new std::string(*names.front());
     second->append(".second");
     
-    Expr::Fn_Call *pareto = new Expr::Fn_Call(Expr::Fn_Call::PARETO_YUKISH);
+    Statement::Fn_Call *pareto = new Statement::Fn_Call(Statement::Fn_Call::PARETO_YUKISH);
+    pareto->add_arg(*answers);
     pareto->add_arg(first);
     pareto->add_arg(second);
     pareto->add_arg(comparator->name);
     pareto->add_arg(new std::string(D_str.str()));
     pareto->add_arg(new std::string("10"));
     
-    Statement::Return *ret = new Statement::Return(pareto);
-    stmts.push_back(ret);  
+    stmts.push_back(pareto);  
+
+    Statement::Return *ret = new Statement::Return(*answers);
+    stmts.push_back(ret);
 }
 
 

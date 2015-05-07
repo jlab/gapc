@@ -41,6 +41,7 @@ const char * Statement::Fn_Call::map_builtin_to_string[] = {
   "empty",
   "append",
   "append",
+  "pareto_yukish",
   "assert",
   "set_value",
   "hash_filter",

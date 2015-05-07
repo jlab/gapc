@@ -387,7 +387,7 @@ class Main {
                         if (opts.pareto > 0) {
                             driver.ast.set_pareto_version(*instance, opts.pareto);
                             
-                            if (opts.pareto == 1) {
+                            if (opts.pareto == 1 || opts.pareto == 3) {
                                 if ((opts.backtrack || opts.subopt || opts.kbacktrack)) {
                                     if(opts.multiDimPareto) {
                                         driver.ast.set_back_track_paretosort(Product::MULTI);

@@ -36,7 +36,7 @@
 
 
 template <class T>
-class y_list : public std::deque<T> {};
+class y_list : public std::deque<T*> {};
 
 template <class T>
 class y_in_list : public std::deque<T> {};
@@ -137,11 +137,11 @@ struct y_sorter {
      int s, dim;
      int (*c)(const T&,const T&, int);
      
-     bool operator () (const T &c1, const T  &c2)
+     bool operator () (T *c1, T  *c2)
      {
          for (int i=s; i<=dim; i++) {
              
-             int sort = c(c1, c2, i);
+             int sort = c(*c1, *c2, i);
              if (sort == 0) {
                  continue;
              }
@@ -181,7 +181,7 @@ typename y_in_list<y_split<T> >::iterator y_sortedSplitMarry_inner1(y_in_list<y_
     
     // move over elements having same value as mid
     typename y_list<T>::iterator store = mid;
-    for(; store != ob.end && c(*store, *mid, d) == 0; store++)  {
+    for(; store != ob.end && c(**store, **mid, d) == 0; store++)  {
     }
     
     // special case when all elements are the same (weird case, I know)
@@ -191,9 +191,9 @@ typename y_in_list<y_split<T> >::iterator y_sortedSplitMarry_inner1(y_in_list<y_
         unsplittable = true;
         typename y_list<T>::iterator last =  store;
         last--;
-        median = *last;
+        median = **last;
     } else {
-        median = *store;
+        median = **store;
     }
     
     
@@ -212,7 +212,7 @@ typename y_in_list<y_split<T> >::iterator y_sortedSplitMarry_inner2(y_in_list<y_
     
     typename y_list<T>::iterator store = ob.begin;
     // move over elements until median
-    for(; store != ob.end && c(median, *store, d) <= 0; store++)  {
+    for(; store != ob.end && c(median, **store, d) <= 0; store++)  {
     }
     
     // special case when all elements are the same (weird case, I know)
@@ -295,7 +295,7 @@ void y_marry2d( y_list<T> &answers ,  y_list<T> &x, typename y_list<T>::iterator
     
     // first get all x bigger than first y
     while(s_x != x.end()) {
-        if (c(*s_x, *s_y, s) <= 0 ) {
+        if (c(**s_x, **s_y, s) <= 0 ) {
             break;
         }
        
@@ -310,16 +310,16 @@ void y_marry2d( y_list<T> &answers ,  y_list<T> &x, typename y_list<T>::iterator
         snext_y++;
         
         // test if next y or next x
-        if( snext_y != y_end && y_marry2d_comperator(*snext_y, *s_x, c, s, dim) ) {
+        if( snext_y != y_end && y_marry2d_comperator(**snext_y, **s_x, c, s, dim) ) {
            // add y, because y better
             s_y++;
             
-            if( c(*s_y, *ref, dim) >= 0) {
+            if( c(**s_y, **ref, dim) >= 0) {
                ref = s_y;
            } 
         } else {
            // x is next
-           if( c(*s_x, *ref, dim) > 0) {
+           if( c(**s_x, **ref, dim) > 0) {
                answers.push_back(*s_x);
            } 
            s_x++; 
@@ -336,7 +336,7 @@ void y_marryBrute(y_list<T>  &answers, const y_split<T> &x, const y_split<T> &y,
         bool add = true;
         for(typename y_list<T>::iterator el_y = y.begin; el_y != y.end; ++el_y) {
 
-          if (y_dominates( *el_y, *el_x , c, s, dim) ) {
+          if (y_dominates( **el_y, **el_x , c, s, dim) ) {
                add = false;
                break;
            }
@@ -495,7 +495,7 @@ void y_bruteSolveSC(y_list<T> &answers, Iterator begin, Iterator end, int (*c)(c
     // n^2 adding
    Iterator ref = begin;
    if (ref != end) { 
-        answers.push_back(*ref);
+        answers.push_back(&(*ref));
         ++ref;
    }
    for(; ref != end; ++ref) {
@@ -503,14 +503,14 @@ void y_bruteSolveSC(y_list<T> &answers, Iterator begin, Iterator end, int (*c)(c
     
        for( typename y_list<T>::iterator ans = answers.begin(); ans != answers.end();ans++) {
 
-           if (y_dominates( *ans, *ref , c, 2, dim)) {
+           if (y_dominates( **ans, *ref , c, 2, dim)) {
                add = false;
                break;
            }
        }
       
        if (add) {
-            answers.push_back(*ref);
+            answers.push_back(&(*ref));
        } 
    }
 }
@@ -579,8 +579,11 @@ void pareto_yukish(List_Ref<T> &ret_answers, Iterator begin, Iterator end, int (
    y_recSolveDC(answers, begin, end, c, dim, blocksize);
 
 
-   ret_answers.ref().insert(ret_answers.ref().begin(), answers.begin(), answers.end());
-
+   //   create response list
+   for( typename y_list<T>::iterator ans = answers.begin(); ans != answers.end();++ans) {
+       push_back( ret_answers, **ans);
+   }
+   
 }
 
 #endif	/* PARETO_YUKISH_HH */

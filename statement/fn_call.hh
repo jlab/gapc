@@ -41,13 +41,14 @@ namespace Statement {
 		public:
 			
 			enum Builtin { NONE, PUSH_BACK, ERASE, CLEAR, TABULATE, EMPTY,
-			     APPEND, STR_APPEND, ASSERT,
+			     APPEND, STR_APPEND, PARETO_YUKISH, ASSERT,
 			     SET_VALUE, HASH_FILTER,
 			     APPEND_FILTER,
 			     UPDATE,
 			     MARK,
 			     FINALIZE,
-			     INNER
+			     INNER,
+                             
 			};
 			
 			

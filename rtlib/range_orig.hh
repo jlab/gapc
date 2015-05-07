@@ -54,16 +54,12 @@ struct select2nd : public std::unary_function<Pair,typename Pair::second_type> {
 
 #include <iterator>
 
-#include <iostream>
-
 namespace Proxy {
 
 template<typename Itr, typename Fn>
-class Iterator : public std::iterator<std::random_access_iterator_tag, typename Fn::result_type> {
- 
+class Iterator {
   private:
     Itr curr;
-    
   public:
     typedef typename Fn::result_type value_type;
     typedef typename Itr::difference_type difference_type;
@@ -71,31 +67,25 @@ class Iterator : public std::iterator<std::random_access_iterator_tag, typename 
     typedef typename Fn::result_type* pointer;
     typedef typename Fn::result_type& reference;
 
-    Iterator() {}
-    
     Iterator(Itr i) : curr(i) {}
-    
-    Iterator(const Iterator &other) {
-        curr = other.curr;
-    }
 
     Iterator &operator++()
     {
       ++curr;
       return *this;
     }
-    
-    Iterator &operator--()
-    {
-      --curr;
-      return *this;
-    }
-    
-    typename Fn::result_type &operator*()
+
+     typename Fn::result_type &operator*()
     {
       return Fn()(*curr);
     }
-
+    
+    /*
+    const typename Fn::result_type & operator*() const
+    {
+      return Fn()(*curr);
+    }
+    */
 
     bool operator==(const Iterator &other) const
     {
@@ -106,66 +96,6 @@ class Iterator : public std::iterator<std::random_access_iterator_tag, typename 
     {
       return !(*this == other);
     }
-     // random access
-     
-    difference_type operator-(const Iterator &other ) const
-    {
-      return curr - other.curr;
-    }
-    
-    Iterator &operator=(Iterator &o)
-    {
-      curr = o.curr;
-      return *this;
-    }
-      
-    bool operator<(const Iterator &other) const
-    {
-      return curr < other.curr;
-    } 
-     
-    bool operator>(const Iterator &other) const
-    {
-      return curr > other.curr;
-    } 
-    
-    bool operator<=(const Iterator &other) const
-    {
-      return curr <= other.curr;
-    } 
-     
-    bool operator>=(const Iterator &other) const
-    {
-      return curr >= other.curr;
-    } 
-
-    Iterator &operator+(difference_type n)
-    {
-      return *(new Iterator(curr+n));
-    }
-    
-    Iterator &operator+=(difference_type n)
-    {
-      curr +=n;
-      return *this;
-    }
-    
-    Iterator &operator-(difference_type n)
-    {
-        return *(new Iterator(curr-n));
-    }
-    
-    Iterator &operator-=(difference_type n)
-    {
-      curr -=n;
-      return *this;
-    }
- 
-    const typename Fn::result_type & operator [] (difference_type n)
-    {
-      return Fn()(curr[n]);
-    }
- 
 };
 
 }

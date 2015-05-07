@@ -336,7 +336,7 @@ bool Product::Pareto::init()
     
     // warn if choice functions are not scoring, ideally they should only yield on result each
     if(fn_l->choice_mode() != Mode::SCORING || fn_r->choice_mode() != Mode::SCORING) {
-        Log::instance()->warning(location, "!! (Ignore for option -P1 --multi-dim-pareto) !! For Pareto product, choice functions should yield only one result. Only the first element of the result list will be used.");
+        Log::instance()->warning(location, "!! (Ignore for option --multi-dim-pareto) !! For Pareto product, choice functions should yield only one result. Only the first element of the result list will be used.");
     }
     
     fn->choice_mode().set(Mode::KSCORING);
