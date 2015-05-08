@@ -2413,7 +2413,7 @@ void Printer::Cpp::imports (const AST &ast)
 	}
 	stream << endl;
 	stream << "#include <rtlib/generic_opts.hh>\n";
-        stream << "#include \"rtlib/pareto_yukish.hh\"\n\n";
+        stream << "#include \"rtlib/pareto_yukish_ref.hh\"\n\n";
 	
 }
 

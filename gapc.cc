@@ -406,10 +406,10 @@ class Main {
                         }
                         
                         if(opts.multiDimPareto) {
-                             if (opts.pareto == 1 || opts.pareto == 3) {
+                             if (opts.pareto == 0 || opts.pareto == 1 || opts.pareto == 3) {
                                  driver.ast.set_pareto_dim(*instance, true);
                              } else {
-                                throw LogError ("Multi-Dimensional Pareto only works for sorted Pareto implementation.");
+                                throw LogError ("Multi-Dimensional Pareto is only available for Pareto type 0, 1 and 3.");
                              }
                         }
                         
