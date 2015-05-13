@@ -220,6 +220,7 @@ class AST {
                 void set_pareto_version(Instance &inst, int version);
                 
                 void set_pareto_dim(Instance &inst, bool dim);
+                void set_pareto_cutoff(Instance &inst, int cutoff);
                 
                 void set_back_track_paretosort(Product::Sort_Type st) {
                     back_track_paretosort = st;

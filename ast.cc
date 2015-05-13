@@ -463,6 +463,16 @@ void AST::set_pareto_dim(Instance &inst, bool dim) {
     }
 }
 
+void AST::set_pareto_cutoff(Instance &inst, int cutoff) {
+    for (Product::iterator i = Product::begin(inst.product); i != Product::end(); ++i) {
+        Product::Pareto *p = dynamic_cast<Product::Pareto*>(*i);
+        if(!p) {
+            continue;
+        }
+        p->set_cutoff(cutoff);
+    }
+}
+
 void AST::backtrack_gen(Backtrack_Base &bt)
 {
 	assert(instance_);

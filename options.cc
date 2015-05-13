@@ -99,6 +99,9 @@ bool Options::check()
         
         if (pareto < 0 || pareto > 3)
 		Log::instance()->error("Pareto version must be in the range of 0 to 2.");
+        
+        if (cutoff < 10 )
+		Log::instance()->error("Cut-off must be bigger than 10.");
 	
 	if (ambiguityCheck && specializeGrammar)
 		Log::instance()->error("options '--ambiguity' and '--specialize_grammar' do not work together.");

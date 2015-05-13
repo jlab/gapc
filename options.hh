@@ -55,7 +55,7 @@ struct Options {
 			specializeGrammar (false),
 			verbose_mode (false),
 			logLevel (3),
-                        pareto(0), multiDimPareto(false)
+                        pareto(0), multiDimPareto(false), cutoff(65)
 	{
 	}
 	
@@ -124,6 +124,9 @@ struct Options {
 	
         // multi dimensional pareto switch
 	bool multiDimPareto;
+        
+        //cut-off value for yukish
+        int cutoff;
         
 	bool is_stdout()
 	{

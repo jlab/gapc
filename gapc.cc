@@ -104,7 +104,8 @@ static void parse_options(int argc, char **argv, Options &rec)
 		("include,I", po::value< std::vector<std::string> >(), "include path")
 		("version,v", "version string")
                 ("pareto-version,P", po::value<int>(), "Implementation of Pareto Product to use 0 (NoSort), 1 (Sort),  2 (ISort), 3 (MultiDimOptimized)")
-                ("multi-dim-pareto", "Use multi-dimensional Pareto. Only works with option -P 1.")
+                ("multi-dim-pareto", "Use multi-dimensional Pareto. Works with -P 0, -P 1 and -P 3.")
+                ("cut-off,c", po::value<int>(), "The cut-off value for -P 3 option (65 default).")
 		;
 	po::options_description hidden("");
 	hidden.add_options()
@@ -209,6 +210,11 @@ static void parse_options(int argc, char **argv, Options &rec)
         
         if (vm.count("multi-dim-pareto")) {
                 rec.multiDimPareto = true;
+        }
+        
+        if (vm.count("cut-off")) {
+                int cutoff = vm["cut-off"].as<int>();
+		rec.cutoff = cutoff;
         }
 	
 	bool r = rec.check();
@@ -408,6 +414,9 @@ class Main {
                         if(opts.multiDimPareto) {
                              if (opts.pareto == 0 || opts.pareto == 1 || opts.pareto == 3) {
                                  driver.ast.set_pareto_dim(*instance, true);
+                                 if(opts.pareto == 3) {
+                                     driver.ast.set_pareto_cutoff(*instance, opts.cutoff);
+                                 }
                              } else {
                                 throw LogError ("Multi-Dimensional Pareto is only available for Pareto type 0, 1 and 3.");
                              }

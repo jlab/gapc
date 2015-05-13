@@ -412,11 +412,12 @@ namespace Product {
 
                     ParetoType pareto_type;
                     bool multi_dim;
+                    int cutoff;
                     
 		public:
                     			
 			Pareto(Base *a, Base *b, const Loc &l) :
-                           Two(PARETO, l, a, b), pareto_type(NoSort), multi_dim(false) {}
+                           Two(PARETO, l, a, b), pareto_type(NoSort), multi_dim(false), cutoff(0) {}
                            
 			bool init();
                         
@@ -442,6 +443,15 @@ namespace Product {
                         bool get_multi_dim() {
                             return multi_dim;
                         }
+                        
+                        void set_cutoff(int c) {
+                            cutoff = c;
+                        }
+                        
+                        int get_cutoff() {
+                            return cutoff;
+                        }
+                        
 	
 	};
 	

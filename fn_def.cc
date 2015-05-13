@@ -573,7 +573,7 @@ void Fn_Def::codegen_choice(Fn_Def &a, Fn_Def &b, Product::Two &product)
               break;
           case Product::Pareto::MultiDimOpt:
               init_comperator_adaptor();
-              codegen_pareto_multi_yukish(a, b, product);
+              codegen_pareto_multi_yukish(a, b, product, p->get_cutoff());
               break;
       } 
       break;
@@ -2267,7 +2267,7 @@ void Fn_Def::codegen_pareto_multi_lex(Fn_Def &a, Fn_Def &b, Product::Two &produc
 
 
 // generates the comperator element needed for advanced multi-dim pareto
-void Fn_Def::codegen_pareto_multi_yukish(Fn_Def &a, Fn_Def &b, Product::Two &product) {
+void Fn_Def::codegen_pareto_multi_yukish(Fn_Def &a, Fn_Def &b, Product::Two &product, int cutoff) {
   
   Statement::Var_Decl *c1 = new Statement::Var_Decl(
   return_type->component(), "c1", new Expr::Vacc(new std::string("e1"))); 
@@ -2418,6 +2418,8 @@ void Fn_Def::codegen_pareto_multi_yukish(Fn_Def &a, Fn_Def &b, Product::Two &pro
     std::ostringstream D_str;
     D_str << D;
   
+    std::ostringstream cutoff_str;
+    cutoff_str << cutoff;
     
     // create  a variable to put all answers in 
     assert(stmts.empty());
@@ -2437,7 +2439,7 @@ void Fn_Def::codegen_pareto_multi_yukish(Fn_Def &a, Fn_Def &b, Product::Two &pro
     pareto->add_arg(second);
     pareto->add_arg(comparator->name);
     pareto->add_arg(new std::string(D_str.str()));
-    pareto->add_arg(new std::string("10"));
+    pareto->add_arg(new std::string(cutoff_str.str()));
     
     stmts.push_back(pareto);  
 

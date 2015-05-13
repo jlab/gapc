@@ -180,7 +180,7 @@ class Fn_Def : public Fn_Decl
                 void codegen_pareto_multi_nosort(Fn_Def &a, Fn_Def &b, Product::Two &product);
                 void codegen_pareto_isort(Fn_Def &a, Fn_Def &b, Product::Two &product);
                 void codegen_pareto_multi_lex(Fn_Def &a, Fn_Def &b, Product::Two &product);
-                void codegen_pareto_multi_yukish(Fn_Def &a, Fn_Def &b, Product::Two &product);
+                void codegen_pareto_multi_yukish(Fn_Def &a, Fn_Def &b, Product::Two &product, int cutoff);
                 void codegen_pareto_lex(Fn_Def &a, Fn_Def &b, Product::Two &product);
 		void codegen_nop(Fn_Def &a, Fn_Def &b, Product::Two &product);
 		void codegen_cartesian(Fn_Def &a, Fn_Def &b, Product::Two &product);
