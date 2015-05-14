@@ -113,7 +113,13 @@ class Iterator : public std::iterator<std::random_access_iterator_tag, typename 
       return curr - other.curr;
     }
     
-    Iterator &operator=(Iterator &o)
+//    Iterator &operator=(Iterator &o)
+//    {
+//      curr = o.curr;
+//      return *this;
+//    }
+    
+    Iterator &operator=(const Iterator &o)
     {
       curr = o.curr;
       return *this;
