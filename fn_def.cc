@@ -477,7 +477,7 @@ void Fn_Def::init_range_iterator(Fn_Def &a, Fn_Def &b, Product::Two &product) {
 }
 
 void Fn_Def::init_range_iterator()
-{
+{ 
   adaptor->name = name;
   adaptor->names = names;
   adaptor->types = types;
@@ -2885,7 +2885,11 @@ void Fn_Def::add_choice_specialization()
         assert(f);
         f = f->clone();
         f->add_arg(*w);
-
+        
+        Statement::Return *ret = new Statement::Return(f);
+        y->stmts.pop_back();
+        y->stmts.push_back(ret);
+        
         w->disable();
         *i = w;
         break;

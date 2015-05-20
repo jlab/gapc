@@ -154,7 +154,7 @@ inline void sort_list(Iterator begin, Iterator end, bool (*c)(T,T))
 
 
 #include <iostream>
-#include <set>
+//#include <set>
 
 #include "hash.hh"
 
@@ -177,6 +177,28 @@ unique(std::pair<Iterator, Iterator> &p)
   return l;
 }
 
+
+
+//#include <boost/unordered_set.hpp>
+//
+//template <typename Iterator>
+//inline
+//List_Ref<typename std::iterator_traits<Iterator>::value_type>
+//unique(std::pair<Iterator, Iterator> &p)
+//{
+//  typedef typename std::iterator_traits<Iterator>::value_type type;
+//
+//  boost::unordered_set<type> set;
+//  for (; p.first != p.second; ++p.first)
+//    set.insert(*p.first);
+//  //set.finalize();
+//  List_Ref<type> l;
+//  for (typename boost::unordered_set<type>::iterator j = set.begin();
+//       j!=set.end(); ++j)
+//    l.ref().push_back(*j);
+//
+//  return l;
+//}
 
 //template <typename Iterator>
 //inline
