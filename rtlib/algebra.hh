@@ -33,7 +33,10 @@
 // FIXME remove
 //#include <iostream>
 
-
+template <typename T>
+inline T round_to_digit(int offset, T number) {
+    return std::floor(number * offset + 0.5f);
+}
 
 template <typename Itr>
 inline

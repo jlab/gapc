@@ -55,7 +55,9 @@ struct Options {
 			specializeGrammar (false),
 			verbose_mode (false),
 			logLevel (3),
-                        pareto(0), multiDimPareto(false), cutoff(65)
+                        pareto(0), multiDimPareto(false), cutoff(65),
+                        float_acc(0),
+                        specialization(0), step_option(0)
 	{
 	}
 	
@@ -127,6 +129,13 @@ struct Options {
         
         //cut-off value for yukish
         int cutoff;
+        
+        // number of digits used for pareto and sorting
+        int float_acc;
+        
+        // switch for different ADP implementations
+        int specialization; 
+        int step_option; 
         
 	bool is_stdout()
 	{

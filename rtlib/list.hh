@@ -53,7 +53,10 @@ template<class T, typename pos_int>
 class List_Ref;
 
 template <class T, typename pos_int = unsigned char>
-class List : public std::deque<T> {};
+class List : public std::deque<T> {
+    public:
+        typedef typename std::deque<T>::reverse_iterator reverse_iterator;
+};
 
 #include <ostream>
 #include "output.hh"
@@ -72,6 +75,8 @@ std::ostream &operator<<(std::ostream &out, const List<T, pos_int> &list)
 template<class T, typename pos_int = unsigned char>
 class List_Ref : public ::Ref::Lazy<List<T, pos_int> >
 {
+    public:
+        typedef typename List<T, pos_int>::reverse_iterator reverse_iterator;
 };
 
 template<class T, typename pos_int>
@@ -98,10 +103,20 @@ inline bool isEmpty(const List_Ref<T, pos_int> &x)
   return !x.l || x.const_ref().empty();
 }
 
+// erase is meant as a destructor
+// destructors on lists or auto called upon function end and therefore not needed
 template<class T, typename pos_int>
 inline void erase(List_Ref<T, pos_int> &x)
+{   
+}
+
+// removes all elements from the list
+template<class T, typename pos_int>
+inline void clear(List_Ref<T, pos_int> &x)
 {
-    // TODO TG: why is this even here....
+    if(x.l) {
+        x.ref().clear();
+    }
 }
 
 template<class T, typename pos_int>
@@ -146,11 +161,14 @@ inline typename List_Ref<T, pos_int>::iterator insert_element(List_Ref<T, pos_in
 }
 
 
-template<class T, typename Iterator>
-inline void sort_list(Iterator begin, Iterator end, bool (*c)(T,T))
+
+template<typename Iterator, typename Compare>
+inline void sort_list(Iterator begin, Iterator end, Compare &c)
 {
    std::sort(begin, end, c);
 }
+
+ 
 
 
 #include <iostream>

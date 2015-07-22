@@ -162,7 +162,7 @@ Algebra *Signature::generate_algebra(std::string *n, Mode::Type mode_type, Type:
 
 
 Algebra *Signature::generate_algebra(std::string *n, Mode::Type mode_type, Type::Base *answer_type, Type::Base *alpha, const Generate_Stmts &generate_stmts)
-{
+{     
 	Algebra *a = new Algebra(n);
 	a->signature = this;
 	hashtable<std::string, Type::Base*> eqs;

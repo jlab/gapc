@@ -47,6 +47,7 @@
 // for Filter::Type
 #include "filter.hh"
 //class Filter;
+#include  "adp_mode.hh"
 
 
 class Grammar;
@@ -80,9 +81,44 @@ namespace Alt {
 			 */
 			Type type;
 			
-			
+                        		
 		protected:
-			
+		
+                        ADP_Mode::Adp_Specialization adp_specialization;
+                        ADP_Mode::Adp_Join adp_join;
+                        
+                        std::string *eval_nullary_fn;
+                        std::string *specialised_comparator_fn;
+                        std::string *specialised_sorter_fn;
+                        
+                        Statement::Var_Decl* marker;
+                        
+                        bool disabled_spec;
+                        bool keep_coopts;
+                        
+                public:        
+                        void set_comparator(std::string *s1, std::string *s2) {
+                            specialised_comparator_fn = s1;
+                            specialised_sorter_fn = s2;
+                        }
+                        
+                        void set_nullary(std::string *s) {
+                            eval_nullary_fn = s;
+                        }
+                
+                        void set_marker(Statement::Var_Decl* m) {
+                            marker = m;
+                        }
+                        
+                        void set_disable_specialisation(bool b) {
+                            disabled_spec = b;
+                        }
+                        
+                        void set_keep_coopts(bool b) {
+                            keep_coopts = b;
+                        }
+                        
+                protected:
 			bool productive;
 			
 			::Type::Base *datatype;
@@ -126,6 +162,22 @@ namespace Alt {
 				return type == t;
 			}
 			
+                        void add_specialised_arguments(Statement::Fn_Call *fn);
+                        
+                        void set_adp_specialization(ADP_Mode::Adp_Specialization a) {
+                            adp_specialization = a;
+                        }
+                        ADP_Mode::Adp_Specialization get_adp_specialization() {
+                            return adp_specialization;
+                        }
+                        
+                        void set_adp_join(ADP_Mode::Adp_Join a) {
+                            adp_join = a;
+                        }
+                        ADP_Mode::Adp_Join get_adp_join() {
+                            return adp_join;
+                        }
+                        
 			std::list<Filter*> filters;
 			
 			virtual bool init_links(Grammar &grammar);
@@ -292,6 +344,8 @@ namespace Alt {
 			
 			
 			virtual void set_ntparas(const Loc &loc, std::list<Expr::Base*> *l);
+                        
+                        bool choice_set();
 			
 			
 	};
@@ -357,6 +411,7 @@ namespace Alt {
 			void print_type(std::ostream &s);
 			
 			bool has_moving_k();
+                        bool is_nullary();
 			bool eliminate_lists();
 			bool init_list_sizes();
 			

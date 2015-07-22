@@ -25,6 +25,8 @@
 #ifndef CPP_HH
 #define CPP_HH
 
+#include "operator.hh"
+
 #include "printer.hh"
 #include "codegen.hh"
 
@@ -123,6 +125,7 @@ namespace Printer {
       void print(const Statement::While &stmt);
       void print(const Statement::Var_Decl &stmt);
       void print(const Statement::If &stmt);
+      void print(const Statement::Switch &stmt);
       void print(const Statement::Return &stmt);
       void print(const Statement::Break &stmt);
       void print(const Statement::Continue &stmt);
@@ -139,7 +142,7 @@ namespace Printer {
       void print(const Statement::Marker_Decl &stmt);
 
       void print(const Fn_Def &fn_def);
-
+      void print(const Operator &op);
 
       void print(const std::list<Statement::Base*> &stmts);
 
@@ -193,6 +196,8 @@ namespace Printer {
 
       void prelude(const Options &opts, const AST &ast);
       void imports(const AST &ast);
+      
+      void global_constants(const AST &ast);
 
       void makefile(const Options &opts);
 

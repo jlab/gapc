@@ -55,6 +55,9 @@ AST::AST()
 		grammars_(0),
 		selected_grammar(0),
                 back_track_paretosort(Product::NONE),
+                adp_specialization(ADP_Mode::STANDARD),
+                pareto_cutoff(-1),
+                float_acc(0),
 		signature(NULL),
 		first_instance(NULL), instance_(0),
 		backtrack_product(0),
@@ -395,6 +398,7 @@ void AST::optimize_choice(Instance &inst)
 
 
 #include "classify_visitor.hh"
+#include "operator.hh"
 
 
 void AST::optimize_classify(Instance &inst)
@@ -464,6 +468,7 @@ void AST::set_pareto_dim(Instance &inst, bool dim) {
 }
 
 void AST::set_pareto_cutoff(Instance &inst, int cutoff) {
+    pareto_cutoff = cutoff;
     for (Product::iterator i = Product::begin(inst.product); i != Product::end(); ++i) {
         Product::Pareto *p = dynamic_cast<Product::Pareto*>(*i);
         if(!p) {
@@ -471,6 +476,148 @@ void AST::set_pareto_cutoff(Instance &inst, int cutoff) {
         }
         p->set_cutoff(cutoff);
     }
+}
+
+void AST::set_float_accuracy(Instance &inst, int float_accuracy) {
+    this->float_acc = float_accuracy;
+    for (Product::iterator i = Product::begin(inst.product); i != Product::end(); ++i) {
+
+        (*i)->set_float_accuracy(float_accuracy);
+    }
+}
+
+struct SetADPVersion : public Visitor {
+        
+        ADP_Mode::Adp_Specialization spec;
+        ADP_Mode::Adp_Join join;
+        std::string duplicate_suffix;
+        std::string comperator_suffix;
+        std::string sorter_suffix;
+        SetADPVersion(ADP_Mode::Adp_Specialization s, ADP_Mode::Adp_Join j, std::string d, std::string cs, std::string ss) 
+        :  spec(s), join(j), duplicate_suffix(d), comperator_suffix(cs), sorter_suffix(ss) {}
+        
+	void visit(Alt::Base &b)
+	{
+            b.set_adp_specialization(spec);
+            b.set_adp_join(join);
+	}
+        
+        void visit(Symbol::NT &n)
+        {
+             n.set_adp_join(join);
+             if (spec != ADP_Mode::STANDARD) {
+                 n.set_adp_specialization(spec, duplicate_suffix, comperator_suffix, sorter_suffix);
+             } else {
+                 n.Base::set_adp_specialization(spec);
+             }
+        }
+        
+};
+
+const std::string AST::duplicate_suffix = "_nullary";
+const std::string AST::comperator_suffix = "_spec_comperator";
+const std::string AST::sorter_suffix = "_spec_sorter";
+
+void AST::set_adp_version(Instance &inst, int i, int step, int pareto) {
+    
+    // what to set?
+    ADP_Mode::Adp_Specialization spec;
+    ADP_Mode::Adp_Join join = ADP_Mode::EMPTY;
+    
+    switch(i) {
+        case 1:
+             if (step) {
+                 spec = ADP_Mode::SORTED_STEP;
+             } else {
+                 spec = ADP_Mode::SORTED_BLOCK;
+             }
+             break;
+        case 2:
+             if (step) {
+                 spec = ADP_Mode::PARETO_EAGER_STEP;
+             } else {
+                 spec = ADP_Mode::PARETO_EAGER_BLOCK;
+             }
+             break;
+        default:
+            spec = ADP_Mode::STANDARD;
+            break;
+    }
+    
+    if (i != 0) {
+        if(i == 1 ) {
+            join = ADP_Mode::SORTER;
+        } else if (pareto == 0 ){
+            join = ADP_Mode::COMPERATOR;
+        } else {
+            join = ADP_Mode::SORTER_COMPERATOR;
+        }
+    }
+    
+    adp_specialization = spec;
+    adp_join = join;
+    
+    if (spec != ADP_Mode::STANDARD) {
+        Algebra *a = instance_->product->algebra();
+	if(a->choice_fns.size() > 1) {
+            Log::instance()->error("ADP specialization set but 2 choice functions defined. Mixing choice functions may cause undefined behaviour.");
+        }
+    }
+        
+    // set for all products to modify choice functions
+    for (Product::iterator i = Product::begin(inst.product); i != Product::end(); ++i) {
+        (*i)->set_adp_specialization(spec);
+        
+        if (spec != ADP_Mode::STANDARD) {
+            Algebra *a = (*i)->algebra();
+            duplicate_choice_functions(a, duplicate_suffix, comperator_suffix, sorter_suffix, "");
+        }
+        
+    }
+    if (backtrack_product) {
+        for (Product::iterator i = Product::begin(backtrack_product); i != Product::end(); ++i) {
+            (*i)->set_adp_specialization(spec);
+
+            if (spec != ADP_Mode::STANDARD) {
+                Algebra *a = (*i)->algebra();
+                // _bt is set in the backtracking object on the existing choice functions
+                // but there is no elegant way to propagate it back to Sorter structs
+                duplicate_choice_functions(a, duplicate_suffix, comperator_suffix, sorter_suffix, "_bt");
+            }  
+        }
+    }
+    
+
+    // set for ALT and Symbol (NT)
+    SetADPVersion v = SetADPVersion(spec, join, duplicate_suffix, comperator_suffix, sorter_suffix);
+    grammar()->traverse(v);
+}
+
+void AST::duplicate_choice_functions(Algebra *a, std::string duplicate_suffix, std::string comperator_suffix, std::string sorter_suffix, std::string nullary_sort_suffix) {
+    
+    hashtable<std::string, Fn_Def*> new_fncts; 
+   
+    for (hashtable<std::string, Fn_Def*>::iterator i = a->fns.begin(); i != a->fns.end(); ++i) {
+        new_fncts[i->first] = i->second;
+        if (i->second->is_Choice_Fn()) {
+            Fn_Def* f = i->second;
+            
+            f->comperator_suffix = new std::string(comperator_suffix);
+            f->sorter_suffix = new std::string(sorter_suffix);
+            
+            // duplicate choice function
+            Fn_Def* fnew = f->copy();
+            fnew->name = new std::string(*f->name);
+            fnew->name->append(duplicate_suffix);
+            fnew->nullary_sort_ob = new std::string(*f->name);
+            fnew->nullary_sort_ob->append(nullary_sort_suffix);
+            
+            fnew->set_gen_type(Fn_Def::NULLARY);
+            
+            new_fncts[*fnew->name] = fnew;
+        }
+    }
+    a->set_fns(new_fncts);   
 }
 
 void AST::backtrack_gen(Backtrack_Base &bt)
@@ -485,21 +632,85 @@ void AST::backtrack_gen(Backtrack_Base &bt)
 	Type::Alphabet *alph = dynamic_cast<Type::Alphabet*>(t);
 	assert(alph);
 	assert(!alph->simple()->is(Type::ALPHABET));
+        
+        // generate right algebra of new product
 	bt.gen_algebra(*signature, alph->temp ? alph->temp : new Type::Char());
 	
+        if (adp_specialization != ADP_Mode::STANDARD) {
+            
+             // _bt is set in the backtracking object on the existing choice functions
+            // but there is no elegant way to propagate it back to NTs
+            // so.. yeah... this works
+            std::string backtrace_prefix = "_bt";
+            
+            duplicate_choice_functions(bt.get_gen_algebra(), duplicate_suffix, comperator_suffix, sorter_suffix, backtrace_prefix);
+            
+             // set for ALT and Symbol (NT) again, because choice function has been renamed to _bt by now
+            SetADPVersion v = SetADPVersion(adp_specialization, adp_join,  backtrace_prefix+duplicate_suffix,
+                    backtrace_prefix+comperator_suffix, backtrace_prefix+sorter_suffix);
+            grammar()->traverse(v);
+        }
+
        //bt.gen_instance(score, back_track_paretosort);
         bt.gen_instance(score, instance_->product->bt_score_product(), back_track_paretosort);
-	
+	          
+        if (adp_specialization != ADP_Mode::STANDARD) {
+            for (Product::iterator i = Product::begin(bt.get_instance()->product); i != Product::end(); ++i) {
+                (*i)->set_adp_specialization(adp_specialization);
+            }
+        }
+        
 	//bt.gen_nt_decls(grammar()->nts());
 	bt.apply_filter(backtrack_filter);
 	if (original_product &&
 	(original_product->is(Product::TAKEONE) || original_product->no_coopt()) )
 	cg_mode.set_cooptimal(false);
-	bt.gen_backtrack(*this);
+	bt.gen_backtrack(*this);      
 	bt.gen_instance_code(*this);
 	
 }
 
+
+void AST::set_adp_header(int spec, int pareto, bool multi_pareto, int step_mode) {
+    
+    //TODO: do we still need this? Yes, but change
+    
+    rtlib_header = ADP_Mode::NONE;
+    if (spec == 1) {
+        
+        if (step_mode) {
+            rtlib_header = ADP_Mode::SORT_STEP;
+        } else {
+            rtlib_header = ADP_Mode::SORT_BLOCK;
+        }
+    } else if (spec == 2) {
+        switch(pareto) {
+            case 0:
+                if (step_mode) {
+                    rtlib_header = ADP_Mode::PARETO_NOSORT_STEP;
+                } else {
+                    rtlib_header = ADP_Mode::PARETO_NOSORT_BLOCK;
+                }
+                break;
+            case 3:
+                if (step_mode) {
+                    rtlib_header = ADP_Mode::PARETO_YUK_STEP;
+                } else {
+                    rtlib_header = ADP_Mode::PARETO_YUK_BLOCK;
+                }
+                break;
+            case 1:
+            case 2:
+                if (step_mode) {
+                    rtlib_header = ADP_Mode::PARETO_SORT_STEP;
+                } else {
+                    rtlib_header = ADP_Mode::PARETO_SORT_BLOCK;
+                }
+                break;
+        }
+    }
+    
+}
 
 Instance *AST::split_instance_for_backtrack(std::string &n)
 {

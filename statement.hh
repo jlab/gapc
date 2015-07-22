@@ -32,12 +32,13 @@
 #include <list>
 #include <cassert>
 
+#include "operator_fwd.hh"
+
 #include "expr_fwd.hh"
 #include "type_fwd.hh"
 #include "var_acc_fwd.hh"
 
 #include "statement_fwd.hh"
-
 
 namespace Printer { class Base; }
 
@@ -188,6 +189,23 @@ namespace Statement {
 			
 			
 	};
+        
+        
+        class Switch : public Base {
+            public:
+                         Switch(Expr::Base *c): Base(SWITCH), cond(c)
+			{
+			}
+                         
+                        Expr::Base *cond;
+                        std::list<std::pair<std::string, std::list<Base*> > > cases;
+                        std::list<Base*> defaul;
+                        
+                        std::list<Base*> *add_case(std::string *n);
+                        
+                        void print(Printer::Base &p) const;
+        };
+        
         
         class Decrease : public Base {
             
@@ -376,19 +394,15 @@ namespace Statement {
         class Sorter : public Block_Base {
             
                 public:
-                        Var_Decl *comp1;
-			Var_Decl *comp2;
+                        std::string *op;
                         Var_Decl *list;
-                        std::string *name;
-                        std::string *sort_var;
                         
-                
-                        Sorter(Var_Decl *c1, Var_Decl *c2, Var_Decl *l, const std::string &n, const std::string &s)
-                            : Block_Base(SORTER), comp1(c1), comp2(c2),list(l)
-                        {
-                            name = new std::string(n);
-                            sort_var = new std::string(s);
-                        }
+                        Sorter(Operator *op, Var_Decl *l);                    
+                        
+                        Sorter(std::string *op, Var_Decl *l)
+                            : Block_Base(SORTER), op(op),  list(l)
+                        {}
+                        
                         void print(Printer::Base &p) const;
             
         };

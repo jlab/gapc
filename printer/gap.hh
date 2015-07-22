@@ -78,6 +78,7 @@ namespace Printer {
 			void print (Statement::Base* b);
 			void print (Statement::Return* r);
 			void print (Statement::If* i);
+                        void print (Statement::Switch* i);
 			void print (Statement::Var_Decl* i);
 			void print (Statement::Block* b);
 			void print (Statement::Break* b);

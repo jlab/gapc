@@ -62,7 +62,14 @@ class Backtrack_Base {
     virtual void gen_nt_decls(const std::list<Symbol::NT*> &nts);
     virtual void gen_algebra(Signature &signature, Type::Base *alph);
 
+    Algebra* get_gen_algebra() {
+        return algebra;
+    }
 
+    Instance *get_instance() {
+        return instance;
+    }
+    
     virtual void gen_instance(Algebra *score) = 0;
     virtual void gen_instance(Algebra *score, Product::Sort_Type sort) = 0;
     

@@ -69,7 +69,7 @@ class Algebra : public Signature_Base
 		hashtable<std::string, Type::Base*> params;
 		Signature *signature;
 		std::string *signature_name;
-		
+                
 		Fn_Def *choice_fn(Fn_Def *f);
 		
 		Algebra(std::string *n, std::string *s, Loc l)
@@ -149,7 +149,7 @@ class Algebra : public Signature_Base
 		
 		void install_choice_filter(Filter &filter);
 		
-		void add_choice_specialisations();
+		void add_choice_specialisations(Product::Two &product);
 		
 		Algebra *copy() const;
 		

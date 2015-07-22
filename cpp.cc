@@ -147,6 +147,30 @@ void Printer::Cpp::print(const Statement::If &stmt)
     dec_indent();
 }
 
+void Printer::Cpp::print(const Statement::Switch &stmt)
+{
+  stream << indent() << "switch (" << *stmt.cond << ") {" << endl;
+  inc_indent();
+  for(std::list<std::pair<std::string, std::list<Statement::Base*> > >::const_iterator i = stmt.cases.begin(); i!= stmt.cases.end(); ++i) {
+      stream << indent() << "case " << i->first << " :" << endl;
+      inc_indent();
+            stream << i->second;
+            stream << indent() << "break;" << endl;
+      dec_indent();
+  }
+  if(!stmt.defaul.empty()) {
+      stream << indent() << "default :" << endl;
+      inc_indent();
+            stream << stmt.defaul;
+            stream << indent() << "break;" << endl;
+      dec_indent();
+  }
+  
+  dec_indent();
+  stream << indent() << " }" << endl;
+}
+
+
 void Printer::Cpp::print(const Statement::Return &stmt)
 {
   if (stmt.expr)
@@ -177,19 +201,6 @@ void Printer::Cpp::print(const Statement::Increase &stmt)
 
 void Printer::Cpp::print(const Statement::Sorter &stmt) {
     
-    stream << indent();
-    stream << "struct " << *stmt.name << " {" << endl;
-    stream << indent() << "   static bool "  << *stmt.sort_var << "(";
-    stream << *stmt.comp1->type << " " << *stmt.comp1->name << ", ";
-    stream << *stmt.comp2->type << " " << *stmt.comp2->name << ") {" << endl;       
-    
-    for (std::list<Statement::Base*>::const_iterator i = stmt.statements.begin(); i != stmt.statements.end(); ++i) {
-        stream << indent() << "    " << **i << endl;       
-    }
-    
-    stream << indent() << "   }" << endl;
-    stream << indent() << "};" << endl;
-    
     stream << indent() << "sort_list(";
     if (stmt.list->type->simple()->is(Type::RANGE)) {
         stream << *stmt.list->name << ".first, ";
@@ -200,7 +211,7 @@ void Printer::Cpp::print(const Statement::Sorter &stmt) {
     } else {
         // TODO: Implement if needed
     }
-    stream << ", " << *stmt.name << "::" << *stmt.sort_var << ");" << endl;
+    stream << ", " << *stmt.op << ");" << endl;
 }
 
 void Printer::Cpp::print(const Statement::Foreach &stmt)
@@ -456,7 +467,7 @@ void Printer::Cpp::print (const Statement::Fn_Call &stmt)
 	std::list<Expr::Base*>::const_iterator i = stmt.args.begin();
 	if (stmt.is_obj == false) {
 		if (stmt.builtin == Statement::Fn_Call::PUSH_BACK || stmt.builtin == Statement::Fn_Call::APPEND) {
-			//assert(stmt.args.size() == 2);
+			//assert(stmt.args.size() == 2);       
 			Statement::Var_Decl *v = stmt.args.front()->var_decl();
 			if (v && v->type->is (::Type::LIST)) {
 				Type::List *l = dynamic_cast<Type::List*> (v->type);
@@ -608,15 +619,15 @@ void Printer::Cpp::print(const Fn_Def &fn_def)
 	
 	if (fn_def.adaptor)
 		stream << *fn_def.adaptor;
+        
 	if (fn_def.comparator) {
-            
-            if(fwd_decls) {
-                stream << "static ";
-            }
-            
             stream << *fn_def.comparator;
         }
-
+        if (fn_def.sorter) {
+            stream << *fn_def.sorter;
+        }
+        
+        
 	if (fn_def.choice_fn && fn_def.types.front()->is(Type::RANGE)) {
 		assert(fn_def.types.size() == 1 || fn_def.types.size() == 2);
 		choice_range = dynamic_cast<Type::Range*>(fn_def.types.front());
@@ -682,6 +693,35 @@ void Printer::Cpp::print(const Fn_Def &fn_def)
 	stream << indent() << '}' << endl << endl;
 	choice_range = NULL;
 }
+
+
+void Printer::Cpp::print(const Operator &op) {
+    
+    if (!fwd_decls) {
+        return;
+    }
+    
+    stream << indent();
+    stream << "struct " << *op.name << " {" << endl;
+    
+    
+    for( std::list<Statement::Var_Decl*>::const_iterator i = op.const_values.begin(); i!= op.const_values.end(); ++i) {
+        stream <<  indent() << "static const ";
+        stream << **i << endl;
+    }
+    
+    stream << indent() << *op.return_type << " operator () (";
+    print(op.paras);
+    stream << ") {" << endl;       
+    
+    for (std::list<Statement::Base*>::const_iterator i = op.stmts.begin(); i != op.stmts.end(); ++i) {
+        stream << indent() << "    " << **i << endl;       
+    }
+    
+    stream << indent() << "   }" << endl;
+    stream << indent() << "} " <<  *op.object << " ;" << endl;  
+}
+
 
 
 void Printer::Cpp::lines_start_mark(const std::list<Statement::Base*> &stmts)
@@ -1647,6 +1687,9 @@ void Printer::Cpp::header(const AST &ast)
 		if (ast.code_mode().sample()) {
 			stream << "#define USE_GSL\n";
 		}
+                if (ast.get_float_acc() > 0) {
+                        stream << "#define FLOAT_ACC " << ast.get_float_acc() << "\n";
+                }
 		includes();
 		print_subseq_typedef(ast);
 		print_type_defs(ast);
@@ -2401,6 +2444,34 @@ void Printer::Cpp::imports (const AST &ast)
 		stream << "#include <rtlib/subopt.hh>" << endl;
 	}
 
+        switch(ast.get_rtlib_header()) {
+            case ADP_Mode::PARETO_NOSORT_BLOCK:
+                stream << "#include <rtlib/adp_specialization/pareto_0_nosort_block.hh>" << endl;
+                break;
+            case ADP_Mode::PARETO_NOSORT_STEP:
+                stream << "#include <rtlib/adp_specialization/pareto_0_nosort_step.hh>" << endl;
+                break;
+            case ADP_Mode::PARETO_SORT_BLOCK:
+                stream << "#include <rtlib/adp_specialization/pareto_1_sorted_block.hh>" << endl;
+                break;
+            case ADP_Mode::PARETO_SORT_STEP:
+                stream << "#include <rtlib/adp_specialization/pareto_1_sorted_step.hh>" << endl;
+                break;
+            case ADP_Mode::PARETO_YUK_BLOCK:
+                stream << "#include <rtlib/adp_specialization/pareto_3_yukish_block.hh>" << endl;
+                break;
+            case ADP_Mode::PARETO_YUK_STEP:
+                stream << "#include <rtlib/adp_specialization/pareto_3_yukish_step.hh>" << endl;
+                break;    
+            case ADP_Mode::SORT_BLOCK:   
+                stream << "#include <rtlib/adp_specialization/sort_block.hh>" << endl;
+                break;
+            case ADP_Mode::SORT_STEP:   
+                stream << "#include <rtlib/adp_specialization/sort_step.hh>" << endl;
+                break;
+            default: break;
+        }
+        
 	for (std::list<Import*>::const_iterator i = ast.imports.begin(); i != ast.imports.end(); ++i) {
 		// if this import-declaration is verbatim, do not append
 		// a ".hh" suffix.
@@ -2417,6 +2488,17 @@ void Printer::Cpp::imports (const AST &ast)
 	
 }
 
+
+void Printer::Cpp::global_constants(const AST &ast) {
+    if (ast.get_pareto_cutoff() != -1) {
+        stream << "const int yukish_cutoff = " << ast.get_pareto_cutoff() << ";\n\n";
+    }
+    
+    if (ast.get_float_acc() != 0) {
+        stream << "#include <rtlib/float_accuracy_operators.hh>\n";
+        stream << "const double depsilon = " << std::pow(0.1, ast.get_float_acc()) << ";\n\n";
+    } 
+}
 
 void Printer::Cpp::print (const Statement::Backtrace_Decl &d)
 {

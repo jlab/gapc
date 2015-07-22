@@ -115,6 +115,18 @@ class AST {
 		Grammar *selected_grammar;
 		
                 Product::Sort_Type back_track_paretosort;
+                
+                static const std::string duplicate_suffix;
+                static const std::string comperator_suffix;
+                static const std::string sorter_suffix;
+                
+                ADP_Mode::Adp_Specialization adp_specialization;
+                ADP_Mode::Adp_Join adp_join;
+                
+                ADP_Mode::Rtlib_Header rtlib_header;
+                
+                int pareto_cutoff;
+                int float_acc;
 	public:
 	
 		AST();
@@ -147,7 +159,6 @@ class AST {
 		Grammar *grammar(const std::string&);
 		void select_grammar(const std::string &instname);
 	
-		
 		
 		hashtable<std::string, Instance*> instances;
 		Instance *first_instance;
@@ -203,7 +214,7 @@ class AST {
 		
 		void optimize_choice(Instance &i);
 		void optimize_classify(Instance &i);
-		
+                
 		// FIXME probably remove these get/setters
 		bool cyk() const { return cg_mode == Code::Mode::CYK; }
 		void set_cyk() { cg_mode = Code::Mode::CYK; }
@@ -212,6 +223,7 @@ class AST {
 		void set_backtrace(bool b = true) { cg_mode = Code::Mode::BACKTRACK; }
 		
 		const Code::Mode & code_mode() const { return cg_mode; }
+                Code::Mode & code_mode() { return cg_mode; }
 		
 		void set_code_mode(const Code::Mode &m) { cg_mode = m; }
 	
@@ -221,10 +233,30 @@ class AST {
                 
                 void set_pareto_dim(Instance &inst, bool dim);
                 void set_pareto_cutoff(Instance &inst, int cutoff);
-                
+                void set_float_accuracy(Instance &inst, int float_accuracy);
                 void set_back_track_paretosort(Product::Sort_Type st) {
                     back_track_paretosort = st;
                 }
+                
+                const ADP_Mode::Rtlib_Header get_rtlib_header() const {
+                    return rtlib_header;
+                }
+                
+                void set_adp_version(Instance &inst, int i, int step_mode, int pareto);
+                
+                void set_adp_header(int spec,  int pareto, bool multi_pareto, int step_mode);
+                
+                void duplicate_choice_functions(Algebra *a, std::string duplicate_suffix, 
+                    std::string comperator_suffix, std::string sorter_suffix, std::string nullary_sort_suffix);
+                
+                int get_pareto_cutoff() const {
+                    return pareto_cutoff;
+                }
+                
+                int get_float_acc() const {
+                    return float_acc;
+                }
+                
 	private:
 	
 		// FIXME

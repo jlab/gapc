@@ -476,5 +476,12 @@ Statement::Var_Decl *Fn_Arg::Base::var_decl()
   return var_decls_.front();
 }
 
+bool Fn_Arg::Alt::choice_set()
+{
+  return alt->choice_set();
+}
 
-
+bool Fn_Arg::Const::choice_set()
+{
+  return false;
+}

@@ -41,11 +41,19 @@
 #include <cassert>
 #include "expr/fn_call.hh"
 
+#include "operator.hh"
+
 // join two Function definitions into one
 Fn_Def::Fn_Def(Fn_Def &a, Fn_Def &b)
-  : is_comperator(false), adaptor(NULL), comparator(NULL),
+  :  adaptor(NULL), comparator(NULL), sorter(NULL), 
     choice_fn_type_(Expr::Fn_Call::NONE)
 {
+    
+  gen_type = a.gen_type;
+  comperator_suffix = b.comperator_suffix;  
+  sorter_suffix = b.sorter_suffix; 
+  nullary_sort_ob = b.nullary_sort_ob;
+    
   //assert(a.in_use() == b.in_use());
   set_in_use(a.in_use() || b.in_use());
   choice_fn = a.choice_fn;
@@ -171,7 +179,12 @@ Fn_Def::Fn_Def(const Fn_Decl &other)
   choice_fn = other.is_Choice_Fn();
   adaptor = NULL;
   comparator = NULL;
-  is_comperator = false;
+  sorter = NULL;
+  nullary_sort_ob = NULL;
+  
+  gen_type = STANDARD;
+  comperator_suffix = new std::string("_comperator");
+  sorter_suffix = new std::string("_sorter");
   
   // creates names as simple index numerations with a prefix
   std::string pref("param_");
@@ -467,12 +480,29 @@ void Fn_Def::init_range_iterator(Fn_Def &a, Fn_Def &b, Product::Two &product) {
     adaptor = new Fn_Def(*this);
     adaptor->stmts.clear();
     
-    if (product.get_sorted_choice() == Product::STANDARD) {
-       codegen_sort(a, b, product);  
-    } else if (product.get_sorted_choice() == Product::MULTI) {
-       codegen_multi_sort(a, b, product); 
+    adaptor->comparator = NULL;
+    adaptor->sorter = NULL;
+
+    if (product.is_sorted_choice() && gen_type != CHOICE_SPECIALIZATION) {  
+        
+        Statement::Var_Decl *input_list = new Statement::Var_Decl(
+            types.front(), names.front(), new Expr::Vacc(names.front()));
+
+        if (gen_type == STANDARD) {
+            
+            // the sorter, using sorter struct
+            Statement::Sorter *s = new Statement::Sorter(sorter, input_list);
+            adaptor->stmts.push_back(s);
+        } else {
+
+            std::string *name = new std::string(*nullary_sort_ob);
+            name->append(*sorter_suffix);
+            
+            Statement::Sorter *s = new Statement::Sorter(name, input_list);
+            adaptor->stmts.push_back(s);
+        }
     }
-    
+         
     init_range_iterator();
 }
 
@@ -502,24 +532,100 @@ void Fn_Def::init_range_iterator()
   adaptor->stmts.push_back(ret);
 }
 
-//generates function header used for multi-dimension P 4
-void Fn_Def::init_comperator_adaptor() {
+//generates struct for comparing at a specific dimension
+void Fn_Def::init_comparator_adaptor() {
     
-    comparator = new Fn_Def();
-    comparator->stmts.clear();
+    std::string *name = new std::string(target_name_);
+    name->append(*comperator_suffix);
     
-    comparator->is_comperator = true;
+    comparator = new Operator(new Type::Int(), name);
     
-    comparator->name = new std::string(target_name_);
-    comparator->name->append("_comparator");
-    comparator->return_type = new Type::Int();
-    comparator->paras.clear();
-    
-    comparator->paras.push_back(new Para_Decl::Simple(return_type->component(), new std::string("e1")));
-    comparator->paras.push_back(new Para_Decl::Simple(return_type->component(), new std::string("e2")));
-    comparator->paras.push_back(new Para_Decl::Simple(new Type::Int(), new std::string("d")));
+    comparator->add_para(return_type->component(), new std::string("e1"));
+    comparator->add_para(return_type->component(), new std::string("e2"));
+    comparator->add_para(new Type::Int(), new std::string("d"));
 }
- 
+
+//generates struct for comparing all dims at once
+void Fn_Def::init_sorter_adaptor() {
+    
+    std::string *name = new std::string(target_name_);
+    name->append(*sorter_suffix);
+    
+    sorter = new Operator(new Type::Bool(), name);
+    
+    sorter->add_para(return_type->component(), new std::string("c1"));
+    sorter->add_para(return_type->component(), new std::string("c2"));
+}
+
+
+bool Fn_Def::is_pareto_instance(Product::Base &product) {
+    
+    switch (product.type()) {
+    case Product::SINGLE:
+        return false;
+    case Product::PARETO:
+        return true;
+    default:
+        bool left = is_pareto_instance(*product.left());
+        bool right = is_pareto_instance(*product.right());
+        return left || right;
+      break;
+    }
+    
+   return false;
+}
+
+int Fn_Def::codegen_compare(Product::Base &product) {
+   
+   // create the adaptor 
+   init_comparator_adaptor();
+    
+   // the comparator always needs to get the parameters to variables        
+   Statement::Var_Decl *c1 = new Statement::Var_Decl(return_type->component(), "c1", new Expr::Vacc(new std::string("e1")));
+   comparator->stmts.push_back(c1);
+
+   Statement::Var_Decl *c2 = new Statement::Var_Decl(return_type->component(), "c2", new Expr::Vacc(new std::string("e2")));
+   comparator->stmts.push_back(c2);
+
+   Statement::Var_Decl *dim = new Statement::Var_Decl( new Type::Int(), "dim", new Expr::Vacc(new std::string("d")));
+   
+   comparator->stmts.push_back(dim);  
+
+  int dimension;
+  if (( product.sort_product &&  is_pareto_instance(*product.sort_product)) || is_pareto_instance(product)) {
+     
+     Product::Two prod = codegen_pareto_move_to_first_all_dim(c1, c2, &comparator->stmts, product); 
+     dimension = codegen_pareto_comparator_all_dim(c1, c2, dim, *comparator, prod);  
+      
+  } else {
+     dimension = 1;
+     Log::instance()->error( "Non-Pareto Compare not implemented yet!");
+  }
+   
+    std::ostringstream D_str;
+    D_str << dimension;
+    
+    Statement::Var_Decl *dimInt = new Statement::Var_Decl(new Type::Int(), "dim", new Expr::Vacc(new std::string(D_str.str())));
+  
+    comparator->add_const_value(dimInt);
+    
+    return dimension;
+}
+
+void Fn_Def::codegen_sorter(Product::Base &product) {
+   
+   // create the adaptor 
+  init_sorter_adaptor();
+    
+  if (( product.sort_product &&  is_pareto_instance(*product.sort_product)) || is_pareto_instance(product)) {
+     
+     codegen_multi_sort(product, &sorter->stmts); 
+       
+  } else {
+     Log::instance()->error( "Non-Pareto Compare not implemented yet!");
+  }
+   
+}
 
 
 void Fn_Def::add_simple_choice_fn_adaptor()
@@ -530,8 +636,64 @@ void Fn_Def::add_simple_choice_fn_adaptor()
   stmts.push_front(new Statement::Return(names.front()));
 }
 
+void Fn_Def::codegen_sorting_nullary(Product::Two &product) {
+    
+    std::string *name = new std::string(*nullary_sort_ob);
+    name->append(*sorter_suffix);
+    
+    Statement::Var_Decl *input_list = new Statement::Var_Decl(
+        types.front(), names.front() /*"input_list"*/,
+        new Expr::Vacc(names.front()));
+
+    // the sorter, using sorter struct
+    Statement::Sorter *s = new Statement::Sorter(name, input_list);
+    stmts.push_back(s);
+
+    codegen_nop(product);
+}
+
+
 void Fn_Def::codegen_choice(Fn_Def &a, Fn_Def &b, Product::Two &product)
-{   
+{ 
+   
+   // for specialized ADP or Sorted Pareto, generate a comparator on the original choice function
+   // (only one is needed to original is chosen for naming, no other reasons)
+   if (product.get_sorted_choice() != Product::NONE && gen_type == STANDARD) {
+
+       switch (product.get_sorted_choice()) {
+           case Product::STANDARD:
+           case Product::MULTI:
+           case Product::SORTER:
+           case Product::NULLARY_SORTER:
+                codegen_sorter(product);
+                break;
+           case Product::COMPERATOR:
+           case Product::NULLARY_COMPERATOR:
+                codegen_compare(product);
+               break;
+           case Product::COMPERATOR_SORTER:
+           case Product::NULLARY_COMPERATOR_SORTER:
+                codegen_sorter(product);
+                codegen_compare(product);
+                break;
+           default:
+               break;
+       }
+   }  
+    
+   if (gen_type == NULLARY && 
+           (product.get_adp_specialization() == ADP_Mode::SORTED_STEP || product.get_adp_specialization() == ADP_Mode::SORTED_BLOCK)) {
+        codegen_sorting_nullary(product);
+        return;
+   } 
+   
+   
+   if (gen_type == STANDARD && 
+           (product.get_adp_specialization() == ADP_Mode::PARETO_EAGER_STEP || product.get_adp_specialization() == ADP_Mode::PARETO_EAGER_BLOCK)) {
+        codegen_nop(product);
+        return;
+   }
+    
   if (!product.is(Product::NOP))
     init_range_iterator(a, b, product);
      
@@ -541,7 +703,7 @@ void Fn_Def::codegen_choice(Fn_Def &a, Fn_Def &b, Product::Two &product)
       codegen_times(a, b, product);
       break;
     case Product::NOP :
-      codegen_nop(a, b, product);
+      codegen_nop(product);
       break;
     case Product::CARTESIAN :
       codegen_cartesian(a, b, product);
@@ -572,8 +734,8 @@ void Fn_Def::codegen_choice(Fn_Def &a, Fn_Def &b, Product::Two &product)
               codegen_pareto_isort(a, b, product);
               break;
           case Product::Pareto::MultiDimOpt:
-              init_comperator_adaptor();
-              codegen_pareto_multi_yukish(a, b, product, p->get_cutoff());
+              int dim = codegen_compare(product);
+              codegen_pareto_multi_yukish(a, b, product, p->get_cutoff(), dim);
               break;
       } 
       break;
@@ -585,7 +747,7 @@ void Fn_Def::codegen_choice(Fn_Def &a, Fn_Def &b, Product::Two &product)
 void Fn_Def::get_pareto_dimensions(Product::Base &product, std::list<Statement::Base*> &base,
         int *i, int *D, Statement::Var_Decl *last_decl, std::string prefix,
         std::list<std::pair<Product::Base*, bool> > &products,
-        std::list<Statement::Var_Decl*> &decls ) {
+        std::list<Statement::Var_Decl*> &decls, int float_acc) {
     
     if (product.left()->type() == Product::PARETO) {
         
@@ -594,16 +756,35 @@ void Fn_Def::get_pareto_dimensions(Product::Base &product, std::list<Statement::
         Statement::Var_Decl *t_vardecl = new Statement::Var_Decl(last_decl->type->left() , temp_str.str(),  new Expr::Vacc(last_decl->left()));
         base.push_back(t_vardecl);
         (*i)++;
-        get_pareto_dimensions(*product.left(), base, i, D, t_vardecl, prefix, products, decls);
+        get_pareto_dimensions(*product.left(), base, i, D, t_vardecl, prefix, products, decls, float_acc);
         
     } else {
         
         std::ostringstream temp_str;
         temp_str << prefix << "_dim_" << (*D+1);
-        Statement::Var_Decl *t_vardecl = new Statement::Var_Decl(last_decl->type->left(), temp_str.str(),  new Expr::Vacc(last_decl->left()));
-        base.push_back(t_vardecl);
+        
+        Statement::Var_Decl *t_vardecl;
+        
+        // switch to make float roundings
+        if (last_decl->type->left()->is(Type::FLOAT) && float_acc != 0) {
+            
+            Expr::Fn_Call *round = new Expr::Fn_Call(Expr::Fn_Call::ROUND_TO_DIGIT);
+
+            std::ostringstream offset;
+            offset  << (int )std::pow(10, float_acc);
+            
+            round->add_arg( new std::string(offset.str()) );
+            round->add_arg( new Expr::Vacc(last_decl->left()));
+            
+            t_vardecl = new Statement::Var_Decl(last_decl->type->left(), temp_str.str(), round);
+            
+        } else {
+            t_vardecl = new Statement::Var_Decl(last_decl->type->left(), temp_str.str(),  new Expr::Vacc(last_decl->left()));
+        }
+
         (*D)++;
         
+        base.push_back(t_vardecl);
         decls.push_back(t_vardecl);
         products.push_back( std::make_pair(&product, true));
     }
@@ -614,13 +795,29 @@ void Fn_Def::get_pareto_dimensions(Product::Base &product, std::list<Statement::
         Statement::Var_Decl *t_vardecl = new Statement::Var_Decl(last_decl->type->right() , temp_str.str(),  new Expr::Vacc(last_decl->right()));
         base.push_back(t_vardecl);
         (*i)++;
-        get_pareto_dimensions(*product.right(), base, i, D, t_vardecl, prefix, products, decls);
+        get_pareto_dimensions(*product.right(), base, i, D, t_vardecl, prefix, products, decls, float_acc);
         
     } else {
         
         std::ostringstream temp_str;
         temp_str << prefix << "_dim_" << (*D+1);
-        Statement::Var_Decl *t_vardecl = new Statement::Var_Decl(last_decl->type->right(), temp_str.str(),  new Expr::Vacc(last_decl->right()));
+        
+        Statement::Var_Decl *t_vardecl;
+        if (last_decl->type->right()->is(Type::FLOAT) && float_acc != 0) {
+            
+            Expr::Fn_Call *round = new Expr::Fn_Call(Expr::Fn_Call::ROUND_TO_DIGIT);
+
+            std::ostringstream offset;
+            offset  << (int )std::pow(10, float_acc);
+            
+            round->add_arg( new std::string(offset.str()) );
+            round->add_arg( new Expr::Vacc(last_decl->right()));
+            
+            t_vardecl = new Statement::Var_Decl(last_decl->type->right(), temp_str.str(), round);
+        } else {
+            t_vardecl = new Statement::Var_Decl(last_decl->type->right(), temp_str.str(),  new Expr::Vacc(last_decl->right()));
+        }
+        
         base.push_back(t_vardecl);
         (*D)++;
         
@@ -660,108 +857,27 @@ bool Fn_Def::get_sort_grab_list(std::list<bool> &o, Product::Base &product) {
 
 #include "statement/fn_call.hh"
 
-void Fn_Def::codegen_multi_sort(Fn_Def &a, Fn_Def &b, Product::Two &product){
-   
-        
+void Fn_Def::codegen_multi_sort(Product::Base &product, std::list<Statement::Base*> *stmts){
+      
    // list elements 
    Statement::Var_Decl *c1 = new Statement::Var_Decl(return_type->component(), "c1");
    Statement::Var_Decl *c2 = new Statement::Var_Decl(return_type->component(), "c2");
    
-   // input list
-   Statement::Var_Decl *input_list = new Statement::Var_Decl(
-      types.front(), names.front(), new Expr::Vacc(names.front()));
-   
-   // the sorter
-   Statement::Sorter *sorter = new Statement::Sorter(c1, c2, input_list, "sorter", "sort_object");
-   adaptor->stmts.push_back(sorter);
-   
-   
-   // first find the beginning pareto entry
-
-   // true : left
-   // false : right
-   std::list<bool> grabList;
-   
-   Type::Base* type = return_type;
-   
-   Product::Two *prod_t;
-   
-   if (product.sort_product) {
-
-        get_sort_grab_list(grabList, *product.sort_product);
-        
-        Product::Two *p = dynamic_cast<Product::Two*>(product.sort_product);
-        prod_t = p; 
-        
-   } else {
-       
-        get_sort_grab_list(grabList, product);
-        
-        prod_t = &product;
-   }
-   
-   Product::Two prod = *prod_t;
-   
-   if (grabList.empty()) {
-       Log::instance()->error("No pareto product found to sort by. Remove option -P 1 or -P 3 respectively.");
-       assert(0);
-   }
+   Product::Two prod = codegen_pareto_move_to_first_all_dim(c1, c2 , stmts, product);
    
    int i = 0;
-   
-   // don't move into the first pareto, but stop AT it
-   std::list<bool>::iterator preEnd = grabList.end();
-   preEnd--;
-   
-   for (std::list<bool>::iterator it1=grabList.begin(); it1 != preEnd; ++it1, ++i) {
-    
-       bool op = *it1; 
-       std::ostringstream oc1;
-       oc1 << "c1_" << i;
-       std::ostringstream oc2;
-       oc2 << "c2_" << i;
-       
-       std::list<bool>::iterator next = it1;
-       next++;
-       
-       if (op) {
-           type = type->left();
-           if (next != grabList.end()) {
-             Product::Two *p = dynamic_cast<Product::Two*>(prod.left());
-             prod = *p; 
-             
-           }
-           c1 = new Statement::Var_Decl(type, oc1.str(),  new Expr::Vacc(c1->left()));
-           c2 = new Statement::Var_Decl(type, oc2.str(),  new Expr::Vacc(c2->left()));
-       } else {
-           type = type->right();
-           if (next != grabList.end()) {
-               
-             Product::Two *p = dynamic_cast<Product::Two*>(prod.right());
-             prod = *p; 
-             
-           }
-           c1 = new Statement::Var_Decl(type, oc1.str(),  new Expr::Vacc(c1->right()));
-           c2 = new Statement::Var_Decl(type, oc2.str(),  new Expr::Vacc(c2->right()));
-       }
-       
-       sorter->push_back(c1);
-       sorter->push_back(c2);       
-   }
-   
-   i = 0;
    int D = 0;
    std::list<std::pair<Product::Base*, bool> > c_1_products;
    std::list<Statement::Var_Decl*> c_1_decl;
-   get_pareto_dimensions(prod, sorter->statements, &i, &D, c1, std::string("c1"), c_1_products, c_1_decl);
+   get_pareto_dimensions(prod, *stmts, &i, &D, c1, std::string("c1"), c_1_products, c_1_decl, product.get_float_accuracy() );
    
    i = 0;
    D = 0;
    std::list<std::pair<Product::Base*, bool> > c_2_products;
    std::list<Statement::Var_Decl*> c_2_decl;
-   get_pareto_dimensions(prod, sorter->statements, &i, &D, c2, std::string("c2"), c_2_products, c_2_decl);
+   get_pareto_dimensions(prod, *stmts, &i, &D, c2, std::string("c2"), c_2_products, c_2_decl, product.get_float_accuracy() );
    
-   std::list<Statement::Base*> *cur_stmts = &sorter->statements;
+   std::list<Statement::Base*> *cur_stmts = stmts;
    
    int dim = 1;
    std::list<Statement::Var_Decl*>::iterator it_c1 = c_1_decl.begin();
@@ -860,238 +976,6 @@ void Fn_Def::codegen_multi_sort(Fn_Def &a, Fn_Def &b, Product::Two &product){
  
    }
    
-}
-
-void Fn_Def::codegen_sort(Fn_Def &a, Fn_Def &b, Product::Two &product){
-        
-    // first sort list by LEFT component
-   Statement::Var_Decl *c1 = new Statement::Var_Decl(return_type->component(), "c1");
-   Statement::Var_Decl *c2 = new Statement::Var_Decl(return_type->component(), "c2");
-   
-   // input list
-   Statement::Var_Decl *input_list = new Statement::Var_Decl(
-      types.front(), names.front(), new Expr::Vacc(names.front()));
-   
-   Statement::Sorter *sorter = new Statement::Sorter(c1, c2, input_list, "sorter", "sort_object");
-   adaptor->stmts.push_back(sorter);
-   
-
-   // true : left
-   // false : right
-   std::list<bool> grabList;
-   
-   Type::Base* type = return_type;
-   Product::Two *prod_t;
-   
-   if (product.sort_product) {
-
-        get_sort_grab_list(grabList, *product.sort_product);
-        
-        Product::Two *p = dynamic_cast<Product::Two*>(product.sort_product);
-        prod_t = p; 
-        
-   } else {
-       
-        get_sort_grab_list(grabList, product);
-        
-        prod_t = &product;
-   }
-   
-   Product::Two prod = *prod_t;
-   
-   if (grabList.empty()) {
-       Log::instance()->error("No pareto product found to sort by. Remove option -P 1 or -P 3 respectively.");
-       assert(0);
-   }
-   
-   
-   Statement::Var_Decl *pre_c1, *pre_c2;
-   
-   int i = 0;
-   std::list<bool>::iterator preEnd = grabList.end();
-   preEnd--;
-   
-   for (std::list<bool>::iterator it1=grabList.begin(); it1 != grabList.end(); ++it1, ++i) {
-
-       
-       if (preEnd == it1) {
-           pre_c1 = new Statement::Var_Decl(type->right(), "c1_right",  new Expr::Vacc(c1->right()));
-           pre_c2 = new Statement::Var_Decl(type->right(), "c2_right",  new Expr::Vacc(c2->right()));
-           
-           sorter->push_back(pre_c1);
-           sorter->push_back(pre_c2); 
-       }
-     
-       
-       bool op = *it1; 
-       std::ostringstream oc1;
-       oc1 << "c1_" << i;
-       std::ostringstream oc2;
-       oc2 << "c2_" << i;
-       
-       std::list<bool>::iterator next = it1;
-       next++;
-       
-       if (op) {
-           type = type->left();
-           if (next != grabList.end()) {
-             Product::Two *p = dynamic_cast<Product::Two*>(prod.left());
-             prod = *p; 
-             
-           }
-           c1 = new Statement::Var_Decl(type, oc1.str(),  new Expr::Vacc(c1->left()));
-           c2 = new Statement::Var_Decl(type, oc2.str(),  new Expr::Vacc(c2->left()));
-       } else {
-           type = type->right();
-           if (next != grabList.end()) {
-               
-             Product::Two *p = dynamic_cast<Product::Two*>(prod.right());
-             prod = *p; 
-             
-           }
-           c1 = new Statement::Var_Decl(type, oc1.str(),  new Expr::Vacc(c1->right()));
-           c2 = new Statement::Var_Decl(type, oc2.str(),  new Expr::Vacc(c2->right()));
-       }
-       
-       sorter->push_back(c1);
-       sorter->push_back(c2);       
-   }
-   
-   Statement::Var_Decl *u = new Statement::Var_Decl(type, "u",  new Expr::Vacc(c1->name));
-   Statement::Var_Decl *x = new Statement::Var_Decl(type, "x",  new Expr::Vacc(c2->name));
-   sorter->push_back(u);
-   sorter->push_back(x);
-     
-  Statement::If *if_case_equal = new Statement::If(new Expr::Eq( new Expr::Vacc(*u) , new Expr::Vacc(*x)));
-  
-  Statement::Var_Decl *v = new Statement::Var_Decl(pre_c1->type, "v",  new Expr::Vacc(pre_c1->name));
-  Statement::Var_Decl *y = new Statement::Var_Decl(pre_c2->type, "y",  new Expr::Vacc(pre_c2->name));
-  if_case_equal->then.push_back(v);
-  if_case_equal->then.push_back(y);
-  
-  Statement::Var_Decl *right_answer = new Statement::Var_Decl(pre_c1->type, "right_answer");
-  if_case_equal->then.push_back(right_answer);
-  if(prod.right_choice_fn_type(*name) == Expr::Fn_Call::MINIMUM) {
-    
-    Statement::If *if_case_min = new Statement::If(new Expr::Less( new Expr::Vacc(*v) , new Expr::Vacc(*y)));
-    if_case_equal->then.push_back(if_case_min);
-    Statement::Var_Assign* la = new Statement::Var_Assign(*right_answer, *v);
-    if_case_min->then.push_back(la);
-    Statement::Var_Assign* la2 = new Statement::Var_Assign(*right_answer, *y);
-    if_case_min->els.push_back(la2);
-    
-  } else if (prod.right_choice_fn_type(*name) == Expr::Fn_Call::MAXIMUM) {
-      
-    Statement::If *if_case_min = new Statement::If(new Expr::Greater( new Expr::Vacc(*v) , new Expr::Vacc(*y)));
-    if_case_equal->then.push_back(if_case_min);
-    Statement::Var_Assign* la = new Statement::Var_Assign(*right_answer, *v);
-    if_case_min->then.push_back(la);
-    Statement::Var_Assign* la2 = new Statement::Var_Assign(*right_answer, *y);
-    if_case_min->els.push_back(la2);
-      
-  } else { 
-    Statement::Var_Decl *right_candidates = new Statement::Var_Decl(new Type::List(pre_c1->type), "right_candidates");
-    if_case_equal->then.push_back(right_candidates);
-    if_case_equal->then.push_back(new Statement::Fn_Call(Statement::Fn_Call::EMPTY, *right_candidates));
-
-    Statement::Fn_Call *push_backv = new Statement::Fn_Call(Statement::Fn_Call::PUSH_BACK);
-    push_backv->add_arg(*right_candidates);
-    push_backv->add_arg(*v);
-    if_case_equal->then.push_back(push_backv);
-
-    Statement::Fn_Call *push_backy = new Statement::Fn_Call(Statement::Fn_Call::PUSH_BACK);
-    push_backy->add_arg(*right_candidates);
-    push_backy->add_arg(*y);
-    if_case_equal->then.push_back(push_backy); 
-
-    Fn_Def c = *prod.right_choice_function(*name);
-    Expr::Fn_Call *h_right = new Expr::Fn_Call(new std::string(c.target_name()));
-    h_right->add_arg(*right_candidates);
-
-    if (prod.right_mode(*name).number == Mode::ONE) {
-          Statement::Var_Assign* la = new Statement::Var_Assign(*right_answer, h_right);
-          if_case_equal->then.push_back(la);
-    } else {
-
-         Statement::Var_Decl *right_answer_list = new Statement::Var_Decl(c.return_type, "right_answer_list", h_right);
-
-         Expr::Fn_Call *right_first = new Expr::Fn_Call(Expr::Fn_Call::GET_FRONT);
-         right_first->add_arg(*right_answer_list);
-
-         Statement::Var_Assign* la = new Statement::Var_Assign(*right_answer, right_first);
-         if_case_equal->then.push_back(right_answer_list);
-         if_case_equal->then.push_back(la);
-    }
-    
-  }
-  
-  Statement::Return *sort_ret2 = new Statement::Return(new Expr::And(new Expr::Eq(new Expr::Vacc(*v) , new Expr::Vacc(*right_answer)), new Expr::Not_Eq(new Expr::Vacc(*y) , new Expr::Vacc(*right_answer))));
-  if_case_equal->then.push_back(sort_ret2);
-   
-   // core of sorting algorithm
-   
-  Statement::Var_Decl *left_answer = new Statement::Var_Decl(type, "left_answer");
-  if_case_equal->els.push_back(left_answer);
-  if(prod.left_choice_fn_type(*name) == Expr::Fn_Call::MINIMUM) {
-    
-    Statement::If *if_case_min = new Statement::If(new Expr::Less( new Expr::Vacc(*u) , new Expr::Vacc(*x)));
-    if_case_equal->els.push_back(if_case_min);
-    Statement::Var_Assign* la = new Statement::Var_Assign(*left_answer, *u);
-    if_case_min->then.push_back(la);
-    Statement::Var_Assign* la2 = new Statement::Var_Assign(*left_answer, *x);
-    if_case_min->els.push_back(la2);
-    
-  } else if (prod.left_choice_fn_type(*name) == Expr::Fn_Call::MAXIMUM) {
-      
-    Statement::If *if_case_min = new Statement::If(new Expr::Greater( new Expr::Vacc(*u) , new Expr::Vacc(*x)));
-    if_case_equal->els.push_back(if_case_min);
-    Statement::Var_Assign* la = new Statement::Var_Assign(*left_answer, *u);
-    if_case_min->then.push_back(la);
-    Statement::Var_Assign* la2 = new Statement::Var_Assign(*left_answer, *x);
-    if_case_min->els.push_back(la2);
-      
-  } else { 
-  
-    Statement::Var_Decl *left_candidates = new Statement::Var_Decl(new Type::List(type), "left_candidates");
-    if_case_equal->els.push_back(left_candidates);
-    if_case_equal->els.push_back(new Statement::Fn_Call(Statement::Fn_Call::EMPTY, *left_candidates));
-      
-    Statement::Fn_Call *push_backu = new Statement::Fn_Call(Statement::Fn_Call::PUSH_BACK);
-    push_backu->add_arg(*left_candidates);
-    push_backu->add_arg(*u);
-    if_case_equal->els.push_back(push_backu);
-
-    Statement::Fn_Call *push_backx = new Statement::Fn_Call(Statement::Fn_Call::PUSH_BACK);
-    push_backx->add_arg(*left_candidates);
-    push_backx->add_arg(*x);
-    if_case_equal->els.push_back(push_backx);
-    
-    
-    Fn_Def c = *prod.left_choice_function(*name);
-    Expr::Fn_Call *h_left = new Expr::Fn_Call(new std::string(c.target_name()));
-    h_left->add_arg(*left_candidates);
-  
-    if (prod.left_mode(*name).number == Mode::ONE) {
-          Statement::Var_Assign* la = new Statement::Var_Assign(*left_answer, h_left);
-          if_case_equal->els.push_back(la);
-    } else {
-
-         Statement::Var_Decl *left_answer_list = new Statement::Var_Decl(c.return_type, "left_answer_list", h_left);
-
-         Expr::Fn_Call *left_first = new Expr::Fn_Call(Expr::Fn_Call::GET_FRONT);
-         left_first->add_arg(*left_answer_list);
-
-         Statement::Var_Assign* la = new Statement::Var_Assign(*left_answer, left_first);
-         if_case_equal->els.push_back(left_answer_list);
-         if_case_equal->els.push_back(la);
-    }
-  }
-  
-  Statement::Return *sort_ret = new Statement::Return(new Expr::And(new Expr::Eq(new Expr::Vacc(*u) , new Expr::Vacc(*left_answer)), new Expr::Not_Eq(new Expr::Vacc(*x) , new Expr::Vacc(*left_answer))));
-  if_case_equal->els.push_back(sort_ret);
-  
-  sorter->push_back(if_case_equal);
-  
 }
 
 
@@ -1300,8 +1184,35 @@ void Fn_Def::codegen_pareto_nosort(Fn_Def &a, Fn_Def &b, Product::Two &product)
   std::list<Statement::Base*> *loop_body = &loop->statements;
     
   // set the first variables, tuple to insert into the answer list
-  Statement::Var_Decl *u = new Statement::Var_Decl(return_type->left(), "u",  new Expr::Vacc(tupel->left()));
-  Statement::Var_Decl *v = new Statement::Var_Decl(return_type->right(), "v",  new Expr::Vacc(tupel->right()));
+  Statement::Var_Decl *u, *v;
+    if (return_type->left()->is(Type::FLOAT) && product.get_float_accuracy() != 0) {
+            
+        Expr::Fn_Call *round = new Expr::Fn_Call(Expr::Fn_Call::ROUND_TO_DIGIT);
+        std::ostringstream offset;
+        offset  << (int )std::pow(10, product.get_float_accuracy());
+
+        round->add_arg( new std::string(offset.str()) );
+        round->add_arg( new Expr::Vacc(tupel->left()) );
+
+        u = new Statement::Var_Decl(return_type->left(), "u",  round);
+            
+    } else {
+        u = new Statement::Var_Decl(return_type->left(), "u",  new Expr::Vacc(tupel->left()));
+    }
+    if (return_type->right()->is(Type::FLOAT) && product.get_float_accuracy() != 0) {
+            
+        Expr::Fn_Call *round = new Expr::Fn_Call(Expr::Fn_Call::ROUND_TO_DIGIT);
+        std::ostringstream offset;
+        offset  << (int )std::pow(10, product.get_float_accuracy());
+
+        round->add_arg( new std::string(offset.str()) );
+        round->add_arg( new Expr::Vacc(tupel->right()) );
+
+        v = new Statement::Var_Decl(return_type->right(), "v",  round);
+            
+    } else {
+        v = new Statement::Var_Decl(return_type->right(), "v",  new Expr::Vacc(tupel->right()));
+    }
   
   loop_body->push_back(u);
   loop_body->push_back(v);
@@ -1322,8 +1233,36 @@ void Fn_Def::codegen_pareto_nosort(Fn_Def &a, Fn_Def &b, Product::Two &product)
   std::list<Statement::Base*> *loop_body2 = &loop2->statements;
   
   Statement::Var_Decl *tmp = new Statement::Var_Decl(return_type->component(), "tmp",  new Expr::Vacc(*answer));
-  Statement::Var_Decl *x = new Statement::Var_Decl(return_type->left(), "x",  new Expr::Vacc(tmp->left()));
-  Statement::Var_Decl *y = new Statement::Var_Decl(return_type->right(), "y",  new Expr::Vacc(tmp->right()));
+   Statement::Var_Decl *x, *y;
+    if (return_type->left()->is(Type::FLOAT) && product.get_float_accuracy() != 0) {
+            
+        Expr::Fn_Call *round = new Expr::Fn_Call(Expr::Fn_Call::ROUND_TO_DIGIT);
+        std::ostringstream offset;
+        offset  << (int )std::pow(10, product.get_float_accuracy());
+
+        round->add_arg( new std::string(offset.str()) );
+        round->add_arg( new Expr::Vacc(tmp->left()) );
+
+        x = new Statement::Var_Decl(return_type->left(), "x",  round);
+            
+    } else {
+        x = new Statement::Var_Decl(return_type->left(), "x",  new Expr::Vacc(tmp->left()));
+    }
+    if (return_type->right()->is(Type::FLOAT) && product.get_float_accuracy() != 0) {
+            
+        Expr::Fn_Call *round = new Expr::Fn_Call(Expr::Fn_Call::ROUND_TO_DIGIT);
+        std::ostringstream offset;
+        offset  << (int )std::pow(10, product.get_float_accuracy());
+
+        round->add_arg( new std::string(offset.str()) );
+        round->add_arg( new Expr::Vacc(tmp->right()) );
+
+        y = new Statement::Var_Decl(return_type->right(), "y",  round);
+            
+    } else {
+        y = new Statement::Var_Decl(return_type->right(), "y",  new Expr::Vacc(tmp->right()));
+    } 
+
   loop_body2->push_back(tmp);
   loop_body2->push_back(x);
   loop_body2->push_back(y);
@@ -1475,9 +1414,9 @@ void Fn_Def::codegen_pareto_nosort(Fn_Def &a, Fn_Def &b, Product::Two &product)
   Statement::Var_Decl *temp_elem = new Statement::Var_Decl(return_type->component(), "temp_elem");
   if_add->then.push_back(temp_elem);
   
-  Statement::Var_Assign *l_ass = new Statement::Var_Assign(temp_elem->left(), *u);
+  Statement::Var_Assign *l_ass = new Statement::Var_Assign(temp_elem->left(), new Expr::Vacc(tupel->left()));
   if_add->then.push_back(l_ass);
-  Statement::Var_Assign *r_ass = new Statement::Var_Assign(temp_elem->right(), *v);
+  Statement::Var_Assign *r_ass = new Statement::Var_Assign(temp_elem->right(), new Expr::Vacc(tupel->right()));
   if_add->then.push_back(r_ass);
   pb->add_arg(*answers);
   pb->add_arg(*temp_elem);
@@ -1556,13 +1495,13 @@ void Fn_Def::codegen_pareto_multi_nosort(Fn_Def &a, Fn_Def &b, Product::Two &pro
   int D = 0;
   std::list<std::pair<Product::Base*, bool> > c_1_products;
   std::list<Statement::Var_Decl*> c_1_decl;
-  get_pareto_dimensions(product, *loop_body2, &i, &D, c1, std::string("c1"), c_1_products, c_1_decl);
+  get_pareto_dimensions(product, *loop_body2, &i, &D, c1, std::string("c1"), c_1_products, c_1_decl, product.get_float_accuracy());
    
   i = 0;
   D = 0;
   std::list<std::pair<Product::Base*, bool> > c_2_products;
   std::list<Statement::Var_Decl*> c_2_decl;
-  get_pareto_dimensions(product, *loop_body2, &i, &D, c2, std::string("c2"), c_2_products, c_2_decl);  
+  get_pareto_dimensions(product, *loop_body2, &i, &D, c2, std::string("c2"), c_2_products, c_2_decl, product.get_float_accuracy());  
   
   // storage to keep track of what to add where in loop
   std::list<Statement::Base*> *cur_stmts = loop_body2;
@@ -1807,8 +1746,35 @@ void Fn_Def::codegen_pareto_isort(Fn_Def &a, Fn_Def &b, Product::Two &product)
   std::list<Statement::Base*> *loop_body = &loop->statements;
     
   // set the first variables, tuple to insert into the answer list
-  Statement::Var_Decl *u = new Statement::Var_Decl(return_type->left(), "u",  new Expr::Vacc(tupel->left()));
-  Statement::Var_Decl *v = new Statement::Var_Decl(return_type->right(), "v",  new Expr::Vacc(tupel->right()));
+  Statement::Var_Decl *u, *v;
+    if (return_type->left()->is(Type::FLOAT) && product.get_float_accuracy() != 0) {
+            
+        Expr::Fn_Call *round = new Expr::Fn_Call(Expr::Fn_Call::ROUND_TO_DIGIT);
+        std::ostringstream offset;
+        offset  << (int )std::pow(10, product.get_float_accuracy());
+
+        round->add_arg( new std::string(offset.str()) );
+        round->add_arg( new Expr::Vacc(tupel->left()) );
+
+        u = new Statement::Var_Decl(return_type->left(), "u",  round);
+            
+    } else {
+        u = new Statement::Var_Decl(return_type->left(), "u",  new Expr::Vacc(tupel->left()));
+    }
+    if (return_type->right()->is(Type::FLOAT) && product.get_float_accuracy() != 0) {
+            
+        Expr::Fn_Call *round = new Expr::Fn_Call(Expr::Fn_Call::ROUND_TO_DIGIT);
+        std::ostringstream offset;
+        offset  << (int) std::pow(10, product.get_float_accuracy());
+
+        round->add_arg( new std::string(offset.str()) );
+        round->add_arg( new Expr::Vacc(tupel->right()) );
+
+        v = new Statement::Var_Decl(return_type->right(), "v",  round);
+            
+    } else {
+        v = new Statement::Var_Decl(return_type->right(), "v",  new Expr::Vacc(tupel->right()));
+    }
   
   loop_body->push_back(u);
   loop_body->push_back(v);
@@ -1832,8 +1798,35 @@ void Fn_Def::codegen_pareto_isort(Fn_Def &a, Fn_Def &b, Product::Two &product)
   std::list<Statement::Base*> *loop_body2 = &loop2->statements;
   
   Statement::Var_Decl *tmp = new Statement::Var_Decl(return_type->component(), "tmp",  new Expr::Vacc(*answer));
-  Statement::Var_Decl *x = new Statement::Var_Decl(return_type->left(), "x",  new Expr::Vacc(tmp->left()));
-  Statement::Var_Decl *y = new Statement::Var_Decl(return_type->right(), "y",  new Expr::Vacc(tmp->right()));
+   Statement::Var_Decl *x, *y;
+    if (return_type->left()->is(Type::FLOAT) && product.get_float_accuracy() != 0) {
+            
+        Expr::Fn_Call *round = new Expr::Fn_Call(Expr::Fn_Call::ROUND_TO_DIGIT);
+        std::ostringstream offset;
+        offset  << (int )std::pow(10, product.get_float_accuracy());
+
+        round->add_arg( new std::string(offset.str()) );
+        round->add_arg( new Expr::Vacc(tmp->left()) );
+
+        x = new Statement::Var_Decl(return_type->left(), "x",  round);
+            
+    } else {
+        x = new Statement::Var_Decl(return_type->left(), "x",  new Expr::Vacc(tmp->left()));
+    }
+    if (return_type->right()->is(Type::FLOAT) && product.get_float_accuracy() != 0) {
+            
+        Expr::Fn_Call *round = new Expr::Fn_Call(Expr::Fn_Call::ROUND_TO_DIGIT);
+        std::ostringstream offset;
+        offset  << (int )std::pow(10, product.get_float_accuracy());
+
+        round->add_arg( new std::string(offset.str()) );
+        round->add_arg( new Expr::Vacc(tmp->right()) );
+
+        y = new Statement::Var_Decl(return_type->right(), "y",  round);
+            
+    } else {
+        y = new Statement::Var_Decl(return_type->right(), "y",  new Expr::Vacc(tmp->right()));
+    } 
   loop_body2->push_back(tmp);
   loop_body2->push_back(x);
   loop_body2->push_back(y);
@@ -2010,9 +2003,9 @@ void Fn_Def::codegen_pareto_isort(Fn_Def &a, Fn_Def &b, Product::Two &product)
   Statement::Var_Decl *temp_elem = new Statement::Var_Decl(return_type->component(), "temp_elem");
   if_case2->then.push_back(temp_elem);
   
-  Statement::Var_Assign *l_ass = new Statement::Var_Assign(temp_elem->left(), *u);
+  Statement::Var_Assign *l_ass = new Statement::Var_Assign(temp_elem->left(), new Expr::Vacc(tupel->left()));
   if_case2->then.push_back(l_ass);
-  Statement::Var_Assign *r_ass = new Statement::Var_Assign(temp_elem->right(), *v);
+  Statement::Var_Assign *r_ass = new Statement::Var_Assign(temp_elem->right(), new Expr::Vacc(tupel->right()));
   if_case2->then.push_back(r_ass);
   
   Expr::Fn_Call *insert = new Expr::Fn_Call(Expr::Fn_Call::INSERT_ELEMENT);
@@ -2056,9 +2049,9 @@ void Fn_Def::codegen_pareto_isort(Fn_Def &a, Fn_Def &b, Product::Two &product)
   Statement::Var_Decl *temp_elem2 = new Statement::Var_Decl(return_type->component(), "temp_elem");
   if_add->then.push_back(temp_elem2);
   
-  Statement::Var_Assign *l_ass2 = new Statement::Var_Assign(temp_elem->left(), *u);
+  Statement::Var_Assign *l_ass2 = new Statement::Var_Assign(temp_elem->left(), new Expr::Vacc(tupel->left()));
   if_add->then.push_back(l_ass2);
-  Statement::Var_Assign *r_ass2 = new Statement::Var_Assign(temp_elem->right(), *v);
+  Statement::Var_Assign *r_ass2 = new Statement::Var_Assign(temp_elem->right(), new Expr::Vacc(tupel->right()));
   if_add->then.push_back(r_ass2);
   pb->add_arg(*answers);
   pb->add_arg(*temp_elem2);
@@ -2139,13 +2132,13 @@ void Fn_Def::codegen_pareto_multi_lex(Fn_Def &a, Fn_Def &b, Product::Two &produc
   int D = 0;
   std::list<std::pair<Product::Base*, bool> > c_1_products;
   std::list<Statement::Var_Decl*> c_1_decl;
-  get_pareto_dimensions(product, *loop_body2, &i, &D, c1, std::string("c1"), c_1_products, c_1_decl);
+  get_pareto_dimensions(product, *loop_body2, &i, &D, c1, std::string("c1"), c_1_products, c_1_decl, product.get_float_accuracy());
    
   i = 0;
   D = 0;
   std::list<std::pair<Product::Base*, bool> > c_2_products;
   std::list<Statement::Var_Decl*> c_2_decl;
-  get_pareto_dimensions(product, *loop_body2, &i, &D, c2, std::string("c2"), c_2_products, c_2_decl);  
+  get_pareto_dimensions(product, *loop_body2, &i, &D, c2, std::string("c2"), c_2_products, c_2_decl, product.get_float_accuracy());  
   
   // storage to keep track of what to add where in loop
   std::list<Statement::Base*> *cur_stmts = loop_body2;
@@ -2266,36 +2259,103 @@ void Fn_Def::codegen_pareto_multi_lex(Fn_Def &a, Fn_Def &b, Product::Two &produc
 }
 
 
-// generates the comperator element needed for advanced multi-dim pareto
-void Fn_Def::codegen_pareto_multi_yukish(Fn_Def &a, Fn_Def &b, Product::Two &product, int cutoff) {
-  
-  Statement::Var_Decl *c1 = new Statement::Var_Decl(
-  return_type->component(), "c1", new Expr::Vacc(new std::string("e1"))); 
-  comparator->stmts.push_back(c1);
-  
-  Statement::Var_Decl *c2 = new Statement::Var_Decl(
-  return_type->component(), "c2", new Expr::Vacc(new std::string("e2"))); 
-  comparator->stmts.push_back(c2);
+Product::Two Fn_Def::codegen_pareto_move_to_first_all_dim(Statement::Var_Decl * & c1, Statement::Var_Decl * & c2, std::list<Statement::Base*> *stmts, Product::Base &product) {
+       
+    // first find the beginning pareto entry
 
-  Statement::Var_Decl *dim = new Statement::Var_Decl(
-  new Type::Int(), "dim", new Expr::Vacc(new std::string("d"))); 
-  comparator->stmts.push_back(dim);  
+   // true : left
+   // false : right
+   std::list<bool> grabList;
+   
+   Type::Base* type = return_type;
+   
+   Product::Two *prod_t;
+   
+   if (product.sort_product) {
+
+        get_sort_grab_list(grabList, *product.sort_product);
+        
+        Product::Two *p = dynamic_cast<Product::Two*>(product.sort_product);
+        prod_t = p; 
+        
+   } else {
+       
+        get_sort_grab_list(grabList, product);
+        
+        Product::Two *p = dynamic_cast<Product::Two*>(&product);
+        
+        prod_t = p;
+   }
+   
+   Product::Two prod = *prod_t;
+   
+   if (grabList.empty() && product.type() != Product::PARETO) {
+       Log::instance()->error("No pareto product found to sort by. Remove option -P 1 or -P 3 respectively.");
+       assert(0);
+   }
+   
+   int i = 0;
+   
+   // don't move into the first pareto, but stop AT it
+   std::list<bool>::iterator preEnd = grabList.end();
+   preEnd--;
+   
+   for (std::list<bool>::iterator it1=grabList.begin(); it1 != preEnd; ++it1, ++i) {
+    
+       bool op = *it1; 
+       std::ostringstream oc1;
+       oc1 << "c1_" << i;
+       std::ostringstream oc2;
+       oc2 << "c2_" << i;
+       
+       std::list<bool>::iterator next = it1;
+       next++;
+       
+       if (op) {
+           type = type->left();
+           if (next != grabList.end()) {
+             Product::Two *p = dynamic_cast<Product::Two*>(prod.left());
+             prod = *p; 
+             
+           }
+           c1 = new Statement::Var_Decl(type, oc1.str(),  new Expr::Vacc(c1->left()));
+           c2 = new Statement::Var_Decl(type, oc2.str(),  new Expr::Vacc(c2->left()));
+       } else {
+           type = type->right();
+           if (next != grabList.end()) {
+               
+             Product::Two *p = dynamic_cast<Product::Two*>(prod.right());
+             prod = *p; 
+             
+           }
+           c1 = new Statement::Var_Decl(type, oc1.str(),  new Expr::Vacc(c1->right()));
+           c2 = new Statement::Var_Decl(type, oc2.str(),  new Expr::Vacc(c2->right()));
+       }
+       
+       stmts->push_back(c1);
+       stmts->push_back(c2);       
+   }
+   
+   return prod;
+}
+
+
+int Fn_Def::codegen_pareto_comparator_all_dim(Statement::Var_Decl *c1, Statement::Var_Decl *c2, Statement::Var_Decl *dim, Operator &comp, Product::Base &product) {
   
     // create access for all dimensions
   int i = 0;
   int D = 0;
   std::list<std::pair<Product::Base*, bool> > c_1_products;
   std::list<Statement::Var_Decl*> c_1_decl;
-  get_pareto_dimensions(product, comparator->stmts, &i, &D, c1, std::string("c1"), c_1_products, c_1_decl);
+  get_pareto_dimensions(product, comp.stmts, &i, &D, c1, std::string("c1"), c_1_products, c_1_decl, product.get_float_accuracy());
    
   i = 0;
   D = 0;
   std::list<std::pair<Product::Base*, bool> > c_2_products;
   std::list<Statement::Var_Decl*> c_2_decl;
-  get_pareto_dimensions(product, comparator->stmts, &i, &D, c2, std::string("c2"), c_2_products, c_2_decl);
+  get_pareto_dimensions(product, comp.stmts, &i, &D, c2, std::string("c2"), c_2_products, c_2_decl, product.get_float_accuracy());
     
-  
-  std::list<Statement::Base*> *cur_stmts = &comparator->stmts;
+  std::list<Statement::Base*> *cur_stmts = &comp.stmts;
   
   // loop over all dimensions
   int d = 1;
@@ -2303,13 +2363,16 @@ void Fn_Def::codegen_pareto_multi_yukish(Fn_Def &a, Fn_Def &b, Product::Two &pro
   std::list<Statement::Var_Decl*>::iterator it_c2 = c_2_decl.begin();
   std::list<std::pair<Product::Base*, bool> >::iterator it = c_1_products.begin();
  
+  Statement::Switch *sw = new Statement::Switch(new Expr::Vacc(*dim));
+  
+  comp.stmts.push_back(sw);
+  
   for (; it != c_1_products.end(); ++it, ++it_c1, ++it_c2, ++d) {
       
+        std::ostringstream D_str;
+        D_str << d;
       
-       // test if add
-        Statement::If *if_case_add = new Statement::If(new Expr::Eq( new Expr::Vacc(*dim) , new Expr::Const(new Const::Int(d))));
-        cur_stmts->push_back(if_case_add);
-        cur_stmts = &if_case_add->then;
+        cur_stmts = sw->add_case(new std::string(D_str.str()));
         
         Statement::Var_Decl *u = *it_c1;
         Statement::Var_Decl *x = *it_c2;
@@ -2405,14 +2468,18 @@ void Fn_Def::codegen_pareto_multi_yukish(Fn_Def &a, Fn_Def &b, Product::Two &pro
         if_equal->then.push_back(ret_equal);
         if_equal->els.push_back(ret_lesser);
         
-        cur_stmts = &if_case_add->els;
   }
   
   Statement::Return *ret_cond = new Statement::Return(new Expr::Const(new Const::Int(-1)));
-  comparator->stmts.push_back(ret_cond);
+  comp.stmts.push_back(ret_cond);
   
-  
-  
+  return D;
+}
+
+
+// generates the comparator element needed for advanced multi-dim pareto
+void Fn_Def::codegen_pareto_multi_yukish(Fn_Def &a, Fn_Def &b, Product::Two &product, int cutoff, int D) {
+
     // real implementation is in rtlib, this just calls the function passing the comparator
 
     std::ostringstream D_str;
@@ -2437,7 +2504,7 @@ void Fn_Def::codegen_pareto_multi_yukish(Fn_Def &a, Fn_Def &b, Product::Two &pro
     pareto->add_arg(*answers);
     pareto->add_arg(first);
     pareto->add_arg(second);
-    pareto->add_arg(comparator->name);
+    pareto->add_arg(comparator->object);
     pareto->add_arg(new std::string(D_str.str()));
     pareto->add_arg(new std::string(cutoff_str.str()));
     
@@ -2495,7 +2562,21 @@ void Fn_Def::codegen_pareto_lex(Fn_Def &a, Fn_Def &b, Product::Two &product)
   if_empty->then.push_back(new Statement::Continue());
   
   // raw comp is easy
-  Statement::Var_Decl *v = new Statement::Var_Decl(return_type->right(), "v",  new Expr::Vacc(tupel->right()));
+  Statement::Var_Decl *v;
+  if (return_type->right()->is(Type::FLOAT) && product.get_float_accuracy() != 0) {
+
+        Expr::Fn_Call *round = new Expr::Fn_Call(Expr::Fn_Call::ROUND_TO_DIGIT);
+        std::ostringstream offset;
+        offset  << (int )std::pow(10, product.get_float_accuracy());
+
+        round->add_arg( new std::string(offset.str()) );
+        round->add_arg( new Expr::Vacc(tupel->right()) );
+
+        v = new Statement::Var_Decl(return_type->right(), "v",  round);
+            
+  } else {
+        v = new Statement::Var_Decl(return_type->right(), "v",  new Expr::Vacc(tupel->right()));
+  }
   loop_body->push_back(v);
   
   // get last element of the list
@@ -2503,7 +2584,21 @@ void Fn_Def::codegen_pareto_lex(Fn_Def &a, Fn_Def &b, Product::Two &product)
   last_answer->add_arg(*answers);
   
   Statement::Var_Decl *tmp = new Statement::Var_Decl(return_type->component(), "tmp",  last_answer);
-  Statement::Var_Decl *y = new Statement::Var_Decl(return_type->right(), "y",  new Expr::Vacc(tmp->right()));
+  Statement::Var_Decl *y;
+  if (return_type->right()->is(Type::FLOAT) && product.get_float_accuracy() != 0) {
+            
+        Expr::Fn_Call *round = new Expr::Fn_Call(Expr::Fn_Call::ROUND_TO_DIGIT);
+        std::ostringstream offset;
+        offset  << (int )std::pow(10, product.get_float_accuracy());
+
+        round->add_arg( new std::string(offset.str()) );
+        round->add_arg( new Expr::Vacc(tmp->right()) );
+
+        y = new Statement::Var_Decl(return_type->right(), "y",  round);
+            
+    } else {
+        y = new Statement::Var_Decl(return_type->right(), "y",  new Expr::Vacc(tmp->right()));
+    }
   
   loop_body->push_back(tmp);
   loop_body->push_back(y);
@@ -2594,7 +2689,7 @@ void Fn_Def::codegen_takeone(Fn_Def &a, Fn_Def &b, Product::Two &product)
   codegen_times(a, b, product);
 }
 
-void Fn_Def::codegen_nop(Fn_Def &a, Fn_Def &b, Product::Two &product)
+void Fn_Def::codegen_nop(Product::Two &product)
 {
   Statement::Return *ret =
     new Statement::Return(new Expr::Vacc(names.front()));
@@ -2721,7 +2816,7 @@ Mode Fn_Def::derive_role() const
 // find type of the choice function
 Expr::Fn_Call::Builtin Fn_Def::choice_fn_type() const
 {
-  if (!choice_fn) {
+  if (!choice_fn) { 
     assert(choice_fn_type_ != Expr::Fn_Call::NONE);
     return choice_fn_type_;
   }
@@ -2836,31 +2931,83 @@ void Fn_Def::optimize_classify()
 }
 
 
-void Fn_Def::add_choice_specialization()
+void Fn_Def::add_choice_specialization(Fn_Def &a, Fn_Def &b, Product::Two &product)
 {
-  assert(!adaptor || !adaptor->adaptor);
-
-  bool is_list_opt = false;
-
-  Fn_Def *x = new Fn_Def(*this);
+  
+  Fn_Def *x = 0;  
   Fn_Def *y = 0;
-  if (adaptor)
-    y = new Fn_Def(*adaptor);
-  else
-    is_list_opt = true;
-  x->adaptor = y;
-  if (y)
-    adaptor->adaptor = x;
-  else
-    adaptor = x;
+  if (gen_type == STANDARD && 
+           (product.get_adp_specialization() == ADP_Mode::PARETO_EAGER_STEP || product.get_adp_specialization() == ADP_Mode::PARETO_EAGER_BLOCK)) {
+        
+        // base case is NOP, but we need real codegen
+        x = new Fn_Def();
+        x->name = name;
+        x->names = names;
+        x->types = types;
+        x->return_type = return_type;
+        x->target_name_ = target_name_;
+        x->gen_type = CHOICE_SPECIALIZATION;
+        x->paras = paras;
+        x->choice_fn = true;
+        
+        x->codegen_choice(a, b, product);
+        
+//        x->paras.clear();
+//        x->add_para(x->types.front(), new std::string("i"));
+        
+        y = x->adaptor;
+        
+        if (adaptor)
+            adaptor->adaptor = x;
+          else
+            adaptor = x;
+        
+  } else {
+          
+    assert(!adaptor || !adaptor->adaptor);
 
-  if (is_list_opt) {
-    Type::Base *t = x->types.front()->component()->left();
-    assert(t);
-    x->add_para(new Type::Referencable(t), new std::string("left"));
-    return;
+    bool is_list_opt = false;
+
+    x = new Fn_Def(*this);
+
+    x->comparator = NULL;
+    x->sorter = NULL;
+
+    
+    if (adaptor)
+      y = new Fn_Def(*adaptor);
+    else
+      is_list_opt = true;
+    x->adaptor = y;
+    if (y)
+      adaptor->adaptor = x;
+    else
+      adaptor = x;
+
+    if (is_list_opt) {
+      Type::Base *t = x->types.front()->component()->left();
+
+      if (x->types.front()->is(Type::LIST)){
+          t = new Type::List(t);
+      }
+
+      assert(t);
+      x->add_para(new Type::Referencable(t), new std::string("left"));
+      return;
+    }
   }
-
+  
+  // sorting for adaptors taking forwards tabulated data
+  for (Statement::iterator i = Statement::begin(y->stmts); i != Statement::end(); ++i) {
+    Statement::Base *s = *i;
+    if (s->is(Statement::SORTER)) {
+        Statement::Sorter *so = dynamic_cast<Statement::Sorter*>(s);
+        
+        *i = new Statement::Sorter(so->op, so->list) ;
+        (*i)->disable();
+    }
+  }
+  
   for (Statement::iterator i = Statement::begin(x->stmts); i != Statement::end(); ++i) {
     Statement::Base *s = *i;
     if (s->is(Statement::VAR_DECL)) {

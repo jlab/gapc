@@ -265,8 +265,8 @@ void Algebra::init_fn_suffix(const std::string &s)
 
 void Algebra::print_code(Printer::Base &s)
 {
-  s << endl;
-
+    s << endl;   
+  
   assert(signature);
   for (hashtable<std::string, Fn_Def*>::iterator i = fns.begin(); i != fns.end(); ++i) {
     if (i->second->in_use() || signature->decl(i->first) )
@@ -368,12 +368,20 @@ Fn_Def *Algebra::choice_fn(Fn_Def *f)
   return i->second;
 }
 
-void Algebra::add_choice_specialisations()
+void Algebra::add_choice_specialisations(Product::Two &product)
 {
-  for (hashtable<std::string, Fn_Def*>::iterator i = choice_fns.begin();
+  Algebra *a = product.left()->algebra();
+  Algebra *b = product.right()->algebra();
+  for (hashtable<std::string, Fn_Def*>::iterator i=choice_fns.begin();
        i != choice_fns.end(); ++i) {
-    i->second->add_choice_specialization();
-  }
+      
+    hashtable<std::string, Fn_Def*>::iterator x = a->fns.find(i->first);
+    assert(x != a->fns.end());
+    hashtable<std::string, Fn_Def*>::iterator y = b->fns.find(i->first);
+    assert(y != b->fns.end());
+    
+    i->second->add_choice_specialization(*x->second, *y->second, product);
+  }  
 }
 
 

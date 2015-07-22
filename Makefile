@@ -56,6 +56,7 @@ CXXFILES = statement/fn_call.cc expr/fn_call.cc tablegen.cc \
 	   fn_arg.cc grammar.cc \
 	   terminal.cc ast.cc log.cc \
 	   driver.cc \
+	   adp_mode.cc operator.cc \
 	   $(UNITTEST_CXX) \
            $(MODTESTS_CXX) \
 	   testdata/test/range.cc \

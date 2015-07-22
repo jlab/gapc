@@ -48,7 +48,8 @@ namespace Statement {
 			     MARK,
 			     FINALIZE,
 			     INNER,
-                             
+                             MARK_POSITION,
+                             JOIN_MARKED
 			};
 			
 			

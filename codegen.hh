@@ -44,6 +44,7 @@ namespace Code {
       Bt_Type bt_type;
 
       bool allow_cooptimal_;
+      bool keep_equal_; // used for ADP specialization
       bool kscoring_;
 
       Bool subopt_buddy_;
@@ -53,13 +54,13 @@ namespace Code {
     public:
       Mode()
         : type(UNGER), bt_type(FORWARD),
-          allow_cooptimal_(true),
+          allow_cooptimal_(true), keep_equal_(true),
           kscoring_(false)
       {
       }
       Mode(Type t, Bt_Type b)
         : type(t), bt_type(b),
-          allow_cooptimal_(true),
+          allow_cooptimal_(true), keep_equal_(true),
           kscoring_(false)
       {
       }
@@ -75,6 +76,9 @@ namespace Code {
       void set_cooptimal(bool t) { allow_cooptimal_ = t; }
       bool cooptimal() const { return allow_cooptimal_; }
 
+      void set_keep_cooptimal(bool t) { keep_equal_ = t; }
+      bool keep_cooptimal() const { return keep_equal_; }
+      
       void set_kscoring(bool t) { kscoring_ = t; }
       bool kscoring() const { return kscoring_; }
 

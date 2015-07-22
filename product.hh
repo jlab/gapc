@@ -40,6 +40,8 @@
 #include "bool.hh"
 
 #include "expr/fn_call.hh"
+#include "adp_mode.hh"
+
 
 class Default;
 class Filter;
@@ -50,14 +52,18 @@ namespace Product {
 	
 	enum Type { SINGLE, TIMES, KLASS, CARTESIAN, NOP, OVERLAY, TAKEONE, PARETO};
 	
-        enum Sort_Type { NONE, STANDARD, MULTI};
-	
+        // NONE: normal ADP
+        // STANDARD, MULTI: normal ADP with sorted Pareto products
+        // COMPERATOR, SORTER: create a comperator or sorter for generalized ADP
+        enum Sort_Type { NONE, STANDARD, MULTI, COMPERATOR, SORTER, COMPERATOR_SORTER,
+            NULLARY_COMPERATOR, NULLARY_SORTER, NULLARY_COMPERATOR_SORTER};
+	        
 	class Base {
 			
 		private:
 			
 			Type type_;
-			
+			ADP_Mode::Adp_Specialization adp_specialization;
 			
 		protected:
 			
@@ -68,6 +74,9 @@ namespace Product {
                         // set to value when sorting needs to be generated for the 
                         // choice funtion
                         Sort_Type sorted_choice;
+                        
+                        // number of digits used for pareto or sorting
+                        int float_accuracy;
 			
 		public:
 			
@@ -109,7 +118,7 @@ namespace Product {
 			virtual void init_fn_suffix(const std::string &p) = 0;
 			
 			virtual void codegen() = 0;
-			
+                        
 			virtual void print_code(Printer::Base &s) = 0;
 			
 			
@@ -134,7 +143,9 @@ namespace Product {
                         void set_sorted_choice(Sort_Type st);
                         
                         Sort_Type get_sorted_choice();
-			
+                        
+                        bool is_sorted_choice();
+                        			
 			//FIXME protected:
 		public:
 			
@@ -186,7 +197,20 @@ namespace Product {
 			
 			virtual Base *replace_classified(bool &x) = 0;
 			
+                        void set_adp_specialization(ADP_Mode::Adp_Specialization a) {
+                            adp_specialization = a;
+                        }
+                        ADP_Mode::Adp_Specialization get_adp_specialization() {
+                            return adp_specialization;
+                        }
                         
+                        void set_float_accuracy(int a) {
+                            float_accuracy = a;
+                        }
+                        int get_float_accuracy() {
+                            return float_accuracy;
+                        }
+                                                  
                 // extension for sorting with kbacktrack!
                 public:
                         Base* sort_product;
@@ -194,7 +218,7 @@ namespace Product {
                         void set_sort_product(Base *sp) {
                             sort_product = sp;
                         }
-			
+                        			
 	};
 	
 	
@@ -417,7 +441,7 @@ namespace Product {
 		public:
                     			
 			Pareto(Base *a, Base *b, const Loc &l) :
-                           Two(PARETO, l, a, b), pareto_type(NoSort), multi_dim(false), cutoff(0) {}
+                           Two(PARETO, l, a, b), pareto_type(NoSort), multi_dim(false), cutoff(65) {}
                            
 			bool init();
                         

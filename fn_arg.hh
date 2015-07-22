@@ -144,7 +144,7 @@ namespace Fn_Arg {
 			
 			virtual void print(std::ostream &s) = 0;
 			
-			
+			virtual bool choice_set() = 0;
 		protected:
 			
 			Yield::Multi m_ys;
@@ -204,7 +204,7 @@ namespace Fn_Arg {
 			const Yield::Multi &multi_ys() const;
 			
 			void init_ret_decl(unsigned int i, const std::string &prefix);
-			
+			bool choice_set();
 			
 	};
 	
@@ -254,7 +254,7 @@ namespace Fn_Arg {
 			void print(std::ostream &s);
 			
 			void init_multi_ys();
-			
+			bool choice_set();
 			
 	};
 	

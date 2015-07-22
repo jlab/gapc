@@ -148,7 +148,7 @@ void KBacktrack::gen_instance_code(AST &ast)
   ast.optimize_choice(*instance);
   instance->product->install_choice_filter();
 
-  instance->product->algebra()->add_choice_specialisations();
+  instance->product->algebra()->add_choice_specialisations(*dynamic_cast<Product::Two*>(instance->product));
 }
 
 

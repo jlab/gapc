@@ -35,7 +35,13 @@
 
 #include <cassert>
 #include <cstdlib>
+#include "operator.hh"
 
+
+Statement::Sorter::Sorter(Operator *op, Var_Decl *l)  : Block_Base(SORTER), list(l)
+{
+    this->op = op->object;
+}
 
 Statement::Var_Decl::Var_Decl(::Type::Base *t, Expr::Base *e, Expr::Base *f)
 	: Base(VAR_DECL), type(t), rhs(f)
@@ -115,6 +121,11 @@ void Statement::If::print(Printer::Base &p) const
 	p.print(*this);
 }
 
+
+void Statement::Switch::print(Printer::Base &p) const
+{
+	p.print(*this);
+}
 
 void Statement::For::print(Printer::Base &p) const
 {
@@ -345,6 +356,17 @@ Statement::Iterator &Statement::Iterator::operator++()
 }
 
 
+ std::list<Statement::Base*> *Statement::Switch::add_case(std::string *n) {
+     
+     std::string *name = new std::string(*n);
+     std::list<Base*> cont;
+     std::pair<std::string, std::list<Base*> > newCase= std::make_pair( *name,  cont);
+     cases.push_back(newCase);
+     return &cases.back().second;
+ }
+
+ 
+ 
 Statement::Foreach::Foreach(Var_Decl *i, Var_Decl *l)
 	: Block_Base(FOREACH), elem(i), container(l), iteration(true)
 {

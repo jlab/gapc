@@ -25,6 +25,7 @@ set +e
 install -d $PREFIX/bin
 set -e
 install -d $PREFIX/include/rtlib
+install -d $PREFIX/include/rtlib/adp_specialization
 install -d $PREFIX/include/librna
 install -d "$SHARE"
 install -d "$SHARE"/librna
@@ -36,7 +37,15 @@ set -e
 install -m 755 gapc $PREFIX/bin
 
 for i in rtlib/*; do
-  install -m 644 $i $PREFIX/include/rtlib
+  if [[ ! -d $i ]]; then
+  	install -m 644 $i $PREFIX/include/rtlib
+  fi
+done
+
+for i in rtlib/adp_specialization/*; do
+  if [[ ! -d $i ]]; then
+  	install -m 644 $i $PREFIX/include/rtlib/adp_specialization
+  fi
 done
 
 install -m 644 librna/rnalib.h $PREFIX/include/librna

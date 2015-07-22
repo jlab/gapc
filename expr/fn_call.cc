@@ -146,6 +146,7 @@ const char * Expr::Fn_Call::map_builtin_to_string[] = {
   "get_back",
   "erase_element",
   "insert_element",
+  "round_to_digit",
   "minimum",
   "maximum",
   "sum",

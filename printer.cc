@@ -40,6 +40,7 @@ Printer::Base::~Base() {}
 
 
 void Printer::Base::print(const Fn_Def &fn_def) {}
+void Printer::Base::print(const Operator &op) {}
 
 
 void Printer::Base::print(const Statement::Base &stmt)
@@ -54,6 +55,7 @@ void Printer::Base::print(const Statement::For &stmt) {}
 void Printer::Base::print(const Statement::While &stmt) {}
 void Printer::Base::print(const Statement::Var_Decl &stmt) {}
 void Printer::Base::print(const Statement::If &stmt) {}
+void Printer::Base::print(const Statement::Switch &stmt) {}
 void Printer::Base::print(const Statement::Return &stmt) {}
 void Printer::Base::print(const Statement::Break &stmt) {}
 void Printer::Base::print(const Statement::Increase &stmt) {}
@@ -170,6 +172,11 @@ namespace Printer {
 		p.print(b);
 		return p;
 	}
+        Base &operator<<(Base &p, const Operator &b)
+	{
+		p.print(b);
+		return p;
+	}
 	
 	Base &operator<<(Base &p, const Statement::Base &b)
 	{
@@ -256,6 +263,12 @@ namespace Printer {
 	}
 	
 	Base &operator<<(Base &p, const Statement::If &b)
+	{
+		p.print(b);
+		return p;
+	}
+        
+        Base &operator<<(Base &p, const Statement::Switch &b)
 	{
 		p.print(b);
 		return p;

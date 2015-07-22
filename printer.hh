@@ -41,6 +41,7 @@ class Grammar;
 class Fn_Def;
 class AST;
 class Options;
+class Operator;
 
 
 namespace Printer { class Base; }
@@ -97,12 +98,14 @@ namespace Printer {
 		
 		
 		virtual void print(const Fn_Def &fn_def);
+                virtual void print(const Operator &op);
 		
 		virtual void print(const Statement::Base &stmt);
 		virtual void print(const Statement::For &stmt);
 		virtual void print(const Statement::While &stmt);
 		virtual void print(const Statement::Var_Decl &stmt);
 		virtual void print(const Statement::If &stmt);
+                virtual void print(const Statement::Switch &stmt);
 		virtual void print(const Statement::Return &stmt);
 		virtual void print(const Statement::Break &stmt);
                 virtual void print(const Statement::Increase &stmt);
@@ -198,6 +201,7 @@ namespace Printer {
 	
 	
 	Base &operator<<(Base &p, const Fn_Def &b);
+        Base &operator<<(Base &p, const Operator &b);
 	
 	Base &operator<<(Base &p, const Statement::Base &b);
 	Base &operator<<(Base &p, const Statement::Block &b);
@@ -207,6 +211,7 @@ namespace Printer {
 	Base &operator<<(Base &p, const Statement::Foreach &b);
         Base &operator<<(Base &p, const Statement::Sorter &b);
 	Base &operator<<(Base &p, const Statement::If &b);
+        Base &operator<<(Base &p, const Statement::Switch &b);
 	Base &operator<<(Base &p, const Statement::Return &b);
 	Base &operator<<(Base &p, const Statement::Break &b);
         Base &operator<<(Base &p, const Statement::Increase &b);

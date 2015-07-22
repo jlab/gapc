@@ -45,9 +45,14 @@
 #include <algorithm>
 #include <functional>
 
+#include "statement/fn_call.hh"
+
 
 Alt::Base::Base(Type t, const Loc &l)
-	:	type(t), productive(false), 
+	:	type(t), adp_specialization(ADP_Mode::STANDARD),
+                eval_nullary_fn(NULL), specialised_comparator_fn(NULL),  
+                specialised_sorter_fn(NULL), marker(NULL), disabled_spec(false),
+                productive(false), 
 		datatype(NULL), eliminated(false),
 		terminal_type(false), location(l),
 		ret_decl(NULL), filter_guards(NULL),
@@ -112,6 +117,28 @@ Alt::Base *Alt::Multi::clone()
 		a->list.push_back((*i)->clone());
 	}
 	return a;
+}
+
+
+void Alt::Base::add_specialised_arguments(Statement::Fn_Call *fn) {
+    switch (adp_join) {
+        case ADP_Mode::COMPERATOR:
+            fn->add_arg(specialised_comparator_fn);
+            break;
+        case ADP_Mode::SORTER:
+            fn->add_arg(specialised_sorter_fn);
+            break;
+        case ADP_Mode::SORTER_COMPERATOR:
+            fn->add_arg(specialised_comparator_fn);
+            fn->add_arg(specialised_sorter_fn);
+            break;
+        default:
+            break;    
+    }
+    
+    if(ADP_Mode::is_coopt_param(adp_specialization)) {
+        fn->add_arg(new Expr::Const(new Const::Bool(keep_coopts)));
+    }  
 }
 
 
@@ -662,7 +689,7 @@ Type::Status Alt::Link::infer_missing_types()
 		return ::Type::RUNNING;
 	}
 	t = t->simple();
-	
+        
 	::Type::List *l = dynamic_cast< ::Type::List*>(nt->data_type());
 	if (l) {
 		l = new ::Type::List(*l);
@@ -810,6 +837,19 @@ bool Alt::Simple::has_moving_k()
 	return false;
 }
 
+
+/* Returns true if no subfunctions are involved. This value is used to apply 
+ sorting, pareto or others for specialised ADP version, such as Pareto Eager or Sorted ADP*/
+bool Alt::Simple::is_nullary()
+{
+	unsigned x = 0;
+	for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end();++i) {
+            if(!(*i)->terminal_type && (*i)->choice_set() ) {
+                return false;
+            }
+	}
+	return true;
+}
 
 bool Alt::Simple::eliminate_lists()
 {
@@ -1318,9 +1358,6 @@ void Alt::Simple::init_foreach()
 }
 
 
-#include "statement/fn_call.hh"
-
-
 void Alt::Simple::ret_decl_empty_block(Statement::If *stmt)
 {
 	if (!datatype->simple()->is(::Type::LIST)) {
@@ -1606,8 +1643,8 @@ std::list<Statement::Base*> *Alt::Simple::add_arg_code(AST &ast, std::list<State
 	assert(i != l.end());
 	
 	Fn_Arg::Base *last = *i;
-	stmts->insert(stmts->end(),
-	(*i)->statements().begin(), (*i)->statements().end());
+	stmts->insert(stmts->end(), (*i)->statements().begin(), (*i)->statements().end());
+        
 	if ((*i)->is(Fn_Arg::ALT)) {
 		for (std::vector<Statement::Var_Decl*>::const_iterator j = (*i)->ret_decls().begin(); j != (*i)->ret_decls().end(); ++j) {
 			stmts->push_back(*j);
@@ -1806,27 +1843,83 @@ std::list<Statement::Base*> *Alt::Simple::insert_index_stmts(std::list<Statement
 
 void Alt::Simple::codegen(AST &ast)
 {
+    
+       // std::cout << "-----------Simple IN" << std::endl;
+    
+        bool nullary = false; 
+        Expr::Base *answer_list = NULL;
+        
+        // make the list not 
+        if (!disabled_spec && adp_specialization != ADP_Mode::STANDARD) {
+            nullary = is_nullary();
+            answer_list = ret_decl->rhs;
+            
+            if (nullary || ADP_Mode::is_step(adp_specialization)) {
+                ret_decl->rhs = NULL;
+            }
+        }
+        
 	statements.clear();
 	push_back_ret_decl();
 	std::list<Statement::Base*> *stmts = &statements;
+        
+        
 	init_guards();
 	if (guards) {
 		stmts->push_back(guards);
 		if (datatype->simple()->is(::Type::LIST)) {
-			if (!ret_decl->rhs) {
+                        
+                        // only call finalize on hash lists
+                        ::Type::List *l = dynamic_cast< ::Type::List*>(ret_decl->type);
+			if (!ret_decl->rhs && l->push_type() == ::Type::List::HASH) {
 				Statement::Fn_Call *f = new Statement::Fn_Call (Statement::Fn_Call::FINALIZE);
 				f->add_arg(*ret_decl);
 				stmts->push_back(f);
 			}
 		}
 		stmts = &guards->then;
-	}
+	} 
 	init_filter_guards(ast);
 	if (filter_guards) {
 		stmts->push_back(filter_guards);
 		stmts = &filter_guards->then;
 		ret_decl_empty_block(filter_guards);
 	}
+        
+        
+        // answer_list is always set when return type is a list
+        // see symbol set_ret_decl_rhs
+        if (nullary && answer_list && !disabled_spec) { // automatically && adp_specialization != ADP_Mode::STANDARD
+            
+            Expr::Fn_Call *eval_null = new Expr::Fn_Call(eval_nullary_fn);
+            eval_null->add_arg(*ret_decl);
+            
+            std::string ret_eval = *ret_decl->name + "_eval";
+            Statement::Var_Decl *input_list = new Statement::Var_Decl(ret_decl->type, ret_eval);
+            input_list->rhs = eval_null;
+            
+            Statement::Fn_Call *append = new Statement::Fn_Call(Statement::Fn_Call::APPEND);
+
+            append->add_arg(answer_list);
+            append->add_arg(*input_list);
+            
+            
+            statements.push_back(input_list);
+            statements.push_back(append);
+            
+            if (ADP_Mode::is_step(adp_specialization)) {
+                
+                add_specialised_arguments(append);
+                
+            } else {
+                Statement::Fn_Call *mark = new Statement::Fn_Call(Statement::Fn_Call::MARK_POSITION);
+                mark->add_arg(answer_list);
+                mark->add_arg(*marker);
+
+                statements.push_back(mark);
+            }
+        }
+        
 	if (!loops.empty() && !has_index_overlay()) {
 		std::list<Statement::For*> *l = &loops;
 		/*
@@ -1846,7 +1939,7 @@ void Alt::Simple::codegen(AST &ast)
 	pre_stmts.clear();
 	pre_cond.clear();
 	pre_cond.push_back(add_arg_code(ast, pre_stmts));
-	
+
 	init_foreach();
 	std::list<Statement::Base*> *loop_body = inner_guards_body;
 	if (!foreach_loops.empty()) {
@@ -1855,7 +1948,49 @@ void Alt::Simple::codegen(AST &ast)
 		loop_body = &f->statements;
 	}
 	init_body(ast);
+        
+        if(!disabled_spec && !nullary && answer_list && adp_specialization != ADP_Mode::STANDARD) {
+            
+            std::list<Statement::Base*> *app_stmts;
+            // get statements after innermost loop
+            if (foreach_loops.size() > 1) {
+                // 2 or more nested loops
+                   std::list<Statement::Foreach *>::iterator it = foreach_loops.begin();
+                   std::advance(it, foreach_loops.size()-2);
+                   app_stmts = &(*it)->statements;
+
+            } else {
+
+                   app_stmts = inner_guards_body;
+            }
+            
+            if (ADP_Mode::is_step(adp_specialization)) {
+            
+                Statement::Fn_Call *append = new Statement::Fn_Call(Statement::Fn_Call::APPEND);
+                append->add_arg(answer_list);
+                append->add_arg(*ret_decl);
+                
+                add_specialised_arguments(append);
+
+                app_stmts->push_back(append);
+
+                Statement::Fn_Call *clear = new Statement::Fn_Call(Statement::Fn_Call::CLEAR);
+                clear->add_arg(*ret_decl);
+
+                app_stmts->push_back(clear);
+            
+            } else {
+                Statement::Fn_Call *mark = new Statement::Fn_Call(Statement::Fn_Call::MARK_POSITION);
+                mark->add_arg(answer_list);
+                mark->add_arg(*marker);
+
+                app_stmts->push_back(mark);
+            }
+        }
+        
 	loop_body->insert(loop_body->end(), body_stmts.begin(), body_stmts.end());
+        
+       // std::cout << "-----------Simple OUT" << std::endl;
 }
 
 
@@ -1897,6 +2032,9 @@ void Alt::Link::add_args(Expr::Fn_Call *fn)
 
 void Alt::Link::codegen(AST &ast)
 {
+    
+       // std::cout << "link " << *name << std::endl;
+    
 	statements.clear();
 	push_back_ret_decl();
 	
@@ -1951,12 +2089,15 @@ void Alt::Link::codegen(AST &ast)
 			e->add_arg(*ret_decl);
 			c->els.push_back(e);
 		}
-	}
+	}        
 }
 
 
 void Alt::Block::codegen(AST &ast)
 {
+    
+       // std::cout << "-----------------Block " << std::endl;
+    
 	statements.clear();
 	push_back_ret_decl();
 	Statement::Fn_Call *fn = new Statement::Fn_Call(Statement::Fn_Call::EMPTY);
@@ -1998,29 +2139,68 @@ void Alt::Block::codegen(AST &ast)
 			Statement::Fn_Call *fn = new Statement::Fn_Call(Statement::Fn_Call::APPEND);
 			fn->add_arg(*ret_decl);
 			fn->add_arg(*(*i)->ret_decl);
+                        
+                        if(!disabled_spec && adp_specialization != ADP_Mode::STANDARD && ADP_Mode::is_step(adp_specialization) ) {
+                            add_specialised_arguments(fn);
+                        }
 			inner_stmts->push_back(fn);
+                        
+                        if(!disabled_spec && adp_specialization != ADP_Mode::STANDARD && !ADP_Mode::is_step(adp_specialization) ) {
+                             Statement::Fn_Call *mark = new Statement::Fn_Call(Statement::Fn_Call::MARK_POSITION);
+                              mark->add_arg(*ret_decl);
+                              mark->add_arg(*marker);
+
+                             inner_stmts->push_back(mark);
+                        }
 		}
 		else if (!datatype->simple()->is(::Type::LIST) && !(*i)->data_type()->simple()->is(::Type::LIST)) {
 			Statement::Var_Assign *v = new Statement::Var_Assign(*ret_decl, *(*i)->ret_decl);
 			inner_stmts->push_back(v);
 		}
 		else if (datatype->simple()->is(::Type::LIST)) {
-			Statement::Fn_Call *fn = new Statement::Fn_Call(Statement::Fn_Call::PUSH_BACK);
-			fn->add_arg(*ret_decl);
-			fn->add_arg(*(*i)->ret_decl);
-			Expr::Fn_Call *e = new Expr::Fn_Call(Expr::Fn_Call::NOT_EMPTY);
+                      //  std::cout << "Push back BLOCK" << *ret_decl << std::endl;
+
+                        Expr::Fn_Call *e = new Expr::Fn_Call(Expr::Fn_Call::NOT_EMPTY);
 			e->add_arg(*(*i)->ret_decl);
-			Statement::If *cond = new Statement::If(e, fn);
-			inner_stmts->push_back(cond);
+			Statement::If *cond = new Statement::If(e);
+			inner_stmts->push_back(cond); 
+                         
+                        if(!disabled_spec && adp_specialization != ADP_Mode::STANDARD && ADP_Mode::is_step(adp_specialization) ) {
+                             
+                            Statement::Fn_Call *fn = new Statement::Fn_Call(Statement::Fn_Call::APPEND);
+                            fn->add_arg(*ret_decl);
+                            fn->add_arg(*(*i)->ret_decl);
+                        
+                            add_specialised_arguments(fn);
+                            
+                            cond->then.push_back(fn);
+                            
+                        } else {
+                            Statement::Fn_Call *fn = new Statement::Fn_Call(Statement::Fn_Call::PUSH_BACK);
+                            fn->add_arg(*ret_decl);
+                            fn->add_arg(*(*i)->ret_decl);
+                            
+                            cond->then.push_back(fn);
+                            
+                            if(!disabled_spec && adp_specialization != ADP_Mode::STANDARD && !ADP_Mode::is_step(adp_specialization) ) {
+                                Statement::Fn_Call *mark = new Statement::Fn_Call(Statement::Fn_Call::MARK_POSITION);
+                                mark->add_arg(*ret_decl);
+                                mark->add_arg(*marker);
+
+                                cond->then.push_back(mark);
+                           }
+                        }
 		}
 	}
 	if (datatype->simple()->is(::Type::LIST)) {
-		if (!ret_decl->rhs) {
+                ::Type::List *l = dynamic_cast< ::Type::List*>(ret_decl->type);
+		if (!ret_decl->rhs && l->push_type() == ::Type::List::HASH) {
 			Statement::Fn_Call *f = new Statement::Fn_Call(Statement::Fn_Call::FINALIZE);
 			f->add_arg(*ret_decl);
 			stmts->push_back(f);
 		}
 	}
+       // std::cout << "-----------------End Block " << std::endl;
 }
 
 
@@ -2738,3 +2918,7 @@ const std::list<Statement::Var_Decl*> &Alt::Multi::ret_decls() const
 	return ret_decls_;
 }
 
+
+bool Alt::Base::choice_set() {
+    return datatype->simple()->is(::Type::LIST) && eval_nullary_fn;
+}

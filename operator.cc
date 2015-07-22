@@ -21,37 +21,26 @@
 
 }}} */
 
+#include "operator.hh"
+#include "para_decl.hh"
+#include "statement.hh"
 
-#ifndef STATEMENT_FWD_HH
-#define STATEMENT_FWD_HH
 
-namespace Statement {
-  class Base;
-  class Block;
-  class Fn_Call;
-  class For;
-  class While;
-  class Foreach;
-  class Sorter;
-  class If;
-  class Switch;
-  class Return;
-  class Var_Assign;
-  class Var_Decl;
-  class Backtrace_Decl;
-  class Backtrace_NT_Decl;
-  class Iterator;
-  class Hash_Decl;
-  typedef Iterator iterator;
-
-  class Break;
-  class Continue;
-  class Increase;
-  class Decrease;
-
-  class Marker_Decl;
-
-  class Table_Decl;
+// add new parameter to all lists
+void Operator::add_para(Type::Base *type, std::string *n)
+{
+    // no security checks like for functions
+    // because there is no user contact with this function
+    
+  paras.push_back(new Para_Decl::Simple(type, n));
 }
 
-#endif
+
+void Operator::add_const_value(Statement::Var_Decl *v) {
+    // no sanity checks because only internal use
+    // but, v MUST have a constant RHS
+    
+    const_values.push_back(v);
+}
+
+

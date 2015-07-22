@@ -46,6 +46,7 @@
 #include "expr_fwd.hh"
 #include "statement_fwd.hh"
 #include "para_decl_fwd.hh"
+#include "adp_mode.hh"
 
 
 class Fn_Decl;
@@ -68,16 +69,18 @@ namespace Symbol {
 	
 	enum Type { TERMINAL, NONTERMINAL };
 	
-	
+        
 	class Base {
 		
 		private:
 			
 			Type type;
 			
-			
 		protected:
-			
+                        
+                        ADP_Mode::Adp_Specialization adp_specialization;
+                        ADP_Mode::Adp_Join adp_join;
+                    
 			Bool never_tabulate_;
 			bool tabulated;
 			bool reachable;
@@ -144,6 +147,21 @@ namespace Symbol {
 			{
 				return type == t;
 			}
+                        
+                        void set_adp_specialization(ADP_Mode::Adp_Specialization a) {
+                            adp_specialization = a;
+                        }
+                        ADP_Mode::Adp_Specialization get_adp_specialization() {
+                            return adp_specialization;
+                        }
+                        
+                        void set_adp_join(ADP_Mode::Adp_Join a) {
+                            adp_join = a;
+                        }
+                        ADP_Mode::Adp_Join get_adp_join() {
+                            return adp_join;
+                        }
+                        
 			bool is_reachable() const
 			{
 				return reachable;
@@ -354,6 +372,7 @@ namespace Symbol {
 			
 			bool tab_dim_ready;
 			
+                        
 			
 		//private:
 		public:
@@ -368,6 +387,12 @@ namespace Symbol {
 			
 			std::string *eval_fn;
 			Fn_Decl *eval_decl;
+                        
+                        std::string *eval_nullary_fn;
+                        std::string *specialised_comparator_fn;
+                        std::string *specialised_sorter_fn;
+                        
+                        Statement::Var_Decl* marker; 
 			
 			std::list<Statement::If*> guards;
 			
@@ -396,6 +421,7 @@ namespace Symbol {
 			
 			size_t width();
 			
+                        void set_adp_specialization(ADP_Mode::Adp_Specialization a, std::string s_null, std::string s_comp, std::string s_comp_dim);
 			
 		private:
 			
@@ -474,7 +500,8 @@ namespace Symbol {
 			std::list<Fn_Def*> code_;
 			std::list<Statement::Base*> ret_stmts;
 			::Type::Base *data_type_before_eval();
-			void set_ret_decl_rhs();
+                        void add_specialised_arguments(Statement::Fn_Call *fn, bool keep_coopt);
+			void set_ret_decl_rhs(Code::Mode mode);
 			void init_ret_stmts(Code::Mode mode);
 			std::list<Statement::Base*> table_guard;
 			void init_table_decl(const AST &ast);

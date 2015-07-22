@@ -29,6 +29,8 @@
 #include "fn_decl.hh"
 #include "visitor.hh"
 
+#include "const.hh"
+
 #include "expr.hh"
 #include "statement.hh"
 #include "yieldsize.hh"
@@ -46,7 +48,8 @@
 
 
 Symbol::Base::Base(std::string *n, Type t, const Loc &l)
-	:	type(t), tabulated(false), reachable(false), productive(false),
+	:	type(t), adp_specialization(ADP_Mode::STANDARD), adp_join(ADP_Mode::EMPTY),
+                tabulated(false), reachable(false), productive(false),
 		self_rec_count(0), active(false), self_rec_started(false),
 		datatype(NULL), eliminated(false),
 		terminal_type(false), rt_computed(false),
@@ -76,6 +79,8 @@ Symbol::NT::NT(std::string *n, const Loc &l)
 	:	Base(n, NONTERMINAL, l), grammar_index_(0),
 		recompute(false), tab_dim_ready(false),
 		eval_fn(NULL), eval_decl(NULL),
+                eval_nullary_fn(NULL), specialised_comparator_fn(NULL),
+                specialised_sorter_fn(NULL), marker(NULL),
 		ret_decl(NULL), table_decl(NULL),
 		zero_decl(0)
 {
@@ -478,7 +483,7 @@ bool Symbol::Base::set_data_type(::Type::Base *t, const Loc &l)
 }
 
 bool Symbol::Base::set_data_type(::Type::Base *t)
-{
+{ 
   if (!t)
     return true;
   Loc l;
@@ -565,11 +570,66 @@ void Symbol::NT::print_type(std::ostream &s)
 }
 
 
+struct SetADPSpecializations : public Visitor {
+        
+        std::string* eval_nullary_fn;
+        std::string* specialised_comparator_fn;
+        std::string* specialised_sorter_fn;
+        
+        Statement::Var_Decl* marker; 
+        
+        SetADPSpecializations(std::string* d, std::string* cs, std::string* cds, Statement::Var_Decl* m) 
+        :  eval_nullary_fn(d), specialised_comparator_fn(cs), specialised_sorter_fn(cds),
+        marker(m) {}
+        
+	void visit(Alt::Base &b)
+	{
+            b.set_nullary(eval_nullary_fn);
+            b.set_comparator(specialised_comparator_fn, specialised_sorter_fn);
+            
+            if(marker) {
+                b.set_marker(marker);
+            }
+	}
+
+};
+
+void Symbol::NT::set_adp_specialization(ADP_Mode::Adp_Specialization a, std::string s_null, std::string s_comp, std::string s_sort) {
+    // set the specialization value
+    Base::set_adp_specialization(a);
+    
+    if (!eval_fn) {
+        if (datatype->simple()->is(::Type::LIST)) {
+            Log::instance()->error(location, "No Choice function" 
+                " used at non-terminal " + *name + ", but ADP specialization set!");
+        }
+       return;
+    }
+    // string of nullary
+    eval_nullary_fn = new std::string(*eval_fn + s_null);
+    specialised_comparator_fn = new std::string(*eval_fn + s_comp);
+    specialised_sorter_fn = new std::string(*eval_fn + s_sort);
+    
+    if (adp_specialization != ADP_Mode::STANDARD && !ADP_Mode::is_step(adp_specialization) ) {
+        marker =  new Statement::Var_Decl( new ::Type::List (new ::Type::Int()) , "markers");
+    }
+    
+    SetADPSpecializations v = SetADPSpecializations(eval_nullary_fn, specialised_comparator_fn, specialised_sorter_fn, marker);
+    
+    for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
+        (*i)->traverse(v);
+    }
+    
+}
+
+
+// this is called at parse time
 void Symbol::NT::set_eval_fn(std::string *n)
 {
   eval_fn = n;
 }
 
+// function reference is extracted from signature by name set at parsetime
 bool Symbol::NT::set_eval_decl(Signature_Base &s)
 {
   if (!eval_fn)
@@ -808,9 +868,32 @@ void Symbol::NT::put_guards(std::ostream &s)
   }
 }
 
+
 #include "statement/fn_call.hh"
 
-void Symbol::NT::set_ret_decl_rhs()
+void Symbol::NT::add_specialised_arguments(Statement::Fn_Call *fn, bool keep_coopts) {
+    switch (adp_join) {
+        case ADP_Mode::COMPERATOR:
+            fn->add_arg(specialised_comparator_fn);
+            break;
+        case ADP_Mode::SORTER:
+            fn->add_arg(specialised_sorter_fn);
+            break;
+        case ADP_Mode::SORTER_COMPERATOR:
+            fn->add_arg(specialised_comparator_fn);  
+            fn->add_arg(specialised_sorter_fn);
+            break;
+        default:
+            break;
+    }
+    
+    if(ADP_Mode::is_coopt_param(adp_specialization)) {
+        fn->add_arg(new Expr::Const(new Const::Bool(keep_coopts)));
+    }
+    
+}
+
+void Symbol::NT::set_ret_decl_rhs(Code::Mode mode)
 {
   ret_decl = new Statement::Var_Decl(data_type_before_eval(),
       new std::string("answers"));
@@ -824,27 +907,63 @@ void Symbol::NT::set_ret_decl_rhs()
     return;
   }
 
-  for (std::list<Alt::Base*>::iterator i = alts.begin();
-      i != alts.end(); ++i) {
+  for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
+      
     if (!(*i)->data_type()->simple()->is(::Type::LIST)) {
-      Statement::Fn_Call *fn = new Statement::Fn_Call(
-          Statement::Fn_Call::PUSH_BACK);
-      fn->add_arg(*ret_decl);
-      fn->add_arg(*(*i)->ret_decl);
-
+        
       Expr::Fn_Call *e = new Expr::Fn_Call(Expr::Fn_Call::NOT_EMPTY);
       e->add_arg(*(*i)->ret_decl);
-      Statement::If *cond = new Statement::If(e, fn);
+      Statement::If *cond = new Statement::If(e);
+      
+      if ( (mode != Code::Mode::BACKTRACK || !tabulated) && adp_specialization != ADP_Mode::STANDARD ) {
+          
+          if(ADP_Mode::is_step(adp_specialization)) { // directly join the elements in append function
 
+             Statement::Fn_Call *fn = new Statement::Fn_Call(Statement::Fn_Call::APPEND);
+             fn->add_arg(*ret_decl);
+             fn->add_arg(*(*i)->ret_decl);
+             
+             add_specialised_arguments(fn, mode.keep_cooptimal());
+
+             cond->then.push_back(fn);
+           
+          } else { // push element to list and mark position
+              
+              Statement::Fn_Call *fn = new Statement::Fn_Call(Statement::Fn_Call::PUSH_BACK);
+              fn->add_arg(*ret_decl);
+              fn->add_arg(*(*i)->ret_decl);  
+
+              cond->then.push_back(fn);
+              
+              Statement::Fn_Call *mark = new Statement::Fn_Call(Statement::Fn_Call::MARK_POSITION);
+              mark->add_arg(*ret_decl);
+              mark->add_arg(*marker);
+              
+              cond->then.push_back(mark);
+          }
+           
+      } else {
+           Statement::Fn_Call *fn = new Statement::Fn_Call(Statement::Fn_Call::PUSH_BACK);
+           fn->add_arg(*ret_decl);
+           fn->add_arg(*(*i)->ret_decl);  
+
+           cond->then.push_back(fn);
+      }
+      
       post_alt_stmts.push_back(cond);
     } else {
       assert(ret_decl->type->simple()->is(::Type::LIST));
 
       if ((*i)->is(Alt::LINK)) {
-        Statement::Fn_Call *fn = new Statement::Fn_Call(
-            Statement::Fn_Call::APPEND);
+        Statement::Fn_Call *fn = new Statement::Fn_Call(Statement::Fn_Call::APPEND);
+        
         fn->add_arg(*ret_decl);
         fn->add_arg(*(*i)->ret_decl);
+        
+        if((mode != Code::Mode::BACKTRACK || !tabulated) && adp_specialization != ADP_Mode::STANDARD && ADP_Mode::is_step(adp_specialization)) { // direct join
+            add_specialised_arguments(fn, mode.keep_cooptimal());
+        }
+        
         post_alt_stmts.push_back(fn);
       } else
         post_alt_stmts.push_back(NULL);
@@ -852,6 +971,7 @@ void Symbol::NT::set_ret_decl_rhs()
       Expr::Vacc *e = new Expr::Vacc(*ret_decl);
       (*i)->ret_decl->rhs = e;
     }
+    
   }
 }
 
@@ -1092,14 +1212,38 @@ void Symbol::NT::marker_cond(Code::Mode &mode,
 }
 
 
+struct SetADPDisabled : public Visitor {
+        
+        bool disabled;
+        bool keep_coopts;
+        
+        SetADPDisabled(bool b, bool k) 
+        :  disabled(b), keep_coopts(k) {}
+        
+	void visit(Alt::Base &b)
+	{
+            b.set_disable_specialisation(disabled);
+            b.set_keep_coopts(keep_coopts);
+	}
+
+};
+
 void Symbol::NT::codegen(AST &ast)
 {
+    
+        // disable specialisation if needed in backtrace mode
+        SetADPDisabled v = SetADPDisabled(ast.code_mode() == Code::Mode::BACKTRACK && tabulated, ast.code_mode().keep_cooptimal());
+    
+        for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
+            (*i)->traverse(v);
+        }
+    
 	Fn_Def *score_code = 0;
 	if (!code_.empty()) {
 		score_code = code_.back();
 	}
-	code_.clear();
-	set_ret_decl_rhs();
+	code_.clear();  
+	set_ret_decl_rhs(ast.code_mode());
 	init_table_decl(ast);
 	init_zero_decl();
 	::Type::Base *dt = datatype;
@@ -1128,26 +1272,60 @@ void Symbol::NT::codegen(AST &ast)
 		stmts.insert(stmts.begin(), table_guard.begin(), table_guard.end());
 	}
 	
+        if ((ast.code_mode() != Code::Mode::BACKTRACK || !tabulated) && adp_specialization != ADP_Mode::STANDARD 
+                && !ADP_Mode::is_step(adp_specialization) && marker) { // block mode
+            stmts.push_back(marker);
+            stmts.push_back(new Statement::Fn_Call(Statement::Fn_Call::EMPTY, *marker));
+        }
+        
 	stmts.push_back(ret_decl);
 	stmts.push_back(new Statement::Fn_Call(Statement::Fn_Call::EMPTY, *ret_decl));
 	std::list<Statement::Base*>::iterator j = post_alt_stmts.begin();
+       // std::cout << "ALT START  ================ " << alts.size() << std::endl;
 	for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end() && j != post_alt_stmts.end(); ++i, ++j) {
 		(*i)->codegen(ast);
-		stmts.insert(stmts.end(), (*i)->statements.begin(), (*i)->statements.end());
+		stmts.insert(stmts.end(), (*i)->statements.begin(), (*i)->statements.end());  
 		if (*j) {
 			stmts.push_back(*j);
+                        
+                        // this is a little shoed in, but set_ret_decl_rhs would need a full rewrite otherwise
+                        if ((ast.code_mode() != Code::Mode::BACKTRACK || !tabulated) && (*i)->data_type()->simple()->is(::Type::LIST) && (*i)->is(Alt::LINK) 
+                                && adp_specialization != ADP_Mode::STANDARD && !ADP_Mode::is_step(adp_specialization)
+                                && marker) {
+                            
+                                Statement::Fn_Call *mark = new Statement::Fn_Call(Statement::Fn_Call::MARK_POSITION);
+                                mark->add_arg(*ret_decl);
+                                mark->add_arg(*marker);
+
+                                stmts.push_back(mark);
+                        }
 		}
 	}
+       // std::cout << "ALT END    ================" << std::endl;
+        
+        // for blocked mode call the finalize method
+        if ((ast.code_mode() != Code::Mode::BACKTRACK || !tabulated) && adp_specialization != ADP_Mode::STANDARD && !ADP_Mode::is_step(adp_specialization) && marker) {
+            
+            Statement::Fn_Call *join = new Statement::Fn_Call(Statement::Fn_Call::JOIN_MARKED);
+            join->add_arg(*ret_decl);
+            join->add_arg(*marker);
+            
+            add_specialised_arguments(join, ast.code_mode().keep_cooptimal());
+                 
+            stmts.push_back(join);
+        }
+        
 	init_ret_stmts(ast.code_mode());
 	stmts.insert(stmts.end(), ret_stmts.begin(), ret_stmts.end());
 	f->stmts = stmts;
+        
 	if (eval_decl) {
 		Fn_Def *e = dynamic_cast<Fn_Def*>(eval_decl);
 		assert(e);
 		f->set_choice_fn_type(e->choice_fn_type());
 	}
 	code_.push_back(f);
-	eliminate_list_ass();
+	eliminate_list_ass(); // remove intermediary lists to answer list when right hand side is set
 }
 
 
@@ -1164,13 +1342,15 @@ void Symbol::NT::replace(Statement::Var_Decl &decl, Statement::iterator begin, S
 void Symbol::NT::eliminate_list_ass()
 {
   assert(!code_.empty());
-  for (Statement::iterator i = Statement::begin(code_.back()->stmts);
-       i != Statement::end(); ) {
+  for (Statement::iterator i = Statement::begin(code_.back()->stmts); i != Statement::end(); ) {
+      
     Statement::Base *s = *i;
     if (s->is(Statement::VAR_DECL)) {
+        
       Statement::Var_Decl *decl = s->var_decl();
-      if (decl->type->simple()->is(::Type::LIST) && decl->rhs
-          && decl->rhs->is(Expr::VACC)) {
+      
+      if (decl->type->simple()->is(::Type::LIST) && decl->rhs && decl->rhs->is(Expr::VACC)) {
+          
         Statement::iterator a = i;
         ++a;
         if (a != Statement::end()) {
@@ -1195,6 +1375,7 @@ void Symbol::NT::eliminate_list_ass()
           }
         }
         continue;
+        
       }
     }
     ++i;
@@ -1229,7 +1410,7 @@ void Symbol::Base::print_dot_node(std::ostream &out)
 	}
 }
 
-
+// This function is called to change the push type, for example to push_back_max
 void Symbol::NT::optimize_choice(::Type::List::Push_Type push)
 {
   if (!ret_decl->type->is(::Type::LIST))

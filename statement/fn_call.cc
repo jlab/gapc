@@ -49,7 +49,9 @@ const char * Statement::Fn_Call::map_builtin_to_string[] = {
   "update_filter",
   "mark",
   "finalize",
-  "INNER"
+  "INNER",
+  "mark_position",
+  "join_marked"
 };
 
 

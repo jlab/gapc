@@ -106,6 +106,9 @@ static void parse_options(int argc, char **argv, Options &rec)
                 ("pareto-version,P", po::value<int>(), "Implementation of Pareto Product to use 0 (NoSort), 1 (Sort),  2 (ISort), 3 (MultiDimOptimized)")
                 ("multi-dim-pareto", "Use multi-dimensional Pareto. Works with -P 0, -P 1 and -P 3.")
                 ("cut-off,c", po::value<int>(), "The cut-off value for -P 3 option (65 default).")
+                ("float-accuracy,f", po::value<int>(), "The number of decimal places regarded for pareto and sorting procedures. If this is not set")
+                ("specialized-adp,S", po::value<int>(), "Set to generate specialized implementations of the ADP framework: 0 (Standard), 1 (Sorted ADP), 2 (Pareto Eager ADP)")
+                ("step-mode", po::value<int>(), "Mode of specialization: 0 force block mode, 1 force stepwise mode. This is automatically set to best option if not specified.")
 		;
 	po::options_description hidden("");
 	hidden.add_options()
@@ -216,7 +219,22 @@ static void parse_options(int argc, char **argv, Options &rec)
                 int cutoff = vm["cut-off"].as<int>();
 		rec.cutoff = cutoff;
         }
+        
+        if (vm.count("float-accuracy")) {
+            int float_acc = vm["float-accuracy"].as<int>();
+            rec.float_acc = float_acc;
+        }
+        
+        if (vm.count ("specialized-adp")) {
+		int spec = vm["specialized-adp"].as<int>();
+		rec.specialization = spec;
+	}
 	
+        if (vm.count ("step-mode")) {
+		int s = vm["step-mode"].as<int>();
+		rec.step_option = s;
+	}
+        
 	bool r = rec.check();
 	if (!r) {
 		throw LogError("Seen improper option usage.");
@@ -390,18 +408,20 @@ class Main {
 				}
 			}
                         
+                        bool nullarySort = false;
                         if (opts.pareto > 0) {
                             driver.ast.set_pareto_version(*instance, opts.pareto);
                             
                             if (opts.pareto == 1 || opts.pareto == 3) {
-                                if ((opts.backtrack || opts.subopt || opts.kbacktrack)) {
+                                nullarySort = true;
+                                if ((opts.backtrack || opts.subopt || opts.kbacktrack)) {                                  
                                     if(opts.multiDimPareto) {
                                         driver.ast.set_back_track_paretosort(Product::MULTI);
                                     } else {
                                         driver.ast.set_back_track_paretosort(Product::STANDARD);
                                     }
                                 }
-                                
+                                        
                                 if(opts.multiDimPareto) {
                                     instance->product->set_sorted_choice(Product::MULTI);
                                 } else {
@@ -410,18 +430,66 @@ class Main {
                                 
                             }
                         }
+                
+                        if (opts.specialization > 0) {
+                            if (nullarySort && opts.specialization != 1) {
+                                if (opts.specialization == 1) {
+                                    instance->product->set_sorted_choice(Product::NULLARY_SORTER);
+                                    if ((opts.backtrack || opts.subopt || opts.kbacktrack)) {
+                                        driver.ast.set_back_track_paretosort(Product::NULLARY_SORTER);
+                                    }
+                                } else if (opts.pareto == 0) { 
+                                    instance->product->set_sorted_choice(Product::NULLARY_COMPERATOR);
+                                    if ((opts.backtrack || opts.subopt || opts.kbacktrack)) {
+                                        driver.ast.set_back_track_paretosort(Product::NULLARY_COMPERATOR);
+                                    }
+                                } else {
+                                    instance->product->set_sorted_choice(Product::NULLARY_COMPERATOR_SORTER);
+                                    if ((opts.backtrack || opts.subopt || opts.kbacktrack)) {
+                                        driver.ast.set_back_track_paretosort(Product::NULLARY_COMPERATOR_SORTER);
+                                    }
+                                } 
+                            } else {
+                                if (opts.specialization == 1 ) {
+                                    instance->product->set_sorted_choice(Product::SORTER);
+                                    if ((opts.backtrack || opts.subopt || opts.kbacktrack)) {
+                                        driver.ast.set_back_track_paretosort(Product::SORTER);
+                                    }
+                                } else if (opts.pareto == 0) { 
+                                    instance->product->set_sorted_choice(Product::COMPERATOR);
+                                    if ((opts.backtrack || opts.subopt || opts.kbacktrack)) {
+                                        driver.ast.set_back_track_paretosort(Product::COMPERATOR);
+                                    }
+                                } else {
+                                    instance->product->set_sorted_choice(Product::COMPERATOR_SORTER);
+                                    if ((opts.backtrack || opts.subopt || opts.kbacktrack)) {
+                                        driver.ast.set_back_track_paretosort(Product::COMPERATOR_SORTER);
+                                    }
+                                } 
+                            }
+                            
+                            if (opts.backtrack || opts.subopt || opts.kbacktrack) {
+                                 driver.ast.code_mode().set_keep_cooptimal(false);
+                            } else {
+                                 driver.ast.code_mode().set_keep_cooptimal(!opts.no_coopt_class);
+                            }
+                        }
+                        
+                        
+                        driver.ast.set_float_accuracy(*instance, opts.float_acc);
+                        if(opts.pareto == 3) {
+                            driver.ast.set_pareto_cutoff(*instance, opts.cutoff);
+                        }
                         
                         if(opts.multiDimPareto) {
                              if (opts.pareto == 0 || opts.pareto == 1 || opts.pareto == 3) {
                                  driver.ast.set_pareto_dim(*instance, true);
-                                 if(opts.pareto == 3) {
-                                     driver.ast.set_pareto_cutoff(*instance, opts.cutoff);
-                                 }
                              } else {
                                 throw LogError ("Multi-Dimensional Pareto is only available for Pareto type 0, 1 and 3.");
                              }
                         }
                         
+                        driver.ast.set_adp_header(opts.specialization, opts.pareto, opts.multiDimPareto, opts.step_option);
                                               
                         // set the alphabet type in all VAR_DECL
 			driver.ast.update_seq_type(*instance);
@@ -455,22 +523,28 @@ class Main {
 			if (opts.inline_nts) {
 				grammar->inline_nts();
 			}
-                        
+                                       
 			grammar->init_indices();
 			grammar->init_decls();
 			// for cyk (ordering of NT for parsing, see page 101 of the thesis)
 			grammar->dep_analysis();
 			
-			
+                        driver.ast.set_adp_version(*instance, opts.specialization, opts.step_option, opts.pareto);
+                        
 			driver.ast.codegen();
 			                        
 			instance->codegen();
 			
-			driver.ast.optimize_choice(*instance);
-			driver.ast.optimize_classify(*instance);
+                        if (opts.specialization == 0) {
+                            driver.ast.optimize_choice(*instance);
+                            driver.ast.optimize_classify(*instance);
+                        } else {
+                            Log::instance()->warning( "Choice function and classification optimization are disabled for specialized ADP.");
+                        }
+                        
 			driver.ast.set_class_name(opts.class_name);
 			
-			
+
 			// Paste out the header file of the compile-result.
 			// The Printer::Cpp writes out its components on
 			// each call.
@@ -497,6 +571,7 @@ class Main {
 			cc.set_files(opts.in_file, opts.out_file);
 			cc.prelude(opts, driver.ast);
 			cc.imports(driver.ast);
+                        cc.global_constants(driver.ast);
 			driver.ast.print_code(cc);
 			instance->print_code(cc);
 			cc.footer(driver.ast);
@@ -519,6 +594,11 @@ class Main {
 			}
 			
 			if (bt.get()) {
+                            
+                                if (opts.specialization > 0) {
+                                     driver.ast.code_mode().set_keep_cooptimal(!opts.no_coopt_class);
+                                }
+                                
 				driver.ast.backtrack_gen(*bt);
 				bt->print_header(hh, driver.ast);
 				bt->print_body(cc, driver.ast);

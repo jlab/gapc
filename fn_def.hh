@@ -46,6 +46,8 @@
 
 #include "para_decl_fwd.hh"
 
+#include "operator_fwd.hh"
+
 namespace Para_Decl { class Base; }
 
 
@@ -65,9 +67,11 @@ class Fn_Def : public Fn_Decl
 	friend class Printer::CC;
 	friend class Printer::Cpp;
 	
-              	
+         	
 	public:
-		
+            
+                 enum Gen_Type { STANDARD, NULLARY, CHOICE_SPECIALIZATION };
+		                             
 		// The list of statements as defined in the function
 		// body.
 		std::list<Statement::Base*> stmts;
@@ -77,8 +81,17 @@ class Fn_Def : public Fn_Decl
 		// source code.
 		std::list<std::string*> names;
 		
-                bool is_comperator;
-		
+                // type of the function
+                // differentiate between choice functions
+                // and nullary functions for specialized ADP
+                Gen_Type gen_type;
+                
+                // strings to name possible sorter and comperator
+                std::string* comperator_suffix;
+                std::string* sorter_suffix;
+           
+                std::string* nullary_sort_ob;
+                
 	private:
 		
 		// Mapping between parameter names and parameter-type
@@ -98,13 +111,17 @@ class Fn_Def : public Fn_Decl
 		
 		
 		Fn_Def(Type::Base *r, std::string *n, const Loc &l)
-			: Fn_Decl(r, n, l), is_comperator(false), adaptor(NULL), comparator(NULL), choice_fn_type_(Expr::Fn_Call::NONE)
+			: Fn_Decl(r, n, l), gen_type(STANDARD), comperator_suffix(new std::string("_comperator")),
+                        sorter_suffix(new std::string("_sorter")), nullary_sort_ob(NULL),
+                        adaptor(NULL), comparator(NULL), sorter(NULL), choice_fn_type_(Expr::Fn_Call::NONE)
 		{
 		}
 		
 		
 		Fn_Def(Type::Base *r, std::string *n)
-			: Fn_Decl(r, n), is_comperator(false), adaptor(NULL), comparator(NULL), choice_fn_type_(Expr::Fn_Call::NONE)
+			: Fn_Decl(r, n), gen_type(STANDARD), comperator_suffix(new std::string("_comperator")),
+                        sorter_suffix(new std::string("_sorter")), nullary_sort_ob(NULL),
+                        adaptor(NULL), comparator(NULL), sorter(NULL),  choice_fn_type_(Expr::Fn_Call::NONE)
 		{
 		}
 		
@@ -113,7 +130,9 @@ class Fn_Def : public Fn_Decl
 		
 		
 		Fn_Def()
-			: Fn_Decl(), is_comperator(false), adaptor(NULL), comparator(NULL), choice_fn_type_(Expr::Fn_Call::NONE)
+			: Fn_Decl(), gen_type(STANDARD), comperator_suffix(new std::string("_comperator")),
+                        sorter_suffix(new std::string("_sorter")), nullary_sort_ob(NULL),
+                        adaptor(NULL), comparator(NULL),  sorter(NULL),  choice_fn_type_(Expr::Fn_Call::NONE)
 		{
 		}
 		
@@ -141,17 +160,27 @@ class Fn_Def : public Fn_Decl
 		
 		void init_var_decls(Fn_Def &a, Fn_Def &b);
 		Fn_Def *adaptor;
-		Fn_Def *comparator;
                 
+                // comparator is a stub for the comparator functions needed for yukish
+                // sorted Pareto and specialized ADP
+                // comparator can also hold the maximal number of comparable dimensions
+		Operator *comparator;
+                Operator *sorter;
+                
+                
+                            
 		void times_cg_with_rhs_choice (Fn_Def &a, Fn_Def &b, Product::Two &product, Statement::Var_Decl *answer, std::list<Statement::Base*> *loop_body, Statement::Var_Decl *elem);
 		void times_cg_without_rhs_choice (Fn_Def &a, Fn_Def &b, Product::Two &product, Statement::Var_Decl *answer, std::list<Statement::Base*> *loop_body, Statement::Var_Decl *elem);
 		
                 bool get_sort_grab_list(std::list<bool> &o, Product::Base &product);
+                bool is_pareto_instance(Product::Base &product) ;
 		void get_pareto_dimensions(Product::Base &product, std::list<Statement::Base*> &base,
                     int *i, int *D, Statement::Var_Decl *last_decl, std::string prefix,
                     std::list<std::pair<Product::Base*, bool> > &products,
-                    std::list<Statement::Var_Decl*> &decls );
-                
+                    std::list<Statement::Var_Decl*> &decls , int float_acc);
+                Product::Two codegen_pareto_move_to_first_all_dim(Statement::Var_Decl * & c1, Statement::Var_Decl * & c2, std::list<Statement::Base*> *stmts, Product::Base &product);
+                int codegen_pareto_comparator_all_dim(Statement::Var_Decl *c1, Statement::Var_Decl *c2, Statement::Var_Decl *dim, Operator &comp, Product::Base &product );
+                            
 	public:
 		
 		void add_simple_choice_fn_adaptor();
@@ -172,29 +201,43 @@ class Fn_Def : public Fn_Decl
 		
 		void codegen();
 		void codegen(Fn_Def &a, Fn_Def &b, Product::Two &product);
-                void codegen_sort(Fn_Def &a, Fn_Def &b, Product::Two &product);
-                void codegen_multi_sort(Fn_Def &a, Fn_Def &b, Product::Two &product);
+                void codegen_sort(Product::Two &product);
+                void codegen_sorting_nullary(Product::Two &product);
+                void codegen_multi_sort(Product::Base &product, std::list<Statement::Base*> *stmts);
 		void codegen_choice(Fn_Def &a, Fn_Def &b, Product::Two &product);
 		void codegen_times(Fn_Def &a, Fn_Def &b, Product::Two &product);
                 void codegen_pareto_nosort(Fn_Def &a, Fn_Def &b, Product::Two &product);
                 void codegen_pareto_multi_nosort(Fn_Def &a, Fn_Def &b, Product::Two &product);
                 void codegen_pareto_isort(Fn_Def &a, Fn_Def &b, Product::Two &product);
                 void codegen_pareto_multi_lex(Fn_Def &a, Fn_Def &b, Product::Two &product);
-                void codegen_pareto_multi_yukish(Fn_Def &a, Fn_Def &b, Product::Two &product, int cutoff);
+                void codegen_pareto_multi_yukish(Fn_Def &a, Fn_Def &b, Product::Two &product, int cutoff, int dim);
                 void codegen_pareto_lex(Fn_Def &a, Fn_Def &b, Product::Two &product);
-		void codegen_nop(Fn_Def &a, Fn_Def &b, Product::Two &product);
+		void codegen_nop(Product::Two &product);
 		void codegen_cartesian(Fn_Def &a, Fn_Def &b, Product::Two &product);
 		void codegen_takeone(Fn_Def &a, Fn_Def &b, Product::Two &product);
 		void init_range_iterator();
-                void init_comperator_adaptor();
                 void init_range_iterator(Fn_Def &a, Fn_Def &b, Product::Two &product);
-		
+                
+                void init_comparator_adaptor();
+                void init_sorter_adaptor();
+                int codegen_compare(Product::Base &product);
+                void codegen_sorter(Product::Base &product);
+                
+                
 		void remove_return_list();
 		Mode derive_role() const;
 		
 		Expr::Fn_Call::Builtin choice_fn_type() const;
 		
 		
+                void set_gen_type(Gen_Type t) {
+                     gen_type = t;
+                }
+                Gen_Type get_gen_type() {
+                    return gen_type;
+                }
+  
+                
 	private:
 		
 		Expr::Fn_Call::Builtin choice_fn_type_;
@@ -244,7 +287,7 @@ class Fn_Def : public Fn_Decl
 		
 		void optimize_classify();
 		
-		void add_choice_specialization();
+		void add_choice_specialization(Fn_Def &a, Fn_Def &b, Product::Two &product);
 		
 		
 		void disable()

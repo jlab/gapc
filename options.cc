@@ -98,14 +98,24 @@ bool Options::check()
 		Log::instance()->error("Log-level must be in the range of 0 to 4.");
         
         if (pareto < 0 || pareto > 3)
-		Log::instance()->error("Pareto version must be in the range of 0 to 2.");
+		Log::instance()->error("Pareto version must be in the range of 0 to 3.");
         
         if (cutoff < 10 )
 		Log::instance()->error("Cut-off must be bigger than 10.");
 	
 	if (ambiguityCheck && specializeGrammar)
 		Log::instance()->error("options '--ambiguity' and '--specialize_grammar' do not work together.");
+        
+        if (specialization < 0 || specialization > 2)
+		Log::instance()->error("ADP specialization must be in the range of 0 to 2.");
+        
+        if (step_option < 0 || step_option > 1)
+		Log::instance()->error("Step Mode must be either 0 or 1.");
 	
+        if (float_acc < 0) {
+                Log::instance()->error("Floating point accuracy must be greater then 0 digits");
+        } 
+        
 	return !Log::instance()->seen_errors();
 }
 
