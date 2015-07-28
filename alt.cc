@@ -1870,8 +1870,7 @@ void Alt::Simple::codegen(AST &ast)
 		if (datatype->simple()->is(::Type::LIST)) {
                         
                         // only call finalize on hash lists
-                        ::Type::List *l = dynamic_cast< ::Type::List*>(ret_decl->type);
-			if (!ret_decl->rhs && l->push_type() == ::Type::List::HASH) {
+			if (!ret_decl->rhs && adp_specialization == ADP_Mode::STANDARD) {
 				Statement::Fn_Call *f = new Statement::Fn_Call (Statement::Fn_Call::FINALIZE);
 				f->add_arg(*ret_decl);
 				stmts->push_back(f);
@@ -2193,8 +2192,7 @@ void Alt::Block::codegen(AST &ast)
 		}
 	}
 	if (datatype->simple()->is(::Type::LIST)) {
-                ::Type::List *l = dynamic_cast< ::Type::List*>(ret_decl->type);
-		if (!ret_decl->rhs && l->push_type() == ::Type::List::HASH) {
+		if (!ret_decl->rhs && adp_specialization == ADP_Mode::STANDARD) {
 			Statement::Fn_Call *f = new Statement::Fn_Call(Statement::Fn_Call::FINALIZE);
 			f->add_arg(*ret_decl);
 			stmts->push_back(f);
