@@ -673,7 +673,6 @@ void AST::backtrack_gen(Backtrack_Base &bt)
 
 void AST::set_adp_header(int spec, int pareto, bool multi_pareto, int step_mode) {
     
-    //TODO: do we still need this? Yes, but change
     
     rtlib_header = ADP_Mode::NONE;
     if (spec == 1) {

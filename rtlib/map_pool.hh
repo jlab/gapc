@@ -21,8 +21,16 @@
 
 }}} */
 
+
+
+
 #ifndef MAP_POOL_HH
 #define MAP_POOL_HH
+
+#if defined(__APPLE__) && defined(__MACH__)
+	#define _DARWIN_C_SOURCE
+#endif
+
 
 #include <vector>
 #include <cassert>

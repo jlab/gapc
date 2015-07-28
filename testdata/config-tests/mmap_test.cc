@@ -1,4 +1,7 @@
 
+#if defined(__APPLE__) && defined(__MACH__)
+	#define _DARWIN_C_SOURCE
+#endif
 
 #include <sys/mman.h>
 #include <cstdlib>

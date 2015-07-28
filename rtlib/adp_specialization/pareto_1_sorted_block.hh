@@ -210,21 +210,22 @@ inline void join_marked_multi_to_two_2D(List_Ref<T> &x, List_Ref<int> &markers, 
 
 
 // generalized algorithm for >2 dimensions
-template<class T, typename Compare, typename Sorter>
-inline void join_all_step(List_Ref<T> &answers, List_Ref<T> &inserts, Compare &c, Sorter &s, const bool keep_equal)
-{
 
-    typename List_Ref<T>::iterator a_it = answers.ref().begin();
-    typename List_Ref<T>::iterator i_it = inserts.ref().begin();
+template<class T, typename Compare, typename Sorter>
+inline void join_all_step(typename List_Ref<T>::iterator &a_begin, typename List_Ref<T>::iterator &a_end,
+       typename List_Ref<T>::iterator &i_begin, typename List_Ref<T>::iterator &i_end, 
+        List_Ref<T> &new_list, Compare &c, Sorter &s, const bool keep_equal) {
+
+
+    typename List_Ref<T>::iterator a_it = a_begin;
+    typename List_Ref<T>::iterator i_it = i_begin;
     
-    // new list
-    List_Ref<T> new_list;
     
-    while(a_it != answers.ref().end() || i_it != inserts.ref().end()) {
+    while(a_it != a_end || i_it != i_end) {
 
          // from which list to add next
          typename List_Ref<T>::iterator next;
-         if (i_it == inserts.ref().end() || (a_it != answers.ref().end() && s(*a_it, *i_it))) {
+         if (i_it == i_end || (a_it != a_end && s(*a_it, *i_it))) {
              next = a_it;
              ++a_it;
          } else {
@@ -277,7 +278,6 @@ inline void join_all_step(List_Ref<T> &answers, List_Ref<T> &inserts, Compare &c
          }
     }
     
-    answers = _MOVE(new_list);
 }
 
 
@@ -499,24 +499,24 @@ inline void join_marked(List_Ref<T> &x, List_Ref<int> &markers, Compare &c, Sort
         double t1 = t.elapsed();
 
         boost::timer u;
-        join_sorted_2d(l2, ends2, c, keep_equal);
+        join_sorted_2d(l2, c, s, keep_equal);
         double t2 = u.elapsed();
         
         std::cerr << x.ref().size() << " " << markers.ref().size() 
             << " M " << t1 << " " << l1.ref().size()
             << " S " << t2 << " " << l2.ref().size();
         if (t1 == t2) {
-            std::cout << " ms" << std::endl;
+            std::cerr << " ms" << std::endl;
         } else if (t1 > t2){
-            std::cout << " s" << std::endl;
+            std::cerr << " s" << std::endl;
         } else {
-            std::cout << " m" << std::endl;
+            std::cerr << " m" << std::endl;
         }
         
         join_sorted_2d(x,c,s, keep_equal);
               
     } else {
-//        join_marked_multi_to_two_all(x, markers, c, s);
+  //      join_marked_multi_to_two_all(x, markers, c, s, keep_equal);
 //        join_sorted_all(x,c,s, keep_equal);
         
         
@@ -531,22 +531,22 @@ inline void join_marked(List_Ref<T> &x, List_Ref<int> &markers, Compare &c, Sort
         std::copy(markers.ref().begin(), markers.ref().end(), std::back_inserter(ends2.ref()));
         
         boost::timer t;
-        join_marked_multi_to_two_all(l1, ends1, c, keep_equal);
+        join_marked_multi_to_two_all(l1, ends1, c, s, keep_equal);
         double t1 = t.elapsed();
 
         boost::timer u;
-        join_sorted_all(l2, ends2, c, keep_equal);
+        join_sorted_all(l2, c, s, keep_equal);
         double t2 = u.elapsed();
         
         std::cerr << x.ref().size() << " " << markers.ref().size() 
             << " M " << t1 << " " << l1.ref().size()
             << " S " << t2 << " " << l2.ref().size();
         if (t1 == t2) {
-            std::cout << " ms" << std::endl;
+            std::cerr << " ms" << std::endl;
         } else if (t1 > t2){
-            std::cout << " s" << std::endl;
+            std::cerr << " s" << std::endl;
         } else {
-            std::cout << " m" << std::endl;
+            std::cerr << " m" << std::endl;
         }
         
         join_sorted_all(x,c,s, keep_equal);

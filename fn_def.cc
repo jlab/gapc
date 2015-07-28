@@ -681,9 +681,13 @@ void Fn_Def::codegen_choice(Fn_Def &a, Fn_Def &b, Product::Two &product)
        }
    }  
     
-   if (gen_type == NULLARY && 
+   if (gen_type == NULLARY  && 
            (product.get_adp_specialization() == ADP_Mode::SORTED_STEP || product.get_adp_specialization() == ADP_Mode::SORTED_BLOCK)) {
-        codegen_sorting_nullary(product);
+        if (product.get_sorted_choice() != Product::NONE) {
+            codegen_sorting_nullary(product);
+        } else {
+            codegen_nop(product);
+        }
         return;
    } 
    
