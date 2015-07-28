@@ -2991,7 +2991,7 @@ void Fn_Def::add_choice_specialization(Fn_Def &a, Fn_Def &b, Product::Two &produ
     if (is_list_opt) {
       Type::Base *t = x->types.front()->component()->left();
 
-      if (x->types.front()->is(Type::LIST)){
+      if (x->types.front()->is(Type::LIST) && product.get_adp_specialization() != ADP_Mode::STANDARD){
           t = new Type::List(t);
       }
 
