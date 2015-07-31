@@ -572,6 +572,7 @@ class iupac_filter {
       assert(base<6);
       assert(iupac>=0);
       assert(iupac<13);
+
       return iupac_match(base, iupac);
     }
     void convert_iupac(std::vector<char> &v) const
@@ -639,7 +640,7 @@ class iupac_filter {
    */
       for (pos_type posText = 0; posText<seq.size(); ++posText) {
     	  bool matchAtPosText = true;
-    	  for (pos_type posPattern = 0; posPattern<m; ++posPattern) {
+    	  for (pos_type posPattern = 0; posPattern<m && posText+posPattern<seq.size(); ++posPattern) {
     		  if (not match(seq[posText+posPattern], pattern[posPattern])) {
     			  matchAtPosText = false;
     			  break;
@@ -650,6 +651,35 @@ class iupac_filter {
     	  }
       }
     }
+    void init(const Basic_Sequence<M_Char, pos_type> &seq, const char *pat)
+	{
+      array.init(seq.size());
+
+	  pos_type m = std::strlen(pat);
+	  std::vector<char> pattern(pat, pat+m);
+	  convert_iupac(pattern);
+	  for (pos_type posText = 0; posText<seq.size(); ++posText) {
+		  bool matchAtPosText = true;
+		  for (pos_type posPattern = 0; posPattern<m && posText+posPattern<seq.size(); ++posPattern) {
+			  bool colmatch = true;
+			  for (pos_type row = 0; row < seq.rows(); row++) {
+				  char base = column(seq.seq[posText+posPattern],row);
+				  if (not match(base, pattern[posPattern])) {
+					  colmatch = false;
+					  break;
+				  }
+			  }
+
+			  if (not colmatch) {
+				  matchAtPosText = false;
+				  break;
+			  }
+		  }
+		  if (matchAtPosText) {
+			  this->mark(posText, posText+m);
+		  }
+		}
+	}
     bool query(pos_type a, pos_type b)
     {
       assert(a<=b);
