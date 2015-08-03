@@ -2372,8 +2372,8 @@ static const char deps[] =
 "-include $(DEPS)\n"
 "\n"
 "%.o : %.cc\n"
-"	$(CXX) -MMD -MP $(CPPFLAGS) $(CXXFLAGS) $< -c -o $@ \\\n"
-"         && $(SED) -e 's/[^ ]\\+boost[^ \\n]\\+//' $*.d > _t && mv _t $*.d\n"
+"	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< -c -o $@ \n"
+//"         && $(SED) -e 's/[^ ]\\+boost[^ \\n]\\+//' $*.d > _t && mv _t $*.d\n"
 ""
 "endif\n"
 ;
@@ -2386,8 +2386,8 @@ void Printer::Cpp::makefile(const Options &opts)
 {
 	stream << endl << make_comments(id_string, "#") << endl << endl;
 	
-	stream << "SED = sed\n";
-	stream << "RTLIB = rtlib\n\n";
+	//stream << "SED = sed\n";
+	//stream << "RTLIB = rtlib\n\n";
 	stream << "RTLIB_LDFLAGS = $(RT_LDFLAGS)\n";
 	stream << "RTLIB_LDLIBS = $(RT_LDLIBS)\n";
 	stream << "RTLIB_CPPFLAGS = $(RT_CPPFLAGS)\n\n";
@@ -2414,8 +2414,12 @@ void Printer::Cpp::makefile(const Options &opts)
 	stream << opts.class_name << " : $(OFILES)" << endl
 		<< "\t$(CXX) -o $@ $^  $(LDFLAGS) $(LDLIBS)" ;
 	
-	if (opts.sample) {
-		stream << " $(GSLLIBS) ";
+	//if (opts.sample) {
+	//	stream << " $(GSLLIBS) ";
+	//}
+
+	if (opts.cyk) {
+		stream << " $(CXXFLAGS_OPENMP) ";
 	}
 	
 	stream << endl << endl

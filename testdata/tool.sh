@@ -14,7 +14,7 @@ build_cpp()
     INST="-i $3"
   fi
   log ${GAPC} ${GAPC_EXTRA} $1 -o $2.cc $INST
-  log ${MAKE} ${MAKEFLAGS} -f $2.mf RTLIB\=$RTLIB CPPFLAGS_EXTRA\="${CPPFLAGS_EXTRA}" LDLIBS_EXTRA\="${LDLIBS_EXTRA}" GSLLIBS=""
+  log ${MAKE} ${MAKEFLAGS} -f $2.mf CPPFLAGS_EXTRA\="${CPPFLAGS_EXTRA}" LDLIBS_EXTRA\="${LDLIBS_EXTRA}"
 }
 
 build_haskell()

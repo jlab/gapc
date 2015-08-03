@@ -2,8 +2,8 @@
 
 set -u
 
-NO_CONFIG_MF="foo"
-export NO_CONFIG_MF
+#NO_CONFIG_MF="foo"
+#export NO_CONFIG_MF
 
 GAPC=../../../gapc
 GHC=ghc
@@ -13,10 +13,15 @@ MAKEFLAGS="-I../../.. -I../../gapc_filter"
 TEMP=./temp
 GRAMMAR=../../grammar
 LHS_DIR=../..
-RTLIB=../../../rtlib
-CPPFLAGS_EXTRA="-I../../.. -I../../../librna -I../../../rtlib -I../../gapc_filter -O -DNDEBUG"
+#RTLIB=../../../rtlib
+#CPPFLAGS_EXTRA="-I../../.. -I../../../librna -I../../../rtlib -I../../gapc_filter -O -DNDEBUG"
+#LDLIBS_EXTRA=""
+#RUN_CPP_FLAGS=""
+
+CPPFLAGS_EXTRA=" -I../../../testdata/gapc_filter -I.. "
 LDLIBS_EXTRA=""
 RUN_CPP_FLAGS=""
+
 
 KSH="ksh"
 
@@ -30,7 +35,6 @@ fi
 
 if [ $# -ge 3 ]; then
 	KSH=$3
-	LIBGSL=$4
 fi
 
 err_count=0
@@ -50,8 +54,8 @@ fi
 
 mkdir -p $TEMP
 
-if [ ! -d $TEMP/$REF ]; then
-  echo Reference directory is no directory: $TEMP/$REF
+if [ ! -d $REF ]; then
+  echo Reference directory is no directory: $REF
   exit 1
 fi
 
@@ -59,9 +63,9 @@ cd $TEMP
 
 . ../../tool.sh
 
-echo include $CONFIG_MF > gapc_local.mf
-printf RT_LDLIBS=\\n $CONFIG_MF >> gapc_local.mf
-printf RT_LDLIBS04=\\n $CONFIG_MF >> gapc_local.mf
+#echo include $CONFIG_MF > gapc_local.mf
+#printf RT_LDLIBS=\\n $CONFIG_MF >> gapc_local.mf
+#printf RT_LDLIBS04=\\n $CONFIG_MF >> gapc_local.mf
 
 cmp_new_old_output()
 {

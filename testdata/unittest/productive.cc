@@ -13,8 +13,8 @@
 
 #include "macros.hh"
 
-#include "../../driver.hh"
-#include "../../log.hh"
+#include "../../src/driver.hh"
+#include "../../src/log.hh"
 #include <sstream>
 
 BOOST_AUTO_TEST_CASE( twotrack )

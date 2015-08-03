@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE( shape_set )
   CHECK_EQ(y.str(), "[]");
 }
 
-#include "../rtlib/cm_alph.hh"
+#include "../../rtlib/cm_alph.hh"
 
 BOOST_AUTO_TEST_CASE ( cm_alph )
 {

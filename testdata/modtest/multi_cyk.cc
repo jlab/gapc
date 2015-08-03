@@ -1,6 +1,6 @@
 
-#include "../../driver.hh"
-#include "../../log.hh"
+#include "../../src/driver.hh"
+#include "../../src/log.hh"
 
 #include <iostream>
 #include <iomanip>
@@ -9,9 +9,9 @@
 
 
 
-#include "../../instance.hh"
+#include "../../src/instance.hh"
 
-#include "../../cpp.hh"
+#include "../../src/cpp.hh"
 
 int main(int argc, char **argv)
 {

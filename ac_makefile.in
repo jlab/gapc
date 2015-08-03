@@ -1,5 +1,0 @@
-CC=@CC@
-YACC=@YACC@
-PREFIX=@prefix@
-
-

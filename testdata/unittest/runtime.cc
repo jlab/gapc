@@ -13,10 +13,10 @@
 
 #include "macros.hh"
 
-#include "../../runtime.hh"
+#include "../../src/runtime.hh"
 
-#include "../../yieldsize.hh"
-#include "../../table.hh"
+#include "../../src/yieldsize.hh"
+#include "../../src/table.hh"
 
 BOOST_AUTO_TEST_CASE( runtime_asm )
 {

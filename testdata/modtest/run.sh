@@ -19,7 +19,7 @@ PREFIX=../..
 
 mkdir -p $TEMP
 
-if [ ! -d $TEMP/$REF ]; then
+if [ ! -d $REF ]; then
   echo Reference directory is no directory: $TEMP/$REF
   exit 1
 fi
@@ -65,5 +65,4 @@ done
 
 
 echo +==============================================================================+
-printf "| Helper failed: %6d                                                        |\n" $module_errors
 . ../../stats.sh

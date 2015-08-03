@@ -52,7 +52,7 @@ install -m 644 librna/rnalib.h $PREFIX/include/librna
 
 #install -m 644 config.mf "$SHARE"
 
-CONF_PREFIX=`grep 'char prefix' prefix.cc | $SED 's/^[^"]\+"\([^"]\+\)".*$/\1/'`
+CONF_PREFIX=`grep 'char prefix' src/prefix.cc | $SED 's/^[^"]\+"\([^"]\+\)".*$/\1/'`
 
 $SED -e 's@^PREFIX[ ?]*=.*$@PREFIX='"$CONF_PREFIX"'@' \
   -e 's/^#CXXFLAGS_EXTRA/CXXFLAGS_EXTRA/' \

@@ -1,6 +1,6 @@
 
-#include "../../driver.hh"
-#include "../../log.hh"
+#include "../../src/driver.hh"
+#include "../../src/log.hh"
 
 #include <iostream>
 #include <sstream>

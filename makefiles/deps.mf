@@ -30,11 +30,7 @@ ifneq ($(filter $(CXX),g++ icc),)
 # headers (since each boost header references A LOT more boost headers ...)
 
 %.o : %.cc
-	$(CXX) -MMD -MP \
-  $(CPPFLAGS) \
-  $(CXXFLAGS) \
-  $< -c -o $@ \
-         && sed -e 's/[^ ]\+boost[^ \n]\+//' $*.d > tmp.$$$$ && mv tmp.$$$$ $*.d
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< -c -o $@ 
 
 else
 

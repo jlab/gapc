@@ -13,8 +13,8 @@
 
 #include "macros.hh"
 
-#include "../../tablegen.hh"
-#include "../../cpp.hh"
+#include "../../src/tablegen.hh"
+#include "../../src/cpp.hh"
 
 #include <map>
 #include <set>
@@ -22,8 +22,8 @@
 
 #include "expr_parser.hh"
 
-#include "../../lexer.h"
-#include "../../lexer_priv.h"
+#include "../../src/lexer.h"
+#include "../../src/lexer_priv.h"
 
 BOOST_AUTO_TEST_CASE( parser )
 {
@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE( parser )
   CHECK_EQ(result, 13);
 }
 
-#include "../../expr/base.hh"
+#include "../../src/expr/base.hh"
 #include <sstream>
 
 typedef std::map<std::string, int> env_t;

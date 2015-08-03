@@ -36,13 +36,13 @@ BOOST_AUTO_TEST_CASE( listtest )
     x++;
   }
   CHECK_EQ(x, 100);
-  CHECK_NOT_EQ(l.isEmpty(), true);
+  CHECK_NOT_EQ(l.empty(), true);
   l.clear();
   x = 0;
   for (List<int>::iterator i = l.begin(); i != l.end(); ++i)
     x++;
   CHECK_EQ(x, 0);
-  CHECK_EQ(l.isEmpty(), true);
+  CHECK_EQ(l.empty(), true);
 
   int g;
   empty(g);
@@ -56,7 +56,10 @@ BOOST_AUTO_TEST_CASE( algebra )
     int a = i + i % 2;
     l.push_back(a);
   }
-  l.unique();
+  typedef typename List<int>::iterator itr;
+  std::pair<itr, itr> p = std::make_pair(l.begin(), l.end());
+  l = unique(p).ref();
+  
   size_t size = 0;
   for (List<int>::iterator i = l.begin(); i != l.end(); ++i)
     size++;

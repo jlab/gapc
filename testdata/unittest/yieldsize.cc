@@ -13,7 +13,7 @@
 
 #include "macros.hh"
 
-#include "../../yieldsize.hh"
+#include "../../src/yieldsize.hh"
 
 BOOST_AUTO_TEST_CASE( yield_poly )
 {
