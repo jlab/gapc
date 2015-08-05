@@ -43,6 +43,8 @@
 
 #include "operator.hh"
 
+#include <cmath>
+
 // join two Function definitions into one
 Fn_Def::Fn_Def(Fn_Def &a, Fn_Def &b)
   :  adaptor(NULL), comparator(NULL), sorter(NULL), 

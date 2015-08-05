@@ -49,6 +49,8 @@
 
 #include <boost/tokenizer.hpp>
 
+#include <cmath>
+
 static std::string make_comments(const std::string &s, const std::string &c)
 {
   std::ostringstream o;
