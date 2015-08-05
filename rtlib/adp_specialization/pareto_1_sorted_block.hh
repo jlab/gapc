@@ -481,75 +481,75 @@ inline void join_marked(List_Ref<T> &x, List_Ref<int> &markers, Compare &c, Sort
     }
     
     if(c.dim == 2) {
-//        join_marked_multi_to_two_2D(x, markers, c, keep_equal);
+          join_marked_multi_to_two_2D(x, markers, c, keep_equal);
 //        join_sorted_2d(x,c,s, keep_equal);
         
-        List_Ref<T > l1;	
-        List_Ref<int> ends1;
-        std::copy(x.ref().begin(), x.ref().end(), std::back_inserter(l1.ref()));
-        std::copy(markers.ref().begin(), markers.ref().end(), std::back_inserter(ends1.ref()));
-
-        List_Ref<T > l2;	
-        List_Ref<int> ends2;
-        std::copy(x.ref().begin(), x.ref().end(), std::back_inserter(l2.ref()));
-        std::copy(markers.ref().begin(), markers.ref().end(), std::back_inserter(ends2.ref()));
-        
-        boost::timer t;
-        join_marked_multi_to_two_2D(l1, ends1, c, keep_equal);
-        double t1 = t.elapsed();
-
-        boost::timer u;
-        join_sorted_2d(l2, c, s, keep_equal);
-        double t2 = u.elapsed();
-        
-        std::cerr << x.ref().size() << " " << markers.ref().size() 
-            << " M " << t1 << " " << l1.ref().size()
-            << " S " << t2 << " " << l2.ref().size();
-        if (t1 == t2) {
-            std::cerr << " ms" << std::endl;
-        } else if (t1 > t2){
-            std::cerr << " s" << std::endl;
-        } else {
-            std::cerr << " m" << std::endl;
-        }
-        
-        join_sorted_2d(x,c,s, keep_equal);
+//        List_Ref<T > l1;	
+//        List_Ref<int> ends1;
+//        std::copy(x.ref().begin(), x.ref().end(), std::back_inserter(l1.ref()));
+//        std::copy(markers.ref().begin(), markers.ref().end(), std::back_inserter(ends1.ref()));
+//
+//        List_Ref<T > l2;	
+//        List_Ref<int> ends2;
+//        std::copy(x.ref().begin(), x.ref().end(), std::back_inserter(l2.ref()));
+//        std::copy(markers.ref().begin(), markers.ref().end(), std::back_inserter(ends2.ref()));
+//        
+//        boost::timer t;
+//        join_marked_multi_to_two_2D(l1, ends1, c, keep_equal);
+//        double t1 = t.elapsed();
+//
+//        boost::timer u;
+//        join_sorted_2d(l2, c, s, keep_equal);
+//        double t2 = u.elapsed();
+//        
+//        std::cerr << x.ref().size() << " " << markers.ref().size() 
+//            << " M " << t1 << " " << l1.ref().size()
+//            << " S " << t2 << " " << l2.ref().size();
+//        if (t1 == t2) {
+//            std::cerr << " ms" << std::endl;
+//        } else if (t1 > t2){
+//            std::cerr << " s" << std::endl;
+//        } else {
+//            std::cerr << " m" << std::endl;
+//        }
+//        
+//        join_sorted_2d(x,c,s, keep_equal);
               
     } else {
-  //      join_marked_multi_to_two_all(x, markers, c, s, keep_equal);
+          join_marked_multi_to_two_all(x, markers, c, s, keep_equal);
 //        join_sorted_all(x,c,s, keep_equal);
         
         
-        List_Ref<T > l1;	
-        List_Ref<int> ends1;
-        std::copy(x.ref().begin(), x.ref().end(), std::back_inserter(l1.ref()));
-        std::copy(markers.ref().begin(), markers.ref().end(), std::back_inserter(ends1.ref()));
-
-        List_Ref<T > l2;	
-        List_Ref<int> ends2;
-        std::copy(x.ref().begin(), x.ref().end(), std::back_inserter(l2.ref()));
-        std::copy(markers.ref().begin(), markers.ref().end(), std::back_inserter(ends2.ref()));
-        
-        boost::timer t;
-        join_marked_multi_to_two_all(l1, ends1, c, s, keep_equal);
-        double t1 = t.elapsed();
-
-        boost::timer u;
-        join_sorted_all(l2, c, s, keep_equal);
-        double t2 = u.elapsed();
-        
-        std::cerr << x.ref().size() << " " << markers.ref().size() 
-            << " M " << t1 << " " << l1.ref().size()
-            << " S " << t2 << " " << l2.ref().size();
-        if (t1 == t2) {
-            std::cerr << " ms" << std::endl;
-        } else if (t1 > t2){
-            std::cerr << " s" << std::endl;
-        } else {
-            std::cerr << " m" << std::endl;
-        }
-        
-        join_sorted_all(x,c,s, keep_equal);
+//        List_Ref<T > l1;	
+//        List_Ref<int> ends1;
+//        std::copy(x.ref().begin(), x.ref().end(), std::back_inserter(l1.ref()));
+//        std::copy(markers.ref().begin(), markers.ref().end(), std::back_inserter(ends1.ref()));
+//
+//        List_Ref<T > l2;	
+//        List_Ref<int> ends2;
+//        std::copy(x.ref().begin(), x.ref().end(), std::back_inserter(l2.ref()));
+//        std::copy(markers.ref().begin(), markers.ref().end(), std::back_inserter(ends2.ref()));
+//        
+//        boost::timer t;
+//        join_marked_multi_to_two_all(l1, ends1, c, s, keep_equal);
+//        double t1 = t.elapsed();
+//
+//        boost::timer u;
+//        join_sorted_all(l2, c, s, keep_equal);
+//        double t2 = u.elapsed();
+//        
+//        std::cerr << x.ref().size() << " " << markers.ref().size() 
+//            << " M " << t1 << " " << l1.ref().size()
+//            << " S " << t2 << " " << l2.ref().size();
+//        if (t1 == t2) {
+//            std::cerr << " ms" << std::endl;
+//        } else if (t1 > t2){
+//            std::cerr << " s" << std::endl;
+//        } else {
+//            std::cerr << " m" << std::endl;
+//        }
+//        
+//        join_sorted_all(x,c,s, keep_equal);
         
     }
 }

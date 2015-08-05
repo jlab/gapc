@@ -914,111 +914,104 @@ inline void join_marked(List_Ref<T> &x, List_Ref<int> &markers, Compare &c)
     
     // create copies
     
-    List_Ref<T > l1;	
-    List_Ref<int> ends1;
-    std::copy(x.ref().begin(), x.ref().end(), std::back_inserter(l1.ref()));
-    std::copy(markers.ref().begin(), markers.ref().end(), std::back_inserter(ends1.ref()));
+//    List_Ref<T > l1;	
+//    List_Ref<int> ends1;
+//    std::copy(x.ref().begin(), x.ref().end(), std::back_inserter(l1.ref()));
+//    std::copy(markers.ref().begin(), markers.ref().end(), std::back_inserter(ends1.ref()));
+//    
+//    List_Ref<T > l2;	
+//    List_Ref<int> ends2;
+//    std::copy(x.ref().begin(), x.ref().end(), std::back_inserter(l2.ref()));
+//    std::copy(markers.ref().begin(), markers.ref().end(), std::back_inserter(ends2.ref()));
+//
+//    List_Ref<T > l3;	
+//    List_Ref<int> ends3;
+//    std::copy(x.ref().begin(), x.ref().end(), std::back_inserter(l3.ref()));
+//    std::copy(markers.ref().begin(), markers.ref().end(), std::back_inserter(ends3.ref()));
+//    
+//    List_Ref<T > l4;	
+//    List_Ref<int> ends4;
+//    std::copy(x.ref().begin(), x.ref().end(), std::back_inserter(l4.ref()));
+//    std::copy(markers.ref().begin(), markers.ref().end(), std::back_inserter(ends4.ref()));   
+//    
+//    List_Ref<T > l5;	
+//    List_Ref<int> ends5;
+//    std::copy(x.ref().begin(), x.ref().end(), std::back_inserter(l5.ref()));
+//    std::copy(markers.ref().begin(), markers.ref().end(), std::back_inserter(ends5.ref()));    
+//    
+//    List_Ref<T > l6;	
+//    List_Ref<int> ends6;
+//    std::copy(x.ref().begin(), x.ref().end(), std::back_inserter(l6.ref()));
+//    std::copy(markers.ref().begin(), markers.ref().end(), std::back_inserter(ends6.ref()));    
+//    
+//    List_Ref<T > l7;	
+//    List_Ref<int> ends7;
+//    std::copy(x.ref().begin(), x.ref().end(), std::back_inserter(l7.ref()));
+//    std::copy(markers.ref().begin(), markers.ref().end(), std::back_inserter(ends7.ref()));       
+//    
+//    
+//    boost::timer t;
+//    join_marked_multi(l1, ends1, c);
+//    double t1 = t.elapsed();
+//
+//    boost::timer u;
+//    join_sort(l2, ends2, c);
+//    double t2 = u.elapsed();
+//
+//    boost::timer z;
+//    join_sort_queue(l7, ends7, c);
+//    double t7 = z.elapsed();
+//    
+//    boost::timer v;
+//    join_marked_multi_to_two_merge_array(l3, ends3, c);
+//    double t3 = v.elapsed(); 
+//
+//    boost::timer w;
+//    join_marked_multi_to_two_merge_array_alt(l4, ends4, c);
+//    double t4 = w.elapsed();
+//
+//    boost::timer x2;
+//    join_marked_multi_to_two_merge_array_c(l5, ends5, c);
+//    double t5 = x2.elapsed();
+//
+//    boost::timer y;
+//    full_sort(l6, c);
+//    double t6 = y.elapsed();
+//
+//    
+//     std::cerr << l1.ref().size() << " " << ends1.ref().size() 
+//            << " MULTI " << t1  
+//            << " JOIN " << t2 
+//            << " JOIND " << t7 
+//            << " MERGEA " << t3 
+//            << " MERGEB " << t4  
+//            << " MERGEC " << t5 
+//            << " SORT " << t6                    
+//            << " ";
+//
+//    double min = std::min(t1, std::min(t2, std::min(t3, std::min(t4, std::min(t5, std::min(t6, t7))))));
+//
+//    if(t1 == min) std::cerr << "m";
+//    if(t2 == min) std::cerr << "j";
+//    if(t7 == min) std::cerr << "d";
+//    if(t3 == min) std::cerr << "a";
+//    if(t4 == min) std::cerr << "b";
+//    if(t5 == min) std::cerr << "c";
+//    if(t6 == min) std::cerr << "s";
+//    std::cerr << std::endl;
+//
+//
+//    if (! std::is_sorted(l1.ref().begin(),l1.ref().end(), c)) std::cerr << " FAIL 1" << std::endl;
+//    if (! std::is_sorted(l2.ref().begin(),l2.ref().end(), c)) std::cerr << " FAIL 2" << std::endl;
+//    if (! std::is_sorted(l3.ref().begin(),l3.ref().end(), c)) std::cerr << " FAIL 3" << std::endl;
+//    if (! std::is_sorted(l4.ref().begin(),l4.ref().end(), c)) std::cerr << " FAIL 4" << std::endl;
+//    if (! std::is_sorted(l5.ref().begin(),l5.ref().end(), c)) std::cerr << " FAIL 5" << std::endl;
+//    if (! std::is_sorted(l6.ref().begin(),l6.ref().end(), c)) std::cerr << " FAIL 6" << std::endl;
+//    if (! std::is_sorted(l7.ref().begin(),l7.ref().end(), c)) std::cerr << " FAIL 7" << std::endl;
     
-    List_Ref<T > l2;	
-    List_Ref<int> ends2;
-    std::copy(x.ref().begin(), x.ref().end(), std::back_inserter(l2.ref()));
-    std::copy(markers.ref().begin(), markers.ref().end(), std::back_inserter(ends2.ref()));
 
-    List_Ref<T > l3;	
-    List_Ref<int> ends3;
-    std::copy(x.ref().begin(), x.ref().end(), std::back_inserter(l3.ref()));
-    std::copy(markers.ref().begin(), markers.ref().end(), std::back_inserter(ends3.ref()));
-    
-    List_Ref<T > l4;	
-    List_Ref<int> ends4;
-    std::copy(x.ref().begin(), x.ref().end(), std::back_inserter(l4.ref()));
-    std::copy(markers.ref().begin(), markers.ref().end(), std::back_inserter(ends4.ref()));   
-    
-    List_Ref<T > l5;	
-    List_Ref<int> ends5;
-    std::copy(x.ref().begin(), x.ref().end(), std::back_inserter(l5.ref()));
-    std::copy(markers.ref().begin(), markers.ref().end(), std::back_inserter(ends5.ref()));    
-    
-    List_Ref<T > l6;	
-    List_Ref<int> ends6;
-    std::copy(x.ref().begin(), x.ref().end(), std::back_inserter(l6.ref()));
-    std::copy(markers.ref().begin(), markers.ref().end(), std::back_inserter(ends6.ref()));    
-    
-    List_Ref<T > l7;	
-    List_Ref<int> ends7;
-    std::copy(x.ref().begin(), x.ref().end(), std::back_inserter(l7.ref()));
-    std::copy(markers.ref().begin(), markers.ref().end(), std::back_inserter(ends7.ref()));       
-    
-    
-    boost::timer t;
-    join_marked_multi(l1, ends1, c);
-    double t1 = t.elapsed();
+      join_marked_multi_to_two_merge_array_c(x, markers, c);
 
-    boost::timer u;
-    join_sort(l2, ends2, c);
-    double t2 = u.elapsed();
-
-    boost::timer z;
-    join_sort_queue(l7, ends7, c);
-    double t7 = z.elapsed();
-    
-    boost::timer v;
-    join_marked_multi_to_two_merge_array(l3, ends3, c);
-    double t3 = v.elapsed(); 
-
-    boost::timer w;
-    join_marked_multi_to_two_merge_array_alt(l4, ends4, c);
-    double t4 = w.elapsed();
-
-    boost::timer x2;
-    join_marked_multi_to_two_merge_array_c(l5, ends5, c);
-    double t5 = x2.elapsed();
-
-    boost::timer y;
-    full_sort(l6, c);
-    double t6 = y.elapsed();
-
-    
-     std::cerr << l1.ref().size() << " " << ends1.ref().size() 
-            << " MULTI " << t1  
-            << " JOIN " << t2 
-            << " JOIND " << t7 
-            << " MERGEA " << t3 
-            << " MERGEB " << t4  
-            << " MERGEC " << t5 
-            << " SORT " << t6                    
-            << " ";
-
-    double min = std::min(t1, std::min(t2, std::min(t3, std::min(t4, std::min(t5, std::min(t6, t7))))));
-
-    if(t1 == min) std::cerr << "m";
-    if(t2 == min) std::cerr << "j";
-    if(t7 == min) std::cerr << "d";
-    if(t3 == min) std::cerr << "a";
-    if(t4 == min) std::cerr << "b";
-    if(t5 == min) std::cerr << "c";
-    if(t6 == min) std::cerr << "s";
-    std::cerr << std::endl;
-
-
-    if (! std::is_sorted(l1.ref().begin(),l1.ref().end(), c)) std::cerr << " FAIL 1" << std::endl;
-    if (! std::is_sorted(l2.ref().begin(),l2.ref().end(), c)) std::cerr << " FAIL 2" << std::endl;
-    if (! std::is_sorted(l3.ref().begin(),l3.ref().end(), c)) std::cerr << " FAIL 3" << std::endl;
-    if (! std::is_sorted(l4.ref().begin(),l4.ref().end(), c)) std::cerr << " FAIL 4" << std::endl;
-    if (! std::is_sorted(l5.ref().begin(),l5.ref().end(), c)) std::cerr << " FAIL 5" << std::endl;
-    if (! std::is_sorted(l6.ref().begin(),l6.ref().end(), c)) std::cerr << " FAIL 6" << std::endl;
-    if (! std::is_sorted(l7.ref().begin(),l7.ref().end(), c)) std::cerr << " FAIL 7" << std::endl;
-    
-    
-    
-//    if ( fast_log(x.ref().size()) >= markers.ref().size()) {
-//       join_sort(x, markers, c);
-//       //full_sort(x, c);
-//    } else {
-       full_sort(x, c);
-//    }
-    
-//    join_sort_queue(x, markers, c);
 }
 
 
