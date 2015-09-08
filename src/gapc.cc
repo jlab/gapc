@@ -106,7 +106,7 @@ static void parse_options(int argc, char **argv, Options &rec)
                 ("pareto-version,P", po::value<int>(), "Implementation of Pareto Product to use 0 (NoSort), 1 (Sort),  2 (ISort), 3 (MultiDimOptimized)")
                 ("multi-dim-pareto", "Use multi-dimensional Pareto. Works with -P 0, -P 1 and -P 3.")
                 ("cut-off,c", po::value<int>(), "The cut-off value for -P 3 option (65 default).")
-                ("float-accuracy,f", po::value<int>(), "The number of decimal places regarded for pareto and sorting procedures. If this is not set")
+                ("float-accuracy,f", po::value<int>(), "The number of decimal places regarded for pareto and sorting procedures. If this is not set the full floating point is compared.")
                 ("specialized-adp,S", po::value<int>(), "Set to generate specialized implementations of the ADP framework: 0 (Standard), 1 (Sorted ADP), 2 (Pareto Eager ADP)")
                 ("step-mode", po::value<int>(), "Mode of specialization: 0 force block mode, 1 force stepwise mode. This is automatically set to best option if not specified.")
 		;

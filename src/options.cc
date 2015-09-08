@@ -112,6 +112,9 @@ bool Options::check()
         if (step_option < 0 || step_option > 1)
 		Log::instance()->error("Step Mode must be either 0 or 1.");
 	
+        if (specialization == 2 &&  step_option == 1)
+                Log::instance()->error("Step mode is not supported for sorted ADP.");
+            
         if (float_acc < 0) {
                 Log::instance()->error("Floating point accuracy must be greater then 0 digits");
         } 

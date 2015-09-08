@@ -2,8 +2,8 @@
 ####### Automatic Configuration
 
 #system
-SYSTEM_SUFFIX = @host_os@
-PREFIX = _@prefix@
+SYSTEM_SUFFIX = _@host_os@
+PREFIX = @prefix@
 
 # programms
 CXX = @CXX@ 
@@ -70,9 +70,9 @@ LIB_PATH=/lib
 LDFLAGS = $(BOOST_LDFLAGS)  \
 	$(LDFLAGS_EXTRA) \
 	$(RTLIB_LDFLAGS) \
-	$(shell echo $(BOOST_LDFLAGS) | sed -e 's/\-L/-Xlinker -rpath -Xlinker /g') \
-	$(shell echo $(LDFLAGS_EXTRA) | sed -e 's/\-L/-Xlinker -rpath -Xlinker /g') \
-	$(shell echo $(RTLIB_LDFLAGS) | sed -e 's/\-L/-Xlinker -rpath -Xlinker /g') 
+	$(shell echo $(BOOST_LDFLAGS) | sed -e 's/\(^\|[ ][ ]*\)[^ ]*\.o\($\|[ ]\)//g' | sed -e 's/\-L/-Xlinker -rpath -Xlinker /g') \
+	$(shell echo $(LDFLAGS_EXTRA) | sed -e 's/\(^\|[ ][ ]*\)[^ ]*\.o\($\|[ ]\)//g' | sed -e 's/\-L/-Xlinker -rpath -Xlinker /g') \
+	$(shell echo $(RTLIB_LDFLAGS) | sed -e 's/\(^\|[ ][ ]*\)[^ ]*\.o\($\|[ ]\)//g' | sed -e 's/\-L/-Xlinker -rpath -Xlinker /g') 
 
 LDLIBS = $(RTLIB_LDLIBS) \
 	 $(LDLIBS_EXTRA)
