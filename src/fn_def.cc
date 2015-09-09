@@ -504,7 +504,7 @@ void Fn_Def::init_range_iterator(Fn_Def &a, Fn_Def &b, Product::Two &product) {
             adaptor->stmts.push_back(s);
         }
     }
-         
+    
     init_range_iterator();
 }
 
@@ -738,6 +738,10 @@ void Fn_Def::codegen_choice(Fn_Def &a, Fn_Def &b, Product::Two &product)
               break;
           case Product::Pareto::ISort:
               codegen_pareto_isort(a, b, product);
+              break;
+          case Product::Pareto::NoSortDomOpt:
+              codegen_compare(product);
+              codegen_pareto_domination_nosort(a, b, product);
               break;
           case Product::Pareto::MultiDimOpt:
               int dim = codegen_compare(product);
@@ -2520,7 +2524,32 @@ void Fn_Def::codegen_pareto_multi_yukish(Fn_Def &a, Fn_Def &b, Product::Two &pro
     stmts.push_back(ret);
 }
 
+// generates the comparator element needed for domination optimized nosort
+void Fn_Def::codegen_pareto_domination_nosort(Fn_Def &a, Fn_Def &b, Product::Two &product) {
 
+    // create  a variable to put all answers in 
+    assert(stmts.empty());
+    Statement::Var_Decl *answers = new Statement::Var_Decl(
+        return_type, "answers");
+    stmts.push_back(answers);
+    stmts.push_back(new Statement::Fn_Call(Statement::Fn_Call::EMPTY, *answers));
+    
+    std::string* first = new std::string(*names.front());
+    first->append(".first");
+    std::string* second = new std::string(*names.front());
+    second->append(".second");
+    
+    Statement::Fn_Call *pareto = new Statement::Fn_Call(Statement::Fn_Call::PARETO_DOMINATION_SORT);
+    pareto->add_arg(*answers);
+    pareto->add_arg(first);
+    pareto->add_arg(second);
+    pareto->add_arg(comparator->object);
+    
+    stmts.push_back(pareto);  
+
+    Statement::Return *ret = new Statement::Return(*answers);
+    stmts.push_back(ret);
+}
 
 
 void Fn_Def::codegen_pareto_lex(Fn_Def &a, Fn_Def &b, Product::Two &product)

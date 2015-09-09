@@ -430,7 +430,7 @@ namespace Product {
         
         class Pareto : public Two {
                 public: 
-                    enum ParetoType {NoSort, Sort, ISort, MultiDimOpt};
+                    enum ParetoType {NoSort, Sort, ISort, MultiDimOpt, NoSortDomOpt};
             
 		private:
 

@@ -49,7 +49,8 @@ namespace Statement {
 			     FINALIZE,
 			     INNER,
                              MARK_POSITION,
-                             JOIN_MARKED
+                             JOIN_MARKED,
+                             PARETO_DOMINATION_SORT
 			};
 			
 			

@@ -103,7 +103,7 @@ static void parse_options(int argc, char **argv, Options &rec)
 		("log-level,l", po::value<int>(), "the log level, valid values are 0 (VERBOSE), 1 (INFO),  2 (NORMAL), 3 (WARNING), 4 (ERROR). Default is 2 (NORMAL).")
 		("include,I", po::value< std::vector<std::string> >(), "include path")
 		("version,v", "version string")
-                ("pareto-version,P", po::value<int>(), "Implementation of Pareto Product to use 0 (NoSort), 1 (Sort),  2 (ISort), 3 (MultiDimOptimized)")
+                ("pareto-version,P", po::value<int>(), "Implementation of Pareto Product to use 0 (NoSort), 1 (Sort),  2 (ISort), 3 (MultiDimOptimized), 4 (NoSort, domination ordered) ")
                 ("multi-dim-pareto", "Use multi-dimensional Pareto. Works with -P 0, -P 1 and -P 3.")
                 ("cut-off,c", po::value<int>(), "The cut-off value for -P 3 option (65 default).")
                 ("float-accuracy,f", po::value<int>(), "The number of decimal places regarded for pareto and sorting procedures. If this is not set the full floating point is compared.")
@@ -412,7 +412,7 @@ class Main {
                         if (opts.pareto > 0) {
                             driver.ast.set_pareto_version(*instance, opts.pareto);
                             
-                            if (opts.pareto == 1 || opts.pareto == 3) {
+                            if (opts.pareto == 1 || opts.pareto == 3 || opts.pareto == 4 ) {
                                 nullarySort = true;
                                 if ((opts.backtrack || opts.subopt || opts.kbacktrack)) {                                  
                                     if(opts.multiDimPareto) {
@@ -482,7 +482,7 @@ class Main {
                         }
                         
                         if(opts.multiDimPareto) {
-                             if (opts.pareto == 0 || opts.pareto == 1 || opts.pareto == 3) {
+                             if (opts.pareto == 0 || opts.pareto == 1 || opts.pareto == 3 || opts.pareto == 4) {
                                  driver.ast.set_pareto_dim(*instance, true);
                              } else {
                                 throw LogError ("Multi-Dimensional Pareto is only available for Pareto type 0, 1 and 3.");

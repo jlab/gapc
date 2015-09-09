@@ -51,7 +51,8 @@ const char * Statement::Fn_Call::map_builtin_to_string[] = {
   "finalize",
   "INNER",
   "mark_position",
-  "join_marked"
+  "join_marked",
+  "pareto_domination_sort"
 };
 
 

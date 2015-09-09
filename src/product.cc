@@ -371,6 +371,9 @@ void Product::Pareto::set_pareto_type(int i) {
         case 3:
             pareto_type = Product::Pareto::MultiDimOpt;
             break;
+        case 4:
+            pareto_type = Product::Pareto::NoSortDomOpt;
+            break;
         default:
             pareto_type = Product::Pareto::NoSort;
             break;
