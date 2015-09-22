@@ -34,6 +34,13 @@ runtime:
   - cstdint
   - the accumulator framework (with -DSTATS)
 
+########## SOURCES ########## 
+
+Always get the latest sources at:
+hg clone ssh://hganon@hg.cebitec.uni-bielefeld.de/pi/software/gapc
+
+Password: hganon
+
 
 ########## INSTALLATION ########## 
 
@@ -69,7 +76,7 @@ sudo apt-get install bellmansgapc
 
 Under Mac OS X you may want to use MacPorts to install the compiler. There is a ports description on the BiBiServ MacPorts repository. You can install GAP-C via:
 
-$ sudo port install http://bibiserv.techfak.uni-bielefeld.de/macports/resources/ports/lang/gapc.tgz
+$ sudo port install http://bibiserv.techfak.uni-bielefeld.de/resources/macports/ports/lang/gapc.tgz
 
 
 
