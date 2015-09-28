@@ -169,7 +169,7 @@ librna/librna$(SO_SUFFIX): LDLIBS = -lm
 
 librna/librna$(SO_SUFFIX): $(LIBRNA_PIO)
 ifneq ($(INSTALL_SHARED_FLAG),)
-	$(LD) $(SHARED_FLAGS) $(INSTALL_SHARED_FLAG)$@ $^ $(LDLIBS) -o $@
+	$(LD) $(SHARED_FLAGS) $(INSTALL_SHARED_FLAG)/librna$(SO_SUFFIX) $^ $(LDLIBS) -o $@
 else
 	$(LD) $(SHARED_FLAGS) $^ $(LDLIBS) -o $@
 endif
@@ -178,7 +178,7 @@ librna/librnafast$(SO_SUFFIX): LDLIBS = -lm
 
 librna/librnafast$(SO_SUFFIX): librna/rnalib.fpio $(filter-out librna/rnalib.pio, $(LIBRNA_PIO))
 ifneq ($(INSTALL_SHARED_FLAG),)
-	$(LD) $(SHARED_FLAGS) $(INSTALL_SHARED_FLAG)$@ $^ $(LDLIBS) -o $@
+	$(LD) $(SHARED_FLAGS) $(INSTALL_SHARED_FLAG)/librnafast$(SO_SUFFIX) $^ $(LDLIBS) -o $@
 else
 	$(LD) $(SHARED_FLAGS) $^ $(LDLIBS) -o $@
 endif

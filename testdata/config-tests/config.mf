@@ -104,7 +104,7 @@ boost.succ: boost_post
 	touch $@
 
 # boost
-
+ 
 # boost_test
 
 
@@ -112,13 +112,12 @@ boost_test_pre: cxx.succ
 	$(call bold,>>> Checking for boost unit test framework ...)
 	@touch $@
 
-boost_test_test: LDLIBS_EXTRA = $(BOOST_UNIT_TEST_FRAMEWORK_LIB)
+#boost_test_test: LDLIBS_EXTRA = $(BOOST_UNIT_TEST_FRAMEWORK_LIB)
 
-boost_test_test: boost_test_test.cc boost_test_pre
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< $(LDFLAGS) $(LDLIBS) -o $@
+#boost_test_test: boost_test_test.cc boost_test_pre
+#	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< $(LDFLAGS) $(LDLIBS) -o $@
 
-boost_test_exec: boost_test_test
-	./$< > $@
+boost_test_exec: 
 
 boost_test_post: boost_test_exec
 	$(call bold,>>> Checking for boost unit test framework ... OK)
