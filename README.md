@@ -1,12 +1,11 @@
-
+```
   ____       _ _                       _        _____          _____  
  |  _ \     | | |                     ( )      / ____|   /\   |  __ \ 
  | |_) | ___| | |_ __ ___   __ _ _ __ |/ ___  | |  __   /  \  | |__) |
  |  _ < / _ \ | | '_ ` _ \ / _` | '_ \  / __| | | |_ | / /\ \ |  ___/ 
  | |_) |  __/ | | | | | | | (_| | | | | \__ \ | |__| |/ ____ \| |     
  |____/ \___|_|_|_| |_| |_|\__,_|_| |_| |___/  \_____/_/    \_\_|     
-                                                                      
-  
+```                                                                      
                                                                     
 ## Dependencies
 
@@ -34,26 +33,24 @@ runtime:
   - cstdint
   - the accumulator framework (with -DSTATS)
 
-########## SOURCES ########## 
+## SOURCES
 
-Always get the latest sources at:
-hg clone ssh://hganon@hg.cebitec.uni-bielefeld.de/pi/software/gapc
-
-Password: hganon
+Always get the latest sources from github:
+`git clone https://github.com/jlab/gapc.git`
 
 
-########## INSTALLATION ########## 
+## INSTALLATION
 
 To install Bellman's GAP from source call:
 
-1. ./configure --prefix=<install-path>
-2. make
-3. make install
+1. `./configure --prefix=<install-path>`
+2. `make`
+3. `make install`
 
-If --prefix is not set the path defaults to /usr/local
+If `--prefix` is not set the path defaults to `/usr/local`
 
-More options for ./configure are:
-
+More options for `./configure` are:
+```
 CXX=<g++ path>
 CC=<gcc path>
 SED=<sed path>
@@ -61,26 +58,19 @@ FLEX=<flex path>
 BISON=<bison path>
 --with-boost=<path to booth installation>
 --with-boost-program-options=<path to boost library program options> and --with-boost-unit-test-framework=<path to boost library unit test>
-
-## Ubuntu ## 
+```
+## Ubuntu
 
 Bellman's GAP is available as a pre-compiled Debian package via Ubuntus launchpad system, a Ubuntu Personal Package Archive (PPA).
 On your command line, execute the three following commands
 
-sudo add-apt-repository ppa:bibi-help/bibitools
-sudo apt-get update
-sudo apt-get install bellmansgapc
+`sudo add-apt-repository ppa:bibi-help/bibitools`
+`sudo apt-get update`
+`sudo apt-get install bellmansgapc`
 
 
-## MacPorts ##
+## MacPorts
 
 Under Mac OS X you may want to use MacPorts to install the compiler. There is a ports description on the BiBiServ MacPorts repository. You can install GAP-C via:
 
-$ sudo port install http://bibiserv.techfak.uni-bielefeld.de/resources/macports/ports/lang/gapc.tgz
-
-
-
-                
-
-
-
+`$ sudo port install http://bibiserv.techfak.uni-bielefeld.de/resources/macports/ports/lang/gapc.tgz`
