@@ -63,11 +63,11 @@ BISON=<bison path>
 
 Bellman's GAP is available as a pre-compiled Debian package via Ubuntus launchpad system, a Ubuntu Personal Package Archive (PPA).
 On your command line, execute the three following commands
-
-`sudo add-apt-repository ppa:bibi-help/bibitools`
-`sudo apt-get update`
-`sudo apt-get install bellmansgapc`
-
+```
+sudo add-apt-repository ppa:bibi-help/bibitools
+sudo apt-get update
+sudo apt-get install bellmansgapc
+```
 
 ## MacPorts
 
