@@ -6,4 +6,4 @@ os:
 - linux
 before_install:
   - sudo apt-get update -y
-  - sudo apt-get install flex
+  - sudo apt-get install flex bison make libboost-all-dev
