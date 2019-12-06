@@ -20,7 +20,8 @@
 > import Data.List(nub,sort)
 > import System.IO.Unsafe
 > import Data.Map(Map,toList,fromListWith,empty,insertWith',insertWith,member,insert)
-> import Data.HashTable as HT
+
+import Data.HashTable as HT
 
 > import RNACombinators
 > import Foldingspace
@@ -738,16 +739,16 @@ Das hier scheint teuer zu sein!!
 
 uses a hash for storage and plain addition for updating of values
 
-> buildHash :: [(String,Double)] -> IO [(String,Double)]
-> buildHash  xs = do
->       h <- HT.new (==) HT.hashString
->       mapM (myinsert h) xs
->       HT.toList h
+buildHash :: [(String,Double)] -> IO [(String,Double)]
+buildHash  xs = do
+      h <- HT.new (==) HT.hashString
+      mapM (myinsert h) xs
+      HT.toList h
 
-> myinsert:: HashTable String Double -> (String, Double) -> IO Bool
-> myinsert hash (x,y) = case unsafePerformIO (HT.lookup hash x) of
->                            Just a  -> HT.update hash x (y+a)
->                            Nothing -> HT.update hash x  y   
+myinsert:: HashTable String Double -> (String, Double) -> IO Bool
+myinsert hash (x,y) = case unsafePerformIO (HT.lookup hash x) of
+                           Just a  -> HT.update hash x (y+a)
+                           Nothing -> HT.update hash x  y   
 
 
 Given a list of (shape,boltzmann weights) remove all entries whose relative weight < thresh
