@@ -11,4 +11,8 @@ install:
   - ./configure
   - make
 script:
-  - make test-unit
+  #- make test-unit
+  - make test-mod
+  #- make test-paral
+  #- make test-regress
+  #- make test-ambiguity
