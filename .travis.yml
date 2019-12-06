@@ -19,6 +19,6 @@ before_script:
 script:
   #- make test-unit  # works locally & in travis
   #- make test-paral  # works locally & in travis
-  - make test-mod TRUTH_DIR=/home/travis/gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu
-  #- make test-regress TRUTH_DIR=./gapc-test-suite/Truth
+  #- make test-mod TRUTH_DIR=/home/travis/gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu
+  - make test-regress TRUTH_DIR=/home/travis/gapc-test-suite/Truth
   #- make test-ambiguity
