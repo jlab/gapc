@@ -10,6 +10,11 @@ before_install:
 install:
   - ./configure
   - make
+  - make install
+before_script:
+  - sudo apt-get install cabal-install -y
+  - cabal update
+  - cabal install random
 script:
   #- make test-unit
   - make test-paral
