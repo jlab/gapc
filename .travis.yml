@@ -15,10 +15,10 @@ before_script:
   - sudo apt-get install cabal-install -y
   - cabal update
   - cabal install random
-  - git clone https://github.com/jlab/gapc-test-suite.git
+  - git clone https://github.com/jlab/gapc-test-suite.git /home/travis/gapc-test-suite
 script:
   #- make test-unit  # works locally & in travis
   #- make test-paral  # works locally & in travis
-  - make test-mod TRUTH_DIR=./gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu
-  #- make test-regress
+  - make test-mod TRUTH_DIR=/home/travis/gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu
+  #- make test-regress TRUTH_DIR=./gapc-test-suite/Truth
   #- make test-ambiguity
