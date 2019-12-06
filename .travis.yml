@@ -12,13 +12,15 @@ install:
   - make
   - sudo make install
 before_script:
+  # install missing ghc/haskell modules
   - sudo apt-get install cabal-install -y
   - cabal update
   - cabal install random
+  # obtain truth data from secondary github repository
   - git clone https://github.com/jlab/gapc-test-suite.git /home/travis/gapc-test-suite
 script:
-  #- make test-unit  # works locally & in travis
-  #- make test-paral  # works locally & in travis
-  #- make test-mod TRUTH_DIR=/home/travis/gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu
+  - make test-unit
+  - make test-paral
+  - make test-mod TRUTH_DIR=/home/travis/gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu
   - make test-regress TRUTH_DIR=/home/travis/gapc-test-suite/Truth
-  #- make test-ambiguity
+  - make test-ambiguity TRUTH_DIR=/home/travis/gapc-test-suite/Truth
