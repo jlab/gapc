@@ -4,9 +4,15 @@ compiler:
 - gcc
 os:
 - linux
-before_install:
-  - sudo apt-get update -y
-  - sudo apt-get install flex bison make libboost-all-dev libgsl-dev ghc
+addons:
+  apt:
+    packages:
+      - flex
+      - bison
+      - make
+      - libboost-all-dev
+      - libgsl-dev
+      - ghc
 install:
   - ./configure
   - make
