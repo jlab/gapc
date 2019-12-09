@@ -22,6 +22,7 @@ addons:
       - libboost-all-dev
       - libgsl-dev
       - ghc
+    update: true
 install:
   - ./configure
   - make
