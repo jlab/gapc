@@ -101,7 +101,7 @@ void app(Rope &a, const std::string &s)
 #include <boost/random/linear_congruential.hpp>
 #include <boost/random/uniform_int.hpp>
 #include <boost/random/variate_generator.hpp>
-#include <boost/tr1/random.hpp>
+#include <boost/random.hpp>
 #include <ctime>
 
 typedef boost::mt19937 rand_gen;
