@@ -19,8 +19,8 @@ addons:
       - flex
       - bison
       - make
-      - libboost-all-dev
-      - libgsl-dev
+      - boost
+      - gsl
       - ghc
     update: true
 install:
