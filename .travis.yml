@@ -3,7 +3,7 @@ language: cpp
 compiler:
 - gcc
 os:
-#- linux
+- linux
 - osx
 addons:
   apt:
