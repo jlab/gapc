@@ -37,6 +37,7 @@ before_script:
 script:
   - make test-unit
   - make test-paral
-  - make test-mod TRUTH_DIR=/home/travis/gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then make test-mod TRUTH_DIR=/home/travis/gapc-test-suite/Truth TRUTH_SUFFIX=_osx; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; make test-mod TRUTH_DIR=/home/travis/gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu; fi
   - make test-regress TRUTH_DIR=/home/travis/gapc-test-suite/Truth
   - make test-ambiguity TRUTH_DIR=/home/travis/gapc-test-suite/Truth
