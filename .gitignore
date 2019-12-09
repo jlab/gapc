@@ -1,0 +1,29 @@
+# general intermediate files
+**.hi
+**.d
+**.o
+
+# temporary directories
+testdata/ambiguitytest/temp
+testdata/modtest/temp
+testdata/paraltest/temp
+testdata/regresstest/rand
+testdata/regresstest/temp
+
+# specific files, generated through tests
+testdata/test/shapemfepfx/shapemfepfx.*
+testdata/test/shrepmfesample/pfsampleshrep*
+testdata/test/shapemfepfx/shapemfepfx_main.*
+testdata/config-tests/sed_exec
+testdata/paraltest/AdpfMain
+testdata/test/shapemfepfx/main
+testdata/test/shapemfepfx/nowindow
+testdata/test/shrepmfesample/main
+testdata/unittest/expr_parser.hh
+testdata/unittest/expr_parser.output
+testdata/unittest/stack.hh
+
+# config files
+config.log
+config.mf
+config.status
