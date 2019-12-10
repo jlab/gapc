@@ -27,6 +27,7 @@ matrix:
             - boost
             - gsl
             - ghc
+      osx_image: xcode11.2
 
 install:
   - ./configure
