@@ -17,7 +17,6 @@ matrix:
             - libgsl-dev
             - ghc
     - os: osx
-      osx_image: xcode11.2
       addons:
         homebrew:
           update: true
