@@ -2,28 +2,33 @@ dist: xenial
 language: cpp
 compiler:
 - gcc
-os:
-- linux
-- osx:
-  osx_image: xcode11.2
-addons:
-  apt:
-    packages:
-      - flex
-      - bison
-      - make
-      - libboost-all-dev
-      - libgsl-dev
-      - ghc
-  homebrew:
-    packages:
-      - flex
-      - bison
-      - make
-      - boost
-      - gsl
-      - ghc
-    update: true
+
+matrix:
+  include:
+    - os: linux
+      addons:
+        apt:
+          update: true
+          packages:
+            - flex
+            - bison
+            - make
+            - libboost-all-dev
+            - libgsl-dev
+            - ghc
+    - os: osx
+      osx_image: xcode11.2
+      addons:
+        homebrew:
+          update: true
+          packages:
+            - flex
+            - bison
+            - make
+            - boost
+            - gsl
+            - ghc
+
 install:
   - ./configure
   - make
