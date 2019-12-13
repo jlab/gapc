@@ -292,6 +292,14 @@ int termau_energy(const char *s, rsize i, rsize j)
 }
 
 /*
+  returns the destabilizing energy of two RNA molecules that form a dimere. Needed for co-folding and initial penalty.
+*/
+int duplex_energy(void)
+{
+  return P->DuplexInit;
+}
+
+/*
    returns the energy contribution for hairpin loops, i.e one closing basepair with an embedded unpaired loop region (of 3 bases, at least).
           . . .
         .       .
@@ -1034,11 +1042,11 @@ int dr_dangle_dg(enum base_t i, enum base_t j, enum base_t dangle) {
 static const bool map_base_iupac[5][13] =
 {
              /*      { N    , A     , C     , G     , U     , _     , +     , B     , D     , H     , R     , V     , Y     }  , */
-             /* N */ { true , true  , true  , true  , true  , true  , false , true  , true  , true  , true  , true  , true  }  , 
-             /* A */ { true , true  , false , false , false , false , false , false , true  , true  , true  , true  , false }  , 
-             /* C */ { true , false , true  , false , false , false , false , true  , false , true  , false , true  , true  }  , 
-             /* G */ { true , false , false , true  , false , false , false , true  , true  , false , true  , true  , false }  , 
-             /* U */ { true , false , false , false , true  , false , false , true  , true  , true  , false , false , true  }  , 
+             /* N */ { true , true  , true  , true  , true  , true  , false , true  , true  , true  , true  , true  , true  }  ,
+             /* A */ { true , true  , false , false , false , false , false , false , true  , true  , true  , true  , false }  ,
+             /* C */ { true , false , true  , false , false , false , false , true  , false , true  , false , true  , true  }  ,
+             /* G */ { true , false , false , true  , false , false , false , true  , true  , false , true  , true  , false }  ,
+             /* U */ { true , false , false , false , true  , false , false , true  , true  , true  , false , false , true  }  ,
 };
 
 bool iupac_match(char base, char iupac_base)
@@ -1049,5 +1057,3 @@ bool iupac_match(char base, char iupac_base)
   assert(iupac_base<13);
   return map_base_iupac[base][iupac_base];
 }
-
-
