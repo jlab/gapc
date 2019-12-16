@@ -6,9 +6,9 @@ os:
 - linux
 - osx
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then \
-    sudo apt-get update -y; \
-    sudo apt-get install flex bison make libboost-all-dev libgsl-dev ghc; \
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+    sudo apt-get update -y;
+    sudo apt-get install flex bison make libboost-all-dev libgsl-dev ghc;
     fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"; brew update; brew install flex bison@2.7 make boost gsl ghc gnu-sed; export PATH="/usr/local/opt/flex/bin:/usr/local/opt/bison@2.7/bin:/usr/local/opt/gnu-sed/libexec/gnubin:$PATH"; fi
 install:
