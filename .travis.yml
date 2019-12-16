@@ -2,51 +2,48 @@ dist: xenial
 language: cpp
 compiler:
 - gcc
-
-matrix:
-  include:
-    - os: linux
-      addons:
-        apt:
-          packages:
-            - flex
-            - bison
-            - make
-            - libboost-all-dev
-            - libgsl-dev
-            - ghc
-    - os: osx
-      addons:
-        homebrew:
-          update: true
-          packages:
-            - flex
-            - bison@2.7
-            - make
-            - boost
-            - gsl
-            - ghc
-            - gnu-sed
-
+os:
+- linux
+- osx
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+    sudo apt-get update -y;
+    sudo apt-get install flex bison make libboost-all-dev libgsl-dev ghc;
+    fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+    /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)";
+    brew update;
+    brew install flex bison@2.7 make boost gsl ghc gnu-sed;
+    export PATH="/usr/local/opt/flex/bin:/usr/local/opt/bison@2.7/bin:/usr/local/opt/gnu-sed/libexec/gnubin:$PATH";
+    fi
 install:
-  # actually use brew install version of programs
-  - if [ $TRAVIS_OS_NAME = osx ]; then export PATH="/usr/local/opt/flex/bin:/usr/local/opt/bison@2.7/bin:/usr/local/opt/gnu-sed/libexec/gnubin:$PATH"; fi
-  - ./configure
-  - if [ $TRAVIS_OS_NAME = osx ]; then sed -i "s/-D_XOPEN_SOURCE=500//" config.mf; fi
-  - if [ $TRAVIS_OS_NAME = osx ]; then make LDFLAGS_EXTRA=" -L/usr/local/opt/bison@2.7/lib -L/usr/local/opt/flex/lib " CPPFLAGS_EXTRA=" -I/usr/local/opt/flex/include "; fi
-  - if [ $TRAVIS_OS_NAME = linux]; then make; fi
-  - sudo make install
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+    ./configure;
+    make;
+    sudo make install;
+    fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+    ./configure;
+    # avoid old POSIX standard
+    sed -i "s/-D_XOPEN_SOURCE=500//" config.mf;
+    make LDFLAGS_EXTRA=" -L/usr/local/opt/bison@2.7/lib -L/usr/local/opt/flex/lib " CPPFLAGS_EXTRA=" -I/usr/local/opt/flex/include ";
+    sudo make install;
+    fi
 before_script:
   # install missing ghc/haskell modules
-  - sudo apt-get install cabal-install -y
-  - cabal update
-  - cabal install random
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+    sudo apt-get install cabal-install -y;
+    cabal update;
+    cabal install random;
+    fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+    echo "empty";
+    fi
   # obtain truth data from secondary github repository
   - git clone https://github.com/jlab/gapc-test-suite.git /home/travis/gapc-test-suite
 script:
   - make test-unit
   - make test-paral
-  - if [ $TRAVIS_OS_NAME = osx ]; then make test-mod TRUTH_DIR=/home/travis/gapc-test-suite/Truth TRUTH_SUFFIX=_osx; fi
-  - if [ $TRAVIS_OS_NAME = linux ]; then make test-mod TRUTH_DIR=/home/travis/gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu; fi
+  - make test-mod TRUTH_DIR=/home/travis/gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu
   - make test-regress TRUTH_DIR=/home/travis/gapc-test-suite/Truth
   - make test-ambiguity TRUTH_DIR=/home/travis/gapc-test-suite/Truth
