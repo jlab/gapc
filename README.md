@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/jlab/gapc.svg?branch=master)](https://travis-ci.org/jlab/gapc)
 ```
   ____       _ _                       _        _____          _____  
  |  _ \     | | |                     ( )      / ____|   /\   |  __ \ 

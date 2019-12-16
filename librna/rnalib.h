@@ -26,6 +26,7 @@ extern double temperature;
 void librna_read_param_file(const char *filename);
 
 int termau_energy(const char *s, rsize i, rsize j);
+int duplex_energy(void);
 int hl_energy(const char *s, rsize i, rsize j);
 int hl_energy_stem(const char *s, rsize i, rsize j);
 int il_energy(const char *s, rsize i, rsize j, rsize k, rsize l);
