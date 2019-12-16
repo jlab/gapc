@@ -32,7 +32,7 @@ install:
   # actually use brew install version of programs
   - if [ $TRAVIS_OS_NAME = osx ]; then export PATH="/usr/local/opt/flex/bin:/usr/local/opt/bison@2.7/bin:/usr/local/opt/gnu-sed/libexec/gnubin:$PATH"; fi
   - ./configure
-  - if [ $TRAVIS_OS_NAME = osx ]; then sed -i "s/-D_XOPEN_SOURCE=500//" config.mf
+  - if [ $TRAVIS_OS_NAME = osx ]; then sed -i "s/-D_XOPEN_SOURCE=500//" config.mf; fi
   - if [ $TRAVIS_OS_NAME = osx ]; then make LDFLAGS_EXTRA=" -L/usr/local/opt/bison@2.7/lib -L/usr/local/opt/flex/lib " CPPFLAGS_EXTRA=" -I/usr/local/opt/flex/include "; fi
   - if [ $TRAVIS_OS_NAME = linux]; then make; fi
   - sudo make install
