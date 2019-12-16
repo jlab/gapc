@@ -38,13 +38,18 @@ before_script:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
     brew install cabal-install;
     cabal update;
-    cabal install random;
+    cabal install --lib random;
     fi
   # obtain truth data from secondary github repository
   - git clone https://github.com/jlab/gapc-test-suite.git $HOME/gapc-test-suite
 script:
   - make test-unit
   - make test-paral
-  - make test-mod TRUTH_DIR=$HOME/gapc-test-suite/Truth TRUTH_SUFFIX=_$TRAVIS_OS_NAME;
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+    make test-mod TRUTH_DIR=$HOME/gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu;
+    fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+    make test-mod TRUTH_DIR=$HOME/gapc-test-suite/Truth TRUTH_SUFFIX=_osx;
+    fi
   - make test-regress TRUTH_DIR=$HOME/gapc-test-suite/Truth
   - make test-ambiguity TRUTH_DIR=$HOME/gapc-test-suite/Truth
