@@ -22,16 +22,19 @@ matrix:
           update: true
           packages:
             - flex
-            - bison
+            - bison@2.7
             - make
             - boost
             - gsl
             - ghc
-      osx_image: xcode11.2
+            - gnu-sed
 
 install:
+  # actually use brew install version of programs
+  - if [ $TRAVIS_OS_NAME = osx ]; then exort PATH="/usr/local/opt/flex/bin:/usr/local/opt/bison@2.7/bin:/usr/local/opt/gnu-sed/libexec/gnubin:$PATH"; fi
   - ./configure
-  - make
+  - if [ $TRAVIS_OS_NAME = osx ]; then make LDFLAGS_EXTRA=" -L/usr/local/opt/bison@2.7/lib -L/usr/local/opt/flex/lib " CPPFLAGS_EXTRA=" -I/usr/local/opt/flex/include "; fi
+  - if [ $TRAVIS_OS_NAME = linux]; then make; fi
   - sudo make install
 before_script:
   # install missing ghc/haskell modules
