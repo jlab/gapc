@@ -8,7 +8,6 @@ matrix:
     - os: linux
       addons:
         apt:
-          update: true
           packages:
             - flex
             - bison
