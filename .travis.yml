@@ -10,14 +10,34 @@ before_install:
     sudo apt-get update -y;
     sudo apt-get install flex bison make libboost-all-dev libgsl-dev ghc;
     fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"; brew update; brew install flex bison@2.7 make boost gsl ghc gnu-sed; export PATH="/usr/local/opt/flex/bin:/usr/local/opt/bison@2.7/bin:/usr/local/opt/gnu-sed/libexec/gnubin:$PATH"; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+    /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)";
+    brew update;
+    brew install flex bison@2.7 make boost gsl ghc gnu-sed;
+    export PATH="/usr/local/opt/flex/bin:/usr/local/opt/bison@2.7/bin:/usr/local/opt/gnu-sed/libexec/gnubin:$PATH";
+    fi
 install:
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./configure; make; sudo make install; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ./configure; sed -i "s/-D_XOPEN_SOURCE=500//" config.mf; make LDFLAGS_EXTRA=" -L/usr/local/opt/bison@2.7/lib -L/usr/local/opt/flex/lib " CPPFLAGS_EXTRA=" -I/usr/local/opt/flex/include "; sudo make install; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+    ./configure;
+    make;
+    sudo make install;
+    fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+    ./configure;
+    sed -i "s/-D_XOPEN_SOURCE=500//" config.mf;
+    make LDFLAGS_EXTRA=" -L/usr/local/opt/bison@2.7/lib -L/usr/local/opt/flex/lib " CPPFLAGS_EXTRA=" -I/usr/local/opt/flex/include ";
+    sudo make install;
+    fi
 before_script:
   # install missing ghc/haskell modules
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install cabal-install -y; cabal update; cabal install random; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then echo "empty"; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+    sudo apt-get install cabal-install -y;
+    cabal update;
+    cabal install random;
+    fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+    echo "empty";
+    fi
   # obtain truth data from secondary github repository
   - git clone https://github.com/jlab/gapc-test-suite.git /home/travis/gapc-test-suite
 script:
