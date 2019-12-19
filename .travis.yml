@@ -80,10 +80,7 @@ jobs:
         - popd
 
 deploy:
-  skip_cleanup: true
+  cleanup: true
   provider: script
   edge: true
-  script:
-    - cd tmp_debian
-    - dist=xenial
-    - dput ppa:janssenlab/software ../*${dist}*_source.changes;
+  script: dput ppa:janssenlab/software tmp_debian/*xenial*_source.changes
