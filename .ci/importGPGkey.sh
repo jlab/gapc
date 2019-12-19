@@ -13,7 +13,7 @@ declare -r pubring_auto="${custom_gpg_home}/pubring.auto"
 echo
 echo "Decrypting secret gpg keyring.."
 # $super_secret_password is taken from the script's env. See below in the blog.
-{ echo $super_secret_password | gpg --passphrase-fd 0 "${secring_auto}".gpg ; } || { end_with_error "Failed to decrypt secret gpg keyring." ; }
+{ echo $super_secret_password | gpg --batch --passphrase-fd 0 "${secring_auto}".gpg ; } || { end_with_error "Failed to decrypt secret gpg keyring." ; }
 echo Success!
 
 echo
