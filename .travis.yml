@@ -13,33 +13,35 @@ env:
 jobs:
   include:
     - stage: test
-      addons:
-        apt:
-          packages:
-            - flex
-            - bison
-            - make
-            - libboost-all-dev
-            - libgsl-dev
-            - ghc
-      install:
-        - ./configure
-        - make
-        - sudo make install
-      before_script:
-        # install missing ghc/haskell modules
-        - sudo apt-get install cabal-install -y
-        - cabal update
-        - cabal install random
-        # obtain truth data from secondary github repository
-        - git clone https://github.com/jlab/gapc-test-suite.git /home/travis/gapc-test-suite
       script:
-        - echo "tests"
-        #- make test-unit
-        #- make test-paral
-        #- make test-mod TRUTH_DIR=/home/travis/gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu
-        #- make test-regress TRUTH_DIR=/home/travis/gapc-test-suite/Truth
-        #- make test-ambiguity TRUTH_DIR=/home/travis/gapc-test-suite/Truth
+        - echo "ich bin fertig"
+      # addons:
+      #   apt:
+      #     packages:
+      #       - flex
+      #       - bison
+      #       - make
+      #       - libboost-all-dev
+      #       - libgsl-dev
+      #       - ghc
+      # install:
+      #   - ./configure
+      #   - make
+      #   - sudo make install
+      # before_script:
+      #   # install missing ghc/haskell modules
+      #   - sudo apt-get install cabal-install -y
+      #   - cabal update
+      #   - cabal install random
+      #   # obtain truth data from secondary github repository
+      #   - git clone https://github.com/jlab/gapc-test-suite.git /home/travis/gapc-test-suite
+      # script:
+      #   - echo "tests"
+      #   - make test-unit
+      #   - make test-paral
+      #   - make test-mod TRUTH_DIR=/home/travis/gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu
+      #   - make test-regress TRUTH_DIR=/home/travis/gapc-test-suite/Truth
+      #   - make test-ambiguity TRUTH_DIR=/home/travis/gapc-test-suite/Truth
     - stage: launchpad deploy
       addons:
         apt:
@@ -49,6 +51,8 @@ jobs:
             - ubuntu-dev-tools
             - apt-file
             - dput
+            - libdistro-info-perl
+            - fakeroot
       before_script:
         - gpg --import .ci/pubring.auto
         - . ./.ci/importGPGkey.sh
