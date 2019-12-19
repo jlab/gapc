@@ -75,6 +75,7 @@ jobs:
         - debuild -S -sa -k"74AE1009";
         - ls -la;
         - ls -la ../;
+        - readlink -f ../*xenial*
         #- dput ppa:janssenlab/software ../*${dist}*_source.changes;
         #  done
         - popd
