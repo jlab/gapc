@@ -52,7 +52,7 @@ jobs:
             - apt-file
             - dput
             - libdistro-info-perl
-            #- fakeroot
+            - fakeroot
       before_script:
         - gpg --import .ci/pubring.auto
         - . ./.ci/importGPGkey.sh
@@ -66,12 +66,13 @@ jobs:
         - cd $WORKDIR
         - tar cfz bellmansgapc-$DATE.orig.tar.gz gapc --exclude-vcs
         - cd gapc
-        - for dist in "xenial" ; do
-          version="$DATE-0ubuntu0ppa1~${dist}1";
-          DEBFULLNAME="janssenlab" EMAIL="stefan.m.janssen@gmail.com" dch -b --newversion $version --distribution $dist "$TRAVIS_COMMIT_MESSAGE";
-          sudo debuild -S -sa -k"74AE1009";
-          ls -la;
-          ls -la ../;
-          dput ppa:janssenlab/software ../*${dist}*_source.changes;
-          done
+        #- for dist in "xenial" ; do
+        - dist=xenial
+        - version="$DATE-0ubuntu0ppa1~${dist}1";
+        - DEBFULLNAME="janssenlab" EMAIL="stefan.m.janssen@gmail.com" dch -b --newversion $version --distribution $dist "$TRAVIS_COMMIT_MESSAGE";
+        - debuild -S -sa -k"74AE1009";
+        - ls -la;
+        - ls -la ../;
+        - dput ppa:janssenlab/software ../*${dist}*_source.changes;
+        #  done
         - popd
