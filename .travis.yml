@@ -53,6 +53,7 @@ jobs:
             - dput
             - libdistro-info-perl
             - fakeroot
+            - debhelper
       before_script:
         - gpg --import .ci/pubring.auto
         - . ./.ci/importGPGkey.sh
