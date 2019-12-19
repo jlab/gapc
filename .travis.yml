@@ -50,6 +50,7 @@ jobs:
             - apt-file
             - dput
       before_script:
+        - gpg --import .ci/pubring.auto
         - . ./.ci/importGPGkey.sh
       script:
         - WORKDIR=tmp_debian
