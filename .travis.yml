@@ -83,4 +83,4 @@ deploy:
   cleanup: true
   provider: script
   edge: true
-  script: dput ppa:janssenlab/software tmp_debian/*xenial*_source.changes
+  script: . ./.ci/deploy.sh
