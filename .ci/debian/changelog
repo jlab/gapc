@@ -1,0 +1,994 @@
+bellmansgapc (2015.09.28-0ubuntu0ppa1~vivid1) vivid; urgency=medium
+
+  * minor update in config files and docu
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Thu, 01 Oct 2015 09:39:09 +0200
+
+bellmansgapc (2015.09.28-0ubuntu0ppa1~trusty1) trusty; urgency=medium
+
+  * minor update in config files and docu
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Thu, 01 Oct 2015 09:39:03 +0200
+
+bellmansgapc (2015.09.28-0ubuntu0ppa1~precise1) precise; urgency=medium
+
+  * minor update in config files and docu
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Thu, 01 Oct 2015 09:38:55 +0200
+
+bellmansgapc (2015.09.22.4-0ubuntu0ppa1~utopic1) utopic; urgency=medium
+
+  * Final implementation of Pareto products
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 23 Sep 2015 09:43:47 +0200
+
+bellmansgapc (2015.09.22.4-0ubuntu0ppa1~trusty1) trusty; urgency=medium
+
+  * Final implementation of Pareto products
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 23 Sep 2015 09:43:41 +0200
+
+bellmansgapc (2015.09.22.4-0ubuntu0ppa1~precise1) precise; urgency=medium
+
+  * Final implementation of Pareto products
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 23 Sep 2015 09:43:35 +0200
+
+bellmansgapc (2015.09.22.4-0ubuntu0ppa1~lucid1) lucid; urgency=medium
+
+  * Final implementation of Pareto products
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 23 Sep 2015 09:43:28 +0200
+
+bellmansgapc (2015.05.14-0ubuntu0ppa1~utopic1) utopic; urgency=medium
+
+  * Pareto computations are now fully functional.
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Fri, 15 May 2015 10:52:57 +0200
+
+bellmansgapc (2015.05.14-0ubuntu0ppa1~trusty1) trusty; urgency=medium
+
+  * Pareto computations are now fully functional.
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Fri, 15 May 2015 10:52:47 +0200
+
+bellmansgapc (2015.05.14-0ubuntu0ppa1~precise1) precise; urgency=medium
+
+  * Pareto computations are now fully functional.
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Fri, 15 May 2015 10:52:39 +0200
+
+bellmansgapc (2015.05.14-0ubuntu0ppa1~lucid1) lucid; urgency=medium
+
+  * Pareto computations are now fully functional.
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Fri, 15 May 2015 10:52:15 +0200
+
+bellmansgapc (2015.03.17-0ubuntu0ppa1~utopic1) utopic; urgency=medium
+
+  * extended for Pareto products
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 25 Mar 2015 16:28:02 +0100
+
+bellmansgapc (2015.03.17-0ubuntu0ppa1~trusty1) trusty; urgency=medium
+
+  * extended for Pareto products
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 25 Mar 2015 16:27:57 +0100
+
+bellmansgapc (2015.03.17-0ubuntu0ppa1~precise1) precise; urgency=medium
+
+  * extended for Pareto products
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 25 Mar 2015 16:27:52 +0100
+
+bellmansgapc (2015.03.17-0ubuntu0ppa1~lucid1) lucid; urgency=medium
+
+  * extended for Pareto products
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 25 Mar 2015 16:27:46 +0100
+
+bellmansgapc (2014.12.20-0ubuntu0ppa1~utopic1) utopic; urgency=medium
+
+  * corrected config file
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 17 Dec 2014 15:43:44 +0100
+
+bellmansgapc (2014.12.20-0ubuntu0ppa1~trusty1) trusty; urgency=medium
+
+  * corrected config file
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 17 Dec 2014 15:43:39 +0100
+
+bellmansgapc (2014.12.20-0ubuntu0ppa1~precise1) precise; urgency=medium
+
+  * corrected config file
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 17 Dec 2014 15:43:34 +0100
+
+bellmansgapc (2014.12.20-0ubuntu0ppa1~lucid1) lucid; urgency=medium
+
+  * corrected config file
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 17 Dec 2014 15:43:28 +0100
+
+bellmansgapc (2014.12.19-0ubuntu0ppa1~utopic1) utopic; urgency=medium
+
+  * corrected config file
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 17 Dec 2014 15:28:48 +0100
+
+bellmansgapc (2014.12.19-0ubuntu0ppa1~trusty1) trusty; urgency=medium
+
+  * corrected config file
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 17 Dec 2014 15:28:43 +0100
+
+bellmansgapc (2014.12.19-0ubuntu0ppa1~precise1) precise; urgency=medium
+
+  * corrected config file
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 17 Dec 2014 15:28:39 +0100
+
+bellmansgapc (2014.12.19-0ubuntu0ppa1~lucid1) lucid; urgency=medium
+
+  * corrected config file
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 17 Dec 2014 15:28:27 +0100
+
+bellmansgapc (2014.12.18-0ubuntu0ppa1~utopic1) utopic; urgency=medium
+
+  * corrected makefiles
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 17 Dec 2014 11:10:45 +0100
+
+bellmansgapc (2014.12.18-0ubuntu0ppa1~trusty1) trusty; urgency=medium
+
+  * corrected makefiles
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 17 Dec 2014 11:10:40 +0100
+
+bellmansgapc (2014.12.18-0ubuntu0ppa1~precise1) precise; urgency=medium
+
+  * corrected makefiles
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 17 Dec 2014 11:10:34 +0100
+
+bellmansgapc (2014.12.18-0ubuntu0ppa1~lucid1) lucid; urgency=medium
+
+  * corrected makefiles
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 17 Dec 2014 11:10:05 +0100
+
+bellmansgapc (2014.12.17-0ubuntu0ppa1~utopic1) utopic; urgency=medium
+
+  * uploaded restructured version, cleaned by Thomas Gatter
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 17 Dec 2014 10:56:59 +0100
+
+bellmansgapc (2014.12.17-0ubuntu0ppa1~trusty1) trusty; urgency=medium
+
+  * uploaded restructured version, cleaned by Thomas Gatter
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 17 Dec 2014 10:56:54 +0100
+
+bellmansgapc (2014.12.17-0ubuntu0ppa1~precise1) precise; urgency=medium
+
+  * uploaded restructured version, cleaned by Thomas Gatter
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 17 Dec 2014 10:56:47 +0100
+
+bellmansgapc (2014.12.17-0ubuntu0ppa1~lucid1) lucid; urgency=medium
+
+  * uploaded restructured version, cleaned by Thomas Gatter
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 17 Dec 2014 10:56:03 +0100
+
+bellmansgapc (2014.10.07-0ubuntu0ppa1~utopic1) utopic; urgency=medium
+
+  * See hg repository.
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Mon, 27 Oct 2014 12:28:08 +0100
+
+bellmansgapc (2014.05.08-0ubuntu0ppa1~trusty1) trusty; urgency=low
+
+  * initial upload for trusty
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Thu, 08 May 2014 09:28:15 +0200
+
+bellmansgapc (2014.04.11-0ubuntu0ppa1~saucy1) saucy; urgency=low
+
+  * bugfix for new bison release (special saucy commit)
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Fri, 11 Apr 2014 17:15:25 +0200
+
+bellmansgapc (2014.04.10-0ubuntu0ppa1~saucy1) saucy; urgency=low
+
+  * bugfix for new bison release
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Fri, 11 Apr 2014 16:56:33 +0200
+
+bellmansgapc (2014.04.10-0ubuntu0ppa1~quantal1) quantal; urgency=low
+
+  * bugfix for new bison release
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Fri, 11 Apr 2014 16:56:27 +0200
+
+bellmansgapc (2014.04.10-0ubuntu0ppa1~precise1) precise; urgency=low
+
+  * bugfix for new bison release
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Fri, 11 Apr 2014 16:56:20 +0200
+
+bellmansgapc (2014.04.10-0ubuntu0ppa1~lucid1) lucid; urgency=low
+
+  * bugfix for new bison release
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Fri, 11 Apr 2014 16:56:02 +0200
+
+bellmansgapc (2013.12.01-0ubuntu0ppa1~saucy1) saucy; urgency=low
+
+  * test to locate boost_unit_test_framework-mt file 6
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 20 Nov 2013 11:02:35 +0100
+
+bellmansgapc (2013.12.01-0ubuntu0ppa1~raring1) raring; urgency=low
+
+  * test to locate boost_unit_test_framework-mt file 6
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 20 Nov 2013 10:59:45 +0100
+
+bellmansgapc (2013.12.01-0ubuntu0ppa1~quantal1) quantal; urgency=low
+
+  * test to locate boost_unit_test_framework-mt file 6
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 20 Nov 2013 10:59:39 +0100
+
+bellmansgapc (2013.12.01-0ubuntu0ppa1~precise1) precise; urgency=low
+
+  * test to locate boost_unit_test_framework-mt file 6
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 20 Nov 2013 10:59:32 +0100
+
+bellmansgapc (2013.12.01-0ubuntu0ppa1~lucid1) lucid; urgency=low
+
+  * test to locate boost_unit_test_framework-mt file 6
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 20 Nov 2013 10:59:24 +0100
+
+bellmansgapc (2013.11.205-0ubuntu0ppa1~saucy1) saucy; urgency=low
+
+  * test to locate boost_unit_test_framework-mt file 5
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 20 Nov 2013 10:43:45 +0100
+
+bellmansgapc (2013.11.204-0ubuntu0ppa1~saucy1) saucy; urgency=low
+
+  * test to locate boost_unit_test_framework-mt file 4
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 20 Nov 2013 10:39:02 +0100
+
+bellmansgapc (2013.11.203-0ubuntu0ppa1~saucy1) saucy; urgency=low
+
+  * test to locate boost_unit_test_framework-mt file 3
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 20 Nov 2013 10:32:37 +0100
+
+bellmansgapc (2013.11.202-0ubuntu0ppa1~saucy1) saucy; urgency=low
+
+  * test to locate boost_unit_test_framework-mt file 2
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 20 Nov 2013 08:40:16 +0100
+
+bellmansgapc (2013.11.201-0ubuntu0ppa1~saucy1) saucy; urgency=low
+
+  * test to locate boost_unit_test_framework-mt file
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 20 Nov 2013 08:30:10 +0100
+
+bellmansgapc (2013.11.19-0ubuntu0ppa1~saucy1) saucy; urgency=low
+
+  * removed boost version suffix
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Mon, 18 Nov 2013 00:32:27 +0100
+
+bellmansgapc (2013.11.18-0ubuntu0ppa1~saucy1) saucy; urgency=low
+
+  * updated PPA makefile to use boost 1.40
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Sun, 17 Nov 2013 16:03:03 +0100
+
+bellmansgapc (2013.11.18-0ubuntu0ppa1~raring1) raring; urgency=low
+
+  * updated PPA makefile to use boost 1.40
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Sun, 17 Nov 2013 15:53:10 +0100
+
+bellmansgapc (2013.11.18-0ubuntu0ppa1~quantal1) quantal; urgency=low
+
+  * updated PPA makefile to use boost 1.40
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Sun, 17 Nov 2013 15:53:00 +0100
+
+bellmansgapc (2013.11.18-0ubuntu0ppa1~precise1) precise; urgency=low
+
+  * updated PPA makefile to use boost 1.40
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Sun, 17 Nov 2013 15:52:51 +0100
+
+bellmansgapc (2013.11.18-0ubuntu0ppa1~lucid1) lucid; urgency=low
+
+  * updated PPA makefile to use boost 1.40
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Sun, 17 Nov 2013 15:52:30 +0100
+
+bellmansgapc (2013.11.17-0ubuntu0ppa1~saucy1) saucy; urgency=low
+
+  * updated boost package to 1.40
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Sun, 17 Nov 2013 15:38:21 +0100
+
+bellmansgapc (2013.11.17-0ubuntu0ppa1~raring1) raring; urgency=low
+
+  * updated boost package to 1.40
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Sun, 17 Nov 2013 15:32:13 +0100
+
+bellmansgapc (2013.11.17-0ubuntu0ppa1~quantal1) quantal; urgency=low
+
+  * updated boost package to 1.40
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Sun, 17 Nov 2013 15:32:06 +0100
+
+bellmansgapc (2013.11.17-0ubuntu0ppa1~precise1) precise; urgency=low
+
+  * updated boost package to 1.40
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Sun, 17 Nov 2013 15:31:59 +0100
+
+bellmansgapc (2013.11.17-0ubuntu0ppa1~lucid1) lucid; urgency=low
+
+  * updated boost package to 1.40
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Sun, 17 Nov 2013 15:31:37 +0100
+
+bellmansgapc (2013.09.24-0ubuntu0ppa1~raring1) raring; urgency=low
+
+  * Corrected IUPAC filter for terminal parsers in RNA context
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Tue, 24 Sep 2013 11:14:03 +0200
+
+bellmansgapc (2013.09.24-0ubuntu0ppa1~quantal1) quantal; urgency=low
+
+  * Corrected IUPAC filter for terminal parsers in RNA context
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Tue, 24 Sep 2013 11:13:57 +0200
+
+bellmansgapc (2013.09.24-0ubuntu0ppa1~precise1) precise; urgency=low
+
+  * Corrected IUPAC filter for terminal parsers in RNA context
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Tue, 24 Sep 2013 11:13:50 +0200
+
+bellmansgapc (2013.09.24-0ubuntu0ppa1~lucid1) lucid; urgency=low
+
+  * Corrected IUPAC filter for terminal parsers in RNA context
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Tue, 24 Sep 2013 11:13:38 +0200
+
+bellmansgapc (2013.06.17-0ubuntu0ppa1~raring1) raring; urgency=low
+
+  * further corrections to energy library functions.
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Fri, 21 Jun 2013 21:16:07 +0200
+
+bellmansgapc (2013.06.17-0ubuntu0ppa1~quantal1) quantal; urgency=low
+
+  * further corrections to energy library functions.
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Fri, 21 Jun 2013 21:15:57 +0200
+
+bellmansgapc (2013.06.17-0ubuntu0ppa1~precise1) precise; urgency=low
+
+  * further corrections to energy library functions.
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Fri, 21 Jun 2013 21:15:50 +0200
+
+bellmansgapc (2013.06.17-0ubuntu0ppa1~lucid1) lucid; urgency=low
+
+  * further corrections to energy library functions.
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Fri, 21 Jun 2013 21:15:20 +0200
+
+bellmansgapc (2013.06.16-0ubuntu0ppa1~raring1) raring; urgency=low
+
+  * little corrections to energy library: right border cannot be overrun
+    any longer with gapped regions.
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Sun, 16 Jun 2013 11:56:27 +0200
+
+bellmansgapc (2013.06.16-0ubuntu0ppa1~quantal1) quantal; urgency=low
+
+  * little corrections to energy library: right border cannot be overrun
+    any longer with gapped regions.
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Sun, 16 Jun 2013 11:56:20 +0200
+
+bellmansgapc (2013.06.16-0ubuntu0ppa1~precise1) precise; urgency=low
+
+  * little corrections to energy library: right border cannot be overrun
+    any longer with gapped regions.
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Sun, 16 Jun 2013 11:56:13 +0200
+
+bellmansgapc (2013.06.16-0ubuntu0ppa1~oneiric1) oneiric; urgency=low
+
+  * little corrections to energy library: right border cannot be overrun
+    any longer with gapped regions.
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Sun, 16 Jun 2013 11:56:06 +0200
+
+bellmansgapc (2013.06.16-0ubuntu0ppa1~lucid1) lucid; urgency=low
+
+  * little corrections to energy library: right border cannot be overrun
+    any longer with gapped regions.
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Sun, 16 Jun 2013 11:55:37 +0200
+
+bellmansgapc (2013.05.02-0ubuntu0ppa1~raring1) raring; urgency=low
+
+  * See hg repository.
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Wed, 08 May 2013 08:40:48 +0200
+
+bellmansgapc (2013.04.12-0ubuntu0ppa1~quantal1) quantal; urgency=low
+
+  * replaced id_empty with isEmpty to avoid conflict with boost
+    is_empty, which raises on older gcc versions <= 4.4
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Sun, 14 Apr 2013 02:02:59 +0200
+
+bellmansgapc (2013.04.12-0ubuntu0ppa1~precise1) precise; urgency=low
+
+  * replaced id_empty with isEmpty to avoid conflict with boost
+    is_empty, which raises on older gcc versions <= 4.4
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Sun, 14 Apr 2013 02:02:53 +0200
+
+bellmansgapc (2013.04.12-0ubuntu0ppa1~oneiric1) oneiric; urgency=low
+
+  * replaced id_empty with isEmpty to avoid conflict with boost
+    is_empty, which raises on older gcc versions <= 4.4
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Sun, 14 Apr 2013 02:02:46 +0200
+
+bellmansgapc (2013.04.12-0ubuntu0ppa1~lucid1) lucid; urgency=low
+
+  * replaced id_empty with isEmpty to avoid conflict with boost
+    is_empty, which raises on older gcc versions <= 4.4
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Sun, 14 Apr 2013 02:02:22 +0200
+
+bellmansgapc (2013.03.21-0ubuntu0ppa1~quantal1) quantal; urgency=low
+
+  * increased number of includeable files
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Tue, 09 Apr 2013 17:28:17 +0200
+
+bellmansgapc (2013.03.21-0ubuntu0ppa1~precise1) precise; urgency=low
+
+  * increased number of includeable files
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Tue, 09 Apr 2013 17:28:11 +0200
+
+bellmansgapc (2013.03.21-0ubuntu0ppa1~oneiric1) oneiric; urgency=low
+
+  * increased number of includeable files
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Tue, 09 Apr 2013 17:28:05 +0200
+
+bellmansgapc (2013.03.21-0ubuntu0ppa1~lucid1) lucid; urgency=low
+
+  * increased number of includeable files
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Tue, 09 Apr 2013 17:27:58 +0200
+
+bellmansgapc (2013.02.03-0ubuntu0ppa1~quantal1) quantal; urgency=low
+
+  * two bugfixes: 1) MChar BASE_X conversion also if alignment has just
+    one row, 2) dangling energy correction: should dangling bases be
+    gaps the dangling type might change.
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Sun, 03 Feb 2013 20:00:50 +0100
+
+bellmansgapc (2013.02.03-0ubuntu0ppa1~precise1) precise; urgency=low
+
+  * two bugfixes: 1) MChar BASE_X conversion also if alignment has just
+    one row, 2) dangling energy correction: should dangling bases be
+    gaps the dangling type might change.
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Sun, 03 Feb 2013 20:00:29 +0100
+
+bellmansgapc (2013.02.03-0ubuntu0ppa1~oneiric1) oneiric; urgency=low
+
+  * two bugfixes: 1) MChar BASE_X conversion also if alignment has just
+    one row, 2) dangling energy correction: should dangling bases be
+    gaps the dangling type might change.
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Sun, 03 Feb 2013 20:00:03 +0100
+
+bellmansgapc (2013.02.03-0ubuntu0ppa1~lucid1) lucid; urgency=low
+
+  * two bugfixes: 1) MChar BASE_X conversion also if alignment has just
+    one row, 2) dangling energy correction: should dangling bases be
+    gaps the dangling type might change.
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Sun, 03 Feb 2013 19:59:38 +0100
+
+bellmansgapc (2013.01.17-0ubuntu0ppa1~lucid1) lucid; urgency=low
+
+  * using a newer boost version, to prevent errors with pkiss on lucid
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Fri, 18 Jan 2013 10:17:21 +0100
+
+bellmansgapc (2013.01.16-0ubuntu0ppa1~lucid1) lucid; urgency=low
+
+  * correct libgsl version for lucid
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Sun, 13 Jan 2013 11:53:03 +0100
+
+bellmansgapc (2013.01.15-0ubuntu0ppa1~quantal1) quantal; urgency=low
+
+  * different log levels: Extended logger, added log levels VERBOSE,
+    INFO, NORMAL, WARNING and ERROR. Set the default log level to
+    NORMAL, added a command line option --loglevel n for setting the
+    loglevel at the command line level. automated table design is on by
+    default: Automatic table design is now automatic, for real, which
+    means optimal table design is calculated if no design was provided
+    by the user, and the grammar yields asymptotically suboptimal
+    runtime. Changed the error message into a verbose message. Extended
+    import mechanism in gapc source code: The new import statement
+    allows a relative path to an include file. The new import statement
+    received a new syntax: the path and file name must be enclosed in
+    double quotes. new module: semantic ambiguity checker suppression of
+    unused signature function warnings and pretty print explosions.
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Sun, 13 Jan 2013 00:17:06 +0100
+
+bellmansgapc (2013.01.15-0ubuntu0ppa1~precise1) precise; urgency=low
+
+  * different log levels: Extended logger, added log levels VERBOSE,
+    INFO, NORMAL, WARNING and ERROR. Set the default log level to
+    NORMAL, added a command line option --loglevel n for setting the
+    loglevel at the command line level. automated table design is on by
+    default: Automatic table design is now automatic, for real, which
+    means optimal table design is calculated if no design was provided
+    by the user, and the grammar yields asymptotically suboptimal
+    runtime. Changed the error message into a verbose message. Extended
+    import mechanism in gapc source code: The new import statement
+    allows a relative path to an include file. The new import statement
+    received a new syntax: the path and file name must be enclosed in
+    double quotes. new module: semantic ambiguity checker suppression of
+    unused signature function warnings and pretty print explosions.
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Sun, 13 Jan 2013 00:16:42 +0100
+
+bellmansgapc (2013.01.15-0ubuntu0ppa1~oneiric1) oneiric; urgency=low
+
+  * different log levels: Extended logger, added log levels VERBOSE,
+    INFO, NORMAL, WARNING and ERROR. Set the default log level to
+    NORMAL, added a command line option --loglevel n for setting the
+    loglevel at the command line level. automated table design is on by
+    default: Automatic table design is now automatic, for real, which
+    means optimal table design is calculated if no design was provided
+    by the user, and the grammar yields asymptotically suboptimal
+    runtime. Changed the error message into a verbose message. Extended
+    import mechanism in gapc source code: The new import statement
+    allows a relative path to an include file. The new import statement
+    received a new syntax: the path and file name must be enclosed in
+    double quotes. new module: semantic ambiguity checker suppression of
+    unused signature function warnings and pretty print explosions.
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Sun, 13 Jan 2013 00:16:09 +0100
+
+bellmansgapc (2013.01.15-0ubuntu0ppa1~lucid1) lucid; urgency=low
+
+  * different log levels: Extended logger, added log levels VERBOSE,
+    INFO, NORMAL, WARNING and ERROR. Set the default log level to
+    NORMAL, added a command line option --loglevel n for setting the
+    loglevel at the command line level. automated table design is on by
+    default: Automatic table design is now automatic, for real, which
+    means optimal table design is calculated if no design was provided
+    by the user, and the grammar yields asymptotically suboptimal
+    runtime. Changed the error message into a verbose message. Extended
+    import mechanism in gapc source code: The new import statement
+    allows a relative path to an include file. The new import statement
+    received a new syntax: the path and file name must be enclosed in
+    double quotes. new module: semantic ambiguity checker suppression of
+    unused signature function warnings and pretty print explosions.
+
+ -- bibi-help <bibi-help@cebitec.uni-bielefeld.de>  Sun, 13 Jan 2013 00:15:42 +0100
+
+bellmansgapc (2012.05.07-0ubuntu0ppa1~precise1) precise; urgency=low
+
+  * multitrack fixes, overlay filter fix, rnalib redesign
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Tue, 08 May 2012 16:59:49 +0200
+
+bellmansgapc (2012.05.07-0ubuntu0ppa1~oneiric1) oneiric; urgency=low
+
+  * multitrack fixes, overlay filter fix, rnalib redesign
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Tue, 08 May 2012 16:58:10 +0200
+
+bellmansgapc (2012.05.07-0ubuntu0ppa1~natty1) natty; urgency=low
+
+  * multitrack fixes, overlay filter fix, rnalib redesign
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Tue, 08 May 2012 16:57:51 +0200
+
+bellmansgapc (2012.05.07-0ubuntu0ppa1~maverick1) maverick; urgency=low
+
+  * multitrack fixes, overlay filter fix, rnalib redesign
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Tue, 08 May 2012 16:57:34 +0200
+
+bellmansgapc (2012.05.07-0ubuntu0ppa1~lucid1) lucid; urgency=low
+
+  * multitrack fixes, overlay filter fix, rnalib redesign
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Tue, 08 May 2012 16:57:03 +0200
+
+bellmansgapc (2012.02.14-0ubuntu0ppa1~oneiric1) oneiric; urgency=low
+
+  * fix multi-/single-bt bug
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Wed, 15 Feb 2012 14:49:19 +0100
+
+bellmansgapc (2012.02.14-0ubuntu0ppa1~natty1) natty; urgency=low
+
+  * fix multi-/single-bt bug
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Wed, 15 Feb 2012 14:49:01 +0100
+
+bellmansgapc (2012.02.14-0ubuntu0ppa1~maverick1) maverick; urgency=low
+
+  * fix multi-/single-bt bug
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Wed, 15 Feb 2012 14:48:46 +0100
+
+bellmansgapc (2012.02.14-0ubuntu0ppa1~lucid1) lucid; urgency=low
+
+  * fix multi-/single-bt bug
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Wed, 15 Feb 2012 14:48:22 +0100
+
+bellmansgapc (2012.02.13-0ubuntu0ppa1~oneiric1) oneiric; urgency=low
+
+  * escape char fix
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Tue, 14 Feb 2012 14:40:09 +0100
+
+bellmansgapc (2012.02.13-0ubuntu0ppa1~natty1) natty; urgency=low
+
+  * escape char fix
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Tue, 14 Feb 2012 14:39:47 +0100
+
+bellmansgapc (2012.02.13-0ubuntu0ppa1~maverick1) maverick; urgency=low
+
+  * escape char fix
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Tue, 14 Feb 2012 14:39:30 +0100
+
+bellmansgapc (2012.02.13-0ubuntu0ppa1~lucid1) lucid; urgency=low
+
+  * escape char fix
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Tue, 14 Feb 2012 14:39:08 +0100
+
+bellmansgapc (2012.01.16-0ubuntu0ppa1~oneiric1) oneiric; urgency=low
+
+  * add CONST_ROPE, char escapes, turner 2004 fix
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Mon, 16 Jan 2012 13:59:13 +0100
+
+bellmansgapc (2012.01.16-0ubuntu0ppa1~natty1) natty; urgency=low
+
+  * add CONST_ROPE, char escapes, turner 2004 fix
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Mon, 16 Jan 2012 13:58:58 +0100
+
+bellmansgapc (2012.01.16-0ubuntu0ppa1~maverick1) maverick; urgency=low
+
+  * add CONST_ROPE, char escapes, turner 2004 fix
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Mon, 16 Jan 2012 13:58:42 +0100
+
+bellmansgapc (2012.01.16-0ubuntu0ppa1~lucid1) lucid; urgency=low
+
+  * add CONST_ROPE, char escapes, turner 2004 fix
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Mon, 16 Jan 2012 13:58:19 +0100
+
+bellmansgapc (2011.12.16-0ubuntu0ppa1~oneiric1) oneiric; urgency=low
+
+  * Adjust energy tables for gaps
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Fri, 16 Dec 2011 15:54:17 +0100
+
+bellmansgapc (2011.12.16-0ubuntu0ppa1~natty1) natty; urgency=low
+
+  * Adjust energy tables for gaps
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Fri, 16 Dec 2011 15:54:00 +0100
+
+bellmansgapc (2011.12.16-0ubuntu0ppa1~maverick1) maverick; urgency=low
+
+  * Adjust energy tables for gaps
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Fri, 16 Dec 2011 15:53:38 +0100
+
+bellmansgapc (2011.12.16-0ubuntu0ppa1~lucid1) lucid; urgency=low
+
+  * Adjust energy tables for gaps
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Fri, 16 Dec 2011 15:53:07 +0100
+
+bellmansgapc (2011.10.10-0ubuntu0ppa1~oneiric1) oneiric; urgency=low
+
+  * include turner 1998 and 2004 parameters; add temperature option
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Fri, 11 Nov 2011 16:33:55 +0100
+
+bellmansgapc (2011.10.10-0ubuntu0ppa1~natty1) natty; urgency=low
+
+  * include turner 1998 and 2004 parameters; add temperature option
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Thu, 03 Nov 2011 16:35:37 +0100
+
+bellmansgapc (2011.10.10-0ubuntu0ppa1~maverick1) maverick; urgency=low
+
+  * include turner 1998 and 2004 parameters; add temperature option
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Thu, 03 Nov 2011 16:35:19 +0100
+
+bellmansgapc (2011.10.10-0ubuntu0ppa1~lucid1) lucid; urgency=low
+
+  * include turner 1998 and 2004 parameters; add temperature option
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Thu, 03 Nov 2011 16:34:09 +0100
+
+bellmansgapc (2011.08.30-0ubuntu0ppa1~natty1) natty; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Tue, 30 Aug 2011 17:13:10 +0200
+
+bellmansgapc (2011.08.30-0ubuntu0ppa1~maverick1) maverick; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Tue, 30 Aug 2011 17:12:56 +0200
+
+bellmansgapc (2011.08.30-0ubuntu0ppa1~lucid1) lucid; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Tue, 30 Aug 2011 17:12:33 +0200
+
+bellmansgapc (2011.07.15-0ubuntu0ppa1~natty1) natty; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Fri, 15 Jul 2011 17:02:12 +0200
+
+bellmansgapc (2011.07.15-0ubuntu0ppa1~maverick1) maverick; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Fri, 15 Jul 2011 17:01:49 +0200
+
+bellmansgapc (2011.07.15-0ubuntu0ppa1~lucid1) lucid; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Fri, 15 Jul 2011 17:00:26 +0200
+
+bellmansgapc (2011.07.07-0ubuntu0ppa1~natty1) natty; urgency=low
+
+  * Enum multi-track fix, while, break, prefix
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Thu, 07 Jul 2011 13:53:33 +0200
+
+bellmansgapc (2011.07.07-0ubuntu0ppa1~maverick1) maverick; urgency=low
+
+  * Enum multi-track fix, while, break, prefix
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Thu, 07 Jul 2011 13:53:18 +0200
+
+bellmansgapc (2011.07.07-0ubuntu0ppa1~lucid1) lucid; urgency=low
+
+  * Enum multi-track fix, while, break, prefix
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Thu, 07 Jul 2011 13:52:55 +0200
+
+bellmansgapc (2011.06.27-0ubuntu0ppa1~natty1) natty; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Mon, 27 Jun 2011 17:09:27 +0200
+
+bellmansgapc (2011.06.27-0ubuntu0ppa1~maverick1) maverick; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Mon, 27 Jun 2011 17:09:08 +0200
+
+bellmansgapc (2011.06.27-0ubuntu0ppa1~lucid1) lucid; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Mon, 27 Jun 2011 17:08:46 +0200
+
+bellmansgapc (2011.05.17-0ubuntu0ppa1~natty1) natty; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Tue, 17 May 2011 21:13:44 +0200
+
+bellmansgapc (2011.05.17-0ubuntu0ppa1~maverick1) maverick; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Tue, 17 May 2011 21:13:28 +0200
+
+bellmansgapc (2011.05.17-0ubuntu0ppa1~lucid1) lucid; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Tue, 17 May 2011 21:12:51 +0200
+
+bellmansgapc (2011.05.09-0ubuntu0ppa1~natty1) natty; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Mon, 09 May 2011 16:20:28 +0200
+
+bellmansgapc (2011.05.09-0ubuntu0ppa1~maverick1) maverick; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Mon, 09 May 2011 16:20:13 +0200
+
+bellmansgapc (2011.05.09-0ubuntu0ppa1~lucid1) lucid; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Mon, 09 May 2011 16:19:28 +0200
+
+bellmansgapc (2011.05.05-0ubuntu0ppa1~natty1) natty; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Thu, 05 May 2011 22:40:39 +0200
+
+bellmansgapc (2011.05.05-0ubuntu0ppa1~maverick1) maverick; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Thu, 05 May 2011 22:40:24 +0200
+
+bellmansgapc (2011.05.05-0ubuntu0ppa1~lucid1) lucid; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Thu, 05 May 2011 22:39:54 +0200
+
+bellmansgapc (2011.04.29-0ubuntu0ppa1~natty1) natty; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Fri, 29 Apr 2011 12:45:17 +0200
+
+bellmansgapc (2011.04.29-0ubuntu0ppa1~maverick1) maverick; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Fri, 29 Apr 2011 12:45:03 +0200
+
+bellmansgapc (2011.04.29-0ubuntu0ppa1~lucid1) lucid; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Fri, 29 Apr 2011 12:44:43 +0200
+
+bellmansgapc (2011.04.27-0ubuntu0ppa1~natty1) natty; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Wed, 27 Apr 2011 18:54:39 +0200
+
+bellmansgapc (2011.04.27-0ubuntu0ppa1~maverick1) maverick; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Wed, 27 Apr 2011 18:54:24 +0200
+
+bellmansgapc (2011.04.27-0ubuntu0ppa1~lucid1) lucid; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Wed, 27 Apr 2011 18:53:50 +0200
+
+bellmansgapc (2011.04.21-0ubuntu0ppa1~maverick1) maverick; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Thu, 21 Apr 2011 09:06:01 +0200
+
+bellmansgapc (2011.04.21-0ubuntu0ppa1~lucid1) lucid; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Thu, 21 Apr 2011 09:05:31 +0200
+
+bellmansgapc (2011.04.08-0ubuntu0ppa1~maverick1) maverick; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Fri, 08 Apr 2011 17:09:05 +0200
+
+bellmansgapc (2011.04.08-0ubuntu0ppa1~lucid1) lucid; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Fri, 08 Apr 2011 17:08:33 +0200
+
+bellmansgapc (2011.03.03-0ubuntu0ppa1~maverick1) maverick; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Mon, 07 Mar 2011 15:40:47 +0100
+
+bellmansgapc (2011.03.03-0ubuntu0ppa1~lucid1) lucid; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Mon, 07 Mar 2011 15:40:13 +0100
+
+bellmansgapc (2011.01.27-0ubuntu0ppa1~maverick1) maverick; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Tue, 01 Feb 2011 12:09:42 +0100
+
+bellmansgapc (2011.01.27-0ubuntu0ppa1~lucid1) lucid; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Tue, 01 Feb 2011 12:09:42 +0100
+
+bellmansgapc (2010.12.01-0ubuntu0ppa1) lucid; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Thu, 02 Dec 2010 16:47:19 +0100
+
+bellmansgapc (2010.10.01-0ubuntu0ppa1) lucid; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Sun, 03 Oct 2010 22:55:18 +0200
+
+bellmansgapc (2010.09.01-0ubuntu0ppa1) lucid; urgency=low
+
+  * See hg repository.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Wed, 01 Sep 2010 18:00:38 +0200
+
+bellmansgapc (2010.08.10-0ubuntu0ppa1) lucid; urgency=low
+
+  * Initial release.
+
+ -- Georg Sauthoff <gsauthof@techfak.uni-bielefeld.de>  Mon, 09 Aug 2010 18:48:38 +0200
