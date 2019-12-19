@@ -57,6 +57,7 @@ jobs:
       before_script:
         - gpg --import .ci/pubring.auto
         - . ./.ci/importGPGkey.sh
+        - gpg --import .ci/secring.auto
       script:
         - WORKDIR=tmp_debian
         - git clone . $WORKDIR/gapc
