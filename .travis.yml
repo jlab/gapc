@@ -26,7 +26,15 @@ before_script:
   - git clone https://github.com/jlab/gapc-test-suite.git /home/travis/gapc-test-suite
 script:
   - make test-unit
-  - make test-paral
-  - make test-mod TRUTH_DIR=/home/travis/gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu
-  - make test-regress TRUTH_DIR=/home/travis/gapc-test-suite/Truth
-  - make test-ambiguity TRUTH_DIR=/home/travis/gapc-test-suite/Truth
+  - false
+  #- make test-paral
+  #- make test-mod TRUTH_DIR=/home/travis/gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu
+  #- make test-regress TRUTH_DIR=/home/travis/gapc-test-suite/Truth
+  #- make test-ambiguity TRUTH_DIR=/home/travis/gapc-test-suite/Truth
+
+jobs:
+  include:
+    - stage: launchpad deploy
+      script:
+        - echo "Hallo"
+        - echo "ich bin es"
