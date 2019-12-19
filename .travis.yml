@@ -48,17 +48,23 @@ jobs:
             - pbuilder
             - ubuntu-dev-tools
             - apt-file
+            - dput
       before_script:
         - . ./.ci/importGPGkey.sh
       script:
-        - DATE=`git log -1 --format=%ci | cut -d " " -f 1 | tr "-" "."`
-        - tar cfz bellmansgapc-$DATE.orig.tar.gz . --exclude-vcs
+        - mkdir ../work
+        - pushd .
+        - cd ../work
+        #- DATE=`git log -1 --format=%ci | cut -d " " -f 1 | tr "-" "."`
+        - DATE=2019.12.2
+        - tar cfz bellmansgapc-$DATE.orig.tar.gz ../gapc --exclude-vcs
         - for dist in "xenial" ; do
-          cp -r .ci/debian .;
+          cp -r ../gapc/.ci/debian .;
           version="$DATE-0ubuntu0ppa1~${dist}1";
           DEBFULLNAME="janssenlab" EMAIL="stefan.m.janssen@gmail.com" dch -b --newversion $version --distribution $dist "$TRAVIS_COMMIT_MESSAGE";
           debuild -S -sa -k"74AE1009";
           pwd;
           ls -la;
-          dput ppa:janssenlab/software *${dist}*_source.changes;
+          dput ppa:janssenlab/software ../*${dist}*_source.changes;
           done
+        - popd
