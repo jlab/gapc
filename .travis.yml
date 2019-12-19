@@ -69,8 +69,9 @@ jobs:
         - for dist in "xenial" ; do
           version="$DATE-0ubuntu0ppa1~${dist}1";
           DEBFULLNAME="janssenlab" EMAIL="stefan.m.janssen@gmail.com" dch -b --newversion $version --distribution $dist "$TRAVIS_COMMIT_MESSAGE";
-          debuild -S -sa -k"74AE1009";
+          sudo debuild -S -sa -k"74AE1009";
           ls -la;
           ls -la ../;
+          dput ppa:janssenlab/software ../*${dist}*_source.changes;
           done
         - popd
