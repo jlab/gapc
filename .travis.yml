@@ -5,10 +5,14 @@ compiler:
 os:
 - linux
 
+# Super secret password to decrypt the private signing key
+env:
+  global:
+    secure: "a28IAq5Eh09f4PBRmJmgMDTc5Q+1/IC8Q0uN1B348iSfVr9Xx53sLwv08QPSgQ86Yfm+Q/XqqfFirrLtJcx2BAozboir17tlEscrLNjnhLjlJiSk2vNconm+M1ozlS992qPHNW8SEH1SUU4KdAes4vvquGVAX0wsuxAmPFhUK4rEZqQCgW86aPc5mr5HSEMwI8jo9QmSEmY23XMUl9KX3epm4H6TYEpwU7JQRYtegAv9AGKkGY8yGhIxJYezqAV7PrbnSFhIOb2Doctmdc+egP4ppJqjzGrTeNnNNSYIj6Q7bquUXyi8Hyb25yOrz0X0eyhe2tdiZ1Zuo0BfXo392ndGjVbmZRXO9u/cIAudaq4Wua1q3xFLQyYr8FPYd9spH0BxcI3EA9NcvcLJ3BQaXTREfdcH0+YIsComy2qvfF02siGC0DLjz20edy0+ta184MDsryLSlvXM+FWWO/lribWhX012mRRUPqd1YQ1OvIoUy9kLzlYuKcLUx9EWudwKZiIohtj/8JfiY1pSoVuTMWbu6wU9YtM8lK4aGuwK8gWqMIIsaYvz5jYxCQa7oIN+YOKB+MvjyB+2kR7463HJlNArKFVBwD8TbairP9qg7Oe/vQ3A+U3YyWeYRx4TfGSjdNMepGeP9IB4V+tuN7Zj3f0p9TVKwvRrwW6HF5MGaqk="
+
 jobs:
   include:
     - stage: test
-      name: compile gapc and run several tests
       addons:
         apt:
           packages:
@@ -37,8 +41,24 @@ jobs:
         #- make test-regress TRUTH_DIR=/home/travis/gapc-test-suite/Truth
         #- make test-ambiguity TRUTH_DIR=/home/travis/gapc-test-suite/Truth
     - stage: launchpad deploy
+      addons:
+        apt:
+          packages:
+            - gnupg
+            - pbuilder
+            - ubuntu-dev-tools
+            - apt-file
+      before_script:
+        - . ./.ci/importGPGkey.sh
       script:
-        - echo "Hallo"
-        - echo "ich bin es"
-        - pwd
-        - ls -la
+        - DATE=`git log -1 --format=%ci | cut -d " " -f 1 | tr "-" "."`
+        - tar cfz bellmansgapc-$DATE.orig.tar.gz . --exclude-vcs
+        - for dist in "xenial" ; do
+          cp -r .ci/debian .;
+          version="$DATE-0ubuntu0ppa1~${dist}1";
+          DEBFULLNAME="janssenlab" EMAIL="stefan.m.janssen@gmail.com" dch -b --newversion $version --distribution $dist "$TRAVIS_COMMIT_MESSAGE";
+          debuild -S -sa -k"74AE1009";
+          pwd;
+          ls -la;
+          dput ppa:janssenlab/software *${dist}*_source.changes;
+          done
