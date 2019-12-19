@@ -5,4 +5,5 @@ sudo apt-get install gnupg pbuilder ubuntu-dev-tools apt-file dput libdistro-inf
 pwd
 ls -la
 ls -la tmp_debian/
+git stash pop
 dput ppa:janssenlab/software tmp_debian/*xenial*_source.changes
