@@ -78,9 +78,8 @@ jobs:
         #- dput ppa:janssenlab/software ../*${dist}*_source.changes;
         #  done
         - popd
-
-deploy:
-  cleanup: true
-  provider: script
-  edge: true
-  script: . ./.ci/deploy.sh
+      deploy:
+        cleanup: true
+        provider: script
+        edge: true
+        script: . ./.ci/deploy.sh
