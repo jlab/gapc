@@ -1,3 +1,15 @@
+bellmansgapc (2019.12.20-0ubuntu0ppa1~xenial1) bionic; urgency=medium
+
+  * using boost/random.hpp instead of boost/tr1/random.hpp
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Fri, 20 Dec 2019 11:13:00 +0200
+
+bellmansgapc (2019.12.20-0ubuntu0ppa1~xenial1) xenial; urgency=medium
+
+  * migrating code base to github
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Fri, 20 Dec 2019 11:13:00 +0200
+
 bellmansgapc (2015.09.28-0ubuntu0ppa1~vivid1) vivid; urgency=medium
 
   * minor update in config files and docu

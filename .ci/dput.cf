@@ -1,7 +1,0 @@
-[janssenlab-ppa]
-fqdn = ppa.launchpad.net
-method = sftp
-incoming = ~janssenlab/ubuntu/software/
-login = janssenlab
-allow_unsigned_uploads = 0
-ssh_config_options = -i $HOME/gapc/.ci/id_janssenlab_launchpad
