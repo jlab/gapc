@@ -59,12 +59,13 @@ jobs:
         - . ./.ci/importGPGkey.sh
         - gpg --import .ci/secring.auto
       script:
+        - cp .ci/dput.cf $HOME/.dput.cf
         - WORKDIR=tmp_debian
         - git clone . $WORKDIR/gapc
         - cp -r $WORKDIR/gapc/.ci/debian $WORKDIR/gapc
         - pushd .
         #- DATE=`git log -1 --format=%ci | cut -d " " -f 1 | tr "-" "."`
-        - DATE=2019.12.4
+        - DATE=2019.12.6
         - cd $WORKDIR
         - tar cfz bellmansgapc-$DATE.orig.tar.gz gapc --exclude-vcs
         - cd gapc
