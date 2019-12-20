@@ -1,7 +1,7 @@
 #!/bin/bash
 
 sudo apt-get update -y
-sudo apt-get install gnupg pbuilder ubuntu-dev-tools apt-file dput libdistro-info-perl fakeroot debhelper dput-ng -y
+sudo apt-get install gnupg pbuilder ubuntu-dev-tools apt-file libdistro-info-perl fakeroot debhelper dput-ng -y
 pwd
 ls -la
 ls -la tmp_debian/

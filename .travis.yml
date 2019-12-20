@@ -50,7 +50,7 @@ jobs:
             - pbuilder
             - ubuntu-dev-tools
             - apt-file
-            - dput
+            - dput-ng
             - libdistro-info-perl
             - fakeroot
             - debhelper
