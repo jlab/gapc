@@ -63,7 +63,14 @@ BISON=<bison path>
 ## Ubuntu
 
 Bellman's GAP is available as a pre-compiled Debian package via Ubuntus launchpad system, a Ubuntu Personal Package Archive (PPA).
+Packages for Ubuntu versions 16.04 (Xenial) and 18.04 (Bionic) can be obtained from janssenlab/software.
 On your command line, execute the three following commands
+```
+sudo add-apt-repository ppa:janssenlab/software
+sudo apt-get update
+sudo apt-get install bellmansgapc
+```
+For older Ubuntu releases, have a look at bibi-help/bibitools (Ubuntu versions 10.04, 11.10, 12.04, 12.10, 13.04, 13.10, 14.04, 14.10, 15.04) 
 ```
 sudo add-apt-repository ppa:bibi-help/bibitools
 sudo apt-get update
