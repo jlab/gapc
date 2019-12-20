@@ -271,7 +271,7 @@ BOOST_AUTO_TEST_CASE ( cm_alph_app )
 #include <boost/random/linear_congruential.hpp>
 #include <boost/random/uniform_int.hpp>
 #include <boost/random/variate_generator.hpp>
-#include <boost/tr1/random.hpp>
+#include <boost/random.hpp>
 #include <ctime>
 
 typedef boost::mt19937 rand_gen;
@@ -596,5 +596,3 @@ BOOST_AUTO_TEST_CASE( tailer )
   o << tail(a);
   CHECK_EQ(o.str(), "[][]");
 }
-
-

@@ -12,7 +12,7 @@
 #include <boost/random/linear_congruential.hpp>
 #include <boost/random/uniform_int.hpp>
 #include <boost/random/variate_generator.hpp>
-#include <boost/tr1/random.hpp>
+#include <boost/random.hpp>
 #include <ctime>
 
 #include <vector>
