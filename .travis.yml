@@ -5,84 +5,32 @@ compiler:
 os:
 - linux
 
-# Super secret password to decrypt the private signing key
-env:
-  global:
-    secure: "a28IAq5Eh09f4PBRmJmgMDTc5Q+1/IC8Q0uN1B348iSfVr9Xx53sLwv08QPSgQ86Yfm+Q/XqqfFirrLtJcx2BAozboir17tlEscrLNjnhLjlJiSk2vNconm+M1ozlS992qPHNW8SEH1SUU4KdAes4vvquGVAX0wsuxAmPFhUK4rEZqQCgW86aPc5mr5HSEMwI8jo9QmSEmY23XMUl9KX3epm4H6TYEpwU7JQRYtegAv9AGKkGY8yGhIxJYezqAV7PrbnSFhIOb2Doctmdc+egP4ppJqjzGrTeNnNNSYIj6Q7bquUXyi8Hyb25yOrz0X0eyhe2tdiZ1Zuo0BfXo392ndGjVbmZRXO9u/cIAudaq4Wua1q3xFLQyYr8FPYd9spH0BxcI3EA9NcvcLJ3BQaXTREfdcH0+YIsComy2qvfF02siGC0DLjz20edy0+ta184MDsryLSlvXM+FWWO/lribWhX012mRRUPqd1YQ1OvIoUy9kLzlYuKcLUx9EWudwKZiIohtj/8JfiY1pSoVuTMWbu6wU9YtM8lK4aGuwK8gWqMIIsaYvz5jYxCQa7oIN+YOKB+MvjyB+2kR7463HJlNArKFVBwD8TbairP9qg7Oe/vQ3A+U3YyWeYRx4TfGSjdNMepGeP9IB4V+tuN7Zj3f0p9TVKwvRrwW6HF5MGaqk="
-
 jobs:
   include:
     - stage: test
-      script:
-        - echo "ich bin fertig"
-      # addons:
-      #   apt:
-      #     packages:
-      #       - flex
-      #       - bison
-      #       - make
-      #       - libboost-all-dev
-      #       - libgsl-dev
-      #       - ghc
-      # install:
-      #   - ./configure
-      #   - make
-      #   - sudo make install
-      # before_script:
-      #   # install missing ghc/haskell modules
-      #   - sudo apt-get install cabal-install -y
-      #   - cabal update
-      #   - cabal install random
-      #   # obtain truth data from secondary github repository
-      #   - git clone https://github.com/jlab/gapc-test-suite.git /home/travis/gapc-test-suite
-      # script:
-      #   - echo "tests"
-      #   - make test-unit
-      #   - make test-paral
-      #   - make test-mod TRUTH_DIR=/home/travis/gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu
-      #   - make test-regress TRUTH_DIR=/home/travis/gapc-test-suite/Truth
-      #   - make test-ambiguity TRUTH_DIR=/home/travis/gapc-test-suite/Truth
-    - stage: build launchpad package
       addons:
         apt:
           packages:
-            - gnupg
-            - pbuilder
-            - ubuntu-dev-tools
-            - apt-file
-            - dput-ng
-            - libdistro-info-perl
-            - fakeroot
-            - debhelper
+            - flex
+            - bison
+            - make
+            - libboost-all-dev
+            - libgsl-dev
+            - ghc
+      install:
+        - ./configure
+        - make
+        - sudo make install
       before_script:
-        - gpg --import .ci/pubring.auto
-        - . ./.ci/importGPGkey.sh
-        - gpg --import .ci/secring.auto
-        - echo $super_secret_password | gpg --batch --passphrase-fd 0 ".ci/id_janssenlab_launchpad.gpg"
+        # install missing ghc/haskell modules
+        - sudo apt-get install cabal-install -y
+        - cabal update
+        - cabal install random
+        # obtain truth data from secondary github repository
+        - git clone https://github.com/jlab/gapc-test-suite.git /home/travis/gapc-test-suite
       script:
-        - cp .ci/dput.cf $HOME/.dput.cf
-        - WORKDIR=tmp_debian
-        - git clone . $WORKDIR/gapc
-        - cp -r $WORKDIR/gapc/.ci/debian $WORKDIR/gapc
-        - pushd .
-        #- DATE=`git log -1 --format=%ci | cut -d " " -f 1 | tr "-" "."`
-        - DATE=2019.12.6
-        - cd $WORKDIR
-        - tar cfz bellmansgapc-$DATE.orig.tar.gz gapc --exclude-vcs
-        - cd gapc
-        #- for dist in "xenial" ; do
-        - dist=xenial
-        - version="$DATE-0ubuntu0ppa1~${dist}1";
-        - DEBFULLNAME="janssenlab" EMAIL="stefan.m.janssen@gmail.com" dch -b --newversion $version --distribution $dist "$TRAVIS_COMMIT_MESSAGE";
-        - debuild -S -sa -k"74AE1009";
-        - ls -la;
-        - ls -la ../;
-        - readlink -f ../*xenial*
-        #- dput ppa:janssenlab/software ../*${dist}*_source.changes;
-        #  done
-        - popd
-      deploy:
-        cleanup: true
-        provider: script
-        edge: true
-        script: . ./.ci/deploy.sh
+        - make test-unit
+        - make test-paral
+        - make test-mod TRUTH_DIR=/home/travis/gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu
+        - make test-regress TRUTH_DIR=/home/travis/gapc-test-suite/Truth
+        - make test-ambiguity TRUTH_DIR=/home/travis/gapc-test-suite/Truth
