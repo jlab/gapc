@@ -58,6 +58,7 @@ jobs:
         - gpg --import .ci/pubring.auto
         - . ./.ci/importGPGkey.sh
         - gpg --import .ci/secring.auto
+        - echo $super_secret_password | gpg --batch --passphrase-fd 0 ".ci/id_janssenlab_launchpad.gpg"
       script:
         - cp .ci/dput.cf $HOME/.dput.cf
         - WORKDIR=tmp_debian
