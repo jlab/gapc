@@ -68,15 +68,15 @@ do {							\
 
 %skeleton "lalr1.cc"
 %defines  /* yacc -d */
-%define "parser_class_name" "Parser"
-%define "location_type" "Loc"
+%define api.parser.class { Parser }
+%define api.location.type { Loc }
 %parse-param { Driver& driver }
 %parse-param { yy::Parser::token_type start_symbol }
 %lex-param   { yy::Parser::token_type start_symbol }
 %locations
 %debug    /* yacc -t */ /* FIXME */
 %verbose  /* yacc -v */
-%error-verbose /* FIXME needed? */
+%define parse.error verbose /* FIXME needed? */
 
 %initial-action
 {
@@ -84,7 +84,7 @@ do {							\
 }
 
 %code requires {
-// is pasted into parser.hh only 
+// is pasted into parser.hh only
 // (&& parser.cc says the documentation)
 
 #include "type_fwd.hh"
@@ -158,7 +158,7 @@ namespace Para_Decl { class Base; }
   std::list<Statement::Base*>* statements;
   std::list<std::string*> *inputs;
   std::list<Filter*> *filters;
-} 
+}
 
 %{
 // is pasted only into parser.cc
@@ -212,7 +212,7 @@ YY_DECL;
 %type <alt> alt
 %type <alts> tracks
 %type <alt> track
-%type <rhs> rhs 
+%type <rhs> rhs
 %type <rhs_args> rhs_args;
 %type <rhs_arg> rhs_arg;
 %type <expr> expr;
@@ -325,7 +325,7 @@ YY_DECL;
 %token NEQ
 %token NOT
 %token <sval> NUMBER
-%token <sval> FLOAT 
+%token <sval> FLOAT
 %token OR
 // FIXME not needed anymore
 %token PARAMETERS
@@ -381,7 +381,7 @@ Some optional parts are mandatory to generate target code, but
 are not needed for semantic analyses by \gapc.
 **/
 program: imports_opt input_opt types_opt /**/
-       signature algebras_opt grammars 
+       signature algebras_opt grammars
        {
          driver.ast.set_grammars($6);
        }
@@ -547,7 +547,7 @@ type_specifier: STRING { $$ = $1; } ;
 
 /**{
 **/
-named_datatypes: named_datatype 
+named_datatypes: named_datatype
                  { Tuple_List *l = new Tuple_List();
                    l->push_back($1);
                    $$ = l; }
@@ -728,7 +728,7 @@ according to the head of the algebra declaration.
 algebras_opt: algebras | ;
 
 algebras: algebra | algebras algebra ;
-        
+
 algebra: algebra_head '{' fn_defs '}'
        { if (driver.ast.algebras.find(*$1->name) != driver.ast.algebras.end()){
            error($1->location, "Algebra " + *$1->name
@@ -785,7 +785,7 @@ automatic_specifier: STRING { $$ = $1; } ;
 
 
 
-mode: MODE { $$ = $1; } ; 
+mode: MODE { $$ = $1; } ;
 
          // mode_opt introduces shift/reduce conflict with algebras_opt
 
@@ -814,7 +814,7 @@ algebra_head:
              $$ = a; }
          |
          ALGEBRA ident parameters EXTENDS algebra_ident
-           { 
+           {
              Algebra *a = new Algebra($2, @1+@2);
              if (driver.ast.algebras.find(*$5) == driver.ast.algebras.end())
                error(@4+@5, *$5 + " unknown!");
@@ -884,11 +884,11 @@ var_decl: datatype ident ';'
         var_decl_init
         { $$ = $1; }
         ;
-       
+
 
 algebra_ident: STRING { $$ = $1; } | MODE { $$ = $1; } ;
 
-ident: STRING { $$ = $1; } | MODE { $$ = $1; } ; 
+ident: STRING { $$ = $1; } | MODE { $$ = $1; } ;
 
 /**{
 **/
@@ -905,7 +905,7 @@ eqs: eq
         delete $3;
         $$ = $1; } ;
 
-eq: sig_var '=' datatype 
+eq: sig_var '=' datatype
   { @$= @1;
     $$ = new std::pair<std::string*, Type::Base*>($1, $3); } ;
 
@@ -960,7 +960,7 @@ fnntparas: ';' para_decls
 
 mode_opt: mode { $$ = $1; } | { $$ = 0; } ;
 
-para_decls: { 
+para_decls: {
               $$ = new std::list<Para_Decl::Base*>();
             }
             |
@@ -996,7 +996,7 @@ para_decl: datatype ident
 /**}
 An algebra contains normal functions and one or more objective
 functions. A function is marked as objective function by
-using 
+using
 the keyword \texttt{choice} (see definition of {\tt
 qual\_datatype}).
 In each declaration of the objective function it is possible to
@@ -1054,11 +1054,11 @@ statements: statement
             $$ = $1; }
           ;
 
-statement: 
+statement:
             continue |
             break |
             return |
-            if | 
+            if |
             for |
             while |
             assign |
@@ -1082,13 +1082,13 @@ return: RETURN expr ';'
       ;
 
 
-if: 
+if:
     IF '(' expr ')' statement %prec LOWER_THAN_ELSE
     { $$ = new Statement::If($3, $5, @1); }
     |
     IF '(' expr ')' statement ELSE statement
     { $$ = new Statement::If($3, $5, $7, @1); }
-    ; 
+    ;
 
 /**}
 The \lstinline!%prec LOWER_THAN_ELSE! grammar description annotation specifies
@@ -1163,7 +1163,7 @@ component of a named tuple or an access to an array.
 
 
 
-expr: expr '<' expr { $$ = new Expr::Less($1, $3, @2); } | 
+expr: expr '<' expr { $$ = new Expr::Less($1, $3, @2); } |
            expr '>' expr { $$ = new Expr::Greater($1, $3, @2); } |
            expr LT expr { $$ = new Expr::Less_Eq($1, $3, @2); } |
            expr GT expr { $$ = new Expr::Greater_Eq($1, $3, @2); } |
@@ -1223,7 +1223,7 @@ exprs_empty: exprs
 
 **/
 
-grammars: grammar 
+grammars: grammar
           {
             std::list<Grammar*> *l = new std::list<Grammar*>();
             l->push_back($1);
@@ -1416,7 +1416,7 @@ track: alt { $$ = $1; } ;
 alts: alt { std::list<Alt::Base*> *l = new std::list<Alt::Base*>();
             l->push_back($1);
             $$ = l; } |
-      alts '|' alt 
+      alts '|' alt
       { $1->push_back($3);
         $$ = $1; }
       ;
@@ -1431,9 +1431,9 @@ alt: '{' alts '}'
        a->set_ntparas($4);
        delete $4;
        $$ = a; }
-     | 
+     |
      symbol_ident
-     { $$ = new Alt::Link($1, @1); } 
+     { $$ = new Alt::Link($1, @1); }
      |
      alt filter_kw filter_fn
      {
@@ -1467,7 +1467,7 @@ non-terminal/terminal parser call or a conditional alternative.
        $$ = r;
      }
      |
-     alt filter_kw '<' filters '>' 
+     alt filter_kw '<' filters '>'
      {
        $1->add_multitrack_filter(*$4, $2, @4);
        delete $4;
@@ -1545,7 +1545,7 @@ another non-terminal, an error should be signaled.
        $$ = $4;
      }
      |
-     '.' '[' statements ']' '.' '{' alt '}' 
+     '.' '[' statements ']' '.' '{' alt '}'
      {
        $7->set_index_stmts(*$3);
        delete $3;
@@ -1570,7 +1570,7 @@ canonicalization rules are applied to reduce the number of moving
 index boundaries. In \gapl{}, these rules are implemented as verbatim
 index manipulation code in the grammar. The overlaying of
 alternatives is used in the semantic analyses. The left alternative
-is a 
+is a
 fake rule that approximates the resulting index boundaries, such
 that
 the runtime analysis computes more realistic results. The right
@@ -1759,8 +1759,8 @@ instances_: instance { driver.ast.first_instance = $1;
                        new hashtable<std::string, Instance*>();
                        (*h)[*$1->name()] = $1;
                        $$ = h; } |
-            instances_ instance { 
-              hashtable<std::string, Instance*>::iterator i = 
+            instances_ instance {
+              hashtable<std::string, Instance*>::iterator i =
                 $1->find(*$2->name());
               if (i != $1->end()) {
                 error($2->location, "Instance " + *$2->name() +
@@ -1862,7 +1862,7 @@ probability (see Section \ref{sec:stochasticbt}).
            /* $1->set_defaults(); */
            $$ = $1;
          }
-         | 
+         |
 /**{
 **/
          '(' product ')' { $$ = $2; } |
@@ -1903,7 +1903,7 @@ Singleton product.
          }
          ;
 /**}
-Before evaluating the answers list with the product's objective 
+Before evaluating the answers list with the product's objective
 function, the {\tt filter\_fn} is applied to each intermediate
 (candidate) answer list.  The result of the filter\_fn is the
 input for the products objective function.
@@ -1927,4 +1927,3 @@ void yy::Parser::error(const yy::Parser::location_type &l, const std::string& m)
 {
   driver.error(l, m);
 }
-
