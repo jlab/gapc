@@ -10,7 +10,8 @@
 	  if [[ "$<" == "src/parser.y" ]]; then \
 	    # patch parser.y file, if older version of bison is used. Since 3.3.2, synatx changed. \
 	    if [[ "$$x" =~ "error: %define variable 'api.parser.class' is not used" ]]; then \
-	      patch ../$< < ../src/parser.y_apiparserclass.patch; \
+	      # push and pop is necessary, as GNU patch does not accept ../ as file paths \
+	      pushd . && cd ../ && patch $< < src/parser.y_apiparserclass.patch && popd; \
 	      x=`$(YACC) $(YFLAGS) -o $(notdir $@) ../$< 2>&1` ; \
 	    fi; \
 	  fi; \
