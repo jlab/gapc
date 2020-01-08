@@ -3,6 +3,8 @@
 %.c: %.y
 
 %.cc: %.y
+	# patch parser.y file, if older version of bison is used. Since 3.3.2, synatx changed.
+	if [[ "$(shell $(YACC) -o dummy/dummy.cc $< 2>&1)" =~ "error: %define variable 'api.parser.class' is not used" ]]; then patch $< < src/parser.y_apiparserclass.patch; fi
 	# $(YACC) $(YFLAGS) -o $@ $<
 	mkdir -p bisontmp ; \
 	  rm -f bisontmp/* ; \
