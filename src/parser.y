@@ -69,7 +69,7 @@ do {							\
 %skeleton "lalr1.cc"
 %defines  /* yacc -d */
 %define "parser_class_name" "Parser"
-%define "location_type" "Loc"
+%define api.location.type { Loc }
 %parse-param { Driver& driver }
 %parse-param { yy::Parser::token_type start_symbol }
 %lex-param   { yy::Parser::token_type start_symbol }
