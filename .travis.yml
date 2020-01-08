@@ -12,7 +12,7 @@ jobs:
         apt:
           packages:
             - flex
-            - bison >= 3.3.2
+            - bison=3.3.2
             - make
             - libboost-all-dev
             - libgsl-dev
