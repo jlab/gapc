@@ -76,7 +76,7 @@ do {							\
 %locations
 %debug    /* yacc -t */ /* FIXME */
 %verbose  /* yacc -v */
-%error-verbose /* FIXME needed? */
+%define parse.error verbose
 
 %initial-action
 {
