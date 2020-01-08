@@ -3,11 +3,18 @@
 %.c: %.y
 
 %.cc: %.y
-	# $(YACC) $(YFLAGS) -o $@ $<
 	mkdir -p bisontmp ; \
 	  rm -f bisontmp/* ; \
 	  cd bisontmp ; \
 	  x=`$(YACC) $(YFLAGS) -o $(notdir $@) ../$< 2>&1` ; \
+	  if [[ "$<" == "src/parser.y" ]]; then \
+	    # patch parser.y file, if older version of bison is used. Since 3.3.2, synatx changed. \
+	    if [[ "$$x" =~ "error: %define variable 'api.parser.class' is not used" ]]; then \
+	      # push and pop is necessary, as GNU patch does not accept ../ as file paths \
+	      pushd . && cd ../ && patch $< < src/parser.y_apiparserclass.patch && popd; \
+	      x=`$(YACC) $(YFLAGS) -o $(notdir $@) ../$< 2>&1` ; \
+	    fi; \
+	  fi; \
 	  r=$$? ; \
 	  printf "$$x\n" ; \
 	  if [ "$$r" != 0 ]; then \
@@ -22,7 +29,8 @@
 		cd ..; rm -rf bisontmp;  exit 2; fi ; \
 	  for i in *; do cmp $$i ../$(dir $@)/$$i; if [ "$$?" != 0 ]; then echo copying $$i; cp $$i ../$(dir $@)$$i; fi; done ; \
 	  touch ../$@; \
-	  cd ..; rm -rf bisontmp;
+	  cd ..; \
+	  rm -rf bisontmp;
 
 %.c: %.l
 

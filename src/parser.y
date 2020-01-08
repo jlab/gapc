@@ -68,15 +68,15 @@ do {							\
 
 %skeleton "lalr1.cc"
 %defines  /* yacc -d */
-%define "parser_class_name" "Parser"
-%define "location_type" "Loc"
+%define api.parser.class {Parser}
+%define api.location.type { Loc }
 %parse-param { Driver& driver }
 %parse-param { yy::Parser::token_type start_symbol }
 %lex-param   { yy::Parser::token_type start_symbol }
 %locations
 %debug    /* yacc -t */ /* FIXME */
 %verbose  /* yacc -v */
-%error-verbose /* FIXME needed? */
+%define parse.error verbose
 
 %initial-action
 {
