@@ -75,6 +75,7 @@ static int bp_index(char x, char y)
   switch (x) {
     case A_BASE : switch (y) {
         case U_BASE : return AU_BP;
+        case PSEUDOURIDINE_BASE : return AU_BP;
         case GAP_BASE : return NO_BP;
       }
       break;
@@ -92,6 +93,11 @@ static int bp_index(char x, char y)
     case U_BASE : switch (y) {
         case G_BASE : return UG_BP;
         case A_BASE : return UA_BP;
+        case GAP_BASE : return NO_BP;
+      }
+      break;
+    case PSEUDOURIDINE_BASE : switch (y) {
+        case A_BASE : return AU_BP;
         case GAP_BASE : return NO_BP;
       }
       break;
@@ -206,7 +212,8 @@ static void decode(char *s, const char *x, const int len)
 	      case 3 : s[i] = 'G'; break;
 	      case 4 : s[i] = 'U'; break;
 	      case 5 : s[i] = '_'; break;
-		  case 6 : s[i] = '+'; break;
+        case 6 : s[i] = 'U'; break;  // although "P" it is a Pseudouridine
+		    case 7 : s[i] = '+'; break;
 	      default: abort();
 	    };
 	}

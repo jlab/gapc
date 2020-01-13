@@ -47,6 +47,7 @@ inline bool basepairing(const alphabet *seq,
     case A_BASE :
       switch (b) {
         case U_BASE : return true;
+        case PSEUDOURIDINE_BASE : return true;
       }
       break;
     case U_BASE :
@@ -64,6 +65,11 @@ inline bool basepairing(const alphabet *seq,
     case C_BASE :
       switch (b) {
         case G_BASE : return true;
+      }
+      break;
+    case PSEUDOURIDINE_BASE :
+      switch(b) {
+        case A_BASE : return true;
       }
       break;
   }
@@ -147,14 +153,15 @@ class BaseException : public std::exception {
 
 inline char char_to_base(char a)
 {
-  char c = lower_case(a);
-  switch (c) {
-    case 'n' : return N_BASE;
-    case 'a' : return A_BASE;
-    case 'c' : return C_BASE;
-    case 'g' : return G_BASE;
-    case 'u' : return U_BASE;
+  //char c = lower_case(a);
+  switch (a) {
+    case 'N' : return N_BASE;
+    case 'A' : return A_BASE;
+    case 'C' : return C_BASE;
+    case 'G' : return G_BASE;
+    case 'U' : return U_BASE;
     case '_' : return GAP_BASE;
+    case 'P' : return PSEUDOURIDINE_BASE;
     case '+' : return SEPARATOR_BASE;
     default: throw BaseException(a);
   };
@@ -164,12 +171,13 @@ inline char char_to_base(char a)
 inline char base_to_char(char a)
 {
   switch (a) {
-    case N_BASE : return 'n';
-    case A_BASE : return 'a';
-    case C_BASE : return 'c';
-    case G_BASE : return 'g';
-    case U_BASE : return 'u';
+    case N_BASE : return 'N';
+    case A_BASE : return 'A';
+    case C_BASE : return 'C';
+    case G_BASE : return 'G';
+    case U_BASE : return 'U';
     case GAP_BASE : return '_';
+    case PSEUDOURIDINE_BASE : return 'P';
     case SEPARATOR_BASE : return '+';
     default: throw BaseException(a);
   };
@@ -275,7 +283,7 @@ template<typename alphabet, typename pos_type>
 inline int hl_energy_stem(const Basic_Subsequence<alphabet, pos_type> &a)
 {
   int energy = 0;
-  
+
   for (unsigned k = 0; k < a.seq->rows(); k++)
     energy += hl_energy_stem(a.seq->row(k), a.i-1, a.j);
 
