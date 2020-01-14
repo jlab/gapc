@@ -16,7 +16,7 @@ enum iupac_t { N_IUPAC = 0,
   V_IUPAC = 11,
   Y_IUPAC = 12
 };
-enum bp_t { N_BP, CG_BP, GC_BP, GU_BP, UG_BP, AU_BP, UA_BP, NO_BP };
+enum bp_t { N_BP, CG_BP, GC_BP, GU_BP, UG_BP, AU_BP, UA_BP, NO_BP, AP_BP, PA_BP };
 
 typedef unsigned int rsize;
 
