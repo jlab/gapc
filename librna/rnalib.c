@@ -75,7 +75,7 @@ static int bp_index(char x, char y)
   switch (x) {
     case A_BASE : switch (y) {
         case U_BASE : return AU_BP;
-        case PSEUDOURIDINE_BASE : return AU_BP;
+        case PSEUDOURIDINE_BASE : return AP_BP;
         case GAP_BASE : return NO_BP;
       }
       break;
@@ -97,7 +97,7 @@ static int bp_index(char x, char y)
       }
       break;
     case PSEUDOURIDINE_BASE : switch (y) {
-        case A_BASE : return AU_BP;
+        case A_BASE : return PA_BP;
         case GAP_BASE : return NO_BP;
       }
       break;
@@ -193,6 +193,137 @@ static rsize getPrev(const char *s, rsize pos, rsize steps, rsize leftBorder) {
 
 /* ============== END: Alignment functions ================= */
 
+static int to_ACGU_basepair(int basepair) {
+  switch (basepair) {
+    case AP_BP: return AU_BP;
+    case PA_BP: return UA_BP;
+    default: return basepair;
+  }
+}
+static int to_ACGU_base(int base) {
+  switch (base) {
+    case PSEUDOURIDINE_BASE: return U_BASE;
+    default: return base;
+  }
+}
+static int revcomp_basepair(int basepair) {
+  switch (basepair) {
+    case CG_BP: return GC_BP;
+    case GC_BP: return CG_BP;
+
+    case GU_BP: return UG_BP;
+    case UG_BP: return GU_BP;
+
+    case AU_BP: return UA_BP;
+    case UA_BP: return AU_BP;
+
+    case AP_BP: return PA_BP;
+    case PA_BP: return AP_BP;
+
+    default: return basepair;
+  }
+}
+
+static int _get_P_stack(int closing_basepair, int enclosed_basepair) {
+  // following parameters are from Hudson et al. 2013 10.1261/rna.039610.113 Table 3, column 5
+  // note: since we do not include enthalpie values (yet) we cannot change temperature
+  switch (closing_basepair) {
+    case CG_BP:
+      switch (revcomp_basepair(enclosed_basepair)) {
+        case PA_BP: return -277;
+        case AP_BP: return -220;
+      }
+      break;
+    case GC_BP:
+      switch (revcomp_basepair(enclosed_basepair)) {
+        case PA_BP: return -329;
+        case AP_BP: return -249;
+      }
+      break;
+    case AU_BP:
+      switch (revcomp_basepair(enclosed_basepair)) {
+        case PA_BP: return -280;
+        case AP_BP: return -274;
+      }
+      break;
+    case UA_BP:
+      switch (revcomp_basepair(enclosed_basepair)) {
+        case PA_BP: return -162;
+        case AP_BP: return -210;
+      }
+      break;
+    case PA_BP:
+      switch (revcomp_basepair(enclosed_basepair)) {
+        case CG_BP: return -249;
+        case GC_BP: return -220;
+        case AU_BP: return -210;
+        case UA_BP: return -274;
+      }
+      break;
+    case AP_BP:
+      switch (revcomp_basepair(enclosed_basepair)) {
+        case CG_BP: return -329;
+        case GC_BP: return -277;
+        case AU_BP: return -162;
+        case UA_BP: return -280;
+      }
+      break;
+  }
+  return P->stack[to_ACGU_basepair(closing_basepair)][to_ACGU_basepair(enclosed_basepair)];
+}
+static int _get_P_int11(int closingBP, int enclosedBP, int lbase, int rbase) {
+  return P->int11[to_ACGU_basepair(closingBP)][to_ACGU_basepair(enclosedBP)][to_ACGU_base(lbase)][to_ACGU_base(rbase)];
+}
+static int _get_P_int21(int closingBP, int enclosedBP, int lbase, int rbase, int rrbase) {
+  return P->int21[to_ACGU_basepair(closingBP)][to_ACGU_basepair(enclosedBP)][to_ACGU_base(lbase)][to_ACGU_base(rbase)][to_ACGU_base(rrbase)];
+}
+static int _get_P_int22(int closingBP, int enclosedBP, int lbase, int llbase, int rbase, int rrbase) {
+  return P->int22[to_ACGU_basepair(closingBP)][to_ACGU_basepair(enclosedBP)][to_ACGU_base(lbase)][to_ACGU_base(llbase)][to_ACGU_base(rbase)][to_ACGU_base(rrbase)];
+}
+static int _get_P_mismatchH(int bp, int lbase, int rbase) {
+  return P->mismatchH[to_ACGU_basepair(bp)][to_ACGU_base(lbase)][to_ACGU_base(rbase)];
+}
+static int _get_P_mismatchI(int out_closingBP, int out_lbase, int out_rbase) {
+  return P->mismatchI[to_ACGU_basepair(out_closingBP)][to_ACGU_base(out_lbase)][to_ACGU_base(out_rbase)];
+}
+static int _get_P_mismatch1nI(int out_closingBP, int out_lbase, int out_rbase) {
+  return P->mismatch1nI[to_ACGU_basepair(out_closingBP)][to_ACGU_base(out_lbase)][to_ACGU_base(out_rbase)];
+}
+static int _get_P_mismatch23I(int out_closingBP, int out_lbase, int out_rbase) {
+  return P->mismatch23I[to_ACGU_basepair(out_closingBP)][to_ACGU_base(out_lbase)][to_ACGU_base(out_rbase)];
+}
+static int _get_P_mismatchExt(int closingBP, int lbase, int rbase) {
+  return P->mismatchExt[to_ACGU_basepair(closingBP)][to_ACGU_base(lbase)][to_ACGU_base(rbase)];
+}
+static int _get_P_mismatchM(int closingBP, int lbase, int rbase) {
+  return P->mismatchM[to_ACGU_basepair(closingBP)][to_ACGU_base(lbase)][to_ACGU_base(rbase)];
+}
+static int _get_P_dangle5(int closingBP, int dangle) {
+  return P->dangle5[to_ACGU_basepair(closingBP)][to_ACGU_base(dangle)];
+}
+static int _get_P_dangle3(int closingBP, int dbase) {
+  return P->dangle3[to_ACGU_basepair(closingBP)][to_ACGU_base(dbase)];
+}
+static int _get_P_termau(const char *s, rsize i, rsize j) {
+  int lbase = to_ACGU_base(s[i]);
+  int rbase = to_ACGU_base(s[j]);
+  if (
+    (lbase == G_BASE && rbase == C_BASE) ||
+    (lbase == C_BASE && rbase == G_BASE)
+  ) {
+    return 0;
+  } else if (
+    (lbase == PSEUDOURIDINE_BASE && rbase == A_BASE) ||
+    (lbase == A_BASE && rbase == PSEUDOURIDINE_BASE)
+  ) {
+    // following parameters are from Hudson et al. 2013 10.1261/rna.039610.113 Table 3, column 5
+    // note: since we do not include enthalpie values (yet) we cannot change temperature
+    return 0.31;
+  } else {
+	   return P->TerminalAU;
+  }
+}
+
 /*
    returns a char pointer, i.e. string, of the decode RNA sequence in letters, after a decoding of the bit encoded chars
            this is a necessary helper function to get energies for special hairpin loop cases, i.e. tri-, tetra- and hexaloops
@@ -271,7 +402,7 @@ static int hl_stack(const char *s, rsize i, rsize j)
   int bp = bp_index(s[i], s[j]);
   char lbase = s[getNext(s,i,1,j-1)];
   char rbase = s[getPrev(s,j,1,i+1)];
-  return P->mismatchH[bp][lbase][rbase];
+  return _get_P_mismatchH(bp, lbase, rbase);
 }
 
 /*
@@ -288,14 +419,7 @@ static int hl_stack(const char *s, rsize i, rsize j)
 */
 int termau_energy(const char *s, rsize i, rsize j)
 {
-  if (
-    (s[i] == G_BASE && s[j] == C_BASE) ||
-    (s[i] == C_BASE && s[j] == G_BASE)
-  ) {
-    return 0;
-  } else {
-	return P->TerminalAU;
-  }
+  return _get_P_termau(s, i, j);
 }
 
 /*
@@ -353,8 +477,8 @@ int hl_energy(const char *s, rsize i, rsize j)
 	//loop type depends on ungapped loop sequence
 	char ungapped[j-i+1];
 	int sizeUngapped = ungapRegion(s, i, j, ungapped);
-        char loop[sizeUngapped+1];
-        loop[sizeUngapped] = 0;
+  char loop[sizeUngapped+1];
+  loop[sizeUngapped] = 0;
 	decode(loop, ungapped, sizeUngapped);
 	if (sizeUngapped == 3+2) {
 	  //special triloop cases
@@ -435,7 +559,7 @@ static int il11_energy(const char *s, rsize i, rsize k, rsize l, rsize j)
   int enclosedBP = bp_index(s[getPrev(s,j,2,l)], s[getNext(s,i,2,k)]); //we know that the enclosed base pair is at exactly this position, since both unpaired regions have size 1.  Note, basepair is reversed to preserver 5'-3' order.
   char lbase = s[getNext(s,i,1,k)];
   char rbase = s[getPrev(s,j,1,l)];
-  return P->int11[closingBP][enclosedBP][lbase][rbase];
+  return _get_P_int11(closingBP, enclosedBP, lbase, rbase);
 }
 
 /*
@@ -468,7 +592,7 @@ static int il12_energy(const char *s, rsize i, rsize k, rsize l, rsize j)
   char lbase = s[getNext(s,i,1,k)];
   char rbase = s[getPrev(s,j,2,l)];
   char rrbase = s[getPrev(s,j,1,l)];
-  return P->int21[closingBP][enclosedBP][lbase][rbase][rrbase];
+  return _get_P_int21(closingBP, enclosedBP, lbase, rbase, rrbase);
 }
 
 /*
@@ -481,7 +605,7 @@ static int il21_energy(const char *s, rsize i, rsize k, rsize l, rsize j)
   char lbase = s[getPrev(s,j,1,l)];
   char rbase = s[getNext(s,i,1,k)];
   char rrbase = s[getNext(s,i,2,k)];
-  return P->int21[closingBP][enclosedBP][lbase][rbase][rrbase];
+  return _get_P_int21(closingBP, enclosedBP, lbase, rbase, rrbase);
 }
 
 /*
@@ -517,7 +641,7 @@ static int il22_energy(const char *s, rsize i, rsize k, rsize l, rsize j)
   char llbase = s[getNext(s,i,2,k)];
   char rbase = s[getPrev(s,j,2,l)];
   char rrbase = s[getPrev(s,j,1,l)];
-  return P->int22[closingBP][enclosedBP][lbase][llbase][rbase][rrbase];
+  return _get_P_int22(closingBP, enclosedBP, lbase, llbase, rbase, rrbase);
 }
 
 /*
@@ -567,7 +691,7 @@ static int il_stack(const char *s, rsize i, rsize k, rsize l, rsize j)
   int in_closingBP = bp_index(s[l], s[k]); // Note, basepair and stacking bases are reversed to preserver 5'-3' order
   char in_lbase = s[getNext(s,l,1,j-1)];
   char in_rbase = s[getPrev(s,k,1,i+1)];
-  return P->mismatchI[out_closingBP][out_lbase][out_rbase] + P->mismatchI[in_closingBP][in_lbase][in_rbase];
+  return _get_P_mismatchI(out_closingBP, out_lbase, out_rbase) + _get_P_mismatchI(in_closingBP, in_lbase, in_rbase);
 }
 
 /*
@@ -640,21 +764,21 @@ int il_energy(const char *s, rsize i, rsize k, rsize l, rsize j)
 	} else if (sr == 2) {
       return il12_energy(s, i, k, l, j);
 	} else {
-	  return il_ent(sl+sr) + il_asym(sl,sr) + P->mismatch1nI[out_closingBP][out_lbase][out_rbase] + P->mismatch1nI[in_closingBP][in_lbase][in_rbase];
 	}
+  return il_ent(sl+sr) + il_asym(sl,sr) + _get_P_mismatch1nI(out_closingBP, out_lbase, out_rbase) + _get_P_mismatch1nI(in_closingBP, in_lbase, in_rbase);
   } else if (sl == 2) {
 	if (sr == 1) {
 	  return il21_energy(s, i, k, l, j);
 	} else if (sr == 2) {
 	  return il22_energy(s, i, k, l, j);
 	} else if (sr == 3) {
-	  return P->internal_loop[5]+P->ninio[2] + P->mismatch23I[out_closingBP][out_lbase][out_rbase] + P->mismatch23I[in_closingBP][in_lbase][in_rbase];
+	  return P->internal_loop[5]+P->ninio[2] + _get_P_mismatch23I(out_closingBP, out_lbase, out_rbase) + _get_P_mismatch23I(in_closingBP, in_lbase, in_rbase);
 	}
   } else if ((sl == 3) && (sr == 2)) {
-	return P->internal_loop[5]+P->ninio[2] + P->mismatch23I[out_closingBP][out_lbase][out_rbase] + P->mismatch23I[in_closingBP][in_lbase][in_rbase];
+	return P->internal_loop[5]+P->ninio[2] + _get_P_mismatch23I(out_closingBP, out_lbase, out_rbase) + _get_P_mismatch23I(in_closingBP, in_lbase, in_rbase);
   } else {
 	if (sr == 1) {
-	  return il_ent(sl+sr) + il_asym(sl,sr) + P->mismatch1nI[out_closingBP][out_lbase][out_rbase] + P->mismatch1nI[in_closingBP][in_lbase][in_rbase];
+	  return il_ent(sl+sr) + il_asym(sl,sr) + _get_P_mismatch1nI(out_closingBP, out_lbase, out_rbase) + _get_P_mismatch1nI(in_closingBP, in_lbase, in_rbase);
 	}
   }
 
@@ -711,12 +835,12 @@ int bl_energy(const char *s, rsize i, rsize k, rsize l, rsize j, rsize Xright)
   if (size==0) {
     int closingBP = bp_index(s[i], s[j]);
     int enclosedBP = bp_index(s[getPrev(s,j,1,Xright)],s[l+1]); // Note, basepair is reversed to preserver 5'-3' order
-    return P->stack[closingBP][enclosedBP];
+    return _get_P_stack(closingBP, enclosedBP);
   }
   if (size==1) {
     int closingBP = bp_index(s[i], s[j]);
     int enclosedBP = bp_index(s[getPrev(s,j,1,Xright)],s[l+1]); // Note, basepair is reversed to preserver 5'-3' order
-    return bl_ent(size) + P->stack[closingBP][enclosedBP];
+    return bl_ent(size) + _get_P_stack(closingBP, enclosedBP);
   }
   if (size>1) {
 	return bl_ent(size) + termau_energy(s, i, j) + termau_energy(s, getPrev(s,j,1,Xright), l+1);
@@ -747,12 +871,12 @@ int br_energy(const char *s, rsize i, rsize k, rsize l, rsize j, rsize Xleft)
   if (size == 0) {
     int closingBP = bp_index(s[i], s[j]);
     int enclosedBP = bp_index(s[k-1],s[getNext(s,i,1,Xleft)]); // Note, basepair is reversed to preserver 5'-3' order
-    return P->stack[closingBP][enclosedBP];
+    return _get_P_stack(closingBP, enclosedBP);
   }
   if (size == 1) {
     int closingBP = bp_index(s[i], s[j]);
     int enclosedBP = bp_index(s[k-1],s[getNext(s,i,1,Xleft)]); // Note, basepair is reversed to preserver 5'-3' order
-    return bl_ent(size) + P->stack[closingBP][enclosedBP];
+    return bl_ent(size) + _get_P_stack(closingBP, enclosedBP);
   }
   if (size > 1){
 	return bl_ent(size) + termau_energy(s, i, j) + termau_energy(s, k-1, getNext(s,i,1,Xleft));
@@ -783,7 +907,7 @@ int sr_energy(const char *s, rsize i, rsize j)
 {
   int closingBP = bp_index(s[i], s[j]);
   int enclosedBP = bp_index(s[j-1],s[i+1]); // Note, basepair is reversed to preserver 5'-3' order
-  return P->stack[closingBP][enclosedBP];
+  return _get_P_stack(closingBP, enclosedBP);
 }
 
 /*
@@ -794,7 +918,7 @@ int sr_pk_energy(char a, char b, char c, char d)
 {
   int closingBP = bp_index(a, b);
   int enclosedBP = bp_index(d, c); // Note, basepair is reversed to preserver 5'-3' order
-  return P->stack[closingBP][enclosedBP];
+  return _get_P_stack(closingBP, enclosedBP);
 }
 
 /*
@@ -818,7 +942,7 @@ int dl_energy(const char *s, rsize i, rsize j)
   int closingBP = bp_index(s[i], s[j]);
   char dbase = s[getPrev(s,i,1,0)];
   if (dbase == GAP_BASE) dbase = N_BASE; //RNAfold treats a gap like a N-base that is dangling on the pair. Strange but true.
-  int dd = P->dangle5[closingBP][dbase];
+  int dd = _get_P_dangle5(closingBP, dbase);
   return (dd>0) ? 0 : dd;  /* must be <= 0 */
 }
 
@@ -838,7 +962,7 @@ int dr_energy(const char *s, rsize i, rsize j, rsize n)
   int closingBP = bp_index(s[i], s[j]);
   char dbase = s[getNext(s,j,1,n-1)];
   if (dbase == GAP_BASE) dbase = N_BASE; //RNAfold treats a gap like a N-base that is dangling on the pair. Strange but true.
-  int dd = P->dangle3[closingBP][dbase];
+  int dd = _get_P_dangle3(closingBP, dbase);
   return (dd>0) ? 0 : dd;  /* must be <= 0 */
 }
 
@@ -854,7 +978,7 @@ int dli_energy(const char *s, rsize i, rsize j)
 {
   int closingBP = bp_index(s[j], s[i]); // Note, basepair is reversed to preserver 5'-3' order
   char dbase = s[getNext(s,i,1,j-1)];
-  int dd = P->dangle3[closingBP][dbase];
+  int dd = _get_P_dangle3(closingBP, dbase);
   return (dd>0) ? 0 : dd;  /* must be <= 0 */
 }
 
@@ -870,7 +994,7 @@ int dri_energy(const char *s, rsize i, rsize j)
 {
   int closingBP = bp_index(s[j], s[i]); // Note, basepair is reversed to preserver 5'-3' order
   char dbase = s[getPrev(s,j,1,i+1)];
-  int dd = P->dangle5[closingBP][dbase];
+  int dd = _get_P_dangle5(closingBP, dbase);
   return (dd>0) ? 0 : dd;  /* must be <= 0 */
 }
 
@@ -902,7 +1026,7 @@ int ext_mismatch_energy(const char *s, rsize i, rsize j, rsize n)
 	if (lbase == GAP_BASE) lbase = N_BASE;
 	if (rbase == GAP_BASE) rbase = N_BASE;
 	if ((lbase <  5) && (rbase <  5)) {
-		return P->mismatchExt[closingBP][lbase][rbase]; //left and right dangling positions are real bases
+		return _get_P_mismatchExt(closingBP, lbase, rbase); //left and right dangling positions are real bases
 	}
 	if ((lbase <  5) && (rbase >= 5)) {
 		return dl_energy(s,i,j); //if right position is a gap and left position is a real base, we resort to a left dangle
@@ -938,7 +1062,7 @@ int ml_mismatch_energy(const char *s, rsize i, rsize j)
   int lbase = s[getPrev(s,j,1,i+1)];
   int rbase = s[getNext(s,i,1,j-1)];
   if ((lbase <  5) && (rbase <  5)) {
-  	return P->mismatchM[closingBP][lbase][rbase]; //left and right dangling positions are real bases
+  	return _get_P_mismatchM(closingBP, lbase, rbase); //left and right dangling positions are real bases
   }
   if ((lbase <  5) && (rbase >= 5)) {
 	return dli_energy(s,i,j); //if right position is a gap and left position is a real base, we resort to a left dangle
@@ -1025,7 +1149,7 @@ dangle   |        (dangle = 5' dangling base)
 int dl_dangle_dg(enum base_t dangle, enum base_t i, enum base_t j)
 {
   int closingBP = bp_index(i,j);
-  int dd = P->dangle5[closingBP][dangle];
+  int dd = _get_P_dangle5(closingBP, dangle);
   return (dd>0) ? 0 : dd;  /* must be <= 0 */
 }
 
@@ -1039,8 +1163,8 @@ int dl_dangle_dg(enum base_t dangle, enum base_t i, enum base_t j)
 */
 int dr_dangle_dg(enum base_t i, enum base_t j, enum base_t dangle) {
   int closingBP = bp_index(i, j);
-  return P->dangle3[closingBP][dangle];
-  int dd = P->dangle3[closingBP][dangle];
+  return _get_P_dangle3(closingBP, dangle);
+  int dd = _get_P_dangle3(closingBP, dangle);
   return (dd>0) ? 0 : dd;  /* must be <= 0 */
 }
 
