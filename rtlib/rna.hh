@@ -136,7 +136,7 @@ inline int char_to_base(char a)
   return 0;
 }
 
-inline int base_to_char(int a)
+inline char base_to_char(int a)
 {
   if (a < SEPARATOR_BASE+1) {
     return BASE_CHARS[a];
@@ -196,7 +196,7 @@ inline void append_deep_rna(rope::Ref<X> &str, const Basic_Subsequence<alphabet,
 {
   for (typename Basic_Subsequence<alphabet, pos_type>::const_iterator i = sub.begin();
       i != sub.end(); ++i)
-    str.append(base_to_char(*i));
+    str.append((char) base_to_char(*i));
 }
 
 // ======== energy wrapper function ========
