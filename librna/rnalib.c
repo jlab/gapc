@@ -82,6 +82,7 @@ static int bp_index(char x, char y)
     case C_BASE : switch (y) {
         case G_BASE : return CG_BP;
         case GAP_BASE : return NO_BP;
+        case INOSINE_BASE : return CI_BP;
       }
       break;
     case G_BASE : switch (y) {
@@ -98,6 +99,11 @@ static int bp_index(char x, char y)
       break;
     case PSEUDOURIDINE_BASE : switch (y) {
         case A_BASE : return PA_BP;
+        case GAP_BASE : return NO_BP;
+      }
+      break;
+    case INOSINE_BASE : switch (y) {
+        case C_BASE : return IC_BP;
         case GAP_BASE : return NO_BP;
       }
       break;
@@ -197,12 +203,15 @@ static int to_ACGU_basepair(int basepair) {
   switch (basepair) {
     case AP_BP: return AU_BP;
     case PA_BP: return UA_BP;
+    case IC_BP: return GC_BP;
+    case CI_BP: return CG_BP;
     default: return basepair;
   }
 }
 static int to_ACGU_base(int base) {
   switch (base) {
     case PSEUDOURIDINE_BASE: return U_BASE;
+    case INOSINE_BASE: return G_BASE;
     default: return base;
   }
 }
@@ -219,6 +228,9 @@ static int revcomp_basepair(int basepair) {
 
     case AP_BP: return PA_BP;
     case PA_BP: return AP_BP;
+
+    case IC_BP: return CI_BP;
+    case CI_BP: return IC_BP;
 
     default: return basepair;
   }
@@ -269,6 +281,51 @@ static int _get_P_stack(int closing_basepair, int enclosed_basepair) {
       }
       break;
   }
+
+  // following parameters are from Wright et al. 2018 10.1093/nar/gky907 Table 3, column 5
+  // note: since we do not include enthalpie values (yet) we cannot change temperature
+  switch (closing_basepair) {
+    case GC_BP:
+      switch (revcomp_basepair(enclosed_basepair)) {
+        case IC_BP: return -262;
+        case CI_BP: return -189;
+      }
+      break;
+    case CG_BP:
+      switch (revcomp_basepair(enclosed_basepair)) {
+        case IC_BP: return -186;
+        case CI_BP: return -223;
+      }
+      break;
+    case AU_BP:
+      switch (revcomp_basepair(enclosed_basepair)) {
+        case IC_BP: return -157;
+        case CI_BP: return -102;
+      }
+      break;
+    case UA_BP:
+      switch (revcomp_basepair(enclosed_basepair)) {
+        case IC_BP: return -96;
+        case CI_BP: return -118;
+      }
+      break;
+    case IC_BP:
+      switch (revcomp_basepair(enclosed_basepair)) {
+        case GC_BP: return -223;
+        case CG_BP: return -189;
+        case AU_BP: return -118;
+        case UA_BP: return -102;
+      }
+      break;
+    case CI_BP:
+      switch (revcomp_basepair(enclosed_basepair)) {
+        case CG_BP: return -262;
+        case GC_BP: return -186;
+        case UA_BP: return -157;
+        case AU_BP: return -96;
+      }
+      break;
+  }
   return P->stack[to_ACGU_basepair(closing_basepair)][to_ACGU_basepair(enclosed_basepair)];
 }
 static int _get_P_int11(int closingBP, int enclosedBP, int lbase, int rbase) {
@@ -305,20 +362,31 @@ static int _get_P_dangle3(int closingBP, int dbase) {
   return P->dangle3[to_ACGU_basepair(closingBP)][to_ACGU_base(dbase)];
 }
 static int _get_P_termau(const char *s, rsize i, rsize j) {
-  int lbase = to_ACGU_base(s[i]);
-  int rbase = to_ACGU_base(s[j]);
+  int lbase = s[i];
+  int rbase = s[j];
   if (
-    (lbase == G_BASE && rbase == C_BASE) ||
-    (lbase == C_BASE && rbase == G_BASE)
-  ) {
-    return 0;
-  } else if (
     (lbase == PSEUDOURIDINE_BASE && rbase == A_BASE) ||
     (lbase == A_BASE && rbase == PSEUDOURIDINE_BASE)
   ) {
     // following parameters are from Hudson et al. 2013 10.1261/rna.039610.113 Table 3, column 5
     // note: since we do not include enthalpie values (yet) we cannot change temperature
-    return 0.31;
+    return 31;
+  } else if (
+    (lbase == INOSINE_BASE && rbase == C_BASE) ||
+    (lbase == C_BASE && rbase == INOSINE_BASE)
+  ) {
+    // following parameters are from Wright et al. 2018 10.1093/nar/gky907 Table 3, column 5
+    // note: since we do not include enthalpie values (yet) we cannot change temperature
+    return -8;
+  }
+
+  lbase = to_ACGU_base(s[i]);
+  rbase = to_ACGU_base(s[j]);
+  if (
+    (lbase == G_BASE && rbase == C_BASE) ||
+    (lbase == C_BASE && rbase == G_BASE)
+  ) {
+    return 0;
   } else {
 	   return P->TerminalAU;
   }

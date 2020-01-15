@@ -65,11 +65,17 @@ inline bool basepairing(const alphabet *seq,
     case C_BASE :
       switch (b) {
         case G_BASE : return true;
+        case INOSINE_BASE : return true;
       }
       break;
     case PSEUDOURIDINE_BASE :
       switch(b) {
         case A_BASE : return true;
+      }
+      break;
+    case INOSINE_BASE :
+      switch (b) {
+        case C_BASE : return true;
       }
       break;
   }
@@ -162,6 +168,7 @@ inline char char_to_base(char a)
     case 'U' : return U_BASE;
     case '_' : return GAP_BASE;
     case 'P' : return PSEUDOURIDINE_BASE;
+    case 'I' : return INOSINE_BASE;
     case '+' : return SEPARATOR_BASE;
     default: throw BaseException(a);
   };
@@ -178,6 +185,7 @@ inline char base_to_char(char a)
     case U_BASE : return 'U';
     case GAP_BASE : return '_';
     case PSEUDOURIDINE_BASE : return 'P';
+    case INOSINE_BASE : return 'I';
     case SEPARATOR_BASE : return '+';
     default: throw BaseException(a);
   };
