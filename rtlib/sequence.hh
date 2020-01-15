@@ -341,7 +341,7 @@ inline char upper_case(char c)
     return c;
   if (c == '+')
 	  return c;
-  if (c > 'a')
+  if (c >= 'a')
     return c-('a'-'A');
   else
     return c;
