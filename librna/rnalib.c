@@ -95,7 +95,10 @@ int bp_index(char x, char y)
         case GAP_BASE : return NO_BP;
       }
       break;
-    case GAP_BASE : return NO_BP;
+    case GAP_BASE : switch (y) {
+        case GAP_BASE : return N_BP;
+      }
+      break;
   }
   return NO_BP;
 }
