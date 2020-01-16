@@ -54,6 +54,7 @@ inline bool basepairing(const alphabet *seq,
       switch (b) {
         case A_BASE : return true;
         case G_BASE : return true;
+        case INOSINE_BASE : return true;
       }
       break;
     case G_BASE :
@@ -76,6 +77,7 @@ inline bool basepairing(const alphabet *seq,
     case INOSINE_BASE :
       switch (b) {
         case C_BASE : return true;
+        case U_BASE : return true;
       }
       break;
   }
