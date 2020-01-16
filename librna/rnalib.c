@@ -94,6 +94,7 @@ static int bp_index(char x, char y)
     case U_BASE : switch (y) {
         case G_BASE : return UG_BP;
         case A_BASE : return UA_BP;
+        case INOSINE_BASE : return U_INOSINE_BP;
         case GAP_BASE : return NO_BP;
       }
       break;
@@ -104,6 +105,7 @@ static int bp_index(char x, char y)
       break;
     case INOSINE_BASE : switch (y) {
         case C_BASE : return IC_BP;
+        case U_BASE : return INOSINE_U_BP;
         case GAP_BASE : return NO_BP;
       }
       break;
@@ -205,6 +207,8 @@ static int to_ACGU_basepair(int basepair) {
     case PA_BP: return UA_BP;
     case IC_BP: return GC_BP;
     case CI_BP: return CG_BP;
+    case INOSINE_U_BP: return AU_BP;
+    case U_INOSINE_BP: return UA_BP;
     default: return basepair;
   }
 }
@@ -231,6 +235,9 @@ static int revcomp_basepair(int basepair) {
 
     case IC_BP: return CI_BP;
     case CI_BP: return IC_BP;
+
+    case INOSINE_U_BP: return U_INOSINE_BP;
+    case U_INOSINE_BP: return INOSINE_U_BP;
 
     default: return basepair;
   }
@@ -326,6 +333,56 @@ static int _get_P_stack(int closing_basepair, int enclosed_basepair) {
       }
       break;
   }
+
+  // following parameters are from Wright et al. 2007 10.1021/bi0616910 Table 3, column 5
+  // note: since we do not include enthalpie values (yet) we cannot change temperature
+  switch (closing_basepair) {
+    case INOSINE_U_BP:
+      switch (revcomp_basepair(enclosed_basepair)) {
+        case U_INOSINE_BP: return 358;
+        case INOSINE_U_BP: return 266;
+        case AU_BP: return 43;
+        case UA_BP: return -50;
+        case CG_BP: return -103;
+        case GC_BP: return -122;
+      }
+      break;
+    case U_INOSINE_BP:
+      switch (revcomp_basepair(enclosed_basepair)) {
+        case INOSINE_U_BP: return 223;
+        case U_INOSINE_BP: return 266;
+        case AU_BP: return 37;
+        case UA_BP: return -41;
+        case GC_BP: return -77;
+        case CG_BP: return -134;
+      }
+      break;
+    case UA_BP:
+      switch (revcomp_basepair(enclosed_basepair)) {
+        case INOSINE_U_BP: return 37;
+        case U_INOSINE_BP: return 43;
+      }
+      break;
+    case AU_BP:
+      switch (revcomp_basepair(enclosed_basepair)) {
+        case INOSINE_U_BP: return -41;
+        case U_INOSINE_BP: return -50;
+      }
+      break;
+    case CG_BP:
+      switch (revcomp_basepair(enclosed_basepair)) {
+        case INOSINE_U_BP: return -77;
+        case U_INOSINE_BP: return -122;
+      }
+      break;
+    case GC_BP:
+      switch (revcomp_basepair(enclosed_basepair)) {
+        case INOSINE_U_BP: return -134;
+        case U_INOSINE_BP: return -103;
+      }
+      break;
+  }
+
   return P->stack[to_ACGU_basepair(closing_basepair)][to_ACGU_basepair(enclosed_basepair)];
 }
 static int _get_P_int11(int closingBP, int enclosedBP, int lbase, int rbase) {
@@ -378,6 +435,13 @@ static int _get_P_termau(const char *s, rsize i, rsize j) {
     // following parameters are from Wright et al. 2018 10.1093/nar/gky907 Table 3, column 5
     // note: since we do not include enthalpie values (yet) we cannot change temperature
     return -8;
+  } else if (
+    (lbase == INOSINE_BASE && rbase == U_BASE) ||
+    (lbase == U_BASE && rbase == INOSINE_BASE)
+  ) {
+    // following parameters are from Wright et al. 2007 10.1021/bi0616910 Table 3, column 5
+    // note: since we do not include enthalpie values (yet) we cannot change temperature
+    return -133;
   }
 
   lbase = to_ACGU_base(s[i]);
