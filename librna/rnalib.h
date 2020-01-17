@@ -7,7 +7,11 @@
 #include <stdbool.h>
 #endif
 
-enum base_t { N_BASE, A_BASE, C_BASE, G_BASE, U_BASE, GAP_BASE, SEPARATOR_BASE };
+enum base_t {
+  N_BASE, A_BASE, C_BASE, G_BASE, U_BASE, GAP_BASE, SEPARATOR_BASE };
+static char BASE_CHARS[SEPARATOR_BASE+1] = {
+ 'N',    'A',    'C',    'G',    'U',    '_',      '+'};
+
 enum iupac_t { N_IUPAC = 0,
   B_IUPAC = 7,
   D_IUPAC = 8,
@@ -57,5 +61,6 @@ double scale(int x);
 
 
 bool iupac_match(char base, char iupac_base);
+int bp_index(char x, char y);
 
 #endif

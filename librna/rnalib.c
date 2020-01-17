@@ -70,32 +70,27 @@ void librna_read_param_file(const char *filename)
      x = 5' base of the basepair
      y = 3' base of the basepair
 */
-static int bp_index(char x, char y)
+int bp_index(char x, char y)
 {
   switch (x) {
     case A_BASE : switch (y) {
         case U_BASE : return AU_BP;
-        case GAP_BASE : return NO_BP;
       }
       break;
     case C_BASE : switch (y) {
         case G_BASE : return CG_BP;
-        case GAP_BASE : return NO_BP;
       }
       break;
     case G_BASE : switch (y) {
         case C_BASE : return GC_BP;
         case U_BASE : return GU_BP;
-        case GAP_BASE : return NO_BP;
       }
       break;
     case U_BASE : switch (y) {
         case G_BASE : return UG_BP;
         case A_BASE : return UA_BP;
-        case GAP_BASE : return NO_BP;
       }
       break;
-    case GAP_BASE : return NO_BP;
   }
   return NO_BP;
 }
@@ -199,16 +194,7 @@ static void decode(char *s, const char *x, const int len)
 {
 	unsigned int i;
 	for (i = 0; i < len; ++i) {
-	    switch (x[i]) {
-	      case 0 : s[i] = 'N'; break;
-	      case 1 : s[i] = 'A'; break;
-	      case 2 : s[i] = 'C'; break;
-	      case 3 : s[i] = 'G'; break;
-	      case 4 : s[i] = 'U'; break;
-	      case 5 : s[i] = '_'; break;
-		  case 6 : s[i] = '+'; break;
-	      default: abort();
-	    };
+    s[i] = BASE_CHARS[x[i]];
 	}
 }
 

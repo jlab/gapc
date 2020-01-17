@@ -40,34 +40,13 @@ inline bool basepairing(const alphabet *seq,
 {
   if (j<=i+1)
     return false;
-  char a = seq[i];
-  char b = seq[j-1];
 
-  switch (a) {
-    case A_BASE :
-      switch (b) {
-        case U_BASE : return true;
-      }
-      break;
-    case U_BASE :
-      switch (b) {
-        case A_BASE : return true;
-        case G_BASE : return true;
-      }
-      break;
-    case G_BASE :
-      switch (b) {
-        case C_BASE : return true;
-        case U_BASE : return true;
-      }
-      break;
-    case C_BASE :
-      switch (b) {
-        case G_BASE : return true;
-      }
-      break;
+  int basepair = bp_index(seq[i], seq[j-1]);
+  if ((basepair == N_BP) || (basepair == NO_BP)) {
+    return false;
+  } else {
+    return true;
   }
-  return false;
 }
 
 template<typename alphabet, typename pos_type, typename T>
@@ -145,34 +124,25 @@ class BaseException : public std::exception {
     }
 };
 
-inline char char_to_base(char a)
+inline int char_to_base(char a)
 {
-  char c = lower_case(a);
-  switch (c) {
-    case 'n' : return N_BASE;
-    case 'a' : return A_BASE;
-    case 'c' : return C_BASE;
-    case 'g' : return G_BASE;
-    case 'u' : return U_BASE;
-    case '_' : return GAP_BASE;
-    case '+' : return SEPARATOR_BASE;
-    default: throw BaseException(a);
-  };
+  char c = upper_case(a);
+  for (int i = 0; i <= SEPARATOR_BASE; ++i) {
+    if (c == BASE_CHARS[i]) {
+      return i;
+    }
+  }
+  throw BaseException(a);
   return 0;
 }
 
-inline char base_to_char(char a)
+inline char base_to_char(int a)
 {
-  switch (a) {
-    case N_BASE : return 'n';
-    case A_BASE : return 'a';
-    case C_BASE : return 'c';
-    case G_BASE : return 'g';
-    case U_BASE : return 'u';
-    case GAP_BASE : return '_';
-    case SEPARATOR_BASE : return '+';
-    default: throw BaseException(a);
-  };
+  if (a < SEPARATOR_BASE+1) {
+    return BASE_CHARS[a];
+  } else {
+    throw BaseException(a);
+  }
   return 0;
 }
 
@@ -226,7 +196,7 @@ inline void append_deep_rna(rope::Ref<X> &str, const Basic_Subsequence<alphabet,
 {
   for (typename Basic_Subsequence<alphabet, pos_type>::const_iterator i = sub.begin();
       i != sub.end(); ++i)
-    str.append(base_to_char(*i));
+    str.append((char) base_to_char(*i));
 }
 
 // ======== energy wrapper function ========
@@ -275,7 +245,7 @@ template<typename alphabet, typename pos_type>
 inline int hl_energy_stem(const Basic_Subsequence<alphabet, pos_type> &a)
 {
   int energy = 0;
-  
+
   for (unsigned k = 0; k < a.seq->rows(); k++)
     energy += hl_energy_stem(a.seq->row(k), a.i-1, a.j);
 
