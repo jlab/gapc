@@ -8,9 +8,9 @@
 #endif
 
 enum base_t {
-  N_BASE, A_BASE, C_BASE, G_BASE, U_BASE, GAP_BASE, PSEUDOURIDINE_BASE, INOSINE_BASE, SEVENDEAZAADENOSINE_BASE, SEPARATOR_BASE };
+  N_BASE, A_BASE, C_BASE, G_BASE, U_BASE, GAP_BASE, PSEUDOURIDINE_BASE, INOSINE_BASE, SEVENDEAZAADENOSINE_BASE, PURINE_BASE, SEPARATOR_BASE };
 static char BASE_CHARS[SEPARATOR_BASE+1] = {
- 'N',    'A',    'C',    'G',    'U',    '_',      'P',                 'I',          '7',                      '+'};
+ 'N',    'A',    'C',    'G',    'U',    '_',      'P',                 'I',          '7',                      'p',         '+'};
 
 enum iupac_t { N_IUPAC = 0,
   B_IUPAC = 7,
@@ -20,7 +20,7 @@ enum iupac_t { N_IUPAC = 0,
   V_IUPAC = 11,
   Y_IUPAC = 12
 };
-enum bp_t { N_BP, CG_BP, GC_BP, GU_BP, UG_BP, AU_BP, UA_BP, NO_BP, A_PSEUDOURIDINE_BP, PSEUDOURIDINE_A_BP, INOSINE_C_BP, C_INOSINE_BP, INOSINE_U_BP, U_INOSINE_BP, SEVENDEAZAADENOSINE_U_BP, U_SEVENDEAZAADENOSINE_BP };
+enum bp_t { N_BP, CG_BP, GC_BP, GU_BP, UG_BP, AU_BP, UA_BP, NO_BP, A_PSEUDOURIDINE_BP, PSEUDOURIDINE_A_BP, INOSINE_C_BP, C_INOSINE_BP, INOSINE_U_BP, U_INOSINE_BP, SEVENDEAZAADENOSINE_U_BP, U_SEVENDEAZAADENOSINE_BP, PURINE_U_BP, U_PURINE_BP };
 
 typedef unsigned int rsize;
 

@@ -93,6 +93,7 @@ int bp_index(char x, char y)
         case A_BASE : return UA_BP;
         case INOSINE_BASE : return U_INOSINE_BP;
         case SEVENDEAZAADENOSINE_BASE : return U_SEVENDEAZAADENOSINE_BP;
+        case PURINE_BASE : return U_PURINE_BP;
       }
       break;
     case PSEUDOURIDINE_BASE : switch (y) {
@@ -108,7 +109,11 @@ int bp_index(char x, char y)
         case U_BASE : return SEVENDEAZAADENOSINE_U_BP;
       }
       break;
-  }
+    case PURINE_BASE : switch (y) {
+        case U_BASE : return PURINE_U_BP;
+      }
+      break;
+    }
   return NO_BP;
 }
 
@@ -209,6 +214,8 @@ static int to_ACGU_basepair(int basepair) {
     case U_INOSINE_BP: return UA_BP;
     case SEVENDEAZAADENOSINE_U_BP: return AU_BP;
     case U_SEVENDEAZAADENOSINE_BP: return UA_BP;
+    case PURINE_U_BP: return AU_BP;
+    case U_PURINE_BP: return UA_BP;
     default: return basepair;
   }
 }
@@ -217,6 +224,7 @@ static int to_ACGU_base(int base) {
     case PSEUDOURIDINE_BASE: return U_BASE;
     case INOSINE_BASE: return G_BASE;
     case SEVENDEAZAADENOSINE_BASE: return A_BASE;
+    case PURINE_BASE: return A_BASE;
     default: return base;
   }
 }
@@ -242,6 +250,9 @@ static int revcomp_basepair(int basepair) {
 
     case SEVENDEAZAADENOSINE_U_BP: return U_SEVENDEAZAADENOSINE_BP;
     case U_SEVENDEAZAADENOSINE_BP: return SEVENDEAZAADENOSINE_U_BP;
+
+    case PURINE_U_BP: return U_PURINE_BP;
+    case U_PURINE_BP: return PURINE_U_BP;
 
     default: return basepair;
   }
@@ -432,6 +443,51 @@ static int _get_P_stack(int closing_basepair, int enclosed_basepair) {
       break;
   }
 
+  // following parameters are from Jolley et al. 2016 10.1093/nar/gkw830 Table 3, column 5
+  // note: since we do not include enthalpie values (yet) we cannot change temperature
+  switch (closing_basepair) {
+    case AU_BP:
+      switch (revcomp_basepair(enclosed_basepair)) {
+        case PURINE_U_BP: return 43;
+        case U_PURINE_BP: return -32;
+      }
+      break;
+    case CG_BP:
+      switch (revcomp_basepair(enclosed_basepair)) {
+        case PURINE_U_BP: return -76;
+        case U_PURINE_BP: return -188;
+      }
+      break;
+    case GC_BP:
+      switch (revcomp_basepair(enclosed_basepair)) {
+        case PURINE_U_BP: return -110;
+        case U_PURINE_BP: return -198;
+      }
+      break;
+    case UA_BP:
+      switch (revcomp_basepair(enclosed_basepair)) {
+        case PURINE_U_BP: return 33;
+        case U_PURINE_BP: return -68;
+      }
+      break;
+    case PURINE_U_BP:
+      switch (revcomp_basepair(enclosed_basepair)) {
+        case AU_BP: return -68;
+        case CG_BP: return -198;
+        case GC_BP: return -188;
+        case UA_BP: return -32;
+      }
+      break;
+    case U_PURINE_BP:
+      switch (revcomp_basepair(enclosed_basepair)) {
+        case UA_BP: return 43;
+        case GC_BP: return -76;
+        case CG_BP: return -110;
+        case AU_BP: return 33;
+      }
+      break;
+  }
+
   return P->stack[to_ACGU_basepair(closing_basepair)][to_ACGU_basepair(enclosed_basepair)];
 }
 static int _get_P_int11(int closingBP, int enclosedBP, int lbase, int rbase) {
@@ -498,6 +554,13 @@ static int _get_P_termau(const char *s, rsize i, rsize j) {
     // following parameters are from Richardson et al. 2016 10.1261/rna.055277.115 Table 3, column 5
     // note: since we do not include enthalpie values (yet) we cannot change temperature
     return 31;
+  } else if (
+    (lbase == PURINE_BASE && rbase == U_BASE) ||
+    (lbase == U_BASE && rbase == PURINE_BASE)
+  ) {
+    // following parameters are from Jolley et al. 2016 10.1093/nar/gkw830 Table 3, column 5
+    // note: since we do not include enthalpie values (yet) we cannot change temperature
+    return 86;
   }
 
   lbase = to_ACGU_base(s[i]);
@@ -511,6 +574,7 @@ static int _get_P_termau(const char *s, rsize i, rsize j) {
 	   return P->TerminalAU;
   }
 }
+
 
 /*
    returns a char pointer, i.e. string, of the decode RNA sequence in letters, after a decoding of the bit encoded chars
