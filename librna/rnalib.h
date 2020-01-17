@@ -40,6 +40,7 @@ int dli_energy(const char *s, rsize i, rsize j);
 int dri_energy(const char *s, rsize i, rsize j);
 int ext_mismatch_energy(const char *s, rsize i, rsize j, rsize n);
 int ml_mismatch_energy(const char *s, rsize i, rsize j);
+int symmetric_dimer_energy(const char *s, rsize i, rsize j);
 int ml_energy(void);
 int ul_energy(void);
 int sbase_energy(void);

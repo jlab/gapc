@@ -527,6 +527,19 @@ int ml_energy();
 */
 int sbase_energy();
 
+template<typename alphabet, typename pos_type>
+inline int symmetric_dimer_energy(const Basic_Subsequence<alphabet, pos_type> &a,
+    const Basic_Subsequence<alphabet, pos_type> &b)
+{
+  int energy = 0;
+  assert(a.seq->rows() == b.seq->rows());
+
+  for (unsigned k = 0; k < a.seq->rows(); k++)
+    energy += symmetric_dimer_energy(a.seq->row(k), a.i, b.j-1);
+
+  return energy;
+}
+
 /*
    returns the energy value for a stretch of unpaired bases outside of closed substructures, i.e. left or right of closed substructures, between two substructures or within multiloops but not in multiloop stems
    Input is

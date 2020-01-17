@@ -1207,6 +1207,25 @@ int ml_mismatch_energy(const char *s, rsize i, rsize j)
   }
 }
 
+// checks if both RNA sequences of a cofolding are identical, i.e. symmetric.
+// If so, energy penalty of 0.43 must be added.
+// warning: this value is (not yet) temperature scaled!
+int symmetric_dimer_energy(const char *s, rsize i, rsize j) {
+  int center_pos = (j-i)/2+i;
+  if (s[center_pos] == SEPARATOR_BASE) {
+    // both strings must be of same length centered around the SEPARATOR_BASE char.
+    if (center_pos-i != j-center_pos)
+      return 0;
+    for (int k = i; k < center_pos; k++) {
+      if (s[k] != s[center_pos+1+k]) {
+        return 0;
+      }
+    }
+    return 43;
+  }
+  return 0;
+}
+
 /*
    returns the energy for initiating a multiloop
    version 1999: currently (12.09.2011) this value is set to 340
