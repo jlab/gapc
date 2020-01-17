@@ -75,28 +75,20 @@ int bp_index(char x, char y)
   switch (x) {
     case A_BASE : switch (y) {
         case U_BASE : return AU_BP;
-        case GAP_BASE : return NO_BP;
       }
       break;
     case C_BASE : switch (y) {
         case G_BASE : return CG_BP;
-        case GAP_BASE : return NO_BP;
       }
       break;
     case G_BASE : switch (y) {
         case C_BASE : return GC_BP;
         case U_BASE : return GU_BP;
-        case GAP_BASE : return NO_BP;
       }
       break;
     case U_BASE : switch (y) {
         case G_BASE : return UG_BP;
         case A_BASE : return UA_BP;
-        case GAP_BASE : return NO_BP;
-      }
-      break;
-    case GAP_BASE : switch (y) {
-        case GAP_BASE : return N_BP;
       }
       break;
   }
