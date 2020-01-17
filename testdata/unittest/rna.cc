@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE ( app_subseq_rna )
   Subsequence x(s, 3, 6);
   append_deep_rna(r, x);
   Rope q;
-  append(q, "uag");
+  append(q, "UAG");
   CHECK_EQ(r, q);
 }
 
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE ( iupac )
   CHECK(!filter.query(6, 14));
   CHECK(filter.query(6, 22));
   CHECK(filter.query(16, 21));
-	
+
   char sequence2[14] = "ccacuccucccgg";
   Sequence seq2(sequence2);
   char_to_rna(seq2);
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE ( iupac )
   const char pattern2[] = "ccuccuccc";
   filter2.init(seq2,pattern2);
   CHECK(!filter2.query(2,11));
-  
+
   iupac_filter<char, unsigned> filter3;
   const char pattern3[] = "acuccuccc";
   filter3.init(seq2,pattern3);

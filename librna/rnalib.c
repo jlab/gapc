@@ -70,46 +70,44 @@ void librna_read_param_file(const char *filename)
      x = 5' base of the basepair
      y = 3' base of the basepair
 */
-static int bp_index(char x, char y)
+int bp_index(char x, char y)
 {
   switch (x) {
     case A_BASE : switch (y) {
         case U_BASE : return AU_BP;
-        case PSEUDOURIDINE_BASE : return AP_BP;
-        case GAP_BASE : return NO_BP;
+        case PSEUDOURIDINE_BASE : return A_PSEUDOURIDINE_BP;
       }
       break;
     case C_BASE : switch (y) {
         case G_BASE : return CG_BP;
-        case GAP_BASE : return NO_BP;
-        case INOSINE_BASE : return CI_BP;
+        case INOSINE_BASE : return C_INOSINE_BP;
       }
       break;
     case G_BASE : switch (y) {
         case C_BASE : return GC_BP;
         case U_BASE : return GU_BP;
-        case GAP_BASE : return NO_BP;
       }
       break;
     case U_BASE : switch (y) {
         case G_BASE : return UG_BP;
         case A_BASE : return UA_BP;
         case INOSINE_BASE : return U_INOSINE_BP;
-        case GAP_BASE : return NO_BP;
+        case SEVENDEAZAADENOSINE_BASE : return U_SEVENDEAZAADENOSINE_BP;
       }
       break;
     case PSEUDOURIDINE_BASE : switch (y) {
-        case A_BASE : return PA_BP;
-        case GAP_BASE : return NO_BP;
+        case A_BASE : return PSEUDOURIDINE_A_BP;
       }
       break;
     case INOSINE_BASE : switch (y) {
-        case C_BASE : return IC_BP;
+        case C_BASE : return INOSINE_C_BP;
         case U_BASE : return INOSINE_U_BP;
-        case GAP_BASE : return NO_BP;
       }
       break;
-    case GAP_BASE : return NO_BP;
+    case SEVENDEAZAADENOSINE_BASE : switch (y) {
+        case U_BASE : return SEVENDEAZAADENOSINE_U_BP;
+      }
+      break;
   }
   return NO_BP;
 }
@@ -203,12 +201,14 @@ static rsize getPrev(const char *s, rsize pos, rsize steps, rsize leftBorder) {
 
 static int to_ACGU_basepair(int basepair) {
   switch (basepair) {
-    case AP_BP: return AU_BP;
-    case PA_BP: return UA_BP;
-    case IC_BP: return GC_BP;
-    case CI_BP: return CG_BP;
+    case A_PSEUDOURIDINE_BP: return AU_BP;
+    case PSEUDOURIDINE_A_BP: return UA_BP;
+    case INOSINE_C_BP: return GC_BP;
+    case C_INOSINE_BP: return CG_BP;
     case INOSINE_U_BP: return AU_BP;
     case U_INOSINE_BP: return UA_BP;
+    case SEVENDEAZAADENOSINE_U_BP: return AU_BP;
+    case U_SEVENDEAZAADENOSINE_BP: return UA_BP;
     default: return basepair;
   }
 }
@@ -216,6 +216,7 @@ static int to_ACGU_base(int base) {
   switch (base) {
     case PSEUDOURIDINE_BASE: return U_BASE;
     case INOSINE_BASE: return G_BASE;
+    case SEVENDEAZAADENOSINE_BASE: return A_BASE;
     default: return base;
   }
 }
@@ -230,14 +231,17 @@ static int revcomp_basepair(int basepair) {
     case AU_BP: return UA_BP;
     case UA_BP: return AU_BP;
 
-    case AP_BP: return PA_BP;
-    case PA_BP: return AP_BP;
+    case A_PSEUDOURIDINE_BP: return PSEUDOURIDINE_A_BP;
+    case PSEUDOURIDINE_A_BP: return A_PSEUDOURIDINE_BP;
 
-    case IC_BP: return CI_BP;
-    case CI_BP: return IC_BP;
+    case INOSINE_C_BP: return C_INOSINE_BP;
+    case C_INOSINE_BP: return INOSINE_C_BP;
 
     case INOSINE_U_BP: return U_INOSINE_BP;
     case U_INOSINE_BP: return INOSINE_U_BP;
+
+    case SEVENDEAZAADENOSINE_U_BP: return U_SEVENDEAZAADENOSINE_BP;
+    case U_SEVENDEAZAADENOSINE_BP: return SEVENDEAZAADENOSINE_U_BP;
 
     default: return basepair;
   }
@@ -249,29 +253,29 @@ static int _get_P_stack(int closing_basepair, int enclosed_basepair) {
   switch (closing_basepair) {
     case CG_BP:
       switch (revcomp_basepair(enclosed_basepair)) {
-        case PA_BP: return -277;
-        case AP_BP: return -220;
+        case PSEUDOURIDINE_A_BP: return -277;
+        case A_PSEUDOURIDINE_BP: return -220;
       }
       break;
     case GC_BP:
       switch (revcomp_basepair(enclosed_basepair)) {
-        case PA_BP: return -329;
-        case AP_BP: return -249;
+        case PSEUDOURIDINE_A_BP: return -329;
+        case A_PSEUDOURIDINE_BP: return -249;
       }
       break;
     case AU_BP:
       switch (revcomp_basepair(enclosed_basepair)) {
-        case PA_BP: return -280;
-        case AP_BP: return -274;
+        case PSEUDOURIDINE_A_BP: return -280;
+        case A_PSEUDOURIDINE_BP: return -274;
       }
       break;
     case UA_BP:
       switch (revcomp_basepair(enclosed_basepair)) {
-        case PA_BP: return -162;
-        case AP_BP: return -210;
+        case PSEUDOURIDINE_A_BP: return -162;
+        case A_PSEUDOURIDINE_BP: return -210;
       }
       break;
-    case PA_BP:
+    case PSEUDOURIDINE_A_BP:
       switch (revcomp_basepair(enclosed_basepair)) {
         case CG_BP: return -249;
         case GC_BP: return -220;
@@ -279,7 +283,7 @@ static int _get_P_stack(int closing_basepair, int enclosed_basepair) {
         case UA_BP: return -274;
       }
       break;
-    case AP_BP:
+    case A_PSEUDOURIDINE_BP:
       switch (revcomp_basepair(enclosed_basepair)) {
         case CG_BP: return -329;
         case GC_BP: return -277;
@@ -294,29 +298,29 @@ static int _get_P_stack(int closing_basepair, int enclosed_basepair) {
   switch (closing_basepair) {
     case GC_BP:
       switch (revcomp_basepair(enclosed_basepair)) {
-        case IC_BP: return -262;
-        case CI_BP: return -189;
+        case INOSINE_C_BP: return -262;
+        case C_INOSINE_BP: return -189;
       }
       break;
     case CG_BP:
       switch (revcomp_basepair(enclosed_basepair)) {
-        case IC_BP: return -186;
-        case CI_BP: return -223;
+        case INOSINE_C_BP: return -186;
+        case C_INOSINE_BP: return -223;
       }
       break;
     case AU_BP:
       switch (revcomp_basepair(enclosed_basepair)) {
-        case IC_BP: return -157;
-        case CI_BP: return -102;
+        case INOSINE_C_BP: return -157;
+        case C_INOSINE_BP: return -102;
       }
       break;
     case UA_BP:
       switch (revcomp_basepair(enclosed_basepair)) {
-        case IC_BP: return -96;
-        case CI_BP: return -118;
+        case INOSINE_C_BP: return -96;
+        case C_INOSINE_BP: return -118;
       }
       break;
-    case IC_BP:
+    case INOSINE_C_BP:
       switch (revcomp_basepair(enclosed_basepair)) {
         case GC_BP: return -223;
         case CG_BP: return -189;
@@ -324,7 +328,7 @@ static int _get_P_stack(int closing_basepair, int enclosed_basepair) {
         case UA_BP: return -102;
       }
       break;
-    case CI_BP:
+    case C_INOSINE_BP:
       switch (revcomp_basepair(enclosed_basepair)) {
         case CG_BP: return -262;
         case GC_BP: return -186;
@@ -379,6 +383,51 @@ static int _get_P_stack(int closing_basepair, int enclosed_basepair) {
       switch (revcomp_basepair(enclosed_basepair)) {
         case INOSINE_U_BP: return -134;
         case U_INOSINE_BP: return -103;
+      }
+      break;
+  }
+
+  // following parameters are from Richardson et al. 2016 10.1261/rna.055277.115 Table 3, column 5
+  // note: since we do not include enthalpie values (yet) we cannot change temperature
+  switch (closing_basepair) {
+    case AU_BP:
+      switch (revcomp_basepair(enclosed_basepair)) {
+        case SEVENDEAZAADENOSINE_U_BP: return -59;
+        case U_SEVENDEAZAADENOSINE_BP: return -146;
+      }
+      break;
+    case CG_BP:
+      switch (revcomp_basepair(enclosed_basepair)) {
+        case SEVENDEAZAADENOSINE_U_BP: return -181;
+        case U_SEVENDEAZAADENOSINE_BP: return -198;
+      }
+      break;
+    case GC_BP:
+      switch (revcomp_basepair(enclosed_basepair)) {
+        case SEVENDEAZAADENOSINE_U_BP: return -166;
+        case U_SEVENDEAZAADENOSINE_BP: return -210;
+      }
+      break;
+    case UA_BP:
+      switch (revcomp_basepair(enclosed_basepair)) {
+        case SEVENDEAZAADENOSINE_U_BP: return -107;
+        case U_SEVENDEAZAADENOSINE_BP: return -68;
+      }
+      break;
+    case SEVENDEAZAADENOSINE_U_BP:
+      switch (revcomp_basepair(enclosed_basepair)) {
+        case AU_BP: return -68;
+        case CG_BP: return -210;
+        case GC_BP: return -198;
+        case UA_BP: return -146;
+      }
+      break;
+    case U_SEVENDEAZAADENOSINE_BP:
+      switch (revcomp_basepair(enclosed_basepair)) {
+        case UA_BP: return -59;
+        case GC_BP: return -181;
+        case CG_BP: return -166;
+        case AU_BP: return -107;
       }
       break;
   }
@@ -442,6 +491,13 @@ static int _get_P_termau(const char *s, rsize i, rsize j) {
     // following parameters are from Wright et al. 2007 10.1021/bi0616910 Table 3, column 5
     // note: since we do not include enthalpie values (yet) we cannot change temperature
     return -133;
+  } else if (
+    (lbase == SEVENDEAZAADENOSINE_BASE && rbase == U_BASE) ||
+    (lbase == U_BASE && rbase == SEVENDEAZAADENOSINE_BASE)
+  ) {
+    // following parameters are from Richardson et al. 2016 10.1261/rna.055277.115 Table 3, column 5
+    // note: since we do not include enthalpie values (yet) we cannot change temperature
+    return 31;
   }
 
   lbase = to_ACGU_base(s[i]);
@@ -468,17 +524,7 @@ static void decode(char *s, const char *x, const int len)
 {
 	unsigned int i;
 	for (i = 0; i < len; ++i) {
-	    switch (x[i]) {
-	      case 0 : s[i] = 'N'; break;
-	      case 1 : s[i] = 'A'; break;
-	      case 2 : s[i] = 'C'; break;
-	      case 3 : s[i] = 'G'; break;
-	      case 4 : s[i] = 'U'; break;
-	      case 5 : s[i] = '_'; break;
-        case 6 : s[i] = 'U'; break;  // although "P" it is a Pseudouridine
-		    case 7 : s[i] = '+'; break;
-	      default: abort();
-	    };
+    s[i] = BASE_CHARS[x[i]];
 	}
 }
 

@@ -40,48 +40,13 @@ inline bool basepairing(const alphabet *seq,
 {
   if (j<=i+1)
     return false;
-  char a = seq[i];
-  char b = seq[j-1];
 
-  switch (a) {
-    case A_BASE :
-      switch (b) {
-        case U_BASE : return true;
-        case PSEUDOURIDINE_BASE : return true;
-      }
-      break;
-    case U_BASE :
-      switch (b) {
-        case A_BASE : return true;
-        case G_BASE : return true;
-        case INOSINE_BASE : return true;
-      }
-      break;
-    case G_BASE :
-      switch (b) {
-        case C_BASE : return true;
-        case U_BASE : return true;
-      }
-      break;
-    case C_BASE :
-      switch (b) {
-        case G_BASE : return true;
-        case INOSINE_BASE : return true;
-      }
-      break;
-    case PSEUDOURIDINE_BASE :
-      switch(b) {
-        case A_BASE : return true;
-      }
-      break;
-    case INOSINE_BASE :
-      switch (b) {
-        case C_BASE : return true;
-        case U_BASE : return true;
-      }
-      break;
+  int basepair = bp_index(seq[i], seq[j-1]);
+  if ((basepair == N_BP) || (basepair == NO_BP)) {
+    return false;
+  } else {
+    return true;
   }
-  return false;
 }
 
 template<typename alphabet, typename pos_type, typename T>
@@ -159,38 +124,25 @@ class BaseException : public std::exception {
     }
 };
 
-inline char char_to_base(char a)
+inline int char_to_base(char a)
 {
-  //char c = lower_case(a);
-  switch (a) {
-    case 'N' : return N_BASE;
-    case 'A' : return A_BASE;
-    case 'C' : return C_BASE;
-    case 'G' : return G_BASE;
-    case 'U' : return U_BASE;
-    case '_' : return GAP_BASE;
-    case 'P' : return PSEUDOURIDINE_BASE;
-    case 'I' : return INOSINE_BASE;
-    case '+' : return SEPARATOR_BASE;
-    default: throw BaseException(a);
-  };
+  //char c = upper_case(a);
+  for (int i = 0; i <= SEPARATOR_BASE; ++i) {
+    if (a == BASE_CHARS[i]) {
+      return i;
+    }
+  }
+  throw BaseException(a);
   return 0;
 }
 
-inline char base_to_char(char a)
+inline char base_to_char(int a)
 {
-  switch (a) {
-    case N_BASE : return 'N';
-    case A_BASE : return 'A';
-    case C_BASE : return 'C';
-    case G_BASE : return 'G';
-    case U_BASE : return 'U';
-    case GAP_BASE : return '_';
-    case PSEUDOURIDINE_BASE : return 'P';
-    case INOSINE_BASE : return 'I';
-    case SEPARATOR_BASE : return '+';
-    default: throw BaseException(a);
-  };
+  if (a < SEPARATOR_BASE+1) {
+    return BASE_CHARS[a];
+  } else {
+    throw BaseException(a);
+  }
   return 0;
 }
 
@@ -244,7 +196,7 @@ inline void append_deep_rna(rope::Ref<X> &str, const Basic_Subsequence<alphabet,
 {
   for (typename Basic_Subsequence<alphabet, pos_type>::const_iterator i = sub.begin();
       i != sub.end(); ++i)
-    str.append(base_to_char(*i));
+    str.append((char) base_to_char(*i));
 }
 
 // ======== energy wrapper function ========

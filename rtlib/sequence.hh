@@ -287,7 +287,7 @@ class Basic_Sequence {
       return *this;
     }
 
-    alphabet &operator[](pos_type x) 
+    alphabet &operator[](pos_type x)
     {
       assert(x < n);
       return seq[x];
@@ -328,9 +328,21 @@ inline char lower_case(char c)
   if (c == '_')
     return c;
   if (c == '+')
-	return c;
+	  return c;
   if (c < 'a')
     return c+('a'-'A');
+  else
+    return c;
+}
+
+inline char upper_case(char c)
+{
+  if (c == '_')
+    return c;
+  if (c == '+')
+	  return c;
+  if (c >= 'a')
+    return c-('a'-'A');
   else
     return c;
 }
