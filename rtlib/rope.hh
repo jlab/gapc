@@ -175,7 +175,7 @@ namespace rope {
         }
       }
 
-      void *operator new(size_t t) throw (std::bad_alloc);
+      void *operator new(size_t t) noexcept(false);
       void operator delete(void *b) throw ();
 
   };
