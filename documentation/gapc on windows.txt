@@ -1,23 +1,26 @@
 How to compile gapc on Windows 10:
 
-1) Install Linux Sub-System
+1) install Linux Sub-System:
 	1.1) go Start -> Settings -> For Developers : Click Developer-Mode
-	1.2) Open Windows Power Shell then type: Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
+	1.2) open Windows Power Shell then type: Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
 	1.3) restart computer
-	1.4) Download Ubuntu app from Windows-Strore
-	1.5) Initialize installation by setting Username and Password
-2) Prepare compiling and installation of gapc by installing requiered sources: 
-	2.1) Open Ubuntu app
+	1.4) download Ubuntu app (Ubuntu 18.04 LTS) from Windows-Store
+	1.5) initialize installation by setting Username and Password
+2) prepare compiling and installation of gapc by installing required sources: 
+	2.1) open Ubuntu app
 	2.2) install compiler: sudo apt update
 			       sudo apt install gcc
-			       sudo apt install g++ (for some reason u need both)	
+			       sudo apt install g++ (you need to install both)	
 	2.3) install flex    : sudo apt-get install flex
-	2.4) install bison   : DO NOT :sudo apt-get install bison !! 
-			       INSTEAD go on the bison website and istall the latest version
+	2.4) install bison   : DO NOT: sudo apt-get install bison !! 
+			       INSTEAD visit the bison website and install the latest version
+			       http://mirrors.ibiblio.org/gnu/ftp/gnu/bison/	
 	2.5) install boost   : sudo apt-get install libboost-all-dev (takes some time)
 	2.6) install GSL     : sudo apt-get install libgsl-dev
+	
+	--see also https://github.com/jlab/gapc/blob/master/.travis.yml
 	
 3) compile gapc: 
 	3.1) ./configure 
 	3.2) make 
-	3.3) (sudo) make install
+	3.3) sudo make install
