@@ -373,7 +373,7 @@ T, I, U, Hash_Policy, Resize_Policy, Shrink_Policy, Stat_Policy, load_factor
        Set_Dummy<SET_TEMPLATE_ARGS>::pool;
 
   template<SET_TEMPLATE_DECL>
-  void *Set<SET_TEMPLATE_ARGS>::operator new(size_t t) throw (std::bad_alloc)
+  void *Set<SET_TEMPLATE_ARGS>::operator new(size_t t) noexcept(false)
   {
     assert(sizeof(Set<SET_TEMPLATE_ARGS>) == t);
     Set<SET_TEMPLATE_ARGS> *r = Set_Dummy<SET_TEMPLATE_ARGS>::pool.malloc();
