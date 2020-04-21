@@ -28,7 +28,7 @@
 // like in list?
 Pool<String::Block> String::pool;
 
-void *String::Block::operator new(size_t t) throw (std::bad_alloc)
+void *String::Block::operator new(size_t t) noexcept(false)
 {
   assert(t == sizeof(Block));
   Block *r = pool.malloc();
