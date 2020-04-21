@@ -672,7 +672,7 @@ template<typename X>
 Pool<rope::Block<X> > rope::Ref<X>::pool;
 
 template<typename X>
-void *rope::Block<X>::operator new(size_t t) throw (std::bad_alloc)
+void *rope::Block<X>::operator new(size_t t) noexcept(false)
 {
   assert(t == sizeof(Block<X>));
   Block<X> *r = rope::Ref<X>::pool.malloc();
