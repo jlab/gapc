@@ -1,0 +1,102 @@
+
+####### Automatic Configuration
+
+#system
+SYSTEM_SUFFIX = _linux-gnu
+PREFIX=/homes/fkeller/gapc
+
+# programms
+CXX = g++ 
+CC = gcc 
+LD = $(CC)
+LEX = /usr/bin/flex
+YACC = /usr/bin/bison
+SED = /bin/sed
+INSTALL = /usr/bin/install -c
+SHELL = /bin/bash
+HG = /usr/bin/hg
+
+#flags
+# c
+CFLAGS =  -O3  -std=c11 
+
+#c++
+CXXFLAGS =  -O3  -std=c++11 -D_XOPEN_SOURCE=500 -MMD -MP -Wall -Wnon-virtual-dtor -Wno-unused-variable -Wno-parentheses
+
+#library
+SO_SUFFIX = .so
+SHARED_FLAGS = -shared 
+FAST_MATH =  -ffast-math 
+PIC_FLAGS = -fPIC
+INSTALL_SHARED_FLAG=
+
+#bison
+BISON_VERSION_FLAG =  -DBISONNEW 
+
+#boost
+BOOST_CPPFLAGS = -I/usr/include
+BOOST_LDFLAGS = -L/usr/lib/x86_64-linux-gnu
+BOOST_PROGRAM_OPTIONS_LIB = -lboost_program_options
+BOOST_UNIT_TEST_FRAMEWORK_LIB = -lboost_unit_test_framework
+
+#gsl
+GSL_LIBS = -L/usr/lib/x86_64-linux-gnu -lgsl -lgslcblas -lm
+GSL_CFLAGS = -I/usr/include
+
+# openmp
+CXXFLAGS_OPENMP = -fopenmp
+
+####### Fixed Configuration
+
+AR = ar
+
+#preprocessor
+LIB_RT = rtlib
+LIB_RNA = librna
+LIB_GENERAL = 
+INCLUDE_PATH=/include
+CPPFLAGS += $(BOOST_CPPFLAGS) \
+	 $(CPPFLAGS_EXTRA) \
+	 $(RTLIB_CPPFLAGS)
+
+# c
+CFLAGS += -DNDEBUG
+
+# c++
+CXXFLAGS += -DNDEBUG $(BISON_VERSION_FLAG) $(CXXFLAGS_EXTRA)
+
+# linker
+LIB_PATH=/lib
+LDFLAGS = $(BOOST_LDFLAGS)  \
+	$(LDFLAGS_EXTRA) \
+	$(RTLIB_LDFLAGS) \
+	$(shell echo " $(BOOST_LDFLAGS) " | sed -e 's/[ ][ ]*[^ ]*\.o[ ]//g' | sed -e 's/\-L/-Xlinker -rpath -Xlinker /g') \
+	$(shell echo " $(LDFLAGS_EXTRA) " | sed -e 's/[ ][ ]*[^ ]*\.o[ ]//g' | sed -e 's/\-L/-Xlinker -rpath -Xlinker /g') \
+	$(shell echo " $(RTLIB_LDFLAGS) " | sed -e 's/[ ][ ]*[^ ]*\.o[ ]//g' | sed -e 's/\-L/-Xlinker -rpath -Xlinker /g') 
+
+LDLIBS = $(RTLIB_LDLIBS) \
+	 $(LDLIBS_EXTRA)
+
+
+
+# Options for compling GapC generated code
+# set to RTLIB_LDLIBS
+RT_LDLIBS = $(GSL_LIBS) -lrna
+# set to RTLIB_LDFLAGS
+RT_LDFLAGS = -L$(PREFIX)$(LIB_PATH)/$(LIB_GENERAL) \
+	-L$(PREFIX)$(LIB_PATH)/$(LIB_RT)  \
+	-L$(PREFIX)$(LIB_PATH)/$(LIB_RNA) \
+# set to RTLIB_CPPFLAGS
+RT_CPPFLAGS = $(GSL_CFLAGS) \
+	 -I$(PREFIX)$(INCLUDE_PATH)/$(LIB_GENERAL) \
+	 -I$(PREFIX)$(INCLUDE_PATH)/$(LIB_RT) \
+	 -I$(PREFIX)$(INCLUDE_PATH)/$(LIB_RNA) \
+
+RTLIB = $(PREFIX)$(INCLUDE_PATH)/$(LIB_RT)
+
+
+
+
+
+
+
