@@ -175,8 +175,8 @@ namespace rope {
         }
       }
 
-      void *operator new(size_t t) throw();
-      void operator delete(void *b) throw ();
+      void *operator new(size_t t) noexcept(false);
+      void operator delete(void *b) noexcept(false);
 
   };
 
@@ -672,7 +672,7 @@ template<typename X>
 Pool<rope::Block<X> > rope::Ref<X>::pool;
 
 template<typename X>
-void *rope::Block<X>::operator new(size_t t) throw()
+void *rope::Block<X>::operator new(size_t t) noexcept(false)
 {
   assert(t == sizeof(Block<X>));
   Block<X> *r = rope::Ref<X>::pool.malloc();
@@ -680,7 +680,7 @@ void *rope::Block<X>::operator new(size_t t) throw()
 }
 
 template<typename X>
-void rope::Block<X>::operator delete(void *b) throw ()
+void rope::Block<X>::operator delete(void *b) noexcept(false)
 {
   if (!b)
     return;

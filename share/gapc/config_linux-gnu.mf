@@ -21,7 +21,7 @@ HG = /usr/bin/hg
 CFLAGS =  -O3  -std=c11 
 
 #c++
-CXXFLAGS =  -O3  -std=c++11 -D_XOPEN_SOURCE=500 -MMD -MP -Wall -Wnon-virtual-dtor -Wno-unused-variable -Wno-parentheses
+CXXFLAGS =  -O3  -std=c++17 -D_XOPEN_SOURCE=500 -MMD -MP -Wall -Wnon-virtual-dtor -Wno-unused-variable -Wno-parentheses
 
 #library
 SO_SUFFIX = .so
