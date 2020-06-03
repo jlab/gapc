@@ -211,9 +211,9 @@ class String {
         array[pos++] = ((unsigned char *) &l)[3];
       }
 
-      void *operator new(size_t t) throw (std::bad_alloc);
+      void *operator new(size_t t) noexcept(false);
 
-      void operator delete(void *b) throw ();
+      void operator delete(void *b) noexcept(false);
 
       void put(std::ostream &s) const;
     };
