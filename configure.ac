@@ -62,8 +62,8 @@ GAP_PIC_FLAGS
 
 
 AC_LANG([C++])
-AX_CHECK_COMPILE_FLAG([-std=c++11], [
-  CXXFLAGS+=" -std=c++11"
+AX_CHECK_COMPILE_FLAG([-std=c++17], [
+  CXXFLAGS+=" -std=c++17"
 ])
 
 ## test additional flags
@@ -94,7 +94,7 @@ if test "x$BISON" = "x"; then
 	echo "bison is needed to compile GapC."
 	exit -1
 fi
- 
+
 
 AC_PATH_PROG([HG], [hg])
 
@@ -145,13 +145,3 @@ AC_FUNC_REALLOC
 AC_CHECK_FUNCS([memset strerror])
 
 AC_OUTPUT
-
-
-
-
-
-
-
-
-
-
