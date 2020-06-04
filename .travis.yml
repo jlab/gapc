@@ -8,16 +8,17 @@ jobs:
   include:
     - os: linux
       dist: bionic
-    - stage: test
-      addons:
-        apt:
-          packages:
-            - flex
-            - bison
-            - make
-            - libboost-all-dev
-            - libgsl-dev
-            - ghc
+    
+addons:
+  apt:
+    packages:
+      - flex
+      - bison
+      - make
+      - libboost-all-dev
+      - libgsl-dev
+      - ghc
+
 install:
   - ./configure
   - make
