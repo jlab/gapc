@@ -1,4 +1,6 @@
-dist: xenial
+dist:
+  - xenial
+  - bionic
 language: cpp
 compiler:
 - gcc
@@ -29,6 +31,9 @@ jobs:
         # obtain truth data from secondary github repository
         - git clone https://github.com/jlab/gapc-test-suite.git /home/travis/gapc-test-suite
       script:
+        # manually compiling an example to check for raised warnings
+        - cp testdata/grammar/elm.gap && gapc -p "buyer * pretty2" elm.gap && make -f out.mf
+        # run compiler test suite
         - make test-unit
         - make test-paral
         - make test-mod TRUTH_DIR=/home/travis/gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu
