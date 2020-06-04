@@ -1,14 +1,13 @@
-dist:
-  - xenial
-  - bionic
 language: cpp
 compiler:
 - gcc
-os:
-- linux
 
 jobs:
   include:
+    - os: linux
+      dist: xenial
+    - os: linux
+      dist: bionic
     - stage: test
       addons:
         apt:
