@@ -1,11 +1,11 @@
+dist: xenial
+os: linux
 language: cpp
 compiler:
 - gcc
 
 jobs:
   include:
-    - os: linux
-      dist: xenial
     - os: linux
       dist: bionic
     - stage: test
@@ -18,23 +18,23 @@ jobs:
             - libboost-all-dev
             - libgsl-dev
             - ghc
-      install:
-        - ./configure
-        - make
-        - sudo make install
-      before_script:
-        # install missing ghc/haskell modules
-        - sudo apt-get install cabal-install -y
-        - cabal update
-        - cabal install random
-        # obtain truth data from secondary github repository
-        - git clone https://github.com/jlab/gapc-test-suite.git /home/travis/gapc-test-suite
-      script:
-        # manually compiling an example to check for raised warnings
-        - cp testdata/grammar/elm.gap && gapc -p "buyer * pretty2" elm.gap && make -f out.mf
-        # run compiler test suite
-        - make test-unit
-        - make test-paral
-        - make test-mod TRUTH_DIR=/home/travis/gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu
-        - make test-regress TRUTH_DIR=/home/travis/gapc-test-suite/Truth
-        - make test-ambiguity TRUTH_DIR=/home/travis/gapc-test-suite/Truth
+install:
+  - ./configure
+  - make
+  - sudo make install
+before_script:
+  # install missing ghc/haskell modules
+  - sudo apt-get install cabal-install -y
+  - cabal update
+  - cabal install random
+  # obtain truth data from secondary github repository
+  - git clone https://github.com/jlab/gapc-test-suite.git /home/travis/gapc-test-suite
+script:
+  # manually compiling an example to check for raised warnings
+  - cp testdata/grammar/elm.gap && gapc -p "buyer * pretty2" elm.gap && make -f out.mf
+  # run compiler test suite
+  - make test-unit
+  - make test-paral
+  - make test-mod TRUTH_DIR=/home/travis/gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu
+  - make test-regress TRUTH_DIR=/home/travis/gapc-test-suite/Truth
+  - make test-ambiguity TRUTH_DIR=/home/travis/gapc-test-suite/Truth
