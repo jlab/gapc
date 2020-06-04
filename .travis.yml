@@ -40,7 +40,7 @@ script:
   # manually compiling an example to check for raised warnings ...
   - cp testdata/grammar/elm.gap . && gapc -p "buyer * pretty2" elm.gap && make -f out.mf 2>&1 > /dev/null | tee make.stderr
   # ... and test if "warning: dynamic exception specifications are deprecated" are no longer triggered
-  - test $(grep 'warning: dynamic exception specifications are deprecated' make.stderr -c) -eq 0
+  - test $(grep "warning:.dynamic exception specifications are deprecated" make.stderr -c) -eq 0
   # run compiler test suite
   - make test-unit
   - make test-paral
