@@ -10,10 +10,7 @@ jobs:
       dist: bionic # 18.04
     - os: linux
       dist: xenial # 16.04
-    - os: linux
-      dist: trusty # 14.04
-    - os: linux
-      dist: precise # 12.04
+    # earlier distributions are lacking libgsl-dev AND are no longer supported by Ubuntu
 
 addons:
   apt:
