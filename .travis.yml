@@ -2,13 +2,15 @@ dist: xenial
 os: linux
 language: cpp
 compiler:
-- gcc
+  - gcc
 
 jobs:
   include:
     - os: linux
       dist: bionic
-    
+    - os: linux
+      dist: xenial
+
 addons:
   apt:
     packages:
