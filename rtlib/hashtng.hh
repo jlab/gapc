@@ -347,8 +347,8 @@ struct compare {
           inspector.finalize(*i);
       }
 
-      void *operator new(size_t t) throw (std::bad_alloc);
-      void operator delete(void *b) throw ();
+      void *operator new(size_t t) noexcept(false);
+      void operator delete(void *b) noexcept(false);
   };
 
 #define SET_TEMPLATE_DECL \
@@ -373,7 +373,7 @@ T, I, U, Hash_Policy, Resize_Policy, Shrink_Policy, Stat_Policy, load_factor
        Set_Dummy<SET_TEMPLATE_ARGS>::pool;
 
   template<SET_TEMPLATE_DECL>
-  void *Set<SET_TEMPLATE_ARGS>::operator new(size_t t) throw (std::bad_alloc)
+  void *Set<SET_TEMPLATE_ARGS>::operator new(size_t t) noexcept(false)
   {
     assert(sizeof(Set<SET_TEMPLATE_ARGS>) == t);
     Set<SET_TEMPLATE_ARGS> *r = Set_Dummy<SET_TEMPLATE_ARGS>::pool.malloc();
@@ -381,7 +381,7 @@ T, I, U, Hash_Policy, Resize_Policy, Shrink_Policy, Stat_Policy, load_factor
   }
 
   template<SET_TEMPLATE_DECL>
-  void Set<SET_TEMPLATE_ARGS>::operator delete(void *b) throw ()
+  void Set<SET_TEMPLATE_ARGS>::operator delete(void *b) noexcept(false)
   {
     if (!b)
       return;
