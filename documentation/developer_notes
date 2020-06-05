@@ -1,3 +1,13 @@
+2020-06-03 (Stefan Janssen):
+The configure script will gather your systems settings in order to setup correct environment variables for the make process.
+This script is generated itself, see: https://thoughtbot.com/blog/the-magic-behind-configure-make-make-install
+Thus, changes should be made in configure.ac instead of the generated configure file.
+We did so last, to migrate from c++11 to the newer c++17 standard. Following command were issued to update the configure script:
+  aclocal
+  autoconf
+  automake --add-missing
+(Note that the last command triggered warnings and errors. However, a working version of the configure script was generated)
+
 This file will give you an overview of the GAP-C project.
 If you have questions feel free contact me at: tgatter(at)cebitec.uni-bielefeld.de
 
