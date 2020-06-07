@@ -21,6 +21,7 @@ addons:
       - libboost-all-dev
       - libgsl-dev
       - ghc
+      - python3
 
 install:
   - ./configure
