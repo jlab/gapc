@@ -32,6 +32,7 @@ void Arg::add_arg(hashtable<std::string, Arg*> &h, Arg* a) {
     Log::instance()->error(a->location,
         "Argument " + *a->name + " already defined");
     Log::instance()->error(h[*a->name]->location, "here.");
-  } else
+  } else {
     h[*a->name] = a;
+  }
 }

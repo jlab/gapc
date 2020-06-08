@@ -21,6 +21,7 @@
 
 }}} */
 
+#include <string>
 #include "backtrack.hh"
 
 #include "algebra.hh"
@@ -48,7 +49,7 @@ void Backtrack::gen_instance(Algebra *score) {
 
 void Backtrack::gen_instance(Algebra *score, Product::Sort_Type sort) {
   Instance *i = new Instance(score, algebra);
-  if(sort != Product::NONE) {
+  if (sort != Product::NONE) {
     i->product->set_sorted_choice(sort);
   }
   i->product = i->product->optimize_shuffle_products();
@@ -59,12 +60,11 @@ void Backtrack::gen_instance(Algebra *score, Product::Sort_Type sort) {
   instance = i;
 }
 
-void Backtrack::gen_instance(Algebra *score, Product::Base *base, Product::Sort_Type sort) {
-
+void Backtrack::gen_instance(
+  Algebra *score, Product::Base *base, Product::Sort_Type sort) {
   gen_instance(score,  sort);
 
   instance->product->set_sort_product((new Instance(base, algebra))->product);
-
 }
 
 void Backtrack::apply_filter(Filter *f) {
@@ -80,14 +80,14 @@ void Backtrack::gen_backtrack(AST &ast) {
   assert(r);
   remove_unused();
 
-  //ast.instance_grammar_eliminate_lists(instance);
+  // ast.instance_grammar_eliminate_lists(instance);
   Product::Two *t = dynamic_cast<Product::Two*>(instance->product);
   assert(t);
   t->right()->eliminate_lists();
   ast.grammar()->eliminate_lists();
 
   ast.grammar()->init_list_sizes();
-  //ast.warn_missing_choice_fns(instance);
+  // ast.warn_missing_choice_fns(instance);
   ast.grammar()->init_indices();
   ast.grammar()->init_decls();
 
@@ -95,7 +95,7 @@ void Backtrack::gen_backtrack(AST &ast) {
   ast.codegen();
 
   const std::list<Symbol::NT*> l = ast.grammar()->nts();
-  //Type::Backtrace_List *bt_type = new Type::Backtrace_List();
+  // Type::Backtrace_List *bt_type = new Type::Backtrace_List();
   Type::Backtrace *bt_type = new Type::Backtrace(pos_type, value_type);
   for (std::list<Symbol::NT*>::const_iterator i = l.begin();
        i != l.end(); ++i) {
@@ -116,7 +116,6 @@ void Backtrack::gen_backtrack(AST &ast) {
     fn->return_type = bt_type;
     fn->set_target_name("bt_" + *fn->name);
   }
-
 }
 
 
@@ -128,7 +127,8 @@ void Backtrack::gen_instance_code(AST &ast) {
   ast.optimize_choice(*instance);
   instance->product->install_choice_filter();
 
-  instance->product->algebra()->add_choice_specialisations(*dynamic_cast<Product::Two*>(instance->product));
+  instance->product->algebra()->add_choice_specialisations(
+    *dynamic_cast<Product::Two*>(instance->product));
 }
 
 
@@ -138,7 +138,8 @@ void Backtrack::gen_nt_proxy_fn(Fn_Def *fn) {
 
   if (!is_list && !t->is(Type::TUPLE)) {
     fn->disable();
-    Fn_Def *f = fn->copy_head(t, new std::string("bt_proxy_" + *fn->name));
+    Fn_Def *f = fn->copy_head(t, new std::string(
+      "bt_proxy_" + *fn->name));
     Expr::Fn_Call *x = new Expr::Fn_Call(fn->name);
     x->add_arg(f->names.front());
     x->add_arg(f->names.back());
@@ -177,7 +178,8 @@ void Backtrack::gen_nt_proxy_fn(Fn_Def *fn) {
 
   Expr::Fn_Call *empty = new Expr::Fn_Call(Expr::Fn_Call::IS_EMPTY);
   empty->add_arg(new Var_Acc::Comp(*ret, 0));
-  Statement::Fn_Call *set_empty = new Statement::Fn_Call(Statement::Fn_Call::EMPTY);
+  Statement::Fn_Call *set_empty = new Statement::Fn_Call(
+    Statement::Fn_Call::EMPTY);
   set_empty->add_arg(new Var_Acc::Comp(*ret, 1));
   Statement::If *if_empty = new Statement::If(empty, set_empty, track);
 
@@ -200,9 +202,11 @@ void Backtrack::gen_nt_proxy_fn(Fn_Def *fn) {
 
 
 void Backtrack::print_header(Printer::Base &pp, AST &ast) {
-  for (std::list<Statement::Backtrace_Decl*>::iterator i = bt_decls.begin();
-       i != bt_decls.end(); ++i)
+  for (std::list<Statement::Backtrace_Decl*>::iterator i =
+       bt_decls.begin();
+       i != bt_decls.end(); ++i) {
     pp << **i;
+  }
   for (std::list<Statement::Backtrace_NT_Decl*>::iterator i =
        bt_nt_decls.begin(); i != bt_nt_decls.end(); ++i)
     pp << **i;

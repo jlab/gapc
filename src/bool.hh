@@ -25,15 +25,14 @@
 #define SRC_BOOL_HH_
 
 class Bool {
-  private:
-    bool b;
-  public:
-    Bool()
-      : b(false) {}
-    Bool(bool a)
-      : b(a) {}
+ private:
+  bool b;
 
-    operator bool() const { return b; }
+ public:
+  Bool() : b(false) {}
+  Bool(bool a) : b(a) {}
+
+  operator bool() const { return b; }
 };
 
-#endif
+#endif  // SRC_BOOL_HH_

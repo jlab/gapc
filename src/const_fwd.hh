@@ -26,8 +26,8 @@
 #define SRC_CONST_FWD_HH_
 
 namespace Const {
-  class Base;
-  class Number;
+class Base;
+class Number;
 }
 
-#endif
+#endif  // SRC_CONST_FWD_HH_

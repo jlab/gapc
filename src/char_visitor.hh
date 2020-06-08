@@ -24,24 +24,24 @@
 #ifndef SRC_CHAR_VISITOR_HH_
 #define SRC_CHAR_VISITOR_HH_
 
+#include <list>
+
 #include "visitor.hh"
 
-#include <list>
 #include "type_fwd.hh"
 #include "bool.hh"
 
 class Char_Visitor : public Visitor {
-  private:
-    std::list<Type::Base*> list_;
-    Bool active;
+ private:
+  std::list<Type::Base*> list_;
+  Bool active;
 
-  public:
-    void visit_begin(Alt::Simple &a);
-    void visit_end(Alt::Simple &a);
-    void visit(Fn_Arg::Const &f);
+ public:
+  void visit_begin(Alt::Simple &a);
+  void visit_end(Alt::Simple &a);
+  void visit(Fn_Arg::Const &f);
 
-    const std::list<Type::Base*> &list() const { return list_; }
-
+  const std::list<Type::Base*> &list() const { return list_; }
 };
 
-#endif
+#endif  // SRC_CHAR_VISITOR_HH_

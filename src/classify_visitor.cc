@@ -21,6 +21,9 @@
 
 }}} */
 
+#include <iostream>
+#include <list>
+
 #include "classify_visitor.hh"
 
 
@@ -29,7 +32,6 @@
 #include "statement/fn_call.hh"
 #include "fn_def.hh"
 
-#include <iostream>
 
 
 void Classify_Visitor::visit(Symbol::NT &n) {
@@ -39,7 +41,8 @@ void Classify_Visitor::visit(Symbol::NT &n) {
 
     Fn_Def *fn = n.code_list().back();
     std::list<Statement::Base*> &l = fn->stmts;
-    for (std::list<Statement::Base*>::iterator i = l.begin(); i != l.end(); ++i) {
+    for (std::list<Statement::Base*>::iterator i = l.begin();
+         i != l.end(); ++i) {
       if ((*i)->is(Statement::RETURN)) {
         Statement::Fn_Call *finalize = new Statement::Fn_Call(
             Statement::Fn_Call::FINALIZE);
@@ -62,7 +65,7 @@ void Classify_Visitor::visit(Symbol::NT &n) {
 
   std::list<Fn_Def*> &list = n.code_list();
   for (std::list<Fn_Def*>::iterator a = list.begin(); a != list.end(); ++a) {
-    //Fn_Def *fn = dynamic_cast<Fn_Def*>(n.code());
+    // Fn_Def *fn = dynamic_cast<Fn_Def*>(n.code());
     Fn_Def *fn = *a;
 
     for (Statement::iterator i = Statement::begin(*fn); i != Statement::end();
@@ -101,6 +104,5 @@ void Classify_Visitor::visit(Symbol::NT &n) {
         }
       }
     }
-
   }
 }

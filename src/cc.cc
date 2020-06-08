@@ -21,7 +21,7 @@
 
 }}} */
 
-
+#include <string>
 #include "cc.hh"
 
 #include "statement.hh"
@@ -121,10 +121,11 @@ void Printer::CC::print(const Fn_Def &fn_def) {
   if (fn_def.adaptor)
     stream << *fn_def.adaptor;
   stream << indent() << *fn_def.return_type << ' ';
-  if (fn_def.target_name().empty())
-    stream << *fn_def.name ;
-  else
+  if (fn_def.target_name().empty()) {
+    stream << *fn_def.name;
+  } else {
     stream << fn_def.target_name();
+  }
   stream << '(';
   std::list<std::string*>::const_iterator j = fn_def.names.begin();
   std::list<Type::Base*>::const_iterator i = fn_def.types.begin();

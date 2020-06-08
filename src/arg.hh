@@ -25,16 +25,13 @@
 #ifndef SRC_ARG_HH_
 #define SRC_ARG_HH_
 
+#include <string>
 #include "hashtable.hh"
 #include "loc.hh"
 
-#include <string>
-
 
 class Arg {
-
-  public:
-
+ public:
     std::string *name;
     Loc location;
 
@@ -44,9 +41,7 @@ class Arg {
 
 
     static void add_arg(hashtable<std::string, Arg*> &h, Arg* a);
-
-
 };
 
 
-#endif
+#endif  // SRC_ARG_HH_

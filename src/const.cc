@@ -44,10 +44,11 @@ Const::Char::Char(const std::string &n, const Loc &l)
       Int i(suff, l);
       c = char(i.i);
     }
-  } else
+  } else {}
     c = n[0];
+  }
 
-  ys.set(1,1);
+  ys.set(1, 1);
   datatype = new ::Type::Char();
 }
 
@@ -77,8 +78,8 @@ void Const::Float::put(std::ostream &s) {
 }
 
 void Const::Char::put(std::ostream &s) {
-  if (c<32) {
-    //s << "\'\\x" << std::hex << int(c) << std::dec << '\'';
+  if (c < 32) {
+    // s << "\'\\x" << std::hex << int(c) << std::dec << '\'';
     s << int(c);
     return;
   }

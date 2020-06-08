@@ -27,6 +27,7 @@
 
 #include <list>
 #include <vector>
+#include <string>
 
 #include "grammar.hh"
 #include "runtime.hh"
@@ -46,7 +47,7 @@
 
 // for Filter::Type
 #include "filter.hh"
-//class Filter;
+// class Filter;
 #include  "adp_mode.hh"
 
 
@@ -57,709 +58,689 @@ class Fn_Decl;
 
 
 namespace Alt {
+/*
+ * The Type enumeration is used as used in the Alt::Base class
+ * for marking each subclass with its appropriate type. It is
+ * set by the constructor Base::Base, and used by the method
+ * Base::is (Type t), which simply compares the type of the current
+ * instance with the parameter value t.
+ */
+enum Type { SIMPLE, LINK, BLOCK, MULTI };
 
-
+class Base {
+ private:
   /*
-   * The Type enumeration is used as used in the Alt::Base class
-   * for marking each subclass with its appropriate type. It is
-   * set by the constructor Base::Base, and used by the method
-   * Base::is (Type t), which simply compares the type of the current
-   * instance with the parameter value t.
+   * Stores an enum value that states the type of this class.
+   * The value is set by the constructor, and as far as I can
+   * see only used by the inlined method Base::is(Type t).
    */
-  enum Type { SIMPLE, LINK, BLOCK, MULTI };
+  Type type;
 
+ protected:
+  ADP_Mode::Adp_Specialization adp_specialization;
+  ADP_Mode::Adp_Join adp_join;
 
-  class Base {
+  std::string *eval_nullary_fn;
+  std::string *specialised_comparator_fn;
+  std::string *specialised_sorter_fn;
 
-    private:
+  Statement::Var_Decl* marker;
 
-      /*
-       * Stores an enum value that states the type of this class.
-       * The value is set by the constructor, and as far as I can
-       * see only used by the inlined method Base::is(Type t).
-       */
-      Type type;
+  bool disabled_spec;
+  bool keep_coopts;
 
+ public:
+  void set_comparator(std::string *s1, std::string *s2) {
+      specialised_comparator_fn = s1;
+      specialised_sorter_fn = s2;
+  }
 
-    protected:
+  void set_nullary(std::string *s) {
+      eval_nullary_fn = s;
+  }
 
-                        ADP_Mode::Adp_Specialization adp_specialization;
-                        ADP_Mode::Adp_Join adp_join;
+  void set_marker(Statement::Var_Decl* m) {
+      marker = m;
+  }
 
-                        std::string *eval_nullary_fn;
-                        std::string *specialised_comparator_fn;
-                        std::string *specialised_sorter_fn;
+  void set_disable_specialisation(bool b) {
+      disabled_spec = b;
+  }
 
-                        Statement::Var_Decl* marker;
+  void set_keep_coopts(bool b) {
+      keep_coopts = b;
+  }
 
-                        bool disabled_spec;
-                        bool keep_coopts;
+ protected:
+  bool productive;
 
-                public:
-                        void set_comparator(std::string *s1, std::string *s2) {
-                            specialised_comparator_fn = s1;
-                            specialised_sorter_fn = s2;
-                        }
+  ::Type::Base *datatype;
 
-                        void set_nullary(std::string *s) {
-                            eval_nullary_fn = s;
-                        }
+  bool eliminated;
 
-                        void set_marker(Statement::Var_Decl* m) {
-                            marker = m;
-                        }
 
-                        void set_disable_specialisation(bool b) {
-                            disabled_spec = b;
-                        }
+ public:
+  bool terminal_type;
+  Bool top_level;
 
-                        void set_keep_coopts(bool b) {
-                            keep_coopts = b;
-                        }
+ protected:
+  Yield::Poly list_size_;
+  Base(Type t, const Loc &l);
 
-                protected:
-      bool productive;
+ public:
+  virtual ~Base();
+  Loc location;
 
-      ::Type::Base *datatype;
+  virtual Base *clone() = 0;
 
-      bool eliminated;
+ protected:
+  std::vector<Expr::Base*> left_indices;
+  std::vector<Expr::Base*> right_indices;
 
+ public:
+  Statement::Var_Decl *ret_decl;
 
-    public:
+  inline bool is(Type t) {
+    return type == t;
+  }
 
-      bool terminal_type;
-      Bool top_level;
+  void add_specialised_arguments(Statement::Fn_Call *fn);
 
+  void set_adp_specialization(ADP_Mode::Adp_Specialization a) {
+      adp_specialization = a;
+  }
+  ADP_Mode::Adp_Specialization get_adp_specialization() {
+      return adp_specialization;
+  }
 
-    protected:
+  void set_adp_join(ADP_Mode::Adp_Join a) {
+      adp_join = a;
+  }
+  ADP_Mode::Adp_Join get_adp_join() {
+      return adp_join;
+  }
 
-      Yield::Poly list_size_;
+  std::list<Filter*> filters;
 
-      Base(Type t, const Loc &l);
+  virtual bool init_links(Grammar &grammar);
 
+  virtual bool init_productive() = 0;
+  bool is_productive() {
+    return productive;
+  }
 
-    public:
+  virtual void collect_lr_deps(
+    std::list<Symbol::NT*> &list, const Yield::Multi &left,
+    const Yield::Multi &right) = 0;
 
-      virtual ~Base();
-      Loc location;
+  virtual size_t width() = 0;
 
-      virtual Base *clone() = 0;
+  virtual void init_table_dim(
+    const Yield::Size &a, const Yield::Size &b,
+    std::vector<Yield::Size> &temp_ls,
+    std::vector<Yield::Size> &temp_rs, size_t track) = 0;
 
+  virtual void print_link(std::ostream &s) = 0;
 
-    protected:
+  virtual Runtime::Poly runtime(
+    std::list<Symbol::NT*> &active_list,
+    const Runtime::Poly &accum_rt) = 0;
 
-      std::vector<Expr::Base*> left_indices;
-      std::vector<Expr::Base*> right_indices;
 
+  virtual Runtime::Poly init_in_out() = 0;
 
-    public:
+  virtual void init_self_rec() = 0;
 
-      Statement::Var_Decl *ret_decl;
+  ::Type::Base * data_type() {
+    return datatype;
+  }
+  bool set_data_type(::Type::Base *t, const Loc &l);
+  virtual bool insert_types(Signature_Base &s) = 0;
+  virtual ::Type::Status infer_missing_types() = 0;
 
-      inline bool is(Type t) {
-        return type == t;
-      }
+  virtual void print_type(std::ostream &s) = 0;
 
-                        void add_specialised_arguments(Statement::Fn_Call *fn);
+  virtual bool eliminate_lists() = 0;
+  bool is_eliminated() {
+    return eliminated;
+  }
 
-                        void set_adp_specialization(ADP_Mode::Adp_Specialization a) {
-                            adp_specialization = a;
-                        }
-                        ADP_Mode::Adp_Specialization get_adp_specialization() {
-                            return adp_specialization;
-                        }
+  void reset_types();
 
-                        void set_adp_join(ADP_Mode::Adp_Join a) {
-                            adp_join = a;
-                        }
-                        ADP_Mode::Adp_Join get_adp_join() {
-                            return adp_join;
-                        }
+  const Yield::Poly &list_size() const {
+    return list_size_;
+  }
+  void set_list_size(const Yield::Poly &p) {
+    list_size_ = p;
+  }
+  virtual bool init_list_sizes() = 0;
 
-      std::list<Filter*> filters;
+  virtual void traverse(Visitor &v) = 0;
 
-      virtual bool init_links(Grammar &grammar);
+  virtual void init_indices(
+    Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
 
-      virtual bool init_productive() = 0;
-      bool is_productive() {
-        return productive;
-      }
+  virtual void init_ret_decl(unsigned int i, const std::string &prefix);
 
-      virtual void collect_lr_deps(std::list<Symbol::NT*> &list, const Yield::Multi &left, const Yield::Multi &right) = 0;
+ protected:
+  Statement::If *filter_guards;
+  void push_back_ret_decl();
 
-      virtual size_t width() = 0;
+  Expr::Base *suchthat_code(Statement::Var_Decl &decl) const;
 
-      virtual void init_table_dim(const Yield::Size &a, const Yield::Size &b, std::vector<Yield::Size> &temp_ls, std::vector<Yield::Size> &temp_rs, size_t track) = 0;
 
-      virtual void print_link(std::ostream &s) = 0;
+ public:
+  std::list<Statement::Base*> statements;
+  virtual void codegen(AST &ast) = 0;
+  void init_filter_guards(AST &ast);
 
-      virtual Runtime::Poly runtime(std::list<Symbol::NT*> &active_list, const Runtime::Poly &accum_rt) = 0;
+  virtual void print_dot_edge(std::ostream &out, Symbol::NT &nt) = 0;
 
+  void optimize_choice(::Type::List::Push_Type push);
+  void optimize_choice(
+    ::Type::List::Push_Type push, Statement::Hash_Decl *h);
 
-      virtual Runtime::Poly init_in_out() = 0;
+  virtual void print(std::ostream &s) = 0;
 
-      virtual void init_self_rec() = 0;
+  bool is_filtered() const {
+    return !filters.empty();
+  }
+  virtual bool calls_terminal_parser() const {
+    return false;
+  }
 
-      ::Type::Base * data_type() {
-        return datatype;
-      }
-      bool set_data_type(::Type::Base *t, const Loc &l);
-      virtual bool insert_types(Signature_Base &s) = 0;
-      virtual ::Type::Status infer_missing_types() = 0;
 
-      virtual void print_type(std::ostream &s) = 0;
+ protected:
+  Expr::Fn_Call::Builtin choice_fn_type_;
 
-      virtual bool eliminate_lists() = 0;
-      bool is_eliminated() {
-        return eliminated;
-      }
+ public:
+  void set_choice_fn_type(Expr::Fn_Call::Builtin b) {
+    choice_fn_type_ = b;
+  }
 
-      void reset_types();
 
-      const Yield::Poly &list_size() const {
-        return list_size_;
-      }
-      void set_list_size(const Yield::Poly &p) {
-        list_size_ = p;
-      }
-      virtual bool init_list_sizes() = 0;
+ protected:
+  size_t tracks_;
+  size_t track_pos_;
 
-      virtual void traverse(Visitor &v) = 0;
+ public:
+  void set_tracks(size_t t, size_t p);
 
-      virtual void init_indices(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
+ protected:
+  Yield::Multi m_ys;
 
-      virtual void init_ret_decl(unsigned int i, const std::string &prefix);
+ public:
+  virtual void init_multi_ys();
+  const Yield::Multi &multi_ys() const {
+    return m_ys;
+  }
 
+ private:
+  std::vector<std::list<Filter*> > multi_filter;
 
-    protected:
+ public:
+  void add_multitrack_filter(
+    const std::list<Filter*> &l, Filter::Type t, const Loc &loc);
+  virtual bool multi_detect_loop(
+    const Yield::Multi &left, const Yield::Multi &right,
+    Symbol::NT *n) const = 0;
 
-      Statement::If *filter_guards;
-      void push_back_ret_decl();
+ private:
+  Yield::Multi multi_ys_max_temp;
 
-      Expr::Base *suchthat_code(Statement::Var_Decl &decl) const;
+ public:
+  void multi_set_max_size();
+  virtual void multi_propagate_max_filter(
+    std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size);
 
+  virtual void multi_collect_factors(Runtime::Poly &p) = 0;
+  virtual void multi_init_calls(
+    const Runtime::Poly &p, size_t base_tracks) = 0;
 
-    public:
+ protected:
+  void add_seqs(Expr::Fn_Call *fn_call, const AST &ast) const;
 
-      std::list<Statement::Base*> statements;
-      virtual void codegen(AST &ast) = 0;
-      void init_filter_guards(AST &ast);
+ public:
+  virtual void set_index_stmts(const std::list<Statement::Base*> &l);
+  virtual void set_index_overlay(Alt::Base *alt);
 
-      virtual void print_dot_edge(std::ostream &out, Symbol::NT &nt) = 0;
 
-      void optimize_choice(::Type::List::Push_Type push);
-      void optimize_choice(::Type::List::Push_Type push, Statement::Hash_Decl *h);
+  virtual void set_ntparas(const Loc &loc, std::list<Expr::Base*> *l);
 
-      virtual void print(std::ostream &s) = 0;
+  bool choice_set();
+};
 
-      bool is_filtered() const {
-        return !filters.empty();
-      }
-      virtual bool calls_terminal_parser() const {
-        return false;
-      }
 
+/*
+ * Represents an application of an algebra function to
+ * other terminal and non-terminal parsers.
+ */
+class Simple : public Base {
+ private:
+  // Stores the yield size of this perser.
+  Yield::Size terminal_ys;
+  // stores a flag as sorthand to determine if this
+  // Alt::Simple is just a terminal symbol. This flag
+  // is set at initialization time in the constructor
+  // Alt::Simple::Simple where the static hashtable
+  // of build in declarations is consulted via Fn_Decl::buildins.
+  bool is_terminal_;
 
-    protected:
+ public:
+  std::string *name;
+  std::list<Fn_Arg::Base*> args;
+  Fn_Decl *decl;
+  Simple(std::string *n, const Loc &l);
 
-      Expr::Fn_Call::Builtin choice_fn_type_;
+  Base *clone();
 
+  void set_terminal_ys(const Yield::Size &a) {
+    assert(is_terminal_);
+    terminal_ys = a;
+  }
 
-    public:
+  bool is_terminal() const {
+    return is_terminal_;
+  }
 
-      void set_choice_fn_type(Expr::Fn_Call::Builtin b) {
-        choice_fn_type_ = b;
-      }
+  bool init_links(Grammar &grammar);
+  bool init_productive();
 
+  void collect_lr_deps(
+    std::list<Symbol::NT*> &list, const Yield::Multi &left,
+    const Yield::Multi &right);
 
-    protected:
+  size_t width();
 
-      size_t tracks_;
-      size_t track_pos_;
+  void init_table_dim(
+    const Yield::Size &a, const Yield::Size &b,
+    std::vector<Yield::Size> &temp_ls, std::vector<Yield::Size> &temp_rs,
+    size_t track);
 
+  void print_link(std::ostream &s);
 
-    public:
+  Runtime::Poly runtime(
+    std::list<Symbol::NT*> &active_list, const Runtime::Poly &accum_rt);
 
-      void set_tracks(size_t t, size_t p);
+  Runtime::Poly init_in_out();
+  void init_self_rec();
 
+  bool insert_types(Signature_Base &s);
+  ::Type::Status infer_missing_types();
+  void print_type(std::ostream &s);
 
-    protected:
+  bool has_moving_k();
+                    bool is_nullary();
+  bool eliminate_lists();
+  bool init_list_sizes();
 
-      Yield::Multi m_ys;
+  void traverse(Visitor &v);
 
+ private:
+  Expr::Base *next_index_var(
+    unsigned &k, size_t track, Expr::Base *next_var,
+    Expr::Base *last_var, Expr::Base *right, const Yield::Size &ys,
+    const Yield::Size &lhs, const Yield::Size &rhs);
 
-    public:
+  // FIXME convert callers
+  Yield::Poly rhs_ys_min_rest(
+    const std::list<Fn_Arg::Base*>::iterator &i,
+    const std::list<Fn_Arg::Base*>::iterator &end) const;
 
-      virtual void init_multi_ys();
-      const Yield::Multi &multi_ys() const {
-        return m_ys;
-      }
+  std::list<Statement::For *> loops;
+  std::list<Statement::Foreach *> foreach_loops;
+  std::list<Statement::Base*> body_stmts;
 
+  Statement::If *guards;
+  void ret_decl_empty_block(Statement::If *stmt);
+  void deep_erase_if_backtrace(
+    Statement::If *stmt, std::vector<Fn_Arg::Base*>::iterator start,
+    std::vector<Fn_Arg::Base*>::iterator end);
+  Statement::If *add_empty_check(
+    std::list<Statement::Base*> &stmts, const Fn_Arg::Base &b);
+  void add_clear_code(
+    std::list<Statement::Base*> &stmts, const Fn_Arg::Base &b);
+  std::list<Statement::Base*> *reorder_args_cg(
+    AST &ast, std::list<Statement::Base*> &l);
 
-    private:
 
-      std::vector<std::list<Filter*> > multi_filter;
+  void add_overlay_code(
+    std::list<Statement::Base*> *& stmts, AST &ast,
+    std::list<Expr::Fn_Call*> &exprs, Filter::Type t) const;
+  void add_with_overlay_code(
+    std::list<Statement::Base*> *&stmts, AST &ast) const;
+  void add_suchthat_overlay_code(
+    std::list<Statement::Base*> *&stmts, AST &ast) const;
 
+  void add_subopt_guards(std::list<Statement::Base*> *&stmts, AST &ast);
+  std::list<Statement::Base*> *add_arg_code(
+    AST &ast, std::list<Statement::Base*> &x);
+  std::list<Statement::Base*> pre_stmts;
+  std::list<std::list<Statement::Base*>*> pre_cond;
+  std::list<Statement::Var_Decl*> pre_decl;
 
-    public:
+ public:
+  void init_indices(
+    Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
+  void put_indices(std::ostream &s);
 
-      void add_multitrack_filter(const std::list<Filter*> &l, Filter::Type t, const Loc &loc);
-      virtual bool multi_detect_loop(const Yield::Multi &left, const Yield::Multi &right, Symbol::NT *n) const = 0;
+  void reset();
 
+  void init_foreach();
+  bool has_arg_list();
+  void init_body(AST &ast);
+  void init_guards();
+  void codegen(AST &ast);
 
-    private:
+  void print_dot_edge(std::ostream &out, Symbol::NT &nt);
 
-      Yield::Multi multi_ys_max_temp;
+  void print(std::ostream &s);
 
+  bool calls_terminal_parser() const;
 
-    public:
+  void init_multi_ys();
 
-      void multi_set_max_size();
-      virtual void multi_propagate_max_filter(std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size);
+ private:
+  void sum_rhs(
+    Yield::Multi &y, std::list<Fn_Arg::Base*>::const_iterator i,
+    const std::list<Fn_Arg::Base*>::const_iterator &end) const;
+  void sum_rhs(
+    Yield::Size &y, std::list<Fn_Arg::Base*>::const_iterator i,
+    const std::list<Fn_Arg::Base*>::const_iterator &end,
+    size_t track) const;
 
-      virtual void multi_collect_factors(Runtime::Poly &p) = 0;
-      virtual void multi_init_calls(const Runtime::Poly &p, size_t base_tracks) = 0;
+ public:
+  bool multi_detect_loop(
+    const Yield::Multi &left, const Yield::Multi &right,
+    Symbol::NT *n) const;
 
+  void multi_propagate_max_filter(
+    std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size);
 
-    protected:
+  void multi_collect_factors(Runtime::Poly &p);
+  void multi_init_calls(const Runtime::Poly &p, size_t base_tracks);
 
-      void add_seqs(Expr::Fn_Call *fn_call, const AST &ast) const;
+ private:
+  std::list<Statement::Base*> index_stmts;
+  Bool is_index_overlay_;
 
+ public:
+  std::list<Simple*> index_overlay;
+  void set_index_stmts(const std::list<Statement::Base*> &l);
 
-    public:
+  bool has_index_overlay() const {
+    return !index_stmts.empty();
+  }
 
-      virtual void set_index_stmts(const std::list<Statement::Base*> &l);
-      virtual void set_index_overlay(Alt::Base *alt);
+  void set_index_overlay(Base *alt);
 
+ private:
+  std::list<Expr::Base*> ntparas;
 
-      virtual void set_ntparas(const Loc &loc, std::list<Expr::Base*> *l);
+ public:
+  void set_ntparas(std::list<Expr::Base*> *l);
 
-                        bool choice_set();
 
+ private:
+  std::list<Statement::Base*> *insert_index_stmts(
+    std::list<Statement::Base*> *stmts);
+  std::list<Statement::Base*> *inner_code;
+};
 
-  };
 
+/*
+ * A Alt::Link is a wrapper for non-terminal parsers embedding them
+ * in the hirarchy of all Alt::Base subclasses.
+ */
+class Link : public Base {
+ private:
+  Runtime::Poly calls;
 
-  /*
-   * Represents an application of an algebra function to
-   * other terminal and non-terminal parsers.
-   */
-  class Simple : public Base {
+ public:
+  // The name of the non-terminal this instance wrappes. This
+  // name will be resolved when the method Link::init_links(Grammar*)
+  // is called, and the pointer 'nt' is set to point to the
+  // instance of the corresponding non-terminal.
+  std::string *name;
+  // this field gets set when the method
+  // Link::init_links(Grammar*) is called.
+  Symbol::Base *nt;
 
-    private:
 
-      // Stores the yield size of this perser.
-      Yield::Size terminal_ys;
-      // stores a flag as sorthand to determine if this
-      // Alt::Simple is just a terminal symbol. This flag
-      // is set at initialization time in the constructor
-      // Alt::Simple::Simple where the static hashtable
-      // of build in declarations is consulted via Fn_Decl::buildins.
-      bool is_terminal_;
+  // Inits the insatnce and sets the local fields according to
+  // the parameter values of the non-terminal name. It also sets
+  // the pointer to the non-terminal grammar-node explicitely
+  // to NULL.
+  Link(std::string *n, const Loc&l)
+    : Base(LINK, l), name(n), nt(NULL) {
+  }
 
+  // Creates a deep copy of this instance.
+  Base *clone();
 
-    public:
+  // Inits the graph link structure of the grammar for this
+  // instance.
+  bool init_links(Grammar &grammar);
+  // Inits the protected field Alt::Base.productive according to
+  // whether this non-terminal can produce any parse results
+  // at all.
+  bool init_productive();
 
-      std::string *name;
-      std::list<Fn_Arg::Base*> args;
-      Fn_Decl *decl;
-      Simple(std::string *n, const Loc &l);
+  void collect_lr_deps(
+    std::list<Symbol::NT*> &list, const Yield::Multi &left,
+    const Yield::Multi &right);
 
-      Base *clone();
+  size_t width();
 
-      void set_terminal_ys(const Yield::Size &a) {
-        assert(is_terminal_);
-        terminal_ys = a;
-      }
+  void init_table_dim(
+    const Yield::Size &a, const Yield::Size &b,
+    std::vector<Yield::Size> &temp_ls,
+    std::vector<Yield::Size> &temp_rs, size_t track);
 
-      bool is_terminal() const {
-        return is_terminal_;
-      }
+  void print_link(std::ostream &s);
 
-      bool init_links(Grammar &grammar);
-      bool init_productive();
+  Runtime::Poly runtime(
+    std::list<Symbol::NT*> &active_list, const Runtime::Poly &accum_rt);
 
-      void collect_lr_deps(std::list<Symbol::NT*> &list, const Yield::Multi &left, const Yield::Multi &right);
+  Runtime::Poly init_in_out();
+  void init_self_rec();
 
-      size_t width();
+  bool insert_types(Signature_Base &s);
+  ::Type::Status infer_missing_types();
+  void print_type(std::ostream &s);
 
-      void init_table_dim(const Yield::Size &a, const Yield::Size &b, std::vector<Yield::Size> &temp_ls, std::vector<Yield::Size> &temp_rs, size_t track);
+  bool eliminate_lists();
+  bool init_list_sizes();
 
-      void print_link(std::ostream &s);
+  void traverse(Visitor &v);
 
-      Runtime::Poly runtime(std::list<Symbol::NT*> &active_list, const Runtime::Poly &accum_rt);
+  void init_indices(
+    Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
 
-      Runtime::Poly init_in_out();
-      void init_self_rec();
+  // void init_ret_decl(unsigned int i);
 
-      bool insert_types(Signature_Base &s);
-      ::Type::Status infer_missing_types();
-      void print_type(std::ostream &s);
+  void codegen(AST &ast);
 
-      bool has_moving_k();
-                        bool is_nullary();
-      bool eliminate_lists();
-      bool init_list_sizes();
+  void print_dot_edge(std::ostream &out, Symbol::NT &nt);
 
-      void traverse(Visitor &v);
+  void print(std::ostream &s);
 
+  bool calls_terminal_parser() const;
 
-    private:
+  void init_multi_ys();
 
-      Expr::Base *next_index_var(unsigned &k, size_t track, Expr::Base *next_var, Expr::Base *last_var, Expr::Base *right, const Yield::Size &ys, const Yield::Size &lhs, const Yield::Size &rhs);
+  bool multi_detect_loop(
+    const Yield::Multi &left,
+    const Yield::Multi &right, Symbol::NT *n) const;
 
-      // FIXME convert callers
-      Yield::Poly rhs_ys_min_rest(const std::list<Fn_Arg::Base*>::iterator &i, const std::list<Fn_Arg::Base*>::iterator &end) const;
+  void multi_propagate_max_filter(
+    std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size);
 
-      std::list<Statement::For *> loops;
-      std::list<Statement::Foreach *> foreach_loops;
-      std::list<Statement::Base*> body_stmts;
+  void multi_collect_factors(Runtime::Poly &p);
+  void multi_init_calls(const Runtime::Poly &p, size_t base_tracks);
 
-      Statement::If *guards;
-      void ret_decl_empty_block(Statement::If *stmt);
-      void deep_erase_if_backtrace(Statement::If *stmt, std::vector<Fn_Arg::Base*>::iterator start, std::vector<Fn_Arg::Base*>::iterator end);
-      Statement::If *add_empty_check(std::list<Statement::Base*> &stmts, const Fn_Arg::Base &b);
-      void add_clear_code(std::list<Statement::Base*> &stmts, const Fn_Arg::Base &b);
-      std::list<Statement::Base*> *reorder_args_cg(AST &ast, std::list<Statement::Base*> &l);
+ private:
+  void add_args(Expr::Fn_Call *fn);
 
+ private:
+  std::list<Expr::Base*> indices;
 
-      void add_overlay_code(std::list<Statement::Base*> *& stmts, AST &ast, std::list<Expr::Fn_Call*> &exprs, Filter::Type t) const;
-      void add_with_overlay_code(std::list<Statement::Base*> *&stmts, AST &ast) const;
-      void add_suchthat_overlay_code(std::list<Statement::Base*> *&stmts, AST &ast) const;
+ public:
+  void set_indices(const std::list<Expr::Base*> &l) {
+    indices = l;
+  }
+  bool is_explicit() const {
+    return !indices.empty();
+  }
 
-      void add_subopt_guards(std::list<Statement::Base*> *&stmts, AST &ast);
-      std::list<Statement::Base*> *add_arg_code(AST &ast, std::list<Statement::Base*> &x);
-      std::list<Statement::Base*> pre_stmts;
-      std::list<std::list<Statement::Base*>*> pre_cond;
-      std::list<Statement::Var_Decl*> pre_decl;
+ private:
+  std::list<Expr::Base*> ntparas;
 
+ public:
+  void set_ntparas(const Loc &loc, std::list<Expr::Base*> *l);
+  bool check_ntparas();
 
-    public:
+  void optimize_choice();
+};
 
-      void init_indices(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
-      void put_indices(std::ostream &s);
 
-      void reset();
+/*
+ * A Alt::Block is a list of alternatives grouped together. The
+ * list of alternative rules is stored in a std::list<Base*> with
+ * name 'alts'.
+ */
+class Block : public Base {
+ public:
+  // Stores the list of alternatives
+  std::list<Base*> alts;
 
-      void init_foreach();
-      bool has_arg_list();
-      void init_body(AST &ast);
-      void init_guards();
-      void codegen(AST &ast);
+  Block(std::list<Base*> &a, const Loc &l) : Base(BLOCK, l), alts(a) {
+  }
 
-      void print_dot_edge(std::ostream &out, Symbol::NT &nt);
+  Base *clone();
 
-      void print(std::ostream &s);
+  bool init_links(Grammar &grammar);
+  bool init_productive();
 
-      bool calls_terminal_parser() const;
+  void collect_lr_deps(
+    std::list<Symbol::NT*> &list, const Yield::Multi &left,
+    const Yield::Multi &right);
 
-      void init_multi_ys();
+  size_t width();
 
+  void init_table_dim(
+    const Yield::Size &a, const Yield::Size &b,
+    std::vector<Yield::Size> &temp_ls,
+    std::vector<Yield::Size> &temp_rs, size_t track);
 
-    private:
+  void print_link(std::ostream &s);
 
-      void sum_rhs(Yield::Multi &y, std::list<Fn_Arg::Base*>::const_iterator i, const std::list<Fn_Arg::Base*>::const_iterator &end) const;
-      void sum_rhs(Yield::Size &y, std::list<Fn_Arg::Base*>::const_iterator i, const std::list<Fn_Arg::Base*>::const_iterator &end, size_t track) const;
+  Runtime::Poly runtime(
+    std::list<Symbol::NT*> &active_list, const Runtime::Poly &accum_rt);
 
+  Runtime::Poly init_in_out();
+  void init_self_rec();
 
-    public:
+  bool insert_types(Signature_Base &s);
+  ::Type::Status infer_missing_types();
+  void print_type(std::ostream &s);
 
-      bool multi_detect_loop(const Yield::Multi &left, const Yield::Multi &right, Symbol::NT *n) const;
+  bool eliminate_lists();
+  bool init_list_sizes();
 
-      void multi_propagate_max_filter(std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size);
+  void traverse(Visitor &v);
+  void init_indices(
+    Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
 
-      void multi_collect_factors(Runtime::Poly &p);
-      void multi_init_calls(const Runtime::Poly &p, size_t base_tracks);
+  void codegen(AST &ast);
 
+  void print_dot_edge(std::ostream &out, Symbol::NT &nt);
 
-    private:
+  void print(std::ostream &s);
 
-      std::list<Statement::Base*> index_stmts;
-      Bool is_index_overlay_;
+  void init_multi_ys();
 
+  bool multi_detect_loop(const Yield::Multi &left,
+  const Yield::Multi &right, Symbol::NT *n) const;
 
-    public:
+  void multi_propagate_max_filter(
+    std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size);
 
-      std::list<Simple*> index_overlay;
-      void set_index_stmts(const std::list<Statement::Base*> &l);
+  void multi_collect_factors(Runtime::Poly &p);
+  void multi_init_calls(const Runtime::Poly &p, size_t base_tracks);
+};
 
-      bool has_index_overlay() const {
-        return !index_stmts.empty();
-      }
 
-      void set_index_overlay(Base *alt);
+class Multi : public Base {
+ private:
+  std::list<Base*> list;
+  std::list<Statement::Var_Decl*> ret_decls_;
 
+ public:
+  Multi(const std::list<Alt::Base*> &t, const Loc &l);
+  Base *clone();
 
-    private:
+  size_t tracks() const {
+    return list.size();
+  }
 
-      std::list<Expr::Base*> ntparas;
 
+  bool init_links(Grammar &grammar);
 
-    public:
+  bool init_productive();
+  void collect_lr_deps(
+    std::list<Symbol::NT*> &list,
+    const Yield::Multi &left, const Yield::Multi &right);
 
-      void set_ntparas(std::list<Expr::Base*> *l);
+  size_t width();
 
+  void init_table_dim(
+    const Yield::Size &a, const Yield::Size &b,
+    std::vector<Yield::Size> &temp_ls,
+    std::vector<Yield::Size> &temp_rs, size_t track);
 
-    private:
+  void print_link(std::ostream &s);
 
-      std::list<Statement::Base*> *insert_index_stmts(std::list<Statement::Base*> *stmts);
-      std::list<Statement::Base*> *inner_code;
+  Runtime::Poly runtime(
+    std::list<Symbol::NT*> &active_list, const Runtime::Poly &accum_rt);
 
+  Runtime::Poly init_in_out();
 
-  };
+  void init_self_rec();
+  bool insert_types(Signature_Base &s);
+  ::Type::Status infer_missing_types();
 
+  void print_type(std::ostream &s);
 
-  /*
-   * A Alt::Link is a wrapper for non-terminal parsers embedding them
-   * in the hirarchy of all Alt::Base subclasses.
-   */
-  class Link : public Base {
+  bool eliminate_lists();
+  bool init_list_sizes();
 
-    private:
+  void traverse(Visitor &v);
 
-      Runtime::Poly calls;
+  void init_indices(
+    Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
+  void codegen(AST &ast);
+  void print_dot_edge(std::ostream &out, Symbol::NT &nt);
+  void print(std::ostream &s);
 
+  void init_multi_ys();
 
-    public:
+  bool multi_detect_loop(
+    const Yield::Multi &left,
+    const Yield::Multi &right, Symbol::NT *n) const;
 
-      // The name of the non-terminal this instance wrappes. This
-      // name will be resolved when the method Link::init_links(Grammar*)
-      // is called, and the pointer 'nt' is set to point to the
-      // instance of the corresponding non-terminal.
-      std::string *name;
-      // this field gets set when the method
-      // Link::init_links(Grammar*) is called.
-      Symbol::Base *nt;
+  void multi_propagate_max_filter(
+    std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size);
 
+  void multi_collect_factors(Runtime::Poly &p);
+  void multi_init_calls(const Runtime::Poly &p, size_t base_tracks);
 
-      // Inits the insatnce and sets the local fields according to
-      // the parameter values of the non-terminal name. It also sets
-      // the pointer to the non-terminal grammar-node explicitely
-      // to NULL.
-      Link(std::string *n, const Loc&l)
-        : Base(LINK, l), name(n), nt(NULL) {
-      }
+  void types(std::list< ::Type::Base*> &) const;
+  const std::list<Statement::Var_Decl*> &ret_decls() const;
+  void init_ret_decl(unsigned int i, const std::string &prefix);
+};
 
-      // Creates a deep copy of this instance.
-      Base *clone();
 
-      // Inits the graph link structure of the grammar for this
-      // instance.
-      bool init_links(Grammar &grammar);
-      // Inits the protected field Alt::Base.productive according to
-      // whether this non-terminal can produce any parse results
-      // at all.
-      bool init_productive();
+}  // namespace Alt
 
-      void collect_lr_deps(std::list<Symbol::NT*> &list, const Yield::Multi &left, const Yield::Multi &right);
-
-      size_t width();
-
-      void init_table_dim(const Yield::Size &a, const Yield::Size &b, std::vector<Yield::Size> &temp_ls, std::vector<Yield::Size> &temp_rs, size_t track);
-
-      void print_link(std::ostream &s);
-
-      Runtime::Poly runtime(std::list<Symbol::NT*> &active_list, const Runtime::Poly &accum_rt);
-
-      Runtime::Poly init_in_out();
-      void init_self_rec();
-
-      bool insert_types(Signature_Base &s);
-      ::Type::Status infer_missing_types();
-      void print_type(std::ostream &s);
-
-      bool eliminate_lists();
-      bool init_list_sizes();
-
-      void traverse(Visitor &v);
-
-      void init_indices(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
-
-      //void init_ret_decl(unsigned int i);
-
-      void codegen(AST &ast);
-
-      void print_dot_edge(std::ostream &out, Symbol::NT &nt);
-
-      void print(std::ostream &s);
-
-      bool calls_terminal_parser() const;
-
-      void init_multi_ys();
-
-      bool multi_detect_loop(const Yield::Multi &left, const Yield::Multi &right, Symbol::NT *n) const;
-
-      void multi_propagate_max_filter(std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size);
-
-      void multi_collect_factors(Runtime::Poly &p);
-      void multi_init_calls(const Runtime::Poly &p, size_t base_tracks);
-
-
-    private:
-
-      void add_args(Expr::Fn_Call *fn);
-
-
-    private:
-
-      std::list<Expr::Base*> indices;
-
-
-    public:
-
-      void set_indices(const std::list<Expr::Base*> &l) {
-        indices = l;
-      }
-      bool is_explicit() const {
-        return !indices.empty();
-      }
-
-
-    private:
-
-      std::list<Expr::Base*> ntparas;
-
-
-    public:
-
-      void set_ntparas(const Loc &loc, std::list<Expr::Base*> *l);
-      bool check_ntparas();
-
-      void optimize_choice();
-
-
-  };
-
-
-  /*
-   * A Alt::Block is a list of alternatives grouped together. The
-   * list of alternative rules is stored in a std::list<Base*> with
-   * name 'alts'.
-   */
-  class Block : public Base {
-
-    public:
-
-      // Stores the list of alternatives
-      std::list<Base*> alts;
-
-      Block(std::list<Base*> &a, const Loc &l) : Base(BLOCK,l), alts(a) {
-      }
-
-      Base *clone();
-
-      bool init_links(Grammar &grammar);
-      bool init_productive();
-
-      void collect_lr_deps(std::list<Symbol::NT*> &list, const Yield::Multi &left, const Yield::Multi &right);
-
-      size_t width();
-
-      void init_table_dim(const Yield::Size &a, const Yield::Size &b, std::vector<Yield::Size> &temp_ls, std::vector<Yield::Size> &temp_rs, size_t track);
-
-      void print_link(std::ostream &s);
-
-      Runtime::Poly runtime(std::list<Symbol::NT*> &active_list, const Runtime::Poly &accum_rt);
-
-      Runtime::Poly init_in_out();
-      void init_self_rec();
-
-      bool insert_types(Signature_Base &s);
-      ::Type::Status infer_missing_types();
-      void print_type(std::ostream &s);
-
-      bool eliminate_lists();
-      bool init_list_sizes();
-
-      void traverse(Visitor &v);
-      void init_indices(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
-
-      void codegen(AST &ast);
-
-      void print_dot_edge(std::ostream &out, Symbol::NT &nt);
-
-      void print(std::ostream &s);
-
-      void init_multi_ys();
-
-      bool multi_detect_loop(const Yield::Multi &left,
-      const Yield::Multi &right, Symbol::NT *n) const;
-
-      void multi_propagate_max_filter(std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size);
-
-      void multi_collect_factors(Runtime::Poly &p);
-      void multi_init_calls(const Runtime::Poly &p, size_t base_tracks);
-
-
-  };
-
-
-  class Multi : public Base {
-
-    private:
-
-      std::list<Base*> list;
-      std::list<Statement::Var_Decl*> ret_decls_;
-
-
-    public:
-
-      Multi(const std::list<Alt::Base*> &t, const Loc &l);
-      Base *clone();
-
-      size_t tracks() const {
-        return list.size();
-      }
-
-
-      bool init_links(Grammar &grammar);
-
-      bool init_productive();
-      void collect_lr_deps(std::list<Symbol::NT*> &list, const Yield::Multi &left, const Yield::Multi &right);
-
-      size_t width();
-
-      void init_table_dim(const Yield::Size &a, const Yield::Size &b, std::vector<Yield::Size> &temp_ls, std::vector<Yield::Size> &temp_rs, size_t track);
-
-      void print_link(std::ostream &s);
-
-      Runtime::Poly runtime(std::list<Symbol::NT*> &active_list, const Runtime::Poly &accum_rt);
-
-      Runtime::Poly init_in_out();
-
-      void init_self_rec();
-      bool insert_types(Signature_Base &s);
-      ::Type::Status infer_missing_types();
-
-      void print_type(std::ostream &s);
-
-      bool eliminate_lists();
-      bool init_list_sizes();
-
-      void traverse(Visitor &v);
-
-      void init_indices(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
-      void codegen(AST &ast);
-      void print_dot_edge(std::ostream &out, Symbol::NT &nt);
-      void print(std::ostream &s);
-
-      void init_multi_ys();
-
-      bool multi_detect_loop(const Yield::Multi &left, const Yield::Multi &right, Symbol::NT *n) const;
-
-      void multi_propagate_max_filter(std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size);
-
-      void multi_collect_factors(Runtime::Poly &p);
-      void multi_init_calls(const Runtime::Poly &p, size_t base_tracks);
-
-      void types(std::list< ::Type::Base*> &) const;
-      const std::list<Statement::Var_Decl*> &ret_decls() const;
-      void init_ret_decl(unsigned int i, const std::string &prefix);
-
-
-  };
-
-
-}
-
-#endif
+#endif  // SRC_ALT_HH_

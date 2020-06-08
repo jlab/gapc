@@ -45,11 +45,13 @@ void Char_Visitor::visit(Fn_Arg::Const &f) {
     return;
   Type::Base *type = f.expr().data_type();
   bool found = false;
-  for (std::list<Type::Base*>::iterator i = list_.begin(); i!=list_.end(); ++i)
+  for (std::list<Type::Base*>::iterator i = list_.begin();
+       i != list_.end(); ++i) {
     if ((*i)->is_eq(*type)) {
       found = true;
       break;
     }
+  }
   if (!found)
     list_.push_back(type);
 }

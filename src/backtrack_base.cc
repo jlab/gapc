@@ -21,6 +21,7 @@
 
 }}} */
 
+#include <string>
 #include "backtrack_base.hh"
 #include "type.hh"
 #include "product.hh"
@@ -51,7 +52,6 @@ void Backtrack_Base::remove_unused() {
     else
       ++i;
   }
-
 }
 
 void Backtrack_Base::gen_backtraces(Product::Base *bt_product,
@@ -76,7 +76,8 @@ void Backtrack_Base::gen_backtraces(Product::Base *bt_product,
     Statement::Backtrace_Decl *bt_decl =
       new Statement::Backtrace_Decl(*decl, *fn);
 
-    hashtable<std::string, Fn_Def*>::const_iterator k = score.fns.find(*fn->name);
+    hashtable<std::string, Fn_Def*>::const_iterator k = score.fns.find(
+      *fn->name);
     assert(k != score.fns.end());
     bt_decl->set_score_type(k->second->return_type);
 
@@ -95,7 +96,6 @@ void Backtrack_Base::gen_nt_decls(const std::list<Symbol::NT*> &nts) {
   for (std::list<Symbol::NT*>::const_iterator i = nts.begin();
        i != nts.end(); ++i) {
     bt_nt_decls.push_back(new Statement::Backtrace_NT_Decl(*(*i)));
-
   }
 }
 

@@ -34,11 +34,8 @@ class Fn_Def;
 #include "symbol_fwd.hh"
 
 class Classify_Visitor : public Visitor {
-
-  public:
-
+ public:
     void visit(Symbol::NT &n);
-
 };
 
-#endif
+#endif  // SRC_CLASSIFY_VISITOR_HH_
