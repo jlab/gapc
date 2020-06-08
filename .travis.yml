@@ -22,6 +22,7 @@ addons:
       - libgsl-dev
       - ghc
       - python3
+      - python3-pip
 
 install:
   - ./configure
@@ -35,7 +36,7 @@ before_script:
   # obtain truth data from secondary github repository
   - git clone https://github.com/jlab/gapc-test-suite.git /home/travis/gapc-test-suite
   # install c++ linter
-  - pip install cpplint
+  - pip3 install cpplint
 script:
   # c++ code style checks
   - cpplint src/* rtlib/*
