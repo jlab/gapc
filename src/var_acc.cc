@@ -21,7 +21,8 @@
 
 }}} */
 
-
+#include <list>
+#include <utility>
 #include "var_acc.hh"
 
 #include "statement.hh"
@@ -29,20 +30,16 @@
 
 #include "expr.hh"
 
-Var_Acc::Plain::Plain(Statement::Var_Decl &a)
-  : Base(PLAIN), name(NULL)
-{
+Var_Acc::Plain::Plain(Statement::Var_Decl &a) : Base(PLAIN), name(NULL) {
   vdecl = &a;
 }
 
 Var_Acc::Base::~Base() {}
 
-void Var_Acc::Base::put(std::ostream &s) const
-{
+void Var_Acc::Base::put(std::ostream &s) const {
 }
 
-void Var_Acc::Plain::put(std::ostream &s) const
-{
+void Var_Acc::Plain::put(std::ostream &s) const {
   if (itr_access)
     s << "(*";
   if (name)
@@ -53,22 +50,18 @@ void Var_Acc::Plain::put(std::ostream &s) const
     s << ')';
 }
 
-void Var_Acc::Comp::put(std::ostream &s) const
-{
+void Var_Acc::Comp::put(std::ostream &s) const {
   if (itr_access)
     s << "(*" << *lhs << ")." << *rhs;
   else
     s << *lhs << '.' << *rhs;
 }
 
-void Var_Acc::Array::put(std::ostream &s) const
-{
+void Var_Acc::Array::put(std::ostream &s) const {
   s << *lhs << '[' << *expr << ']';
 }
 
-Var_Acc::Comp::Comp(const Statement::Var_Decl &vdecl, int n)
-  : Base(COMP)
-{
+Var_Acc::Comp::Comp(const Statement::Var_Decl &vdecl, int n) : Base(COMP) {
   Plain *p = new Var_Acc::Plain(vdecl.name);
   assert(vdecl.type->is(::Type::TUPLE));
   ::Type::Tuple *t = dynamic_cast< ::Type::Tuple*>(vdecl.type);
