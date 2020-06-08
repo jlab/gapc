@@ -31,11 +31,7 @@
 #include "location.hh"
 
 #define LINE_SIZE 160
-#define CHECK_EXIT(A) if ((A) < 0) {
-  std::fprintf(stderr, "%s:%d", __FILE__, __LINE__);
-  std::perror("");
-  std::abort();
-}
+#define CHECK_EXIT(A) if ((A) < 0) {std::fprintf(stderr, "%s:%d", __FILE__, __LINE__); std::perror(""); std::abort();}
 
 class Loc : public yy::location {
  private:
