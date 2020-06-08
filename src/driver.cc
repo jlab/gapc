@@ -34,8 +34,8 @@
 
 #include "parser.hh"
 
-#include "src/lexer.h"
-#include "src/lexer_priv.h"
+#include "lexer.h"
+#include "lexer_priv.h"
 
 
 Driver::Driver() : from_stdin(false), trace_lexer(false), trace_parser(false),

@@ -21,6 +21,8 @@
 
 }}} */
 
+#include <cmath>
+#include <boost/tokenizer.hpp>
 
 #include "cpp.hh"
 
@@ -45,11 +47,6 @@
 
 #include "options.hh"
 
-
-
-#include <boost/tokenizer.hpp>
-
-#include <cmath>
 
 static std::string make_comments(const std::string &s, const std::string &c) {
   std::ostringstream o;
@@ -77,9 +74,9 @@ void Printer::Cpp::print(const Statement::For &stmt) {
   stream << *stmt.var_decl;
   stream << ' '
     << *stmt.cond << "; ";
-  if (!stmt.inc)
+  if (!stmt.inc) {
     stream << "++" << *stmt.var_decl->name << ")";
-  else {
+  } else {
     bool t = in_fn_head;
     in_fn_head = true;
     stream << *stmt.inc << ")";
@@ -98,8 +95,9 @@ void Printer::Cpp::print(const Statement::Var_Decl &stmt) {
   assert(stmt.type);
   assert(stmt.name);
 
-  //std::cerr << "JJJ " << *stmt.type << '\n';
-  if (stmt.type->is(::Type::MULTI) || (stmt.type->is(::Type::LIST) && stmt.type->component()->is(::Type::MULTI)) ) {
+  // std::cerr << "JJJ " << *stmt.type << '\n';
+  if (stmt.type->is(::Type::MULTI) || (stmt.type->is(::Type::LIST) &&
+      stmt.type->component()->is(::Type::MULTI)) ) {
     ::Type::Base  *tbase = stmt.type;
     if (stmt.type->is(::Type::LIST))
       tbase = stmt.type->component();
@@ -146,14 +144,16 @@ void Printer::Cpp::print(const Statement::If &stmt) {
 void Printer::Cpp::print(const Statement::Switch &stmt) {
   stream << indent() << "switch (" << *stmt.cond << ") {" << endl;
   inc_indent();
-  for(std::list<std::pair<std::string, std::list<Statement::Base*> > >::const_iterator i = stmt.cases.begin(); i!= stmt.cases.end(); ++i) {
+  for (std::list<std::pair<std::string,
+                           std::list<Statement::Base*>>>::const_iterator i =
+      stmt.cases.begin(); i!= stmt.cases.end(); ++i) {
       stream << indent() << "case " << i->first << " :" << endl;
       inc_indent();
             stream << i->second;
             stream << indent() << "break;" << endl;
       dec_indent();
   }
-  if(!stmt.defaul.empty()) {
+  if (!stmt.defaul.empty()) {
       stream << indent() << "default :" << endl;
       inc_indent();
             stream << stmt.defaul;
@@ -190,7 +190,6 @@ void Printer::Cpp::print(const Statement::Increase &stmt) {
 }
 
 void Printer::Cpp::print(const Statement::Sorter &stmt) {
-
     stream << indent() << "sort_list(";
     if (stmt.list->type->simple()->is(Type::RANGE)) {
         stream << *stmt.list->name << ".first, ";
@@ -199,7 +198,7 @@ void Printer::Cpp::print(const Statement::Sorter &stmt) {
         stream << *stmt.list->name << ".ref().begin(), ";
         stream << *stmt.list->name << ".ref().end() ";
     } else {
-        // TODO: Implement if needed
+        // TODO(who?): Implement if needed
     }
     stream << ", " << *stmt.op << ");" << endl;
 }
@@ -218,8 +217,9 @@ void Printer::Cpp::print(const Statement::Foreach &stmt) {
     if (choice_range) {
       if (choice_range->is_eq(*range))
         stream << "Iterator ";
-    } else
+    } else {
      stream << "List<" << *range->element_type << ">::iterator ";
+    }
     stream
       << itr
       << " = " << *stmt.container->name << ".first; " << itr << " != "
@@ -251,7 +251,7 @@ void Printer::Cpp::print(const Statement::Foreach &stmt) {
     inc_indent();
     stream << indent() << *stmt.elem->type << ' ' << *stmt.elem->name << " = "
       << "*" << itr << ';' << endl;
-  //} else if (stmt.container->type->simple()->is(Type::BACKTRACE_LIST)) {
+  // } else if (stmt.container->type->simple()->is(Type::BACKTRACE_LIST)) {
   } else if (stmt.container->type->simple()->is(Type::BACKTRACE)) {
     std::string t = *stmt.container->name + "_t";
     stream << indent()
@@ -343,7 +343,9 @@ void Printer::Cpp::print_arg(Expr::Base *e) {
     if (x->var_acc->is (Var_Acc::PLAIN)) {
       Var_Acc::Plain *v = dynamic_cast<Var_Acc::Plain*> (x->var_acc);
       if (v->vdecl) {
-        if (v->vdecl->type->is(::Type::MULTI) || (v->vdecl->type->simple()->is(::Type::LIST) && v->vdecl->type->component()->is(::Type::MULTI))) {
+        if (v->vdecl->type->is(::Type::MULTI) ||
+            (v->vdecl->type->simple()->is(::Type::LIST) &&
+            v->vdecl->type->component()->is(::Type::MULTI))) {
           ::Type::Base *tbase = v->vdecl->type;
           if (v->vdecl->type->simple()->is(::Type::LIST)) {
             tbase = v->vdecl->type->component();
@@ -400,7 +402,8 @@ unsigned int literal_size_of_string (Loc& location, std::string* str) {
           }
           case 'u':
           case 'U': {
-            Log::instance()->error (location, "Unicode escape sequences in string literals not supported yet.");
+            Log::instance()->error (location,
+              "Unicode escape sequences in string literals not supported yet.");
             break;
           }
           case 'x':
@@ -424,17 +427,20 @@ unsigned int literal_size_of_string (Loc& location, std::string* str) {
             }
 
             unsigned int numberOfDigitsFound = 0;
-            while (nextPos < str->size() && allowedChars.find (str->at (nextPos)) != std::string::npos) {
+            while (nextPos < str->size() &&
+                   allowedChars.find (str->at (nextPos)) != std::string::npos) {
               nextPos++;
               numberOfDigitsFound++;
             }
             // Not more than two digits are allowed, but there must be
             // at least one digit.
             if (numberOfDigitsFound > maxDigitsAllowed) {
-              Log::instance()->error (location, "An excape sequence is unknown, or can not be parsed correctly in the literal string.");
+              Log::instance()->error (location,
+                "An excape sequence is unknown, or can not be parsed correctly in the literal string.");
             }
             else if (numberOfDigitsFound < 1) {
-              Log::instance()->error (location, "Unknown escape sequence in string literal. No auto length detection possible. Try to provide explicitely the length of the literal as a third parameter.");
+              Log::instance()->error (location,
+                "Unknown escape sequence in string literal. No auto length detection possible. Try to provide explicitely the length of the literal as a third parameter.");
             }
             // We went one character too far.
             i = nextPos - 1;
@@ -452,14 +458,16 @@ unsigned int literal_size_of_string (Loc& location, std::string* str) {
 void Printer::Cpp::print (const Statement::Fn_Call &stmt) {
   std::list<Expr::Base*>::const_iterator i = stmt.args.begin();
   if (stmt.is_obj == false) {
-    if (stmt.builtin == Statement::Fn_Call::PUSH_BACK || stmt.builtin == Statement::Fn_Call::APPEND) {
-      //assert(stmt.args.size() == 2);
+    if (stmt.builtin == Statement::Fn_Call::PUSH_BACK ||
+        stmt.builtin == Statement::Fn_Call::APPEND) {
+      // assert(stmt.args.size() == 2);
       Statement::Var_Decl *v = stmt.args.front()->var_decl();
       if (v && v->type->is (::Type::LIST)) {
         Type::List *l = dynamic_cast<Type::List*> (v->type);
         assert(l);
         stream << indent() << stmt.name();
-        if (l->push_type() != Type::List::NORMAL && l->push_type() != Type::List::HASH) {
+        if (l->push_type() != Type::List::NORMAL &&
+            l->push_type() != Type::List::HASH) {
           stream << "_";
           stream << l->push_str();
         }
@@ -499,7 +507,8 @@ void Printer::Cpp::print (const Statement::Fn_Call &stmt) {
               Const::String* str = dynamic_cast<Const::String*> (constant);
               std::string* string = str->s;
               stream << ", ";
-              unsigned int literalLength = literal_size_of_string (expr->location, string);
+              unsigned int literalLength = literal_size_of_string(
+                expr->location, string);
               stream << literalLength;
             }
           }
@@ -529,7 +538,8 @@ void Printer::Cpp::print (const Statement::Fn_Call &stmt) {
 void Printer::Cpp::print (const Statement::Block &stmt) {
   stream << indent() << "{" << endl;
   inc_indent();
-  for (std::list<Statement::Base*>::const_iterator i = stmt.statements.begin(); i != stmt.statements.end(); ++i) {
+  for (std::list<Statement::Base*>::const_iterator i = stmt.statements.begin();
+       i != stmt.statements.end(); ++i) {
     stream << **i << endl;
   }
   dec_indent();
@@ -537,7 +547,8 @@ void Printer::Cpp::print (const Statement::Block &stmt) {
 }
 
 
-void Printer::Cpp::print (const std::list<Type::Base*> &types, const std::list<std::string*> &names) {
+void Printer::Cpp::print(const std::list<Type::Base*> &types,
+                         const std::list<std::string*> &names) {
   stream << '(';
   std::list<std::string*>::const_iterator j = names.begin();
   std::list<Type::Base*>::const_iterator i = types.begin();
@@ -576,7 +587,7 @@ void Printer::Cpp::print (Para_Decl::Base *p) {
 
 
 void Printer::Cpp::print(const std::list<Para_Decl::Base*> &paras) {
-  //stream << '(';
+  // stream << '(';
 
   if (!paras.empty()) {
 
@@ -590,7 +601,7 @@ void Printer::Cpp::print(const std::list<Para_Decl::Base*> &paras) {
 
   }
 
-  //stream << ')';
+  // stream << ')';
 }
 
 
@@ -666,7 +677,8 @@ void Printer::Cpp::print(const Fn_Def &fn_def) {
   stream << indent() << '{' << endl;
   inc_indent();
   lines_start_mark(fn_def.stmts);
-  for (std::list<Statement::Base*>::const_iterator s = fn_def.stmts.begin(); s != fn_def.stmts.end(); ++s) {
+  for (std::list<Statement::Base*>::const_iterator s = fn_def.stmts.begin();
+       s != fn_def.stmts.end(); ++s) {
     stream << **s << endl;
   }
   lines_end_mark(fn_def.stmts);
@@ -686,7 +698,8 @@ void Printer::Cpp::print(const Operator &op) {
     stream << "struct " << *op.name << " {" << endl;
 
 
-    for( std::list<Statement::Var_Decl*>::const_iterator i = op.const_values.begin(); i!= op.const_values.end(); ++i) {
+    for (std::list<Statement::Var_Decl*>::const_iterator i =
+         op.const_values.begin(); i!= op.const_values.end(); ++i) {
         stream <<  indent() << "static const ";
         stream << **i << endl;
     }
@@ -695,7 +708,8 @@ void Printer::Cpp::print(const Operator &op) {
     print(op.paras);
     stream << ") {" << endl;
 
-    for (std::list<Statement::Base*>::const_iterator i = op.stmts.begin(); i != op.stmts.end(); ++i) {
+    for (std::list<Statement::Base*>::const_iterator i = op.stmts.begin();
+         i != op.stmts.end(); ++i) {
         stream << indent() << "    " << **i << endl;
     }
 
@@ -709,10 +723,12 @@ void Printer::Cpp::lines_start_mark(const std::list<Statement::Base*> &stmts) {
   if (stmts.empty()) {
     return;
   }
-  if (stmts.front()->location.begin.column == stmts.front()->location.end.column) {
+  if (stmts.front()->location.begin.column ==
+      stmts.front()->location.end.column) {
     return;
   }
-  stream << "#line " << stmts.front()->location.begin.line << " \"" << in_name << "\"" << endl;
+  stream << "#line " << stmts.front()->location.begin.line <<
+    " \"" << in_name << "\"" << endl;
 }
 
 
@@ -720,7 +736,8 @@ void Printer::Cpp::lines_end_mark(const std::list<Statement::Base*> &stmts) {
   if (stmts.empty()) {
     return;
   }
-  if (stmts.front()->location.begin.column == stmts.front()->location.end.column) {
+  if (stmts.front()->location.begin.column ==
+      stmts.front()->location.end.column) {
     return;
   }
   stream << "#line " << line_number + 2 << " \"" << out_name << "\"" << endl;
@@ -765,7 +782,8 @@ void Printer::Cpp::print(const Var_Acc::Base &b) {
 
 
 void Printer::Cpp::print(const Type::List &t) {
-  if (t.push_type() > Type::List::NORMAL && t.push_type() < Type::List::MIN_OTHER) {
+  if (t.push_type() > Type::List::NORMAL &&
+      t.push_type() < Type::List::MIN_OTHER) {
     stream << *t.of;
     return;
   }
@@ -797,7 +815,8 @@ void Printer::Cpp::print(const Type::Tuple &t) {
     stream << "const ";
   }
   stream << "std::pair<";
-  std::list<std::pair<Type::Name *, std::string*>*>::const_iterator i = t.list.begin();
+  std::list<std::pair<Type::Name *, std::string*>*>::const_iterator i =
+    t.list.begin();
   stream << *(*i)->first->lhs << ", ";
   ++i;
   stream << *(*i)->first->lhs;
@@ -970,13 +989,15 @@ void Printer::Cpp::print(const Type::Table &t) {
 
 
 void Printer::Cpp::print(const std::list<Statement::Var_Decl*> &l) {
-  for (std::list<Statement::Var_Decl*>::const_iterator i = l.begin(); i != l.end(); ++i) {
+  for (std::list<Statement::Var_Decl*>::const_iterator i = l.begin();
+       i != l.end(); ++i) {
     stream << **i << "\n";
   }
 }
 
 
-void Printer::Cpp::print_paras(const std::list<Statement::Var_Decl*> &l, char c) {
+void Printer::Cpp::print_paras(
+  const std::list<Statement::Var_Decl*> &l, char c) {
   std::list<Statement::Var_Decl*>::const_iterator i = l.begin();
   stream << *(*i)->type << ' ' << *(*i)->name  << c;
   ++i;
@@ -986,7 +1007,8 @@ void Printer::Cpp::print_paras(const std::list<Statement::Var_Decl*> &l, char c)
 }
 
 
-void Printer::Cpp::print_names(const std::list<Statement::Var_Decl*> &l, char c) {
+void Printer::Cpp::print_names(
+  const std::list<Statement::Var_Decl*> &l, char c) {
   std::list<Statement::Var_Decl*>::const_iterator i = l.begin();
   stream << *(*i)->name << c;
   ++i;
@@ -997,7 +1019,8 @@ void Printer::Cpp::print_names(const std::list<Statement::Var_Decl*> &l, char c)
 
 
 void Printer::Cpp::print_eqs(const std::list<Statement::Var_Decl*> &l, char c) {
-  for (std::list<Statement::Var_Decl*>::const_iterator i = l.begin(); i != l.end(); ++i) {
+  for (std::list<Statement::Var_Decl*>::const_iterator i = l.begin();
+       i != l.end(); ++i) {
     stream << *(*i)->name << " = " << *(*i)->name << c << ";\n";
   }
 }
@@ -1029,13 +1052,16 @@ void Printer::Cpp::print_window_inc(const Symbol::NT &nt) {
     "t_0_right_most = std::min(t_0_right_most + inc, t_0_n);\n"
     "}\n\n";
   stream << w;
-  if (!nt.tables()[0].delete_left_index() && !nt.tables()[0].delete_right_index()) {
+  if (!nt.tables()[0].delete_left_index() &&
+      !nt.tables()[0].delete_right_index()) {
     stream << "i, j";
   }
-  if (!nt.tables()[0].delete_left_index() && nt.tables()[0].delete_right_index()) {
+  if (!nt.tables()[0].delete_left_index() &&
+      nt.tables()[0].delete_right_index()) {
     stream << "i";
   }
-  if (nt.tables()[0].delete_left_index() && !nt.tables()[0].delete_right_index()) {
+  if (nt.tables()[0].delete_left_index() &&
+      !nt.tables()[0].delete_right_index()) {
     stream << "j";
   }
   stream << u;
@@ -1086,7 +1112,8 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   stream << "{\n";
   print_eqs(ns, '_');
 
-  for (size_t track = t.nt().track_pos(); track < t.nt().track_pos() + t.nt().tracks(); ++track) {
+  for (size_t track = t.nt().track_pos();
+       track < t.nt().track_pos() + t.nt().tracks(); ++track) {
     stream << "t_" << track << "_left_most = 0;\n" << "t_" << track << "_right_most = t_" << track << "_n;\n";
   }
 
@@ -1213,8 +1240,7 @@ void Printer::Cpp::print (const Type::Backtrace &t) {
     case Type::Backtrace::FN_SPEC :
       if (pointer_as_itr) {
         stream << "Backtrace" << "<" << *t.value_type() << ", " << *t.pos_type() << "> ";
-      }
-      else {
+      } else {
         stream << "intrusive_ptr<Backtrace" << "<" << *t.value_type() << ", " << *t.pos_type() << "> > ";
       }
       break;
@@ -1258,7 +1284,8 @@ void Printer::Cpp::print (const Type::Multi &t) {
 
 
 void Printer::Cpp::print_type_defs(const AST &ast) {
-  for (std::list<Type::Base*>::const_iterator i = ast.type_def_list.begin(); i!=ast.type_def_list.end(); ++i) {
+  for (std::list<Type::Base*>::const_iterator i = ast.type_def_list.begin();
+       i!=ast.type_def_list.end(); ++i) {
     Type::Base *t = *i;
     if (t->is(Type::DEF)) {
       Type::Def *def = dynamic_cast<Type::Def*>(t);
@@ -2001,7 +2028,7 @@ void Printer::Cpp::print_backtrack_fn (const AST &ast) {
   }
 
   std::list<std::string*>::const_iterator i = ast.grammar()->axiom->code()->names.begin();
-  //assert(ast.grammar()->axiom->code()->names.size() > 1);
+  // assert(ast.grammar()->axiom->code()->names.size() > 1);
   if (i != ast.grammar()->axiom->code()->names.end()) {
     stream << **i;
     ++i;
@@ -2270,7 +2297,7 @@ static const char deps[] =
 "\n"
 "%.o : %.cc\n"
 "\t$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< -c -o $@ \n"
-//"         && $(SED) -e 's/[^ ]\\+boost[^ \\n]\\+//' $*.d > _t && mv _t $*.d\n"
+// "         && $(SED) -e 's/[^ ]\\+boost[^ \\n]\\+//' $*.d > _t && mv _t $*.d\n"
 ""
 "endif\n"
 ;
@@ -2282,8 +2309,8 @@ static const char deps[] =
 void Printer::Cpp::makefile(const Options &opts) {
   stream << endl << make_comments(id_string, "#") << endl << endl;
 
-  //stream << "SED = sed\n";
-  //stream << "RTLIB = rtlib\n\n";
+  // stream << "SED = sed\n";
+  // stream << "RTLIB = rtlib\n\n";
   stream << "RTLIB_LDFLAGS = $(RT_LDFLAGS)\n";
   stream << "RTLIB_LDLIBS = $(RT_LDLIBS)\n";
   stream << "RTLIB_CPPFLAGS = $(RT_CPPFLAGS)\n\n";
@@ -2300,7 +2327,7 @@ void Printer::Cpp::makefile(const Options &opts) {
            << "include $(MF)" << endl
        << "endif" << endl << endl;
 
-  std::string base = opts.class_name; //basename(opts.out_file);
+  std::string base = opts.class_name; // basename(opts.out_file);
   std::string out_file = remove_dir(opts.out_file);
   std::string header_file = remove_dir(opts.header_file);
   stream << "CXXFILES =  " << base << "_main.cc "
@@ -2310,9 +2337,9 @@ void Printer::Cpp::makefile(const Options &opts) {
   stream << opts.class_name << " : $(OFILES)" << endl
     << "\t$(CXX) -o $@ $^  $(LDFLAGS) $(LDLIBS)" ;
 
-  //if (opts.sample) {
+  // if (opts.sample) {
   //  stream << " $(GSLLIBS) ";
-  //}
+  // }
 
   if (opts.cyk) {
     stream << " $(CXXFLAGS_OPENMP) ";
@@ -2653,11 +2680,11 @@ void Printer::Cpp::print(const Statement::Backtrace_NT_Decl &d) {
   stream << ");" << endl;
   dec_indent();
   stream << indent() << '}' << endl << endl;
-  //stream << "Eval_List<Value>* eval() { assert(false); }" << endl;
+  // stream << "Eval_List<Value>* eval() { assert(false); }" << endl;
   stream << "intrusive_ptr<Eval_List<Value> > eval() { "
     << "proxy = backtrack(); return proxy->eval();"
     << " }";
-  //stream << "bool is_proxy() const { return true; }" << endl;
+  // stream << "bool is_proxy() const { return true; }" << endl;
   dec_indent();
   stream << "};" << endl << endl;
 }
