@@ -134,7 +134,7 @@ class Name {
     std::ostream & put(std::ostream &s) const;
 
     bool is_eq(Name & n) const;
-}
+};
 
 
 inline std::ostream & operator<<(std::ostream &s, const Name &p) {
@@ -146,7 +146,7 @@ class Tuple : public Base {
  public:
     MAKE_CLONE(Tuple);
 
-    excplicit Tuple(const Loc &l) : Base(TUPLE, l) {}
+    Tuple(const Loc &l) : Base(TUPLE, l) {}
     Tuple(Base *a, Base *b);
 
     hashtable<std::string, Name*> members;
@@ -167,7 +167,7 @@ class Tuple : public Base {
     Base *left();
     Base *right();
     Base *component();
-}
+};
 
 
 // Used to distinguish user defined tuples from
@@ -182,7 +182,7 @@ class TupleDef : public Tuple {
 
     bool is_eq(const Base & base) const;
     void print(Printer::Base &s) const;
-}
+};
 
 
 class Alphabet : public Base {
@@ -192,7 +192,7 @@ class Alphabet : public Base {
     Base *temp;
     ::Signature *signature;
 
-    excplicit Alphabet(Loc &l) : Base(ALPHABET, l), temp(NULL),
+    Alphabet(Loc &l) : Base(ALPHABET, l), temp(NULL),
               signature(NULL) {}
     Alphabet() : Base(ALPHABET), temp(NULL), signature(NULL) {}
 
@@ -201,7 +201,7 @@ class Alphabet : public Base {
     Base * simple();
     const Base * const_simple() const;
     void print(Printer::Base &s) const;
-}
+};
 
 
 class Def : public Base {
@@ -224,7 +224,7 @@ class Def : public Base {
     const Base * const_simple() const;
     bool is_eq(const Base & base) const;
     void print(Printer::Base &s) const;
-}
+};
 
 
 class Choice : public Base {
@@ -236,19 +236,19 @@ class Choice : public Base {
 
     std::ostream & put(std::ostream &s) const;
     void print(Printer::Base &s) const;
-}
+};
 
 
 class Void : public Base {
  public:
     MAKE_CLONE(Void);
 
-    excplicit Void(Loc &l) : Base(VOID, l) {}
+    Void(Loc &l) : Base(VOID, l) {}
     Void() : Base(VOID) {}
 
     std::ostream & put(std::ostream &s) const;
     void print(Printer::Base &s) const;
-}
+};
 
 
 class RealVoid : public Base {
@@ -259,29 +259,29 @@ class RealVoid : public Base {
 
     std::ostream & put(std::ostream &s) const;
     void print(Printer::Base &s) const;
-}
+};
 
 
 class Int : public Base {
  public:
     MAKE_CLONE(Int);
 
-    excplicit Int(Loc &l) : Base(INT, l) {}
+    Int(Loc &l) : Base(INT, l) {}
     Int() : Base(INT) {}
 
     std::ostream & put(std::ostream &s) const;
     void print(Printer::Base &s) const;
-}
+};
 
 
 class Integer : public Base {
  public:
     MAKE_CLONE(Integer);
-    excplicit Integer(Loc &l) : Base(INTEGER, l) {}
+    Integer(Loc &l) : Base(INTEGER, l) {}
     Integer() : Base(INTEGER) {}
     std::ostream & put(std::ostream &s) const;
     void print(Printer::Base &s) const;
-}
+};
 
 
 class Size : public Base {
@@ -292,65 +292,65 @@ class Size : public Base {
 
     std::ostream & put(std::ostream &s) const;
     void print(Printer::Base &s) const;
-}
+};
 
 
 class Float : public Base {
  public:
     MAKE_CLONE(Float);
 
-    excplicit Float(Loc &l) : Base(FLOAT, l) {}
+    Float(Loc &l) : Base(FLOAT, l) {}
     Float() : Base(FLOAT) {}
 
     std::ostream & put(std::ostream &s) const;
-    excplicit void print(Printer::Base &s) const;
-}
+    void print(Printer::Base &s) const;
+};
 
 
 class Single : public Base {
  public:
     MAKE_CLONE(Single);
-    excplicit Single(Loc &l) : Base(FLOAT, l) {}
+    Single(Loc &l) : Base(FLOAT, l) {}
     Single() : Base(SINGLE) {}
     std::ostream & put(std::ostream &s) const;
     void print(Printer::Base &s) const;
-}
+};
 
 
 class String : public Base {
  public:
     MAKE_CLONE(String);
 
-    excplicit String(Loc &l) : Base(STRING, l) {}
+    String(Loc &l) : Base(STRING, l) {}
     String() : Base(STRING) {}
 
     std::ostream & put(std::ostream &s) const;
     void print(Printer::Base &s) const;
-}
+};
 
 
 class Char : public Base {
  public:
     MAKE_CLONE(Char);
 
-    excplicit Char(Loc &l) : Base(CHAR, l) {}
+    Char(Loc &l) : Base(CHAR, l) {}
     Char() : Base(CHAR) {}
 
     std::ostream & put(std::ostream &s) const;
     void print(Printer::Base &s) const;
-}
+};
 
 
 class Bool : public Base {
  public:
     MAKE_CLONE(Bool);
 
-    excplicit Bool(Loc &l) : Base(BOOL, l) {}
+    Bool(Loc &l) : Base(BOOL, l) {}
     Bool() : Base(BOOL) {}
 
     std::ostream & put(std::ostream &s) const;
     void print(Printer::Base &s) const;
-}
+};
 
 
 class Signature : public Base {
@@ -372,7 +372,7 @@ class Signature : public Base {
 
     const std::string &name() const { return *_name; }
     void print(Printer::Base &s) const;
-}
+};
 
 
 // represents a pair of begin end iterator
@@ -385,7 +385,7 @@ class Range : public Base {
     Base *original_tuple;
     Component component;
 
-    excplicit Range(Base *b) : Base(RANGE), element_type(b),
+    Range(Base *b) : Base(RANGE), element_type(b),
               original_tuple(NULL), component(NONE) {}
     Range(Base *b, Base *o, Component c) : Base(RANGE), element_type(b),
           original_tuple(o), component(c) {}
@@ -393,7 +393,7 @@ class Range : public Base {
     std::ostream & put(std::ostream &s) const;
     void print(Printer::Base &s) const;
     bool is_eq(const Base & base) const;
-}
+};
 
 
 // the type of the input ...
@@ -408,7 +408,7 @@ class Seq : public Base {
     Seq(Base *b) : Base(SEQ), element_type(b) {}
     std::ostream & put(std::ostream &s) const;
     void print(Printer::Base &s) const;
-}
+};
 
 class Table : public Base {
  public:
@@ -435,7 +435,7 @@ class Subseq : public Base {
     Subseq(Seq *s) : Base(SUBSEQ), seq(s) {}
     std::ostream & put(std::ostream &s) const;
     void print(Printer::Base &s) const;
-}
+};
 
 
 class Generic : public Base {
@@ -444,7 +444,7 @@ class Generic : public Base {
     Generic(Type t) : Base(t) {}
     Generic(Type t, const Loc &l) : Base(t, l) {}
     std::ostream & put(std::ostream &s) const;
-}
+};
 
 
 class Shape : public Generic {
@@ -453,7 +453,7 @@ class Shape : public Generic {
     Shape() : Generic(SHAPE) { name = "shape"; }
     Shape(const Loc &l) : Generic(SHAPE, l) { name = "shape"; }
     void print(Printer::Base &s) const;
-}
+};
 
 
 class Referencable : public Base {
@@ -465,7 +465,7 @@ class Referencable : public Base {
     std::ostream & put(std::ostream &s) const;
     void print(Printer::Base &s) const;
     Base *deref();
-}
+};
 
 
 class Rational : public Generic {
@@ -476,7 +476,7 @@ class Rational : public Generic {
       name = "rational";
     }
     void print(Printer::Base &s) const;
-}
+};
 
 class BigInt : public Generic {
  public:
@@ -484,7 +484,7 @@ class BigInt : public Generic {
     BigInt() : Generic(BIGINT) { name = "bigint"; }
     BigInt(const Loc &l) : Generic(BIGINT, l) { name = "bigint"; }
     void print(Printer::Base &s) const;
-}
+};
 
 
 class External : public Base {
@@ -499,7 +499,7 @@ class External : public Base {
     std::ostream & put(std::ostream &s) const;
     void print(Printer::Base &s) const;
     bool is_eq(const Base & base) const;
-}
+};
 
 
 }  // namespace Type
