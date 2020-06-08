@@ -63,14 +63,12 @@ AST::AST()
     backtrack_product(0),
     backtrack_filter(0),
     original_product(0),
-    char_type(0)
-{
+    char_type(0) {
   Type::add_predefined(types);
 }
 
 
-Type::Base *AST::get_type(const std::string &name, const Loc &l)
-{
+Type::Base *AST::get_type(const std::string &name, const Loc &l) {
   hashtable<std::string, Type::Base*>::iterator i = types.find(name);
   if (i != types.end()) {
     return i->second;
@@ -80,8 +78,7 @@ Type::Base *AST::get_type(const std::string &name, const Loc &l)
 }
 
 
-Type::Base *AST::get_type(const std::string &name)
-{
+Type::Base *AST::get_type(const std::string &name) {
   hashtable<std::string, Type::Base*>::iterator i = types.find(name);
   if (i != types.end()) {
     return i->second;
@@ -91,8 +88,7 @@ Type::Base *AST::get_type(const std::string &name)
 }
 
 
-void AST::add_type(std::string *name, const Loc &l, Type::Base *base)
-{
+void AST::add_type(std::string *name, const Loc &l, Type::Base *base) {
   hashtable<std::string, Type::Base*>::iterator i = types.find(*name);
   if (i == types.end()) {
     types[*name] = base;
@@ -104,8 +100,7 @@ void AST::add_type(std::string *name, const Loc &l, Type::Base *base)
 }
 
 
-void AST::add_sig_types(hashtable<std::string, Arg*> & args, Signature *s)
-{
+void AST::add_sig_types(hashtable<std::string, Arg*> & args, Signature *s) {
   for (hashtable<std::string, Arg*>::iterator i = args.begin(); i != args.end(); ++i) {
     Arg *arg = i->second;
     if (*arg->name == "alphabet")
@@ -116,8 +111,7 @@ void AST::add_sig_types(hashtable<std::string, Arg*> & args, Signature *s)
 }
 
 
-bool AST::check_signature()
-{
+bool AST::check_signature() {
   bool r = true;
   bool b = signature->check();
   r = r && b;
@@ -127,8 +121,7 @@ bool AST::check_signature()
 }
 
 
-bool AST::check_algebras()
-{
+bool AST::check_algebras() {
   bool r = true;
   for(hashtable<std::string, Algebra*>::iterator i = algebras.begin(); i != algebras.end(); ++i) {
     bool b = i->second->check_signature(*signature);
@@ -138,8 +131,7 @@ bool AST::check_algebras()
 }
 
 
-bool AST::check_instances(Instance *instance)
-{
+bool AST::check_instances(Instance *instance) {
   for (hashtable<std::string, Algebra*>::iterator i = algebras.begin(); i != algebras.end(); ++i) {
     i->second->annotate_terminal_arguments(*signature);
   }
@@ -155,8 +147,7 @@ bool AST::check_instances(Instance *instance)
 }
 
 
-void AST::print_instances(std::ostream &s)
-{
+void AST::print_instances(std::ostream &s) {
   for (hashtable<std::string, Instance*>::iterator i = instances.begin(); i != instances.end(); ++i) {
     s << *i->second << std::endl;
   }
@@ -170,8 +161,7 @@ void AST::print_instances(std::ostream &s)
  * b) that one defined in the hashtable "instances"
  *    for the given instance name
  */
-Instance *AST::instance(const std::string &n)
-{
+Instance *AST::instance(const std::string &n) {
   if (n.empty()) {
     if (first_instance) {
       return first_instance;
@@ -191,8 +181,7 @@ Instance *AST::instance(const std::string &n)
 }
 
 
-bool AST::insert_instance(std::string &n)
-{
+bool AST::insert_instance(std::string &n) {
   Instance *inst = instance(n);
   if (!inst) {
     return false;
@@ -201,8 +190,7 @@ bool AST::insert_instance(std::string &n)
   return b;
 }
 
-bool AST::insert_instance(Instance *inst)
-{
+bool AST::insert_instance(Instance *inst) {
   assert(inst);
   instance_ = inst;
   grammar()->reset_types();
@@ -218,8 +206,7 @@ bool AST::insert_instance(Instance *inst)
 }
 
 
-bool AST::instance_grammar_eliminate_lists(std::string &n)
-{
+bool AST::instance_grammar_eliminate_lists(std::string &n) {
   Instance *inst = instance(n);
   if (!inst) {
     return false;
@@ -229,8 +216,7 @@ bool AST::instance_grammar_eliminate_lists(std::string &n)
 }
 
 
-bool AST::instance_grammar_eliminate_lists(Instance *inst)
-{
+bool AST::instance_grammar_eliminate_lists(Instance *inst) {
   assert(inst);
   inst->eliminate_lists();
   grammar()->eliminate_lists();
@@ -240,15 +226,13 @@ bool AST::instance_grammar_eliminate_lists(Instance *inst)
 
 // callable after insert_instance(), instance_grammar_eliminate_lists()
 //   and Grammar::init_list_sizes() are called
-void AST::warn_missing_choice_fns(Instance *instance)
-{
+void AST::warn_missing_choice_fns(Instance *instance) {
   List_Warn lw(instance);
   grammar()->traverse(lw);
 }
 
 
-void AST::warn_missing_choice_fns()
-{
+void AST::warn_missing_choice_fns() {
   List_Warn lw;
   grammar()->traverse(lw);
 }
@@ -264,8 +248,7 @@ bool AST::tableDesignIsOptimal() {
 }
 
 
-void AST::warn_user_table_conf_suboptimal()
-{
+void AST::warn_user_table_conf_suboptimal() {
   Runtime::Asm::Poly rt;
   rt  = grammar()->runtime();
   Runtime::Asm::Poly opt;
@@ -281,7 +264,7 @@ void AST::warn_user_table_conf_suboptimal()
           "runtime of " << rt ;
       o  << "\n\t  (optimal rt is " << opt << ").\n"
         << "\nAdded option -t for automatic table design for this compile run.";
-      Log::instance()->verboseMessage (grammar()->location, o.str());
+      Log::instance()->verboseMessage(grammar()->location, o.str());
     } else {
       // Print out a plain warning, because this might turn out to be
       // a problem, or is unwanted by the gapc user.
@@ -296,21 +279,18 @@ void AST::warn_user_table_conf_suboptimal()
 }
 
 
-void AST::codegen()
-{
+void AST::codegen() {
   sf_filter_code.clear();
   grammar()->codegen(*this);
 }
 
 
-void AST::print_code(Printer::Base &out)
-{
+void AST::print_code(Printer::Base &out) {
   grammar()->print_code(out);
 }
 
 
-void AST::derive_roles()
-{
+void AST::derive_roles() {
   for(hashtable<std::string, Algebra*>::iterator i = algebras.begin(); i != algebras.end(); ++i) {
     i->second->derive_role();
   }
@@ -318,8 +298,7 @@ void AST::derive_roles()
 
 
 struct Push_Type_Cmp {
-  bool operator() (const std::pair<Type::List::Push_Type, std::string> &a, const std::pair<Type::List::Push_Type, std::string>  &b)
-  {
+  bool operator() (const std::pair<Type::List::Push_Type, std::string> &a, const std::pair<Type::List::Push_Type, std::string>  &b) {
     //return *p1 < *p2;
     Type::List::Push_Type x = a.first;
     Type::List::Push_Type y = b.first;
@@ -335,15 +314,13 @@ struct Push_Type_Cmp {
 
 
 struct FixLink : public Visitor {
-  void visit (Alt::Link &a)
-  {
+  void visit(Alt::Link &a) {
     a.optimize_choice();
   }
 };
 
 
-void AST::optimize_choice(Instance &inst)
-{
+void AST::optimize_choice(Instance &inst) {
   if (!inst.product->contains_only_times())
     return;
 
@@ -401,8 +378,7 @@ void AST::optimize_choice(Instance &inst)
 #include "operator.hh"
 
 
-void AST::optimize_classify(Instance &inst)
-{
+void AST::optimize_classify(Instance &inst) {
   assert(inst.product);
   if (!inst.product->left_is_classify() || !inst.product->one_per_class()) {
     if (kbest) {
@@ -496,14 +472,12 @@ struct SetADPVersion : public Visitor {
         SetADPVersion(ADP_Mode::Adp_Specialization s, ADP_Mode::Adp_Join j, std::string d, std::string cs, std::string ss)
         :  spec(s), join(j), duplicate_suffix(d), comperator_suffix(cs), sorter_suffix(ss) {}
 
-  void visit(Alt::Base &b)
-  {
+  void visit(Alt::Base &b) {
             b.set_adp_specialization(spec);
             b.set_adp_join(join);
   }
 
-        void visit(Symbol::NT &n)
-        {
+        void visit(Symbol::NT &n) {
              n.set_adp_join(join);
              if (spec != ADP_Mode::STANDARD) {
                  n.set_adp_specialization(spec, duplicate_suffix, comperator_suffix, sorter_suffix);
@@ -620,8 +594,7 @@ void AST::duplicate_choice_functions(Algebra *a, std::string duplicate_suffix, s
     a->set_fns(new_fncts);
 }
 
-void AST::backtrack_gen(Backtrack_Base &bt)
-{
+void AST::backtrack_gen(Backtrack_Base &bt) {
   assert(instance_);
   Algebra *score = instance_->product->bt_score_algebra();
 
@@ -711,8 +684,7 @@ void AST::set_adp_header(int spec, int pareto, bool multi_pareto, int step_mode)
 
 }
 
-Instance *AST::split_instance_for_backtrack(std::string &n)
-{
+Instance *AST::split_instance_for_backtrack(std::string &n) {
   Instance *i = instance(n);
   if (!i) {
     return 0;
@@ -738,8 +710,7 @@ Instance *AST::split_instance_for_backtrack(std::string &n)
 }
 
 
-std::pair<Instance*, Instance*> AST::split_classified(const std::string &n)
-{
+std::pair<Instance*, Instance*> AST::split_classified(const std::string &n) {
   Instance *i = instance(n);
   if (!i) {
     throw LogError("Instance does not exist.");
@@ -776,8 +747,7 @@ std::pair<Instance*, Instance*> AST::split_classified(const std::string &n)
 #include "unused_visitor.hh"
 
 
-void AST::warn_unused_fns(Instance &inst)
-{
+void AST::warn_unused_fns(Instance &inst) {
   Unused_Visitor v;
   grammar()->traverse(v);
   hashtable<std::string, Fn_Def*> &fns = inst.product->algebra()->fns;
@@ -786,7 +756,7 @@ void AST::warn_unused_fns(Instance &inst)
     if (!f->in_use()) {
       Fn_Decl *x = signature->decl(*f->name);
       if (x) {
-        Log::instance()->verboseMessage (x->location, "Signature symbol " + *f->name + " unused in grammar " + *grammar()->name + ".");
+        Log::instance()->verboseMessage(x->location, "Signature symbol " + *f->name + " unused in grammar " + *grammar()->name + ".");
       }
     }
     inst.product->set_in_use(*f);
@@ -797,8 +767,7 @@ void AST::warn_unused_fns(Instance &inst)
 #include "options.hh"
 
 
-void AST::check_backtrack(const Options &opts)
-{
+void AST::check_backtrack(const Options &opts) {
   if (opts.backtrack) {
     Algebra *a = instance_->product->algebra();
     for (hashtable<std::string, Fn_Def*>::iterator i = a->choice_fns.begin(); i != a->choice_fns.end(); ++i) {
@@ -817,8 +786,7 @@ void AST::check_backtrack(const Options &opts)
 #include "char_visitor.hh"
 
 
-void AST::set_tracks()
-{
+void AST::set_tracks() {
   size_t tracks = grammar()->axiom->tracks();
   input.set_tracks(tracks);
 
@@ -834,8 +802,7 @@ void AST::set_tracks()
 }
 
 
-void AST::derive_temp_alphabet()
-{
+void AST::derive_temp_alphabet() {
   set_tracks();
 
   Char_Visitor v;
@@ -865,8 +832,7 @@ void AST::derive_temp_alphabet()
 }
 
 // set the type of the input to read
-void AST::update_alphabet_types(Type::Base *res)
-{
+void AST::update_alphabet_types(Type::Base *res) {
   hashtable<std::string, Type::Base*>::iterator i = types.find("alphabet");
   assert(i != types.end());
   dynamic_cast<Type::Alphabet*>(i->second)->temp = res;
@@ -897,11 +863,10 @@ void AST::update_alphabet_types(Type::Base *res)
 }
 
 
-void AST::update_seq_type (Instance &inst)
-{
+void AST::update_seq_type(Instance &inst) {
   Algebra *a = inst.product->algebra();
   assert(a);
-  hashtable<std::string, Type::Base*>::iterator i = a->params.find ("alphabet");
+  hashtable<std::string, Type::Base*>::iterator i = a->params.find("alphabet");
   assert(i != a->params.end());
   Type::Base *type = i->second;
   if (char_type && !type->is_eq(*char_type)) {
@@ -918,8 +883,7 @@ void AST::update_seq_type (Instance &inst)
 }
 
 
-void AST::set_window_mode (bool w)
-{
+void AST::set_window_mode(bool w) {
   if (!w)
     return;
   if (grammar()->axiom->tracks() > 1)
@@ -931,8 +895,7 @@ void AST::set_window_mode (bool w)
 }
 
 
-bool AST::grammar_defined (const std::string &n) const
-{
+bool AST::grammar_defined(const std::string &n) const {
   assert (grammars_);
   for (std::list<Grammar*>::iterator i = grammars_->begin(); i != grammars_->end(); ++i) {
     if (*(*i)->name == n) {
@@ -955,10 +918,8 @@ Grammar *AST::grammar() const {
 /*
  * Returns the grammar with the given name.
  */
-Grammar *AST::grammar (const std::string &n)
-{
-  for (std::list<Grammar*>::iterator i = grammars_->begin(); i != grammars_->end(); ++i)
-  {
+Grammar *AST::grammar(const std::string &n) {
+  for (std::list<Grammar*>::iterator i = grammars_->begin(); i != grammars_->end(); ++i) {
     if (*(*i)->name == n) {
       return *i;
     }
@@ -971,8 +932,7 @@ Grammar *AST::grammar (const std::string &n)
 #include <map>
 
 
-void AST::set_grammars (std::list<Grammar*> *g)
-{
+void AST::set_grammars(std::list<Grammar*> *g) {
   grammars_ = g;
   if (!grammars_->empty()) {
     selected_grammar = grammars_->back();
@@ -999,8 +959,7 @@ void AST::set_grammars (std::list<Grammar*> *g)
  * compiler driver gapc.cc, at that moment when the front end
  * sets the instance name found in the command line options.
  */
-void AST::select_grammar(const std::string &instname)
-{
+void AST::select_grammar(const std::string &instname) {
   // If the instance name given by the parameter is empty, this
   // next assignment gets an instance that is defined first
   // in the source-code file.
@@ -1015,8 +974,7 @@ void AST::select_grammar(const std::string &instname)
 #include "statement/hash_decl.hh"
 
 
-void AST::set_class_name(const std::string &n)
-{
+void AST::set_class_name(const std::string &n) {
   for (std::list<Statement::Hash_Decl*>::iterator i = hash_decls_.begin(); i != hash_decls_.end(); ++i) {
     (*i)->set_class_name(n);
   }

@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef CONST_FWD_HH
-#define CONST_FWD_HH
+#ifndef SRC_CONST_FWD_HH_
+#define SRC_CONST_FWD_HH_
 
 namespace Const {
   class Base;

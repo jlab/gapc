@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef EXPR_FWD_HH
-#define EXPR_FWD_HH
+#ifndef SRC_EXPR_FWD_HH_
+#define SRC_EXPR_FWD_HH_
 
 namespace Expr {
   enum Type { PLUS, MINUS, TIMES, DIV, COMP, FN_CALL, VACC, CONST,

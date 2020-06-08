@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef FILTER_HH
-#define FILTER_HH
+#ifndef SRC_FILTER_HH_
+#define SRC_FILTER_HH_
 
 #include "hashtable.hh"
 #include "loc.hh"

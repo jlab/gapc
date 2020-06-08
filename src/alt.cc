@@ -57,21 +57,18 @@ Alt::Base::Base(Type t, const Loc &l)
     terminal_type(false), location(l),
     ret_decl(NULL), filter_guards(NULL),
     choice_fn_type_(Expr::Fn_Call::NONE),
-    tracks_(0), track_pos_(0)
-{
+    tracks_(0), track_pos_(0) {
 }
 
 
-Alt::Base::~Base()
-{
+Alt::Base::~Base() {
 }
 
 
 Alt::Simple::Simple(std::string *n, const Loc &l)
   :  Base(SIMPLE,l), is_terminal_(false),
     name(n), decl(NULL),
-        guards(NULL), inner_code(0)
-{
+        guards(NULL), inner_code(0) {
   hashtable<std::string, Fn_Decl*>::iterator j = Fn_Decl::builtins.find(*name);
   if (j != Fn_Decl::builtins.end()) {
     is_terminal_ = true;
@@ -80,8 +77,7 @@ Alt::Simple::Simple(std::string *n, const Loc &l)
 }
 
 
-Alt::Base *Alt::Simple::clone()
-{
+Alt::Base *Alt::Simple::clone() {
   Alt::Simple *a = new Alt::Simple(*this);
   a->args.clear();
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
@@ -91,8 +87,7 @@ Alt::Base *Alt::Simple::clone()
 }
 
 
-Alt::Base *Alt::Block::clone()
-{
+Alt::Base *Alt::Block::clone() {
   Alt::Block *a = new Alt::Block(*this);
   a->alts.clear();
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
@@ -102,15 +97,13 @@ Alt::Base *Alt::Block::clone()
 }
 
 
-Alt::Base *Alt::Link::clone()
-{
+Alt::Base *Alt::Link::clone() {
   Alt::Link *a = new Alt::Link(*this);
   return a;
 }
 
 
-Alt::Base *Alt::Multi::clone()
-{
+Alt::Base *Alt::Multi::clone() {
   Alt::Multi *a = new Alt::Multi(*this);
   a->list.clear();
   for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i) {
@@ -142,14 +135,12 @@ void Alt::Base::add_specialised_arguments(Statement::Fn_Call *fn) {
 }
 
 
-bool Alt::Base::init_links (Grammar &g)
-{
+bool Alt::Base::init_links(Grammar &g) {
   return true;
 }
 
 
-bool Alt::Simple::init_links(Grammar &g)
-{
+bool Alt::Simple::init_links(Grammar &g) {
   if (has_index_overlay()) {
     index_overlay.front()->init_links(g);
   }
@@ -163,8 +154,7 @@ bool Alt::Simple::init_links(Grammar &g)
 }
 
 
-bool Alt::Link::init_links(Grammar &grammar)
-{
+bool Alt::Link::init_links(Grammar &grammar) {
   if (grammar.NTs.find(*name) == grammar.NTs.end()) {
     Log::instance()->error(location, "Nonterminal " + *name + " is not defined in grammar " + *(grammar.name) + ".");
     return false;
@@ -181,8 +171,7 @@ bool Alt::Link::init_links(Grammar &grammar)
 }
 
 
-bool Alt::Block::init_links(Grammar &grammar)
-{
+bool Alt::Block::init_links(Grammar &grammar) {
   bool r = true;
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     bool a = (*i)->init_links(grammar);
@@ -192,8 +181,7 @@ bool Alt::Block::init_links(Grammar &grammar)
 }
 
 
-bool Alt::Multi::init_links(Grammar &grammar)
-{
+bool Alt::Multi::init_links(Grammar &grammar) {
   bool r = true;
   for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i) {
     if ((*i)->is(BLOCK)) {
@@ -212,8 +200,7 @@ bool Alt::Multi::init_links(Grammar &grammar)
 }
 
 
-bool Alt::Simple::init_productive()
-{
+bool Alt::Simple::init_productive() {
   bool r = false;
   bool s = true;
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
@@ -230,8 +217,7 @@ bool Alt::Simple::init_productive()
 }
 
 
-bool Alt::Link::init_productive()
-{
+bool Alt::Link::init_productive() {
   if (!nt) {
     return false;
   }
@@ -243,8 +229,7 @@ bool Alt::Link::init_productive()
 }
 
 
-bool Alt::Block::init_productive()
-{
+bool Alt::Block::init_productive() {
   bool r = false;
   bool s = false;
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
@@ -260,8 +245,7 @@ bool Alt::Block::init_productive()
   return r;
 }
 
-bool Alt::Multi::init_productive()
-{
+bool Alt::Multi::init_productive() {
   bool r = false;
   bool s = true;
   for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i) {
@@ -278,8 +262,7 @@ bool Alt::Multi::init_productive()
 }
 
 
-void Alt::Simple::collect_lr_deps(std::list<Symbol::NT*> &list, const Yield::Multi &l, const Yield::Multi &r)
-{
+void Alt::Simple::collect_lr_deps(std::list<Symbol::NT*> &list, const Yield::Multi &l, const Yield::Multi &r) {
   Yield::Multi left(l);
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
     Yield::Multi right(r);
@@ -294,8 +277,7 @@ void Alt::Simple::collect_lr_deps(std::list<Symbol::NT*> &list, const Yield::Mul
 }
 
 
-void Alt::Link::collect_lr_deps(std::list<Symbol::NT*> &list, const Yield::Multi &left, const Yield::Multi &right)
-{
+void Alt::Link::collect_lr_deps(std::list<Symbol::NT*> &list, const Yield::Multi &left, const Yield::Multi &right) {
   if (!(left.is_low_zero() && right.is_low_zero())) {
     return;
   }
@@ -309,16 +291,14 @@ void Alt::Link::collect_lr_deps(std::list<Symbol::NT*> &list, const Yield::Multi
 }
 
 
-void Alt::Block::collect_lr_deps(std::list<Symbol::NT*> &list, const Yield::Multi &left, const Yield::Multi &right)
-{
+void Alt::Block::collect_lr_deps(std::list<Symbol::NT*> &list, const Yield::Multi &left, const Yield::Multi &right) {
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     (*i)->collect_lr_deps(list, left, right);
   }
 }
 
 
-void Alt::Multi::collect_lr_deps(std::list<Symbol::NT*> &nts, const Yield::Multi &left, const Yield::Multi &right)
-{
+void Alt::Multi::collect_lr_deps(std::list<Symbol::NT*> &nts, const Yield::Multi &left, const Yield::Multi &right) {
   assert(left.tracks() == tracks_);
   assert(right.tracks() == tracks_);
   assert(tracks_ == list.size());
@@ -334,8 +314,7 @@ void Alt::Multi::collect_lr_deps(std::list<Symbol::NT*> &nts, const Yield::Multi
 }
 
 
-size_t Alt::Simple::width()
-{
+size_t Alt::Simple::width() {
   size_t r = 0;
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
     Fn_Arg::Base *b = *i;
@@ -352,8 +331,7 @@ size_t Alt::Simple::width()
 }
 
 
-size_t Alt::Link::width()
-{
+size_t Alt::Link::width() {
   size_t r = 0;
 
   for (Yield::Multi::iterator i = m_ys.begin(); i != m_ys.end(); ++i) {
@@ -365,8 +343,7 @@ size_t Alt::Link::width()
 }
 
 
-size_t Alt::Block::width()
-{
+size_t Alt::Block::width() {
   size_t r = 0;
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     size_t t = (*i)->width();
@@ -378,8 +355,7 @@ size_t Alt::Block::width()
 }
 
 
-size_t Alt::Multi::width()
-{
+size_t Alt::Multi::width() {
   size_t r = 0;
   for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i) {
     r += (*i)->width();
@@ -388,8 +364,7 @@ size_t Alt::Multi::width()
 }
 
 
-void Alt::Simple::init_table_dim(const Yield::Size &a, const Yield::Size &b, std::vector<Yield::Size> &temp_ls, std::vector<Yield::Size> &temp_rs, size_t track)
-{
+void Alt::Simple::init_table_dim(const Yield::Size &a, const Yield::Size &b, std::vector<Yield::Size> &temp_ls, std::vector<Yield::Size> &temp_rs, size_t track) {
   if (is_terminal()) {
     return;
   }
@@ -413,22 +388,19 @@ void Alt::Simple::init_table_dim(const Yield::Size &a, const Yield::Size &b, std
 }
 
 
-void Alt::Link::init_table_dim(const Yield::Size &a, const Yield::Size &b, std::vector<Yield::Size> &temp_ls, std::vector<Yield::Size> &temp_rs, size_t track)
-{
+void Alt::Link::init_table_dim(const Yield::Size &a, const Yield::Size &b, std::vector<Yield::Size> &temp_ls, std::vector<Yield::Size> &temp_rs, size_t track) {
   nt->init_table_dim(a, b, temp_ls, temp_rs, track);
 }
 
 
-void Alt::Block::init_table_dim(const Yield::Size &a, const Yield::Size &b, std::vector<Yield::Size> &temp_ls, std::vector<Yield::Size> &temp_rs, size_t track)
-{
+void Alt::Block::init_table_dim(const Yield::Size &a, const Yield::Size &b, std::vector<Yield::Size> &temp_ls, std::vector<Yield::Size> &temp_rs, size_t track) {
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     (*i)->init_table_dim(a, b, temp_ls, temp_rs, track);
   }
 }
 
 
-void Alt::Multi::init_table_dim(const Yield::Size &a, const Yield::Size &b, std::vector<Yield::Size> &temp_ls, std::vector<Yield::Size> &temp_rs, size_t track)
-{
+void Alt::Multi::init_table_dim(const Yield::Size &a, const Yield::Size &b, std::vector<Yield::Size> &temp_ls, std::vector<Yield::Size> &temp_rs, size_t track) {
   size_t j = 0;
   assert(track < list.size());
   std::list<Base*>::iterator i = list.begin();
@@ -439,30 +411,26 @@ void Alt::Multi::init_table_dim(const Yield::Size &a, const Yield::Size &b, std:
 }
 
 
-void Alt::Simple::print_link(std::ostream &s)
-{
+void Alt::Simple::print_link(std::ostream &s) {
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
     (*i)->print_link(s);
   }
 }
 
 
-void Alt::Link::print_link(std::ostream &s)
-{
+void Alt::Link::print_link(std::ostream &s) {
   s << " -> " << *nt->name << " (" << calls << ')';
 }
 
 
-void Alt::Block::print_link(std::ostream &s)
-{
+void Alt::Block::print_link(std::ostream &s) {
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     (*i)->print_link(s);
   }
 }
 
 
-void Alt::Multi::print_link(std::ostream &s)
-{
+void Alt::Multi::print_link(std::ostream &s) {
   s << " < ";
   for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i) {
     (*i)->print_link(s); s << ", ";
@@ -471,8 +439,7 @@ void Alt::Multi::print_link(std::ostream &s)
 }
 
 
-Runtime::Poly Alt::Simple::runtime(std::list<Symbol::NT*> &active_list, const Runtime::Poly &accum_rt)
-{
+Runtime::Poly Alt::Simple::runtime(std::list<Symbol::NT*> &active_list, const Runtime::Poly &accum_rt) {
   Runtime::Poly rt(1); // FIXME use higher constant for more realistic fn call
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
     rt += (*i)->runtime(active_list, accum_rt);
@@ -481,8 +448,7 @@ Runtime::Poly Alt::Simple::runtime(std::list<Symbol::NT*> &active_list, const Ru
 }
 
 
-Runtime::Poly Alt::Link::runtime(std::list<Symbol::NT*> &active_list, const Runtime::Poly &accum_rt)
-{
+Runtime::Poly Alt::Link::runtime(std::list<Symbol::NT*> &active_list, const Runtime::Poly &accum_rt) {
   Runtime::Poly rt = calls;
   Runtime::Poly a(accum_rt);
   a *= calls;
@@ -493,8 +459,7 @@ Runtime::Poly Alt::Link::runtime(std::list<Symbol::NT*> &active_list, const Runt
 }
 
 
-Runtime::Poly Alt::Block::runtime(std::list<Symbol::NT*> &active_list, const Runtime::Poly &accum_rt)
-{
+Runtime::Poly Alt::Block::runtime(std::list<Symbol::NT*> &active_list, const Runtime::Poly &accum_rt) {
   Runtime::Poly rt;
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     rt += (*i)->runtime(active_list, accum_rt);
@@ -503,8 +468,7 @@ Runtime::Poly Alt::Block::runtime(std::list<Symbol::NT*> &active_list, const Run
 }
 
 
-Runtime::Poly Alt::Multi::runtime(std::list<Symbol::NT*> &active_list, const Runtime::Poly &accum_rt)
-{
+Runtime::Poly Alt::Multi::runtime(std::list<Symbol::NT*> &active_list, const Runtime::Poly &accum_rt) {
   Runtime::Poly rt;
   for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i) {
     rt += (*i)->runtime(active_list, accum_rt);
@@ -513,8 +477,7 @@ Runtime::Poly Alt::Multi::runtime(std::list<Symbol::NT*> &active_list, const Run
 }
 
 
-Runtime::Poly Alt::Simple::init_in_out()
-{
+Runtime::Poly Alt::Simple::init_in_out() {
   Runtime::Poly p;
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
     p += (*i)->init_in_out();
@@ -523,15 +486,13 @@ Runtime::Poly Alt::Simple::init_in_out()
 }
 
 
-Runtime::Poly Alt::Link::init_in_out()
-{
+Runtime::Poly Alt::Link::init_in_out() {
   nt->init_in_out(calls);
   return calls;
 }
 
 
-Runtime::Poly Alt::Block::init_in_out()
-{
+Runtime::Poly Alt::Block::init_in_out() {
   Runtime::Poly p;
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     p += (*i)->init_in_out();
@@ -540,8 +501,7 @@ Runtime::Poly Alt::Block::init_in_out()
 }
 
 
-Runtime::Poly Alt::Multi::init_in_out()
-{
+Runtime::Poly Alt::Multi::init_in_out() {
   Runtime::Poly p;
   for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i) {
     p += (*i)->init_in_out();
@@ -550,8 +510,7 @@ Runtime::Poly Alt::Multi::init_in_out()
 }
 
 
-void Alt::Simple::init_self_rec()
-{
+void Alt::Simple::init_self_rec() {
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
     if ((*i)->is(Fn_Arg::ALT)) {
       (*i)->alt_ref()->init_self_rec();
@@ -560,28 +519,24 @@ void Alt::Simple::init_self_rec()
 }
 
 
-void Alt::Link::init_self_rec()
-{
+void Alt::Link::init_self_rec() {
   nt->init_self_rec();
 }
 
 
-void Alt::Block::init_self_rec()
-{
+void Alt::Block::init_self_rec() {
   for_each(alts.begin(), alts.end(), std::mem_fun(&Base::init_self_rec));
 }
 
 
-void Alt::Multi::init_self_rec()
-{
+void Alt::Multi::init_self_rec() {
   for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i) {
     (*i)->init_self_rec();
   }
 }
 
 
-bool Alt::Base::set_data_type(::Type::Base *t, const Loc &l)
-{
+bool Alt::Base::set_data_type(::Type::Base *t, const Loc &l) {
   if (!t) {
     return true;
   }
@@ -590,8 +545,7 @@ bool Alt::Base::set_data_type(::Type::Base *t, const Loc &l)
 }
 
 
-bool Alt::Simple::insert_types(Signature_Base &s)
-{
+bool Alt::Simple::insert_types(Signature_Base &s) {
   Fn_Decl *fn_decl = s.decl(*name);
   if (!fn_decl) {
     hashtable<std::string, Fn_Decl*>::iterator j = Fn_Decl::builtins.find(*name);
@@ -640,14 +594,12 @@ bool Alt::Simple::insert_types(Signature_Base &s)
 }
 
 
-bool Alt::Link::insert_types(Signature_Base &s)
-{
+bool Alt::Link::insert_types(Signature_Base &s) {
   return true;
 }
 
 
-bool Alt::Block::insert_types(Signature_Base &s)
-{
+bool Alt::Block::insert_types(Signature_Base &s) {
   bool r = true;
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     bool b = (*i)->insert_types(s);
@@ -657,14 +609,12 @@ bool Alt::Block::insert_types(Signature_Base &s)
 }
 
 
-bool Alt::Multi::insert_types(Signature_Base &s)
-{
+bool Alt::Multi::insert_types(Signature_Base &s) {
   return true;
 }
 
 
-Type::Status Alt::Simple::infer_missing_types()
-{
+Type::Status Alt::Simple::infer_missing_types() {
   ::Type::Status r = ::Type::READY;
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
     ::Type::Status b = (*i)->infer_missing_types();
@@ -674,8 +624,7 @@ Type::Status Alt::Simple::infer_missing_types()
 }
 
 
-Type::Status Alt::Link::infer_missing_types()
-{
+Type::Status Alt::Link::infer_missing_types() {
   ::Type::Status r = ::Type::READY;
   if (!terminal_type && nt->terminal_type) {
     terminal_type = true;
@@ -707,8 +656,7 @@ Type::Status Alt::Link::infer_missing_types()
 }
 
 
-Type::Status Alt::Block::infer_missing_types()
-{
+Type::Status Alt::Block::infer_missing_types() {
   ::Type::Status r = ::Type::READY;
   bool terminal_types = true;
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
@@ -738,8 +686,7 @@ Type::Status Alt::Block::infer_missing_types()
 #include "type/multi.hh"
 
 
-Type::Status Alt::Multi::infer_missing_types()
-{
+Type::Status Alt::Multi::infer_missing_types() {
   ::Type::Status r = ::Type::READY;
   std::list< ::Type::Base*> types;
   bool saw_list = false;
@@ -770,8 +717,7 @@ Type::Status Alt::Multi::infer_missing_types()
 }
 
 
-void Alt::Simple::print_type(std::ostream &s)
-{
+void Alt::Simple::print_type(std::ostream &s) {
   if (datatype) {
     s << *datatype;
   }
@@ -787,8 +733,7 @@ void Alt::Simple::print_type(std::ostream &s)
 }
 
 
-void Alt::Link::print_type(std::ostream &s)
-{
+void Alt::Link::print_type(std::ostream &s) {
   if (datatype) {
     s << *datatype;
   }
@@ -798,8 +743,7 @@ void Alt::Link::print_type(std::ostream &s)
 }
 
 
-void Alt::Block::print_type(std::ostream &s)
-{
+void Alt::Block::print_type(std::ostream &s) {
   if (datatype) {
     s << *datatype;
   }
@@ -812,8 +756,7 @@ void Alt::Block::print_type(std::ostream &s)
 }
 
 
-void Alt::Multi::print_type(std::ostream &s)
-{
+void Alt::Multi::print_type(std::ostream &s) {
   if (datatype) {
     s << *datatype;
   }
@@ -823,8 +766,7 @@ void Alt::Multi::print_type(std::ostream &s)
 }
 
 
-bool Alt::Simple::has_moving_k()
-{
+bool Alt::Simple::has_moving_k() {
   unsigned x = 0;
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end();++i) {
     if ((*i)->multi_ys().has_moving()) {
@@ -840,8 +782,7 @@ bool Alt::Simple::has_moving_k()
 
 /* Returns true if no subfunctions are involved. This value is used to apply
  sorting, pareto or others for specialised ADP version, such as Pareto Eager or Sorted ADP*/
-bool Alt::Simple::is_nullary()
-{
+bool Alt::Simple::is_nullary() {
   unsigned x = 0;
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end();++i) {
             if(!(*i)->terminal_type && (*i)->choice_set() ) {
@@ -851,8 +792,7 @@ bool Alt::Simple::is_nullary()
   return true;
 }
 
-bool Alt::Simple::eliminate_lists()
-{
+bool Alt::Simple::eliminate_lists() {
   bool r = false;
   bool x = true;
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
@@ -872,8 +812,7 @@ bool Alt::Simple::eliminate_lists()
 }
 
 
-bool Alt::Link::eliminate_lists()
-{
+bool Alt::Link::eliminate_lists() {
   if (!eliminated && nt->is_eliminated()) {
     eliminated = true;
 
@@ -891,8 +830,7 @@ bool Alt::Link::eliminate_lists()
 }
 
 
-bool Alt::Block::eliminate_lists()
-{
+bool Alt::Block::eliminate_lists() {
   bool r = false;
   bool x = true;
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
@@ -910,8 +848,7 @@ bool Alt::Block::eliminate_lists()
 }
 
 
-bool Alt::Multi::eliminate_lists()
-{
+bool Alt::Multi::eliminate_lists() {
   bool r = false;
   bool x = true;
   for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i) {
@@ -929,8 +866,7 @@ bool Alt::Multi::eliminate_lists()
 }
 
 
-bool Alt::Simple::init_list_sizes()
-{
+bool Alt::Simple::init_list_sizes() {
   bool r = false;
   if (has_moving_k() && list_size_ != Yield::UP) {
     list_size_ = Yield::UP;
@@ -961,8 +897,7 @@ bool Alt::Simple::init_list_sizes()
 }
 
 
-bool Alt::Link::init_list_sizes()
-{
+bool Alt::Link::init_list_sizes() {
   if (nt->list_size() != 0) {
     if (list_size_ == 0) {
       list_size_ = nt->list_size();
@@ -973,8 +908,7 @@ bool Alt::Link::init_list_sizes()
   return false;
 }
 
-bool Alt::Block::init_list_sizes()
-{
+bool Alt::Block::init_list_sizes() {
   Yield::Poly t;
   bool uninit = false;
   bool r = false;
@@ -999,8 +933,7 @@ bool Alt::Block::init_list_sizes()
 }
 
 
-bool Alt::Multi::init_list_sizes()
-{
+bool Alt::Multi::init_list_sizes() {
   Yield::Poly t;
   bool uninit = false;
   bool r = false;
@@ -1025,15 +958,13 @@ bool Alt::Multi::init_list_sizes()
 }
 
 
-void Alt::Base::reset_types()
-{
+void Alt::Base::reset_types() {
   datatype = NULL;
   eliminated = false;
 }
 
 
-void Alt::Simple::traverse(Visitor &v)
-{
+void Alt::Simple::traverse(Visitor &v) {
   v.visit(*dynamic_cast<Base*>(this));
   v.visit_begin(*this);
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
@@ -1044,15 +975,13 @@ void Alt::Simple::traverse(Visitor &v)
 }
 
 
-void Alt::Link::traverse(Visitor &v)
-{
+void Alt::Link::traverse(Visitor &v) {
   v.visit(*dynamic_cast<Base*>(this));
   v.visit(*this);
 }
 
 
-void Alt::Block::traverse(Visitor &v)
-{
+void Alt::Block::traverse(Visitor &v) {
   v.visit(*dynamic_cast<Base*>(this));
   v.visit_begin(*this);
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
@@ -1063,8 +992,7 @@ void Alt::Block::traverse(Visitor &v)
 }
 
 
-void Alt::Multi::traverse(Visitor &v)
-{
+void Alt::Multi::traverse(Visitor &v) {
   v.visit(*dynamic_cast<Base*>(this));
   v.visit(*this);
   for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i) {
@@ -1076,8 +1004,7 @@ void Alt::Multi::traverse(Visitor &v)
 
 
 void Alt::Base::init_indices(Expr::Base *left, Expr::Base *right,
-    unsigned int &k, size_t track)
-{
+    unsigned int &k, size_t track) {
   assert(track < left_indices.size());
   assert(left);
   assert(right);
@@ -1087,8 +1014,7 @@ void Alt::Base::init_indices(Expr::Base *left, Expr::Base *right,
 }
 
 
-void Alt::Simple::reset()
-{
+void Alt::Simple::reset() {
   loops.clear();
   if (has_index_overlay()) {
     index_overlay.front()->reset();
@@ -1102,8 +1028,7 @@ void Alt::Simple::reset()
 
 Expr::Base *Alt::Simple::next_index_var(unsigned &k, size_t track,
   Expr::Base *next_var, Expr::Base *last_var, Expr::Base *right,
-  const Yield::Size &ys, const Yield::Size &lhs, const Yield::Size &rhs)
-{
+  const Yield::Size &ys, const Yield::Size &lhs, const Yield::Size &rhs) {
   if (ys.low() != ys.high()) {
     if (rhs.low() == rhs.high()) {
       return right;
@@ -1148,8 +1073,7 @@ Expr::Base *Alt::Simple::next_index_var(unsigned &k, size_t track,
 }
 
 
-void Alt::Simple::init_indices(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track)
-{
+void Alt::Simple::init_indices(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track) {
   if (has_index_overlay()) {
     unsigned t = k;
     index_overlay.front()->init_indices(left, right, t, track);
@@ -1204,14 +1128,12 @@ void Alt::Simple::init_indices(Expr::Base *left, Expr::Base *right, unsigned int
 }
 
 
-void Alt::Link::init_indices(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track)
-{
+void Alt::Link::init_indices(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track) {
   Base::init_indices(left, right, k, track);
 }
 
 
-void Alt::Block::init_indices(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track)
-{
+void Alt::Block::init_indices(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track) {
   Base::init_indices(left, right, k, track);
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     (*i)->init_indices(left, right, k, track);
@@ -1219,8 +1141,7 @@ void Alt::Block::init_indices(Expr::Base *left, Expr::Base *right, unsigned int 
 }
 
 
-void Alt::Multi::init_indices(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track)
-{
+void Alt::Multi::init_indices(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track) {
   Base::init_indices(left, right, k, track);
   size_t j = 0;
   assert(track < list.size());
@@ -1232,13 +1153,11 @@ void Alt::Multi::init_indices(Expr::Base *left, Expr::Base *right, unsigned int 
   (*i)->init_indices(left, right, k, 0);
 }
 
-void Alt::Simple::put_indices(std::ostream &s)
-{
+void Alt::Simple::put_indices(std::ostream &s) {
   print(s);
   s << std::endl;
   s << *name << "( ";
-  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i)
-  {
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
     if (tracks_ == 1) {
       assert(left_indices.size() == 1);
       s << "\\" << *(*i)->left_indices.front()
@@ -1264,8 +1183,7 @@ void Alt::Simple::put_indices(std::ostream &s)
 }
 
 
-void Alt::Simple::print(std::ostream &s)
-{
+void Alt::Simple::print(std::ostream &s) {
   s << *name << "( ";
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
     (*i)->print(s);
@@ -1275,8 +1193,7 @@ void Alt::Simple::print(std::ostream &s)
 }
 
 
-void Alt::Block::print(std::ostream &s)
-{
+void Alt::Block::print(std::ostream &s) {
   s << "{ ";
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     (*i)->print(s);
@@ -1286,14 +1203,12 @@ void Alt::Block::print(std::ostream &s)
 }
 
 
-void Alt::Link::print(std::ostream &s)
-{
+void Alt::Link::print(std::ostream &s) {
   s << *name;
 }
 
 
-void Alt::Multi::print(std::ostream &s)
-{
+void Alt::Multi::print(std::ostream &s) {
   assert(!list.empty());
   s << " < ";
   std::list<Base*>::iterator i = list.begin();
@@ -1307,16 +1222,14 @@ void Alt::Multi::print(std::ostream &s)
 }
 
 
-void Alt::Base::init_ret_decl(unsigned int i, const std::string &prefix)
-{
+void Alt::Base::init_ret_decl(unsigned int i, const std::string &prefix) {
   std::ostringstream o;
   o << prefix << "ret_" << i;
   ret_decl = new Statement::Var_Decl(datatype, new std::string(o.str()));
 }
 
 
-void Alt::Multi::init_ret_decl(unsigned int i, const std::string &prefix)
-{
+void Alt::Multi::init_ret_decl(unsigned int i, const std::string &prefix) {
   Base::init_ret_decl(i, prefix);
   ret_decls_.clear();
 
@@ -1336,14 +1249,12 @@ void Alt::Multi::init_ret_decl(unsigned int i, const std::string &prefix)
 
 
 /*
-void Alt::Link::init_ret_decl(unsigned int i)
-{
+void Alt::Link::init_ret_decl(unsigned int i) {
 }
 */
 
 
-void Alt::Simple::init_foreach()
-{
+void Alt::Simple::init_foreach() {
   foreach_loops.clear();
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
     assert((*i)->var_decls().size() == (*i)->ret_decls().size());
@@ -1358,8 +1269,7 @@ void Alt::Simple::init_foreach()
 }
 
 
-void Alt::Simple::ret_decl_empty_block(Statement::If *stmt)
-{
+void Alt::Simple::ret_decl_empty_block(Statement::If *stmt) {
   if (!datatype->simple()->is(::Type::LIST)) {
     Statement::Fn_Call *e = new Statement::Fn_Call(Statement::Fn_Call::EMPTY);
     e->add_arg(*ret_decl);
@@ -1371,8 +1281,7 @@ void Alt::Simple::ret_decl_empty_block(Statement::If *stmt)
 #include "type/backtrace.hh"
 
 
-void Alt::Simple::deep_erase_if_backtrace(Statement::If *stmt, std::vector<Fn_Arg::Base*>::iterator start, std::vector<Fn_Arg::Base*>::iterator end)
-{
+void Alt::Simple::deep_erase_if_backtrace(Statement::If *stmt, std::vector<Fn_Arg::Base*>::iterator start, std::vector<Fn_Arg::Base*>::iterator end) {
   // FIXME perhaps use alternative deep_erase() rtlib fn
   // which matches an List_Ref<std::pair<*, Backtrace<*>*>>
   // instead of this Foreach construct
@@ -1408,8 +1317,7 @@ void Alt::Simple::deep_erase_if_backtrace(Statement::If *stmt, std::vector<Fn_Ar
 }
 
 
-bool Alt::Simple::has_arg_list()
-{
+bool Alt::Simple::has_arg_list() {
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
     for (std::vector<Statement::Var_Decl*>::const_iterator j = (*i)->var_decls().begin(); j != (*i)->var_decls().end(); ++j) {
       if (*j) {
@@ -1421,8 +1329,7 @@ bool Alt::Simple::has_arg_list()
 }
 
 
-Expr::Base *Alt::Base::suchthat_code(Statement::Var_Decl &decl) const
-{
+Expr::Base *Alt::Base::suchthat_code(Statement::Var_Decl &decl) const {
   Expr::Vacc *acc = new Expr::Vacc(decl);
   std::list<Expr::Fn_Call*> exprs;
   for (std::list<Filter*>::const_iterator i = filters.begin(); i != filters.end(); ++i) {
@@ -1442,8 +1349,7 @@ Expr::Base *Alt::Base::suchthat_code(Statement::Var_Decl &decl) const
 }
 
 
-void Alt::Base::add_seqs(Expr::Fn_Call *fn_call, const AST &ast) const
-{
+void Alt::Base::add_seqs(Expr::Fn_Call *fn_call, const AST &ast) const {
   if (tracks_ > 1) {
     fn_call->add(ast.seq_decls);
   }
@@ -1454,8 +1360,7 @@ void Alt::Base::add_seqs(Expr::Fn_Call *fn_call, const AST &ast) const
 }
 
 
-void Alt::Simple::init_body(AST &ast)
-{
+void Alt::Simple::init_body(AST &ast) {
   body_stmts.clear();
 
   std::list<Statement::Base*> *stmts = &body_stmts;
@@ -1538,8 +1443,7 @@ void Alt::Simple::init_body(AST &ast)
 }
 
 
-void Alt::Simple::init_guards()
-{
+void Alt::Simple::init_guards() {
   std::list<Expr::Base*> l;
   assert(m_ys.tracks() == left_indices.size());
   Yield::Multi::iterator k = m_ys.begin();
@@ -1559,15 +1463,13 @@ void Alt::Simple::init_guards()
 }
 
 
-void Alt::Base::push_back_ret_decl()
-{
+void Alt::Base::push_back_ret_decl() {
   statements.push_back(ret_decl);
 }
 
 
 struct Fn_Arg_Cmp {
-  bool operator() (const Fn_Arg::Base *a, const Fn_Arg::Base *b)
-  {
+  bool operator() (const Fn_Arg::Base *a, const Fn_Arg::Base *b) {
     //return *p1 < *p2;
     if (a->is(Fn_Arg::CONST) && b->is(Fn_Arg::ALT))
       return false;
@@ -1596,8 +1498,7 @@ struct Fn_Arg_Cmp {
 #include <vector>
 
 
-Statement::If *Alt::Simple::add_empty_check(std::list<Statement::Base*> &stmts, const Fn_Arg::Base &b)
-{
+Statement::If *Alt::Simple::add_empty_check(std::list<Statement::Base*> &stmts, const Fn_Arg::Base &b) {
   std::list<Expr::Base*> exprs;
   for (std::vector<Statement::Var_Decl*>::const_iterator i = b.ret_decls().begin(); i != b.ret_decls().end(); ++i) {
     Expr::Fn_Call *f = new Expr::Fn_Call(Expr::Fn_Call::NOT_EMPTY);
@@ -1612,8 +1513,7 @@ Statement::If *Alt::Simple::add_empty_check(std::list<Statement::Base*> &stmts, 
 }
 
 
-void Alt::Simple::add_clear_code(std::list<Statement::Base*> &stmts, const Fn_Arg::Base &b)
-{
+void Alt::Simple::add_clear_code(std::list<Statement::Base*> &stmts, const Fn_Arg::Base &b) {
   for (std::vector<Statement::Var_Decl*>::const_iterator i = b.ret_decls().begin(); i != b.ret_decls().end(); ++i) {
     Statement::Fn_Call *e = new Statement::Fn_Call(Statement::Fn_Call::ERASE);
     e->add_arg(**i);
@@ -1622,8 +1522,7 @@ void Alt::Simple::add_clear_code(std::list<Statement::Base*> &stmts, const Fn_Ar
 }
 
 
-std::list<Statement::Base*> *Alt::Simple::reorder_args_cg(AST &ast, std::list<Statement::Base*> &x)
-{
+std::list<Statement::Base*> *Alt::Simple::reorder_args_cg(AST &ast, std::list<Statement::Base*> &x) {
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
     (*i)->codegen(ast);
   }
@@ -1631,8 +1530,7 @@ std::list<Statement::Base*> *Alt::Simple::reorder_args_cg(AST &ast, std::list<St
 }
 
 
-std::list<Statement::Base*> *Alt::Simple::add_arg_code(AST &ast, std::list<Statement::Base*> &x)
-{
+std::list<Statement::Base*> *Alt::Simple::add_arg_code(AST &ast, std::list<Statement::Base*> &x) {
   std::list<Statement::Base*> *stmts = &x;
 
   std::vector<Fn_Arg::Base*> l(args.size());
@@ -1682,8 +1580,7 @@ std::list<Statement::Base*> *Alt::Simple::add_arg_code(AST &ast, std::list<State
 }
 
 
-void Alt::Simple::add_overlay_code(std::list<Statement::Base*> *& stmts, AST &ast, std::list<Expr::Fn_Call*> &exprs, Filter::Type t) const
-{
+void Alt::Simple::add_overlay_code(std::list<Statement::Base*> *& stmts, AST &ast, std::list<Expr::Fn_Call*> &exprs, Filter::Type t) const {
   std::list<Filter*> l;
   for (std::list<Filter*>::const_iterator i = filters.begin(); i != filters.end(); ++i) {
     if ((*i)->is(t)) {
@@ -1708,8 +1605,7 @@ void Alt::Simple::add_overlay_code(std::list<Statement::Base*> *& stmts, AST &as
 }
 
 
-void Alt::Simple::add_with_overlay_code(std::list<Statement::Base*> *&stmts, AST &ast) const
-{
+void Alt::Simple::add_with_overlay_code(std::list<Statement::Base*> *&stmts, AST &ast) const {
   std::list<Expr::Fn_Call*> exprs;
   add_overlay_code(stmts, ast, exprs, Filter::WITH_OVERLAY);
   for (std::list<Expr::Fn_Call*>::iterator i = exprs.begin(); i != exprs.end(); ++i) {
@@ -1722,8 +1618,7 @@ void Alt::Simple::add_with_overlay_code(std::list<Statement::Base*> *&stmts, AST
 }
 
 
-void Alt::Simple::add_suchthat_overlay_code(std::list<Statement::Base*> *&stmts, AST &ast) const
-{
+void Alt::Simple::add_suchthat_overlay_code(std::list<Statement::Base*> *&stmts, AST &ast) const {
   std::list<Expr::Fn_Call*> exprs;
   add_overlay_code(stmts, ast, exprs, Filter::SUCHTHAT_OVERLAY);
   for (std::list<Expr::Fn_Call*>::iterator i = exprs.begin(); i != exprs.end(); ++i) {
@@ -1743,8 +1638,7 @@ void Alt::Simple::add_suchthat_overlay_code(std::list<Statement::Base*> *&stmts,
 }
 
 
-void Alt::Simple::add_subopt_guards (std::list<Statement::Base*> *&stmts, AST &ast)
-{
+void Alt::Simple::add_subopt_guards (std::list<Statement::Base*> *&stmts, AST &ast) {
   if (ast.code_mode() != Code::Mode::SUBOPT) {
     return;
   }
@@ -1814,8 +1708,7 @@ void Alt::Simple::add_subopt_guards (std::list<Statement::Base*> *&stmts, AST &a
   stmts = &c->then;
 }
 
-std::list<Statement::Base*> *Alt::Simple::insert_index_stmts(std::list<Statement::Base*> *stmts)
-{
+std::list<Statement::Base*> *Alt::Simple::insert_index_stmts(std::list<Statement::Base*> *stmts) {
   if (inner_code) {
     stmts->insert(stmts->end(), index_stmts.begin(), index_stmts.end());
     inner_code->clear();
@@ -1841,8 +1734,7 @@ std::list<Statement::Base*> *Alt::Simple::insert_index_stmts(std::list<Statement
 }
 
 
-void Alt::Simple::codegen(AST &ast)
-{
+void Alt::Simple::codegen(AST &ast) {
 
        // std::cout << "-----------Simple IN" << std::endl;
 
@@ -1993,8 +1885,7 @@ void Alt::Simple::codegen(AST &ast)
 }
 
 
-void Alt::Link::add_args(Expr::Fn_Call *fn)
-{
+void Alt::Link::add_args(Expr::Fn_Call *fn) {
   if (is_explicit()) {
     fn->add(indices);
     fn->add(ntparas);
@@ -2029,8 +1920,7 @@ void Alt::Link::add_args(Expr::Fn_Call *fn)
 }
 
 
-void Alt::Link::codegen(AST &ast)
-{
+void Alt::Link::codegen(AST &ast) {
 
        // std::cout << "link " << *name << std::endl;
 
@@ -2092,8 +1982,7 @@ void Alt::Link::codegen(AST &ast)
 }
 
 
-void Alt::Block::codegen(AST &ast)
-{
+void Alt::Block::codegen(AST &ast) {
 
        // std::cout << "-----------------Block " << std::endl;
 
@@ -2202,8 +2091,7 @@ void Alt::Block::codegen(AST &ast)
 }
 
 
-void Alt::Base::init_filter_guards(AST &ast)
-{
+void Alt::Base::init_filter_guards(AST &ast) {
   if (filters.empty() && multi_filter.empty()) {
     return;
   }
@@ -2261,24 +2149,21 @@ void Alt::Base::init_filter_guards(AST &ast)
 }
 
 
-void Alt::Simple::print_dot_edge(std::ostream &out, Symbol::NT &nt)
-{
+void Alt::Simple::print_dot_edge(std::ostream &out, Symbol::NT &nt) {
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
     (*i)->print_dot_edge(out, nt);
   }
 }
 
 
-void Alt::Block::print_dot_edge(std::ostream &out, Symbol::NT &nt)
-{
+void Alt::Block::print_dot_edge(std::ostream &out, Symbol::NT &nt) {
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     (*i)->print_dot_edge(out, nt);
   }
 }
 
 
-void Alt::Link::print_dot_edge(std::ostream &out, Symbol::NT &n)
-{
+void Alt::Link::print_dot_edge(std::ostream &out, Symbol::NT &n) {
   bool t = false;
   if (nt->is_tabulated()) {
     out << *n.name << " -> " << *nt->name;
@@ -2301,16 +2186,14 @@ void Alt::Link::print_dot_edge(std::ostream &out, Symbol::NT &n)
 }
 
 
-void Alt::Multi::print_dot_edge(std::ostream &out, Symbol::NT &nt)
-{
+void Alt::Multi::print_dot_edge(std::ostream &out, Symbol::NT &nt) {
   for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i) {
     (*i)->print_dot_edge(out, nt);
   }
 }
 
 
-void Alt::Base::optimize_choice(::Type::List::Push_Type push)
-{
+void Alt::Base::optimize_choice(::Type::List::Push_Type push) {
   if (!ret_decl->type->is(::Type::LIST)) {
     return;
   }
@@ -2320,8 +2203,7 @@ void Alt::Base::optimize_choice(::Type::List::Push_Type push)
 }
 
 
-void Alt::Base::optimize_choice(::Type::List::Push_Type push, Statement::Hash_Decl *h)
-{
+void Alt::Base::optimize_choice(::Type::List::Push_Type push, Statement::Hash_Decl *h) {
   if (!ret_decl->type->is(::Type::LIST)) {
     return;
   }
@@ -2332,8 +2214,7 @@ void Alt::Base::optimize_choice(::Type::List::Push_Type push, Statement::Hash_De
 }
 
 
-void Alt::Link::optimize_choice()
-{
+void Alt::Link::optimize_choice() {
   if (!ret_decl->type->is(::Type::LIST)) {
     return;
   }
@@ -2370,30 +2251,25 @@ void Alt::Link::optimize_choice()
 }
 
 
-bool Alt::Link::calls_terminal_parser() const
-{
+bool Alt::Link::calls_terminal_parser() const {
   return nt->is(Symbol::TERMINAL);
 }
 
 
-bool Alt::Simple::calls_terminal_parser() const
-{
+bool Alt::Simple::calls_terminal_parser() const {
   return args.size() == 1 && args.front()->is(Fn_Arg::CONST);
 }
 
 
 
-namespace Alt
-{
+namespace Alt {
 
 
-  Multi::Multi(const std::list<Alt::Base*> &t, const Loc &l) : Base(MULTI, l), list(t)
-  {
+  Multi::Multi(const std::list<Alt::Base*> &t, const Loc &l) : Base(MULTI, l), list(t) {
   }
 
 
-  void Multi::codegen(AST &ast)
-  {
+  void Multi::codegen(AST &ast) {
     statements.clear();
     assert(ret_decls_.size() == list.size());
 
@@ -2432,8 +2308,7 @@ namespace Alt
 
 
 
-void Alt::Base::init_multi_ys()
-{
+void Alt::Base::init_multi_ys() {
   assert(tracks_ == m_ys.tracks());
   // FIXME remove filters and just use multi_filter
   if (0 && tracks_ > 1 && !filters.empty()) {
@@ -2453,8 +2328,7 @@ void Alt::Base::init_multi_ys()
 }
 
 
-void Alt::Simple::init_multi_ys()
-{
+void Alt::Simple::init_multi_ys() {
   m_ys = Yield::Multi(tracks_);
 
   if (is_terminal()) {
@@ -2478,15 +2352,13 @@ void Alt::Simple::init_multi_ys()
 }
 
 
-void Alt::Link::init_multi_ys()
-{
+void Alt::Link::init_multi_ys() {
   m_ys = nt->multi_ys();
   Base::init_multi_ys();
 }
 
 
-void Alt::Block::init_multi_ys()
-{
+void Alt::Block::init_multi_ys() {
   std::list<Base*>::iterator i = alts.begin();
   assert(i != alts.end());
   (*i)->init_multi_ys();
@@ -2500,8 +2372,7 @@ void Alt::Block::init_multi_ys()
 }
 
 
-void Alt::Multi::init_multi_ys()
-{
+void Alt::Multi::init_multi_ys() {
   m_ys.set_tracks(list.size());
   Yield::Multi::iterator j = m_ys.begin();
   for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i, ++j) {
@@ -2513,8 +2384,7 @@ void Alt::Multi::init_multi_ys()
 }
 
 
-void Alt::Base::add_multitrack_filter(const std::list<Filter*> &l, Filter::Type t, const Loc &loc)
-{
+void Alt::Base::add_multitrack_filter(const std::list<Filter*> &l, Filter::Type t, const Loc &loc) {
   if (multi_filter.empty()) {
     multi_filter.resize(l.size());
   }
@@ -2532,8 +2402,7 @@ void Alt::Base::add_multitrack_filter(const std::list<Filter*> &l, Filter::Type 
 }
 
 
-void Alt::Simple::sum_rhs(Yield::Multi &y, std::list<Fn_Arg::Base*>::const_iterator i, const std::list<Fn_Arg::Base*>::const_iterator &end) const
-{
+void Alt::Simple::sum_rhs(Yield::Multi &y, std::list<Fn_Arg::Base*>::const_iterator i, const std::list<Fn_Arg::Base*>::const_iterator &end) const {
   ++i;
   for (; i != end; ++i) {
     y +=  (*i)->multi_ys();
@@ -2541,8 +2410,7 @@ void Alt::Simple::sum_rhs(Yield::Multi &y, std::list<Fn_Arg::Base*>::const_itera
 }
 
 
-void Alt::Simple::sum_rhs(Yield::Size &y, std::list<Fn_Arg::Base*>::const_iterator i, const std::list<Fn_Arg::Base*>::const_iterator &end, size_t track) const
-{
+void Alt::Simple::sum_rhs(Yield::Size &y, std::list<Fn_Arg::Base*>::const_iterator i, const std::list<Fn_Arg::Base*>::const_iterator &end, size_t track) const {
   ++i;
   for (; i != end; ++i) {
     y +=  (*i)->multi_ys()(track);
@@ -2551,8 +2419,7 @@ void Alt::Simple::sum_rhs(Yield::Size &y, std::list<Fn_Arg::Base*>::const_iterat
 
 
 bool Alt::Simple::multi_detect_loop(const Yield::Multi &left,
-    const Yield::Multi &right, Symbol::NT *nt) const
-{
+    const Yield::Multi &right, Symbol::NT *nt) const {
   if (is_terminal()) {
     return false;
   }
@@ -2574,8 +2441,7 @@ bool Alt::Simple::multi_detect_loop(const Yield::Multi &left,
 }
 
 
-bool Alt::Link::multi_detect_loop(const Yield::Multi &left, const Yield::Multi &right, Symbol::NT *n) const
-{
+bool Alt::Link::multi_detect_loop(const Yield::Multi &left, const Yield::Multi &right, Symbol::NT *n) const {
   if (nt == n) {
     return true;
   }
@@ -2583,8 +2449,7 @@ bool Alt::Link::multi_detect_loop(const Yield::Multi &left, const Yield::Multi &
 }
 
 
-bool Alt::Block::multi_detect_loop(const Yield::Multi &left, const Yield::Multi &right, Symbol::NT *nt) const
-{
+bool Alt::Block::multi_detect_loop(const Yield::Multi &left, const Yield::Multi &right, Symbol::NT *nt) const {
   bool r = false;
   for (std::list<Base*>::const_iterator i = alts.begin(); i != alts.end(); ++i) {
     bool a = (*i)->multi_detect_loop(left, right, nt);
@@ -2594,8 +2459,7 @@ bool Alt::Block::multi_detect_loop(const Yield::Multi &left, const Yield::Multi 
 }
 
 
-bool Alt::Multi::multi_detect_loop(const Yield::Multi &left, const Yield::Multi &right, Symbol::NT *nt) const
-{
+bool Alt::Multi::multi_detect_loop(const Yield::Multi &left, const Yield::Multi &right, Symbol::NT *nt) const {
   bool ret = false;
   assert(left.tracks() == tracks_);
   assert(right.tracks() == tracks_);
@@ -2612,8 +2476,7 @@ bool Alt::Multi::multi_detect_loop(const Yield::Multi &left, const Yield::Multi 
 
 
 // call from every derived class's method
-void Alt::Base::multi_propagate_max_filter (std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size)
-{
+void Alt::Base::multi_propagate_max_filter (std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size) {
   Yield::Multi m(max_size);
   m.min_high(m_ys);
 
@@ -2625,8 +2488,7 @@ void Alt::Base::multi_propagate_max_filter (std::vector<Yield::Multi> &nt_sizes,
 
 
 // call from visitor
-void Alt::Base::multi_set_max_size()
-{
+void Alt::Base::multi_set_max_size() {
   if (!multi_ys_max_temp.tracks()) {
     return;
   }
@@ -2635,8 +2497,7 @@ void Alt::Base::multi_set_max_size()
 }
 
 
-void Alt::Simple::multi_propagate_max_filter (std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size)
-{
+void Alt::Simple::multi_propagate_max_filter (std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size) {
   if (is_terminal()) {
     return;
   }
@@ -2665,8 +2526,7 @@ void Alt::Simple::multi_propagate_max_filter (std::vector<Yield::Multi> &nt_size
 }
 
 
-void Alt::Block::multi_propagate_max_filter (std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size)
-{
+void Alt::Block::multi_propagate_max_filter (std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size) {
   Base::multi_propagate_max_filter(nt_sizes, max_size);
 
   Yield::Multi m(max_size);
@@ -2677,8 +2537,7 @@ void Alt::Block::multi_propagate_max_filter (std::vector<Yield::Multi> &nt_sizes
 }
 
 
-void Alt::Link::multi_propagate_max_filter (std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size)
-{
+void Alt::Link::multi_propagate_max_filter (std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size) {
   Base::multi_propagate_max_filter(nt_sizes, max_size);
 
   Yield::Multi m(max_size);
@@ -2690,8 +2549,7 @@ void Alt::Link::multi_propagate_max_filter (std::vector<Yield::Multi> &nt_sizes,
 }
 
 
-void Alt::Multi::multi_propagate_max_filter (std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size)
-{
+void Alt::Multi::multi_propagate_max_filter (std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size) {
   Base::multi_propagate_max_filter(nt_sizes, max_size);
 
   Yield::Multi m(max_size);
@@ -2706,8 +2564,7 @@ void Alt::Multi::multi_propagate_max_filter (std::vector<Yield::Multi> &nt_sizes
 }
 
 
-void Alt::Simple::multi_init_calls (const Runtime::Poly &rest, size_t base_tracks)
-{
+void Alt::Simple::multi_init_calls (const Runtime::Poly &rest, size_t base_tracks) {
   if (is_terminal_) {
     return;
   }
@@ -2732,16 +2589,14 @@ void Alt::Simple::multi_init_calls (const Runtime::Poly &rest, size_t base_track
 }
 
 
-void Alt::Block::multi_init_calls (const Runtime::Poly &rest, size_t base_tracks)
-{
+void Alt::Block::multi_init_calls (const Runtime::Poly &rest, size_t base_tracks) {
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     (*i)->multi_init_calls(rest, base_tracks);
   }
 }
 
 
-void Alt::Link::multi_init_calls(const Runtime::Poly &rest, size_t base_tracks)
-{
+void Alt::Link::multi_init_calls(const Runtime::Poly &rest, size_t base_tracks) {
   if (top_level) {
     calls = 1;
     return;
@@ -2755,8 +2610,7 @@ void Alt::Link::multi_init_calls(const Runtime::Poly &rest, size_t base_tracks)
 }
 
 
-void Alt::Multi::multi_init_calls (const Runtime::Poly &rest, size_t base_tracks)
-{
+void Alt::Multi::multi_init_calls (const Runtime::Poly &rest, size_t base_tracks) {
   Runtime::Poly up(rest);
   for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i) {
     Runtime::Poly down(up);
@@ -2773,8 +2627,7 @@ void Alt::Multi::multi_init_calls (const Runtime::Poly &rest, size_t base_tracks
 }
 
 
-void Alt::Simple::multi_collect_factors (Runtime::Poly &p)
-{
+void Alt::Simple::multi_collect_factors (Runtime::Poly &p) {
   if (is_terminal_) {
     p *= Runtime::Poly(m_ys);
     return;
@@ -2788,8 +2641,7 @@ void Alt::Simple::multi_collect_factors (Runtime::Poly &p)
 }
 
 
-void Alt::Block::multi_collect_factors (Runtime::Poly &p)
-{
+void Alt::Block::multi_collect_factors (Runtime::Poly &p) {
   Runtime::Poly r;
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     Runtime::Poly x(1);
@@ -2800,21 +2652,18 @@ void Alt::Block::multi_collect_factors (Runtime::Poly &p)
 }
 
 
-void Alt::Link::multi_collect_factors(Runtime::Poly &p)
-{
+void Alt::Link::multi_collect_factors(Runtime::Poly &p) {
   p *= Runtime::Poly(m_ys);
 }
 
 
-void Alt::Multi::multi_collect_factors(Runtime::Poly &p)
-{
+void Alt::Multi::multi_collect_factors(Runtime::Poly &p) {
   Runtime::Poly a(m_ys);
   p *= a;
 }
 
 
-void Alt::Base::set_tracks(size_t t, size_t p)
-{
+void Alt::Base::set_tracks(size_t t, size_t p) {
   tracks_ = t;
   track_pos_ = p;
 
@@ -2823,26 +2672,22 @@ void Alt::Base::set_tracks(size_t t, size_t p)
 }
 
 
-void Alt::Base::set_index_stmts(const std::list<Statement::Base*> &l)
-{
+void Alt::Base::set_index_stmts(const std::list<Statement::Base*> &l) {
   Log::instance()->error(location, "Index statements are only allowed before a simple function alternative.");
 }
 
 
-void Alt::Simple::set_index_stmts(const std::list<Statement::Base*> &l)
-{
+void Alt::Simple::set_index_stmts(const std::list<Statement::Base*> &l) {
   index_stmts = l;
 }
 
 
-void Alt::Base::set_index_overlay(Alt::Base *alt)
-{
+void Alt::Base::set_index_overlay(Alt::Base *alt) {
   Log::instance()->error(location, "Alternative is only allowed after a simple function.");
 }
 
 
-void Alt::Simple::set_index_overlay(Alt::Base *alt)
-{
+void Alt::Simple::set_index_overlay(Alt::Base *alt) {
   Simple *f = dynamic_cast<Simple*>(alt);
   if (!alt) {
     Log::instance()->error(location, "As alternative only a simple function is allowed.");
@@ -2853,14 +2698,12 @@ void Alt::Simple::set_index_overlay(Alt::Base *alt)
 }
 
 
-void Alt::Base::set_ntparas(const Loc &loc, std::list<Expr::Base*> *l)
-{
+void Alt::Base::set_ntparas(const Loc &loc, std::list<Expr::Base*> *l) {
   Log::instance()->error(loc, "Non-terminal parameters need a non-terminal on the lhs!");
 }
 
 
-void Alt::Link::set_ntparas(const Loc &loc, std::list<Expr::Base*> *l)
-{
+void Alt::Link::set_ntparas(const Loc &loc, std::list<Expr::Base*> *l) {
   if (!l || l->empty()) {
     Log::instance()->error(loc, "No non-terminal parser parameters given.");
     return;
@@ -2869,8 +2712,7 @@ void Alt::Link::set_ntparas(const Loc &loc, std::list<Expr::Base*> *l)
 }
 
 
-void Alt::Simple::set_ntparas(std::list<Expr::Base*> *l)
-{
+void Alt::Simple::set_ntparas(std::list<Expr::Base*> *l) {
   if (!l) {
     return;
   }
@@ -2878,8 +2720,7 @@ void Alt::Simple::set_ntparas(std::list<Expr::Base*> *l)
 }
 
 
-bool Alt::Link::check_ntparas()
-{
+bool Alt::Link::check_ntparas() {
   assert(nt);
   Symbol::NT *x = dynamic_cast<Symbol::NT*>(nt);
   if (!x) {
@@ -2898,8 +2739,7 @@ bool Alt::Link::check_ntparas()
 }
 
 
-void Alt::Multi::types(std::list< ::Type::Base*> &r) const
-{
+void Alt::Multi::types(std::list< ::Type::Base*> &r) const {
   // FIXME use this
   //::Type::Multi *m = dynamic_cast< ::Type::Multi*>(datatype());
   //assert(m);
@@ -2910,8 +2750,7 @@ void Alt::Multi::types(std::list< ::Type::Base*> &r) const
 }
 
 
-const std::list<Statement::Var_Decl*> &Alt::Multi::ret_decls() const
-{
+const std::list<Statement::Var_Decl*> &Alt::Multi::ret_decls() const {
   assert(!ret_decls_.empty());
   return ret_decls_;
 }

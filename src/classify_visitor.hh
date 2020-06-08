@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef CLASSIFY_VISITOR_HH
-#define CLASSIFY_VISITOR_HH
+#ifndef SRC_CLASSIFY_VISITOR_HH_
+#define SRC_CLASSIFY_VISITOR_HH_
 
 #include "visitor.hh"
 

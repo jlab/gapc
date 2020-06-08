@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef EXPR_HH
-#define EXPR_HH
+#ifndef SRC_EXPR_HH_
+#define SRC_EXPR_HH_
 
 
 #include "loc.hh"
@@ -74,13 +74,11 @@ namespace Expr {
 
   class Times: public Two {
     public:
-      Times(Base *l, Base *r, const Loc &lo) : Two(TIMES, l, r, lo)
-      {
+      Times(Base *l, Base *r, const Loc &lo) : Two(TIMES, l, r, lo) {
         set_pretty_op("*");
       }
 
-      Times(Base *l, Base *r) : Two(TIMES, l, r)
-      {
+      Times(Base *l, Base *r) : Two(TIMES, l, r) {
         set_pretty_op("*");
       }
 
@@ -90,12 +88,10 @@ namespace Expr {
   class Div: public Two {
     public:
       Div(Base *l, Base *r)
-        : Two(DIV, l, r)
-      {
+        : Two(DIV, l, r) {
         set_pretty_op("/");
       }
-      Div(Base *l, Base *r, const Loc &lo) : Two(DIV, l, r, lo)
-      {
+      Div(Base *l, Base *r, const Loc &lo) : Two(DIV, l, r, lo) {
         set_pretty_op("/");
       }
 
@@ -115,11 +111,11 @@ namespace Expr {
   class Const : public Base {
     public:
     ::Const::Base *base;
-    Const (::Const::Base* b, const Loc &l) : Base(CONST, l), base(b) {}
-    Const (::Const::Base* b) : Base(CONST), base(b) {}
-    Const (const Yield::Poly &p);
+    Const(::Const::Base* b, const Loc &l) : Base(CONST, l), base(b) {}
+    Const(::Const::Base* b) : Base(CONST), base(b) {}
+    Const(const Yield::Poly &p);
     Const(const Yield::Size &ys);
-    Const (int p);
+    Const(int p);
     Const(double d);
     Const(const std::string &s);
     Const(char c);
@@ -251,10 +247,9 @@ namespace Expr {
       void put(std::ostream &s) const;
       Base *copy() const;
   };
- 
+
 
 }
 
 
 #endif
-

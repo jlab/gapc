@@ -31,8 +31,7 @@
 
 
 Dep_Analysis::Dep_Analysis(const hashtable<std::string, Symbol::Base*> &s)
- : symbols(s)
-{
+ : symbols(s) {
   size_t a = 0;
   int_map.resize(s.size());
   for (hashtable<std::string, Symbol::Base*>::const_iterator i = s.begin();
@@ -55,8 +54,7 @@ typedef boost::graph_traits<Graph>::vertex_descriptor Vertex;
 typedef std::pair<size_t, size_t> Edge;
 typedef std::list<Vertex> TOrdering;
 
-void Dep_Analysis::sort()
-{
+void Dep_Analysis::sort() {
   std::vector<std::string> debug_out;
 
   std::vector<Edge> edges;
@@ -99,4 +97,3 @@ void Dep_Analysis::sort()
   for (TOrdering::iterator j = res.begin(); j!=res.end(); ++j)
     ordering.push_back(int_map[*j]);
 }
-

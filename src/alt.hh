@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef ALT_HH
-#define ALT_HH
+#ifndef SRC_ALT_HH_
+#define SRC_ALT_HH_
 
 #include <list>
 #include <vector>
@@ -69,8 +69,7 @@ namespace Alt {
   enum Type { SIMPLE, LINK, BLOCK, MULTI };
 
 
-  class Base
-  {
+  class Base {
 
     private:
 
@@ -157,8 +156,7 @@ namespace Alt {
 
       Statement::Var_Decl *ret_decl;
 
-      inline bool is(Type t)
-      {
+      inline bool is(Type t) {
         return type == t;
       }
 
@@ -183,8 +181,7 @@ namespace Alt {
       virtual bool init_links(Grammar &grammar);
 
       virtual bool init_productive() = 0;
-      bool is_productive()
-      {
+      bool is_productive() {
         return productive;
       }
 
@@ -203,8 +200,7 @@ namespace Alt {
 
       virtual void init_self_rec() = 0;
 
-      ::Type::Base * data_type()
-      {
+      ::Type::Base * data_type() {
         return datatype;
       }
       bool set_data_type(::Type::Base *t, const Loc &l);
@@ -214,19 +210,16 @@ namespace Alt {
       virtual void print_type(std::ostream &s) = 0;
 
       virtual bool eliminate_lists() = 0;
-      bool is_eliminated()
-      {
+      bool is_eliminated() {
         return eliminated;
       }
 
       void reset_types();
 
-      const Yield::Poly &list_size() const
-      {
+      const Yield::Poly &list_size() const {
         return list_size_;
       }
-      void set_list_size(const Yield::Poly &p)
-      {
+      void set_list_size(const Yield::Poly &p) {
         list_size_ = p;
       }
       virtual bool init_list_sizes() = 0;
@@ -259,12 +252,10 @@ namespace Alt {
 
       virtual void print(std::ostream &s) = 0;
 
-      bool is_filtered() const
-      {
+      bool is_filtered() const {
         return !filters.empty();
       }
-      virtual bool calls_terminal_parser() const
-      {
+      virtual bool calls_terminal_parser() const {
         return false;
       }
 
@@ -276,8 +267,7 @@ namespace Alt {
 
     public:
 
-      void set_choice_fn_type(Expr::Fn_Call::Builtin b)
-      {
+      void set_choice_fn_type(Expr::Fn_Call::Builtin b) {
         choice_fn_type_ = b;
       }
 
@@ -301,8 +291,7 @@ namespace Alt {
     public:
 
       virtual void init_multi_ys();
-      const Yield::Multi &multi_ys() const
-      {
+      const Yield::Multi &multi_ys() const {
         return m_ys;
       }
 
@@ -326,7 +315,7 @@ namespace Alt {
     public:
 
       void multi_set_max_size();
-      virtual void multi_propagate_max_filter (std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size);
+      virtual void multi_propagate_max_filter(std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size);
 
       virtual void multi_collect_factors(Runtime::Poly &p) = 0;
       virtual void multi_init_calls(const Runtime::Poly &p, size_t base_tracks) = 0;
@@ -355,8 +344,7 @@ namespace Alt {
    * Represents an application of an algebra function to
    * other terminal and non-terminal parsers.
    */
-  class Simple : public Base
-  {
+  class Simple : public Base {
 
     private:
 
@@ -379,21 +367,19 @@ namespace Alt {
 
       Base *clone();
 
-      void set_terminal_ys (const Yield::Size &a)
-      {
+      void set_terminal_ys(const Yield::Size &a) {
         assert(is_terminal_);
         terminal_ys = a;
       }
 
-      bool is_terminal() const
-      {
+      bool is_terminal() const {
         return is_terminal_;
       }
 
       bool init_links(Grammar &grammar);
       bool init_productive();
 
-      void collect_lr_deps (std::list<Symbol::NT*> &list, const Yield::Multi &left, const Yield::Multi &right);
+      void collect_lr_deps(std::list<Symbol::NT*> &list, const Yield::Multi &left, const Yield::Multi &right);
 
       size_t width();
 
@@ -420,10 +406,10 @@ namespace Alt {
 
     private:
 
-      Expr::Base *next_index_var (unsigned &k, size_t track, Expr::Base *next_var, Expr::Base *last_var, Expr::Base *right, const Yield::Size &ys, const Yield::Size &lhs, const Yield::Size &rhs);
+      Expr::Base *next_index_var(unsigned &k, size_t track, Expr::Base *next_var, Expr::Base *last_var, Expr::Base *right, const Yield::Size &ys, const Yield::Size &lhs, const Yield::Size &rhs);
 
       // FIXME convert callers
-      Yield::Poly rhs_ys_min_rest (const std::list<Fn_Arg::Base*>::iterator &i, const std::list<Fn_Arg::Base*>::iterator &end) const;
+      Yield::Poly rhs_ys_min_rest(const std::list<Fn_Arg::Base*>::iterator &i, const std::list<Fn_Arg::Base*>::iterator &end) const;
 
       std::list<Statement::For *> loops;
       std::list<Statement::Foreach *> foreach_loops;
@@ -437,7 +423,7 @@ namespace Alt {
       std::list<Statement::Base*> *reorder_args_cg(AST &ast, std::list<Statement::Base*> &l);
 
 
-      void add_overlay_code (std::list<Statement::Base*> *& stmts, AST &ast, std::list<Expr::Fn_Call*> &exprs, Filter::Type t) const;
+      void add_overlay_code(std::list<Statement::Base*> *& stmts, AST &ast, std::list<Expr::Fn_Call*> &exprs, Filter::Type t) const;
       void add_with_overlay_code(std::list<Statement::Base*> *&stmts, AST &ast) const;
       void add_suchthat_overlay_code(std::list<Statement::Base*> *&stmts, AST &ast) const;
 
@@ -480,7 +466,7 @@ namespace Alt {
 
       bool multi_detect_loop(const Yield::Multi &left, const Yield::Multi &right, Symbol::NT *n) const;
 
-      void multi_propagate_max_filter (std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size);
+      void multi_propagate_max_filter(std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size);
 
       void multi_collect_factors(Runtime::Poly &p);
       void multi_init_calls(const Runtime::Poly &p, size_t base_tracks);
@@ -497,8 +483,7 @@ namespace Alt {
       std::list<Simple*> index_overlay;
       void set_index_stmts(const std::list<Statement::Base*> &l);
 
-      bool has_index_overlay() const
-      {
+      bool has_index_overlay() const {
         return !index_stmts.empty();
       }
 
@@ -528,8 +513,7 @@ namespace Alt {
    * A Alt::Link is a wrapper for non-terminal parsers embedding them
    * in the hirarchy of all Alt::Base subclasses.
    */
-  class Link : public Base
-  {
+  class Link : public Base {
 
     private:
 
@@ -553,8 +537,7 @@ namespace Alt {
       // the pointer to the non-terminal grammar-node explicitely
       // to NULL.
       Link(std::string *n, const Loc&l)
-        : Base(LINK, l), name(n), nt(NULL)
-      {
+        : Base(LINK, l), name(n), nt(NULL) {
       }
 
       // Creates a deep copy of this instance.
@@ -606,7 +589,7 @@ namespace Alt {
 
       bool multi_detect_loop(const Yield::Multi &left, const Yield::Multi &right, Symbol::NT *n) const;
 
-      void multi_propagate_max_filter (std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size);
+      void multi_propagate_max_filter(std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size);
 
       void multi_collect_factors(Runtime::Poly &p);
       void multi_init_calls(const Runtime::Poly &p, size_t base_tracks);
@@ -624,12 +607,10 @@ namespace Alt {
 
     public:
 
-      void set_indices (const std::list<Expr::Base*> &l)
-      {
+      void set_indices(const std::list<Expr::Base*> &l) {
         indices = l;
       }
-      bool is_explicit() const
-      {
+      bool is_explicit() const {
         return !indices.empty();
       }
 
@@ -655,16 +636,14 @@ namespace Alt {
    * list of alternative rules is stored in a std::list<Base*> with
    * name 'alts'.
    */
-  class Block : public Base
-  {
+  class Block : public Base {
 
     public:
 
       // Stores the list of alternatives
       std::list<Base*> alts;
 
-      Block(std::list<Base*> &a, const Loc &l) : Base(BLOCK,l), alts(a)
-      {
+      Block(std::list<Base*> &a, const Loc &l) : Base(BLOCK,l), alts(a) {
       }
 
       Base *clone();
@@ -706,7 +685,7 @@ namespace Alt {
       bool multi_detect_loop(const Yield::Multi &left,
       const Yield::Multi &right, Symbol::NT *n) const;
 
-      void multi_propagate_max_filter (std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size);
+      void multi_propagate_max_filter(std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size);
 
       void multi_collect_factors(Runtime::Poly &p);
       void multi_init_calls(const Runtime::Poly &p, size_t base_tracks);
@@ -715,8 +694,7 @@ namespace Alt {
   };
 
 
-  class Multi : public Base
-  {
+  class Multi : public Base {
 
     private:
 
@@ -729,8 +707,7 @@ namespace Alt {
       Multi(const std::list<Alt::Base*> &t, const Loc &l);
       Base *clone();
 
-      size_t tracks() const
-      {
+      size_t tracks() const {
         return list.size();
       }
 
@@ -770,7 +747,7 @@ namespace Alt {
 
       bool multi_detect_loop(const Yield::Multi &left, const Yield::Multi &right, Symbol::NT *n) const;
 
-      void multi_propagate_max_filter (std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size);
+      void multi_propagate_max_filter(std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size);
 
       void multi_collect_factors(Runtime::Poly &p);
       void multi_init_calls(const Runtime::Poly &p, size_t base_tracks);

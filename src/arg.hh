@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef ARG_HH
-#define ARG_HH
+#ifndef SRC_ARG_HH_
+#define SRC_ARG_HH_
 
 #include "hashtable.hh"
 #include "loc.hh"

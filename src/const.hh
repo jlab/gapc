@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef CONST_HH
-#define CONST_HH
+#ifndef SRC_CONST_HH_
+#define SRC_CONST_HH_
 
 #include "yieldsize.hh"
 #include "type.hh"
@@ -77,7 +77,7 @@ namespace Const {
 
 
       bool set_data_type(::Type::Base *t, const Loc &l) {
-        bool b = set_if_compatible (datatype, t, location, l);
+        bool b = set_if_compatible(datatype, t, location, l);
         return b;
       }
 
@@ -262,8 +262,7 @@ namespace Const {
       std::string *a, *b;
 
       Rational(std::string *x, std::string *y, const Loc &l)
-        : Base(RATIONAL, l), a(x), b(y)
-      {
+        : Base(RATIONAL, l), a(x), b(y) {
         datatype = new ::Type::Rational();
         uint32_t i = x->size() + y->size() + 1;
         ys.set(i, i);
@@ -276,8 +275,7 @@ namespace Const {
   };
 
 
-  inline std::ostream &operator<<(std::ostream &s, Base &b)
-  {
+  inline std::ostream &operator<<(std::ostream &s, Base &b) {
     b.put(s);
     return s;
   }

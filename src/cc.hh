@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef CC_HH
-#define CC_HH
+#ifndef SRC_CC_HH_
+#define SRC_CC_HH_
 
 #include "printer.hh"
 

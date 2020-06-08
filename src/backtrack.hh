@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef BACKTRACK_HH
-#define BACKTRACK_HH
+#ifndef SRC_BACKTRACK_HH_
+#define SRC_BACKTRACK_HH_
 
 #include <list>
 

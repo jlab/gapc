@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef ALGEBRA_HH
-#define ALGEBRA_HH
+#ifndef SRC_ALGEBRA_HH_
+#define SRC_ALGEBRA_HH_
 
 
 #include "loc.hh"
@@ -50,8 +50,7 @@ class Signature;
 class Filter;
 
 
-class Algebra : public Signature_Base
-{
+class Algebra : public Signature_Base {
 
   public:
 
@@ -74,8 +73,7 @@ class Algebra : public Signature_Base
 
     Algebra(std::string *n, std::string *s, Loc l)
       :  Signature_Base(n, l), default_choice_fn_mode(0),
-        signature(NULL), signature_name(s)
-    {
+        signature(NULL), signature_name(s) {
     }
 
 
@@ -84,30 +82,26 @@ class Algebra : public Signature_Base
 
     Algebra(std::string *n, Loc l)
       :  Signature_Base(n, l), default_choice_fn_mode(0),
-        signature(NULL), signature_name(NULL)
-    {
+        signature(NULL), signature_name(NULL) {
     }
 
 
     Algebra(std::string *n)
       :  Signature_Base(n), default_choice_fn_mode(0),
-        signature(NULL), signature_name(NULL)
-    {
+        signature(NULL), signature_name(NULL) {
     }
 
 
     Algebra()
       :  Signature_Base(), default_choice_fn_mode(0),
-        signature(NULL), signature_name(NULL)
-    {
+        signature(NULL), signature_name(NULL) {
     }
 
 
     Fn_Decl* decl(const std::string &s);
 
 
-    Algebra& operator= (const Algebra& a)
-    {
+    Algebra& operator= (const Algebra& a) {
       fns = a.fns;
       choice_fns = a.choice_fns;
       params = a.params;
@@ -156,8 +150,7 @@ class Algebra : public Signature_Base
 
 };
 
-inline std::ostream &operator<<(std::ostream &s, const Algebra &a)
-{
+inline std::ostream &operator<<(std::ostream &s, const Algebra &a) {
   return a.put(s);
 }
 

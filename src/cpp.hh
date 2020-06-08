@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef CPP_HH
-#define CPP_HH
+#ifndef SRC_CPP_HH_
+#define SRC_CPP_HH_
 
 #include "operator.hh"
 
@@ -196,7 +196,7 @@ namespace Printer {
 
       void prelude(const Options &opts, const AST &ast);
       void imports(const AST &ast);
-      
+
       void global_constants(const AST &ast);
 
       void makefile(const Options &opts);
@@ -228,7 +228,7 @@ namespace Printer {
       void print_arg(Expr::Base *e);
 
       void print_subseq_typedef(const AST &ast);
-      
+
       void print_window_inc(const Symbol::NT &nt);
   };
 

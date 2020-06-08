@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef ALT_FWD_HH
-#define ALT_FWD_HH
+#ifndef SRC_ALT_FWD_HH_
+#define SRC_ALT_FWD_HH_
 
 namespace Alt {
   class Base;

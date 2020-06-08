@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef FN_ARG_FWD_HH
-#define FN_ARG_FWD_HH
+#ifndef SRC_FN_ARG_FWD_HH_
+#define SRC_FN_ARG_FWD_HH_
 
 namespace Fn_Arg {
   class Base;

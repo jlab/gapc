@@ -48,8 +48,7 @@ class Dep_Analysis {
     iterator begin() { return ordering.begin(); }
     iterator end() { return ordering.end(); }
 
-    const std::list<Symbol::NT*> &result() const
-    {
+    const std::list<Symbol::NT*> &result() const {
       assert(!ordering.empty());
       return ordering;
     }

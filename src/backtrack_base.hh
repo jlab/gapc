@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef BACKTRACK_BASE_HH
-#define BACKTRACK_BASE_HH
+#ifndef SRC_BACKTRACK_BASE_HH_
+#define SRC_BACKTRACK_BASE_HH_
 
 #include <list>
 
@@ -69,12 +69,12 @@ class Backtrack_Base {
     Instance *get_instance() {
         return instance;
     }
-    
+
     virtual void gen_instance(Algebra *score) = 0;
     virtual void gen_instance(Algebra *score, Product::Sort_Type sort) = 0;
-    
+
     virtual void gen_instance(Algebra *score, Product::Base *base, Product::Sort_Type sort) = 0;
-    
+
     virtual void apply_filter(Filter *f) {}
     virtual void gen_backtrack(AST &ast) = 0;
     virtual void gen_instance_code(AST &ast) = 0;

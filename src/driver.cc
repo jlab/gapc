@@ -40,14 +40,12 @@
 
 
 Driver::Driver() : from_stdin(false), trace_lexer(false), trace_parser(false),
-  fail_later(false), filename_(0)
-{
+  fail_later(false), filename_(0) {
   includes.push_back("");
 }
 
 
-bool Driver::parse()
-{
+bool Driver::parse() {
   yy::Parser parser(*this, yy::Parser::token::START_PROGRAM);
   parser.set_debug_level(trace_parser);
   //parser.set_debug_level(true);
@@ -73,8 +71,7 @@ bool Driver::parse()
 }
 
 
-bool Driver::lexer_prepare(void)
-{
+bool Driver::lexer_prepare(void) {
   //file_close();
   yy_flex_debug = trace_lexer;
   scanner::init(this);
@@ -84,8 +81,7 @@ bool Driver::lexer_prepare(void)
 }
 
 
-void Driver::file_close()
-{
+void Driver::file_close() {
   if (yyin != stdin && yyin != NULL) {
     std::fclose(yyin);
   }
@@ -96,26 +92,23 @@ void Driver::file_close()
 }
 
 
-bool Driver::file_open()
-{
+bool Driver::file_open() {
   assert(filename_);
   if (!(yyin = std::fopen(filename_->c_str(), "r"))) {
-    error (std::string("Can't open ") + *filename_ + std::string(": ") + std::string(std::strerror(errno)));
+    error(std::string("Can't open ") + *filename_ + std::string(": ") + std::string(std::strerror(errno)));
     return false;
   }
   return true;
 }
 
 
-void Driver::error(const std::string &m)
-{
+void Driver::error(const std::string &m) {
   Log::instance()->error(m);
   fail_later = true;
 }
 
 
-void Driver::error(const Loc& l, const std::string& m)
-{
+void Driver::error(const Loc& l, const std::string& m) {
   Log::instance()->error(l, m);
   fail_later = true;
 }
@@ -124,8 +117,7 @@ void Driver::error(const Loc& l, const std::string& m)
 #include "instance.hh"
 
 
-void Driver::parse_product(const std::string &s)
-{
+void Driver::parse_product(const std::string &s) {
   if (s.empty() || fail_later)
     return;
 
@@ -148,10 +140,10 @@ void Driver::parse_product(const std::string &s)
   if (fail_later)
     return;
 
-  assert (ast.grammar());
+  assert(ast.grammar());
   Product::Base *p = ast.product();
   assert(p);
-  Instance *i = new Instance (new std::string("_PRODUCT_"), p, ast.grammar());
+  Instance *i = new Instance(new std::string("_PRODUCT_"), p, ast.grammar());
   ast.first_instance = i;
   ast.instances["_PRODUCT_"] = i;
 
@@ -160,34 +152,29 @@ void Driver::parse_product(const std::string &s)
 }
 
 
-void Driver::setFilename(const std::string &s)
-{
+void Driver::setFilename(const std::string &s) {
   filename_ = new std::string(s);
 }
 
 
-std::string *Driver::filename()
-{
+std::string *Driver::filename() {
   assert(filename_);
   return filename_;
 }
 
 
-void Driver::setStdin(bool b)
-{
+void Driver::setStdin(bool b) {
   filename_ = new std::string("<stdin>");
   from_stdin = b;
 }
 
 
-void Driver::set_includes(const std::vector<std::string> &v)
-{
-  includes.insert (includes.end(), v.begin(), v.end());
+void Driver::set_includes(const std::vector<std::string> &v) {
+  includes.insert(includes.end(), v.begin(), v.end());
 }
 
 
-void Driver::push_buffer(const std::string &s)
-{
+void Driver::push_buffer(const std::string &s) {
   std::string f;
   for (std::vector<std::string>::iterator i = includes.begin(); i != includes.end(); ++i) {
     std::string b(*i);
@@ -202,6 +189,6 @@ void Driver::push_buffer(const std::string &s)
     throw LogError( std::string("include: Can't open ") + s + std::string(": ") + std::string(std::strerror(errno)));
   if (open_files.size() > 100)
     throw LogError("Too many open files! (include loop?)");
-  yypush_buffer_state (yy_create_buffer(yyin, YY_BUF_SIZE));
-  open_files.push_back (yyin);
+  yypush_buffer_state(yy_create_buffer(yyin, YY_BUF_SIZE));
+  open_files.push_back(yyin);
 }

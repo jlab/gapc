@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef FN_DECL_HH
-#define FN_DECL_HH
+#ifndef SRC_FN_DECL_HH_
+#define SRC_FN_DECL_HH_
 
 #include "hashtable.hh"
 
@@ -41,11 +41,11 @@
 
 
 class Fn_Decl {
-  
+
   private:
 
     Yield::Size ys;
-    void init (Type::Base *r);
+    void init(Type::Base *r);
 
     bool in_use_;
 
@@ -56,7 +56,7 @@ class Fn_Decl {
     // declaration.
     bool choice_fn;
 
-    bool types_equal (Fn_Decl &d);
+    bool types_equal(Fn_Decl &d);
 
 
   public:
@@ -75,31 +75,31 @@ class Fn_Decl {
     // The source code location of the function declaration.
     Loc location;
 
-    Fn_Decl (Type::Base *r, std::string *n, const Loc &l);
-    Fn_Decl (Type::Base *r, std::string *n);
-    Fn_Decl() : in_use_ (false), choice_fn (false), return_type (0), name (NULL) {}
+    Fn_Decl(Type::Base *r, std::string *n, const Loc &l);
+    Fn_Decl(Type::Base *r, std::string *n);
+    Fn_Decl() : in_use_(false), choice_fn(false), return_type(0), name(NULL) {}
     virtual ~Fn_Decl();
 
-    virtual void set_types (std::list<Type::Base*> *l);
+    virtual void set_types(std::list<Type::Base*> *l);
 
     bool is_Choice_Fn() const { return choice_fn; }
 
     static hashtable<std::string, Fn_Decl*> builtins;
     static void init_table();
 
-    void replace (Type::Base *a, Type::Base *b);
+    void replace(Type::Base *a, Type::Base *b);
 
-    virtual void replace_types (std::pair<std::string*, Type::Base*> &alph, std::pair<std::string*, Type::Base*> &answer);
+    virtual void replace_types(std::pair<std::string*, Type::Base*> &alph, std::pair<std::string*, Type::Base*> &answer);
 
-    static void add_fn_decl (hashtable<std::string, Fn_Decl *> &h, Fn_Decl *f);
+    static void add_fn_decl(hashtable<std::string, Fn_Decl *> &h, Fn_Decl *f);
 
-    bool operator== (const Fn_Decl &d) const;
+    bool operator==(const Fn_Decl &d) const;
 
     const Yield::Size &yield_size() const { return ys; }
-    void set_yield_size (const Yield::Size &a) { ys = a; }
+    void set_yield_size(const Yield::Size &a) { ys = a; }
 
     bool in_use() const { return in_use_; }
-    void set_in_use (bool b = true) { in_use_ = b; }
+    void set_in_use(bool b = true) { in_use_ = b; }
 
 
   protected:
@@ -119,4 +119,4 @@ class Fn_Decl {
 std::ostream &operator<<(std::ostream &s, const Fn_Decl &f);
 
 
-#endif  // ifndef FN_DECL_HH
+#endif  // ifndef SRC_FN_DECL_HH_

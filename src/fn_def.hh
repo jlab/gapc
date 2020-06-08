@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef FN_DEF_HH
-#define FN_DEF_HH
+#ifndef SRC_FN_DEF_HH_
+#define SRC_FN_DEF_HH_
 
 #include "fn_decl.hh"
 #include "algebra.hh"
@@ -60,8 +60,7 @@ class Filter;
 // just the declaration of the function, and adds a
 // body of statements and a list of parameter names
 // to the definition.
-class Fn_Def : public Fn_Decl
-{
+class Fn_Def : public Fn_Decl {
 
 
   friend class Printer::CC;
@@ -113,16 +112,14 @@ class Fn_Def : public Fn_Decl
     Fn_Def(Type::Base *r, std::string *n, const Loc &l)
       : Fn_Decl(r, n, l), gen_type(STANDARD), comperator_suffix(new std::string("_comperator")),
                         sorter_suffix(new std::string("_sorter")), nullary_sort_ob(NULL),
-                        adaptor(NULL), comparator(NULL), sorter(NULL), choice_fn_type_(Expr::Fn_Call::NONE)
-    {
+                        adaptor(NULL), comparator(NULL), sorter(NULL), choice_fn_type_(Expr::Fn_Call::NONE) {
     }
 
 
     Fn_Def(Type::Base *r, std::string *n)
       : Fn_Decl(r, n), gen_type(STANDARD), comperator_suffix(new std::string("_comperator")),
                         sorter_suffix(new std::string("_sorter")), nullary_sort_ob(NULL),
-                        adaptor(NULL), comparator(NULL), sorter(NULL),  choice_fn_type_(Expr::Fn_Call::NONE)
-    {
+                        adaptor(NULL), comparator(NULL), sorter(NULL),  choice_fn_type_(Expr::Fn_Call::NONE) {
     }
 
 
@@ -132,8 +129,7 @@ class Fn_Def : public Fn_Decl
     Fn_Def()
       : Fn_Decl(), gen_type(STANDARD), comperator_suffix(new std::string("_comperator")),
                         sorter_suffix(new std::string("_sorter")), nullary_sort_ob(NULL),
-                        adaptor(NULL), comparator(NULL),  sorter(NULL),  choice_fn_type_(Expr::Fn_Call::NONE)
-    {
+                        adaptor(NULL), comparator(NULL),  sorter(NULL),  choice_fn_type_(Expr::Fn_Call::NONE) {
     }
 
 
@@ -169,8 +165,8 @@ class Fn_Def : public Fn_Decl
 
 
 
-    void times_cg_with_rhs_choice (Fn_Def &a, Fn_Def &b, Product::Two &product, Statement::Var_Decl *answer, std::list<Statement::Base*> *loop_body, Statement::Var_Decl *elem);
-    void times_cg_without_rhs_choice (Fn_Def &a, Fn_Def &b, Product::Two &product, Statement::Var_Decl *answer, std::list<Statement::Base*> *loop_body, Statement::Var_Decl *elem);
+    void times_cg_with_rhs_choice(Fn_Def &a, Fn_Def &b, Product::Two &product, Statement::Var_Decl *answer, std::list<Statement::Base*> *loop_body, Statement::Var_Decl *elem);
+    void times_cg_without_rhs_choice(Fn_Def &a, Fn_Def &b, Product::Two &product, Statement::Var_Decl *answer, std::list<Statement::Base*> *loop_body, Statement::Var_Decl *elem);
 
                 bool get_sort_grab_list(std::list<bool> &o, Product::Base &product);
                 bool is_pareto_instance(Product::Base &product) ;
@@ -187,14 +183,12 @@ class Fn_Def : public Fn_Decl
     void init_fn_suffix(const std::string &s);
 
 
-    const std::string &target_name() const
-    {
+    const std::string &target_name() const {
       return target_name_;
     }
 
 
-    void set_target_name(const std::string &s)
-    {
+    void set_target_name(const std::string &s) {
       target_name_ = s;
     }
 
@@ -246,8 +240,7 @@ class Fn_Def : public Fn_Decl
 
   public:
 
-    void set_choice_fn_type(Expr::Fn_Call::Builtin x)
-    {
+    void set_choice_fn_type(Expr::Fn_Call::Builtin x) {
       choice_fn_type_ = x;
     }
 
@@ -261,8 +254,7 @@ class Fn_Def : public Fn_Decl
 
   public:
 
-    void set_mode(const Mode &m)
-    {
+    void set_mode(const Mode &m) {
       mode_ = m;
     }
 
@@ -270,14 +262,12 @@ class Fn_Def : public Fn_Decl
     void set_mode(std::string *s);
 
 
-    Mode &choice_mode()
-    {
+    Mode &choice_mode() {
       return mode_;
     }
 
 
-    const Mode &choice_mode() const
-    {
+    const Mode &choice_mode() const {
       return mode_;
     }
 
@@ -291,14 +281,12 @@ class Fn_Def : public Fn_Decl
     void add_choice_specialization(Fn_Def &a, Fn_Def &b, Product::Two &product);
 
 
-    void disable()
-    {
+    void disable() {
       disabled_ = true;
     }
 
 
-    bool disabled() const
-    {
+    bool disabled() const {
       return disabled_;
     }
 
@@ -316,8 +304,7 @@ class Fn_Def : public Fn_Decl
     void set_ntparas(std::list<Para_Decl::Base*> *l);
 
 
-    const std::list<Para_Decl::Base*> &ntparas() const
-    {
+    const std::list<Para_Decl::Base*> &ntparas() const {
       return ntparas_;
     }
 
@@ -330,8 +317,7 @@ class Fn_Def : public Fn_Decl
 };
 
 
-inline bool operator==(const Fn_Decl &a, const Fn_Def &b)
-{
+inline bool operator==(const Fn_Decl &a, const Fn_Def &b) {
   return a == *dynamic_cast<const Fn_Decl*>(&b);
 }
 

@@ -1,7 +1,7 @@
 
 
-#ifndef ADP_MODE_HH
-#define  ADP_MODE_HH
+#ifndef SRC_ADP_MODE_HH_
+#define  SRC_ADP_MODE_HH_
 
 namespace ADP_Mode {
 
@@ -19,4 +19,4 @@ namespace ADP_Mode {
 }
 
 
-#endif  /* ADP_MODE_HH */
+#endif  /* SRC_ADP_MODE_HH_ */

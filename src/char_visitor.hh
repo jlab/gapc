@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef CHAR_VISITOR_HH
-#define CHAR_VISITOR_HH
+#ifndef SRC_CHAR_VISITOR_HH_
+#define SRC_CHAR_VISITOR_HH_
 
 #include "visitor.hh"
 

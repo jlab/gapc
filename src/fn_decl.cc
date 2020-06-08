@@ -33,20 +33,17 @@ Fn_Decl::~Fn_Decl() {}
 
 
 Fn_Decl::Fn_Decl(Type::Base *r, std::string *n, const Loc &l)
-  : in_use_(false), choice_fn(false), return_type(0), name(n), location(l)
-{
+  : in_use_(false), choice_fn(false), return_type(0), name(n), location(l) {
   init(r);
 }
 
 Fn_Decl::Fn_Decl(Type::Base *r, std::string *n)
-  : in_use_(false), choice_fn(false), return_type(0), name(n)
-{
+  : in_use_(false), choice_fn(false), return_type(0), name(n) {
   init(r);
 }
 
 
-void Fn_Decl::init(Type::Base *r)
-{
+void Fn_Decl::init(Type::Base *r) {
   if (r->is(Type::CHOICE)) {
     return_type = dynamic_cast<Type::Choice*>(r)->rest;
     choice_fn = true;
@@ -62,8 +59,7 @@ void Fn_Decl::init(Type::Base *r)
 hashtable<std::string, Fn_Decl*> Fn_Decl::builtins;
 
 
-void Fn_Decl::init_table()
-{
+void Fn_Decl::init_table() {
   Type::Base *r = new Type::Char();
   std::string *s = new std::string("CHAR");
   Loc l;
@@ -128,8 +124,7 @@ void Fn_Decl::init_table()
 
 
 // FIXME no deep replacement - e.g. alphabet in list of list ...
-void Fn_Decl::replace(Type::Base *a, Type::Base *b)
-{
+void Fn_Decl::replace(Type::Base *a, Type::Base *b) {
   if (return_type->is_eq(*a)) {
     return_type = b;
   }
@@ -145,8 +140,7 @@ void Fn_Decl::replace(Type::Base *a, Type::Base *b)
 #include "type/multi.hh"
 
 
-void Fn_Decl::replace_types(std::pair<std::string*, Type::Base*> &alph, std::pair<std::string*, Type::Base*> &answer)
-{
+void Fn_Decl::replace_types(std::pair<std::string*, Type::Base*> &alph, std::pair<std::string*, Type::Base*> &answer) {
   // FIXME for multiple answer types ...
   if (choice_fn) {
     assert(types.size() == 1);
@@ -187,8 +181,7 @@ void Fn_Decl::replace_types(std::pair<std::string*, Type::Base*> &alph, std::pai
   }
 }
 
-std::ostream &operator<<(std::ostream &s, const Fn_Decl &f)
-{
+std::ostream &operator<<(std::ostream &s, const Fn_Decl &f) {
   s << *f.return_type << ' ' << *f.name << '(';
   for (std::list<Type::Base*>::const_iterator i = f.types.begin(); i != f.types.end(); ++i) {
     s << **i << ", ";
@@ -198,14 +191,12 @@ std::ostream &operator<<(std::ostream &s, const Fn_Decl &f)
 }
 
 
-void Fn_Decl::set_types(std::list<Type::Base*> *l)
-{
+void Fn_Decl::set_types(std::list<Type::Base*> *l) {
   types = *l;
 }
 
 
-void Fn_Decl::add_fn_decl(hashtable<std::string, Fn_Decl *> &h, Fn_Decl *f)
-{
+void Fn_Decl::add_fn_decl(hashtable<std::string, Fn_Decl *> &h, Fn_Decl *f) {
   if (h.find(*f->name) != h.end()) {
     Log::instance()->error(f->location, "Operator name " + *f->name + " redefined");
     Log::instance()->error(h[*f->name]->location, "here.");
@@ -252,14 +243,12 @@ bool Fn_Decl::operator==(const Fn_Decl &d) const {
 }
 
 
-bool Fn_Decl::types_equal(Fn_Decl &d)
-{
+bool Fn_Decl::types_equal(Fn_Decl &d) {
   return types.size() == d.types.size();
 }
 
 
-void Fn_Decl::set_nttypes(std::list<Type::Base*> *l)
-{
+void Fn_Decl::set_nttypes(std::list<Type::Base*> *l) {
   if (!l) {
     return;
   }

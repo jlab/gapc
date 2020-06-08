@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef FN_ARG_HH
-#define FN_ARG_HH
+#ifndef SRC_FN_ARG_HH_
+#define SRC_FN_ARG_HH_
 
 #include "runtime.hh"
 #include "table.hh"
@@ -220,7 +220,7 @@ namespace Fn_Arg {
 
     public:
 
-      Const (::Const::Base *e, const Loc &l);
+      Const(::Const::Base *e, const Loc &l);
 
       Base *clone();
 

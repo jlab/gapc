@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef CODEGEN_HH
-#define CODEGEN_HH
+#ifndef SRC_CODEGEN_HH_
+#define SRC_CODEGEN_HH_
 
 #include "type_fwd.hh"
 #include "bool.hh"
@@ -55,14 +55,12 @@ namespace Code {
       Mode()
         : type(UNGER), bt_type(FORWARD),
           allow_cooptimal_(true), keep_equal_(true),
-          kscoring_(false)
-      {
+          kscoring_(false) {
       }
       Mode(Type t, Bt_Type b)
         : type(t), bt_type(b),
           allow_cooptimal_(true), keep_equal_(true),
-          kscoring_(false)
-      {
+          kscoring_(false) {
       }
       void operator=(Type t) { type = t; }
       //Type operator()() const { return type; }
@@ -78,12 +76,11 @@ namespace Code {
 
       void set_keep_cooptimal(bool t) { keep_equal_ = t; }
       bool keep_cooptimal() const { return keep_equal_; }
-      
+
       void set_kscoring(bool t) { kscoring_ = t; }
       bool kscoring() const { return kscoring_; }
 
-      void put(std::ostream &o) const
-      {
+      void put(std::ostream &o) const {
         o << "Type: ";
         switch (type) {
           case UNGER : o << "unger"; break;
@@ -108,8 +105,7 @@ namespace Code {
       void set_sample(bool b) { sample_ = b; }
   };
 
-  inline std::ostream &operator<<(std::ostream &o, const Mode &m)
-  {
+  inline std::ostream &operator<<(std::ostream &o, const Mode &m) {
     m.put(o);
     return o;
   }
@@ -120,8 +116,7 @@ namespace Code {
     public:
       Gen() : return_type_(0) { }
       Gen(AST &ast);
-      const Type::Base *return_type() const
-      {
+      const Type::Base *return_type() const {
         assert(return_type_); return return_type_;
       }
   };

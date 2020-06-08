@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef DRIVER_HH
-#define DRIVER_HH
+#ifndef SRC_DRIVER_HH_
+#define SRC_DRIVER_HH_
 
 #include <string>
 #include <vector>

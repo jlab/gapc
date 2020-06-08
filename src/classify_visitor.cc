@@ -32,8 +32,7 @@
 #include <iostream>
 
 
-void Classify_Visitor::visit(Symbol::NT &n)
-{
+void Classify_Visitor::visit(Symbol::NT &n) {
   if (!n.eval_decl) {
     if (!n.return_decl().type->simple()->is(Type::LIST))
       return;
@@ -105,5 +104,3 @@ void Classify_Visitor::visit(Symbol::NT &n)
 
   }
 }
-
-

@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef BOOL_HH
-#define BOOL_HH
+#ifndef SRC_BOOL_HH_
+#define SRC_BOOL_HH_
 
 class Bool {
   private:

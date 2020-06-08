@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef AST_H
-#define AST_H
+#ifndef SRC_AST_HH_
+#define SRC_AST_HH_
 
 #include <list>
 #include <string>
@@ -78,7 +78,7 @@ class Import {
     // Inits a new instance with the given module name and
     // its source code location of the line which triggered
     // creation of this instance.
-    Import (std::string *s, const Loc &l) : name(s) {
+    Import(std::string *s, const Loc &l) : name(s) {
       this->location = l;
       this->verbatimDeclaration = false;
     }
@@ -88,8 +88,8 @@ class Import {
     // as verbatim text for the generated "#import" declaration
     // of the generated C++ output, and the source code location
     // of the line which triggered creation of this instance.
-    Import (std::string *s, bool verbatimDeclaration, const Loc &l)
-      : name(s), verbatimDeclaration (verbatimDeclaration) {
+    Import(std::string *s, bool verbatimDeclaration, const Loc &l)
+      : name(s), verbatimDeclaration(verbatimDeclaration) {
       this->location = l;
     }
 

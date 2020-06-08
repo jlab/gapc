@@ -32,8 +32,7 @@
 
 
 
-void Filter::init_builtin()
-{
+void Filter::init_builtin() {
   hashtable<std::string, Builtin>::iterator i;
   if ((i = table.find(*name)) != table.end()) {
     builtin = i->second;
@@ -64,14 +63,12 @@ void Filter::init_builtin()
 
 hashtable<std::string, Filter::Builtin> Filter::table;
 
-void Filter::init_table()
-{
+void Filter::init_table() {
   table["maxsize"] = MAX_SIZE;
   table["minsize"] = MIN_SIZE;
 }
 
-size_t Filter::uint_arg() const
-{
+size_t Filter::uint_arg() const {
   assert(args.size() == 1);
   Expr::Base *e = args.front();
   assert(e->is(Expr::CONST));
@@ -83,13 +80,11 @@ size_t Filter::uint_arg() const
 }
 
 Filter::Filter(std::string *n, const Loc &l)
-  : builtin(NONE), stateful(false), instance(0), name(n), location(l), type(NO_TYPE)
-{
+  : builtin(NONE), stateful(false), instance(0), name(n), location(l), type(NO_TYPE) {
     init_stateful_filters();
 }
 
-void Filter::init_stateful_filters()
-{
+void Filter::init_stateful_filters() {
   if (!(name->substr(0,3) == "sf_" || *name == "iupac"))
     return;
   static size_t counter = 0;
@@ -97,10 +92,8 @@ void Filter::init_stateful_filters()
   stateful = true;
 }
 
-std::string Filter::id() const
-{
+std::string Filter::id() const {
   std::ostringstream o;
   o << "filter_" << *name << instance;
   return o.str();
 }
-

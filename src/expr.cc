@@ -29,144 +29,120 @@
 #include "statement.hh"
 
 
-Expr::Const::Const(const Yield::Poly &p) : Base(CONST)
-{
+Expr::Const::Const(const Yield::Poly &p) : Base(CONST) {
   assert(p != Yield::UP);
   base = new ::Const::Size(p.konst());
 }
 
 Expr::Const::Const(const Yield::Size &ys)
-  : Base(CONST)
-{
+  : Base(CONST) {
   assert(ys.low() != Yield::UP);
   assert(ys.high() != Yield::UP);
   assert(ys.low().konst() <= ys.high().konst());
   base = new ::Const::Size(ys.high().konst() - ys.low().konst() + 1);
 }
 
-Expr::Const::Const(int p) : Base(CONST)
-{
+Expr::Const::Const(int p) : Base(CONST) {
   base = new ::Const::Size(p);
 }
 
-Expr::Const::Const(double d) : Base(CONST)
-{
+Expr::Const::Const(double d) : Base(CONST) {
   base = new ::Const::Float(d);
 }
 
-Expr::Const::Const(const std::string &s) : Base(CONST)
-{
+Expr::Const::Const(const std::string &s) : Base(CONST) {
   base = new ::Const::String(s);
 }
 
-Expr::Const::Const(char c) : Base(CONST)
-{
+Expr::Const::Const(char c) : Base(CONST) {
   base = new ::Const::Char(c);
 }
 
-Expr::Greater::Greater(Base *l, const Yield::Poly &p) : Two(GREATER, l, NULL)
-{
+Expr::Greater::Greater(Base *l, const Yield::Poly &p) : Two(GREATER, l, NULL) {
   Expr::Const *c = new Expr::Const(p);
   right_ = c;
 }
 
-Expr::Less::Less(Base *l, const Yield::Poly &p) : Two(LESS, l, NULL)
-{
+Expr::Less::Less(Base *l, const Yield::Poly &p) : Two(LESS, l, NULL) {
   Expr::Const *c = new Expr::Const(p);
   right_ = c;
 }
 
 Expr::Greater_Eq::Greater_Eq(Base *l, const Yield::Poly &p)
-: Two(GREATER_EQ, l, NULL)
-{
-  set_pretty_op(">="); 
+: Two(GREATER_EQ, l, NULL) {
+  set_pretty_op(">=");
   Expr::Const *c = new Expr::Const(p);
   right_ = c;
 }
 
 Expr::Less_Eq::Less_Eq(Base *l, const Yield::Poly &p)
- : Base(LESS_EQ), lhs(l)
-{
+ : Base(LESS_EQ), lhs(l) {
   Expr::Const *c = new Expr::Const(p);
   rhs = c;
 }
 
 
-void Expr::Comp::put(std::ostream &s) const
-{
+void Expr::Comp::put(std::ostream &s) const {
   s << " ( " << *expr << " ) ";
 }
 
-void Expr::Plus::put(std::ostream &s) const
-{
+void Expr::Plus::put(std::ostream &s) const {
   s << '(' << *left_ << " + " << *right_ << ')';
 }
 
-void Expr::Minus::put(std::ostream &s) const
-{
+void Expr::Minus::put(std::ostream &s) const {
   s << '(' << *left_ << " - " << *right_ << ')';
 }
 
-void Expr::Const::put(std::ostream &s) const
-{
+void Expr::Const::put(std::ostream &s) const {
   s << *base;
 }
 
 
-void Expr::Less_Eq::put(std::ostream &s) const
-{
+void Expr::Less_Eq::put(std::ostream &s) const {
   s << '(' << *lhs << " <= " << *rhs << ')';
 }
 
-void Expr::Less::put(std::ostream &s) const
-{
+void Expr::Less::put(std::ostream &s) const {
   s << '(' << *left_ << " < " << *right_ << ')';
 }
 
 
-void Expr::Greater::put(std::ostream &s) const
-{
+void Expr::Greater::put(std::ostream &s) const {
   s << '(' << *left_ << " > " << *right_ << ')';
 }
 
-void Expr::And::put(std::ostream &s) const
-{
+void Expr::And::put(std::ostream &s) const {
   s << '(' << *left_ << " && " << *right_ << ')';
 }
 
-void Expr::Max::put(std::ostream &s) const
-{
+void Expr::Max::put(std::ostream &s) const {
   s << "max(" << *left << " ," << *right << ')';
 }
 
-void Expr::Cond::put(std::ostream &s) const
-{
+void Expr::Cond::put(std::ostream &s) const {
   s << '(' << *cond << ") ? (" << *then << ") : (" << *els << ')';
 }
 
-void Expr::Not::put(std::ostream &s) const
-{
+void Expr::Not::put(std::ostream &s) const {
   s << '!' << *base;
 }
 
 Expr::Eq::Eq(Var_Acc::Base *vacc, Statement::Var_Decl *v)
-        : Two(EQ)
-{
+        : Two(EQ) {
   set_pretty_op("==");
   left_ = new Expr::Vacc(vacc);
   right_ = new Expr::Vacc(*v);
 }
 
 
-Expr::Base *Expr::Base::plus(Base *b)
-{
+Expr::Base *Expr::Base::plus(Base *b) {
   assert(b);
   Expr::Plus *r = new Expr::Plus(this, b);
   return r;
 }
 
-Expr::Base *Expr::Base::plus(const Yield::Poly &p)
-{
+Expr::Base *Expr::Base::plus(const Yield::Poly &p) {
   assert(p != Yield::UP);
   if (p == 0)
     return this;
@@ -175,16 +151,14 @@ Expr::Base *Expr::Base::plus(const Yield::Poly &p)
   return r;
 }
 
-Expr::Base *Expr::Base::minus(Base *b)
-{
+Expr::Base *Expr::Base::minus(Base *b) {
   assert(b);
   assert(this);
   Expr::Minus *r = new Expr::Minus(this, b);
   return r;
 }
 
-Expr::Base *Expr::Base::minus(const Yield::Poly &p)
-{
+Expr::Base *Expr::Base::minus(const Yield::Poly &p) {
   assert(p != Yield::UP);
   if (p == 0)
     return this;
@@ -193,8 +167,7 @@ Expr::Base *Expr::Base::minus(const Yield::Poly &p)
   return r;
 }
 
-bool operator==(Expr::Base &expr, const Statement::Var_Decl &decl)
-{
+bool operator==(Expr::Base &expr, const Statement::Var_Decl &decl) {
   if (!expr.is(Expr::VACC))
     return false;
   Expr::Vacc *v = expr.vacc();
@@ -205,37 +178,32 @@ bool operator==(Expr::Base &expr, const Statement::Var_Decl &decl)
   return *d == decl;
 }
 
-Expr::Base *Expr::Comp::copy() const
-{
+Expr::Base *Expr::Comp::copy() const {
   Comp *o = new Comp(*this);
   o->expr = expr->copy();
   return o;
 }
 
-Expr::Base *Expr::Const::copy() const
-{
+Expr::Base *Expr::Const::copy() const {
   Const *o = new Const(*this);
   return o;
 }
 
-Expr::Base *Expr::Less_Eq::copy() const
-{
+Expr::Base *Expr::Less_Eq::copy() const {
   Less_Eq *o = new Less_Eq(*this);
   o->lhs = lhs->copy();
   o->rhs = rhs->copy();
   return o;
 }
 
-Expr::Base *Expr::Max::copy() const
-{
+Expr::Base *Expr::Max::copy() const {
   Max *o = new Max(*this);
   o->left = left->copy();
   o->right = right->copy();
   return o;
 }
 
-Expr::Base *Expr::Cond::copy() const
-{
+Expr::Base *Expr::Cond::copy() const {
   Cond *o = new Cond(*this);
   o->cond = cond->copy();
   o->then = then->copy();
@@ -243,8 +211,7 @@ Expr::Base *Expr::Cond::copy() const
   return o;
 }
 
-Expr::Base *Expr::Not::copy() const
-{
+Expr::Base *Expr::Not::copy() const {
   Not *o = new Not(*this);
   o->base = base->copy();
   return o;
@@ -269,5 +236,3 @@ EXPRTWOCP(Or)
 EXPRTWOCP(Mod)
 
 #undef EXPRTWOCP
-
-
