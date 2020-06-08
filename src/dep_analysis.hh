@@ -21,15 +21,15 @@
 
 }}} */
 
-#include "hashtable.hh"
-#include "symbol_fwd.hh"
-
 #include <list>
 #include <vector>
 #include <string>
 
+#include "hashtable.hh"
+#include "symbol_fwd.hh"
+
 class Dep_Analysis {
-  private:
+ private:
     const hashtable<std::string, Symbol::Base*> &symbols;
 
     std::list<Symbol::NT*> ordering;
@@ -38,7 +38,7 @@ class Dep_Analysis {
 
     hashtable<Symbol::NT*, size_t> nt_map;
 
-  public:
+ public:
     Dep_Analysis(const hashtable<std::string, Symbol::Base*> &s);
 
     void sort();

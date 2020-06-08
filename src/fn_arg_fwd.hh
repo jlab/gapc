@@ -26,9 +26,9 @@
 #define SRC_FN_ARG_FWD_HH_
 
 namespace Fn_Arg {
-  class Base;
-  class Const;
-  class Alt;
+class Base;
+class Const;
+class Alt;
 }
 
-#endif
+#endif  // SRC_FN_ARG_FWD_HH_

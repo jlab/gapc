@@ -75,8 +75,7 @@ Expr::Greater_Eq::Greater_Eq(Base *l, const Yield::Poly &p)
   right_ = c;
 }
 
-Expr::Less_Eq::Less_Eq(Base *l, const Yield::Poly &p)
- : Base(LESS_EQ), lhs(l) {
+Expr::Less_Eq::Less_Eq(Base *l, const Yield::Poly &p) : Base(LESS_EQ), lhs(l) {
   Expr::Const *c = new Expr::Const(p);
   rhs = c;
 }
@@ -172,7 +171,7 @@ bool operator==(Expr::Base &expr, const Statement::Var_Decl &decl) {
     return false;
   Expr::Vacc *v = expr.vacc();
   Statement::Var_Decl *d = v->var_decl();
-  //assert(d);
+  // assert(d);
   if (!d)
     return false;
   return *d == decl;

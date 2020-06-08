@@ -35,9 +35,7 @@
 
 
 class Driver {
-
-  private:
-
+ private:
     bool from_stdin;
     bool trace_lexer;
     bool trace_parser;
@@ -53,9 +51,7 @@ class Driver {
     void file_close();
     bool file_open();
 
-
-  public:
-
+ public:
     bool parse();
     void parse_product(const std::string &s);
     void setStdin(bool b);
@@ -75,8 +71,7 @@ class Driver {
     AST ast;
 
     Driver();
-
 };
 
 
-#endif
+#endif  // SRC_DRIVER_HH_

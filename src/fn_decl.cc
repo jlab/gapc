@@ -48,8 +48,7 @@ void Fn_Decl::init(Type::Base *r) {
     return_type = dynamic_cast<Type::Choice*>(r)->rest;
     choice_fn = true;
     delete r;
-  }
-  else {
+  } else {
     return_type = r;
     choice_fn = false;
   }
@@ -128,7 +127,8 @@ void Fn_Decl::replace(Type::Base *a, Type::Base *b) {
   if (return_type->is_eq(*a)) {
     return_type = b;
   }
-  for (std::list<Type::Base*>::iterator i = types.begin(); i != types.end(); ++i) {
+  for (std::list<Type::Base*>::iterator i = types.begin();
+       i != types.end(); ++i) {
     if ((*i)->is_eq(*a)) {
       *i = b;
     }
@@ -140,7 +140,9 @@ void Fn_Decl::replace(Type::Base *a, Type::Base *b) {
 #include "type/multi.hh"
 
 
-void Fn_Decl::replace_types(std::pair<std::string*, Type::Base*> &alph, std::pair<std::string*, Type::Base*> &answer) {
+void Fn_Decl::replace_types(
+  std::pair<std::string*, Type::Base*> &alph,
+  std::pair<std::string*, Type::Base*> &answer) {
   // FIXME for multiple answer types ...
   if (choice_fn) {
     assert(types.size() == 1);
@@ -149,27 +151,25 @@ void Fn_Decl::replace_types(std::pair<std::string*, Type::Base*> &alph, std::pai
     types.push_back(new Type::List(answer.second));
     return;
   }
-  for (std::list<Type::Base*>::iterator i = types.begin(); i != types.end(); ++i) {
+  for (std::list<Type::Base*>::iterator i = types.begin();
+       i != types.end(); ++i) {
     Type::Base *t = *i;
     if (t->simple()->is(Type::ALPHABET)) {
       *i = alph.second;
-    }
-    else if (t->simple()->is(Type::SIGNATURE)) {
+    } else if (t->simple()->is(Type::SIGNATURE)) {
       *i = answer.second;
-    }
-    else if (t->simple()->is(Type::MULTI)) {
+    } else if (t->simple()->is(Type::MULTI)) {
       Type::Multi *m = dynamic_cast<Type::Multi*>(t->simple());
       assert(m);
       std::list<Type::Base*> types;
-      for (std::list<Type::Base*>::const_iterator j = m->types().begin(); j != m->types().end(); ++j) {
+      for (std::list<Type::Base*>::const_iterator j = m->types().begin();
+           j != m->types().end(); ++j) {
         Type::Base *t = *j;
         if (t->simple()->is(Type::ALPHABET)) {
           types.push_back(alph.second);
-        }
-        else if (t->simple()->is(Type::SIGNATURE)) {
+        } else if (t->simple()->is(Type::SIGNATURE)) {
           types.push_back(answer.second);
-        }
-        else {
+        } else {
           types.push_back(*j);
         }
       }
@@ -183,7 +183,8 @@ void Fn_Decl::replace_types(std::pair<std::string*, Type::Base*> &alph, std::pai
 
 std::ostream &operator<<(std::ostream &s, const Fn_Decl &f) {
   s << *f.return_type << ' ' << *f.name << '(';
-  for (std::list<Type::Base*>::const_iterator i = f.types.begin(); i != f.types.end(); ++i) {
+  for (std::list<Type::Base*>::const_iterator i = f.types.begin();
+       i != f.types.end(); ++i) {
     s << **i << ", ";
   }
   s << ");";
@@ -198,10 +199,10 @@ void Fn_Decl::set_types(std::list<Type::Base*> *l) {
 
 void Fn_Decl::add_fn_decl(hashtable<std::string, Fn_Decl *> &h, Fn_Decl *f) {
   if (h.find(*f->name) != h.end()) {
-    Log::instance()->error(f->location, "Operator name " + *f->name + " redefined");
+    Log::instance()->error(
+      f->location, "Operator name " + *f->name + " redefined");
     Log::instance()->error(h[*f->name]->location, "here.");
-  }
-  else {
+  } else {
     h[*f->name] = f;
   }
 }
@@ -228,7 +229,8 @@ bool Fn_Decl::operator==(const Fn_Decl &d) const {
     return false;
   }
   std::list<Type::Base*>::const_iterator i = types.begin();
-  for (std::list<Type::Base*>::const_iterator j = d.types.begin(); i != types.end() && j != d.types.end(); ++i, ++j) {
+  for (std::list<Type::Base*>::const_iterator j = d.types.begin();
+       i != types.end() && j != d.types.end(); ++i, ++j) {
     if (!(*i)->is_eq(**j)) {
       std::ostringstream o1;
       o1 << "Type " << **i << " does not match";

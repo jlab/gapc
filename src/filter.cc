@@ -22,14 +22,11 @@
 }}} */
 
 
-
-
 #include "filter.hh"
 
 #include "log.hh"
 #include "expr.hh"
 #include "const.hh"
-
 
 
 void Filter::init_builtin() {
@@ -45,18 +42,20 @@ void Filter::init_builtin() {
       Expr::Base *e = args.front();
       if (e->is(Expr::CONST)) {
         Expr::Const *c  = dynamic_cast<Expr::Const*>(e);
-        if (!c->base->is(Const::INT))
+        if (!c->base->is(Const::INT)) {
           Log::instance()->error(e->location,
               "Not an integer as argument of filter " + (*name) + ".");
-        else {
+        } else {
           Const::Int *i = dynamic_cast<Const::Int*>(c->base);
-          if (i->i < 0)
+          if (i->i < 0) {
             Log::instance()->error(e->location,
                 "Negative argument makes no sense here.");
+          }
         }
-      } else
+      } else {
         Log::instance()->error(e->location,
             "Not an const as argument of filter " + (*name) + ".");
+      }
     }
   }
 }
@@ -79,13 +78,13 @@ size_t Filter::uint_arg() const {
   return size_t(i->i);
 }
 
-Filter::Filter(std::string *n, const Loc &l)
-  : builtin(NONE), stateful(false), instance(0), name(n), location(l), type(NO_TYPE) {
+Filter::Filter(std::string *n, const Loc &l) : builtin(NONE), stateful(false),
+  instance(0), name(n), location(l), type(NO_TYPE) {
     init_stateful_filters();
 }
 
 void Filter::init_stateful_filters() {
-  if (!(name->substr(0,3) == "sf_" || *name == "iupac"))
+  if (!(name->substr(0, 3) == "sf_" || *name == "iupac"))
     return;
   static size_t counter = 0;
   instance = counter++;

@@ -25,23 +25,19 @@
 #ifndef SRC_FILTER_HH_
 #define SRC_FILTER_HH_
 
+#include <string>
+#include <list>
+
 #include "hashtable.hh"
 #include "loc.hh"
 
 #include "expr_fwd.hh"
 
-#include <string>
-#include <list>
-
 class Filter {
+ public:
+  enum Builtin { NONE, MAX_SIZE, MIN_SIZE };
 
-  public:
-
-    enum Builtin { NONE, MAX_SIZE, MIN_SIZE };
-
-
-  private:
-
+ private:
     Builtin builtin;
     bool stateful;
     size_t instance;
@@ -50,9 +46,7 @@ class Filter {
     //       (like with add_predefined)
     static hashtable<std::string, Builtin> table;
 
-
-  public:
-
+ public:
     enum Type { NO_TYPE, WITH, SUCHTHAT, WITH_OVERLAY, SUCHTHAT_OVERLAY };
 
     std::string *name;
@@ -70,18 +64,12 @@ class Filter {
 
     size_t uint_arg() const;
 
-
-  private:
-
+ private:
     void init_stateful_filters();
 
-
-  public:
-
+ public:
     bool is_stateful() const { return stateful; }
     std::string id() const;
-
-
 };
 
-#endif
+#endif  // SRC_FILTER_HH_
