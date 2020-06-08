@@ -21,6 +21,10 @@
 
 }}} */
 
+#include <algorithm>
+#include <functional>
+#include <vector>
+#include <utility>
 
 #include "alt.hh"
 
@@ -42,22 +46,19 @@
 #include "ast.hh"
 #include "instance.hh"
 
-#include <algorithm>
-#include <functional>
-
 #include "statement/fn_call.hh"
 
 
-Alt::Base::Base(Type t, const Loc &l)
-  :  type(t), adp_specialization(ADP_Mode::STANDARD),
-                eval_nullary_fn(NULL), specialised_comparator_fn(NULL),
-                specialised_sorter_fn(NULL), marker(NULL), disabled_spec(false),
-                productive(false),
-    datatype(NULL), eliminated(false),
-    terminal_type(false), location(l),
-    ret_decl(NULL), filter_guards(NULL),
-    choice_fn_type_(Expr::Fn_Call::NONE),
-    tracks_(0), track_pos_(0) {
+Alt::Base::Base(Type t, const Loc &l) :
+  type(t), adp_specialization(ADP_Mode::STANDARD),
+  eval_nullary_fn(NULL), specialised_comparator_fn(NULL),
+  specialised_sorter_fn(NULL), marker(NULL), disabled_spec(false),
+  productive(false),
+  datatype(NULL), eliminated(false),
+  terminal_type(false), location(l),
+  ret_decl(NULL), filter_guards(NULL),
+  choice_fn_type_(Expr::Fn_Call::NONE),
+  tracks_(0), track_pos_(0) {
 }
 
 
@@ -66,9 +67,8 @@ Alt::Base::~Base() {
 
 
 Alt::Simple::Simple(std::string *n, const Loc &l)
-  :  Base(SIMPLE,l), is_terminal_(false),
-    name(n), decl(NULL),
-        guards(NULL), inner_code(0) {
+  :  Base(SIMPLE, l), is_terminal_(false),
+    name(n), decl(NULL), guards(NULL), inner_code(0) {
   hashtable<std::string, Fn_Decl*>::iterator j = Fn_Decl::builtins.find(*name);
   if (j != Fn_Decl::builtins.end()) {
     is_terminal_ = true;
@@ -80,7 +80,8 @@ Alt::Simple::Simple(std::string *n, const Loc &l)
 Alt::Base *Alt::Simple::clone() {
   Alt::Simple *a = new Alt::Simple(*this);
   a->args.clear();
-  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
+       i != args.end(); ++i) {
     a->args.push_back((*i)->clone());
   }
   return a;
@@ -129,7 +130,7 @@ void Alt::Base::add_specialised_arguments(Statement::Fn_Call *fn) {
             break;
     }
 
-    if(ADP_Mode::is_coopt_param(adp_specialization)) {
+    if (ADP_Mode::is_coopt_param(adp_specialization)) {
         fn->add_arg(new Expr::Const(new Const::Bool(keep_coopts)));
     }
 }
@@ -146,7 +147,8 @@ bool Alt::Simple::init_links(Grammar &g) {
   }
 
   bool r = true;
-  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end();
+       ++i) {
     bool a = (*i)->init_links(g);
     r = r && a;
   }
@@ -156,7 +158,9 @@ bool Alt::Simple::init_links(Grammar &g) {
 
 bool Alt::Link::init_links(Grammar &grammar) {
   if (grammar.NTs.find(*name) == grammar.NTs.end()) {
-    Log::instance()->error(location, "Nonterminal " + *name + " is not defined in grammar " + *(grammar.name) + ".");
+    Log::instance()->error(
+      location, "Nonterminal " + *name + " is not defined in grammar " +
+      *(grammar.name) + ".");
     return false;
   }
   Symbol::Base *n = grammar.NTs[*name];
@@ -185,12 +189,14 @@ bool Alt::Multi::init_links(Grammar &grammar) {
   bool r = true;
   for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i) {
     if ((*i)->is(BLOCK)) {
-      Log::instance()->error(location, "Alternative is not allowed in Multi-Track link.");
+      Log::instance()->error(
+        location, "Alternative is not allowed in Multi-Track link.");
       continue;
     }
     // simplifies init_calls analysis for example
     if ((*i)->is(SIMPLE) && !dynamic_cast<Simple*>(*i)->is_terminal()) {
-      Log::instance()->error(location, "Function symbol is not allowed in Multi-Track link.");
+      Log::instance()->error(
+        location, "Function symbol is not allowed in Multi-Track link.");
       continue;
     }
     bool a = (*i)->init_links(grammar);
@@ -203,7 +209,8 @@ bool Alt::Multi::init_links(Grammar &grammar) {
 bool Alt::Simple::init_productive() {
   bool r = false;
   bool s = true;
-  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
+       i != args.end(); ++i) {
     bool a = (*i)->init_productive();
     r = r || a;
     a = (*i)->is_productive();
@@ -262,9 +269,11 @@ bool Alt::Multi::init_productive() {
 }
 
 
-void Alt::Simple::collect_lr_deps(std::list<Symbol::NT*> &list, const Yield::Multi &l, const Yield::Multi &r) {
+void Alt::Simple::collect_lr_deps(
+  std::list<Symbol::NT*> &list, const Yield::Multi &l, const Yield::Multi &r) {
   Yield::Multi left(l);
-  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
+       i != args.end(); ++i) {
     Yield::Multi right(r);
     sum_rhs(right, i, args.end());
 
@@ -277,7 +286,9 @@ void Alt::Simple::collect_lr_deps(std::list<Symbol::NT*> &list, const Yield::Mul
 }
 
 
-void Alt::Link::collect_lr_deps(std::list<Symbol::NT*> &list, const Yield::Multi &left, const Yield::Multi &right) {
+void Alt::Link::collect_lr_deps(
+  std::list<Symbol::NT*> &list, const Yield::Multi &left,
+  const Yield::Multi &right) {
   if (!(left.is_low_zero() && right.is_low_zero())) {
     return;
   }
@@ -291,21 +302,26 @@ void Alt::Link::collect_lr_deps(std::list<Symbol::NT*> &list, const Yield::Multi
 }
 
 
-void Alt::Block::collect_lr_deps(std::list<Symbol::NT*> &list, const Yield::Multi &left, const Yield::Multi &right) {
+void Alt::Block::collect_lr_deps(
+  std::list<Symbol::NT*> &list, const Yield::Multi &left,
+  const Yield::Multi &right) {
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     (*i)->collect_lr_deps(list, left, right);
   }
 }
 
 
-void Alt::Multi::collect_lr_deps(std::list<Symbol::NT*> &nts, const Yield::Multi &left, const Yield::Multi &right) {
+void Alt::Multi::collect_lr_deps(
+  std::list<Symbol::NT*> &nts, const Yield::Multi &left,
+  const Yield::Multi &right) {
   assert(left.tracks() == tracks_);
   assert(right.tracks() == tracks_);
   assert(tracks_ == list.size());
 
   Yield::Multi::const_iterator l = left.begin();
   Yield::Multi::const_iterator r = right.begin();
-  for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i, ++l, ++r) {
+  for (std::list<Base*>::iterator i = list.begin(); i != list.end();
+       ++i, ++l, ++r) {
     Yield::Multi a(1), b(1);
     a(0) = *l;
     b(0) = *r;
@@ -316,7 +332,8 @@ void Alt::Multi::collect_lr_deps(std::list<Symbol::NT*> &nts, const Yield::Multi
 
 size_t Alt::Simple::width() {
   size_t r = 0;
-  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
+       i != args.end(); ++i) {
     Fn_Arg::Base *b = *i;
 
     const Yield::Multi &m = b->multi_ys();
@@ -347,7 +364,7 @@ size_t Alt::Block::width() {
   size_t r = 0;
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     size_t t = (*i)->width();
-    if (t>r) {
+    if (t > r) {
       r = t;
     }
   }
@@ -364,14 +381,17 @@ size_t Alt::Multi::width() {
 }
 
 
-void Alt::Simple::init_table_dim(const Yield::Size &a, const Yield::Size &b, std::vector<Yield::Size> &temp_ls, std::vector<Yield::Size> &temp_rs, size_t track) {
+void Alt::Simple::init_table_dim(
+  const Yield::Size &a, const Yield::Size &b,
+  std::vector<Yield::Size> &temp_ls, std::vector<Yield::Size> &temp_rs,
+  size_t track) {
   if (is_terminal()) {
     return;
   }
 
   Yield::Size l = a;
-  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
-
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end();
+       ++i) {
     if ((*i)->is(Fn_Arg::ALT)) {
       Yield::Size r(b);
       std::list<Fn_Arg::Base*>::iterator j = i;
@@ -388,31 +408,40 @@ void Alt::Simple::init_table_dim(const Yield::Size &a, const Yield::Size &b, std
 }
 
 
-void Alt::Link::init_table_dim(const Yield::Size &a, const Yield::Size &b, std::vector<Yield::Size> &temp_ls, std::vector<Yield::Size> &temp_rs, size_t track) {
+void Alt::Link::init_table_dim(
+  const Yield::Size &a, const Yield::Size &b,
+  std::vector<Yield::Size> &temp_ls, std::vector<Yield::Size> &temp_rs,
+  size_t track) {
   nt->init_table_dim(a, b, temp_ls, temp_rs, track);
 }
 
 
-void Alt::Block::init_table_dim(const Yield::Size &a, const Yield::Size &b, std::vector<Yield::Size> &temp_ls, std::vector<Yield::Size> &temp_rs, size_t track) {
+void Alt::Block::init_table_dim(
+  const Yield::Size &a, const Yield::Size &b,
+  std::vector<Yield::Size> &temp_ls, std::vector<Yield::Size> &temp_rs,
+  size_t track) {
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     (*i)->init_table_dim(a, b, temp_ls, temp_rs, track);
   }
 }
 
 
-void Alt::Multi::init_table_dim(const Yield::Size &a, const Yield::Size &b, std::vector<Yield::Size> &temp_ls, std::vector<Yield::Size> &temp_rs, size_t track) {
+void Alt::Multi::init_table_dim(
+  const Yield::Size &a, const Yield::Size &b,
+  std::vector<Yield::Size> &temp_ls, std::vector<Yield::Size> &temp_rs,
+  size_t track) {
   size_t j = 0;
   assert(track < list.size());
   std::list<Base*>::iterator i = list.begin();
-  for (; j<track; ++i, ++j)
-    ;
+  for (; j < track; ++i, ++j) {}
 
-  (*i)->init_table_dim (a, b, temp_ls, temp_rs, 0);
+  (*i)->init_table_dim(a, b, temp_ls, temp_rs, 0);
 }
 
 
 void Alt::Simple::print_link(std::ostream &s) {
-  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end();
+       ++i) {
     (*i)->print_link(s);
   }
 }
@@ -424,7 +453,8 @@ void Alt::Link::print_link(std::ostream &s) {
 
 
 void Alt::Block::print_link(std::ostream &s) {
-  for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
+  for (std::list<Base*>::iterator i = alts.begin(); i != alts.end();
+       ++i) {
     (*i)->print_link(s);
   }
 }
@@ -439,16 +469,19 @@ void Alt::Multi::print_link(std::ostream &s) {
 }
 
 
-Runtime::Poly Alt::Simple::runtime(std::list<Symbol::NT*> &active_list, const Runtime::Poly &accum_rt) {
-  Runtime::Poly rt(1); // FIXME use higher constant for more realistic fn call
-  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
+Runtime::Poly Alt::Simple::runtime(
+  std::list<Symbol::NT*> &active_list, const Runtime::Poly &accum_rt) {
+  Runtime::Poly rt(1);  // FIXME use higher constant for more realistic fn call
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end();
+       ++i) {
     rt += (*i)->runtime(active_list, accum_rt);
   }
   return rt;
 }
 
 
-Runtime::Poly Alt::Link::runtime(std::list<Symbol::NT*> &active_list, const Runtime::Poly &accum_rt) {
+Runtime::Poly Alt::Link::runtime(
+  std::list<Symbol::NT*> &active_list, const Runtime::Poly &accum_rt) {
   Runtime::Poly rt = calls;
   Runtime::Poly a(accum_rt);
   a *= calls;
@@ -459,7 +492,8 @@ Runtime::Poly Alt::Link::runtime(std::list<Symbol::NT*> &active_list, const Runt
 }
 
 
-Runtime::Poly Alt::Block::runtime(std::list<Symbol::NT*> &active_list, const Runtime::Poly &accum_rt) {
+Runtime::Poly Alt::Block::runtime(
+  std::list<Symbol::NT*> &active_list, const Runtime::Poly &accum_rt) {
   Runtime::Poly rt;
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     rt += (*i)->runtime(active_list, accum_rt);
@@ -468,7 +502,8 @@ Runtime::Poly Alt::Block::runtime(std::list<Symbol::NT*> &active_list, const Run
 }
 
 
-Runtime::Poly Alt::Multi::runtime(std::list<Symbol::NT*> &active_list, const Runtime::Poly &accum_rt) {
+Runtime::Poly Alt::Multi::runtime(
+  std::list<Symbol::NT*> &active_list, const Runtime::Poly &accum_rt) {
   Runtime::Poly rt;
   for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i) {
     rt += (*i)->runtime(active_list, accum_rt);
@@ -479,7 +514,8 @@ Runtime::Poly Alt::Multi::runtime(std::list<Symbol::NT*> &active_list, const Run
 
 Runtime::Poly Alt::Simple::init_in_out() {
   Runtime::Poly p;
-  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end();
+       ++i) {
     p += (*i)->init_in_out();
   }
   return p;
@@ -511,7 +547,8 @@ Runtime::Poly Alt::Multi::init_in_out() {
 
 
 void Alt::Simple::init_self_rec() {
-  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end();
+       ++i) {
     if ((*i)->is(Fn_Arg::ALT)) {
       (*i)->alt_ref()->init_self_rec();
     }
@@ -548,12 +585,12 @@ bool Alt::Base::set_data_type(::Type::Base *t, const Loc &l) {
 bool Alt::Simple::insert_types(Signature_Base &s) {
   Fn_Decl *fn_decl = s.decl(*name);
   if (!fn_decl) {
-    hashtable<std::string, Fn_Decl*>::iterator j = Fn_Decl::builtins.find(*name);
+    hashtable<std::string, Fn_Decl*>::iterator j =
+      Fn_Decl::builtins.find(*name);
     if (j != Fn_Decl::builtins.end()) {
       fn_decl = j->second;
       terminal_type = true;
-    }
-    else {
+    } else {
       Log::instance()->error(location, "Function " + *name + " is not defined");
       Log::instance()->error(s.location, "in signature " + *s.name + ".");
       return false;
@@ -561,7 +598,8 @@ bool Alt::Simple::insert_types(Signature_Base &s) {
   }
   decl = fn_decl;
   bool r = true;
-  bool b = set_data_type(new ::Type::List(fn_decl->return_type), fn_decl->return_type->location);
+  bool b = set_data_type(
+    new ::Type::List(fn_decl->return_type), fn_decl->return_type->location);
   r = r && b;
   if (fn_decl->types.size() != args.size()) {
     std::ostringstream o1;
@@ -575,7 +613,8 @@ bool Alt::Simple::insert_types(Signature_Base &s) {
     r = false;
   }
   std::list< ::Type::Base*>::iterator j = fn_decl->types.begin();
-  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end() && j != fn_decl->types.end(); ++i, ++j) {
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
+       i != args.end() && j != fn_decl->types.end(); ++i, ++j) {
     b = (*i)->set_data_type(*j, location);
     r = r && b;
     if ((*i)->is(Fn_Arg::ALT)) {
@@ -616,7 +655,8 @@ bool Alt::Multi::insert_types(Signature_Base &s) {
 
 Type::Status Alt::Simple::infer_missing_types() {
   ::Type::Status r = ::Type::READY;
-  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
+       i != args.end(); ++i) {
     ::Type::Status b = (*i)->infer_missing_types();
     r = std::max(r, b);
   }
@@ -720,12 +760,12 @@ Type::Status Alt::Multi::infer_missing_types() {
 void Alt::Simple::print_type(std::ostream &s) {
   if (datatype) {
     s << *datatype;
-  }
-  else {
+  } else {
     s << "NULL";
   }
   s << ' ' << *name << '(';
-  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end();
+       ++i) {
     (*i)->print_type(s);
     s << ", ";
   }
@@ -736,8 +776,7 @@ void Alt::Simple::print_type(std::ostream &s) {
 void Alt::Link::print_type(std::ostream &s) {
   if (datatype) {
     s << *datatype;
-  }
-  else {
+  } else {
     s << "NULL";
   }
 }
@@ -759,8 +798,7 @@ void Alt::Block::print_type(std::ostream &s) {
 void Alt::Multi::print_type(std::ostream &s) {
   if (datatype) {
     s << *datatype;
-  }
-  else {
+  } else {
     s << "NULL";
   }
 }
@@ -768,7 +806,8 @@ void Alt::Multi::print_type(std::ostream &s) {
 
 bool Alt::Simple::has_moving_k() {
   unsigned x = 0;
-  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end();++i) {
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
+       i != args.end(); ++i) {
     if ((*i)->multi_ys().has_moving()) {
       ++x;
     }
@@ -781,13 +820,15 @@ bool Alt::Simple::has_moving_k() {
 
 
 /* Returns true if no subfunctions are involved. This value is used to apply
- sorting, pareto or others for specialised ADP version, such as Pareto Eager or Sorted ADP*/
+ sorting, pareto or others for specialised ADP version, such as Pareto Eager
+ or Sorted ADP*/
 bool Alt::Simple::is_nullary() {
   unsigned x = 0;
-  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end();++i) {
-            if(!(*i)->terminal_type && (*i)->choice_set() ) {
-                return false;
-            }
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end();
+       ++i) {
+    if (!(*i)->terminal_type && (*i)->choice_set()) {
+        return false;
+    }
   }
   return true;
 }
@@ -795,7 +836,8 @@ bool Alt::Simple::is_nullary() {
 bool Alt::Simple::eliminate_lists() {
   bool r = false;
   bool x = true;
-  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
+       i != args.end(); ++i) {
     if ((*i)->is(Fn_Arg::ALT)) {
       bool a = (*i)->alt_ref()->eliminate_lists();
       r = r || a;
@@ -803,7 +845,8 @@ bool Alt::Simple::eliminate_lists() {
     bool b = !(*i)->returns_list();
     x = x && b;
   }
-  if (!eliminated && x && datatype->simple()->is(::Type::LIST) && !has_moving_k()) {
+  if (!eliminated && x && datatype->simple()->is(::Type::LIST) &&
+      !has_moving_k()) {
     eliminated = true;
     datatype = dynamic_cast< ::Type::List*>(datatype->simple())->of;
     return true;
@@ -839,7 +882,8 @@ bool Alt::Block::eliminate_lists() {
     bool a = !(*i)->data_type()->simple()->is(::Type::LIST);
     x = x && a;
   }
-  if (!eliminated && x && alts.size() == 1 && datatype->simple()->is(::Type::LIST)) {
+  if (!eliminated && x && alts.size() == 1 &&
+      datatype->simple()->is(::Type::LIST)) {
     eliminated = true;
     datatype = dynamic_cast< ::Type::List*>(datatype->simple())->of;
     return true;
@@ -874,7 +918,8 @@ bool Alt::Simple::init_list_sizes() {
   }
   bool args_uninit = false;
   Yield::Poly t = 1;
-  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end();
+       ++i) {
     if ((*i)->is(Fn_Arg::ALT)) {
       bool b = (*i)->alt_ref()->init_list_sizes();
       r = r || b;
@@ -882,8 +927,7 @@ bool Alt::Simple::init_list_sizes() {
     const Yield::Poly &p = (*i)->list_size();
     if (p == 0) {
       args_uninit = true;
-    }
-    else {
+    } else {
       t *= p;
     }
   }
@@ -918,8 +962,7 @@ bool Alt::Block::init_list_sizes() {
     const Yield::Poly &p = (*i)->list_size();
     if (p == 0) {
       uninit = true;
-    }
-    else {
+    } else {
       t += p;
     }
   }
@@ -943,8 +986,7 @@ bool Alt::Multi::init_list_sizes() {
     const Yield::Poly &p = (*i)->list_size();
     if (p == 0) {
       uninit = true;
-    }
-    else {
+    } else {
       t *= p;
     }
   }
@@ -967,7 +1009,8 @@ void Alt::Base::reset_types() {
 void Alt::Simple::traverse(Visitor &v) {
   v.visit(*dynamic_cast<Base*>(this));
   v.visit_begin(*this);
-  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end();
+       ++i) {
     (*i)->traverse(v);
     v.visit_itr(*this);
   }
@@ -1032,8 +1075,7 @@ Expr::Base *Alt::Simple::next_index_var(unsigned &k, size_t track,
   if (ys.low() != ys.high()) {
     if (rhs.low() == rhs.high()) {
       return right;
-    }
-    else {
+    } else {
       std::ostringstream o;
       o << "t_" << track << "_k_" << k;
       k++;
@@ -1047,10 +1089,12 @@ Expr::Base *Alt::Simple::next_index_var(unsigned &k, size_t track,
 
       if (rhs.high() == Yield::UP) {
         index.first = last_var->plus(lhs_ys.low());
-      }
-      // e.g. second maxsize filter in grammar/forloops5
-      else {
-        Expr::Cond *ce = new Expr::Cond(new Expr::Greater_Eq(right->minus(last_var->plus(lhs_ys.low())), rhs.high()), right->minus(rhs.high()), last_var->plus(lhs_ys.low()));
+      } else {
+        // e.g. second maxsize filter in grammar/forloops5
+        Expr::Cond *ce = new Expr::Cond(
+          new Expr::Greater_Eq(right->minus(
+            last_var->plus(lhs_ys.low())), rhs.high()),
+          right->minus(rhs.high()), last_var->plus(lhs_ys.low()));
         index.first = ce;
       }
 
@@ -1059,21 +1103,23 @@ Expr::Base *Alt::Simple::next_index_var(unsigned &k, size_t track,
       Expr::Base *cond = new Expr::Less_Eq(ivar, index.second);
       // e.g. first maxsize filter in grammar/forloops5
       if (lhs_ys.high() < Yield::UP) {
-        cond = new Expr::And (cond, new Expr::Less_Eq (ivar, last_var->plus(lhs_ys.high())));
+        cond = new Expr::And(
+          cond, new Expr::Less_Eq (ivar, last_var->plus(lhs_ys.high())));
       }
 
-      Statement::For *f = new Statement::For (new Statement::Var_Decl (new ::Type::Size(), ivar, index.first), cond);
+      Statement::For *f = new Statement::For (new Statement::Var_Decl(
+        new ::Type::Size(), ivar, index.first), cond);
       loops.push_back(f);
       return ivar;
     }
-  }
-  else {
+  } else {
     return next_var;
   }
 }
 
 
-void Alt::Simple::init_indices(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track) {
+void Alt::Simple::init_indices(
+  Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track) {
   if (has_index_overlay()) {
     unsigned t = k;
     index_overlay.front()->init_indices(left, right, t, track);
@@ -1084,8 +1130,8 @@ void Alt::Simple::init_indices(Expr::Base *left, Expr::Base *right, unsigned int
   Expr::Base *last_var = left;
   Expr::Base *next_var = NULL;
 
-  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
-
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end();
+       ++i) {
     const Yield::Size &ys = (*i)->multi_ys()(track);
 
     Yield::Size rhs;
@@ -1094,7 +1140,8 @@ void Alt::Simple::init_indices(Expr::Base *left, Expr::Base *right, unsigned int
     Yield::Size rhs_ys(rhs);
     rhs_ys += ys;
 
-    next_var = next_index_var(k, track, next_var, last_var, right, ys, lhs, rhs);
+    next_var = next_index_var(
+      k, track, next_var, last_var, right, ys, lhs, rhs);
 
     std::pair<Expr::Base*, Expr::Base*> res(0, 0);
     if (lhs.low() == lhs.high()) {
@@ -1102,20 +1149,17 @@ void Alt::Simple::init_indices(Expr::Base *left, Expr::Base *right, unsigned int
       if (ys.low() == ys.high()) {
         res.second = last_var->plus(lhs.low())->plus(ys.low());
         lhs += ys;
-      }
-      else {
+      } else {
         if (rhs.low() == rhs.high()) {
           res.second = next_var->minus(rhs.low());
           lhs += ys;
-        }
-        else {
+        } else {
           res.second = next_var;
           lhs.set(0, 0);
           last_var = next_var;
         }
       }
-    }
-    else {
+    } else {
       assert(rhs_ys.low() == rhs_ys.high());
       res.first = next_var->minus(rhs_ys.low());
       res.second = next_var->minus(rhs.low());
@@ -1123,17 +1167,18 @@ void Alt::Simple::init_indices(Expr::Base *left, Expr::Base *right, unsigned int
     }
 
     (*i)->init_indices(res.first, res.second, k, track);
-
   }
 }
 
 
-void Alt::Link::init_indices(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track) {
+void Alt::Link::init_indices(
+  Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track) {
   Base::init_indices(left, right, k, track);
 }
 
 
-void Alt::Block::init_indices(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track) {
+void Alt::Block::init_indices(
+  Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track) {
   Base::init_indices(left, right, k, track);
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     (*i)->init_indices(left, right, k, track);
@@ -1141,13 +1186,13 @@ void Alt::Block::init_indices(Expr::Base *left, Expr::Base *right, unsigned int 
 }
 
 
-void Alt::Multi::init_indices(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track) {
+void Alt::Multi::init_indices(
+  Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track) {
   Base::init_indices(left, right, k, track);
   size_t j = 0;
   assert(track < list.size());
   std::list<Base*>::iterator i = list.begin();
-  for (; j<track; ++i, ++j)
-    ;
+  for (; j < track; ++i, ++j) {}
 
   // each component is in a single-track context
   (*i)->init_indices(left, right, k, 0);
@@ -1157,17 +1202,18 @@ void Alt::Simple::put_indices(std::ostream &s) {
   print(s);
   s << std::endl;
   s << *name << "( ";
-  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
+       i != args.end(); ++i) {
     if (tracks_ == 1) {
       assert(left_indices.size() == 1);
       s << "\\" << *(*i)->left_indices.front()
       << " ," << *(*i)->right_indices.front() << "/, ";
-    }
-    else {
+    } else {
       s << " < ";
       assert((*i)->left_indices.size() == (*i)->right_indices.size());
       std::vector<Expr::Base*>::iterator r = (*i)->right_indices.begin();
-      for (std::vector<Expr::Base*>::iterator l = (*i)->left_indices.begin(); l != (*i)->left_indices.end(); ++l, ++r)
+      for (std::vector<Expr::Base*>::iterator l = (*i)->left_indices.begin();
+           l != (*i)->left_indices.end(); ++l, ++r)
       s << "\\" << **l << ", " << **r << "/, ";
       s << " >, ";
     }
@@ -1175,7 +1221,8 @@ void Alt::Simple::put_indices(std::ostream &s) {
   s << ")";
   s << std::endl;
   Printer::CC printer;
-  for (std::list<Statement::For*>::iterator i = loops.begin(); i != loops.end(); ++i) {
+  for (std::list<Statement::For*>::iterator i = loops.begin();
+       i != loops.end(); ++i) {
     printer.print(**i);
     s << std::endl;
   }
@@ -1185,7 +1232,8 @@ void Alt::Simple::put_indices(std::ostream &s) {
 
 void Alt::Simple::print(std::ostream &s) {
   s << *name << "( ";
-  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
+       i != args.end(); ++i) {
     (*i)->print(s);
     s << ", ";
   }
@@ -1233,16 +1281,18 @@ void Alt::Multi::init_ret_decl(unsigned int i, const std::string &prefix) {
   Base::init_ret_decl(i, prefix);
   ret_decls_.clear();
 
-  // note: types() via datatype ::Type::Multi (or list of ::Type::Multi) does not
-  // capture list of types of single tracks
+  // note: types() via datatype ::Type::Multi (or list of ::Type::Multi)
+  // does not capture list of types of single tracks
   std::list< ::Type::Base*> l;
   types(l);
 
   size_t t = 0;
-  for (std::list< ::Type::Base*>::const_iterator a = l.begin(); a != l.end(); ++a, ++t) {
+  for (std::list< ::Type::Base*>::const_iterator a = l.begin();
+       a != l.end(); ++a, ++t) {
     std::ostringstream o;
     o << prefix << "ret_" << i << "_" << t;
-    Statement::Var_Decl *rdecl = new Statement::Var_Decl(*a, new std::string(o.str()));
+    Statement::Var_Decl *rdecl = new Statement::Var_Decl(
+      *a, new std::string(o.str()));
     ret_decls_.push_back(rdecl);
   }
 }
@@ -1256,10 +1306,13 @@ void Alt::Link::init_ret_decl(unsigned int i) {
 
 void Alt::Simple::init_foreach() {
   foreach_loops.clear();
-  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end();
+       ++i) {
     assert((*i)->var_decls().size() == (*i)->ret_decls().size());
-    std::vector<Statement::Var_Decl*>::const_iterator k = (*i)->ret_decls().begin();
-    for (std::vector<Statement::Var_Decl*>::const_iterator j = (*i)->var_decls().begin(); j != (*i)->var_decls().end(); ++j, ++k) {
+    std::vector<Statement::Var_Decl*>::const_iterator k =
+      (*i)->ret_decls().begin();
+    for (std::vector<Statement::Var_Decl*>::const_iterator j =
+         (*i)->var_decls().begin(); j != (*i)->var_decls().end(); ++j, ++k) {
       if (*j) {
         assert((*k)->type->simple()->is(::Type::LIST));
         foreach_loops.push_back(new Statement::Foreach(*j, *k));
@@ -1281,7 +1334,9 @@ void Alt::Simple::ret_decl_empty_block(Statement::If *stmt) {
 #include "type/backtrace.hh"
 
 
-void Alt::Simple::deep_erase_if_backtrace(Statement::If *stmt, std::vector<Fn_Arg::Base*>::iterator start, std::vector<Fn_Arg::Base*>::iterator end) {
+void Alt::Simple::deep_erase_if_backtrace(
+  Statement::If *stmt, std::vector<Fn_Arg::Base*>::iterator start,
+  std::vector<Fn_Arg::Base*>::iterator end) {
   // FIXME perhaps use alternative deep_erase() rtlib fn
   // which matches an List_Ref<std::pair<*, Backtrace<*>*>>
   // instead of this Foreach construct
@@ -1290,7 +1345,8 @@ void Alt::Simple::deep_erase_if_backtrace(Statement::If *stmt, std::vector<Fn_Ar
       if ((*i)->is(Fn_Arg::CONST)) {
         continue;
       }
-      for (std::vector<Statement::Var_Decl*>::const_iterator j = (*i)->ret_decls().begin(); j != (*i)->ret_decls().end(); ++j) {
+      for (std::vector<Statement::Var_Decl*>::const_iterator j =
+           (*i)->ret_decls().begin(); j != (*i)->ret_decls().end(); ++j) {
         Statement::Var_Decl *rdecl = *j;
         assert(rdecl);
         ::Type::List *l = dynamic_cast< ::Type::List*>(rdecl->type->simple());
@@ -1301,14 +1357,17 @@ void Alt::Simple::deep_erase_if_backtrace(Statement::If *stmt, std::vector<Fn_Ar
         if (!t) {
           continue;
         }
-        ::Type::Backtrace *b = dynamic_cast< ::Type::Backtrace*>(t->list.back()->first->lhs);
+        ::Type::Backtrace *b = dynamic_cast< ::Type::Backtrace*>(
+          t->list.back()->first->lhs);
         if (!b) {
           continue;
         }
         Statement::Var_Decl *v = new Statement::Var_Decl(t, "elem");
         Statement::Foreach *foreach = new Statement::Foreach(v, rdecl);
-        Statement::Fn_Call *f = new Statement::Fn_Call(Statement::Fn_Call::ERASE);
-        f->add_arg(new Expr::Vacc(new std::string("elem"), new std::string("second")));
+        Statement::Fn_Call *f = new Statement::Fn_Call(
+          Statement::Fn_Call::ERASE);
+        f->add_arg(new Expr::Vacc(new std::string("elem"), new std::string(
+          "second")));
         foreach->statements.push_back(f);
         stmt->els.push_back(foreach);
       }
@@ -1318,8 +1377,10 @@ void Alt::Simple::deep_erase_if_backtrace(Statement::If *stmt, std::vector<Fn_Ar
 
 
 bool Alt::Simple::has_arg_list() {
-  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
-    for (std::vector<Statement::Var_Decl*>::const_iterator j = (*i)->var_decls().begin(); j != (*i)->var_decls().end(); ++j) {
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
+       i != args.end(); ++i) {
+    for (std::vector<Statement::Var_Decl*>::const_iterator j =
+         (*i)->var_decls().begin(); j != (*i)->var_decls().end(); ++j) {
       if (*j) {
         return true;
       }
@@ -1332,7 +1393,8 @@ bool Alt::Simple::has_arg_list() {
 Expr::Base *Alt::Base::suchthat_code(Statement::Var_Decl &decl) const {
   Expr::Vacc *acc = new Expr::Vacc(decl);
   std::list<Expr::Fn_Call*> exprs;
-  for (std::list<Filter*>::const_iterator i = filters.begin(); i != filters.end(); ++i) {
+  for (std::list<Filter*>::const_iterator i = filters.begin();
+       i != filters.end(); ++i) {
     Filter *f = *i;
     if (f->is(Filter::SUCHTHAT)) {
       Expr::Fn_Call *t = new Expr::Fn_Call(*f);
@@ -1344,7 +1406,8 @@ Expr::Base *Alt::Base::suchthat_code(Statement::Var_Decl &decl) const {
     delete acc;
     return 0;
   }
-  Expr::Base *e = Expr::seq_to_tree<Expr::Base, Expr::And>(exprs.begin(), exprs.end());
+  Expr::Base *e = Expr::seq_to_tree<Expr::Base, Expr::And>(
+    exprs.begin(), exprs.end());
   return e;
 }
 
@@ -1352,8 +1415,7 @@ Expr::Base *Alt::Base::suchthat_code(Statement::Var_Decl &decl) const {
 void Alt::Base::add_seqs(Expr::Fn_Call *fn_call, const AST &ast) const {
   if (tracks_ > 1) {
     fn_call->add(ast.seq_decls);
-  }
-  else {
+  } else {
     assert(track_pos_ < ast.seq_decls.size());
     fn_call->add_arg(*ast.seq_decls[track_pos_]);
   }
@@ -1373,8 +1435,7 @@ void Alt::Simple::init_body(AST &ast) {
     if (!n) {
       n = name;
     }
-  }
-  else {
+  } else {
     n = name;
   }
   Expr::Fn_Call *fn_call = new Expr::Fn_Call(n);
@@ -1383,7 +1444,8 @@ void Alt::Simple::init_body(AST &ast) {
     fn_call->add(left_indices, right_indices);
   }
 
-  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end();
+       ++i) {
     if ((*i)->is(Fn_Arg::CONST)) {
       Fn_Arg::Const *c = dynamic_cast<Fn_Arg::Const*>(*i);
       assert(c);
@@ -1391,13 +1453,14 @@ void Alt::Simple::init_body(AST &ast) {
       fn_call->exprs.push_back(c->ret_decls().front()->rhs);
       continue;
     }
-    std::vector<Statement::Var_Decl*>::const_iterator k = (*i)->ret_decls().begin();
-    for (std::vector<Statement::Var_Decl*>::const_iterator j = (*i)->var_decls().begin(); j != (*i)->var_decls().end(); ++j, ++k) {
+    std::vector<Statement::Var_Decl*>::const_iterator k =
+      (*i)->ret_decls().begin();
+    for (std::vector<Statement::Var_Decl*>::const_iterator j =
+         (*i)->var_decls().begin(); j != (*i)->var_decls().end(); ++j, ++k) {
       Expr::Vacc *arg = NULL;
       if (*j) {
         arg = new Expr::Vacc(**j);
-      }
-      else {
+      } else {
         arg = new Expr::Vacc(**k);
       }
       fn_call->exprs.push_back(arg);
@@ -1407,11 +1470,13 @@ void Alt::Simple::init_body(AST &ast) {
   fn_call->add(ntparas);
 
   if (has_moving_k() || has_arg_list()) {
-    Statement::Var_Decl *vdecl = new Statement::Var_Decl (decl->return_type, new std::string("ans"));
+    Statement::Var_Decl *vdecl = new Statement::Var_Decl(
+      decl->return_type, new std::string("ans"));
     pre_decl.clear();
     pre_decl.push_back(vdecl);
     vdecl->rhs = fn_call;
-    Statement::Fn_Call *fn = new Statement::Fn_Call (Statement::Fn_Call::PUSH_BACK);
+    Statement::Fn_Call *fn = new Statement::Fn_Call(
+      Statement::Fn_Call::PUSH_BACK);
     fn->add_arg(*ret_decl);
     fn->add_arg(*vdecl);
     stmts->push_back(vdecl);
@@ -1420,12 +1485,10 @@ void Alt::Simple::init_body(AST &ast) {
       Statement::If *c = new Statement::If(suchthat);
       c->then.push_back(fn);
       stmts->push_back(c);
-    }
-    else {
+    } else {
       stmts->push_back(fn);
     }
-  }
-  else {
+  } else {
     Statement::Var_Assign *ass = new Statement::Var_Assign(*ret_decl);
     pre_decl.clear();
     pre_decl.push_back(ret_decl);
@@ -1448,7 +1511,8 @@ void Alt::Simple::init_guards() {
   assert(m_ys.tracks() == left_indices.size());
   Yield::Multi::iterator k = m_ys.begin();
   std::vector<Expr::Base*>::iterator j = right_indices.begin();
-  for (std::vector<Expr::Base*>::iterator i = left_indices.begin(); i != left_indices.end(); ++i, ++j, ++k) {
+  for (std::vector<Expr::Base*>::iterator i = left_indices.begin();
+       i != left_indices.end(); ++i, ++j, ++k) {
     Expr::Base *e = (*j)->minus(*i);
     l.push_back(new Expr::Greater_Eq(e, (*k).low()));
     if ((*k).high() != Yield::UP) {
@@ -1456,7 +1520,8 @@ void Alt::Simple::init_guards() {
     }
   }
 
-  Expr::Base *cond  = Expr::seq_to_tree<Expr::Base, Expr::And> (l.begin(), l.end());
+  Expr::Base *cond  = Expr::seq_to_tree<Expr::Base, Expr::And>(
+    l.begin(), l.end());
 
   guards = new Statement::If(cond);
   ret_decl_empty_block(guards);
@@ -1470,18 +1535,21 @@ void Alt::Base::push_back_ret_decl() {
 
 struct Fn_Arg_Cmp {
   bool operator() (const Fn_Arg::Base *a, const Fn_Arg::Base *b) {
-    //return *p1 < *p2;
+    // return *p1 < *p2;
     if (a->is(Fn_Arg::CONST) && b->is(Fn_Arg::ALT))
       return false;
     if (a->is(Fn_Arg::ALT) && b->is(Fn_Arg::CONST))
       return true;
     if (a->is(Fn_Arg::CONST) && b->is(Fn_Arg::CONST))
       return true;
-    if (!a->alt_ref()->calls_terminal_parser() && b->alt_ref()->calls_terminal_parser())
+    if (!a->alt_ref()->calls_terminal_parser() &&
+        b->alt_ref()->calls_terminal_parser())
       return false;
-    if (a->alt_ref()->calls_terminal_parser() && !b->alt_ref()->calls_terminal_parser())
+    if (a->alt_ref()->calls_terminal_parser() &&
+        !b->alt_ref()->calls_terminal_parser())
       return true;
-    if (a->alt_ref()->calls_terminal_parser() && b->alt_ref()->calls_terminal_parser())
+    if (a->alt_ref()->calls_terminal_parser() &&
+        b->alt_ref()->calls_terminal_parser())
       return true;
     if (!a->alt_ref()->is_filtered() && b->alt_ref()->is_filtered())
       return false;
@@ -1493,19 +1561,17 @@ struct Fn_Arg_Cmp {
   }
 };
 
-
-#include <algorithm>
-#include <vector>
-
-
-Statement::If *Alt::Simple::add_empty_check(std::list<Statement::Base*> &stmts, const Fn_Arg::Base &b) {
+Statement::If *Alt::Simple::add_empty_check(
+  std::list<Statement::Base*> &stmts, const Fn_Arg::Base &b) {
   std::list<Expr::Base*> exprs;
-  for (std::vector<Statement::Var_Decl*>::const_iterator i = b.ret_decls().begin(); i != b.ret_decls().end(); ++i) {
+  for (std::vector<Statement::Var_Decl*>::const_iterator i =
+       b.ret_decls().begin(); i != b.ret_decls().end(); ++i) {
     Expr::Fn_Call *f = new Expr::Fn_Call(Expr::Fn_Call::NOT_EMPTY);
     f->add_arg(new Expr::Vacc(**i));
     exprs.push_back(f);
   }
-  Expr::Base *e = Expr::seq_to_tree<Expr::Base, Expr::And>(exprs.begin(), exprs.end());
+  Expr::Base *e = Expr::seq_to_tree<Expr::Base, Expr::And>(
+    exprs.begin(), exprs.end());
   Statement::If *c = new Statement::If(e);
   ret_decl_empty_block(c);
   stmts.push_back(c);
@@ -1513,8 +1579,10 @@ Statement::If *Alt::Simple::add_empty_check(std::list<Statement::Base*> &stmts, 
 }
 
 
-void Alt::Simple::add_clear_code(std::list<Statement::Base*> &stmts, const Fn_Arg::Base &b) {
-  for (std::vector<Statement::Var_Decl*>::const_iterator i = b.ret_decls().begin(); i != b.ret_decls().end(); ++i) {
+void Alt::Simple::add_clear_code(
+  std::list<Statement::Base*> &stmts, const Fn_Arg::Base &b) {
+  for (std::vector<Statement::Var_Decl*>::const_iterator i =
+       b.ret_decls().begin(); i != b.ret_decls().end(); ++i) {
     Statement::Fn_Call *e = new Statement::Fn_Call(Statement::Fn_Call::ERASE);
     e->add_arg(**i);
     stmts.push_back(e);
@@ -1522,15 +1590,18 @@ void Alt::Simple::add_clear_code(std::list<Statement::Base*> &stmts, const Fn_Ar
 }
 
 
-std::list<Statement::Base*> *Alt::Simple::reorder_args_cg(AST &ast, std::list<Statement::Base*> &x) {
-  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
+std::list<Statement::Base*> *Alt::Simple::reorder_args_cg(
+  AST &ast, std::list<Statement::Base*> &x) {
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
+       i != args.end(); ++i) {
     (*i)->codegen(ast);
   }
   return add_arg_code(ast, x);
 }
 
 
-std::list<Statement::Base*> *Alt::Simple::add_arg_code(AST &ast, std::list<Statement::Base*> &x) {
+std::list<Statement::Base*> *Alt::Simple::add_arg_code(
+  AST &ast, std::list<Statement::Base*> &x) {
   std::list<Statement::Base*> *stmts = &x;
 
   std::vector<Fn_Arg::Base*> l(args.size());
@@ -1541,10 +1612,12 @@ std::list<Statement::Base*> *Alt::Simple::add_arg_code(AST &ast, std::list<State
   assert(i != l.end());
 
   Fn_Arg::Base *last = *i;
-  stmts->insert(stmts->end(), (*i)->statements().begin(), (*i)->statements().end());
+  stmts->insert(
+    stmts->end(), (*i)->statements().begin(), (*i)->statements().end());
 
   if ((*i)->is(Fn_Arg::ALT)) {
-    for (std::vector<Statement::Var_Decl*>::const_iterator j = (*i)->ret_decls().begin(); j != (*i)->ret_decls().end(); ++j) {
+    for (std::vector<Statement::Var_Decl*>::const_iterator j =
+         (*i)->ret_decls().begin(); j != (*i)->ret_decls().end(); ++j) {
       stmts->push_back(*j);
     }
   }
@@ -1561,8 +1634,10 @@ std::list<Statement::Base*> *Alt::Simple::add_arg_code(AST &ast, std::list<State
 
     stmts = &c->then;
 
-    stmts->insert(stmts->end(), (*i)->statements().begin(), (*i)->statements().end());
-    for (std::vector<Statement::Var_Decl*>::const_iterator j = (*i)->ret_decls().begin(); j != (*i)->ret_decls().end(); ++j) {
+    stmts->insert(
+      stmts->end(), (*i)->statements().begin(), (*i)->statements().end());
+    for (std::vector<Statement::Var_Decl*>::const_iterator j =
+         (*i)->ret_decls().begin(); j != (*i)->ret_decls().end(); ++j) {
       stmts->push_back(*j);
     }
     last = *i;
@@ -1572,7 +1647,7 @@ std::list<Statement::Base*> *Alt::Simple::add_arg_code(AST &ast, std::list<State
   }
 
   Statement::If *c = add_empty_check(*stmts, *last);
-  //deep_erase_if_backtrace(c, l.begin(), ++(l.begin()));
+  // deep_erase_if_backtrace(c, l.begin(), ++(l.begin()));
 
   add_clear_code(*stmts, *last);
 
@@ -1580,9 +1655,12 @@ std::list<Statement::Base*> *Alt::Simple::add_arg_code(AST &ast, std::list<State
 }
 
 
-void Alt::Simple::add_overlay_code(std::list<Statement::Base*> *& stmts, AST &ast, std::list<Expr::Fn_Call*> &exprs, Filter::Type t) const {
+void Alt::Simple::add_overlay_code(
+  std::list<Statement::Base*> *& stmts,
+  AST &ast, std::list<Expr::Fn_Call*> &exprs, Filter::Type t) const {
   std::list<Filter*> l;
-  for (std::list<Filter*>::const_iterator i = filters.begin(); i != filters.end(); ++i) {
+  for (std::list<Filter*>::const_iterator i = filters.begin();
+       i != filters.end(); ++i) {
     if ((*i)->is(t)) {
       l.push_back(*i);
     }
@@ -1595,41 +1673,49 @@ void Alt::Simple::add_overlay_code(std::list<Statement::Base*> *& stmts, AST &as
   if (exprs.empty()) {
     return;
   }
-  Expr::Base *e = Expr::seq_to_tree<Expr::Base, Expr::And>(exprs.begin(), exprs.end());
+  Expr::Base *e = Expr::seq_to_tree<Expr::Base, Expr::And>(
+    exprs.begin(), exprs.end());
   Statement::If *c = new Statement::If(e);
   stmts->push_back(c);
   stmts = & c->then;
   // see also grammar2/overlay.gap
-  //c->els.push_back(
+  // c->els.push_back(
   //    new Statement::Fn_Call(Statement::Fn_Call::EMPTY, *ret_decl));
 }
 
 
-void Alt::Simple::add_with_overlay_code(std::list<Statement::Base*> *&stmts, AST &ast) const {
+void Alt::Simple::add_with_overlay_code(
+  std::list<Statement::Base*> *&stmts, AST &ast) const {
   std::list<Expr::Fn_Call*> exprs;
   add_overlay_code(stmts, ast, exprs, Filter::WITH_OVERLAY);
-  for (std::list<Expr::Fn_Call*>::iterator i = exprs.begin(); i != exprs.end(); ++i) {
+  for (std::list<Expr::Fn_Call*>::iterator i = exprs.begin();
+       i != exprs.end(); ++i) {
     Expr::Fn_Call *f = *i;
     add_seqs(f, ast);
-    for (std::list<Fn_Arg::Base*>::const_iterator j = args.begin(); j != args.end(); ++j) {
+    for (std::list<Fn_Arg::Base*>::const_iterator j = args.begin();
+         j != args.end(); ++j) {
       f->add((*j)->left_indices, (*j)->right_indices);
     }
   }
 }
 
 
-void Alt::Simple::add_suchthat_overlay_code(std::list<Statement::Base*> *&stmts, AST &ast) const {
+void Alt::Simple::add_suchthat_overlay_code(
+  std::list<Statement::Base*> *&stmts, AST &ast) const {
   std::list<Expr::Fn_Call*> exprs;
   add_overlay_code(stmts, ast, exprs, Filter::SUCHTHAT_OVERLAY);
-  for (std::list<Expr::Fn_Call*>::iterator i = exprs.begin(); i != exprs.end(); ++i) {
+  for (std::list<Expr::Fn_Call*>::iterator i = exprs.begin();
+       i != exprs.end(); ++i) {
     Expr::Fn_Call *f = *i;
-    for (std::list<Fn_Arg::Base*>::const_iterator j = args.begin(); j != args.end(); ++j) {
-      std::vector<Statement::Var_Decl*>::const_iterator l = (*j)->ret_decls().begin();
-      for (std::vector<Statement::Var_Decl*>::const_iterator k = (*j)->var_decls().begin(); k != (*j)->var_decls().end(); ++k, ++l) {
+    for (std::list<Fn_Arg::Base*>::const_iterator j = args.begin();
+         j != args.end(); ++j) {
+      std::vector<Statement::Var_Decl*>::const_iterator l =
+        (*j)->ret_decls().begin();
+      for (std::vector<Statement::Var_Decl*>::const_iterator k =
+           (*j)->var_decls().begin(); k != (*j)->var_decls().end(); ++k, ++l) {
         if (*k) {
           f->add_arg(**k);
-        }
-        else {
+        } else {
           f->add_arg(**l);
         }
       }
@@ -1638,7 +1724,8 @@ void Alt::Simple::add_suchthat_overlay_code(std::list<Statement::Base*> *&stmts,
 }
 
 
-void Alt::Simple::add_subopt_guards (std::list<Statement::Base*> *&stmts, AST &ast) {
+void Alt::Simple::add_subopt_guards(
+  std::list<Statement::Base*> *&stmts, AST &ast) {
   if (ast.code_mode() != Code::Mode::SUBOPT) {
     return;
   }
@@ -1651,7 +1738,8 @@ void Alt::Simple::add_subopt_guards (std::list<Statement::Base*> *&stmts, AST &a
   std::list<Statement::Base*> *loop_body = stmts;
   if (!foreach_loops.empty()) {
     stmts->push_back(foreach_loops.front());
-    Statement::Foreach *f = nest_for_loops(foreach_loops.begin(), foreach_loops.end());
+    Statement::Foreach *f = nest_for_loops(
+      foreach_loops.begin(), foreach_loops.end());
     loop_body = &f->statements;
   }
 
@@ -1665,7 +1753,8 @@ void Alt::Simple::add_subopt_guards (std::list<Statement::Base*> *&stmts, AST &a
   loop_body->insert(loop_body->end(), pre_stmts.begin(), pre_stmts.end());
   loop_body = pre_cond.front();
 
-  for (Statement::iterator i = Statement::begin(body_stmts); i != Statement::end(); ++i) {
+  for (Statement::iterator i = Statement::begin(body_stmts);
+       i != Statement::end(); ++i) {
     Statement::Base *s = *i;
     if (!s->is(Statement::FN_CALL)) {
       continue;
@@ -1699,8 +1788,7 @@ void Alt::Simple::add_subopt_guards (std::list<Statement::Base*> *&stmts, AST &a
         assert(false);
     }
     e = new Expr::And( not_empty, new Expr::Less_Eq(sub, delta));
-  }
-  else {
+  } else {
     e = not_empty;
   }
   Statement::If *c = new Statement::If(e);
@@ -1708,14 +1796,16 @@ void Alt::Simple::add_subopt_guards (std::list<Statement::Base*> *&stmts, AST &a
   stmts = &c->then;
 }
 
-std::list<Statement::Base*> *Alt::Simple::insert_index_stmts(std::list<Statement::Base*> *stmts) {
+std::list<Statement::Base*> *Alt::Simple::insert_index_stmts(
+  std::list<Statement::Base*> *stmts) {
   if (inner_code) {
     stmts->insert(stmts->end(), index_stmts.begin(), index_stmts.end());
     inner_code->clear();
     return inner_code;
   }
   std::list<Statement::Base*> *ret = stmts;
-  for (Statement::iterator i = Statement::begin(index_stmts); i != Statement::end(); ++i) {
+  for (Statement::iterator i = Statement::begin(index_stmts);
+       i != Statement::end(); ++i) {
     Statement::Base *s = *i;
     if (s->is(Statement::FN_CALL)) {
       Statement::Fn_Call *f = dynamic_cast<Statement::Fn_Call*>(s);
@@ -1735,21 +1825,20 @@ std::list<Statement::Base*> *Alt::Simple::insert_index_stmts(std::list<Statement
 
 
 void Alt::Simple::codegen(AST &ast) {
+  // std::cout << "-----------Simple IN" << std::endl;
 
-       // std::cout << "-----------Simple IN" << std::endl;
+  bool nullary = false;
+  Expr::Base *answer_list = NULL;
 
-        bool nullary = false;
-        Expr::Base *answer_list = NULL;
+  // make the list not
+  if (!disabled_spec && adp_specialization != ADP_Mode::STANDARD) {
+      nullary = is_nullary();
+      answer_list = ret_decl->rhs;
 
-        // make the list not
-        if (!disabled_spec && adp_specialization != ADP_Mode::STANDARD) {
-            nullary = is_nullary();
-            answer_list = ret_decl->rhs;
-
-            if (nullary || ADP_Mode::is_step(adp_specialization)) {
-                ret_decl->rhs = NULL;
-            }
-        }
+      if (nullary || ADP_Mode::is_step(adp_specialization)) {
+          ret_decl->rhs = NULL;
+      }
+  }
 
   statements.clear();
   push_back_ret_decl();
@@ -1760,10 +1849,10 @@ void Alt::Simple::codegen(AST &ast) {
   if (guards) {
     stmts->push_back(guards);
     if (datatype->simple()->is(::Type::LIST)) {
-
-                        // only call finalize on hash lists
+      // only call finalize on hash lists
       if (!ret_decl->rhs && adp_specialization == ADP_Mode::STANDARD) {
-        Statement::Fn_Call *f = new Statement::Fn_Call (Statement::Fn_Call::FINALIZE);
+        Statement::Fn_Call *f = new Statement::Fn_Call(
+          Statement::Fn_Call::FINALIZE);
         f->add_arg(*ret_decl);
         stmts->push_back(f);
       }
@@ -1780,16 +1869,19 @@ void Alt::Simple::codegen(AST &ast) {
 
         // answer_list is always set when return type is a list
         // see symbol set_ret_decl_rhs
-        if (nullary && answer_list && !disabled_spec) { // automatically && adp_specialization != ADP_Mode::STANDARD
+        if (nullary && answer_list && !disabled_spec) {
+            // automatically && adp_specialization != ADP_Mode::STANDARD
 
             Expr::Fn_Call *eval_null = new Expr::Fn_Call(eval_nullary_fn);
             eval_null->add_arg(*ret_decl);
 
             std::string ret_eval = *ret_decl->name + "_eval";
-            Statement::Var_Decl *input_list = new Statement::Var_Decl(ret_decl->type, ret_eval);
+            Statement::Var_Decl *input_list = new Statement::Var_Decl(
+              ret_decl->type, ret_eval);
             input_list->rhs = eval_null;
 
-            Statement::Fn_Call *append = new Statement::Fn_Call(Statement::Fn_Call::APPEND);
+            Statement::Fn_Call *append = new Statement::Fn_Call(
+              Statement::Fn_Call::APPEND);
 
             append->add_arg(answer_list);
             append->add_arg(*input_list);
@@ -1799,11 +1891,11 @@ void Alt::Simple::codegen(AST &ast) {
             statements.push_back(append);
 
             if (ADP_Mode::is_step(adp_specialization)) {
-
                 add_specialised_arguments(append);
 
             } else {
-                Statement::Fn_Call *mark = new Statement::Fn_Call(Statement::Fn_Call::MARK_POSITION);
+                Statement::Fn_Call *mark = new Statement::Fn_Call(
+                  Statement::Fn_Call::MARK_POSITION);
                 mark->add_arg(answer_list);
                 mark->add_arg(*marker);
 
@@ -1835,49 +1927,48 @@ void Alt::Simple::codegen(AST &ast) {
   std::list<Statement::Base*> *loop_body = inner_guards_body;
   if (!foreach_loops.empty()) {
     inner_guards_body->push_back(foreach_loops.front());
-    Statement::Foreach *f = nest_for_loops(foreach_loops.begin(), foreach_loops.end());
+    Statement::Foreach *f = nest_for_loops(
+      foreach_loops.begin(), foreach_loops.end());
     loop_body = &f->statements;
   }
   init_body(ast);
+  if (!disabled_spec && !nullary && answer_list &&
+     adp_specialization != ADP_Mode::STANDARD) {
+      std::list<Statement::Base*> *app_stmts;
+      // get statements after innermost loop
+      if (foreach_loops.size() > 1) {
+        // 2 or more nested loops
+        std::list<Statement::Foreach *>::iterator it = foreach_loops.begin();
+        std::advance(it, foreach_loops.size()-2);
+        app_stmts = &(*it)->statements;
+      } else {
+        app_stmts = inner_guards_body;
+      }
 
-        if(!disabled_spec && !nullary && answer_list && adp_specialization != ADP_Mode::STANDARD) {
+      if (ADP_Mode::is_step(adp_specialization)) {
+        Statement::Fn_Call *append = new Statement::Fn_Call(
+          Statement::Fn_Call::APPEND);
+        append->add_arg(answer_list);
+        append->add_arg(*ret_decl);
 
-            std::list<Statement::Base*> *app_stmts;
-            // get statements after innermost loop
-            if (foreach_loops.size() > 1) {
-                // 2 or more nested loops
-                   std::list<Statement::Foreach *>::iterator it = foreach_loops.begin();
-                   std::advance(it, foreach_loops.size()-2);
-                   app_stmts = &(*it)->statements;
+        add_specialised_arguments(append);
 
-            } else {
+        app_stmts->push_back(append);
 
-                   app_stmts = inner_guards_body;
-            }
+        Statement::Fn_Call *clear = new Statement::Fn_Call(
+          Statement::Fn_Call::CLEAR);
+        clear->add_arg(*ret_decl);
 
-            if (ADP_Mode::is_step(adp_specialization)) {
+        app_stmts->push_back(clear);
+      } else {
+          Statement::Fn_Call *mark = new Statement::Fn_Call(
+            Statement::Fn_Call::MARK_POSITION);
+          mark->add_arg(answer_list);
+          mark->add_arg(*marker);
 
-                Statement::Fn_Call *append = new Statement::Fn_Call(Statement::Fn_Call::APPEND);
-                append->add_arg(answer_list);
-                append->add_arg(*ret_decl);
-
-                add_specialised_arguments(append);
-
-                app_stmts->push_back(append);
-
-                Statement::Fn_Call *clear = new Statement::Fn_Call(Statement::Fn_Call::CLEAR);
-                clear->add_arg(*ret_decl);
-
-                app_stmts->push_back(clear);
-
-            } else {
-                Statement::Fn_Call *mark = new Statement::Fn_Call(Statement::Fn_Call::MARK_POSITION);
-                mark->add_arg(answer_list);
-                mark->add_arg(*marker);
-
-                app_stmts->push_back(mark);
-            }
-        }
+          app_stmts->push_back(mark);
+      }
+  }
 
   loop_body->insert(loop_body->end(), body_stmts.begin(), body_stmts.end());
 
@@ -1894,7 +1985,8 @@ void Alt::Link::add_args(Expr::Fn_Call *fn) {
 
   if (nt->is(Symbol::TERMINAL)) {
     std::vector<Expr::Base*>::iterator j = right_indices.begin();
-    for (std::vector<Expr::Base*>::iterator i = left_indices.begin(); i != left_indices.end(); ++i, ++j) {
+    for (std::vector<Expr::Base*>::iterator i = left_indices.begin();
+         i != left_indices.end(); ++i, ++j) {
       fn->add_arg(*i);
       fn->add_arg(*j);
     }
@@ -1907,7 +1999,8 @@ void Alt::Link::add_args(Expr::Fn_Call *fn) {
   assert(left_indices.size() == tables.size());
   std::vector<Expr::Base*>::iterator k = right_indices.begin();
   std::vector<Expr::Base*>::iterator j = left_indices.begin();
-  for (std::vector<Table>::const_iterator i = tables.begin(); i != tables.end(); ++i, ++j, ++k) {
+  for (std::vector<Table>::const_iterator i = tables.begin();
+       i != tables.end(); ++i, ++j, ++k) {
     if (!(*i).delete_left_index()) {
       fn->add_arg(*j);
     }
@@ -1921,8 +2014,7 @@ void Alt::Link::add_args(Expr::Fn_Call *fn) {
 
 
 void Alt::Link::codegen(AST &ast) {
-
-       // std::cout << "link " << *name << std::endl;
+  // std::cout << "link " << *name << std::endl;
 
   statements.clear();
   push_back_ret_decl();
@@ -1930,15 +2022,12 @@ void Alt::Link::codegen(AST &ast) {
   std::string *s = NULL;
   if (nt->is(Symbol::TERMINAL)) {
     s = name;
-  }
-  else {
+  } else {
     if (ast.backtrace()) {
       s = new std::string("bt_proxy_nt_" + *name);
-    }
-    else if (ast.code_mode() == Code::Mode::SUBOPT) {
+    } else if (ast.code_mode() == Code::Mode::SUBOPT) {
       s = new std::string("bt_nt_" + *name);
-    }
-    else {
+    } else {
       s = new std::string("nt_" + *name);
     }
   }
@@ -1959,8 +2048,7 @@ void Alt::Link::codegen(AST &ast) {
     Statement::Var_Assign *v = new Statement::Var_Assign(*ret_decl, fn);
     statements.push_back(filter_guards);
     filter_guards->then.push_back(v);
-  }
-  else {
+  } else {
     ret_decl->rhs = fn;
   }
   Expr::Base *suchthat = suchthat_code(*ret_decl);
@@ -1972,8 +2060,7 @@ void Alt::Link::codegen(AST &ast) {
       c->els.push_back(v);
       Statement::Var_Assign *ass = new Statement::Var_Assign(*ret_decl, *v);
       c->els.push_back(ass);
-    }
-    else {
+    } else {
       Statement::Fn_Call *e = new Statement::Fn_Call(Statement::Fn_Call::EMPTY);
       e->add_arg(*ret_decl);
       c->els.push_back(e);
@@ -1983,9 +2070,7 @@ void Alt::Link::codegen(AST &ast) {
 
 
 void Alt::Block::codegen(AST &ast) {
-
-       // std::cout << "-----------------Block " << std::endl;
-
+  // std::cout << "-----------------Block " << std::endl;
   statements.clear();
   push_back_ret_decl();
   Statement::Fn_Call *fn = new Statement::Fn_Call(Statement::Fn_Call::EMPTY);
@@ -2000,21 +2085,22 @@ void Alt::Block::codegen(AST &ast) {
   if (filter_guards) {
     statements.push_back(filter_guards);
     stmts = &filter_guards->then;
-  }
-  else {
+  } else {
     stmts = &statements;
   }
   for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     if ((*i)->data_type()->simple()->is(::Type::LIST)) {
       if (!(*i)->is(Alt::LINK)) {
-        if (!((*i)->data_type()->simple()->is(::Type::LIST) && datatype->simple()->is(::Type::LIST))) {
+        if (!((*i)->data_type()->simple()->is(::Type::LIST) &&
+            datatype->simple()->is(::Type::LIST))) {
           (*i)->ret_decl->rhs = new Expr::Vacc(*ret_decl);
         }
       }
     }
 
     (*i)->codegen(ast);
-    stmts->insert(stmts->end(), (*i)->statements.begin(), (*i)->statements.end());
+    stmts->insert(
+      stmts->end(), (*i)->statements.begin(), (*i)->statements.end());
 
     std::list<Statement::Base*> *inner_stmts = stmts;
     Expr::Base *suchthat = suchthat_code(*(*i)->ret_decl);
@@ -2023,66 +2109,76 @@ void Alt::Block::codegen(AST &ast) {
       inner_stmts = & c->then;
     }
 
-    if ((*i)->data_type()->simple()->is(::Type::LIST) && datatype->simple()->is(::Type::LIST)) {
-      Statement::Fn_Call *fn = new Statement::Fn_Call(Statement::Fn_Call::APPEND);
+    if ((*i)->data_type()->simple()->is(::Type::LIST) &&
+        datatype->simple()->is(::Type::LIST)) {
+      Statement::Fn_Call *fn = new Statement::Fn_Call(
+        Statement::Fn_Call::APPEND);
       fn->add_arg(*ret_decl);
       fn->add_arg(*(*i)->ret_decl);
 
-                        if(!disabled_spec && adp_specialization != ADP_Mode::STANDARD && ADP_Mode::is_step(adp_specialization) ) {
-                            add_specialised_arguments(fn);
-                        }
+      if (!disabled_spec && adp_specialization != ADP_Mode::STANDARD &&
+         ADP_Mode::is_step(adp_specialization) ) {
+          add_specialised_arguments(fn);
+      }
       inner_stmts->push_back(fn);
 
-                        if(!disabled_spec && adp_specialization != ADP_Mode::STANDARD && !ADP_Mode::is_step(adp_specialization) ) {
-                             Statement::Fn_Call *mark = new Statement::Fn_Call(Statement::Fn_Call::MARK_POSITION);
-                              mark->add_arg(*ret_decl);
-                              mark->add_arg(*marker);
+      if (!disabled_spec && adp_specialization != ADP_Mode::STANDARD &&
+         !ADP_Mode::is_step(adp_specialization) ) {
+           Statement::Fn_Call *mark = new Statement::Fn_Call(
+             Statement::Fn_Call::MARK_POSITION);
+            mark->add_arg(*ret_decl);
+            mark->add_arg(*marker);
 
-                             inner_stmts->push_back(mark);
-                        }
-    }
-    else if (!datatype->simple()->is(::Type::LIST) && !(*i)->data_type()->simple()->is(::Type::LIST)) {
-      Statement::Var_Assign *v = new Statement::Var_Assign(*ret_decl, *(*i)->ret_decl);
+           inner_stmts->push_back(mark);
+      }
+    } else if (!datatype->simple()->is(::Type::LIST) &&
+               !(*i)->data_type()->simple()->is(::Type::LIST)) {
+      Statement::Var_Assign *v = new Statement::Var_Assign(
+        *ret_decl, *(*i)->ret_decl);
       inner_stmts->push_back(v);
-    }
-    else if (datatype->simple()->is(::Type::LIST)) {
-                      //  std::cout << "Push back BLOCK" << *ret_decl << std::endl;
+    } else if (datatype->simple()->is(::Type::LIST)) {
+      //  std::cout << "Push back BLOCK" << *ret_decl << std::endl;
 
-                        Expr::Fn_Call *e = new Expr::Fn_Call(Expr::Fn_Call::NOT_EMPTY);
+      Expr::Fn_Call *e = new Expr::Fn_Call(Expr::Fn_Call::NOT_EMPTY);
       e->add_arg(*(*i)->ret_decl);
       Statement::If *cond = new Statement::If(e);
       inner_stmts->push_back(cond);
 
-                        if(!disabled_spec && adp_specialization != ADP_Mode::STANDARD && ADP_Mode::is_step(adp_specialization) ) {
+      if (!disabled_spec && adp_specialization != ADP_Mode::STANDARD &&
+          ADP_Mode::is_step(adp_specialization) ) {
+          Statement::Fn_Call *fn = new Statement::Fn_Call(
+            Statement::Fn_Call::APPEND);
+          fn->add_arg(*ret_decl);
+          fn->add_arg(*(*i)->ret_decl);
 
-                            Statement::Fn_Call *fn = new Statement::Fn_Call(Statement::Fn_Call::APPEND);
-                            fn->add_arg(*ret_decl);
-                            fn->add_arg(*(*i)->ret_decl);
+          add_specialised_arguments(fn);
 
-                            add_specialised_arguments(fn);
+          cond->then.push_back(fn);
 
-                            cond->then.push_back(fn);
+      } else {
+          Statement::Fn_Call *fn = new Statement::Fn_Call(
+            Statement::Fn_Call::PUSH_BACK);
+          fn->add_arg(*ret_decl);
+          fn->add_arg(*(*i)->ret_decl);
 
-                        } else {
-                            Statement::Fn_Call *fn = new Statement::Fn_Call(Statement::Fn_Call::PUSH_BACK);
-                            fn->add_arg(*ret_decl);
-                            fn->add_arg(*(*i)->ret_decl);
+          cond->then.push_back(fn);
 
-                            cond->then.push_back(fn);
+          if (!disabled_spec && adp_specialization != ADP_Mode::STANDARD &&
+              !ADP_Mode::is_step(adp_specialization) ) {
+              Statement::Fn_Call *mark = new Statement::Fn_Call(
+                Statement::Fn_Call::MARK_POSITION);
+              mark->add_arg(*ret_decl);
+              mark->add_arg(*marker);
 
-                            if(!disabled_spec && adp_specialization != ADP_Mode::STANDARD && !ADP_Mode::is_step(adp_specialization) ) {
-                                Statement::Fn_Call *mark = new Statement::Fn_Call(Statement::Fn_Call::MARK_POSITION);
-                                mark->add_arg(*ret_decl);
-                                mark->add_arg(*marker);
-
-                                cond->then.push_back(mark);
-                           }
-                        }
+              cond->then.push_back(mark);
+         }
+      }
     }
   }
   if (datatype->simple()->is(::Type::LIST)) {
     if (!ret_decl->rhs && adp_specialization == ADP_Mode::STANDARD) {
-      Statement::Fn_Call *f = new Statement::Fn_Call(Statement::Fn_Call::FINALIZE);
+      Statement::Fn_Call *f = new Statement::Fn_Call(
+        Statement::Fn_Call::FINALIZE);
       f->add_arg(*ret_decl);
       stmts->push_back(f);
     }
@@ -2096,7 +2192,8 @@ void Alt::Base::init_filter_guards(AST &ast) {
     return;
   }
   std::list<Expr::Fn_Call*> exprs;
-  for (std::list<Filter*>::iterator i = filters.begin(); i != filters.end(); ++i) {
+  for (std::list<Filter*>::iterator i = filters.begin();
+       i != filters.end(); ++i) {
     if (!(*i)->is(Filter::WITH)) {
       continue;
     }
@@ -2105,11 +2202,11 @@ void Alt::Base::init_filter_guards(AST &ast) {
       add_seqs(fn, ast);
       fn->exprs.insert(fn->exprs.end(), (*i)->args.begin(), (*i)->args.end());
       ast.sf_filter_code.push_back(std::make_pair(*i, fn));
-      Expr::Fn_Call *f = new Expr::Fn_Call(new std::string((*i)->id() + ".query"));
+      Expr::Fn_Call *f = new Expr::Fn_Call(
+        new std::string((*i)->id() + ".query"));
       f->add(left_indices, right_indices);
       exprs.push_back(f);
-    }
-    else {
+    } else {
       Expr::Fn_Call *fn = new Expr::Fn_Call((*i)->name);
       add_seqs(fn, ast);
       fn->add(left_indices, right_indices);
@@ -2124,11 +2221,13 @@ void Alt::Base::init_filter_guards(AST &ast) {
     std::vector<Statement::Var_Decl*>::const_iterator k = ast.seq_decls.begin();
     std::vector<Expr::Base*>::iterator l = left_indices.begin();
     std::vector<Expr::Base*>::iterator m = right_indices.begin();
-    for (std::vector<std::list<Filter*> >::iterator i = multi_filter.begin(); i != multi_filter.end(); ++i, ++k, ++l, ++m) {
+    for (std::vector<std::list<Filter*> >::iterator i = multi_filter.begin();
+         i != multi_filter.end(); ++i, ++k, ++l, ++m) {
       if (!(*i).front()->is(Filter::WITH)) {
         continue;
       }
-      for (std::list<Filter*>::iterator j = (*i).begin(); j != (*i).end(); ++j) {
+      for (std::list<Filter*>::iterator j = (*i).begin();
+           j != (*i).end(); ++j) {
         Expr::Fn_Call *fn = new Expr::Fn_Call((*j)->name);
         fn->add_arg(**k);
         fn->add_arg(*l);
@@ -2142,15 +2241,18 @@ void Alt::Base::init_filter_guards(AST &ast) {
   if (exprs.empty()) {
     return;
   }
-  Expr::Base *arg = Expr::seq_to_tree<Expr::Base, Expr::And>(exprs.begin(), exprs.end());
+  Expr::Base *arg = Expr::seq_to_tree<Expr::Base, Expr::And>(
+    exprs.begin(), exprs.end());
   Statement::If *guard = new Statement::If(arg);
-  guard->els.push_back (new Statement::Fn_Call(Statement::Fn_Call::EMPTY, *ret_decl));
+  guard->els.push_back (new Statement::Fn_Call(
+    Statement::Fn_Call::EMPTY, *ret_decl));
   filter_guards = guard;
 }
 
 
 void Alt::Simple::print_dot_edge(std::ostream &out, Symbol::NT &nt) {
-  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
+       i != args.end(); ++i) {
     (*i)->print_dot_edge(out, nt);
   }
 }
@@ -2167,8 +2269,7 @@ void Alt::Link::print_dot_edge(std::ostream &out, Symbol::NT &n) {
   bool t = false;
   if (nt->is_tabulated()) {
     out << *n.name << " -> " << *nt->name;
-  }
-  else {
+  } else {
     out << *n.name << " -> " << *nt->name;
   }
   out << " [";
@@ -2203,7 +2304,8 @@ void Alt::Base::optimize_choice(::Type::List::Push_Type push) {
 }
 
 
-void Alt::Base::optimize_choice(::Type::List::Push_Type push, Statement::Hash_Decl *h) {
+void Alt::Base::optimize_choice(
+  ::Type::List::Push_Type push, Statement::Hash_Decl *h) {
   if (!ret_decl->type->is(::Type::LIST)) {
     return;
   }
@@ -2224,27 +2326,27 @@ void Alt::Link::optimize_choice() {
   }
   ::Type::List *l = dynamic_cast< ::Type::List*>(ret_decl->type);
   assert(l);
-  if ((nt->is(Symbol::NONTERMINAL) && dynamic_cast<Symbol::NT*>(nt)->eval_decl)  || x->push_type()) {
+  if ((nt->is(Symbol::NONTERMINAL) && dynamic_cast<Symbol::NT*>(nt)->eval_decl)
+      || x->push_type()) {
     if (x->hdecl()) {
       l->set_hash_decl(x->hdecl());
     }
     Alt::Base::optimize_choice(x->push_type());
-  }
-  else if (l->push_type()) {
-    if (nt->is(Symbol::NONTERMINAL) && !dynamic_cast<Symbol::NT*>(nt)->eval_decl) {
+  } else if (l->push_type()) {
+    if (nt->is(Symbol::NONTERMINAL) &&
+        !dynamic_cast<Symbol::NT*>(nt)->eval_decl) {
       // XXX paraltest adpf shape5 vs. regresstest optchoice
       if (l->hdecl()) {
         x->set_hash_decl(l->hdecl());
         x->set_push_type(l->push_type());
-      }
-      else {
+      } else {
         // XXX remove
-        //if (x->hdecl())
+        // if (x->hdecl())
         //  l->set_hash_decl(x->hdecl());
         // was:
         x->set_push_type(l->push_type());
         // new:
-        //l->set_push_type(::Type::List::NORMAL);
+        // l->set_push_type(::Type::List::NORMAL);
       }
     }
   }
@@ -2263,48 +2365,50 @@ bool Alt::Simple::calls_terminal_parser() const {
 
 
 namespace Alt {
-
-
-  Multi::Multi(const std::list<Alt::Base*> &t, const Loc &l) : Base(MULTI, l), list(t) {
-  }
-
-
-  void Multi::codegen(AST &ast) {
-    statements.clear();
-    assert(ret_decls_.size() == list.size());
-
-    init_filter_guards(ast);
-    if (filter_guards) {
-      for (std::list<Statement::Var_Decl*>::iterator i = ret_decls_.begin(); i != ret_decls_.end(); ++i) {
-        statements.push_back(*i);
-      }
-    }
-    std::list<Statement::Base*> *stmts = &statements;
-    if (filter_guards) {
-      statements.push_back(filter_guards);
-      stmts = &filter_guards->then;
-      filter_guards->els.clear();
-      for (std::list<Statement::Var_Decl*>::iterator i = ret_decls_.begin(); i != ret_decls_.end(); ++i) {
-        filter_guards->els.push_back (new Statement::Fn_Call(Statement::Fn_Call::EMPTY, **i));
-      }
-    }
-    std::list<Statement::Var_Decl*>::iterator j = ret_decls_.begin();
-    for (std::list<Alt::Base*>::iterator i = list.begin(); i != list.end(); ++i, ++j) {
-      (*i)->codegen(ast);
-      stmts->insert(stmts->end(), (*i)->statements.begin(), (*i)->statements.end());
-      assert(!(*j)->rhs);
-      if (filter_guards) {
-        stmts->push_back(new Statement::Var_Assign(**j, new Expr::Vacc(*(*i)->ret_decl)));
-      }
-      else {
-        (*j)->rhs = new Expr::Vacc(*(*i)->ret_decl);
-        stmts->push_back(*j);
-      }
-    }
-  }
-
-
+Multi::Multi(const std::list<Alt::Base*> &t, const Loc &l) :
+  Base(MULTI, l), list(t) {
 }
+
+
+void Multi::codegen(AST &ast) {
+  statements.clear();
+  assert(ret_decls_.size() == list.size());
+
+  init_filter_guards(ast);
+  if (filter_guards) {
+    for (std::list<Statement::Var_Decl*>::iterator i = ret_decls_.begin();
+         i != ret_decls_.end(); ++i) {
+      statements.push_back(*i);
+    }
+  }
+  std::list<Statement::Base*> *stmts = &statements;
+  if (filter_guards) {
+    statements.push_back(filter_guards);
+    stmts = &filter_guards->then;
+    filter_guards->els.clear();
+    for (std::list<Statement::Var_Decl*>::iterator i = ret_decls_.begin();
+         i != ret_decls_.end(); ++i) {
+      filter_guards->els.push_back(
+        new Statement::Fn_Call(Statement::Fn_Call::EMPTY, **i));
+    }
+  }
+  std::list<Statement::Var_Decl*>::iterator j = ret_decls_.begin();
+  for (std::list<Alt::Base*>::iterator i = list.begin();
+       i != list.end(); ++i, ++j) {
+    (*i)->codegen(ast);
+    stmts->insert(
+      stmts->end(), (*i)->statements.begin(), (*i)->statements.end());
+    assert(!(*j)->rhs);
+    if (filter_guards) {
+      stmts->push_back(
+        new Statement::Var_Assign(**j, new Expr::Vacc(*(*i)->ret_decl)));
+    } else {
+      (*j)->rhs = new Expr::Vacc(*(*i)->ret_decl);
+      stmts->push_back(*j);
+    }
+  }
+}
+}  // namespace Alt
 
 
 
@@ -2312,17 +2416,18 @@ void Alt::Base::init_multi_ys() {
   assert(tracks_ == m_ys.tracks());
   // FIXME remove filters and just use multi_filter
   if (0 && tracks_ > 1 && !filters.empty()) {
-    Log::instance()->error(location, "Multi track rule, but single track filter.");
+    Log::instance()->error(
+      location, "Multi track rule, but single track filter.");
     return;
   }
   if (tracks_ == 1 && !multi_filter.empty()) {
-    Log::instance()->error(location,  "Multi track filter with single track rule.");
+    Log::instance()->error(
+      location,  "Multi track filter with single track rule.");
     return;
   }
   if (tracks_ == 1) {
     m_ys(0).with(filters);
-  }
-  else {
+  } else {
     m_ys.with(multi_filter);
   }
 }
@@ -2338,7 +2443,8 @@ void Alt::Simple::init_multi_ys() {
     return;
   }
 
-  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
+       i != args.end(); ++i) {
     Fn_Arg::Base *fn = *i;
     fn->init_multi_ys();
     m_ys += fn->multi_ys();
@@ -2375,7 +2481,8 @@ void Alt::Block::init_multi_ys() {
 void Alt::Multi::init_multi_ys() {
   m_ys.set_tracks(list.size());
   Yield::Multi::iterator j = m_ys.begin();
-  for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i, ++j) {
+  for (std::list<Base*>::iterator i = list.begin();
+       i != list.end(); ++i, ++j) {
     (*i)->init_multi_ys();
     assert((*i)->multi_ys().tracks() == 1);
     *j = (*i)->multi_ys()(0);
@@ -2384,25 +2491,30 @@ void Alt::Multi::init_multi_ys() {
 }
 
 
-void Alt::Base::add_multitrack_filter(const std::list<Filter*> &l, Filter::Type t, const Loc &loc) {
+void Alt::Base::add_multitrack_filter(
+  const std::list<Filter*> &l, Filter::Type t, const Loc &loc) {
   if (multi_filter.empty()) {
     multi_filter.resize(l.size());
   }
   if (multi_filter.size() != l.size()) {
     std::ostringstream o;
-    o << "Filter has more tracks than previous one: " << multi_filter.size() << " vs. " << l.size();
+    o << "Filter has more tracks than previous one: "
+      << multi_filter.size() << " vs. " << l.size();
     Log::instance()->error(loc, o.str());
     return;
   }
   size_t j = 0;
-  for (std::list<Filter*>::const_iterator i = l.begin(); i != l.end(); ++i, ++j) {
+  for (std::list<Filter*>::const_iterator i = l.begin();
+       i != l.end(); ++i, ++j) {
     (*i)->type = t;
     multi_filter[j].push_back(*i);
   }
 }
 
 
-void Alt::Simple::sum_rhs(Yield::Multi &y, std::list<Fn_Arg::Base*>::const_iterator i, const std::list<Fn_Arg::Base*>::const_iterator &end) const {
+void Alt::Simple::sum_rhs(
+  Yield::Multi &y, std::list<Fn_Arg::Base*>::const_iterator i,
+  const std::list<Fn_Arg::Base*>::const_iterator &end) const {
   ++i;
   for (; i != end; ++i) {
     y +=  (*i)->multi_ys();
@@ -2410,7 +2522,9 @@ void Alt::Simple::sum_rhs(Yield::Multi &y, std::list<Fn_Arg::Base*>::const_itera
 }
 
 
-void Alt::Simple::sum_rhs(Yield::Size &y, std::list<Fn_Arg::Base*>::const_iterator i, const std::list<Fn_Arg::Base*>::const_iterator &end, size_t track) const {
+void Alt::Simple::sum_rhs(
+  Yield::Size &y, std::list<Fn_Arg::Base*>::const_iterator i,
+  const std::list<Fn_Arg::Base*>::const_iterator &end, size_t track) const {
   ++i;
   for (; i != end; ++i) {
     y +=  (*i)->multi_ys()(track);
@@ -2426,7 +2540,8 @@ bool Alt::Simple::multi_detect_loop(const Yield::Multi &left,
 
   bool ret = false;
   Yield::Multi l(left);
-  for (std::list<Fn_Arg::Base*>::const_iterator i = args.begin(); i != args.end(); ++i) {
+  for (std::list<Fn_Arg::Base*>::const_iterator i = args.begin();
+       i != args.end(); ++i) {
     Yield::Multi r(right);
     sum_rhs(r, i, args.end());
 
@@ -2441,7 +2556,8 @@ bool Alt::Simple::multi_detect_loop(const Yield::Multi &left,
 }
 
 
-bool Alt::Link::multi_detect_loop(const Yield::Multi &left, const Yield::Multi &right, Symbol::NT *n) const {
+bool Alt::Link::multi_detect_loop(
+  const Yield::Multi &left, const Yield::Multi &right, Symbol::NT *n) const {
   if (nt == n) {
     return true;
   }
@@ -2449,9 +2565,11 @@ bool Alt::Link::multi_detect_loop(const Yield::Multi &left, const Yield::Multi &
 }
 
 
-bool Alt::Block::multi_detect_loop(const Yield::Multi &left, const Yield::Multi &right, Symbol::NT *nt) const {
+bool Alt::Block::multi_detect_loop(
+  const Yield::Multi &left, const Yield::Multi &right, Symbol::NT *nt) const {
   bool r = false;
-  for (std::list<Base*>::const_iterator i = alts.begin(); i != alts.end(); ++i) {
+  for (std::list<Base*>::const_iterator i = alts.begin();
+       i != alts.end(); ++i) {
     bool a = (*i)->multi_detect_loop(left, right, nt);
     r = r || a;
   }
@@ -2459,13 +2577,15 @@ bool Alt::Block::multi_detect_loop(const Yield::Multi &left, const Yield::Multi 
 }
 
 
-bool Alt::Multi::multi_detect_loop(const Yield::Multi &left, const Yield::Multi &right, Symbol::NT *nt) const {
+bool Alt::Multi::multi_detect_loop(
+  const Yield::Multi &left, const Yield::Multi &right, Symbol::NT *nt) const {
   bool ret = false;
   assert(left.tracks() == tracks_);
   assert(right.tracks() == tracks_);
   Yield::Multi::const_iterator j = left.begin();
   Yield::Multi::const_iterator k = right.begin();
-  for (std::list<Base*>::const_iterator i = list.begin(); i != list.end(); ++i, ++j, ++k) {
+  for (std::list<Base*>::const_iterator i = list.begin();
+       i != list.end(); ++i, ++j, ++k) {
     Yield::Multi l(1), r(1);
     l(0) = *j;
     r(0) = *k;
@@ -2476,7 +2596,8 @@ bool Alt::Multi::multi_detect_loop(const Yield::Multi &left, const Yield::Multi 
 
 
 // call from every derived class's method
-void Alt::Base::multi_propagate_max_filter (std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size) {
+void Alt::Base::multi_propagate_max_filter(
+  std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size) {
   Yield::Multi m(max_size);
   m.min_high(m_ys);
 
@@ -2497,7 +2618,8 @@ void Alt::Base::multi_set_max_size() {
 }
 
 
-void Alt::Simple::multi_propagate_max_filter (std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size) {
+void Alt::Simple::multi_propagate_max_filter(
+  std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size) {
   if (is_terminal()) {
     return;
   }
@@ -2505,7 +2627,8 @@ void Alt::Simple::multi_propagate_max_filter (std::vector<Yield::Multi> &nt_size
   Base::multi_propagate_max_filter(nt_sizes, max_size);
 
   Yield::Multi l(tracks_);
-  for (std::list<Fn_Arg::Base*>::const_iterator i = args.begin(); i != args.end(); ++i) {
+  for (std::list<Fn_Arg::Base*>::const_iterator i = args.begin();
+       i != args.end(); ++i) {
     Yield::Multi r(tracks_);
     sum_rhs(r, i, args.end());
 
@@ -2516,8 +2639,8 @@ void Alt::Simple::multi_propagate_max_filter (std::vector<Yield::Multi> &nt_size
       m.sub_high_low(r);
       // - < ... , UP, ... > hat komponentenweise keinen Effekt
       // - saturiert auf 0
-      //m -= l; // actually m.high()-l.low()
-      //m -= r; // see above
+      // m -= l; // actually m.high()-l.low()
+      // m -= r; // see above
       (*i)->alt_ref()->multi_propagate_max_filter(nt_sizes, m);
     }
 
@@ -2526,18 +2649,21 @@ void Alt::Simple::multi_propagate_max_filter (std::vector<Yield::Multi> &nt_size
 }
 
 
-void Alt::Block::multi_propagate_max_filter (std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size) {
+void Alt::Block::multi_propagate_max_filter(
+  std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size) {
   Base::multi_propagate_max_filter(nt_sizes, max_size);
 
   Yield::Multi m(max_size);
   m.min_high(m_ys);
-  for (std::list<Base*>::const_iterator i = alts.begin(); i != alts.end(); ++i) {
+  for (std::list<Base*>::const_iterator i = alts.begin();
+       i != alts.end(); ++i) {
     (*i)->multi_propagate_max_filter(nt_sizes, m);
   }
 }
 
 
-void Alt::Link::multi_propagate_max_filter (std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size) {
+void Alt::Link::multi_propagate_max_filter(
+  std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size) {
   Base::multi_propagate_max_filter(nt_sizes, max_size);
 
   Yield::Multi m(max_size);
@@ -2549,14 +2675,16 @@ void Alt::Link::multi_propagate_max_filter (std::vector<Yield::Multi> &nt_sizes,
 }
 
 
-void Alt::Multi::multi_propagate_max_filter (std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size) {
+void Alt::Multi::multi_propagate_max_filter(
+  std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size) {
   Base::multi_propagate_max_filter(nt_sizes, max_size);
 
   Yield::Multi m(max_size);
   m.min_high(m_ys);
   assert(m.tracks() == tracks_);
   Yield::Multi::const_iterator j = m.begin();
-  for (std::list<Base*>::const_iterator i = list.begin(); i != list.end(); ++i, ++j) {
+  for (std::list<Base*>::const_iterator i = list.begin();
+       i != list.end(); ++i, ++j) {
     Yield::Multi a(1);
     a(0) = *j;
     (*i)->multi_propagate_max_filter(nt_sizes, a);
@@ -2564,13 +2692,14 @@ void Alt::Multi::multi_propagate_max_filter (std::vector<Yield::Multi> &nt_sizes
 }
 
 
-void Alt::Simple::multi_init_calls (const Runtime::Poly &rest, size_t base_tracks) {
+void Alt::Simple::multi_init_calls(
+  const Runtime::Poly &rest, size_t base_tracks) {
   if (is_terminal_) {
     return;
   }
   Runtime::Poly left(rest);
-  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
-
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
+       i != args.end(); ++i) {
     if ((*i)->is(Fn_Arg::ALT)) {
       std::list<Fn_Arg::Base*>::iterator j = i;
       ++j;
@@ -2589,14 +2718,16 @@ void Alt::Simple::multi_init_calls (const Runtime::Poly &rest, size_t base_track
 }
 
 
-void Alt::Block::multi_init_calls (const Runtime::Poly &rest, size_t base_tracks) {
+void Alt::Block::multi_init_calls(
+  const Runtime::Poly &rest, size_t base_tracks) {
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     (*i)->multi_init_calls(rest, base_tracks);
   }
 }
 
 
-void Alt::Link::multi_init_calls(const Runtime::Poly &rest, size_t base_tracks) {
+void Alt::Link::multi_init_calls(
+  const Runtime::Poly &rest, size_t base_tracks) {
   if (top_level) {
     calls = 1;
     return;
@@ -2610,7 +2741,8 @@ void Alt::Link::multi_init_calls(const Runtime::Poly &rest, size_t base_tracks) 
 }
 
 
-void Alt::Multi::multi_init_calls (const Runtime::Poly &rest, size_t base_tracks) {
+void Alt::Multi::multi_init_calls(
+  const Runtime::Poly &rest, size_t base_tracks) {
   Runtime::Poly up(rest);
   for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i) {
     Runtime::Poly down(up);
@@ -2627,12 +2759,13 @@ void Alt::Multi::multi_init_calls (const Runtime::Poly &rest, size_t base_tracks
 }
 
 
-void Alt::Simple::multi_collect_factors (Runtime::Poly &p) {
+void Alt::Simple::multi_collect_factors(Runtime::Poly &p) {
   if (is_terminal_) {
     p *= Runtime::Poly(m_ys);
     return;
   }
-  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
+       i != args.end(); ++i) {
     if (!(*i)->is(Fn_Arg::ALT)) {
       continue;
     }
@@ -2641,7 +2774,7 @@ void Alt::Simple::multi_collect_factors (Runtime::Poly &p) {
 }
 
 
-void Alt::Block::multi_collect_factors (Runtime::Poly &p) {
+void Alt::Block::multi_collect_factors(Runtime::Poly &p) {
   Runtime::Poly r;
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     Runtime::Poly x(1);
@@ -2673,7 +2806,9 @@ void Alt::Base::set_tracks(size_t t, size_t p) {
 
 
 void Alt::Base::set_index_stmts(const std::list<Statement::Base*> &l) {
-  Log::instance()->error(location, "Index statements are only allowed before a simple function alternative.");
+  Log::instance()->error(
+    location,
+    "Index statements are only allowed before a simple function alternative.");
 }
 
 
@@ -2683,14 +2818,16 @@ void Alt::Simple::set_index_stmts(const std::list<Statement::Base*> &l) {
 
 
 void Alt::Base::set_index_overlay(Alt::Base *alt) {
-  Log::instance()->error(location, "Alternative is only allowed after a simple function.");
+  Log::instance()->error(
+    location, "Alternative is only allowed after a simple function.");
 }
 
 
 void Alt::Simple::set_index_overlay(Alt::Base *alt) {
   Simple *f = dynamic_cast<Simple*>(alt);
   if (!alt) {
-    Log::instance()->error(location, "As alternative only a simple function is allowed.");
+    Log::instance()->error(
+      location, "As alternative only a simple function is allowed.");
     return;
   }
   index_overlay.push_back(f);
@@ -2699,7 +2836,8 @@ void Alt::Simple::set_index_overlay(Alt::Base *alt) {
 
 
 void Alt::Base::set_ntparas(const Loc &loc, std::list<Expr::Base*> *l) {
-  Log::instance()->error(loc, "Non-terminal parameters need a non-terminal on the lhs!");
+  Log::instance()->error(
+    loc, "Non-terminal parameters need a non-terminal on the lhs!");
 }
 
 
@@ -2725,7 +2863,8 @@ bool Alt::Link::check_ntparas() {
   Symbol::NT *x = dynamic_cast<Symbol::NT*>(nt);
   if (!x) {
     if (!ntparas.empty()) {
-      Log::instance()->error(location, "Terminal parser parameters not supported.");
+      Log::instance()->error(
+        location, "Terminal parser parameters not supported.");
       return false;
     }
     return true;
@@ -2741,10 +2880,11 @@ bool Alt::Link::check_ntparas() {
 
 void Alt::Multi::types(std::list< ::Type::Base*> &r) const {
   // FIXME use this
-  //::Type::Multi *m = dynamic_cast< ::Type::Multi*>(datatype());
-  //assert(m);
-  //std::list< ::Type::Base*> t& = m.types();
-  for (std::list<Base*>::const_iterator i = list.begin(); i != list.end(); ++i) {
+  // ::Type::Multi *m = dynamic_cast< ::Type::Multi*>(datatype());
+  // assert(m);
+  // std::list< ::Type::Base*> t& = m.types();
+  for (std::list<Base*>::const_iterator i = list.begin();
+       i != list.end(); ++i) {
     r.push_back((*i)->data_type());
   }
 }

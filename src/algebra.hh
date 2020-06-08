@@ -25,6 +25,9 @@
 #ifndef SRC_ALGEBRA_HH_
 #define SRC_ALGEBRA_HH_
 
+#include <string>
+#include <ostream>
+#include <utility>
 
 #include "loc.hh"
 #include "hashtable.hh"
@@ -41,9 +44,6 @@
 
 #include "mode.hh"
 
-#include <string>
-#include <ostream>
-
 
 class Fn_Def;
 class Signature;
@@ -51,107 +51,100 @@ class Filter;
 
 
 class Algebra : public Signature_Base {
+ public:
 
-  public:
+ private:
+  std::string *default_choice_fn_mode;
+  void init_choice_fns();
 
+ public:
+  hashtable<std::string, Fn_Def*> fns;
+  hashtable<std::string, Fn_Def*> choice_fns;
+  hashtable<std::string, Type::Base*> params;
+  Signature *signature;
+  std::string *signature_name;
 
-  private:
+  Fn_Def *choice_fn(Fn_Def *f);
 
-    std::string *default_choice_fn_mode;
-    void init_choice_fns();
+  Algebra(std::string *n, std::string *s, Loc l)
+    :  Signature_Base(n, l), default_choice_fn_mode(0),
+      signature(NULL), signature_name(s) {
+  }
 
-
-  public:
-
-    hashtable<std::string, Fn_Def*> fns;
-    hashtable<std::string, Fn_Def*> choice_fns;
-    hashtable<std::string, Type::Base*> params;
-    Signature *signature;
-    std::string *signature_name;
-
-    Fn_Def *choice_fn(Fn_Def *f);
-
-    Algebra(std::string *n, std::string *s, Loc l)
-      :  Signature_Base(n, l), default_choice_fn_mode(0),
-        signature(NULL), signature_name(s) {
-    }
+  Algebra(Algebra &a, Algebra &b);
 
 
-    Algebra(Algebra &a, Algebra &b);
+  Algebra(std::string *n, Loc l)
+    :  Signature_Base(n, l), default_choice_fn_mode(0),
+      signature(NULL), signature_name(NULL) {
+  }
+
+  Algebra(std::string *n)
+    :  Signature_Base(n), default_choice_fn_mode(0),
+      signature(NULL), signature_name(NULL) {
+  }
 
 
-    Algebra(std::string *n, Loc l)
-      :  Signature_Base(n, l), default_choice_fn_mode(0),
-        signature(NULL), signature_name(NULL) {
-    }
+  Algebra()
+    :  Signature_Base(), default_choice_fn_mode(0),
+      signature(NULL), signature_name(NULL) {
+  }
 
 
-    Algebra(std::string *n)
-      :  Signature_Base(n), default_choice_fn_mode(0),
-        signature(NULL), signature_name(NULL) {
-    }
+  Fn_Decl* decl(const std::string &s);
 
 
-    Algebra()
-      :  Signature_Base(), default_choice_fn_mode(0),
-        signature(NULL), signature_name(NULL) {
-    }
+  Algebra& operator= (const Algebra& a) {
+    fns = a.fns;
+    choice_fns = a.choice_fns;
+    params = a.params;
+    signature = a.signature;
+    signature_name = new std::string(*(a.signature_name));
+    default_choice_fn_mode = a.default_choice_fn_mode;
+    return *this;
+  }
 
 
-    Fn_Decl* decl(const std::string &s);
+  void set_params(hashtable<std::string, Type::Base*> *p);
+  static void add_sig_var(
+    hashtable<std::string, Type::Base*> &h,
+    std::pair<std::string*, Type::Base*> &p, const Loc &l);
 
+  bool check_signature(Signature &s);
 
-    Algebra& operator= (const Algebra& a) {
-      fns = a.fns;
-      choice_fns = a.choice_fns;
-      params = a.params;
-      signature = a.signature;
-      signature_name = new std::string(*(a.signature_name));
-      default_choice_fn_mode = a.default_choice_fn_mode;
-      return *this;
-    }
+  void set_fns(const hashtable<std::string, Fn_Def*> &h);
 
+  Fn_Def *fn_def(const std::string &name);
 
-    void set_params(hashtable<std::string, Type::Base*> *p);
-    static void add_sig_var(hashtable<std::string, Type::Base*> &h, std::pair<std::string*, Type::Base*> &p, const Loc &l);
+  bool check_params(Signature &s);
 
-    bool check_signature(Signature &s);
+  std::ostream &put(std::ostream &s) const;
 
-    void set_fns(const hashtable<std::string, Fn_Def*> &h);
+  void annotate_terminal_arguments(Signature &s);
 
-    Fn_Def *fn_def(const std::string &name);
+  void codegen(Product::Two &product);
+  void codegen();
+  void init_fn_suffix(const std::string &s);
 
-    bool check_params(Signature &s);
+  void print_code(Printer::Base &s);
 
-    std::ostream &put(std::ostream &s) const;
+  void derive_role();
 
-    void annotate_terminal_arguments(Signature &s);
+  void set_default_choice_fn_mode(std::string *s);
 
-    void codegen(Product::Two &product);
-    void codegen();
-    void init_fn_suffix(const std::string &s);
+  Type::Base *answer_type();
 
-    void print_code(Printer::Base &s);
+  bool is_compatible(Mode::Type t);
 
-    void derive_role();
+  void install_choice_filter(Filter &filter);
 
-    void set_default_choice_fn_mode(std::string *s);
+  void add_choice_specialisations(Product::Two &product);
 
-    Type::Base *answer_type();
-
-    bool is_compatible(Mode::Type t);
-
-    void install_choice_filter(Filter &filter);
-
-    void add_choice_specialisations(Product::Two &product);
-
-    Algebra *copy() const;
-
-
+  Algebra *copy() const;
 };
 
 inline std::ostream &operator<<(std::ostream &s, const Algebra &a) {
   return a.put(s);
 }
 
-#endif
+#endif  // SRC_ALGEBRA_HH_
