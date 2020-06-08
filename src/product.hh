@@ -25,15 +25,15 @@
 #ifndef SRC_PRODUCT_HH_
 #define SRC_PRODUCT_HH_
 
+#include <string>
+#include <list>
+
 #include "loc.hh"
 #include "algebra.hh"
 #include "tree_iterator.hh"
 #include "mode.hh"
 
 #include "hashtable.hh"
-#include <string>
-#include <list>
-
 #include "const_fwd.hh"
 #include "printer_fwd.hh"
 
@@ -48,444 +48,378 @@ class Filter;
 
 
 namespace Product {
+enum Type { SINGLE, TIMES, KLASS, CARTESIAN, NOP, OVERLAY, TAKEONE, PARETO};
 
+// NONE: normal ADP
+// STANDARD, MULTI: normal ADP with sorted Pareto products
+// COMPERATOR, SORTER: create a comperator or sorter for generalized ADP
+enum Sort_Type { NONE, STANDARD, MULTI, COMPERATOR, SORTER, COMPERATOR_SORTER,
+    NULLARY_COMPERATOR, NULLARY_SORTER, NULLARY_COMPERATOR_SORTER};
 
-  enum Type { SINGLE, TIMES, KLASS, CARTESIAN, NOP, OVERLAY, TAKEONE, PARETO};
+class Base {
+ private:
+    Type type_;
+    ADP_Mode::Adp_Specialization adp_specialization;
 
-        // NONE: normal ADP
-        // STANDARD, MULTI: normal ADP with sorted Pareto products
-        // COMPERATOR, SORTER: create a comperator or sorter for generalized ADP
-        enum Sort_Type { NONE, STANDARD, MULTI, COMPERATOR, SORTER, COMPERATOR_SORTER,
-            NULLARY_COMPERATOR, NULLARY_SORTER, NULLARY_COMPERATOR_SORTER};
+ protected:
+  Loc location;
+  Algebra *algebra_;
+  Algebra *bt_score_algebra_;
 
-  class Base {
+  // set to value when sorting needs to be generated for the
+  // choice funtion
+  Sort_Type sorted_choice;
 
-    private:
+  // number of digits used for pareto or sorting
+  int float_accuracy;
 
-      Type type_;
-      ADP_Mode::Adp_Specialization adp_specialization;
+ public:
+  Algebra *algebra() { return algebra_; }
+  Algebra *bt_score_algebra();
+                    Base *bt_score_product();
 
-    protected:
+ protected:
+  std::string fn_suffix;
 
-      Loc location;
-      Algebra *algebra_;
-      Algebra *bt_score_algebra_;
+  Filter *filter_;
 
-                        // set to value when sorting needs to be generated for the
-                        // choice funtion
-                        Sort_Type sorted_choice;
+  Bool eliminate_lists_computed;
 
-                        // number of digits used for pareto or sorting
-                        int float_accuracy;
+  Base(Type t, const Loc &l);
+  Base(Type t);
 
-    public:
+ public:
+  virtual ~Base();
 
-      Algebra *algebra() { return algebra_; }
-      Algebra *bt_score_algebra();
-                        Base *bt_score_product();
+  bool is(Type t) { return type_ == t; }
 
-    protected:
+  Type type() const { return type_; }
 
-      std::string fn_suffix;
+  std::list<Default*> defaults;
 
-      Filter *filter_;
+  bool check_defaults();
 
-      Bool eliminate_lists_computed;
+  void set_algebra(Algebra *a) { algebra_ = a; }
 
-      Base(Type t, const Loc &l);
-      Base(Type t);
+  virtual bool init() = 0;
 
+  void reduce_return_type();
+  virtual void eliminate_lists() = 0;
 
-    public:
+  virtual void init_fn_suffix(const std::string &p) = 0;
 
-      virtual ~Base();
+  virtual void codegen() = 0;
 
-      bool is(Type t) { return type_ == t; }
+  virtual void print_code(Printer::Base &s) = 0;
 
-      Type type() const { return type_; }
 
-      std::list<Default*> defaults;
+  virtual Algebra *nth_algebra(unsigned int &n) = 0;
+  // virtual Var_Acc:Base *nth_access(unsigned int n) = 0;
+  virtual unsigned int width() = 0;
+  virtual bool contains_only_times();
 
-      bool check_defaults();
+  virtual Base *left();
+  virtual Base *right();
 
-      void set_algebra(Algebra *a) { algebra_ = a; }
+  virtual Base * left_most();
+  virtual Base * right_most();
 
-      virtual bool init() = 0;
+  virtual Base * optimize_shuffle_products();
 
-      void reduce_return_type();
-      virtual void eliminate_lists() = 0;
+  virtual void collect_fns(std::list<Fn_Def*> &l, const std::string &name);
 
-      virtual void init_fn_suffix(const std::string &p) = 0;
+  void set_filter(Filter *f) { assert(!filter_); filter_ = f; }
+  Filter *filter() { return filter_; }
 
-      virtual void codegen() = 0;
+                    void set_sorted_choice(Sort_Type st);
 
-      virtual void print_code(Printer::Base &s) = 0;
+                    Sort_Type get_sorted_choice();
 
+                    bool is_sorted_choice();
 
-      virtual Algebra *nth_algebra(unsigned int &n) = 0;
-      //virtual Var_Acc:Base *nth_access(unsigned int n) = 0;
-      virtual unsigned int width() = 0;
-      virtual bool contains_only_times();
+    // FIXME protected:
+ public:
+  void install_choice_filter();
 
-      virtual Base *left();
-      virtual Base *right();
+  virtual bool contains(Type t);
 
-      virtual Base * left_most();
-      virtual Base * right_most();
+  virtual void set_in_use(const Fn_Decl &);
 
-      virtual Base * optimize_shuffle_products();
+ protected:
+  static Bool no_coopt_;
+  static Bool no_coopt_class_;
 
-      virtual void collect_fns(std::list<Fn_Def*> &l, const std::string &name);
+  Var_Acc::Base *src_vacc;
+  Var_Acc::Base *dst_vacc;
+  void generate_filter_decl(
+  std::list<Statement::Base*> &hash_code,
+  std::list<Statement::Var_Decl*> &filters) const;
+
+ public:
+  virtual void init_vacc(Var_Acc::Base *src, Var_Acc::Base *dst);
+  virtual void generate_hash_decl(const Fn_Def &fn,
+    std::list<Statement::Base*> &hash_code,
+    std::list<Statement::Var_Decl*> &filters,
+    std::list<Statement::Base*> &finalize_code,
+    std::list<Statement::Base*> &init_code,
+    std::list<Statement::Base*> &equal_score_code,
+    std::list<Statement::Base*> &compare_code) const;
+
+  bool left_is_classify();
+  bool one_per_class();
+
+  static void set_no_coopt() {
+    no_coopt_ = true;
+  }
+  static bool no_coopt() { return no_coopt_; }
 
-      void set_filter(Filter *f) { assert(!filter_); filter_ = f; }
-      Filter *filter() { return filter_; }
+  static void set_no_coopt_class() {
+    no_coopt_class_ = true;
+  }
+  static bool no_coopt_class() { return no_coopt_class_; }
+
+  virtual Base *replace_classified(bool &x) = 0;
 
-                        void set_sorted_choice(Sort_Type st);
+  void set_adp_specialization(ADP_Mode::Adp_Specialization a) {
+      adp_specialization = a;
+  }
+  ADP_Mode::Adp_Specialization get_adp_specialization() {
+      return adp_specialization;
+  }
 
-                        Sort_Type get_sorted_choice();
+  void set_float_accuracy(int a) {
+      float_accuracy = a;
+  }
+  int get_float_accuracy() {
+      return float_accuracy;
+  }
 
-                        bool is_sorted_choice();
+// extension for sorting with kbacktrack!
+ public:
+  Base* sort_product;
 
-      //FIXME protected:
-    public:
+  void set_sort_product(Base *sp) {
+      sort_product = sp;
+  }
+};
 
-      void install_choice_filter();
 
-      virtual bool contains(Type t);
+class Single : public Base {
+ private:
+  std::string *name_;
 
-      virtual void set_in_use(const Fn_Decl &);
+ public:
+  Single(std::string *n, const Loc &l) : Base(SINGLE, l), name_(n) { }
+  Single(Algebra *a);
 
+  bool init();
+  void eliminate_lists();
 
-    protected:
+  void init_fn_suffix(const std::string &p);
+  void codegen();
 
-      static Bool no_coopt_;
-      static Bool no_coopt_class_;
+  void print_code(Printer::Base &s);
 
-      Var_Acc::Base *src_vacc;
-      Var_Acc::Base *dst_vacc;
-      void generate_filter_decl(
-      std::list<Statement::Base*> &hash_code,
-      std::list<Statement::Var_Decl*> &filters) const;
+  unsigned int width();
+  Algebra *nth_algebra(unsigned int &n);
+  bool contains_only_times();
 
+  Base * left_most();
+  Base * right_most();
 
-    public:
+  const std::string &name() const { assert(name_); return *name_; }
 
-      virtual void init_vacc(Var_Acc::Base *src, Var_Acc::Base *dst);
-      virtual void generate_hash_decl(const Fn_Def &fn,
-        std::list<Statement::Base*> &hash_code,
-        std::list<Statement::Var_Decl*> &filters,
-        std::list<Statement::Base*> &finalize_code,
-        std::list<Statement::Base*> &init_code,
-        std::list<Statement::Base*> &equal_score_code,
-        std::list<Statement::Base*> &compare_code
-        ) const;
+  void init_vacc(Var_Acc::Base *src, Var_Acc::Base *dst);
+  void generate_hash_decl(const Fn_Def &fn,
+    std::list<Statement::Base*> &hash_code,
+    std::list<Statement::Var_Decl*> &filters,
+    std::list<Statement::Base*> &finalize_code,
+    std::list<Statement::Base*> &init_code,
+    std::list<Statement::Base*> &equal_score_code,
+    std::list<Statement::Base*> &compare_code) const;
 
-      bool left_is_classify();
-      bool one_per_class();
+  Base *replace_classified(bool &x);
+};
 
-      static void set_no_coopt()
-      {
-        no_coopt_ = true;
-      }
-      static bool no_coopt() { return no_coopt_; }
 
-      static void set_no_coopt_class()
-      {
-        no_coopt_class_ = true;
-      }
-      static bool no_coopt_class() { return no_coopt_class_; }
+class Two : public Base {
+ protected:
+  Base *l;
+  Base *r;
 
-      virtual Base *replace_classified(bool &x) = 0;
+ public:
+  Two(Type t, const Loc &lo, Base *a, Base *b) : Base(t, lo), l(a), r(b) {}
+  Two(Type t, Base *a, Base *b) : Base(t), l(a), r(b) {}
+  Two(Type t, const Two &x);
+  bool init();
+  void eliminate_lists();
 
-                        void set_adp_specialization(ADP_Mode::Adp_Specialization a) {
-                            adp_specialization = a;
-                        }
-                        ADP_Mode::Adp_Specialization get_adp_specialization() {
-                            return adp_specialization;
-                        }
+  void init_fn_suffix(const std::string &p);
+  void codegen();
 
-                        void set_float_accuracy(int a) {
-                            float_accuracy = a;
-                        }
-                        int get_float_accuracy() {
-                            return float_accuracy;
-                        }
+  void print_code(Printer::Base &s);
 
-                // extension for sorting with kbacktrack!
-                public:
-                        Base* sort_product;
+  Base *left() { return l; }
+  Base *right() { return r; }
 
-                        void set_sort_product(Base *sp) {
-                            sort_product = sp;
-                        }
+  unsigned int width();
+  Algebra *nth_algebra(unsigned int &n);
 
-  };
+  Base * left_most();
+  Base * right_most();
+  Base *optimize_shuffle_products();
 
+  Mode & left_mode(const std::string &s);
+  Mode & right_mode(const std::string &s);
 
-  class Single : public Base {
+  Expr::Fn_Call::Builtin right_choice_fn_type(const std::string &s) const;
+  Expr::Fn_Call::Builtin left_choice_fn_type(const std::string &s) const;
 
-    private:
+  Fn_Def* left_choice_function(const std::string &s);
+  Fn_Def* right_choice_function(const std::string &s);
 
-      std::string *name_;
+  void collect_fns(std::list<Fn_Def*> &l, const std::string &name);
 
+  bool contains(Type t);
 
-    public:
+  void set_in_use(const Fn_Decl &);
 
-      Single(std::string *n, const Loc &l) : Base(SINGLE, l), name_(n) { }
-      Single(Algebra *a);
+  void init_vacc(Var_Acc::Base *src, Var_Acc::Base *dst);
 
-      bool init();
-      void eliminate_lists();
+  Base *replace_classified(bool &x);
+};
 
-      void init_fn_suffix(const std::string &p);
-      void codegen();
 
-      void print_code(Printer::Base &s);
+class Times : public Two {
+ private:
+ public:
+  Times(Base *a, Base *b, const Loc &lo);
+  Times(Base *a, Base *b) : Two(TIMES, a, b) { }
+  Times(const Two &t);
+  bool init();
+  bool contains_only_times();
 
-      unsigned int width();
-      Algebra *nth_algebra(unsigned int &n);
-      bool contains_only_times();
+  Base *optimize_shuffle_products();
 
-      Base * left_most();
-      Base * right_most();
+  void generate_hash_decl(const Fn_Def &fn,
+    std::list<Statement::Base*> &hash_code,
+    std::list<Statement::Var_Decl*> &filters,
+    std::list<Statement::Base*> &finalize_code,
+    std::list<Statement::Base*> &init_code,
+    std::list<Statement::Base*> &equal_score_code,
+    std::list<Statement::Base*> &compare_code) const;
+};
 
-      const std::string &name() const { assert(name_); return *name_; }
 
-      void init_vacc(Var_Acc::Base *src, Var_Acc::Base *dst);
-      void generate_hash_decl(const Fn_Def &fn,
-        std::list<Statement::Base*> &hash_code,
-        std::list<Statement::Var_Decl*> &filters,
-        std::list<Statement::Base*> &finalize_code,
-        std::list<Statement::Base*> &init_code,
-        std::list<Statement::Base*> &equal_score_code,
-        std::list<Statement::Base*> &compare_code
-        ) const;
+class Klass : public Two {
+ private:
+  Const::Number *parameter;
 
-      Base *replace_classified(bool &x);
+ public:
+  Klass(Base *a, Base *b, const Loc &l) : Two(KLASS, l, a, b),
+  parameter(NULL) { }
+  bool init();
 
+  Base *replace_classified(bool &x);
+};
 
-  };
 
+class Cartesian : public Two {
+ public:
+  Cartesian(Base *a, Base *b, const Loc &l) : Two(CARTESIAN, l, a, b) {}
+  bool init();
 
-  class Two : public Base {
+  void generate_hash_decl(const Fn_Def &fn,
+    std::list<Statement::Base*> &hash_code,
+    std::list<Statement::Var_Decl*> &filters,
+    std::list<Statement::Base*> &finalize_code,
+    std::list<Statement::Base*> &init_code,
+    std::list<Statement::Base*> &equal_score_code,
+    std::list<Statement::Base*> &compare_code) const;
+};
 
-    protected:
 
-      Base *l;
-      Base *r;
+class Nop : public Two {
+ public:
+  Nop(Times &times);
+  bool contains_only_times();
+};
 
 
-    public:
+class Overlay : public Two {
+ public:
+  Overlay(Base *a, Base *b, const Loc &l) : Two(OVERLAY, l, a, b) {}
+  bool init();
+  bool contains_only_times();
 
-      Two(Type t, const Loc &lo, Base *a, Base *b) : Base(t, lo), l(a), r(b) {}
-      Two(Type t, Base *a, Base *b) : Base(t), l(a), r(b) {}
-      Two(Type t, const Two &x);
-      bool init();
-      void eliminate_lists();
+  void eliminate_lists();
+  void codegen();
+  void print_code(Printer::Base &s);
+  void init_fn_suffix(const std::string &p);
+                    Base *bt_score_product();
+};
 
-      void init_fn_suffix(const std::string &p);
-      void codegen();
 
-      void print_code(Printer::Base &s);
+class Takeone : public Two {
+ public:
+  Takeone(Base *a, Base *b, const Loc &l) : Two(TAKEONE, l, a, b) {}
+  bool init();
+};
 
-      Base *left() { return l; }
-      Base *right() { return r; }
 
-      unsigned int width();
-      Algebra *nth_algebra(unsigned int &n);
+class Pareto : public Two {
+ public:
+  enum ParetoType {NoSort, Sort, ISort, MultiDimOpt, NoSortDomOpt};
 
-      Base * left_most();
-      Base * right_most();
-      Base *optimize_shuffle_products();
+ private:
+  ParetoType pareto_type;
+  bool multi_dim;
+  int cutoff;
 
-      Mode & left_mode(const std::string &s);
-      Mode & right_mode(const std::string &s);
+ public:
+  Pareto(Base *a, Base *b, const Loc &l) : Two(PARETO, l, a, b),
+    pareto_type(NoSort), multi_dim(false), cutoff(65) {}
 
-                        Expr::Fn_Call::Builtin right_choice_fn_type(const std::string &s) const;
-      Expr::Fn_Call::Builtin left_choice_fn_type(const std::string &s) const;
+  bool init();
 
-                        Fn_Def* left_choice_function(const std::string &s);
-                        Fn_Def* right_choice_function(const std::string &s);
+  void set_pareto_type(int i);
 
-      void collect_fns(std::list<Fn_Def*> &l, const std::string &name);
+  void generate_hash_decl(const Fn_Def &fn,
+    std::list<Statement::Base*> &hash_code,
+    std::list<Statement::Var_Decl*> &filters,
+    std::list<Statement::Base*> &finalize_code,
+    std::list<Statement::Base*> &init_code,
+    std::list<Statement::Base*> &equal_score_code,
+    std::list<Statement::Base*> &compare_code) const;
 
-      bool contains(Type t);
+  ParetoType get_pareto_type() {
+      return pareto_type;
+  }
 
-      void set_in_use(const Fn_Decl &);
+  void set_multi_dim(bool b) {
+      multi_dim = b;
+  }
 
-      void init_vacc(Var_Acc::Base *src, Var_Acc::Base *dst);
+  bool get_multi_dim() {
+      return multi_dim;
+  }
 
-      Base *replace_classified(bool &x);
+  void set_cutoff(int c) {
+      cutoff = c;
+  }
 
+  int get_cutoff() {
+      return cutoff;
+  }
+};
 
-  };
+typedef Tree::Iterator<Base, Two> iterator;
 
 
-  class Times : public Two {
+inline iterator begin(Base *b) { return iterator(b); }
+inline iterator end() { return iterator(); }
 
-    private:
 
+}  // namespace Product
 
-    public:
-
-      Times(Base *a, Base *b, const Loc &lo);
-      Times(Base *a, Base *b) : Two(TIMES, a, b) { }
-      Times(const Two &t);
-      bool init();
-      bool contains_only_times();
-
-      Base *optimize_shuffle_products();
-
-      void generate_hash_decl(const Fn_Def &fn,
-        std::list<Statement::Base*> &hash_code,
-        std::list<Statement::Var_Decl*> &filters,
-        std::list<Statement::Base*> &finalize_code,
-        std::list<Statement::Base*> &init_code,
-        std::list<Statement::Base*> &equal_score_code,
-        std::list<Statement::Base*> &compare_code
-        ) const;
-
-
-  };
-
-
-  class Klass : public Two {
-
-    private:
-
-      Const::Number *parameter;
-
-
-    public:
-
-      Klass(Base *a, Base *b, const Loc &l) : Two(KLASS, l, a, b),
-      parameter(NULL) { }
-      bool init();
-
-      Base *replace_classified(bool &x);
-
-
-  };
-
-
-  class Cartesian : public Two {
-
-    public:
-
-      Cartesian(Base *a, Base *b, const Loc &l) : Two(CARTESIAN, l, a, b) {}
-      bool init();
-
-      void generate_hash_decl(const Fn_Def &fn,
-        std::list<Statement::Base*> &hash_code,
-        std::list<Statement::Var_Decl*> &filters,
-        std::list<Statement::Base*> &finalize_code,
-        std::list<Statement::Base*> &init_code,
-        std::list<Statement::Base*> &equal_score_code,
-        std::list<Statement::Base*> &compare_code
-        ) const;
-
-
-  };
-
-
-  class Nop : public Two {
-
-    public:
-
-      Nop(Times &times);
-      bool contains_only_times();
-
-
-  };
-
-
-  class Overlay : public Two {
-
-    public:
-
-      Overlay(Base *a, Base *b, const Loc &l) : Two(OVERLAY, l, a, b) {}
-      bool init();
-      bool contains_only_times();
-
-      void eliminate_lists();
-      void codegen();
-      void print_code(Printer::Base &s);
-      void init_fn_suffix(const std::string &p);
-                        Base *bt_score_product();
-
-
-  };
-
-
-  class Takeone : public Two {
-
-    public:
-
-      Takeone(Base *a, Base *b, const Loc &l) : Two(TAKEONE, l, a, b) {}
-      bool init();
-
-
-  };
-
-
-        class Pareto : public Two {
-                public:
-                    enum ParetoType {NoSort, Sort, ISort, MultiDimOpt, NoSortDomOpt};
-
-    private:
-
-                    ParetoType pareto_type;
-                    bool multi_dim;
-                    int cutoff;
-
-    public:
-
-      Pareto(Base *a, Base *b, const Loc &l) :
-                           Two(PARETO, l, a, b), pareto_type(NoSort), multi_dim(false), cutoff(65) {}
-
-      bool init();
-
-                        void set_pareto_type(int i);
-
-                        void generate_hash_decl(const Fn_Def &fn,
-        std::list<Statement::Base*> &hash_code,
-        std::list<Statement::Var_Decl*> &filters,
-        std::list<Statement::Base*> &finalize_code,
-        std::list<Statement::Base*> &init_code,
-        std::list<Statement::Base*> &equal_score_code,
-        std::list<Statement::Base*> &compare_code
-        ) const;
-
-                        ParetoType get_pareto_type() {
-                            return pareto_type;
-                        };
-
-                        void set_multi_dim(bool b) {
-                            multi_dim = b;
-                        }
-
-                        bool get_multi_dim() {
-                            return multi_dim;
-                        }
-
-                        void set_cutoff(int c) {
-                            cutoff = c;
-                        }
-
-                        int get_cutoff() {
-                            return cutoff;
-                        }
-
-
-  };
-
-  typedef Tree::Iterator<Base, Two> iterator;
-
-
-  inline iterator begin(Base *b) { return iterator(b); }
-  inline iterator end() { return iterator(); }
-
-
-}
-
-#endif
+#endif  // SRC_PRODUCT_HH_
