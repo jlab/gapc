@@ -32,22 +32,21 @@
 
 
 class Arg {
-	
-	public:
-		
-		std::string *name;
-		Loc location;
-		
-		
-		Arg(std::string *n, Loc &l) : name(n), location(l) {
-		}
-		
-		
-		static void add_arg(hashtable<std::string, Arg*> &h, Arg* a);
-		
-		
+
+  public:
+
+    std::string *name;
+    Loc location;
+
+
+    Arg(std::string *n, Loc &l) : name(n), location(l) {
+    }
+
+
+    static void add_arg(hashtable<std::string, Arg*> &h, Arg* a);
+
+
 };
 
 
 #endif
-

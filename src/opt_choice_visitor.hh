@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef OPT_CHOICE_VISITOR_HH
-#define OPT_CHOICE_VISITOR_HH
+#ifndef SRC_OPT_CHOICE_VISITOR_HH_
+#define SRC_OPT_CHOICE_VISITOR_HH_
 
 #include "visitor.hh"
 
@@ -34,23 +34,22 @@ class Fn_Def;
 #include "symbol_fwd.hh"
 
 class Opt_Choice_Visitor : public Visitor {
-  private:
-    Fn_Def *choice_fn;
-    bool in_choice_fn;
-    Type::List::Push_Type push_type;
-    Statement::Hash_Decl *hash_decl;
+ private:
+  Fn_Def *choice_fn;
+  bool in_choice_fn;
+  Type::List::Push_Type push_type;
+  Statement::Hash_Decl *hash_decl;
 
-  public:
-    Opt_Choice_Visitor(Fn_Def *f, Type::List::Push_Type t)
-      : choice_fn(f), in_choice_fn(false), push_type(t), hash_decl(0) {}
-    Opt_Choice_Visitor(Fn_Def *f, Type::List::Push_Type t,
-        Statement::Hash_Decl *h)
-      : choice_fn(f), in_choice_fn(false), push_type(t), hash_decl(h) {}
+ public:
+  Opt_Choice_Visitor(Fn_Def *f, Type::List::Push_Type t)
+    : choice_fn(f), in_choice_fn(false), push_type(t), hash_decl(0) {}
+  Opt_Choice_Visitor(Fn_Def *f, Type::List::Push_Type t,
+      Statement::Hash_Decl *h)
+    : choice_fn(f), in_choice_fn(false), push_type(t), hash_decl(h) {}
 
-    void visit(Alt::Base &b);
-    void visit(Symbol::NT &n);
-    void visit_end(Symbol::NT &n);
-
+  void visit(Alt::Base &b);
+  void visit(Symbol::NT &n);
+  void visit_end(Symbol::NT &n);
 };
 
-#endif
+#endif  // SRC_OPT_CHOICE_VISITOR_HH_

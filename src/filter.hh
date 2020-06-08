@@ -34,54 +34,54 @@
 #include <list>
 
 class Filter {
-	
-	public:
-	
-		enum Builtin { NONE, MAX_SIZE, MIN_SIZE };
-		
-		
-	private:
-		
-		Builtin builtin;
-		bool stateful;
-		size_t instance;
-		
-		// FIXME change to non-static, if user defined filters are possible
-		//       (like with add_predefined)
-		static hashtable<std::string, Builtin> table;
-		
-		
-	public:
-		
-		enum Type { NO_TYPE, WITH, SUCHTHAT, WITH_OVERLAY, SUCHTHAT_OVERLAY };
-		
-		std::string *name;
-		Loc location;
-		std::list<Expr::Base*> args;
-		Type type;
-		
-		Filter(std::string *n, const Loc &l);
-		bool check_const_args();
-		
-		bool is(Builtin b) const { return builtin == b; }
-		bool is(Type t) const { return type == t; }
-		static void init_table();
-		void init_builtin();
-		
-		size_t uint_arg() const;
-		
-		
-	private:
-		
-		void init_stateful_filters();
-		
-		
-	public:
-		
-		bool is_stateful() const { return stateful; }
-		std::string id() const;
-		
-		
+
+  public:
+
+    enum Builtin { NONE, MAX_SIZE, MIN_SIZE };
+
+
+  private:
+
+    Builtin builtin;
+    bool stateful;
+    size_t instance;
+
+    // FIXME change to non-static, if user defined filters are possible
+    //       (like with add_predefined)
+    static hashtable<std::string, Builtin> table;
+
+
+  public:
+
+    enum Type { NO_TYPE, WITH, SUCHTHAT, WITH_OVERLAY, SUCHTHAT_OVERLAY };
+
+    std::string *name;
+    Loc location;
+    std::list<Expr::Base*> args;
+    Type type;
+
+    Filter(std::string *n, const Loc &l);
+    bool check_const_args();
+
+    bool is(Builtin b) const { return builtin == b; }
+    bool is(Type t) const { return type == t; }
+    static void init_table();
+    void init_builtin();
+
+    size_t uint_arg() const;
+
+
+  private:
+
+    void init_stateful_filters();
+
+
+  public:
+
+    bool is_stateful() const { return stateful; }
+    std::string id() const;
+
+
 };
 
 #endif

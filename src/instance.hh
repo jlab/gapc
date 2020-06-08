@@ -41,65 +41,65 @@ class Fn_Def;
 
 
 class Instance {
-	
-		friend class yy::Parser;
-	
-	private:
-		
-		std::string *name_;
-		
-		
-	public:
-		
-		Product::Base *product;
-		
-		
-	private:
-		
-		Loc location;
-		Grammar *grammar_;
-		
-		
-	public:
-		
-		Instance(std::string *n, Product::Base *p, const Loc &l);
-		Instance(std::string *n, Product::Base *p, Grammar *g);
-		Instance(Algebra *a, Algebra *b);
+
+    friend class yy::Parser;
+
+  private:
+
+    std::string *name_;
+
+
+  public:
+
+    Product::Base *product;
+
+
+  private:
+
+    Loc location;
+    Grammar *grammar_;
+
+
+  public:
+
+    Instance(std::string *n, Product::Base *p, const Loc &l);
+    Instance(std::string *n, Product::Base *p, Grammar *g);
+    Instance(Algebra *a, Algebra *b);
                 Instance(Product::Base *a, Algebra *b);
-               
-		
-		const Loc &loc() const { return location; }
-		
-		void set_grammar(Grammar *g) { grammar_ = g; }
-		Grammar *grammar() { return grammar_; }
-		
-		bool init(Instance *instance);
-		
-		void eliminate_lists();
-		
-		std::ostream &put(std::ostream &s) const;
-		
-		void codegen();
-		
-		void print_code(Printer::Base &s);
-		
-		std::string *lookup(const std::string &n);
-		
-		std::string *name() { return name_; }
-		
-		Statement::Hash_Decl *generate_hash_decl(const Fn_Def &fn, bool kbest);
-		
-		bool replace_classified_product();
-		
-		void check_alphabets();
-		
-		
+
+
+    const Loc &loc() const { return location; }
+
+    void set_grammar(Grammar *g) { grammar_ = g; }
+    Grammar *grammar() { return grammar_; }
+
+    bool init(Instance *instance);
+
+    void eliminate_lists();
+
+    std::ostream &put(std::ostream &s) const;
+
+    void codegen();
+
+    void print_code(Printer::Base &s);
+
+    std::string *lookup(const std::string &n);
+
+    std::string *name() { return name_; }
+
+    Statement::Hash_Decl *generate_hash_decl(const Fn_Def &fn, bool kbest);
+
+    bool replace_classified_product();
+
+    void check_alphabets();
+
+
 };
 
 
 inline std::ostream &operator<<(std::ostream &s, const Instance &i)
 {
-	return i.put(s);
+  return i.put(s);
 }
 
 

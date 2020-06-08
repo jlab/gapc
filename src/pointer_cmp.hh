@@ -22,15 +22,14 @@
 }}} */
 
 
-#ifndef POINTER_CMP
-#define POINTER_CMP
+#ifndef SRC_POINTER_CMP_
+#define SRC_POINTER_CMP_
 
 template<typename T>
 struct Pointer_Cmp {
-  bool operator() (const T* p1, const T* p2) 
-  { 
-    return *p1 < *p2; 
-  } 
+  bool operator() (const T* p1, const T* p2) {
+    return *p1 < *p2;
+  }
 };
 
-#endif
+#endif  // SRC_POINTER_CMP_

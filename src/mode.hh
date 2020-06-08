@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef MODE_HH
-#define MODE_HH
+#ifndef SRC_MODE_HH_
+#define SRC_MODE_HH_
 
 
 #include <string>
@@ -33,60 +33,56 @@
 
 
 class Mode {
-	
-	public:
-		
-		enum Type { NONE, SYNOPTIC, PRETTY, CLASSIFY, SCORING, KSCORING };
-		enum Number { ZERO, ONE, MANY };
-		
-		static const Number map_type_to_number[];
-		struct pair { const char *a; Type b; };
-		static const pair map_string_to_mode[];
-		static hashtable<std::string, Type> table;
-		static void init_table();
-		
-		Type type;
-		Yield::Poly number;
-		Mode() : type(NONE) {}
-		//Mode (Type t) : type(t) {}
-		
-		void set(Type t);
-		bool set(const std::string &n);
-		void set(Yield::Poly p) { number = p; }
-		
-		bool is(Type t) {  return type == t; }
-		
-		
-		std::ostream &put(std::ostream &s) const;
-		
-		bool operator==(const Mode &other) const {
-			return type == other.type;
-		}
-		
-		bool operator!=(const Mode &other) const {
-			return !(*this == other);
-		}
-		
-		bool operator==(Type t) const {
-			return type == t;
-		}
-		bool operator!=(Type t) const {
-			return !(*this == t);
-		}
-		
-		bool operator==(Number n) const {
-			return n == MANY ? number == Yield::UP : number == n;
-		}
-		bool operator!=(Number n) const { return !(*this == n); }
-		
-		
+ public:
+  enum Type { NONE, SYNOPTIC, PRETTY, CLASSIFY, SCORING, KSCORING };
+  enum Number { ZERO, ONE, MANY };
+
+  static const Number map_type_to_number[];
+  struct pair { const char *a; Type b; };
+  static const pair map_string_to_mode[];
+  static hashtable<std::string, Type> table;
+  static void init_table();
+
+  Type type;
+  Yield::Poly number;
+  Mode() : type(NONE) {}
+  // Mode (Type t) : type(t) {}
+
+  void set(Type t);
+  bool set(const std::string &n);
+  void set(Yield::Poly p) { number = p; }
+
+  bool is(Type t) {  return type == t; }
+
+
+  std::ostream &put(std::ostream &s) const;
+
+  bool operator==(const Mode &other) const {
+    return type == other.type;
+  }
+
+  bool operator!=(const Mode &other) const {
+    return !(*this == other);
+  }
+
+  bool operator==(Type t) const {
+    return type == t;
+  }
+  bool operator!=(Type t) const {
+    return !(*this == t);
+  }
+
+  bool operator==(Number n) const {
+    return n == MANY ? number == Yield::UP : number == n;
+  }
+  bool operator!=(Number n) const {
+    return !(*this == n);
+  }
 };
 
-
-inline std::ostream &operator<<(std::ostream &s, const Mode &m)
-{
-	return m.put(s);
+inline std::ostream &operator<<(std::ostream &s, const Mode &m) {
+  return m.put(s);
 }
 
 
-#endif
+#endif  // SRC_MODE_HH_

@@ -670,7 +670,7 @@ bool Product::Overlay::init() {
 // for overlay product this is different
 // for all other it's the same
 Algebra *Product::Base::bt_score_algebra() {
-  if (bt_score_algebra_)
+  if (bt_score_algebra_) {
     return bt_score_algebra_;
   } else {
     return algebra_;

@@ -35,47 +35,47 @@
 
 
 class Driver {
-	
-	private:
-	
-		bool from_stdin;
-		bool trace_lexer;
-		bool trace_parser;
-		bool fail_later;
-		
-		std::string *filename_;
-		
-		std::vector<std::string> includes;
-		std::vector<std::FILE*> open_files;
-		
-		bool lexer_prepare(void);
-		
-		void file_close();
-		bool file_open();
-	
-	
-	public:
-	
-		bool parse();
-		void parse_product(const std::string &s);
-		void setStdin(bool b);
-		
-		void setFilename(const std::string &s);
-		std::string *filename();
-		
-		bool is_failing() { return fail_later; }
-		
-		void error(const std::string &m);
-		void error(const Loc & l, const std::string& m);
-		
-		void set_includes(const std::vector<std::string> &v);
-		void push_buffer(const std::string &s);
-		
-		
-		AST ast;
-		
-		Driver();
-	
+
+  private:
+
+    bool from_stdin;
+    bool trace_lexer;
+    bool trace_parser;
+    bool fail_later;
+
+    std::string *filename_;
+
+    std::vector<std::string> includes;
+    std::vector<std::FILE*> open_files;
+
+    bool lexer_prepare(void);
+
+    void file_close();
+    bool file_open();
+
+
+  public:
+
+    bool parse();
+    void parse_product(const std::string &s);
+    void setStdin(bool b);
+
+    void setFilename(const std::string &s);
+    std::string *filename();
+
+    bool is_failing() { return fail_later; }
+
+    void error(const std::string &m);
+    void error(const Loc & l, const std::string& m);
+
+    void set_includes(const std::vector<std::string> &v);
+    void push_buffer(const std::string &s);
+
+
+    AST ast;
+
+    Driver();
+
 };
 
 

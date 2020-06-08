@@ -29,54 +29,53 @@
 
 const char Input::map[][6] =
 {
-	"raw",
-	"rna",
-	"upper"
+  "raw",
+  "rna",
+  "upper"
 };
 
 
 void Input::set (const std::string &s, const Loc &l)
 {
-	assert (modes_.empty());
-	modes_.push_back (str_to_mode (s, l));
+  assert (modes_.empty());
+  modes_.push_back (str_to_mode (s, l));
 }
 
 
 Input::Mode Input::str_to_mode (const std::string &s, const Loc &l)
 {
-	for (size_t i = 0; i <= MODE_END; ++i) {
-		if (map[i] == s) {
-			return Mode (i);
-		}
-	}
-	
-	Log::instance()->error(l, "Unknown input mode: " + s + "\nUse for example 'rna' or the default mode.");
-	
-	return Mode (0);
+  for (size_t i = 0; i <= MODE_END; ++i) {
+    if (map[i] == s) {
+      return Mode (i);
+    }
+  }
+
+  Log::instance()->error(l, "Unknown input mode: " + s + "\nUse for example 'rna' or the default mode.");
+
+  return Mode (0);
 }
 
 
 void Input::set (const std::list<std::string*> &s, const Loc &l)
 {
-	for (std::list<std::string*>::const_iterator i = s.begin(); i != s.end(); ++i) {
-		modes_.push_back (str_to_mode (**i, l));
-	}
+  for (std::list<std::string*>::const_iterator i = s.begin(); i != s.end(); ++i) {
+    modes_.push_back (str_to_mode (**i, l));
+  }
 }
 
 
 void Input::set_tracks (size_t t)
 {
-	if (!modes_.empty()) {
-		return;
-	}
-	modes_.resize (t);
+  if (!modes_.empty()) {
+    return;
+  }
+  modes_.resize (t);
 }
 
 
 std::string* Input::toString (Mode m) {
-	if (m < MODE_END && m >= 0) {
-		return new std::string (map[m]);
-	}
-	return new std::string ("");
+  if (m < MODE_END && m >= 0) {
+    return new std::string (map[m]);
+  }
+  return new std::string ("");
 }
-
