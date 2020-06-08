@@ -22,16 +22,15 @@
 }}} */
 
 
-#ifndef VISITOR_HH
-#define VISITOR_HH
+#ifndef SRC_VISITOR_HH_
+#define SRC_VISITOR_HH_
 
 #include "symbol_fwd.hh"
 #include "alt_fwd.hh"
 #include "fn_arg_fwd.hh"
 
 class Visitor {
-
-  public:
+ public:
     virtual ~Visitor();
 
     virtual void visit(Symbol::Terminal &s);
@@ -57,7 +56,6 @@ class Visitor {
 
     virtual void visit(Fn_Arg::Const &f);
     virtual void visit(Fn_Arg::Alt &f);
-
 };
 
-#endif
+#endif  //  SRC_VISITOR_HH_
