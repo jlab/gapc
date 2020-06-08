@@ -26,32 +26,32 @@
 #define SRC_STATEMENT_FWD_HH_
 
 namespace Statement {
-  class Base;
-  class Block;
-  class Fn_Call;
-  class For;
-  class While;
-  class Foreach;
-  class Sorter;
-  class If;
-  class Switch;
-  class Return;
-  class Var_Assign;
-  class Var_Decl;
-  class Backtrace_Decl;
-  class Backtrace_NT_Decl;
-  class Iterator;
-  class Hash_Decl;
-  typedef Iterator iterator;
+class Base;
+class Block;
+class Fn_Call;
+class For;
+class While;
+class Foreach;
+class Sorter;
+class If;
+class Switch;
+class Return;
+class Var_Assign;
+class Var_Decl;
+class Backtrace_Decl;
+class Backtrace_NT_Decl;
+class Iterator;
+class Hash_Decl;
+typedef Iterator iterator;
 
-  class Break;
-  class Continue;
-  class Increase;
-  class Decrease;
+class Break;
+class Continue;
+class Increase;
+class Decrease;
 
-  class Marker_Decl;
+class Marker_Decl;
 
-  class Table_Decl;
-}
+class Table_Decl;
+}  // namespace Statement
 
-#endif
+#endif  // SRC_STATEMENT_FWD_HH_

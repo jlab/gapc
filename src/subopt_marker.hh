@@ -25,6 +25,7 @@
 #define SRC_SUBOPT_MARKER_HH_
 
 
+#include <list>
 #include "backtrack_base.hh"
 #include "printer_fwd.hh"
 
@@ -36,23 +37,24 @@ class AST;
 class Fn_Def;
 
 class Subopt_Marker : public Backtrack_Base {
-  private:
+ private:
     std::list<Statement::Marker_Decl*> marker_decls;
-
 
     void adjust_list_types(Fn_Def *fn, Fn_Def *fn_type);
     void add_subopt_fn_args(Fn_Def *fn, const Symbol::NT &nt);
-  public:
+
+ public:
     void gen_instance(Algebra *score);
     void gen_instance(Algebra *score, Product::Sort_Type sort);
-    void gen_instance(Algebra *score ,Product::Base *base, Product::Sort_Type sort);
+    void gen_instance(Algebra *score, Product::Base *base,
+                      Product::Sort_Type sort);
     void gen_backtrack(AST &ast);
     void gen_instance_code(AST &ast);
 
-    //void gen_algebra(Signature &signature);
+    // void gen_algebra(Signature &signature);
 
     void print_header(Printer::Base &pp, AST &ast);
     void print_body(Printer::Base &pp, AST &ast);
 };
 
-#endif
+#endif  // SRC_SUBOPT_MARKER_HH_

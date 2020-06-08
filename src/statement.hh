@@ -25,12 +25,13 @@
 #ifndef SRC_STATEMENT_HH_
 #define SRC_STATEMENT_HH_
 
-#include "loc.hh"
-#include "bool.hh"
-
 #include <string>
 #include <list>
 #include <cassert>
+#include <utility>
+
+#include "loc.hh"
+#include "bool.hh"
 
 #include "operator_fwd.hh"
 
@@ -51,419 +52,318 @@ namespace Statement {
 
 
 
-  class Return : public Base {
+class Return : public Base {
+ public:
+  Return() : Base(RETURN), expr(NULL) {
+  }
 
-    public:
+  Return(Expr::Base *e) : Base(RETURN), expr(e) {
+  }
 
-      Return() : Base(RETURN), expr(NULL)
-      {
-      }
+  Return(Expr::Base *e, const Loc &l) : Base(RETURN, l), expr(e) {
+  }
 
+  Return(Var_Decl &vdecl);
 
-      Return(Expr::Base *e) : Base(RETURN), expr(e)
-      {
-      }
+  Return(std::string *n);
 
+  Expr::Base *expr;
 
-      Return(Expr::Base *e, const Loc &l) : Base(RETURN, l), expr(e)
-      {
-      }
+  void print(Printer::Base &p) const;
 
+  Base *copy() const;
+};
 
-      Return(Var_Decl &vdecl);
 
-      Return(std::string *n);
+class Break : public Base {
+ public:
+  Break() : Base(BREAK) {
+  }
 
-      Expr::Base *expr;
+  Break(const Loc &l) : Base(BREAK, l) {
+  }
 
-      void print(Printer::Base &p) const;
+  void print(Printer::Base &p) const;
 
-      Base *copy() const;
+  Base *copy() const;
+};
 
 
-  };
+class Continue : public Base {
+ public:
+  Continue() : Base(CONTINUE) {
+  }
 
+  Continue(const Loc &l) : Base(CONTINUE, l) {
+  }
 
-  class Break : public Base {
+  void print(Printer::Base &p) const;
 
-    public:
+  Base *copy() const;
+};
 
-      Break() : Base(BREAK)
-      {
-      }
 
+class If : public Base {
+ private:
+    void push(std::list<Base*> &l, Base* stmt);
 
-      Break(const Loc &l) : Base(BREAK, l)
-      {
-      }
+ public:
+  If() : Base(IF), cond(NULL) {
+  }
 
+  If(Expr::Base *c, Base *t) : Base(IF), cond(c) {
+    push(then, t);
+  }
 
-      void print(Printer::Base &p) const;
+  If(Expr::Base *c, Base *t, const Loc &l) : Base(IF, l), cond(c) {
+    push(then, t);
+  }
 
-      Base *copy() const;
+  If(Expr::Base *c, Base *t, Base *e, const Loc &l) : Base(IF, l), cond(c) {
+    push(then, t);
+    push(els, e);
+  }
 
+  If(Expr::Base *c, Base *t, Base *e) : Base(IF), cond(c) {
+    push(then, t);
+    push(els, e);
+  }
 
-  };
+  If(Expr::Base *c) : Base(IF), cond(c) {
+  }
 
+  Expr::Base *cond;
+  std::list<Base*> then;
+  std::list<Base*> els;
+  void print(Printer::Base &p) const;
 
-  class Continue : public Base {
+  void replace(Var_Decl &decl, Expr::Base *expr);
 
-    public:
+  Base *copy() const;
+};
 
-                        Continue() : Base(CONTINUE)
-      {
-      }
+class Switch : public Base {
+ public:
+  Switch(Expr::Base *c): Base(SWITCH), cond(c) {
+  }
 
-      Continue(const Loc &l) : Base(CONTINUE, l)
-      {
-      }
+  Expr::Base *cond;
+  std::list<std::pair<std::string, std::list<Base*> > > cases;
+  std::list<Base*> defaul;
 
+  std::list<Base*> *add_case(std::string *n);
 
-      void print(Printer::Base &p) const;
+  void print(Printer::Base &p) const;
+};
 
-      Base *copy() const;
 
+class Decrease : public Base {
+ public:
+  std::string *name;
 
-  };
+  Decrease() : Base(DECREASE) {
+  }
 
+  Decrease(std::string *n) : Base(DECREASE), name(n) {
+  }
 
-  class If : public Base {
+  Decrease(const Loc &l) : Base(DECREASE, l) {
+  }
 
-    private:
+  void print(Printer::Base &p) const;
 
-      void push(std::list<Base*> &l, Base* stmt);
+  Base *copy() const;
+};
 
+class Increase : public Base {
+ public:
+  std::string *name;
 
-    public:
+  Increase() : Base(INCREASE) {
+  }
 
-      If()
-        : Base(IF), cond(NULL)
-      {
-      }
+  Increase(std::string *n) : Base(INCREASE), name(n) {
+  }
 
+  Increase(const Loc &l) : Base(INCREASE, l) {
+  }
 
-      If (Expr::Base *c, Base *t)
-        : Base(IF), cond(c)
-      {
-        push(then, t);
-      }
+  void print(Printer::Base &p) const;
 
+  Base *copy() const;
+};
 
-      If (Expr::Base *c, Base *t, const Loc &l)
-        : Base(IF, l), cond(c)
-      {
-        push(then, t);
-      }
 
+class Var_Decl : public Base {
+ private:
+  Bool use_as_itr;
 
-      If (Expr::Base *c, Base *t, Base *e, const Loc &l)
-        : Base(IF, l), cond(c)
-      {
-        push(then, t);
-        push(els, e);
-      }
+ public:
+  ::Type::Base *type;
+  std::string *name;
+  Expr::Base *rhs;
 
+  Var_Decl(::Type::Base *t, std::string *n);
 
-      If (Expr::Base *c, Base *t, Base *e)
-        : Base(IF), cond(c)
-      {
-        push(then, t);
-        push(els, e);
-      }
 
+  Var_Decl(::Type::Base *t, const std::string &n)
+    : Base(VAR_DECL), type(t), rhs(NULL) {
+    name = new std::string(n);
+  }
 
-      If (Expr::Base *c)
-        : Base(IF), cond(c)
-      {
-      }
 
+  Var_Decl(::Type::Base *t, std::string *n, const Loc &l)
+    : Base(VAR_DECL, l), type(t), name(n), rhs(NULL) {
+  }
 
-      Expr::Base *cond;
-      std::list<Base*> then;
-      std::list<Base*> els;
-      void print(Printer::Base &p) const;
 
-      void replace(Var_Decl &decl, Expr::Base *expr);
+  Var_Decl(::Type::Base *t, std::string *n, Expr::Base *e);
 
-      Base *copy() const;
 
+  Var_Decl(::Type::Base *t, std::string n, Expr::Base *e)
+    : Base(VAR_DECL), type(t), rhs(e) {
+    name = new std::string(n);
+  }
 
-  };
 
+  Var_Decl(::Type::Base *t, std::string *n, Expr::Base *e, const Loc &l)
+    : Base(VAR_DECL, l), type(t), name(n), rhs(e) {
+  }
 
-        class Switch : public Base {
-            public:
-                         Switch(Expr::Base *c): Base(SWITCH), cond(c)
-      {
-      }
 
-                        Expr::Base *cond;
-                        std::list<std::pair<std::string, std::list<Base*> > > cases;
-                        std::list<Base*> defaul;
+  Var_Decl(::Type::Base *t, Expr::Base *e, Expr::Base *f);
+  Var_Decl(const Var_Decl &v);
 
-                        std::list<Base*> *add_case(std::string *n);
 
-                        void print(Printer::Base &p) const;
-        };
+  void set_rhs(Expr::Base *a) {
+    rhs = a;
+  }
 
+  Var_Acc::Base *left();
+  Var_Acc::Base *right();
 
-        class Decrease : public Base {
+  void print(Printer::Base &p) const;
 
-            public:
+  Var_Decl *var_decl();
+  void replace(Var_Decl &decl, Expr::Base *expr);
 
-                std::string *name;
+  bool operator==(const Var_Decl &other) const;
 
-                Decrease() : Base(DECREASE)
-                {
-                }
 
-                Decrease(std::string *n) : Base(DECREASE), name(n)
-                {
-                }
+  void set_itr(bool b) {
+    use_as_itr = b;
+  }
 
-                Decrease(const Loc &l) : Base(DECREASE, l)
-      {
-      }
 
-                void print(Printer::Base &p) const;
+  bool is_itr() const {
+    return use_as_itr;
+  }
 
-    Base *copy() const;
 
-        };
+  Var_Decl *clone() const;
 
-        class Increase : public Base {
+  Base *copy() const;
+};
 
-            public:
 
-                std::string *name;
+// probably only for target code
+class For : public Block_Base {
+ public:
+  Var_Decl *var_decl;
+  Expr::Base *cond;
+  Statement::Base *inc;
 
-                Increase() : Base(INCREASE)
-                {
-                }
+  For(Var_Decl *v, Expr::Base* e)
+  : Block_Base(FOR), var_decl(v), cond(e), inc(NULL) {
+  }
 
-                Increase(std::string *n) : Base(INCREASE), name(n)
-                {
-                }
 
-                Increase(const Loc &l) : Base(INCREASE, l)
-      {
-      }
+  For(Var_Decl *v, Expr::Base *e, Statement::Base *i, const Loc &l)
+  : Block_Base(FOR, l), var_decl(v), cond(e), inc(i) {
+  }
 
-                void print(Printer::Base &p) const;
 
-    Base *copy() const;
+  void print(Printer::Base &p) const;
 
-        };
+  Base *copy() const;
+};
 
 
-  class Var_Decl : public Base {
+class Foreach : public Block_Base {
+ public:
+  Var_Decl *elem;
+  Var_Decl *container;
+  bool iteration;
 
-    private:
+  Foreach(Var_Decl *i, Var_Decl *l);
+  void print(Printer::Base &p) const;
 
-      Bool use_as_itr;
+  void replace(Var_Decl &decl, Expr::Base *expr);
 
+  void set_itr(bool b);
 
-    public:
+  void set_iteration(bool b);
+};
 
-      ::Type::Base *type;
-      std::string *name;
-      Expr::Base *rhs;
 
-      Var_Decl(::Type::Base *t, std::string *n);
+class Sorter : public Block_Base {
+ public:
+  std::string *op;
+  Var_Decl *list;
 
+  Sorter(Operator *op, Var_Decl *l);
 
-      Var_Decl(::Type::Base *t, const std::string &n)
-        : Base(VAR_DECL), type(t), rhs(NULL)
-      {
-        name = new std::string(n);
-      }
+  Sorter(std::string *op, Var_Decl *l)
+      : Block_Base(SORTER), op(op),  list(l) {
+  }
 
+  void print(Printer::Base &p) const;
+};
 
-      Var_Decl(::Type::Base *t, std::string *n, const Loc &l)
-        : Base(VAR_DECL, l), type(t), name(n), rhs(NULL)
-      {
-      }
+class Var_Assign : public Base {
+ private:
+  Expr::Type op_;
 
+ public:
+  Var_Acc::Base *acc;
+  Expr::Base *rhs;
+  Var_Assign(Var_Decl &a);
+  Var_Assign(Var_Decl &a, Var_Decl &b);
+  Var_Assign(Var_Decl &a, Expr::Base *b);
+  Var_Assign(Var_Acc::Base *a, Expr::Base *b, const Loc &l);
+  Var_Assign(Var_Acc::Base *a, Expr::Base *b);
+  Var_Assign(Var_Acc::Base *a, Var_Decl &v);
+  void print(Printer::Base &p) const;
 
-      Var_Decl(::Type::Base *t, std::string *n, Expr::Base *e);
+  void set_op(Expr::Type t);
+  std::string op_str() const;
 
+  Base *copy() const;
+};
 
-      Var_Decl(::Type::Base *t, std::string n, Expr::Base *e)
-        : Base(VAR_DECL), type(t), rhs(e)
-      {
-        name = new std::string(n);
-      }
 
+class Block : public Block_Base {
+ public:
+  Block() : Block_Base(BLOCK) {
+  }
 
-      Var_Decl(::Type::Base *t, std::string *n, Expr::Base *e, const Loc &l)
-        : Base(VAR_DECL, l), type(t), name(n), rhs(e)
-      {
-      }
 
+  Block(const std::list<Base*> &stmts, const Loc &l)
+    : Block_Base(BLOCK, l) {
+    statements = stmts;
+  }
 
-      Var_Decl(::Type::Base *t, Expr::Base *e, Expr::Base *f);
-      Var_Decl(const Var_Decl &v);
+  void print(Printer::Base &p) const;
 
+  void push_back(Base* b) {
+    statements.push_back(b);
+  }
 
-      void set_rhs(Expr::Base *a)
-      {
-        rhs = a;
-      }
+  Base *copy() const;
+};
 
-      Var_Acc::Base *left();
-      Var_Acc::Base *right();
 
-      void print(Printer::Base &p) const;
+}  // namespace Statement
 
-      Var_Decl *var_decl();
-      void replace(Var_Decl &decl, Expr::Base *expr);
 
-      bool operator==(const Var_Decl &other) const;
-
-
-      void set_itr(bool b)
-      {
-        use_as_itr = b;
-      }
-
-
-      bool is_itr() const
-      {
-        return use_as_itr;
-      }
-
-
-      Var_Decl *clone() const;
-
-      Base *copy() const;
-
-
-  };
-
-
-  // probably only for target code
-  class For : public Block_Base {
-
-    public:
-
-      Var_Decl *var_decl;
-      Expr::Base *cond;
-      Statement::Base *inc;
-
-
-      For(Var_Decl *v, Expr::Base* e)
-        : Block_Base(FOR), var_decl(v), cond(e), inc(NULL)
-      {
-      }
-
-
-      For(Var_Decl *v, Expr::Base *e, Statement::Base *i, const Loc &l)
-        : Block_Base(FOR, l), var_decl(v), cond(e), inc(i)
-      {
-      }
-
-
-      void print(Printer::Base &p) const;
-
-      Base *copy() const;
-
-
-  };
-
-
-  class Foreach : public Block_Base {
-
-    public:
-
-      Var_Decl *elem;
-      Var_Decl *container;
-                        bool iteration;
-
-      Foreach(Var_Decl *i, Var_Decl *l);
-      void print(Printer::Base &p) const;
-
-      void replace(Var_Decl &decl, Expr::Base *expr);
-
-      void set_itr(bool b);
-
-                        void set_iteration(bool b);
-
-  };
-
-
-        class Sorter : public Block_Base {
-
-                public:
-                        std::string *op;
-                        Var_Decl *list;
-
-                        Sorter(Operator *op, Var_Decl *l);
-
-                        Sorter(std::string *op, Var_Decl *l)
-                            : Block_Base(SORTER), op(op),  list(l)
-                        {}
-
-                        void print(Printer::Base &p) const;
-
-        };
-
-  class Var_Assign : public Base {
-
-    private:
-
-      Expr::Type op_;
-
-
-    public:
-
-      Var_Acc::Base *acc;
-      Expr::Base *rhs;
-      Var_Assign(Var_Decl &a);
-      Var_Assign(Var_Decl &a, Var_Decl &b);
-      Var_Assign(Var_Decl &a, Expr::Base *b);
-      Var_Assign(Var_Acc::Base *a, Expr::Base *b, const Loc &l);
-      Var_Assign(Var_Acc::Base *a, Expr::Base *b);
-      Var_Assign(Var_Acc::Base *a, Var_Decl &v);
-      void print(Printer::Base &p) const;
-
-      void set_op(Expr::Type t);
-      std::string op_str() const;
-
-      Base *copy() const;
-
-
-  };
-
-
-  class Block : public Block_Base {
-
-    public:
-
-      Block() : Block_Base(BLOCK) {
-      }
-
-
-      Block(const std::list<Base*> &stmts, const Loc &l)
-        : Block_Base(BLOCK, l) {
-        statements = stmts;
-      }
-
-
-      void print(Printer::Base &p) const;
-
-
-      void push_back(Base* b)
-      {
-        statements.push_back(b);
-      }
-
-      Base *copy() const;
-
-
-  };
-
-
-}
-
-
-#endif
+#endif  // SRC_STATEMENT_HH_

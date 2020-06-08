@@ -22,6 +22,9 @@
 }}} */
 
 
+#include <algorithm>
+#include <functional>
+
 #include "symbol.hh"
 #include "signature.hh"
 #include "log.hh"
@@ -43,8 +46,6 @@
 
 #include "type/backtrace.hh"
 
-#include <algorithm>
-#include <functional>
 
 
 Symbol::Base::Base(std::string *n, Type t, const Loc &l)
@@ -89,7 +90,7 @@ Symbol::NT::NT(std::string *n, const Loc &l)
  * information please see the comment for the method
  * Symbol::NT::init_links (Grammar &grammar).
  */
-bool Symbol::Terminal::init_links (Grammar &grammar) {
+bool Symbol::Terminal::init_links(Grammar &grammar) {
   reachable = true;
   return true;
 }
@@ -103,11 +104,11 @@ bool Symbol::Terminal::init_links (Grammar &grammar) {
  * of type std::list<Alt::Base*>, and calls thier init_links()
  * methods one by one.
  */
-bool Symbol::NT::init_links (Grammar &grammar) {
+bool Symbol::NT::init_links(Grammar &grammar) {
   bool r = true;
   reachable = true;
   for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
-    bool a = (*i)->init_links (grammar);
+    bool a = (*i)->init_links(grammar);
     r = r && a;
   }
   return r;
@@ -175,9 +176,9 @@ void Symbol::Base::init_table_dim(const Yield::Size &l, const Yield::Size &r,
 
 
 void Symbol::NT::init_table_dim(const Yield::Size &l, const Yield::Size &r,
-	                              std::vector<Yield::Size> &temp_ls,
-																std::vector<Yield::Size> &temp_rs,
-																size_t track) {
+                                std::vector<Yield::Size> &temp_ls,
+                                std::vector<Yield::Size> &temp_rs,
+                                size_t track) {
   assert(track < table_dims.size());
   Table &table_dim = table_dims[track];
   assert(grammar_index_ < temp_ls.size());
@@ -196,11 +197,10 @@ void Symbol::NT::init_table_dim(const Yield::Size &l, const Yield::Size &r,
         recompute = true;
         temp_r.set(temp_r.low(), Yield::Poly(Yield::UP));
       }
-    }
-    else if (l != temp_l) {
-      if (temp_r.high() == Yield::UP)
+    } else if (l != temp_l) {
+      if (temp_r.high() == Yield::UP) {
         table_dim |= Table::QUADRATIC;
-      else {
+      } else {
         table_dim |= Table::LINEAR;
         table_dim.set_sticky(Table::RIGHT);
         table_dim.set_right_rest(r);
@@ -210,9 +210,9 @@ void Symbol::NT::init_table_dim(const Yield::Size &l, const Yield::Size &r,
         temp_l.set(temp_l.low(), Yield::Poly(Yield::UP));
       }
     } else if (r != temp_r) {
-      if (temp_l.high() == Yield::UP)
+      if (temp_l.high() == Yield::UP) {
         table_dim |= Table::QUADRATIC;
-      else {
+      } else {
         table_dim |= Table::LINEAR;
         table_dim.set_sticky(Table::LEFT);
         table_dim.set_left_rest(l);
@@ -237,9 +237,9 @@ void Symbol::NT::init_table_dim(const Yield::Size &l, const Yield::Size &r,
     Table dim_t;
     dim_t = table_dim;
 
-    if (l.high() == Yield::UP && r.high() == Yield::UP)
+    if (l.high() == Yield::UP && r.high() == Yield::UP) {
       table_dim |= Table::QUADRATIC;
-    else if (l.high() == Yield::UP || r.high() == Yield::UP) {
+    } else if (l.high() == Yield::UP || r.high() == Yield::UP) {
       table_dim |= Table::LINEAR;
       if (l.high() == Yield::UP) {
         table_dim.set_sticky(Table::RIGHT);
@@ -266,11 +266,13 @@ void Symbol::NT::init_table_dim(const Yield::Size &l, const Yield::Size &r,
     if (!(a == temp_l && b == temp_r && dim_t.type() == table_dim.type()))
       tab_dim_ready = false;
 
-    if (tab_dim_ready)
-      if (recompute)
+    if (tab_dim_ready) {
+      if (recompute) {
         continue;
-      else
+      } else {
         break;
+      }
+    }
 
     for (std::list<Alt::Base*>::iterator i = alts.begin();
         i != alts.end(); ++i) {
@@ -280,7 +282,6 @@ void Symbol::NT::init_table_dim(const Yield::Size &l, const Yield::Size &r,
     if ((a == temp_l && b == temp_r && dim_t.type() == table_dim.type()))
       if (!recompute)
         tab_dim_ready = true;
-
   } while (recompute);
   active = false;
   recompute = false;
@@ -309,7 +310,7 @@ std::ostream & Symbol::NT::put(std::ostream &s) const {
 
   for (std::vector<Table>::const_iterator i = table_dims.begin();
       i != table_dims.end(); ++i)
-   s << *i << ' ';
+  s << *i << ' ';
 
   s  << " tabulated(" << tabulated << ')'
     << " in_out(" << in_calls << ", " << out_calls << ')';
@@ -332,7 +333,7 @@ void Symbol::NT::clear_runtime() {
 }
 
 Runtime::Poly Symbol::Terminal::runtime(std::list<NT*> &active_list,
-	                                      const Runtime::Poly &accum_rt) {
+                                        const Runtime::Poly &accum_rt) {
   Runtime::Poly rt(1);
   return rt;
 }
@@ -364,13 +365,14 @@ void Symbol::NT::set_recs(const Runtime::Poly &c,
       active_list.end(), this);
   assert(f != active_list.end());
   for (; f != active_list.end(); ++f) {
-    //std::cerr << "XXX from " << *name << " set rec of " << *(*f)->name << std::endl;
+    // std::cerr << "XXX from " << *name << " set rec of "
+    // << *(*f)->name << std::endl;
     (*f)->set_rec(c);
   }
 }
 
 Runtime::Poly Symbol::NT::runtime(std::list<NT*> &active_list,
-	                                const Runtime::Poly &accum_rt) {
+                                  const Runtime::Poly &accum_rt) {
   if (rt_computed)
     return runtime_;
 
@@ -422,7 +424,7 @@ void Symbol::NT::put_table_conf(std::ostream &s) {
   if (tracks_ == 1) {
     table_dims[0].print_short(s, *name);
   } else {
-    s << " < " ;
+    s << " < ";
     std::vector<Table>::iterator i = table_dims.begin();
     (*i).print_short(s, *name);
     ++i;
@@ -440,7 +442,7 @@ void Symbol::Base::init_self_rec() {
 void Symbol::NT::init_self_rec() {
   if (active) {
     if (self_rec_started)
-      self_rec_count ++;
+      self_rec_count++;
     return;
   }
   active = true;
@@ -538,56 +540,60 @@ void Symbol::NT::print_type(std::ostream &s) {
 
 
 struct SetADPSpecializations : public Visitor {
-
   std::string* eval_nullary_fn;
   std::string* specialised_comparator_fn;
   std::string* specialised_sorter_fn;
 
   Statement::Var_Decl* marker;
 
-  SetADPSpecializations(std::string* d, std::string* cs, std::string* cds, Statement::Var_Decl* m)
-  :  eval_nullary_fn(d), specialised_comparator_fn(cs), specialised_sorter_fn(cds),
-  marker(m) {}
+  SetADPSpecializations(std::string* d, std::string* cs, std::string* cds,
+                        Statement::Var_Decl* m) :
+    eval_nullary_fn(d), specialised_comparator_fn(cs),
+    specialised_sorter_fn(cds), marker(m) {
+  }
 
   void visit(Alt::Base &b) {
             b.set_nullary(eval_nullary_fn);
             b.set_comparator(specialised_comparator_fn, specialised_sorter_fn);
 
-            if(marker) {
+            if (marker) {
                 b.set_marker(marker);
             }
   }
-
 };
 
 void Symbol::NT::set_adp_specialization(ADP_Mode::Adp_Specialization a,
-	                                      std::string s_null, std::string s_comp,
-																				std::string s_sort) {
+                                        std::string s_null, std::string s_comp,
+                                        std::string s_sort) {
     // set the specialization value
     Base::set_adp_specialization(a);
 
     if (!eval_fn) {
-        if (datatype->simple()->is(::Type::LIST)) {
-            Log::instance()->error(location, "No Choice function"
-                " used at non-terminal " + *name + ", but ADP specialization set!");
-        }
-       return;
+      if (datatype->simple()->is(::Type::LIST)) {
+        Log::instance()->error(location, "No Choice function"
+          " used at non-terminal " + *name + ", but ADP specialization set!");
+      }
+      return;
     }
     // string of nullary
     eval_nullary_fn = new std::string(*eval_fn + s_null);
     specialised_comparator_fn = new std::string(*eval_fn + s_comp);
     specialised_sorter_fn = new std::string(*eval_fn + s_sort);
 
-    if (adp_specialization != ADP_Mode::STANDARD && !ADP_Mode::is_step(adp_specialization) ) {
-        marker =  new Statement::Var_Decl( new ::Type::List (new ::Type::Int()) , "markers");
+    if (adp_specialization != ADP_Mode::STANDARD &&
+        !ADP_Mode::is_step(adp_specialization) ) {
+        marker =  new Statement::Var_Decl(
+          new ::Type::List (new ::Type::Int()), "markers");
     }
 
-    SetADPSpecializations v = SetADPSpecializations(eval_nullary_fn, specialised_comparator_fn, specialised_sorter_fn, marker);
+    SetADPSpecializations v = SetADPSpecializations(
+      eval_nullary_fn, specialised_comparator_fn, specialised_sorter_fn,
+      marker);
 
-    for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
+    for (std::list<Alt::Base*>::iterator i = alts.begin();
+         i != alts.end(); ++i) {
         (*i)->traverse(v);
     }
-
 }
 
 
@@ -780,12 +786,12 @@ void Symbol::NT::init_guards(Code::Mode mode) {
 
 void Symbol::NT::gen_ys_guards(std::list<Expr::Base*> &ors) const {
   size_t t = 0;
-  //std::vector<Table>::const_iterator b = tables_.begin();
+  // std::vector<Table>::const_iterator b = tables_.begin();
   for (Yield::Multi::const_iterator a = m_ys.begin();
        a != m_ys.end(); ++a,
        /*++b,*/ ++t) {
     const Yield::Size &y = *a;
-    //const Table &table = *b;
+    // const Table &table = *b;
 
     Expr::Base *i = left_indices[t], *j = right_indices[t];
 
@@ -796,7 +802,7 @@ void Symbol::NT::gen_ys_guards(std::list<Expr::Base*> &ors) const {
     if (y.high() != Yield::UP)
       ors.push_back(new Expr::Greater(size, new Expr::Const(y.high())));
     // FIXME, check this
-    //ors.push_back(new Expr::Greater(j, i));
+    // ors.push_back(new Expr::Greater(j, i));
   }
 }
 
@@ -811,8 +817,7 @@ void Symbol::NT::put_guards(std::ostream &s) {
   s << std::endl;
 }
 
-::Type::Base *Symbol::NT::data_type_before_eval()
-{
+::Type::Base *Symbol::NT::data_type_before_eval() {
   if (eval_decl) {
     return eval_decl->types.front();
   } else {
@@ -824,7 +829,7 @@ void Symbol::NT::put_guards(std::ostream &s) {
 #include "statement/fn_call.hh"
 
 void Symbol::NT::add_specialised_arguments(Statement::Fn_Call *fn,
-	                                         bool keep_coopts) {
+                                           bool keep_coopts) {
     switch (adp_join) {
         case ADP_Mode::COMPERATOR:
             fn->add_arg(specialised_comparator_fn);
@@ -840,10 +845,9 @@ void Symbol::NT::add_specialised_arguments(Statement::Fn_Call *fn,
             break;
     }
 
-    if(ADP_Mode::is_coopt_param(adp_specialization)) {
+    if (ADP_Mode::is_coopt_param(adp_specialization)) {
         fn->add_arg(new Expr::Const(new Const::Bool(keep_coopts)));
     }
-
 }
 
 void Symbol::NT::set_ret_decl_rhs(Code::Mode mode) {
@@ -860,42 +864,43 @@ void Symbol::NT::set_ret_decl_rhs(Code::Mode mode) {
   }
 
   for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
-
     if (!(*i)->data_type()->simple()->is(::Type::LIST)) {
-
       Expr::Fn_Call *e = new Expr::Fn_Call(Expr::Fn_Call::NOT_EMPTY);
       e->add_arg(*(*i)->ret_decl);
       Statement::If *cond = new Statement::If(e);
 
-      if ( (mode != Code::Mode::BACKTRACK || !tabulated) && adp_specialization != ADP_Mode::STANDARD ) {
+      if ((mode != Code::Mode::BACKTRACK || !tabulated) &&
+        adp_specialization != ADP_Mode::STANDARD ) {
+        // directly join the elements in append function
+        if (ADP_Mode::is_step(adp_specialization)) {
+          Statement::Fn_Call *fn = new Statement::Fn_Call(
+            Statement::Fn_Call::APPEND);
+          fn->add_arg(*ret_decl);
+          fn->add_arg(*(*i)->ret_decl);
 
-          if(ADP_Mode::is_step(adp_specialization)) { // directly join the elements in append function
+          add_specialised_arguments(fn, mode.keep_cooptimal());
 
-             Statement::Fn_Call *fn = new Statement::Fn_Call(Statement::Fn_Call::APPEND);
-             fn->add_arg(*ret_decl);
-             fn->add_arg(*(*i)->ret_decl);
+          cond->then.push_back(fn);
 
-             add_specialised_arguments(fn, mode.keep_cooptimal());
+        } else {  // push element to list and mark position
+          Statement::Fn_Call *fn = new Statement::Fn_Call(
+            Statement::Fn_Call::PUSH_BACK);
+          fn->add_arg(*ret_decl);
+          fn->add_arg(*(*i)->ret_decl);
 
-             cond->then.push_back(fn);
+          cond->then.push_back(fn);
 
-          } else { // push element to list and mark position
+          Statement::Fn_Call *mark = new Statement::Fn_Call(
+            Statement::Fn_Call::MARK_POSITION);
+          mark->add_arg(*ret_decl);
+          mark->add_arg(*marker);
 
-              Statement::Fn_Call *fn = new Statement::Fn_Call(Statement::Fn_Call::PUSH_BACK);
-              fn->add_arg(*ret_decl);
-              fn->add_arg(*(*i)->ret_decl);
-
-              cond->then.push_back(fn);
-
-              Statement::Fn_Call *mark = new Statement::Fn_Call(Statement::Fn_Call::MARK_POSITION);
-              mark->add_arg(*ret_decl);
-              mark->add_arg(*marker);
-
-              cond->then.push_back(mark);
-          }
+          cond->then.push_back(mark);
+        }
 
       } else {
-           Statement::Fn_Call *fn = new Statement::Fn_Call(Statement::Fn_Call::PUSH_BACK);
+           Statement::Fn_Call *fn = new Statement::Fn_Call(
+             Statement::Fn_Call::PUSH_BACK);
            fn->add_arg(*ret_decl);
            fn->add_arg(*(*i)->ret_decl);
 
@@ -907,23 +912,26 @@ void Symbol::NT::set_ret_decl_rhs(Code::Mode mode) {
       assert(ret_decl->type->simple()->is(::Type::LIST));
 
       if ((*i)->is(Alt::LINK)) {
-        Statement::Fn_Call *fn = new Statement::Fn_Call(Statement::Fn_Call::APPEND);
+        Statement::Fn_Call *fn = new Statement::Fn_Call(
+          Statement::Fn_Call::APPEND);
 
         fn->add_arg(*ret_decl);
         fn->add_arg(*(*i)->ret_decl);
 
-        if((mode != Code::Mode::BACKTRACK || !tabulated) && adp_specialization != ADP_Mode::STANDARD && ADP_Mode::is_step(adp_specialization)) { // direct join
+        if ((mode != Code::Mode::BACKTRACK || !tabulated) &&
+            adp_specialization != ADP_Mode::STANDARD &&
+            ADP_Mode::is_step(adp_specialization)) {  // direct join
             add_specialised_arguments(fn, mode.keep_cooptimal());
         }
 
         post_alt_stmts.push_back(fn);
-      } else
+      } else {
         post_alt_stmts.push_back(NULL);
+      }
 
       Expr::Vacc *e = new Expr::Vacc(*ret_decl);
       (*i)->ret_decl->rhs = e;
     }
-
   }
 }
 
@@ -978,8 +986,9 @@ void Symbol::NT::init_ret_stmts(Code::Mode mode) {
     erase->add_arg(*ret_decl);
     ret_stmts.push_back(erase);
     ret = new Expr::Vacc(*v);
-  } else
+  } else {
     ret = new Expr::Vacc(*ret_decl);
+  }
   Statement::Return *r = new Statement::Return(ret);
   if (tabulated && mode != Code::Mode::BACKTRACK) {
     Statement::Fn_Call *tabfn =
@@ -997,12 +1006,12 @@ void Symbol::NT::init_ret_stmts(Code::Mode mode) {
     r = new Statement::Return();
   if (mode == Code::Mode::BACKTRACK) {
     Expr::Fn_Call::Builtin b = mode.cooptimal() ?
-      Expr::Fn_Call::EXECUTE_BACKTRACK : Expr::Fn_Call::EXECUTE_BACKTRACK_ONE ;
+      Expr::Fn_Call::EXECUTE_BACKTRACK : Expr::Fn_Call::EXECUTE_BACKTRACK_ONE;
     if (mode.kscoring()) {
       b = mode.cooptimal() ?
         Expr::Fn_Call::EXECUTE_BACKTRACK_K
           :
-        Expr::Fn_Call::EXECUTE_BACKTRACK_K_ONE ;
+        Expr::Fn_Call::EXECUTE_BACKTRACK_K_ONE;
     }
     Expr::Fn_Call *execute_backtrack =
       new Expr::Fn_Call(b);
@@ -1013,12 +1022,12 @@ void Symbol::NT::init_ret_stmts(Code::Mode mode) {
           execute_backtrack);
     } else {
       // FIXME
-      //v = new Statement::Var_Decl(datatype, "bt_list",
+      // v = new Statement::Var_Decl(datatype, "bt_list",
       //    execute_backtrack);
 
       // not needed since Backtrace_Value<left-of-component-of-list>
       // could be used
-      //execute_backtrack->type_param = ;
+      // execute_backtrack->type_param = ;
       v = new Statement::Var_Decl(new ::Type::Backtrace_List(), "bt_list",
           execute_backtrack);
     }
@@ -1080,8 +1089,9 @@ void Symbol::NT::init_table_code(const Code::Mode &mode) {
   Statement::If *if_tab = 0;
   if (mode == Code::Mode::BACKTRACK) {
     if_tab = new Statement::If(new Expr::Not(is_tab));
-  } else
+  } else {
     if_tab = new Statement::If(is_tab);
+  }
   start.push_back(if_tab);
   if (mode == Code::Mode::FORWARD || mode == Code::Mode::SUBOPT) {
     Expr::Fn_Call *get_tab = new Expr::Fn_Call(Expr::Fn_Call::GET_TABULATED);
@@ -1157,7 +1167,6 @@ void Symbol::NT::marker_cond(Code::Mode &mode,
 
 
 struct SetADPDisabled : public Visitor {
-
         bool disabled;
         bool keep_coopts;
 
@@ -1168,13 +1177,12 @@ struct SetADPDisabled : public Visitor {
             b.set_disable_specialisation(disabled);
             b.set_keep_coopts(keep_coopts);
   }
-
 };
 
 void Symbol::NT::codegen(AST &ast) {
-
   // disable specialisation if needed in backtrace mode
-  SetADPDisabled v = SetADPDisabled(ast.code_mode() == Code::Mode::BACKTRACK && tabulated, ast.code_mode().keep_cooptimal());
+  SetADPDisabled v = SetADPDisabled(ast.code_mode() == Code::Mode::BACKTRACK &&
+    tabulated, ast.code_mode().keep_cooptimal());
 
   for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
       (*i)->traverse(v);
@@ -1195,9 +1203,9 @@ void Symbol::NT::codegen(AST &ast) {
   Fn_Def *f = 0;
   if (ast.cyk() && tabulated && ast.code_mode() != Code::Mode::BACKTRACK) {
     add_cyk_stub(ast);
-    f = new Fn_Def(new ::Type::RealVoid(), new std::string("nt_tabulate_" + *name));
-  }
-  else {
+    f = new Fn_Def(new ::Type::RealVoid(),
+                   new std::string("nt_tabulate_" + *name));
+  } else {
     f = new Fn_Def(dt, new std::string("nt_" + *name));
   }
   f->add_para(*this);
@@ -1214,41 +1222,52 @@ void Symbol::NT::codegen(AST &ast) {
     stmts.insert(stmts.begin(), table_guard.begin(), table_guard.end());
   }
 
-  if ((ast.code_mode() != Code::Mode::BACKTRACK || !tabulated) && adp_specialization != ADP_Mode::STANDARD
-          && !ADP_Mode::is_step(adp_specialization) && marker) { // block mode
+  if ((ast.code_mode() != Code::Mode::BACKTRACK || !tabulated) &&
+      adp_specialization != ADP_Mode::STANDARD &&
+      !ADP_Mode::is_step(adp_specialization) && marker) {  // block mode
       stmts.push_back(marker);
-      stmts.push_back(new Statement::Fn_Call(Statement::Fn_Call::EMPTY, *marker));
+      stmts.push_back(new Statement::Fn_Call(
+        Statement::Fn_Call::EMPTY, *marker));
   }
 
   stmts.push_back(ret_decl);
-  stmts.push_back(new Statement::Fn_Call(Statement::Fn_Call::EMPTY, *ret_decl));
+  stmts.push_back(new Statement::Fn_Call(
+    Statement::Fn_Call::EMPTY, *ret_decl));
   std::list<Statement::Base*>::iterator j = post_alt_stmts.begin();
-       // std::cout << "ALT START  ================ " << alts.size() << std::endl;
-  for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end() && j != post_alt_stmts.end(); ++i, ++j) {
+       // std::cout << "ALT START  ================ "
+       // << alts.size() << std::endl;
+  for (std::list<Alt::Base*>::iterator i = alts.begin();
+       i != alts.end() && j != post_alt_stmts.end(); ++i, ++j) {
     (*i)->codegen(ast);
     stmts.insert(stmts.end(), (*i)->statements.begin(), (*i)->statements.end());
     if (*j) {
       stmts.push_back(*j);
 
-      // this is a little shoed in, but set_ret_decl_rhs would need a full rewrite otherwise
-      if ((ast.code_mode() != Code::Mode::BACKTRACK || !tabulated) && (*i)->data_type()->simple()->is(::Type::LIST) && (*i)->is(Alt::LINK)
-              && adp_specialization != ADP_Mode::STANDARD && !ADP_Mode::is_step(adp_specialization)
-              && marker) {
+      // this is a little shoed in, but set_ret_decl_rhs would need a
+      // full rewrite otherwise
+      if ((ast.code_mode() != Code::Mode::BACKTRACK || !tabulated) &&
+          (*i)->data_type()->simple()->is(::Type::LIST) &&
+          (*i)->is(Alt::LINK) &&
+          adp_specialization != ADP_Mode::STANDARD &&
+          !ADP_Mode::is_step(adp_specialization)
+          && marker) {
+          Statement::Fn_Call *mark = new Statement::Fn_Call(
+            Statement::Fn_Call::MARK_POSITION);
+          mark->add_arg(*ret_decl);
+          mark->add_arg(*marker);
 
-              Statement::Fn_Call *mark = new Statement::Fn_Call(Statement::Fn_Call::MARK_POSITION);
-              mark->add_arg(*ret_decl);
-              mark->add_arg(*marker);
-
-              stmts.push_back(mark);
+          stmts.push_back(mark);
       }
     }
   }
- // std::cout << "ALT END    ================" << std::endl;
+  // std::cout << "ALT END    ================" << std::endl;
 
   // for blocked mode call the finalize method
-  if ((ast.code_mode() != Code::Mode::BACKTRACK || !tabulated) && adp_specialization != ADP_Mode::STANDARD && !ADP_Mode::is_step(adp_specialization) && marker) {
-
-      Statement::Fn_Call *join = new Statement::Fn_Call(Statement::Fn_Call::JOIN_MARKED);
+  if ((ast.code_mode() != Code::Mode::BACKTRACK || !tabulated) &&
+      adp_specialization != ADP_Mode::STANDARD &&
+      !ADP_Mode::is_step(adp_specialization) && marker) {
+      Statement::Fn_Call *join = new Statement::Fn_Call(
+        Statement::Fn_Call::JOIN_MARKED);
       join->add_arg(*ret_decl);
       join->add_arg(*marker);
 
@@ -1267,11 +1286,13 @@ void Symbol::NT::codegen(AST &ast) {
     f->set_choice_fn_type(e->choice_fn_type());
   }
   code_.push_back(f);
-  eliminate_list_ass(); // remove intermediary lists to answer list when right hand side is set
+  // remove intermediary lists to answer list when right hand side is set
+  eliminate_list_ass();
 }
 
 
-void Symbol::NT::replace(Statement::Var_Decl &decl, Statement::iterator begin, Statement::iterator end) {
+void Symbol::NT::replace(Statement::Var_Decl &decl,
+                         Statement::iterator begin, Statement::iterator end) {
   if (begin == end)
     return;
   ++begin;
@@ -1282,21 +1303,20 @@ void Symbol::NT::replace(Statement::Var_Decl &decl, Statement::iterator begin, S
 
 void Symbol::NT::eliminate_list_ass() {
   assert(!code_.empty());
-  for (Statement::iterator i = Statement::begin(code_.back()->stmts); i != Statement::end(); ) {
-
+  for (Statement::iterator i = Statement::begin(code_.back()->stmts);
+       i != Statement::end(); ) {
     Statement::Base *s = *i;
     if (s->is(Statement::VAR_DECL)) {
-
       Statement::Var_Decl *decl = s->var_decl();
 
-      if (decl->type->simple()->is(::Type::LIST) && decl->rhs && decl->rhs->is(Expr::VACC)) {
-
+      if (decl->type->simple()->is(::Type::LIST) &&
+          decl->rhs && decl->rhs->is(Expr::VACC)) {
         Statement::iterator a = i;
         ++a;
         if (a != Statement::end()) {
           if ((*a)->is(Statement::IF)) {
             Statement::If *t = dynamic_cast<Statement::If*>(*a);
-            if (t->cond->is(Expr::FN_CALL)) { // e.g. with filters
+            if (t->cond->is(Expr::FN_CALL)) {  // e.g. with filters
               ++i;
               continue;
             }
@@ -1304,7 +1324,7 @@ void Symbol::NT::eliminate_list_ass() {
         }
 
         replace(*decl, i, Statement::end());
-        //i.erase();
+        // i.erase();
         decl->disable();
         ++i;
         if ((*i)->is(Statement::FN_CALL)) {
@@ -1315,7 +1335,6 @@ void Symbol::NT::eliminate_list_ass() {
           }
         }
         continue;
-
       }
     }
     ++i;
@@ -1336,12 +1355,10 @@ void Symbol::NT::print_dot_edge(std::ostream &out) {
 void Symbol::Base::print_dot_node(std::ostream &out) {
   if (tabulated) {
     out << *name << " [style=dotted];\n";
-  }
-  else {
+  } else {
     if (is(Symbol::TERMINAL)) {
       out << *name << " [shape=diamond];\n";
-    }
-    else {
+    } else {
       out << *name << " [shape=box];\n";
     }
   }
@@ -1379,7 +1396,6 @@ void Symbol::NT::optimize_choice(::Type::List::Push_Type push,
   zero_decl = v;
   zero_decl->type = t->type;
   zero_decl->name = t->name;
-
 }
 
 
@@ -1501,7 +1517,8 @@ void Symbol::NT::multi_propagate_max_filter(
   active = false;
 }
 
-void Symbol::NT::multi_propagate_max_filter(std::vector<Yield::Multi> &nt_sizes) {
+void Symbol::NT::multi_propagate_max_filter(
+  std::vector<Yield::Multi> &nt_sizes) {
   multi_propagate_max_filter(nt_sizes, m_ys);
 }
 
@@ -1511,7 +1528,6 @@ void Symbol::NT::update_max_ys(const Yield::Multi &m) {
   m_ys.min_high(m);
   if (Log::instance()->is_debug())
     std::cerr << " new " << m_ys << '\n';
-
 }
 
 bool Symbol::NT::operator<(const NT &b) const {
@@ -1539,7 +1555,8 @@ bool Symbol::NT::operator<(const NT &b) const {
 }
 
 void Symbol::NT::multi_init_calls() {
-  for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
+  for (std::list<Alt::Base*>::iterator i = alts.begin();
+       i != alts.end(); ++i) {
     Runtime::Poly x(1);
     (*i)->multi_init_calls(x, tracks_);
   }
@@ -1596,7 +1613,7 @@ std::ostream & operator<<(std::ostream &s, const Symbol::Base &p) {
 }
 
 
-void Symbol::Terminal::setPredefinedTerminalParser (bool isPredefined) {
+void Symbol::Terminal::setPredefinedTerminalParser(bool isPredefined) {
   this->predefinedTerminalParser = isPredefined;
 }
 

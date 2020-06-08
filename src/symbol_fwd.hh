@@ -31,10 +31,10 @@
  * in the AST for the components the grammar is build from.
  */
 namespace Symbol {
-  class Base;
-  class NT;
-  class Terminal;
+class Base;
+class NT;
+class Terminal;
 }
 
 
-#endif
+#endif  // SRC_SYMBOL_FWD_HH_

@@ -24,24 +24,21 @@
 #ifndef SRC_SIGNATURE_BASE_HH_
 #define SRC_SIGNATURE_BASE_HH_
 
-#include "loc.hh"
-
 #include <string>
+#include "loc.hh"
 
 class Fn_Decl;
 
 class Signature_Base {
-  public:
-    std::string *name;
-    Loc location;
-    Signature_Base() : name(NULL) {}
-    Signature_Base(std::string *n, const Loc &l)
-      : name(n), location(l) {}
-    Signature_Base(std::string *n)
-      : name(n) {}
-    virtual ~Signature_Base();
+ public:
+  std::string *name;
+  Loc location;
+  Signature_Base() : name(NULL) {}
+  Signature_Base(std::string *n, const Loc &l) : name(n), location(l) {}
+  Signature_Base(std::string *n) : name(n) {}
+  virtual ~Signature_Base();
 
-    virtual Fn_Decl* decl(const std::string &s) = 0;
+  virtual Fn_Decl* decl(const std::string &s) = 0;
 };
 
-#endif
+#endif  // SRC_SIGNATURE_BASE_HH_
