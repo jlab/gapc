@@ -2269,7 +2269,7 @@ static const char deps[] =
 "-include $(DEPS)\n"
 "\n"
 "%.o : %.cc\n"
-"  $(CXX) $(CPPFLAGS) $(CXXFLAGS) $< -c -o $@ \n"
+"\t$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< -c -o $@ \n"
 //"         && $(SED) -e 's/[^ ]\\+boost[^ \\n]\\+//' $*.d > _t && mv _t $*.d\n"
 ""
 "endif\n"
@@ -2330,7 +2330,7 @@ void Printer::Cpp::makefile(const Options &opts) {
 
   stream <<
     "string.o: $(RTLIB)/string.cc" << endl <<
-    "  $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@" << endl;
+    "\t$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@" << endl;
 }
 
 
