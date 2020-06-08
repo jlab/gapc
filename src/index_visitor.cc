@@ -21,6 +21,8 @@
 
 }}} */
 
+#include <iostream>
+#include <vector>
 
 #include "index_visitor.hh"
 
@@ -29,15 +31,12 @@
 #include "fn_arg.hh"
 #include "expr.hh"
 
-#include <iostream>
 
 
-void Index_Visitor::visit(Symbol::Terminal &s)
-{
+void Index_Visitor::visit(Symbol::Terminal &s) {
 }
 
-void Index_Visitor::visit(Symbol::NT &n)
-{
+void Index_Visitor::visit(Symbol::NT &n) {
   std::cerr << std::endl << std::endl;
 
   std::cerr << *n.name << " [ < ";
@@ -61,47 +60,38 @@ void Index_Visitor::visit(Symbol::NT &n)
   std::cerr << " > ] = ";
 }
 
-void Index_Visitor::visit_end(Symbol::NT &n)
-{
+void Index_Visitor::visit_end(Symbol::NT &n) {
   std::cerr << std::endl;
 }
 
-void Index_Visitor::visit_itr(Symbol::NT &n)
-{
+void Index_Visitor::visit_itr(Symbol::NT &n) {
   std::cerr << " | \n\t";
 }
 
-void Index_Visitor::visit_begin(Alt::Simple &a)
-{
+void Index_Visitor::visit_begin(Alt::Simple &a) {
   a.put_indices(std::cerr);
 }
 
-void Index_Visitor::visit(Alt::Link &a)
-{
-  //std::cerr << "<" << a.list_size() << " " << *a.nt->name << ">";
+void Index_Visitor::visit(Alt::Link &a) {
+  // std::cerr << "<" << a.list_size() << " " << *a.nt->name << ">";
 }
 
-void Index_Visitor::visit_begin(Alt::Block &a)
-{
+void Index_Visitor::visit_begin(Alt::Block &a) {
   std::cerr << " { ";
 }
 
-void Index_Visitor::visit_itr(Alt::Block &a)
-{
+void Index_Visitor::visit_itr(Alt::Block &a) {
   std::cerr << " | \n\t";
 }
 
-void Index_Visitor::visit_end(Alt::Block &a)
-{
+void Index_Visitor::visit_end(Alt::Block &a) {
   std::cerr << " }";
 }
 
-void Index_Visitor::visit(Fn_Arg::Const &f)
-{
-  //std::cerr << "|" << f.list_size() << "|";
+void Index_Visitor::visit(Fn_Arg::Const &f) {
+  // std::cerr << "|" << f.list_size() << "|";
 }
 
-void Index_Visitor::visit(Fn_Arg::Alt &f)
-{
-  //std::cerr << "|" << f.list_size() << "|";
+void Index_Visitor::visit(Fn_Arg::Alt &f) {
+  // std::cerr << "|" << f.list_size() << "|";
 }

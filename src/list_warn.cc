@@ -21,7 +21,7 @@
 
 }}} */
 
-
+#include <string>
 #include "list_warn.hh"
 
 #include "symbol.hh"
@@ -35,8 +35,7 @@
 
 #include "fn_def.hh"
 
-void List_Warn::visit(Symbol::NT &n)
-{
+void List_Warn::visit(Symbol::NT &n) {
   if (skip)
     return;
   if (instance) {
@@ -58,8 +57,7 @@ void List_Warn::visit(Symbol::NT &n)
         + " has an answer list >= n but no choice function is applied.");
 }
 
-void List_Warn::visit_begin(Alt::Block &a)
-{
+void List_Warn::visit_begin(Alt::Block &a) {
   if (skip)
     return;
   if (a.alts.size() > 1 && a.list_size() == Yield::UP) {

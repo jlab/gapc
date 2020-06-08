@@ -27,88 +27,75 @@
 #include <algorithm>
 
 
-Log::Log () : seen_errs(false), debug_mode(false), error_count(0), logLevel (NORMAL), out(&std::cerr)
-{
+Log::Log() : seen_errs(false), debug_mode(false), error_count(0),
+              logLevel(NORMAL), out(&std::cerr) {
   self = this;
 }
 
 
-Log::~Log()
-{
+Log::~Log() {
 }
 
 
-void Log::error(const std::string &m)
-{
-  writeLogMessage (NULL, m, ERROR);
+void Log::error(const std::string &m) {
+  writeLogMessage(NULL, m, ERROR);
 }
 
 
-void Log::error(const Loc& l, const std::string& m)
-{
-  writeLogMessage (&l, m, ERROR);
+void Log::error(const Loc& l, const std::string& m) {
+  writeLogMessage(&l, m, ERROR);
 }
 
 
-void Log::error_continue(const Loc& l, const std::string& m)
-{
+void Log::error_continue(const Loc& l, const std::string& m) {
   // HACK: DEBUG as a log level results in printing no
   // header which is the same as msg_continue(...)
   *out << std::endl;
-  writeLogMessageContinued (&l, m);
+  writeLogMessageContinued(&l, m);
 }
 
 
-void Log::warning(const Loc& l, const std::string& m)
-{
-  writeLogMessage (&l, m, WARN);
+void Log::warning(const Loc& l, const std::string& m) {
+  writeLogMessage(&l, m, WARN);
 }
 
 
-void Log::warning(const std::string& m)
-{
-  writeLogMessage (NULL, m, WARN);
+void Log::warning(const std::string& m) {
+  writeLogMessage(NULL, m, WARN);
 }
 
 
-void Log::normalMessage (const Loc& l, const std::string& m)
-{
-  writeLogMessage (&l, m, NORMAL);
+void Log::normalMessage(const Loc& l, const std::string& m) {
+  writeLogMessage(&l, m, NORMAL);
 }
 
 
-void Log::normalMessage (const std::string& m)
-{
-  writeLogMessage (NULL, m, NORMAL);
+void Log::normalMessage(const std::string& m) {
+  writeLogMessage(NULL, m, NORMAL);
 }
 
 
-void Log::verboseMessage (const Loc& l, const std::string& m)
-{
-  writeLogMessage (&l, m, VERBOSE);
+void Log::verboseMessage(const Loc& l, const std::string& m) {
+  writeLogMessage(&l, m, VERBOSE);
 }
 
 
-void Log::verboseMessage (const std::string& m)
-{
-  writeLogMessage (NULL, m, VERBOSE);
+void Log::verboseMessage(const std::string& m) {
+  writeLogMessage(NULL, m, VERBOSE);
 }
 
 
-void Log::debugMessage (const Loc& l, const std::string& m)
-{
-  writeLogMessage (&l, m, DEBUG);
+void Log::debugMessage(const Loc& l, const std::string& m) {
+  writeLogMessage(&l, m, DEBUG);
 }
 
 
-void Log::debugMessage (const std::string& m)
-{
-  writeLogMessage (NULL, m, DEBUG);
+void Log::debugMessage(const std::string& m) {
+  writeLogMessage(NULL, m, DEBUG);
 }
 
 
-void Log::inc_error()
-{
+void Log::inc_error() {
   seen_errs = true;
   error_count++;
   if (error_count == 20) {
@@ -117,8 +104,8 @@ void Log::inc_error()
 }
 
 
-void Log::writeLogMessage (const Loc* l, const std::string &m, LogLevel messageLogLevel)
-{
+void Log::writeLogMessage(
+  const Loc* l, const std::string &m, LogLevel messageLogLevel) {
   // Filter the message according to its log level. The log level
   // of the message must be greater or equal than the log level
   // of the logger, otherwise we just return.
@@ -150,18 +137,17 @@ void Log::writeLogMessage (const Loc* l, const std::string &m, LogLevel messageL
   }
   // the lead in of the logmessage is written, now just write out
   // the plain message.
-  writeLogMessageContinued (l, m);
+  writeLogMessageContinued(l, m);
 }
 
 
-void Log::writeLogMessageContinued (const Loc* l, const std::string &m) {
+void Log::writeLogMessageContinued(const Loc* l, const std::string &m) {
   // Depending on the presence of a location for the message
   // the message is simply printed out, or a source code location
   // mark is created.
   if (l == NULL) {
     *out << m << std::endl;
-  }
-  else {
+  } else {
     if (!l->begin.filename) {
       *out << "<builtin>: " << m << std::endl;
       return;
@@ -171,8 +157,8 @@ void Log::writeLogMessageContinued (const Loc* l, const std::string &m) {
 }
 
 
-void Log::build_message (std::ostream &out, const Loc &l, const std::string &m)
-{
+void Log::build_message(
+  std::ostream &out, const Loc &l, const std::string &m) {
   if (!l.begin.filename) {
     out << m << std::endl;
     return;
@@ -180,8 +166,7 @@ void Log::build_message (std::ostream &out, const Loc &l, const std::string &m)
   std::string line;
   if (*l.begin.filename == "_PRODUCT_") {
     line = product_;
-  }
-  else {
+  } else {
     line = l.line();
   }
 
@@ -193,20 +178,18 @@ void Log::build_message (std::ostream &out, const Loc &l, const std::string &m)
 }
 
 
-void Log::build_mark(const Loc& l, std::string &s)
-{
+void Log::build_mark(const Loc& l, std::string &s) {
   // vanilla bison 2.3 counts columns from 0
   // with sed hack in makefiles/lexyaccxx.mf from 1
   size_t off = l.begin.column;
   if (off) {
-    off -= 1; // bison 2.4 counts columns from 1
+    off -= 1;  // bison 2.4 counts columns from 1
   }
   std::string t(off, ' ');
   size_t length = 0;
   if (l.end.line == l.begin.line) {
     length = l.end.column - l.begin.column;
-  }
-  else {
+  } else {
     length = 3;
   }
   length = std::min(length, size_t(160));
@@ -222,12 +205,11 @@ void Log::build_mark(const Loc& l, std::string &s)
 }
 
 
-void Log::set_debug (bool b) {
+void Log::set_debug(bool b) {
   debug_mode = b;
   if (b == true) {
     this->logLevel = DEBUG;
-  }
-  else {
+  } else {
     this->logLevel = NORMAL;
   }
 }
@@ -240,8 +222,7 @@ Log *Log::self;
 #include <sstream>
 
 
-LogError::LogError(const Loc &l, std::string m)
-{
+LogError::LogError(const Loc &l, std::string m) {
   std::ostringstream o;
   o << "Error: \n";
   Log t;

@@ -21,71 +21,60 @@
 
 }}} */
 
-#ifndef INPUT_HH
-#define INPUT_HH
-
-#include "loc.hh"
+#ifndef SRC_INPUT_HH_
+#define SRC_INPUT_HH_
 
 #include <string>
 #include <vector>
 #include <list>
 #include <cassert>
 
+#include "loc.hh"
+
 
 class Input {
+ public:
+  // Enum of all modes of input the compiler provides.
+  // Note that the last element of the enumeration
+  // MODE_END is not a mode, but an end marker which
+  // has the same value as there are useful modes,
+  // provided that this element is the last element
+  // in the enumeration! This property is used in
+  // the implementation. Please keep in mind that
+  // extending the list of modes must leave the MODE_END
+  // element at the end of the enumeration.
+  enum Mode { RAW, RNA, UPPER, MODE_END };
 
-  public:
+ private:
+  //
+  std::vector<Mode> modes_;
+  // Array of strings that represent all allowed
+  // modes.
+  static const char map[][6];
+  Mode str_to_mode(const std::string &s, const Loc &l);
 
-    // Enum of all modes of input the compiler provides.
-    // Note that the last element of the enumeration
-    // MODE_END is not a mode, but an end marker which
-    // has the same value as there are useful modes,
-    // provided that this element is the last element
-    // in the enumeration! This property is used in
-    // the implementation. Please keep in mind that
-    // extending the list of modes must leave the MODE_END
-    // element at the end of the enumeration.
-    enum Mode { RAW, RNA, UPPER, MODE_END };
+ public:
+  Input() {}
 
+  void set(const std::string &s, const Loc &l);
+  void set(const std::list<std::string*> &s, const Loc &l);
 
-  private:
+  bool is(Mode m) const {
+    assert(modes_.size() == 1);
+    return modes_.front() == m;
+  }
 
-    //
-    std::vector<Mode> modes_;
-    // Array of strings that represent all allowed
-    // modes.
-    static const char map[][6];
-    Mode str_to_mode (const std::string &s, const Loc &l);
+  Mode mode() const {
+    assert(modes_.size() == 1);
+    return modes_.front();
+  }
 
+  const std::vector<Mode> &modes() const { return modes_; }
+  size_t tracks() const { return modes_.size() ? modes_.size() : 1; }
 
-  public:
+  void set_tracks(size_t t);
 
-    Input() {}
-
-    void set (const std::string &s, const Loc &l);
-    void set (const std::list<std::string*> &s, const Loc &l);
-
-    bool is (Mode m) const
-    {
-      assert (modes_.size() == 1);
-      return modes_.front() == m;
-    }
-
-    Mode mode() const
-    {
-      assert (modes_.size() == 1);
-      return modes_.front();
-    }
-
-    const std::vector<Mode> &modes() const { return modes_; }
-    size_t tracks() const { return modes_.size() ? modes_.size() : 1; }
-
-    void set_tracks (size_t t);
-
-    static std::string* toString (Mode m);
-
-
+  static std::string* toString(Mode m);
 };
 
-
-#endif
+#endif  // SRC_INPUT_HH_

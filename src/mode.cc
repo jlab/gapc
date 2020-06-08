@@ -24,12 +24,12 @@
 #include "mode.hh"
 
 const Mode::Number Mode::map_type_to_number[] = {
-  ZERO, // NONE
-  ONE, // SYNOPTIC
-  MANY, // PRETTY
-  MANY, // CLASSIFY
-  ONE, // SCORING
-  MANY, // KSCORING
+  ZERO,  // NONE
+  ONE,  // SYNOPTIC
+  MANY,  // PRETTY
+  MANY,  // CLASSIFY
+  ONE,  // SCORING
+  MANY,  // KSCORING
 };
 
 const Mode::pair Mode::map_string_to_mode[] = {
@@ -45,22 +45,19 @@ const Mode::pair Mode::map_string_to_mode[] = {
 
 hashtable<std::string, Mode::Type> Mode::table;
 
-void Mode::set(Mode::Type t)
-{
+void Mode::set(Mode::Type t) {
   number = map_type_to_number[t] > ONE ? Yield::UP :
     Yield::Poly((uint32_t) map_type_to_number[t]);
   type = t;
 }
 
-void Mode::init_table()
-{
+void Mode::init_table() {
   for (unsigned int i = 0; map_string_to_mode[i].a != NULL; i++) {
     table[map_string_to_mode[i].a] = map_string_to_mode[i].b;
   }
 }
 
-bool Mode::set(const std::string &name)
-{
+bool Mode::set(const std::string &name) {
   assert(table.size());
   hashtable<std::string, Type>::iterator i = table.find(name);
   if (i == table.end())
@@ -69,8 +66,7 @@ bool Mode::set(const std::string &name)
   return true;
 }
 
-std::ostream &Mode::put(std::ostream &s) const
-{
+std::ostream &Mode::put(std::ostream &s) const {
   assert(type == map_string_to_mode[type].b);
   s << map_string_to_mode[type].a << '(' << number << ')';
   return s;

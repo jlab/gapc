@@ -22,28 +22,26 @@
 }}} */
 
 
-#ifndef INIT_DECLS_HH
-#define INIT_DECLS_HH
+#ifndef SRC_INIT_DECLS_HH_
+#define SRC_INIT_DECLS_HH_
 
 #include "visitor.hh"
 
 #include <string>
 
 class Init_Decls : public Visitor {
-  private:
-    unsigned int ret;
-    unsigned int arg;
-    std::string prefix;
-  public:
-    Init_Decls() : ret(0), arg(0) {}
-    Init_Decls(const std::string &s)
-      : ret(0), arg(0), prefix(s) {}
+ private:
+  unsigned int ret;
+  unsigned int arg;
+  std::string prefix;
+ public:
+  Init_Decls() : ret(0), arg(0) {}
+  Init_Decls(const std::string &s) : ret(0), arg(0), prefix(s) {}
 
 
-    void visit(Symbol::NT &n);
-    void visit(Alt::Base &a);
-    void visit(Fn_Arg::Base &f);
-
+  void visit(Symbol::NT &n);
+  void visit(Alt::Base &a);
+  void visit(Fn_Arg::Base &f);
 };
 
-#endif
+#endif  // INIT_DECLS_HH

@@ -29,17 +29,14 @@
 #include "symbol.hh"
 #include "grammar.hh"
 
-Inline_Nts::Inline_Nts(Grammar *g) : grammar(g)
-{
+Inline_Nts::Inline_Nts(Grammar *g) : grammar(g) {
 }
 
-void Inline_Nts::visit_end(Symbol::NT &n)
-{
+void Inline_Nts::visit_end(Symbol::NT &n) {
   n.inline_nts(grammar);
 }
 
-void Inline_Nts::visit(Fn_Arg::Alt &f)
-{
+void Inline_Nts::visit(Fn_Arg::Alt &f) {
   if (!f.is(Alt::LINK))
     return;
   Alt::Link *l = dynamic_cast<Alt::Link*>(f.alt);
@@ -54,4 +51,3 @@ void Inline_Nts::visit(Fn_Arg::Alt &f)
     delete nt;
   }
 }
-
