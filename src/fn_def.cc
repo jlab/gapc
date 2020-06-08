@@ -1419,8 +1419,9 @@ void Fn_Def::codegen_pareto_nosort(
   Statement::Increase *increase = new Statement::Increase(answer->name);
   if_case1->els.push_back(increase);
 
-  Statement::If *if_add = new Statement::If(new Expr::Eq
+  Statement::If *if_add = new Statement::If(new Expr::Eq(
     new Expr::Vacc(*add) , new Expr::Const(new Const::Bool(true))));
+    
   loop_body->push_back(if_add);
 
   Statement::Fn_Call *pb = new Statement::Fn_Call(
