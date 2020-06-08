@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef __NAMING_DOMAIN_HH__
-#define __NAMING_DOMAIN_HH__
+#ifndef SRC_UTIL_NAMING_DOMAIN_HH_
+#define SRC_UTIL_NAMING_DOMAIN_HH_
 
 
 #include <map>
@@ -72,4 +72,4 @@ namespace Util {
 }
 
 
-#endif  // ifndef __NAMING_DOMAIN_HH__
+#endif  // ifndef SRC_UTIL_NAMING_DOMAIN_HH_

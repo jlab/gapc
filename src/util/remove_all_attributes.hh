@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef __REMOVE_ALL_ATTRIBUTES_HH__
-#define __REMOVE_ALL_ATTRIBUTES_HH__
+#ifndef SRC_UTIL_REMOVE_ALL_ATTRIBUTES_HH_
+#define SRC_UTIL_REMOVE_ALL_ATTRIBUTES_HH_
 
 
 #include "../cfg/cfg.hh"
@@ -53,4 +53,4 @@ namespace Util {
 }
 
 
-#endif  // ifndef __REMOVE_ALL_ATTRIBUTES_HH__
+#endif  // ifndef SRC_UTIL_REMOVE_ALL_ATTRIBUTES_HH_

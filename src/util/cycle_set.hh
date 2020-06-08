@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef __CYCLE_SET_HH__
-#define __CYCLE_SET_HH__
+#ifndef SRC_UTIL_CYCLE_SET_HH_
+#define SRC_UTIL_CYCLE_SET_HH_
 
 
 #include <list>
@@ -112,4 +112,4 @@ namespace Util {
 }
 
 
-#endif  // ifndef __CYCLE_SET_HH__
+#endif  // ifndef SRC_UTIL_CYCLE_SET_HH_

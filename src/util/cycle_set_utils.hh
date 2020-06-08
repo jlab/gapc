@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef __CYCLE_SET_UTILS_HH__
-#define __CYCLE_SET_UTILS_HH__
+#ifndef SRC_UTIL_CYCLE_SET_UTILS_HH_
+#define SRC_UTIL_CYCLE_SET_UTILS_HH_
 
 
 #include "attribute.hh"
@@ -129,4 +129,4 @@ namespace Util {
 }
 
 
-#endif  // ifndef __CYCLE_SET_UTILS_HH__
+#endif  // ifndef SRC_UTIL_CYCLE_SET_UTILS_HH_

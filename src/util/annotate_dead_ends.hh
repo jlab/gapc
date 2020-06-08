@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef __ANNOTATE_DEAD_ENDS_HH__
-#define __ANNOTATE_DEAD_ENDS_HH__
+#ifndef SRC_UTIL_ANNOTATE_DEAD_ENDS_HH_
+#define SRC_UTIL_ANNOTATE_DEAD_ENDS_HH_
 
 
 #include <set>
@@ -88,4 +88,4 @@ namespace Util {
 }
 
 
-#endif  // ifndef __ANNOTATE_DEAD_ENDS_HH__
+#endif  // ifndef SRC_UTIL_ANNOTATE_DEAD_ENDS_HH_

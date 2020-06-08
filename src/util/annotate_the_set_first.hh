@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef __THE_SET_FIRST_HH__
-#define __THE_SET_FIRST_HH__
+#ifndef SRC_UTIL_ANNOTATE_THE_SET_FIRST_HH_
+#define SRC_UTIL_ANNOTATE_THE_SET_FIRST_HH_
 
 
 
@@ -182,4 +182,4 @@ namespace Util {
 }
 
 
-#endif  // ifndef __THE_SET_FIRST_HH__
+#endif  // ifndef SRC_UTIL_ANNOTATE_THE_SET_FIRST_HH_

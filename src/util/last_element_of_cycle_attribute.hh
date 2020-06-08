@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef __LAST_ELEMENT_OF_CYCLE_ATTRIBUTE_HH__
-#define __LAST_ELEMENT_OF_CYCLE_ATTRIBUTE_HH__
+#ifndef SRC_UTIL_LAST_ELEMENT_OF_CYCLE_ATTRIBUTE_HH_
+#define SRC_UTIL_LAST_ELEMENT_OF_CYCLE_ATTRIBUTE_HH_
 
 
 #include <set>
@@ -69,4 +69,4 @@ namespace Util {
 }
 
 
-#endif  // ifndef __LAST_ELEMENT_OF_CYCLE_ATTRIBUTE_HH__
+#endif  // ifndef SRC_UTIL_LAST_ELEMENT_OF_CYCLE_ATTRIBUTE_HH_

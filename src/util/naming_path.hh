@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef __NAMING_PATH_HH__
-#define __NAMING_PATH_HH__
+#ifndef SRC_UTIL_NAMING_PATH_HH_
+#define SRC_UTIL_NAMING_PATH_HH_
 
 
 #include <string>
@@ -73,4 +73,4 @@ namespace Util {
 }
 
 
-#endif  // ifndef __NAMING_PATH_HH__
+#endif  // ifndef SRC_UTIL_NAMING_PATH_HH_

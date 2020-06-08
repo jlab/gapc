@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef __CYCLE_MARK_ATTRIBUTE_HH__
-#define __CYCLE_MARK_ATTRIBUTE_HH__
+#ifndef SRC_UTIL_CYCLE_MARK_ATTRIBUTE_HH_
+#define SRC_UTIL_CYCLE_MARK_ATTRIBUTE_HH_
 
 
 #include "attribute.hh"
@@ -67,4 +67,4 @@ namespace Util {
 }
 
 
-#endif  // ifndef __CYCLE_MARK_ATTRIBUTE_HH__
+#endif  // ifndef SRC_UTIL_CYCLE_MARK_ATTRIBUTE_HH_

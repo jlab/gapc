@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef __ATTRIBUTABLE_HH__
-#define __ATTRIBUTABLE_HH__
+#ifndef SRC_UTIL_ATTRIBUTABLE_HH_
+#define SRC_UTIL_ATTRIBUTABLE_HH_
 
 
 #include <map>
@@ -83,4 +83,4 @@ namespace Util {
 }
 
 
-#endif  // ifndef __ATTRIBUTABLE_HH__
+#endif  // ifndef SRC_UTIL_ATTRIBUTABLE_HH_

@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef __ATTRIBUTE_HH__
-#define __ATTRIBUTE_HH__
+#ifndef SRC_UTIL_ATTRIBUTE_HH_
+#define SRC_UTIL_ATTRIBUTE_HH_
 
 
 #include <string>
@@ -64,4 +64,4 @@ namespace Util {
 }
 
 
-#endif  // ifndef __ATTRIBUTE_HH__
+#endif  // ifndef SRC_UTIL_ATTRIBUTE_HH_
