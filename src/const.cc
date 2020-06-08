@@ -44,7 +44,7 @@ Const::Char::Char(const std::string &n, const Loc &l)
       Int i(suff, l);
       c = char(i.i);
     }
-  } else {}
+  } else {
     c = n[0];
   }
 
