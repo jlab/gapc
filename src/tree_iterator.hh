@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef TREE_ITERATOR_HH
-#define TREE_ITERATOR_HH
+#ifndef SRC_TREE_ITERATOR_HH_
+#define SRC_TREE_ITERATOR_HH_
 
 #include <stack>
 #include <cassert>
@@ -31,32 +31,28 @@
 
 namespace Tree {
 
-  template <typename S, class T> inline S *left(T &t)
-  {
+  template <typename S, class T> inline S *left(T &t) {
     return t.left();
   }
 
-  template <typename S, class T> inline S *right(T &t)
-  {
+  template <typename S, class T> inline S *right(T &t) {
     return t.right();
   }
 
 template <class Base, class Two>
 class Iterator {
-  private:
+ private:
     std::stack<Base*> stack;
-  public:
-    Iterator(Base *expr)
-    {
+
+ public:
+    Iterator(Base *expr) {
       stack.push(expr);
     }
 
-    Iterator()
-    {
+    Iterator() {
     }
 
-    Iterator<Base, Two> &operator++()
-    {
+    Iterator<Base, Two> &operator++() {
       assert(!stack.empty());
       Base *expr = stack.top();
       stack.pop();
@@ -67,23 +63,20 @@ class Iterator {
       return *this;
     }
 
-    Base *operator*()
-    {
+    Base *operator*() {
       return stack.top();
     }
 
-    bool operator==(const Iterator<Base, Two> &itr) const
-    {
+    bool operator==(const Iterator<Base, Two> &itr) const {
       assert(itr.stack.empty());
       return stack.empty();
     }
 
-    bool operator!=(const Iterator<Base, Two> &itr) const
-    {
+    bool operator!=(const Iterator<Base, Two> &itr) const {
       return !(*this == itr);
     }
 };
 
-}
+}  // namespace Tree
 
-#endif
+#endif  // SRC_TREE_ITERATOR_HH_
