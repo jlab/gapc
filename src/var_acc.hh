@@ -47,7 +47,7 @@ class Base {
 
  protected:
     Base(Type t, const Loc&l) : type(t), location(l) {}
-    explicit Base(Type t) : type(t) {}
+    Base(Type t) : type(t) {}
     Bool itr_access;
 
  public:
@@ -73,8 +73,8 @@ class Plain : public Base {
 
     Plain(std::string *n, const Loc &l) : Base(PLAIN, l), name(n),
           vdecl(NULL) {}
-    explicit Plain(std::string *n) : Base(PLAIN), name(n), vdecl(NULL) {}
-    explicit Plain(Statement::Var_Decl &a);
+    Plain(std::string *n) : Base(PLAIN), name(n), vdecl(NULL) {}
+    Plain(Statement::Var_Decl &a);
 
     void put(std::ostream &s) const;
 };

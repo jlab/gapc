@@ -49,8 +49,8 @@ class Poly {
 
  public:
     Poly() : i(0), n(false) {}
-    explicit Poly(uint32_t a) : i(a), n(false) {}
-    explicit Poly(up a) : i(0), n(true) {}
+    Poly(uint32_t a) : i(a), n(false) {}
+    Poly(up a) : i(0), n(true) {}
 
     void set(uint32_t a) { i = a; n = false; }
     void set(up a) { n = true; }
@@ -192,7 +192,7 @@ class Size {
     }
 
 
-    explicit Size(up foo) : fresh(true) {
+    Size(up foo) : fresh(true) {
       min.set(0); max.set(UP);
     }
 
@@ -338,7 +338,7 @@ class Multi {
     size_t tracks() const { return array.size(); }
 
 
-    explicit Multi(size_t l) {
+    Multi(size_t l) {
       set_tracks(l);
     }
 

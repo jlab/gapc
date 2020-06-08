@@ -68,7 +68,7 @@ class Usage : public Base {
     Base *base;
 
     Usage(Base *b, const Loc &l) : Base(USAGE, l), base(b) {}
-    explicit Usage(Base *b) : Base(USAGE), base(b) {}
+    Usage(Base *b) : Base(USAGE), base(b) {}
 
     bool is_eq(const Base & base) const;
     Base * simple();
@@ -96,7 +96,7 @@ class List : public Base {
 
     List(Base *b, const Loc &l) : Base(LIST, l), push_type_(NORMAL),
          hash_decl_(0), of(b) {}
-    explicit List(Base *b) : Base(LIST), push_type_(NORMAL), hash_decl_(0),
+    List(Base *b) : Base(LIST), push_type_(NORMAL), hash_decl_(0),
                   of(b) {}
 
     Base *of;
@@ -129,7 +129,7 @@ class Name {
     Loc location;
 
     Name(Base *lh, const Loc &l) : lhs(lh), location(l) {}
-    explicit Name(Base *lh) : lhs(lh) {}
+    Name(Base *lh) : lhs(lh) {}
 
     std::ostream & put(std::ostream &s) const;
 
@@ -178,7 +178,7 @@ class TupleDef : public Tuple {
     MAKE_CLONE(TupleDef);
     std::string name;
 
-    explicit TupleDef(const Loc &l) : Tuple(l) { type = TUPLEDEF; }
+    TupleDef(const Loc &l) : Tuple(l) { type = TUPLEDEF; }
 
     bool is_eq(const Base & base) const;
     void print(Printer::Base &s) const;
@@ -405,7 +405,7 @@ class Seq : public Base {
     Seq() : Base(SEQ), element_type(NULL) {
       element_type = new Char();
     }
-    explicit Seq(Base *b) : Base(SEQ), element_type(b) {}
+    Seq(Base *b) : Base(SEQ), element_type(b) {}
     std::ostream & put(std::ostream &s) const;
     void print(Printer::Base &s) const;
 }
@@ -432,7 +432,7 @@ class Subseq : public Base {
  public:
     MAKE_CLONE(Subseq);
     Subseq() : Base(SUBSEQ), seq(NULL) {}
-    explicit Subseq(Seq *s) : Base(SUBSEQ), seq(s) {}
+    Subseq(Seq *s) : Base(SUBSEQ), seq(s) {}
     std::ostream & put(std::ostream &s) const;
     void print(Printer::Base &s) const;
 }
@@ -441,7 +441,7 @@ class Subseq : public Base {
 class Generic : public Base {
  public:
     std::string name;
-    explicit Generic(Type t) : Base(t) {}
+    Generic(Type t) : Base(t) {}
     Generic(Type t, const Loc &l) : Base(t, l) {}
     std::ostream & put(std::ostream &s) const;
 }
@@ -451,7 +451,7 @@ class Shape : public Generic {
  public:
     MAKE_CLONE(Shape);
     Shape() : Generic(SHAPE) { name = "shape"; }
-    explicit Shape(const Loc &l) : Generic(SHAPE, l) { name = "shape"; }
+    Shape(const Loc &l) : Generic(SHAPE, l) { name = "shape"; }
     void print(Printer::Base &s) const;
 }
 
@@ -461,7 +461,7 @@ class Referencable : public Base {
  public:
     MAKE_CLONE(Referencable);
     Base *base;
-    explicit Referencable(Base *b) : Base(REFERENCABLE), base(b) {}
+    Referencable(Base *b) : Base(REFERENCABLE), base(b) {}
     std::ostream & put(std::ostream &s) const;
     void print(Printer::Base &s) const;
     Base *deref();
@@ -472,7 +472,7 @@ class Rational : public Generic {
  public:
     MAKE_CLONE(Rational);
     Rational() : Generic(RATIONAL) { name = "rational"; }
-    explicit Rational(const Loc &l) : Generic(RATIONAL, l) {
+    Rational(const Loc &l) : Generic(RATIONAL, l) {
       name = "rational";
     }
     void print(Printer::Base &s) const;
@@ -482,7 +482,7 @@ class BigInt : public Generic {
  public:
     MAKE_CLONE(BigInt);
     BigInt() : Generic(BIGINT) { name = "bigint"; }
-    explicit BigInt(const Loc &l) : Generic(BIGINT, l) { name = "bigint"; }
+    BigInt(const Loc &l) : Generic(BIGINT, l) { name = "bigint"; }
     void print(Printer::Base &s) const;
 }
 
@@ -493,8 +493,8 @@ class External : public Base {
     MAKE_CLONE(External);
     std::string *name;
     External(std::string *n, const Loc &l) : Base(EXTERNAL, l), name(n) {}
-    explicit External(std::string *n) : Base(EXTERNAL), name(n) {}
-    explicit External(const std::string &n) : Base(EXTERNAL),
+    External(std::string *n) : Base(EXTERNAL), name(n) {}
+    External(const std::string &n) : Base(EXTERNAL),
                       name(new std::string(n)) {}
     std::ostream & put(std::ostream &s) const;
     void print(Printer::Base &s) const;
