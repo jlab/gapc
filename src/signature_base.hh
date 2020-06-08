@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef SIGNATURE_BASE_HH
-#define SIGNATURE_BASE_HH
+#ifndef SRC_SIGNATURE_BASE_HH_
+#define SRC_SIGNATURE_BASE_HH_
 
 #include "loc.hh"
 

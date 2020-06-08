@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef SUBOPT_MARKER_HH
-#define SUBOPT_MARKER_HH
+#ifndef SRC_SUBOPT_MARKER_HH_
+#define SRC_SUBOPT_MARKER_HH_
 
 
 #include "backtrack_base.hh"

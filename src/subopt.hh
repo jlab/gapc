@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef SUBOPT_HH
-#define SUBOPT_HH
+#ifndef SRC_SUBOPT_HH_
+#define SRC_SUBOPT_HH_
 
 
 #include "backtrack_base.hh"

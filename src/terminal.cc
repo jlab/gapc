@@ -21,125 +21,123 @@
 
 }}} */
 
+#include <string>
 
 #include "terminal.hh"
-
 #include "loc.hh"
 #include "symbol.hh"
 #include "type.hh"
 #include "yieldsize.hh"
 
 
-void Terminal::add_predefined(Grammar &grammar)
-{
-	Loc l;
-	std::string *s = new std::string("CHAR");
-	Symbol::Terminal *t = new Symbol::Terminal(s, l);
-	t->writeable_ys().set(1, 1);
-	t->set_data_type(new Type::Char());
-	t->setPredefinedTerminalParser (true);
-	grammar.NTs[*(t->name)] = t;
-	
-	s = new std::string("CHAR_SEP");
-	t = new Symbol::Terminal(s, l);
-	t->writeable_ys().set(1, 1);
-	t->set_data_type(new Type::Char());
-	t->setPredefinedTerminalParser (true);
-	grammar.NTs[*(t->name)] = t;
-	
-	s = new std::string("INT");
-	t = new Symbol::Terminal(s, l);
-	t->writeable_ys().set(1,Yield::UP);
-	t->set_data_type(new Type::Int());
-	t->setPredefinedTerminalParser (true);
-	grammar.NTs[*(t->name)] = t;
-	
-	s = new std::string("STRING");
-	t = new Symbol::Terminal(s, l);
-	t->writeable_ys().set(0,Yield::UP);
-	t->set_data_type(new Type::String());
-	t->setPredefinedTerminalParser (true);
-	grammar.NTs[*(t->name)] = t;
-	
-	s = new std::string("ROPE");
-	t = new Symbol::Terminal(s, l);
-	t->writeable_ys().set(1,Yield::UP);
-	t->set_data_type(new Type::External("Rope"));
-	t->setPredefinedTerminalParser (true);
-	grammar.NTs[*(t->name)] = t;
-	
-	s = new std::string("ROPE0");
-	t = new Symbol::Terminal(s, l);
-	t->writeable_ys().set(0,Yield::UP);
-	t->set_data_type(new Type::External("Rope"));
-	t->setPredefinedTerminalParser (true);
-	grammar.NTs[*(t->name)] = t;
-	
-	s = new std::string("REGION");
-	t = new Symbol::Terminal(s, l);
-	t->writeable_ys().set(1,Yield::UP);
-	// FIXME use Seq as parameter
-	t->set_data_type(new Type::Subseq());
-	t->setPredefinedTerminalParser (true);
-	grammar.NTs[*(t->name)] = t;
-	
-	// deprecated
-	s = new std::string("UREGION");
-	t = new Symbol::Terminal(s, l);
-	t->writeable_ys().set(0,Yield::UP);
-	t->set_data_type(new Type::Subseq());
-	t->setPredefinedTerminalParser (true);
-	grammar.NTs[*(t->name)] = t;
-	
-	s = new std::string("REGION0");
-	t = new Symbol::Terminal(s, l);
-	t->writeable_ys().set(0,Yield::UP);
-	t->set_data_type(new Type::Subseq());
-	t->setPredefinedTerminalParser (true);
-	grammar.NTs[*(t->name)] = t;
-	
-	s = new std::string("BASE");
-	t = new Symbol::Terminal(s, l);
-	t->writeable_ys().set(1,1);
-	t->set_data_type(new Type::Subseq());
-	t->setPredefinedTerminalParser (true);
-	grammar.NTs[*(t->name)] = t;
-	
-	s = new std::string("LOC");
-	t = new Symbol::Terminal(s, l);
-	t->writeable_ys().set(0,0);
-	t->set_data_type(new Type::Subseq());
-	t->setPredefinedTerminalParser (true);
-	grammar.NTs[*(t->name)] = t;
-	
-	// FIXME return type bool
-	s = new std::string("EMPTY");
-	t = new Symbol::Terminal(s, l);
-	t->writeable_ys().set(0,0);
-	t->set_data_type(new Type::Void());
-	t->setPredefinedTerminalParser (true);
-	grammar.NTs[*(t->name)] = t;
-	
-	s = new std::string("SEQ");
-	t = new Symbol::Terminal(s, l);
-	t->writeable_ys().set(0,Yield::UP);
-	t->set_data_type(new Type::Int());
-	t->setPredefinedTerminalParser (true);
-	grammar.NTs[*(t->name)] = t;
-	
-	s = new std::string("SEQ1");
-	t = new Symbol::Terminal(s, l);
-	t->writeable_ys().set(1,Yield::UP);
-	t->set_data_type(new Type::Int());
-	t->setPredefinedTerminalParser (true);
-	grammar.NTs[*(t->name)] = t;
-	
-	// not a number terminal parser
-	s = new std::string("NON");
-	t = new Symbol::Terminal(s, l);
-	t->writeable_ys().set(1,1);
-	t->set_data_type(new Type::Char());
-	t->setPredefinedTerminalParser (true);
-	grammar.NTs[*(t->name)] = t;
-}
+void Terminal::add_predefined(Grammar &grammar) {
+  Loc l;
+  std::string *s = new std::string("CHAR");
+  Symbol::Terminal *t = new Symbol::Terminal(s, l);
+  t->writeable_ys().set(1, 1);
+  t->set_data_type(new Type::Char());
+  t->setPredefinedTerminalParser(true);
+  grammar.NTs[*(t->name)] = t;
 
+  s = new std::string("CHAR_SEP");
+  t = new Symbol::Terminal(s, l);
+  t->writeable_ys().set(1, 1);
+  t->set_data_type(new Type::Char());
+  t->setPredefinedTerminalParser(true);
+  grammar.NTs[*(t->name)] = t;
+
+  s = new std::string("INT");
+  t = new Symbol::Terminal(s, l);
+  t->writeable_ys().set(1, Yield::UP);
+  t->set_data_type(new Type::Int());
+  t->setPredefinedTerminalParser(true);
+  grammar.NTs[*(t->name)] = t;
+
+  s = new std::string("STRING");
+  t = new Symbol::Terminal(s, l);
+  t->writeable_ys().set(0, Yield::UP);
+  t->set_data_type(new Type::String());
+  t->setPredefinedTerminalParser(true);
+  grammar.NTs[*(t->name)] = t;
+
+  s = new std::string("ROPE");
+  t = new Symbol::Terminal(s, l);
+  t->writeable_ys().set(1, Yield::UP);
+  t->set_data_type(new Type::External("Rope"));
+  t->setPredefinedTerminalParser(true);
+  grammar.NTs[*(t->name)] = t;
+
+  s = new std::string("ROPE0");
+  t = new Symbol::Terminal(s, l);
+  t->writeable_ys().set(0, Yield::UP);
+  t->set_data_type(new Type::External("Rope"));
+  t->setPredefinedTerminalParser(true);
+  grammar.NTs[*(t->name)] = t;
+
+  s = new std::string("REGION");
+  t = new Symbol::Terminal(s, l);
+  t->writeable_ys().set(1, Yield::UP);
+  // FIXME use Seq as parameter
+  t->set_data_type(new Type::Subseq());
+  t->setPredefinedTerminalParser(true);
+  grammar.NTs[*(t->name)] = t;
+
+  // deprecated
+  s = new std::string("UREGION");
+  t = new Symbol::Terminal(s, l);
+  t->writeable_ys().set(0, Yield::UP);
+  t->set_data_type(new Type::Subseq());
+  t->setPredefinedTerminalParser(true);
+  grammar.NTs[*(t->name)] = t;
+
+  s = new std::string("REGION0");
+  t = new Symbol::Terminal(s, l);
+  t->writeable_ys().set(0, Yield::UP);
+  t->set_data_type(new Type::Subseq());
+  t->setPredefinedTerminalParser(true);
+  grammar.NTs[*(t->name)] = t;
+
+  s = new std::string("BASE");
+  t = new Symbol::Terminal(s, l);
+  t->writeable_ys().set(1, 1);
+  t->set_data_type(new Type::Subseq());
+  t->setPredefinedTerminalParser(true);
+  grammar.NTs[*(t->name)] = t;
+
+  s = new std::string("LOC");
+  t = new Symbol::Terminal(s, l);
+  t->writeable_ys().set(0, 0);
+  t->set_data_type(new Type::Subseq());
+  t->setPredefinedTerminalParser(true);
+  grammar.NTs[*(t->name)] = t;
+
+  // FIXME return type bool
+  s = new std::string("EMPTY");
+  t = new Symbol::Terminal(s, l);
+  t->writeable_ys().set(0, 0);
+  t->set_data_type(new Type::Void());
+  t->setPredefinedTerminalParser(true);
+  grammar.NTs[*(t->name)] = t;
+
+  s = new std::string("SEQ");
+  t = new Symbol::Terminal(s, l);
+  t->writeable_ys().set(0, Yield::UP);
+  t->set_data_type(new Type::Int());
+  t->setPredefinedTerminalParser(true);
+  grammar.NTs[*(t->name)] = t;
+
+  s = new std::string("SEQ1");
+  t = new Symbol::Terminal(s, l);
+  t->writeable_ys().set(1, Yield::UP);
+  t->set_data_type(new Type::Int());
+  t->setPredefinedTerminalParser(true);
+  grammar.NTs[*(t->name)] = t;
+
+  // not a number terminal parser
+  s = new std::string("NON");
+  t = new Symbol::Terminal(s, l);
+  t->writeable_ys().set(1, 1);
+  t->set_data_type(new Type::Char());
+  t->setPredefinedTerminalParser(true);
+  grammar.NTs[*(t->name)] = t;
+}

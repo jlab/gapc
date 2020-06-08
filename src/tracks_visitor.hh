@@ -22,23 +22,21 @@
 }}} */
 
 
-#ifndef TRACKS_VISITOR_HH
-#define TRACKS_VISITOR_HH
-
-#include "visitor.hh"
+#ifndef SRC_TRACKS_VISITOR_HH_
+#define SRC_TRACKS_VISITOR_HH_
 
 #include <stddef.h>
 #include <utility>
 #include <string>
 
+#include "visitor.hh"
 #include "hashtable.hh"
-
 #include "symbol_fwd.hh"
 
 class Grammar;
 
 class Tracks_Visitor : public Visitor {
-  private:
+ private:
     bool skip;
     size_t local_tracks, old_tracks;
     size_t current_single_track;
@@ -49,7 +47,7 @@ class Tracks_Visitor : public Visitor {
     Grammar &grammar;
     Symbol::NT *different_track(Symbol::NT *nt, size_t track_pos);
 
-  public:
+ public:
     bool again;
     bool error;
 
@@ -65,7 +63,6 @@ class Tracks_Visitor : public Visitor {
     void visit_end(Alt::Multi &a);
 
     void visit(Fn_Arg::Base &a);
-
 };
 
-#endif
+#endif  // SRC_TRACKS_VISITOR_HH_

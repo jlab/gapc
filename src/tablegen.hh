@@ -21,15 +21,15 @@
 
 }}} */
 
-#ifndef TABLEGEN_HH
-#define TABLEGEN_HH
+#ifndef SRC_TABLEGEN_HH_
+#define SRC_TABLEGEN_HH_
 
-
-#include "table.hh"
 
 #include <vector>
 #include <list>
+#include <string>
 
+#include "table.hh"
 #include "type_fwd.hh"
 #include "expr_fwd.hh"
 #include "statement_fwd.hh"
@@ -38,27 +38,29 @@
 class Fn_Def;
 
 class Tablegen {
-  public:
+ public:
     typedef std::vector<Table>::const_iterator itr;
     typedef std::vector<size_t>::const_iterator titr;
 
-  private:
+ private:
     // FIXME
-  public:
+
+ public:
     std::list<Statement::Base*> code;
     std::list<Statement::Base*> window_code;
     std::list<Statement::Var_Decl*> paras;
     std::list<Statement::Var_Decl*> ns;
 
-  private:
-
+ private:
     ::Type::Base *type;
     // FIXME for unit testing ...
-  public:
+
+ public:
     Expr::Base *size;
     Expr::Base *window_size;
     Expr::Base *off;
-  private:
+
+ private:
     Statement::Base *ret_zero;
     Expr::Base *cond;
     ::Type::Base *dtype;
@@ -85,7 +87,7 @@ class Tablegen {
     Fn_Def *gen_get_tab();
     Fn_Def *gen_size();
 
-  public:
+ public:
     Tablegen();
 
     void set_window_mode(bool b) { window_mode_ = b; }
@@ -94,9 +96,8 @@ class Tablegen {
 
     Statement::Table_Decl *create(Symbol::NT &nt,
       std::string *name, bool cyk);
-
 };
 
 
 
-#endif
+#endif  // SRC_TABLEGEN_HH_

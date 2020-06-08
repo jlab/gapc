@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef TERMINAL_HH
-#define TERMINAL_HH
+#ifndef SRC_TERMINAL_HH_
+#define SRC_TERMINAL_HH_
 
 
 class Grammar;
@@ -36,14 +36,14 @@ class Grammar;
  * constructor of that class.
  */
 namespace Terminal {
-	
-	
-	// Adds all predefined non-terminals to the list of non-terminals
-	// of the given grammar instance.
-	void add_predefined(Grammar &grammar);
-	
-	
-}
 
 
-#endif
+// Adds all predefined non-terminals to the list of non-terminals
+// of the given grammar instance.
+void add_predefined(Grammar &grammar);
+
+
+}  // namespace Terminal
+
+
+#endif  // SRC_TERMINAL_HH_

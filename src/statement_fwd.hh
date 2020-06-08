@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef STATEMENT_FWD_HH
-#define STATEMENT_FWD_HH
+#ifndef SRC_STATEMENT_FWD_HH_
+#define SRC_STATEMENT_FWD_HH_
 
 namespace Statement {
   class Base;

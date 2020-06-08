@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef SYMBOL_FWD_HH
-#define SYMBOL_FWD_HH
+#ifndef SRC_SYMBOL_FWD_HH_
+#define SRC_SYMBOL_FWD_HH_
 
 
 /*
@@ -31,9 +31,9 @@
  * in the AST for the components the grammar is build from.
  */
 namespace Symbol {
-	class Base;
-	class NT;
-	class Terminal;
+  class Base;
+  class NT;
+  class Terminal;
 }
 
 
