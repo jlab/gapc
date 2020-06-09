@@ -21,11 +21,11 @@
 
 }}} */
 
+#include <ostream>
+
 #include "backtrace.hh"
 
 #include "../printer.hh"
-
-#include <ostream>
 
 std::ostream & Type::Backtrace::put(std::ostream &s) const {
   if (name_)
@@ -35,8 +35,7 @@ std::ostream & Type::Backtrace::put(std::ostream &s) const {
   return s;
 }
 
-void Type::Backtrace::print(Printer::Base &s) const
-{
+void Type::Backtrace::print(Printer::Base &s) const {
   s.print(*this);
 }
 
@@ -45,8 +44,7 @@ std::ostream & Type::Backtrace_List::put(std::ostream &s) const {
   return s;
 }
 
-void Type::Backtrace_List::print(Printer::Base &s) const
-{
+void Type::Backtrace_List::print(Printer::Base &s) const {
   s.print(*this);
 }
 
@@ -55,12 +53,10 @@ std::ostream & Type::Eval_List::put(std::ostream &s) const {
   return s;
 }
 
-void Type::Eval_List::print(Printer::Base &s) const
-{
+void Type::Eval_List::print(Printer::Base &s) const {
   s.print(*this);
 }
 
-Type::Base *Type::Backtrace::component()
-{
+Type::Base *Type::Backtrace::component() {
   return value_type_;
 }

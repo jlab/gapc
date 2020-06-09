@@ -21,113 +21,105 @@
 
 }}} */
 
-#ifndef TYPE_BACKTRACE_HH
-#define TYPE_BACKTRACE_HH
+#ifndef SRC_TYPE_BACKTRACE_HH_
+#define SRC_TYPE_BACKTRACE_HH_
 
+#include <string>
 #include "base.hh"
 
 #include "../bool.hh"
 
 namespace Type {
 
-  class Backtrace : public Base {
-    private:
-      std::string *name_;
-      ::Type::Base *pos_type_;
-      ::Type::Base *value_type_;
-      ::Type::Base *score_type_;
-    public:
-      enum Derive { NONE, FN, FN_USE, NT, FN_SPEC,
-                    NT_BACKEND, NT_FRONTEND };
-    private:
-      Derive d;
-      ::Bool body_context_;
-    public:
-      MAKE_CLONE(Backtrace);
-      Backtrace()
-        : Base(BACKTRACE), name_(0), pos_type_(0), value_type_(0),
-          score_type_(0), d(NONE)
-      {
-      }
-      Backtrace(std::string *n)
-        : Base(BACKTRACE), name_(n), pos_type_(0), value_type_(0),
-          score_type_(0), d(FN)
-      {
-      }
-      Backtrace(::Type::Base *v, ::Type::Base *p, std::string *n)
-        : Base(BACKTRACE), name_(n), pos_type_(p), value_type_(v),
-          score_type_(0), d(FN_USE)
-      {
-      }
-      Backtrace(std::string *n, ::Type::Base *p, ::Type::Base *v)
-        : Base(BACKTRACE), name_(n), pos_type_(p), value_type_(v),
-          score_type_(0), d(NT)
-      {
-      }
+class Backtrace : public Base {
+ private:
+    std::string *name_;
+    ::Type::Base *pos_type_;
+    ::Type::Base *value_type_;
+    ::Type::Base *score_type_;
 
-      Backtrace(::Type::Base *p, ::Type::Base *v)
-        : Base(BACKTRACE), name_(0), pos_type_(p), value_type_(v),
-          score_type_(0), d(FN_SPEC)
-      {
-      }
+ public:
+    enum Derive { NONE, FN, FN_USE, NT, FN_SPEC,
+                  NT_BACKEND, NT_FRONTEND };
 
-      Backtrace(std::string *n, ::Type::Base *p, ::Type::Base *v,
-          ::Type::Base *s)
-        : Base(BACKTRACE), name_(n), pos_type_(p), value_type_(v),
-          score_type_(s),
-          d(NT_BACKEND)
-      {
-      }
+ private:
+    Derive d;
+    ::Bool body_context_;
 
-      Backtrace(Backtrace *bt)
-        : Base(BACKTRACE), name_(bt->name_), pos_type_(bt->pos_type_),
-          value_type_(bt->value_type_), score_type_(bt->score_type_),
-          d(NT_FRONTEND)
-      {
-      }
+ public:
+    MAKE_CLONE(Backtrace);
+    Backtrace()
+      : Base(BACKTRACE), name_(0), pos_type_(0), value_type_(0),
+        score_type_(0), d(NONE) {
+    }
+    Backtrace(std::string *n)
+      : Base(BACKTRACE), name_(n), pos_type_(0), value_type_(0),
+        score_type_(0), d(FN) {
+    }
+    Backtrace(::Type::Base *v, ::Type::Base *p, std::string *n)
+      : Base(BACKTRACE), name_(n), pos_type_(p), value_type_(v),
+        score_type_(0), d(FN_USE) {
+    }
+    Backtrace(std::string *n, ::Type::Base *p, ::Type::Base *v)
+      : Base(BACKTRACE), name_(n), pos_type_(p), value_type_(v),
+        score_type_(0), d(NT) {
+    }
 
-      std::ostream & put(std::ostream &s) const;
-      void print(Printer::Base &s) const;
+    Backtrace(::Type::Base *p, ::Type::Base *v)
+      : Base(BACKTRACE), name_(0), pos_type_(p), value_type_(v),
+        score_type_(0), d(FN_SPEC) {
+    }
 
-      Derive subclass() const { return d; }
-      const std::string *name() const { return name_; }
-      const ::Type::Base *pos_type() const { return pos_type_; }
-      const ::Type::Base *value_type() const { return value_type_; }
+    Backtrace(std::string *n, ::Type::Base *p, ::Type::Base *v,
+        ::Type::Base *s)
+      : Base(BACKTRACE), name_(n), pos_type_(p), value_type_(v),
+        score_type_(s),
+        d(NT_BACKEND) {
+    }
 
-      Base *component();
+    Backtrace(Backtrace *bt)
+      : Base(BACKTRACE), name_(bt->name_), pos_type_(bt->pos_type_),
+        value_type_(bt->value_type_), score_type_(bt->score_type_),
+        d(NT_FRONTEND) {
+    }
 
-      void set_body_context() { body_context_ = true; }
+    std::ostream & put(std::ostream &s) const;
+    void print(Printer::Base &s) const;
 
-      bool body_context() const { return body_context_; }
+    Derive subclass() const { return d; }
+    const std::string *name() const { return name_; }
+    const ::Type::Base *pos_type() const { return pos_type_; }
+    const ::Type::Base *value_type() const { return value_type_; }
 
-  };
+    Base *component();
 
-  class Backtrace_List : public Base {
-    private:
-    public:
-      MAKE_CLONE(Backtrace_List);
-      Backtrace_List()
-        : Base(BACKTRACE_LIST)
-      {
-      }
+    void set_body_context() { body_context_ = true; }
 
-      std::ostream & put(std::ostream &s) const;
-      void print(Printer::Base &s) const;
-  };
+    bool body_context() const { return body_context_; }
+};
 
-  class Eval_List : public Base {
-    private:
-    public:
-      MAKE_CLONE(Eval_List);
-      ::Type::Base *of;
-      Eval_List()
-        : Base(EVAL_LIST), of(0)
-      {
-      }
+class Backtrace_List : public Base {
+ private:
+ public:
+    MAKE_CLONE(Backtrace_List);
+    Backtrace_List() : Base(BACKTRACE_LIST) {
+    }
 
-      std::ostream & put(std::ostream &s) const;
-      void print(Printer::Base &s) const;
-  };
-}
+    std::ostream & put(std::ostream &s) const;
+    void print(Printer::Base &s) const;
+};
 
-#endif
+class Eval_List : public Base {
+ private:
+ public:
+    MAKE_CLONE(Eval_List);
+    ::Type::Base *of;
+    Eval_List() : Base(EVAL_LIST), of(0) {
+    }
+
+    std::ostream & put(std::ostream &s) const;
+    void print(Printer::Base &s) const;
+};
+}  // namespace Type
+
+#endif  // SRC_TYPE_BACKTRACE_HH_
