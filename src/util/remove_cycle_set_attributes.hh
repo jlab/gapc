@@ -31,26 +31,21 @@
 namespace Util {
 
 
-  class RemoveCycleSetAttributes {
+class RemoveCycleSetAttributes {
+ public:
+    RemoveCycleSetAttributes();
+    ~RemoveCycleSetAttributes();
 
-    public:
+    // Removes all attributes from the given grammar.
+    void removeFromGrammar(CFG::CFG* grammar);
 
-      RemoveCycleSetAttributes();
-      ~RemoveCycleSetAttributes();
-
-      // Removes all attributes from the given grammar.
-      void removeFromGrammar (CFG::CFG* grammar);
-
-    private:
-
-      void removeFromProduction (CFG::GrammarProduction* production);
-      void removeFromBase (CFG::Base* b);
+ private:
+    void removeFromProduction(CFG::GrammarProduction* production);
+    void removeFromBase(CFG::Base* b);
+};
 
 
-  };
+}  // namespace Util
 
 
-}
-
-
-#endif  // ifndef SRC_UTIL_REMOVE_CYCLE_SET_ATTRIBUTES_HH_
+#endif  // SRC_UTIL_REMOVE_CYCLE_SET_ATTRIBUTES_HH_

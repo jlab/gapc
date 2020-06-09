@@ -24,15 +24,15 @@
 #include "cycle_attribute.hh"
 
 
-Util::CycleAttribute::CycleAttribute (std::set<CycleSet*> cycleSets)
-  : Attribute ("Util::CycleAttribute") {
-  this->addCycleSets (cycleSets);
+Util::CycleAttribute::CycleAttribute(std::set<CycleSet*> cycleSets)
+  : Attribute("Util::CycleAttribute") {
+  this->addCycleSets(cycleSets);
 }
 
 
-Util::CycleAttribute::CycleAttribute (CycleAttribute& a)
-  : Attribute (a) {
-  this->addCycleSets (a.cycleSets);
+Util::CycleAttribute::CycleAttribute(CycleAttribute& a)
+  : Attribute(a) {
+  this->addCycleSets(a.cycleSets);
 }
 
 
@@ -51,8 +51,9 @@ Util::Attribute* Util::CycleAttribute::clone() {
 }
 
 
-bool Util::CycleAttribute::containsCycleSet (CycleSet* set) {
-  for (std::set<CycleSet*>::iterator i = this->cycleSets.begin(); i != this->cycleSets.end(); i++) {
+bool Util::CycleAttribute::containsCycleSet(CycleSet* set) {
+  for (std::set<CycleSet*>::iterator i = this->cycleSets.begin();
+       i != this->cycleSets.end(); i++) {
     if (*(*i) == *set) {
       return true;
     }
@@ -61,10 +62,10 @@ bool Util::CycleAttribute::containsCycleSet (CycleSet* set) {
 }
 
 
-void Util::CycleAttribute::addCycleSets (std::set<CycleSet*> sets) {
+void Util::CycleAttribute::addCycleSets(std::set<CycleSet*> sets) {
   for (std::set<CycleSet*>::iterator i = sets.begin(); i != sets.end(); i++) {
-    if (!this->containsCycleSet (*i)) {
-      this->cycleSets.insert (*i);
+    if (!this->containsCycleSet(*i)) {
+      this->cycleSets.insert(*i);
     }
   }
 }

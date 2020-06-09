@@ -31,46 +31,38 @@
 namespace Util {
 
 
-  class NamingPath {
+class NamingPath {
+ private:
+    // The character that is used as a separator when
+    // the pretty print is created.
+    static std::string separatorChar;
 
-    private:
+    // The prefix of this naming-path, or NULL if this
+    // is the root of the path.
+    NamingPath* prefix;
+    // the name of this path element, or "" if this is
+    // the root of the path.
+    std::string* suffix;
 
-      // The character that is used as a separator when
-      // the pretty print is created.
-      static std::string separatorChar;
+ public:
+    // Creates an empty naming path.
+    NamingPath();
+    // Creates a naming-path with the a first suffix
+    // as given by the parameter 'name'.
+    NamingPath(std::string* name);
+    // Copy constructor, creates a deep copy of this instance.
+    NamingPath(NamingPath& p);
+    ~NamingPath();
 
-      // The prefix of this naming-path, or NULL if this
-      // is the root of the path.
-      NamingPath* prefix;
-      // the name of this path element, or "" if this is
-      // the root of the path.
-      std::string* suffix;
+    // Returns a new naming path with this naming path
+    // as prefix, and the 'newName' as suffix.
+    NamingPath* createSubPath(std::string* newName);
 
-
-    public:
-
-      // Creates an empty naming path.
-      NamingPath();
-      // Creates a naming-path with the a first suffix
-      // as given by the parameter 'name'.
-      NamingPath (std::string* name);
-      // Copy constructor, creates a deep copy of this instance.
-      NamingPath (NamingPath& p);
-      ~NamingPath();
-
-      // Returns a new naming path with this naming path
-      // as prefix, and the 'newName' as suffix.
-      NamingPath* createSubPath (std::string* newName);
-
-      // Returns a string representation of this naming-path,
-      // which is a forward-slash separated ('/') list of all its names.
-      std::string toString();
+    // Returns a string representation of this naming-path,
+    // which is a forward-slash separated ('/') list of all its names.
+    std::string toString();
+};
+}  // namespace Util
 
 
-  };
-
-
-}
-
-
-#endif  // ifndef SRC_UTIL_NAMING_PATH_HH_
+#endif  // SRC_UTIL_NAMING_PATH_HH_

@@ -34,39 +34,32 @@
 namespace Util {
 
 
-  // This attribute is used to mark GrammarProductions with
-  // those cycles-sets which end in this production.
-  class LastCycleElementAttribute : public Attribute {
+// This attribute is used to mark GrammarProductions with
+// those cycles-sets which end in this production.
+class LastCycleElementAttribute : public Attribute {
+ private:
+    // Stores all CycleSets which have their last element
+    // in cycle order in that GrammarProduction which will
+    // be attributed with this LastCycleElement instance.
+    std::set<CycleSet*> cycleSets;
 
-    private:
+ public:
+    LastCycleElementAttribute();
+    LastCycleElementAttribute(LastCycleElementAttribute& a);
+    ~LastCycleElementAttribute();
 
-      // Stores all CycleSets which have their last element
-      // in cycle order in that GrammarProduction which will
-      // be attributed with this LastCycleElement instance.
-      std::set<CycleSet*> cycleSets;
+    // Adds a CycleSet to this attribute.
+    void addCycleSet(CycleSet* cycleSet);
+    // Returns the set of CycleSets held by this attribute.
+    std::set<CycleSet*> getCycleSets();
 
+    typedef std::set<CycleSet*>::iterator iterator;
+    iterator begin();
+    iterator end();
 
-    public:
-
-      LastCycleElementAttribute();
-      LastCycleElementAttribute (LastCycleElementAttribute& a);
-      ~LastCycleElementAttribute();
-
-      // Adds a CycleSet to this attribute.
-      void addCycleSet (CycleSet* cycleSet);
-      // Returns the set of CycleSets held by this attribute.
-      std::set<CycleSet*> getCycleSets();
-
-      typedef std::set<CycleSet*>::iterator iterator;
-      iterator begin();
-      iterator end();
-
-      virtual Util::Attribute* clone();
-
-  };
+    virtual Util::Attribute* clone();
+};
+}  // namespace Util
 
 
-}
-
-
-#endif  // ifndef SRC_UTIL_LAST_ELEMENT_OF_CYCLE_ATTRIBUTE_HH_
+#endif  // SRC_UTIL_LAST_ELEMENT_OF_CYCLE_ATTRIBUTE_HH_

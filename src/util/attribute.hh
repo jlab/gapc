@@ -31,37 +31,31 @@
 namespace Util {
 
 
-  class Attribute {
+class Attribute {
+ private:
+    // The internal name a subclass of the Attribute-class
+    // was used to register it as an attribute.
+    std::string kindOfName;
 
-    private:
+ public:
+    Attribute(std::string kindOfName);
+    Attribute(Attribute& a);
+    virtual ~Attribute();
 
-      // The internal name a subclass of the Attribute-class
-      // was used to register it as an attribute.
-      std::string kindOfName;
+    // Returns TRUE of the name equals the kind-name
+    // of this attribute.
+    bool isKindOf(std::string kindOfName);
 
+    // Returns the ID of this attribute (this is the same
+    // value as the method 'isKindOf' expects and compares.
+    std::string getAttributeID();
 
-    public:
-
-      Attribute (std::string kindOfName);
-      Attribute (Attribute& a);
-      virtual ~Attribute();
-
-      // Returns TRUE of the name equals the kind-name
-      // of this attribute.
-      bool isKindOf (std::string kindOfName);
-
-      // Returns the ID of this attribute (this is the same
-      // value as the method 'isKindOf' expects and compares.
-      std::string getAttributeID();
-
-      //Virtual clone function which creates a copy of the instance.
-      virtual Attribute* clone() = 0;
+    // Virtual clone function which creates a copy of the instance.
+    virtual Attribute* clone() = 0;
+};
 
 
-  };
+}  // namespace Util
 
 
-}
-
-
-#endif  // ifndef SRC_UTIL_ATTRIBUTE_HH_
+#endif  // SRC_UTIL_ATTRIBUTE_HH_

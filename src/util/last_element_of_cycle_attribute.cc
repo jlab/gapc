@@ -25,14 +25,15 @@
 
 
 Util::LastCycleElementAttribute::LastCycleElementAttribute()
-  : Attribute ("Util::LastCycleElementAttribute") {
+  : Attribute("Util::LastCycleElementAttribute") {
 }
 
 
-Util::LastCycleElementAttribute::LastCycleElementAttribute (LastCycleElementAttribute& a)
-  : Attribute (a) {
+Util::LastCycleElementAttribute::LastCycleElementAttribute(
+  LastCycleElementAttribute& a)
+  : Attribute(a) {
   for (iterator i = a.begin(); i != a.end(); i++) {
-    this->cycleSets.insert (*i);
+    this->cycleSets.insert(*i);
   }
 }
 
@@ -41,8 +42,8 @@ Util::LastCycleElementAttribute::~LastCycleElementAttribute() {
 }
 
 
-void Util::LastCycleElementAttribute::addCycleSet (CycleSet* cycleSet) {
-  this->cycleSets.insert (cycleSet);
+void Util::LastCycleElementAttribute::addCycleSet(CycleSet* cycleSet) {
+  this->cycleSets.insert(cycleSet);
 }
 
 
@@ -51,12 +52,14 @@ std::set<Util::CycleSet*> Util::LastCycleElementAttribute::getCycleSets() {
 }
 
 
-Util::LastCycleElementAttribute::iterator Util::LastCycleElementAttribute::begin() {
+Util::LastCycleElementAttribute::iterator
+  Util::LastCycleElementAttribute::begin() {
   return this->cycleSets.begin();
 }
 
 
-Util::LastCycleElementAttribute::iterator Util::LastCycleElementAttribute::end() {
+Util::LastCycleElementAttribute::iterator
+  Util::LastCycleElementAttribute::end() {
   return this->cycleSets.end();
 }
 

@@ -32,26 +32,21 @@
 namespace Util {
 
 
-  class RemoveFirstSetAttributes {
+class RemoveFirstSetAttributes {
+ public:
+    RemoveFirstSetAttributes();
+    ~RemoveFirstSetAttributes();
 
-    public:
+    // Removes all attributes from the given grammar.
+    void removeFromGrammar(CFG::CFG* grammar);
 
-      RemoveFirstSetAttributes();
-      ~RemoveFirstSetAttributes();
-
-      // Removes all attributes from the given grammar.
-      void removeFromGrammar (CFG::CFG* grammar);
-
-    private:
-
-      void removeFromProduction (CFG::GrammarProduction* production);
-      void removeFromBase (CFG::Base* b);
+ private:
+    void removeFromProduction(CFG::GrammarProduction* production);
+    void removeFromBase(CFG::Base* b);
+};
 
 
-  };
+}  // namespace Util
 
 
-}
-
-
-#endif  // ifndef SRC_UTIL_REMOVE_FIRST_SET_ATTRIBUTES_HH_
+#endif  // SRC_UTIL_REMOVE_FIRST_SET_ATTRIBUTES_HH_
