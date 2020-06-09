@@ -25,14 +25,14 @@
 
 
 SpecializeGrammar::CycleBreakPointAttribute::CycleBreakPointAttribute()
-  : Attribute ("SpecializeGrammar::CycleBreakPointAttribute") {
+  : Attribute("SpecializeGrammar::CycleBreakPointAttribute") {
 
 }
 
 
-SpecializeGrammar::CycleBreakPointAttribute::CycleBreakPointAttribute (
+SpecializeGrammar::CycleBreakPointAttribute::CycleBreakPointAttribute(
   CycleBreakPointAttribute& a)
-  : Attribute (a) {
+  : Attribute(a) {
 }
 
 
@@ -42,5 +42,5 @@ SpecializeGrammar::CycleBreakPointAttribute::~CycleBreakPointAttribute() {
 
 
 Util::Attribute* SpecializeGrammar::CycleBreakPointAttribute::clone() {
-  return new CycleBreakPointAttribute (*this);
+  return new CycleBreakPointAttribute(*this);
 }

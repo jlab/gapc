@@ -142,61 +142,61 @@ namespace SpecializeGrammar {
       CreateSpecializedGrammar();
       ~CreateSpecializedGrammar();
 
-      AST* createGrammar (AST* sourceProgram, std::string* instanceName);
+      AST* createGrammar(AST* sourceProgram, std::string* instanceName);
 
 
     private:
 
-      Grammar* createGrammar (AST* ast, CFG::CFG* grammar);
-      void createTypeDefinitions (AST* ast);
+      Grammar* createGrammar(AST* ast, CFG::CFG* grammar);
+      void createTypeDefinitions(AST* ast);
 
-      Symbol::NT* processProduction (CFG::GrammarProduction* production);
+      Symbol::NT* processProduction(CFG::GrammarProduction* production);
       std::list<Alt::Base*>* processProductionAlternative(
         CFG::ProductionAlternative* alt);
       std::list<Alt::Base*>* processProductionAlternative(
         Util::Attributable* infoContext, CFG::ProductionAlternative* alt);
-      std::pair<Alt::Base*, AlgebraParameterTypes> processProductionFragment (
+      std::pair<Alt::Base*, AlgebraParameterTypes> processProductionFragment(
         Util::Attributable* infoContext, CFG::Base* b);
 
       // Returns an AST compatible type instance for the given
       // enumeration value.
-      Type::Base* getAlgebraParameterType (AlgebraParameterTypes type);
+      Type::Base* getAlgebraParameterType(AlgebraParameterTypes type);
       // Returns an algebra signature type which corresponds to
       // the 'type' parameter.
-      Type::Base* getAlgebraSignatureType (AlgebraParameterTypes type);
+      Type::Base* getAlgebraSignatureType(AlgebraParameterTypes type);
       // Transforms the list of internal algebra types into a
       // list of AST compatible types.
-      std::list<Type::Base*>* transformaAlgebraSignatureTypes (
+      std::list<Type::Base*>* transformaAlgebraSignatureTypes(
         std::list<AlgebraParameterTypes> types);
       // Returns the alphabet type of the signature.
       Type::Alphabet* getAlphabetType();
       // Returns a type that can be used in a signature.
-      Type::Base* createSignatureType (std::string* typeName);
+      Type::Base* createSignatureType(std::string* typeName);
       // Returns the type 'void'.
       Type::Base* createSignatureVoidType();
       // Returns the algebra-function answer type.
       Type::Base* createSignatureAnswerType();
       // Returns the algebra function name annotated with an
       // attribute to the CFG::Base instance.
-      std::string* getAlgebraFunctionName (CFG::Base* b);
+      std::string* getAlgebraFunctionName(CFG::Base* b);
 
       // Creates an algebra function call wrapped around the argument.
-      Alt::Base* createAlgebraFunctionCallWrapper (
+      Alt::Base* createAlgebraFunctionCallWrapper(
         std::string* algebraFunctionName, Alt::Base* arg);
       // Creates an algebra function call wrapped around the argument.
-      Alt::Base* createAlgebraFunctionCallWrapper (
+      Alt::Base* createAlgebraFunctionCallWrapper(
         std::string* algebraFunctionName, std::list<Fn_Arg::Base*> args);
 
       // Adds a new algebra function declaration to the signature.
-      void addSignatureDeclaration (
+      void addSignatureDeclaration(
         std::string* algebraFunctionName, AlgebraParameterTypes parameterType);
       // Adds a new algebra function declaration to the signature.
-      void addSignatureDeclaration (
+      void addSignatureDeclaration(
         std::string* algebraFunctionName,
         std::list<AlgebraParameterTypes> parameterTypes);
       // Adds a signature declaration for the choice function
       // to the signature.
-      void addSignatureChoiceDeclaration (std::string* choiceFunctionName);
+      void addSignatureChoiceDeclaration(std::string* choiceFunctionName);
 
 
       // Creates an algebra for the shape parser.
@@ -207,14 +207,14 @@ namespace SpecializeGrammar {
       // Creates an algebra function for the grammar-production
       // of the designated axiom-production of the preprocessed
       // CFG graph.
-      void createDesignatedAxiomAlgebraFunction (
+      void createDesignatedAxiomAlgebraFunction(
         std::string* designatedAxiomAlgebraFunctionName,
         std::string* originalAxiomName);
       // Creates an algebra function for the shape-parser.
-      void createAlgebraFunction (
+      void createAlgebraFunction(
         Util::Attributable* infoContext, std::string* name,
         AlgebraParameterTypes parameterType, CFG::Base* parameterValue);
-      void createAlgebraFunction (
+      void createAlgebraFunction(
         Util::Attributable* infoContext, std::string* name,
         std::list<AlgebraParameterTypes> parameterTypes,
         std::list<CFG::Base*> parameterValues);
@@ -222,37 +222,37 @@ namespace SpecializeGrammar {
       // Creates an algebra function part which generates a non-terminal
       // and a rule-body but without an original algebra function
       // applied to it.
-      std::list<Statement::Base*>* createFunctionCallNoAlgFn (
+      std::list<Statement::Base*>* createFunctionCallNoAlgFn(
         Statement::Var_Decl* ntVar, Statement::Var_Decl* bodyVar,
         CFG::Base* argument);
-      Expr::Base* createFunctionCallArgumentNoAlgFn (
+      Expr::Base* createFunctionCallArgumentNoAlgFn(
         Util::Attributable* infoContext, CFG::Base* fragment);
       // Creates the AST statement structures needed to assign
       // values to the shape-parser algebra-function arguments
       // 'nt' and 'body'.
-      std::list<Statement::Base*>* createFunctionCall (
+      std::list<Statement::Base*>* createFunctionCall(
         Statement::Var_Decl* ntVar, Statement::Var_Decl* bodyVar,
         std::list<CFG::Base*> arguments);
-      Expr::Base* createFunctionCallArguments (
+      Expr::Base* createFunctionCallArguments(
         std::list<CFG::Base*> arguments);
-      Expr::Base* createFunctionCallArgument (
+      Expr::Base* createFunctionCallArgument(
         Util::Attributable* infoContext, CFG::Base* fragment);
       // Converts a CFG node instance to a list of CFG node instances
       // used as a list of arguments to a hidden algebra function call.
-      std::list<CFG::Base*> convertCFGFragmentToArgumentList (
+      std::list<CFG::Base*> convertCFGFragmentToArgumentList(
         CFG::Base* fragment);
       //
-      std::list<Statement::Base*>* createHiddenFunctionCallNoAlgFn (
+      std::list<Statement::Base*>* createHiddenFunctionCallNoAlgFn(
         std::string productionNT, Statement::Var_Decl* ntVar,
         Statement::Var_Decl* bodyVar, CFG::Base* arguments);
-      Expr::Base* createHiddenFunctionCallArgumentNoAlgFn (
+      Expr::Base* createHiddenFunctionCallArgumentNoAlgFn(
         Util::Attributable* infoContext, CFG::Base* fragment);
       // Creates a list of statements which contains the algebra function
       // code for generating hidden algebra function calls. This method
       // creates two expressions and assigns them to the variables 'nt'
       // and 'body' of the algebra function. Both variables are subject
       // to insertion into the rules-result of the algebra function.
-      std::list<Statement::Base*>* createHiddenFunctionCall (
+      std::list<Statement::Base*>* createHiddenFunctionCall(
         std::string productionNT, Util::Attributable* infoContext,
         Statement::Var_Decl* ntVar, Statement::Var_Decl* bodyVar,
         std::list<CFG::Base*> arguments);
@@ -260,32 +260,32 @@ namespace SpecializeGrammar {
       // to the variable 'nt' of the algebra function. The expression is
       // primarily a concatenation of sub-expressions generated by the
       // method SpecializeGrammar::createHiddenFunctionCallArgument().
-      Expr::Base* createHiddenFunctionCallArguments (
+      Expr::Base* createHiddenFunctionCallArguments(
         Util::Attributable* infoContext, std::list<CFG::Base*> arguments);
       // Creates a single sub-expression by transforming a single argument
       // form the argument list of a hidden algebra function call.
-      Expr::Base* createHiddenFunctionCallArgument (
+      Expr::Base* createHiddenFunctionCallArgument(
         Util::Attributable* infoContext, CFG::Base* fragment);
       // Creates an AST structure which represents a call to the
       // external function 'insertProduction', which takes three
       // arguments.
-      Statement::Base* create_InsertProduction_Call (
+      Statement::Base* create_InsertProduction_Call(
         Statement::Var_Decl* resVar, Statement::Var_Decl* ntVar,
         Statement::Var_Decl* bodyVar);
       // Creates an addition expression, where both parameters are
       // added together. If both expressions represent character
       // constant content, a new instance of Expr::Const is returned
       // which holds the appended string value of both parameters.
-      Expr::Base* create_Rope_PLUS_Rope_Expression (
+      Expr::Base* create_Rope_PLUS_Rope_Expression(
         Expr::Base* expr1, Expr::Base* expr2);
       // Returns TRUE if the parameter is an instance of Expr::Const
       // with a constant string as value.
-      bool expressionIsConstantString (Expr::Base* expr);
+      bool expressionIsConstantString(Expr::Base* expr);
       // If Expr::Base is a constant string, then the string
       // which is represented by the instance 'expr' is returned.
       // otherwise this method returns NULL. This method also
       // returns a std::string instance for Const::Char content.
-      std::string* getConstantString (Expr::Base* expr);
+      std::string* getConstantString(Expr::Base* expr);
       // Returns a type instance which represents the internal
       // algebra string type, used to represent e.g. shapes or
       // text of anything.
@@ -303,52 +303,52 @@ namespace SpecializeGrammar {
       // Orders the list of algebra function parameters so they match
       // the order they had, when they were fed into the original
       // algebra function of the original gap-program.
-      std::list<CFG::Base*> orderAlgebraFunctionArguments (
+      std::list<CFG::Base*> orderAlgebraFunctionArguments(
         std::list<CFG::Base*> parameterValues,
         std::list<Fn_Arg::Base*> originalArguments);
 
       // Creates an append statement, which appends a verbatim string
       // to the variable 'variableToAppendTo'.
-      Statement::Base* alg_append (
+      Statement::Base* alg_append(
         Statement::Var_Decl* variableToAppendTo, std::string* str);
       // Creates an append statement, which appends an other variable
       // to the variable 'variableToAppendTo'.
-      Statement::Base* alg_append (
+      Statement::Base* alg_append(
         Statement::Var_Decl* variableToAppendTo,
         Statement::Var_Decl* appendedVariable);
       // Creates an append statement, which appends the expression
       // to the variable 'variableToAppendTo'.
-      Statement::Base* alg_append (
+      Statement::Base* alg_append(
         Statement::Var_Decl* variableToAppendTo, Expr::Vacc* appendedExpr);
 
-      Util::AlgebraFunctionInfoAttribute* getAlgebraFunctionInfoAttribute (
+      Util::AlgebraFunctionInfoAttribute* getAlgebraFunctionInfoAttribute(
         Util::Attributable* attributableInstance);
-      Util::ParameterPositionAttribute* getPositionAttribute (
+      Util::ParameterPositionAttribute* getPositionAttribute(
         Util::Attributable* attributableInstance);
       SpecializeGrammar::ActualParameterPositionAttribute*
-        getActualPositionAttribute (Util::Attributable* attributableInstance);
-      SpecializeGrammar::CycleBreakPointAttribute* getCycleBreakPointAttribute (
+        getActualPositionAttribute(Util::Attributable* attributableInstance);
+      SpecializeGrammar::CycleBreakPointAttribute* getCycleBreakPointAttribute(
         Util::Attributable* attributableInstance);
-      HiddenCFGFragmentsAttribute* getHiddenCFGFragmentsAttribute (
+      HiddenCFGFragmentsAttribute* getHiddenCFGFragmentsAttribute(
         Util::Attributable* attributableInstance);
-      Util::CyclePathInfoAttribute* getCyclePathInformationAttribute (
+      Util::CyclePathInfoAttribute* getCyclePathInformationAttribute(
         Util::Attributable* attributableInstance);
       ChoiceFunctionApplicationAttribute*
-        getChoiceFunctionApplicationAttribute (
+        getChoiceFunctionApplicationAttribute(
           Util::Attributable* attributableInstance);
-      DesignatedAxiomAttribute* getDesignatedAxiomAttribute (
+      DesignatedAxiomAttribute* getDesignatedAxiomAttribute(
         Util::Attributable* attributableInstance);
-      Util::RegularExpressionInfoAttribute* getRegularExpressionInfoAttribute (
+      Util::RegularExpressionInfoAttribute* getRegularExpressionInfoAttribute(
         CFG::RegularExpression* regexpr);
-      Util::CycleMarkAttribute* getCycleMarkAttribute (CFG::Base* b);
+      Util::CycleMarkAttribute* getCycleMarkAttribute(CFG::Base* b);
 
       // Creates the default instance of our new GAP-program.
-      Instance* createDefaultInstance (Grammar* grammar);
+      Instance* createDefaultInstance(Grammar* grammar);
 
   };
 
 
-}
+}  // namespace SpecializeGrammar
 
 
 #endif  // SRC_SPECIALIZE_GRAMMAR_CREATE_SPECIALIZED_GRAMMAR_HH_

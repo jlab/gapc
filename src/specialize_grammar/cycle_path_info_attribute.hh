@@ -45,11 +45,11 @@ namespace Util {
     public:
 
       CyclePathInfoAttribute();
-      CyclePathInfoAttribute (CyclePathInfoAttribute& a);
+      CyclePathInfoAttribute(CyclePathInfoAttribute& a);
       virtual ~CyclePathInfoAttribute();
 
-      void addElement (std::string nonTerminalName, CFG::Base* fragment);
-      void addElements (
+      void addElement(std::string nonTerminalName, CFG::Base* fragment);
+      void addElements(
         std::list< std::pair<std::string, CFG::Base*> >* elems,
         unsigned int startPos);
 
@@ -63,7 +63,7 @@ namespace Util {
   };
 
 
-}
+}  // namespace Util
 
 
-#endif  // ifndef SRC_SPECIALIZE_GRAMMAR_CYCLE_PATH_INFO_ATTRIBUTE_HH_
+#endif  // SRC_SPECIALIZE_GRAMMAR_CYCLE_PATH_INFO_ATTRIBUTE_HH_

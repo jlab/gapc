@@ -87,7 +87,7 @@ namespace Util {
   };
 
 
-}
+}  // namespace Util
 
 
-#endif  // ifndef SRC_SPECIALIZE_GRAMMAR_CALL_TRACE_HH_
+#endif  // SRC_SPECIALIZE_GRAMMAR_CALL_TRACE_HH_

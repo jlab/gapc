@@ -48,7 +48,7 @@ class ActualParameterPositionAttribute : public Util::Attribute {
 };
 
 
-}  // SpecializeGrammar
+}  // namespace SpecializeGrammar
 
 
-#endif // SRC_SPECIALIZE_GRAMMAR_ACTUAL_PARAMETER_POSITION_ATTRIBUTE_HH_
+#endif  // SRC_SPECIALIZE_GRAMMAR_ACTUAL_PARAMETER_POSITION_ATTRIBUTE_HH_

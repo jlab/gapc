@@ -25,13 +25,13 @@
 
 
 SpecializeGrammar::HiddenCFGFragmentsAttribute::HiddenCFGFragmentsAttribute()
-  : Attribute ("SpecializeGrammar::HiddenCFGFragmentsAttribute") {
+  : Attribute("SpecializeGrammar::HiddenCFGFragmentsAttribute") {
 }
 
 
-SpecializeGrammar::HiddenCFGFragmentsAttribute::HiddenCFGFragmentsAttribute (
+SpecializeGrammar::HiddenCFGFragmentsAttribute::HiddenCFGFragmentsAttribute(
   HiddenCFGFragmentsAttribute& a)
-  : Attribute (a), hiddenFragments (a.hiddenFragments) {
+  : Attribute(a), hiddenFragments(a.hiddenFragments) {
 }
 
 
@@ -39,17 +39,17 @@ SpecializeGrammar::HiddenCFGFragmentsAttribute::~HiddenCFGFragmentsAttribute() {
 }
 
 
-void SpecializeGrammar::HiddenCFGFragmentsAttribute::addHiddenFragment (
+void SpecializeGrammar::HiddenCFGFragmentsAttribute::addHiddenFragment(
   CFG::Base* b) {
-  this->hiddenFragments.push_back (b);
+  this->hiddenFragments.push_back(b);
 }
 
 
-void SpecializeGrammar::HiddenCFGFragmentsAttribute::addHiddenFragments (
+void SpecializeGrammar::HiddenCFGFragmentsAttribute::addHiddenFragments(
   std::set<CFG::Base*>* fragments) {
   for (std::set<CFG::Base*>::iterator i = fragments->begin();
        i != fragments->end(); i++) {
-    addHiddenFragment (*i);
+    addHiddenFragment(*i);
   }
 }
 
@@ -67,5 +67,5 @@ SpecializeGrammar::HiddenCFGFragmentsAttribute::iterator
 
 
 Util::Attribute* SpecializeGrammar::HiddenCFGFragmentsAttribute::clone() {
-  return new HiddenCFGFragmentsAttribute (*this);
+  return new HiddenCFGFragmentsAttribute(*this);
 }

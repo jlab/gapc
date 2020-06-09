@@ -44,8 +44,8 @@ namespace SpecializeGrammar {
 
     public:
 
-      DesignatedAxiomAttribute (std::string* originalAxiomName);
-      DesignatedAxiomAttribute (DesignatedAxiomAttribute& a);
+      DesignatedAxiomAttribute(std::string* originalAxiomName);
+      DesignatedAxiomAttribute(DesignatedAxiomAttribute& a);
       virtual ~DesignatedAxiomAttribute();
 
       // Returns the original name of the axiom.
@@ -57,7 +57,7 @@ namespace SpecializeGrammar {
   };
 
 
-}
+}  // namespace SpecializeGrammar
 
 
 #endif  // SRC_SPECIALIZE_GRAMMAR_DESIGNATED_AXIOM_ATTRIBUTE_HH_

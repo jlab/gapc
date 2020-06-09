@@ -64,7 +64,7 @@ namespace SpecializeGrammar {
   };
 
 
-}
+}  // namespace SpecializeGrammar
 
 
 #endif  // SRC_SPECIALIZE_GRAMMAR_CHOICE_FUNCTION_APPLICATION_ATTRIBUTE_HH_

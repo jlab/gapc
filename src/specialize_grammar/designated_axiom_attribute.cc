@@ -24,16 +24,16 @@
 #include "designated_axiom_attribute.hh"
 
 
-SpecializeGrammar::DesignatedAxiomAttribute::DesignatedAxiomAttribute (
+SpecializeGrammar::DesignatedAxiomAttribute::DesignatedAxiomAttribute(
     std::string* originalAxiomName)
-  : Util::Attribute ("SpecializeGrammar::DesignatedAxiomAttribute"),
-  originalAxiomName (originalAxiomName) {
+  : Util::Attribute("SpecializeGrammar::DesignatedAxiomAttribute"),
+  originalAxiomName(originalAxiomName) {
 }
 
 
-SpecializeGrammar::DesignatedAxiomAttribute::DesignatedAxiomAttribute (
+SpecializeGrammar::DesignatedAxiomAttribute::DesignatedAxiomAttribute(
   DesignatedAxiomAttribute& a)
-  : Util::Attribute (a) {
+  : Util::Attribute(a) {
 }
 
 
@@ -48,5 +48,5 @@ std::string* SpecializeGrammar::DesignatedAxiomAttribute::
 
 
 Util::Attribute* SpecializeGrammar::DesignatedAxiomAttribute::clone() {
-  return new DesignatedAxiomAttribute (*this);
+  return new DesignatedAxiomAttribute(*this);
 }

@@ -30,15 +30,15 @@ Util::SetOfCycleSets::SetOfCycleSets() {
 }
 
 
-Util::SetOfCycleSets::SetOfCycleSets (std::set<CycleSet*> sets) {
+Util::SetOfCycleSets::SetOfCycleSets(std::set<CycleSet*> sets) {
   for (std::set<CycleSet*>::iterator i = sets.begin(); i != sets.end(); i++) {
-    addCycleSet (*i);
+    addCycleSet(*i);
   }
 }
 
 
-Util::SetOfCycleSets::SetOfCycleSets (SetOfCycleSets& s)
-  : sets (s.sets) {
+Util::SetOfCycleSets::SetOfCycleSets(SetOfCycleSets& s)
+  : sets(s.sets) {
 }
 
 
@@ -46,12 +46,12 @@ Util::SetOfCycleSets::~SetOfCycleSets() {
 }
 
 
-void Util::SetOfCycleSets::addCycleSet (CycleSet* cycleSet) {
-  this->sets.insert (cycleSet);
+void Util::SetOfCycleSets::addCycleSet(CycleSet* cycleSet) {
+  this->sets.insert(cycleSet);
 }
 
 
-bool Util::SetOfCycleSets::containsCycleSet (CycleSet* cycleSet) {
+bool Util::SetOfCycleSets::containsCycleSet(CycleSet* cycleSet) {
   for (std::set<CycleSet*>::iterator i = this->sets.begin();
        i != this->sets.end(); i++) {
     if (*(*i) == *cycleSet) {
@@ -62,10 +62,10 @@ bool Util::SetOfCycleSets::containsCycleSet (CycleSet* cycleSet) {
 }
 
 
-bool Util::SetOfCycleSets::containsElement (CFG::NonTerminal* nonTerminal) {
+bool Util::SetOfCycleSets::containsElement(CFG::NonTerminal* nonTerminal) {
   for (std::set<CycleSet*>::iterator i = this->sets.begin();
        i != this->sets.end(); i++) {
-    if ((*i)->containsElement (nonTerminal)) {
+    if ((*i)->containsElement(nonTerminal)) {
       return true;
     }
   }
@@ -78,7 +78,7 @@ bool Util::SetOfCycleSets::isEmpty() {
 }
 
 
-bool Util::SetOfCycleSets::isBackReference (
+bool Util::SetOfCycleSets::isBackReference(
   CFG::NonTerminal* source, CFG::NonTerminal* destination) {
   bool allSetsAreBackReferences = true;
   bool someSetIsBackReference = false;
@@ -89,21 +89,21 @@ bool Util::SetOfCycleSets::isBackReference (
   // references in all cycle sets.
   // First we check if both, source and destination are
   // contained in this set-set.
-  if (!containsElement (source) || !containsElement(destination)) {
+  if (!containsElement(source) || !containsElement(destination)) {
     // should this be an error message?
     return false;
   }
 
   for (std::set<Util::CycleSet*>::iterator i = this->sets.begin();
        i != this->sets.end(); i++) {
-    bool singleResult = (*i)->isBackReference (source, destination);
+    bool singleResult = (*i)->isBackReference(source, destination);
     allSetsAreBackReferences &= singleResult;
     someSetIsBackReference |= singleResult;
   }
 
   // Both information should be complementary, that is only
   // one flag may be TRUE at a time.
-  assert (allSetsAreBackReferences ^ !someSetIsBackReference);
+  assert(allSetsAreBackReferences ^ !someSetIsBackReference);
 
   // At least one set needs to be a back reference in order to
   // establish a real back reference.

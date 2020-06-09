@@ -36,7 +36,7 @@ namespace SpecializeGrammar {
     public:
 
       CycleBreakPointAttribute();
-      CycleBreakPointAttribute (CycleBreakPointAttribute& a);
+      CycleBreakPointAttribute(CycleBreakPointAttribute& a);
       virtual ~CycleBreakPointAttribute();
 
       virtual Attribute* clone();
@@ -45,7 +45,7 @@ namespace SpecializeGrammar {
   };
 
 
-}
+}  // namespace SpecializeGrammar
 
 
 #endif  // SRC_SPECIALIZE_GRAMMAR_CYCLE_BREAK_POINT_ATTRIBUTE_HH_

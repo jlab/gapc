@@ -55,28 +55,28 @@ namespace SpecializeGrammar {
       ~RewriteNonProductiveCFGRules();
 
       // Rewrites the grammar.
-      CFG::CFG* rewriteGrammar (CFG::CFG* grammar);
+      CFG::CFG* rewriteGrammar(CFG::CFG* grammar);
 
 
     private:
 
       void rewriteProductions();
-      void rewriteProduction (CFG::GrammarProduction* production);
+      void rewriteProduction(CFG::GrammarProduction* production);
 
       //
-      CFG::GrammarProduction* rewriteProductionWithoutEpsilon (
+      CFG::GrammarProduction* rewriteProductionWithoutEpsilon(
         CFG::GrammarProduction* production);
       //
-      CFG::Base* rewriteBaseWithoutEpsilon (CFG::Base* b);
+      CFG::Base* rewriteBaseWithoutEpsilon(CFG::Base* b);
       //
-      CFG::GrammarProduction* rewriteProductionWithEpsilon (
+      CFG::GrammarProduction* rewriteProductionWithEpsilon(
         CFG::GrammarProduction* production);
       //
-      CFG::Base* rewriteBaseWithEpsilon (CFG::Base* b);
+      CFG::Base* rewriteBaseWithEpsilon(CFG::Base* b);
 
       // Copies all attributes that are annotated to the
       // source instance to the destination instance.
-      void copyAttributes (CFG::Base* source, CFG::Base* destination);
+      void copyAttributes(CFG::Base* source, CFG::Base* destination);
 
 
   };
@@ -91,7 +91,7 @@ namespace SpecializeGrammar {
     public:
 
       EpsilonOnlyAttribute();
-      EpsilonOnlyAttribute (EpsilonOnlyAttribute& a);
+      EpsilonOnlyAttribute(EpsilonOnlyAttribute& a);
       ~EpsilonOnlyAttribute();
 
       virtual Util::Attribute* clone();
@@ -100,7 +100,7 @@ namespace SpecializeGrammar {
   };
 
 
-}
+}  // namespace SpecializeGrammar
 
 
 #endif  // SRC_SPECIALIZE_GRAMMAR_REWRITE_NON_PRODUCTIVE_CFG_RULES_HH_

@@ -33,8 +33,8 @@
 
 
 SpecializeGrammar::RewriteNonProductiveCFGRules::RewriteNonProductiveCFGRules()
-  : oldGrammar (NULL),
-    newGrammar (NULL) {
+  : oldGrammar(NULL),
+    newGrammar(NULL) {
 }
 
 
@@ -43,7 +43,7 @@ SpecializeGrammar::RewriteNonProductiveCFGRules::
 }
 
 
-CFG::CFG* SpecializeGrammar::RewriteNonProductiveCFGRules::rewriteGrammar (
+CFG::CFG* SpecializeGrammar::RewriteNonProductiveCFGRules::rewriteGrammar(
   CFG::CFG* grammar) {
   this->oldGrammar = grammar;
   this->newGrammar = new CFG::CFG();
@@ -53,8 +53,8 @@ CFG::CFG* SpecializeGrammar::RewriteNonProductiveCFGRules::rewriteGrammar (
 
   // At the end set the axiom
   std::string* axiomName = this->oldGrammar->getAxiom()->getName();
-  CFG::NonTerminal* newAxiom = new CFG::NonTerminal (axiomName);
-  this->newGrammar->setAxiom (newAxiom);
+  CFG::NonTerminal* newAxiom = new CFG::NonTerminal(axiomName);
+  this->newGrammar->setAxiom(newAxiom);
 
   return this->newGrammar;
 }
@@ -65,19 +65,19 @@ void SpecializeGrammar::RewriteNonProductiveCFGRules::rewriteProductions() {
     this->oldGrammar->getProductions();
   for (std::list<CFG::GrammarProduction*>::iterator i = productions.begin();
        i != productions.end(); i++) {
-    rewriteProduction (*i);
+    rewriteProduction(*i);
   }
 }
 
 
-void SpecializeGrammar::RewriteNonProductiveCFGRules::rewriteProduction (
+void SpecializeGrammar::RewriteNonProductiveCFGRules::rewriteProduction(
   CFG::GrammarProduction* production) {
   // First split off all
-  CFG::GrammarProduction* epsilonProduction = rewriteProductionWithEpsilon (
+  CFG::GrammarProduction* epsilonProduction = rewriteProductionWithEpsilon(
     production);
   // ...then create an embracing rule
   CFG::GrammarProduction* noEpsilonProduction =
-    rewriteProductionWithoutEpsilon (production);
+    rewriteProductionWithoutEpsilon(production);
 
   // Fill the production alternative with one of each or both.
   CFG::ProductionAlternative* newProductionAlternative =
@@ -85,32 +85,32 @@ void SpecializeGrammar::RewriteNonProductiveCFGRules::rewriteProduction (
   if (epsilonProduction != NULL) {
     CFG::NonTerminal* nonTerminal = dynamic_cast<CFG::NonTerminal*> (
       epsilonProduction->lhs->clone());
-    newProductionAlternative->addAlternative (nonTerminal);
-    this->newGrammar->addProduction (epsilonProduction);
+    newProductionAlternative->addAlternative(nonTerminal);
+    this->newGrammar->addProduction(epsilonProduction);
   }
   if (noEpsilonProduction != NULL) {
     CFG::NonTerminal* nonTerminal = dynamic_cast<CFG::NonTerminal*> (
       noEpsilonProduction->lhs->clone());
-    newProductionAlternative->addAlternative (nonTerminal);
-    this->newGrammar->addProduction (noEpsilonProduction);
+    newProductionAlternative->addAlternative(nonTerminal);
+    this->newGrammar->addProduction(noEpsilonProduction);
   }
 
   CFG::NonTerminal* lhs = dynamic_cast<CFG::NonTerminal*> (
     production->lhs->clone());
-  CFG::GrammarProduction* newProduction = new CFG::GrammarProduction (lhs);
+  CFG::GrammarProduction* newProduction = new CFG::GrammarProduction(lhs);
   newProduction->rhs = newProductionAlternative;
-  this->newGrammar->addProduction (newProduction);
+  this->newGrammar->addProduction(newProduction);
 }
 
 
 CFG::GrammarProduction* SpecializeGrammar::RewriteNonProductiveCFGRules::
-  rewriteProductionWithoutEpsilon (CFG::GrammarProduction* production) {
-  CFG::Base* rhs = rewriteBaseWithoutEpsilon (production->rhs);
+  rewriteProductionWithoutEpsilon(CFG::GrammarProduction* production) {
+  CFG::Base* rhs = rewriteBaseWithoutEpsilon(production->rhs);
   if (rhs != NULL) {
-    CFG::NonTerminal* lhs = new CFG::NonTerminal (new std::string (
+    CFG::NonTerminal* lhs = new CFG::NonTerminal(new std::string(
       *production->lhs->getName() + "_no_eps"));
-    CFG::GrammarProduction* newProduction = new CFG::GrammarProduction (lhs);
-    newProduction->rhs = dynamic_cast<CFG::ProductionAlternative*> (rhs);
+    CFG::GrammarProduction* newProduction = new CFG::GrammarProduction(lhs);
+    newProduction->rhs = dynamic_cast<CFG::ProductionAlternative*>(rhs);
     return newProduction;
   }
   return NULL;
@@ -118,7 +118,7 @@ CFG::GrammarProduction* SpecializeGrammar::RewriteNonProductiveCFGRules::
 
 
 CFG::Base* SpecializeGrammar::RewriteNonProductiveCFGRules::
-  rewriteBaseWithoutEpsilon (CFG::Base* b) {
+  rewriteBaseWithoutEpsilon(CFG::Base* b) {
   switch (b->getType()) {
     case CFG::EPSILON: {
       return NULL;
@@ -129,29 +129,29 @@ CFG::Base* SpecializeGrammar::RewriteNonProductiveCFGRules::
     }
     case CFG::BASE_WRAPPER: {
       CFG::BaseWrapper* wrapper = dynamic_cast<CFG::BaseWrapper*> (b);
-      CFG::Base* result = rewriteBaseWithEpsilon (wrapper->getWrappedBase());
+      CFG::Base* result = rewriteBaseWithEpsilon(wrapper->getWrappedBase());
 
       if (result != NULL) {
-        result = new CFG::BaseWrapper (result);
+        result = new CFG::BaseWrapper(result);
       }
 
       return result;
     }
     case CFG::NONTERMINAL: {
       CFG::NonTerminal* nonTerminal = dynamic_cast<CFG::NonTerminal*> (b);
-      if (!Util::CycleSetUtils::elementIsNullable (nonTerminal)) {
+      if (!Util::CycleSetUtils::elementIsNullable(nonTerminal)) {
         return nonTerminal->clone();
       }
       else {
         // If the non-terminal can derive epsilon, we want only
         // that part of the non-terminal, which cannot derive epsilon,
         // hence we use the "_no_eps" suffix.
-        if (Util::CycleSetUtils::elementIsProductive (nonTerminal)) {
-          std::string* nonTerminalWithoutEpsilonName = new std::string (
+        if (Util::CycleSetUtils::elementIsProductive(nonTerminal)) {
+          std::string* nonTerminalWithoutEpsilonName = new std::string(
             *nonTerminal->getName() + "_no_eps");
-          CFG::NonTerminal* newNonTerminal = new CFG::NonTerminal (
+          CFG::NonTerminal* newNonTerminal = new CFG::NonTerminal(
             nonTerminalWithoutEpsilonName);
-          copyAttributes (nonTerminal, newNonTerminal);
+          copyAttributes(nonTerminal, newNonTerminal);
           return newNonTerminal;
         }
         else {
@@ -177,22 +177,22 @@ CFG::Base* SpecializeGrammar::RewriteNonProductiveCFGRules::
       std::list<int> positionOfCycleElements;
       for (CFG::ProductionSequence::iterator i = sequence->begin();
            i != sequence->end(); i++) {
-        CFG::Base* result = rewriteBaseWithoutEpsilon (*i);
+        CFG::Base* result = rewriteBaseWithoutEpsilon(*i);
         // Push it all, even the NULLs. We only know what to do
         // with it after we got them all.
-        resultElements.push_back (result);
+        resultElements.push_back(result);
         // Some statistics about the sequence itself...
         if ((*i)->getType() != CFG::NONTERMINAL) {
           allElementsAreNonTerminals = false;
         }
-        if (Util::CycleSetUtils::elementIsNullableOnly (*i)) {
+        if (Util::CycleSetUtils::elementIsNullableOnly(*i)) {
           nullableOnlyElementCount++;
         }
-        if (Util::CycleSetUtils::elementIsPartOfCycle (*i)) {
+        if (Util::CycleSetUtils::elementIsPartOfCycle(*i)) {
           elementsPartOfCycleCount++;
           // The current position in the sequence equals
           // the total element count.
-          positionOfCycleElements.push_back (totalElementCount);
+          positionOfCycleElements.push_back(totalElementCount);
         }
         totalElementCount++;
       }
@@ -233,16 +233,16 @@ CFG::Base* SpecializeGrammar::RewriteNonProductiveCFGRules::
               if (l == cycleElementPos) {
                 // The cycle element must have the property
                 // of being productive
-                if (!Util::CycleSetUtils::elementIsProductive (*i)) {
+                if (!Util::CycleSetUtils::elementIsProductive(*i)) {
                   // is there any requirement imposed on this
                   // element??
                 }
               }
               else {
-                if (Util::CycleSetUtils::elementIsNullable (*i)) {
+                if (Util::CycleSetUtils::elementIsNullable(*i)) {
                   nullableElementsCount++;
                 }
-                if (Util::CycleSetUtils::elementIsProductive (*i)) {
+                if (Util::CycleSetUtils::elementIsProductive(*i)) {
                   productiveElementsCount++;
                 }
               }
@@ -271,36 +271,36 @@ CFG::Base* SpecializeGrammar::RewriteNonProductiveCFGRules::
               l = 0;
               for (CFG::ProductionSequence::iterator i = sequence->begin();
                    i != sequence->end(); i++, l++) {
-                assert ((*i)->getType() == CFG::NONTERMINAL);
+                assert((*i)->getType() == CFG::NONTERMINAL);
                 CFG::NonTerminal* sequenceElement =
                   dynamic_cast<CFG::NonTerminal*> (*i);
                 if (l == cycleElementPos) {
                   CFG::NonTerminal* newNonTerminal = NULL;
-                  if (!Util::CycleSetUtils::elementIsNullable (
+                  if (!Util::CycleSetUtils::elementIsNullable(
                     sequenceElement)) {
                     newNonTerminal = dynamic_cast<CFG::NonTerminal*> (
                       sequenceElement->clone());
                   }
                   else {
-                    newNonTerminal = new CFG::NonTerminal (new std::string (
+                    newNonTerminal = new CFG::NonTerminal(new std::string(
                       *sequenceElement->getName() + "_no_eps"));
                   }
-                  copyAttributes (sequenceElement, newNonTerminal);
-                  newSequence->append (newNonTerminal);
+                  copyAttributes(sequenceElement, newNonTerminal);
+                  newSequence->append(newNonTerminal);
                 }
                 else {
                   // Divisible by two means the pure epsilon rule,
                   // otherwise we use the pure-non-epsilon rule.
                   std::string* newNonTerminalName = NULL;
                   if (code % 2 == 0) {
-                    newNonTerminalName = new std::string (
+                    newNonTerminalName = new std::string(
                       *sequenceElement->getName() + "_eps");
                   }
                   else {
-                    newNonTerminalName = new std::string (
+                    newNonTerminalName = new std::string(
                       *sequenceElement->getName() + "_no_eps");
                   }
-                  newSequence->append (new CFG::NonTerminal (
+                  newSequence->append(new CFG::NonTerminal(
                     newNonTerminalName));
 
 
@@ -309,7 +309,7 @@ CFG::Base* SpecializeGrammar::RewriteNonProductiveCFGRules::
                 }
               }
 
-              newAlternative->addAlternative (newSequence);
+              newAlternative->addAlternative(newSequence);
             }
           }
 
@@ -334,9 +334,9 @@ CFG::Base* SpecializeGrammar::RewriteNonProductiveCFGRules::
 
       for (CFG::ProductionAlternative::iterator i = alternative->begin();
            i != alternative->end(); i++) {
-        CFG::Base* result = rewriteBaseWithoutEpsilon (*i);
+        CFG::Base* result = rewriteBaseWithoutEpsilon(*i);
         if (result != NULL) {
-          newAlternative->addAlternative (result);
+          newAlternative->addAlternative(result);
         }
       }
 
@@ -349,23 +349,23 @@ CFG::Base* SpecializeGrammar::RewriteNonProductiveCFGRules::
       return newAlternative;
     }
     default: {
-      throw LogError ("gap-00725: Unsupported CFG node type in level 1.");
+      throw LogError("gap-00725: Unsupported CFG node type in level 1.");
     }
   }
 }
 
 
 CFG::GrammarProduction* SpecializeGrammar::RewriteNonProductiveCFGRules::
-rewriteProductionWithEpsilon (CFG::GrammarProduction* production) {
-  CFG::Base* rhs = rewriteBaseWithEpsilon (production->rhs);
+rewriteProductionWithEpsilon(CFG::GrammarProduction* production) {
+  CFG::Base* rhs = rewriteBaseWithEpsilon(production->rhs);
   if (rhs != NULL) {
-    CFG::NonTerminal* lhs = new CFG::NonTerminal (new std::string (
+    CFG::NonTerminal* lhs = new CFG::NonTerminal(new std::string(
       *production->lhs->getName() + "_eps"));
-    lhs->setAttribute (new EpsilonOnlyAttribute());
-    CFG::GrammarProduction* newProduction = new CFG::GrammarProduction (lhs);
-    newProduction->rhs = dynamic_cast<CFG::ProductionAlternative*> (rhs);
-    this->newGrammar->addProduction (newProduction);
-    newProduction->setAttribute (new EpsilonOnlyAttribute());
+    lhs->setAttribute(new EpsilonOnlyAttribute());
+    CFG::GrammarProduction* newProduction = new CFG::GrammarProduction(lhs);
+    newProduction->rhs = dynamic_cast<CFG::ProductionAlternative*>(rhs);
+    this->newGrammar->addProduction(newProduction);
+    newProduction->setAttribute(new EpsilonOnlyAttribute());
     return newProduction;
   }
   return NULL;
@@ -373,10 +373,10 @@ rewriteProductionWithEpsilon (CFG::GrammarProduction* production) {
 
 
 CFG::Base* SpecializeGrammar::RewriteNonProductiveCFGRules::
-  rewriteBaseWithEpsilon (CFG::Base* b) {
+  rewriteBaseWithEpsilon(CFG::Base* b) {
   switch (b->getType()) {
     case CFG::EPSILON: {
-      b->setAttribute (new EpsilonOnlyAttribute());
+      b->setAttribute(new EpsilonOnlyAttribute());
       return b->clone();
     }
     case CFG::TERMINAL:
@@ -385,23 +385,23 @@ CFG::Base* SpecializeGrammar::RewriteNonProductiveCFGRules::
     }
     case CFG::BASE_WRAPPER: {
       CFG::BaseWrapper* wrapper = dynamic_cast<CFG::BaseWrapper*> (b);
-      CFG::Base* result = rewriteBaseWithEpsilon (wrapper->getWrappedBase());
+      CFG::Base* result = rewriteBaseWithEpsilon(wrapper->getWrappedBase());
 
       if (result != NULL) {
-        result = new CFG::BaseWrapper (result);
+        result = new CFG::BaseWrapper(result);
       }
 
       return result;
     }
     case CFG::NONTERMINAL: {
       CFG::NonTerminal* nonTerminal = dynamic_cast<CFG::NonTerminal*> (b);
-      if (Util::CycleSetUtils::elementIsNullable (nonTerminal)) {
-        std::string* nonTerminalWithoutEpsilonName = new std::string (
+      if (Util::CycleSetUtils::elementIsNullable(nonTerminal)) {
+        std::string* nonTerminalWithoutEpsilonName = new std::string(
           *nonTerminal->getName() + "_eps");
-        CFG::NonTerminal* newNonTerminal = new CFG::NonTerminal (
+        CFG::NonTerminal* newNonTerminal = new CFG::NonTerminal(
           nonTerminalWithoutEpsilonName);
-        newNonTerminal->setAttribute (new EpsilonOnlyAttribute());
-        copyAttributes (nonTerminal, newNonTerminal);
+        newNonTerminal->setAttribute(new EpsilonOnlyAttribute());
+        copyAttributes(nonTerminal, newNonTerminal);
         return newNonTerminal;
       }
       else {
@@ -419,18 +419,18 @@ CFG::Base* SpecializeGrammar::RewriteNonProductiveCFGRules::
       }
 
       CFG::ProductionSequence* newSequence = new CFG::ProductionSequence();
-      copyAttributes (sequence, newSequence);
+      copyAttributes(sequence, newSequence);
       bool sequenceContainsInvalidElements = false;
       for (CFG::ProductionSequence::iterator i = sequence->begin();
            i != sequence->end(); i++) {
-        CFG::Base* result = rewriteBaseWithEpsilon (*i);
+        CFG::Base* result = rewriteBaseWithEpsilon(*i);
         if (result == NULL) {
           // There are invalid elements in this sequence which
           // make it not completely nullable.
           sequenceContainsInvalidElements = true;
           break;
         }
-        newSequence->append (result);
+        newSequence->append(result);
       }
 
       // If the transformation revealed at least one element
@@ -443,7 +443,7 @@ CFG::Base* SpecializeGrammar::RewriteNonProductiveCFGRules::
 
       // The whole lot consists of epsilons or epsilon-only
       // deriving elements. Mark this with a special attribute.
-      newSequence->setAttribute (new EpsilonOnlyAttribute());
+      newSequence->setAttribute(new EpsilonOnlyAttribute());
 
       return newSequence;
     }
@@ -452,13 +452,13 @@ CFG::Base* SpecializeGrammar::RewriteNonProductiveCFGRules::
         dynamic_cast<CFG::ProductionAlternative*> (b);
       CFG::ProductionAlternative* newAlternative =
         new CFG::ProductionAlternative();
-      copyAttributes (alternative, newAlternative);
+      copyAttributes(alternative, newAlternative);
 
       for (CFG::ProductionAlternative::iterator i = alternative->begin();
            i != alternative->end(); i++) {
-        CFG::Base* result = rewriteBaseWithEpsilon (*i);
+        CFG::Base* result = rewriteBaseWithEpsilon(*i);
         if (result != NULL) {
-          newAlternative->addAlternative (result);
+          newAlternative->addAlternative(result);
         }
       }
 
@@ -470,23 +470,23 @@ CFG::Base* SpecializeGrammar::RewriteNonProductiveCFGRules::
 
       // The whole lot consists of epsilons or epsilon-only
       // deriving elements. Mark this with a special attribute.
-      newAlternative->setAttribute (new EpsilonOnlyAttribute());
+      newAlternative->setAttribute(new EpsilonOnlyAttribute());
 
 
       return newAlternative;
     }
     default: {
-      throw LogError ("gap-00726: Unsupported CFG node type in level 1.");
+      throw LogError("gap-00726: Unsupported CFG node type in level 1.");
     }
   }
 }
 
 
-void SpecializeGrammar::RewriteNonProductiveCFGRules::copyAttributes (
+void SpecializeGrammar::RewriteNonProductiveCFGRules::copyAttributes(
   CFG::Base* source, CFG::Base* destination) {
   for (Util::Attributable::iterator i = source->begin();
        i != source->end(); i++) {
-    destination->setAttribute ((*i).second);
+    destination->setAttribute((*i).second);
   }
 }
 
@@ -496,13 +496,13 @@ void SpecializeGrammar::RewriteNonProductiveCFGRules::copyAttributes (
 
 
 SpecializeGrammar::EpsilonOnlyAttribute::EpsilonOnlyAttribute()
-  : Util::Attribute ("SpecializeGrammar::EpsilonOnlyAttribute") {
+  : Util::Attribute("SpecializeGrammar::EpsilonOnlyAttribute") {
 }
 
 
-SpecializeGrammar::EpsilonOnlyAttribute::EpsilonOnlyAttribute (
+SpecializeGrammar::EpsilonOnlyAttribute::EpsilonOnlyAttribute(
   EpsilonOnlyAttribute& a)
-  : Util::Attribute ("SpecializeGrammar::EpsilonOnlyAttribute") {
+  : Util::Attribute("SpecializeGrammar::EpsilonOnlyAttribute") {
 }
 
 
@@ -511,5 +511,5 @@ SpecializeGrammar::EpsilonOnlyAttribute::~EpsilonOnlyAttribute() {
 
 
 Util::Attribute* SpecializeGrammar::EpsilonOnlyAttribute::clone() {
-  return new EpsilonOnlyAttribute (*this);
+  return new EpsilonOnlyAttribute(*this);
 }

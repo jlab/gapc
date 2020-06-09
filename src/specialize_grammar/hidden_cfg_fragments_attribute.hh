@@ -46,11 +46,11 @@ namespace SpecializeGrammar {
     public:
 
       HiddenCFGFragmentsAttribute();
-      HiddenCFGFragmentsAttribute (HiddenCFGFragmentsAttribute& a);
+      HiddenCFGFragmentsAttribute(HiddenCFGFragmentsAttribute& a);
       virtual ~HiddenCFGFragmentsAttribute();
 
-      void addHiddenFragment (CFG::Base* b);
-      void addHiddenFragments (std::set<CFG::Base*>* fragments);
+      void addHiddenFragment(CFG::Base* b);
+      void addHiddenFragments(std::set<CFG::Base*>* fragments);
 
       typedef std::list<CFG::Base*>::iterator iterator;
       iterator begin();
@@ -62,7 +62,7 @@ namespace SpecializeGrammar {
   };
 
 
-}
+}  // namespace SpecializeGrammar
 
 
-#endif  // ifndef SRC_SPECIALIZE_GRAMMAR_HIDDEN_CFG_FRAGMENTS_ATTRIBUTE_HH_
+#endif  // SRC_SPECIALIZE_GRAMMAR_HIDDEN_CFG_FRAGMENTS_ATTRIBUTE_HH_

@@ -52,7 +52,7 @@ namespace SpecializeGrammar {
   };
 
 
-}
+}  // SpecializeGrammar
 
 
-#endif  // ifndef SRC_SPECIALIZE_GRAMMAR_ADD_SPECIAL_AXIOM_TO_CFG_HH_
+#endif  // SRC_SPECIALIZE_GRAMMAR_ADD_SPECIAL_AXIOM_TO_CFG_HH_
