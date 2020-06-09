@@ -21,6 +21,7 @@
 
 }}} */
 
+#include <vector>
 #include "backtrace_decl.hh"
 
 #include "../printer.hh"
@@ -29,8 +30,7 @@
 #include "../type/backtrace.hh"
 #include "../statement.hh"
 
-const std::list<Para_Decl::Base*> &Statement::Backtrace_Decl::ntparas() const
-{
+const std::list<Para_Decl::Base*> &Statement::Backtrace_Decl::ntparas() const {
   return fn.ntparas();
 }
 
@@ -43,22 +43,18 @@ Statement::Backtrace_Decl::Backtrace_Decl(const Fn_Decl &a, const Fn_Def &b)
         elist_type(0),
         original_name(*b.name),
         derive_bt_score_(false),
-        score_type_(0)
-{
+        score_type_(0) {
 }
 
-void Statement::Backtrace_Decl::print(Printer::Base &p) const
-{
+void Statement::Backtrace_Decl::print(Printer::Base &p) const {
   p.print(*this);
 }
 
-void Statement::Backtrace_NT_Decl::print(Printer::Base &p) const
-{
+void Statement::Backtrace_NT_Decl::print(Printer::Base &p) const {
   p.print(*this);
 }
 
-void Statement::Backtrace_Decl::codegen()
-{
+void Statement::Backtrace_Decl::codegen() {
   name_ = "Backtrace_" + *fn.name;
   codegen_init();
   codegen_eval();
@@ -67,16 +63,15 @@ void Statement::Backtrace_Decl::codegen()
 
 #include "../para_decl.hh"
 
-void Statement::Backtrace_Decl::add_arg(Para_Decl::Simple *p, const ::Type::Base *i)
-{
+void Statement::Backtrace_Decl::add_arg(
+  Para_Decl::Simple *p, const ::Type::Base *i) {
   arg_types.push_back(p->type());
 
   ::Type::Base *t = 0;
   if (i->const_simple()->is(::Type::SIGNATURE)) {
-    //t = new Type::Backtrace_List();
+    // t = new Type::Backtrace_List();
     t = new ::Type::Backtrace();
-  }
-  else {
+  } else {
     t = p->type();
   }
   assert(t);
@@ -87,8 +82,7 @@ void Statement::Backtrace_Decl::add_arg(Para_Decl::Simple *p, const ::Type::Base
 
 #include "../type/multi.hh"
 
-void Statement::Backtrace_Decl::codegen_init()
-{
+void Statement::Backtrace_Decl::codegen_init() {
   std::list< ::Type::Base*>::const_iterator i = fn_sig.types.begin();
   for (std::list<Para_Decl::Base*>::const_iterator x = fn.paras.begin();
        x != fn.paras.end(); ++x,  ++i) {
@@ -111,8 +105,7 @@ void Statement::Backtrace_Decl::codegen_init()
 }
 
 
-void Statement::Backtrace_Decl::codegen_eval()
-{
+void Statement::Backtrace_Decl::codegen_eval() {
   assert(stmts.empty());
   eval_outer();
   eval_inner();
@@ -121,8 +114,7 @@ void Statement::Backtrace_Decl::codegen_eval()
 
 #include "../expr/new.hh"
 
-void Statement::Backtrace_Decl::eval_outer()
-{
+void Statement::Backtrace_Decl::eval_outer() {
   ::Type::Backtrace *bt_type = new ::Type::Backtrace();
   elist_type = new ::Type::Eval_List();
   elist_type->of = fn.return_type;
@@ -132,7 +124,7 @@ void Statement::Backtrace_Decl::eval_outer()
   std::list< ::Type::Base*>::const_iterator j = arg_types.begin();
   for (std::list<Statement::Var_Decl*>::iterator i = args.begin();
        i != args.end(); ++i, ++j) {
-    //if (!(*i)->type->is(::Type::BACKTRACE_LIST)) {
+    // if (!(*i)->type->is(::Type::BACKTRACE_LIST)) {
     if (!(*i)->type->is(::Type::BACKTRACE)) {
       paras_.push_back(*i);
       eval_paras.push_back(*i);
@@ -148,7 +140,7 @@ void Statement::Backtrace_Decl::eval_outer()
     Statement::Foreach *bt_loop = new Statement::Foreach(bt, a);
     bt_loops.push_back(bt_loop);
 
-    Expr::Fn_Call *e = 
+    Expr::Fn_Call *e =
         new Expr::Fn_Call(Expr::Fn_Call::EVALUATE);
     e->add_arg(*bt);
     Statement::Var_Decl *eval_list =
@@ -158,7 +150,7 @@ void Statement::Backtrace_Decl::eval_outer()
 
     Statement::Var_Decl *eval = new Statement::Var_Decl(elem_type,
         *a->name + "_elem");
-    //paras_.push_back(eval);
+    // paras_.push_back(eval);
     eval_paras.push_back(eval);
     paras_.push_back(a);
 
@@ -179,7 +171,6 @@ void Statement::Backtrace_Decl::eval_outer()
 #include "fn_call.hh"
 
 void Statement::Backtrace_Decl::eval_inner() {
-
   Expr::Fn_Call *e = new Expr::Fn_Call(fn.name, eval_paras);
   e->add(fn.ntparas());
   Statement::Var_Decl *t = new Statement::Var_Decl(fn.return_type, "ret", e);
@@ -223,24 +214,20 @@ void Statement::Backtrace_Decl::eval_end() {
   stmts.push_back(ret);
   eval_code_ = new Fn_Def(elist_type, new std::string("eval"));
   eval_code_->stmts = stmts;
-
 }
 
-void Statement::Backtrace_Decl::codegen_algebra_fn()
-{
+void Statement::Backtrace_Decl::codegen_algebra_fn() {
   algebra_code_ = &fn;
 }
 
-const ::Type::Base & Statement::Backtrace_Decl::score_type() const
-{
+const ::Type::Base & Statement::Backtrace_Decl::score_type() const {
   return *score_type_;
 }
 
 #include "../symbol.hh"
 #include "../table.hh"
 
-void Statement::Backtrace_NT_Decl::init(Symbol::NT &n)
-{
+void Statement::Backtrace_NT_Decl::init(Symbol::NT &n) {
   size_t t = 0;
   for (std::vector<Table>::const_iterator i = n.tables().begin();
       i != n.tables().end(); ++i, ++t) {
@@ -259,15 +246,11 @@ void Statement::Backtrace_NT_Decl::init(Symbol::NT &n)
 }
 
 Statement::Backtrace_NT_Decl::Backtrace_NT_Decl(Symbol::NT &n)
-  : Base (BACKTRACE_NT_DECL), name_(*n.name), score_type_(0)
-{
+  : Base(BACKTRACE_NT_DECL), name_(*n.name), score_type_(0) {
   init(n);
 }
 
 Statement::Backtrace_NT_Decl::Backtrace_NT_Decl(Symbol::NT &n, ::Type::Base *s)
-  : Base (BACKTRACE_NT_DECL), name_(*n.name), score_type_(s)
-{
+  : Base(BACKTRACE_NT_DECL), name_(*n.name), score_type_(s) {
   init(n);
 }
-
-

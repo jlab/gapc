@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef STATEMENT_WHILE_HH
-#define STATEMENT_WHILE_HH
+#ifndef SRC_STATEMENT_WHILE_HH_
+#define SRC_STATEMENT_WHILE_HH_
 
 
 #include "base.hh"
@@ -31,29 +31,22 @@
 
 
 namespace Statement {
-	
-	
-	class While : public Block_Base {
-		
-		private:
-			
-			Expr::Base *expr_;
-			
-			
-		public:
-			
-			While(Expr::Base *e, const Loc &l);
-			
-			void print(Printer::Base &p) const;
-			Base *copy() const;
-			const Expr::Base &expr() const { assert(expr_); return *expr_; }
-			
-			
-	};
-	
-	
-}
 
 
-#endif
+class While : public Block_Base {
+ private:
+    Expr::Base *expr_;
 
+ public:
+    While(Expr::Base *e, const Loc &l);
+
+    void print(Printer::Base &p) const;
+    Base *copy() const;
+    const Expr::Base &expr() const { assert(expr_); return *expr_; }
+};
+
+
+}  // namespace Statement
+
+
+#endif  // SRC_STATEMENT_WHILE_HH_

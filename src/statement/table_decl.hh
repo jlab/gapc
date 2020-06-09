@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef TABLE_DECL_HH
-#define TABLE_DECL_HH
+#ifndef SRC_STATEMENT_TABLE_DECL_HH_
+#define SRC_STATEMENT_TABLE_DECL_HH_
 
 #include "base.hh"
 
@@ -35,55 +35,55 @@ class Fn_Def;
 
 namespace Statement {
 
-  class Table_Decl : public Base {
-    private:
+class Table_Decl : public Base {
+ private:
+  Symbol::NT &nt_;
 
-      Symbol::NT &nt_;
+  ::Type::Base *type_;
+  ::Type::Base *pos_type_;
+  std::string *name_;
+  bool cyk_;
 
-      ::Type::Base *type_;
-      ::Type::Base *pos_type_;
-      std::string *name_;
-      bool cyk_;
+  Fn_Def *fn_is_tab_;
+  Fn_Def *fn_untab_;
+  Fn_Def *fn_tab_;
+  Fn_Def *fn_get_tab_;
+  Fn_Def *fn_size_;
 
-      Fn_Def *fn_is_tab_;
-      Fn_Def *fn_untab_;
-      Fn_Def *fn_tab_;
-      Fn_Def *fn_get_tab_;
-      Fn_Def *fn_size_;
+  std::list<Statement::Var_Decl*> ns_;
 
-      std::list<Statement::Var_Decl*> ns_;
-    public:
-      Table_Decl(
-          Symbol::NT &nt,
-          ::Type::Base *t, std::string *n, 
-          bool c,
-          Fn_Def *fn_is_tab,
-          Fn_Def *fn_tab,
-          Fn_Def *fn_get_tab,
-          Fn_Def *fn_size,
-          const std::list<Statement::Var_Decl*> &ns
-          );
+ public:
+  Table_Decl(
+      Symbol::NT &nt,
+      ::Type::Base *t, std::string *n,
+      bool c,
+      Fn_Def *fn_is_tab,
+      Fn_Def *fn_tab,
+      Fn_Def *fn_get_tab,
+      Fn_Def *fn_size,
+      const std::list<Statement::Var_Decl*> &ns
+      );
 
-      void print(Printer::Base &p) const;
+  void print(Printer::Base &p) const;
 
-      const std::string &name() const { assert(name_); return *name_; }
-      const ::Type::Base &datatype() const { assert(type_); return *type_; }
-      const ::Type::Base &pos_type() const { assert(pos_type_); return *pos_type_; }
-      bool cyk() const { return cyk_; }
-      const std::list<Statement::Var_Decl*> &ns() const { return ns_; }
+  const std::string &name() const { assert(name_); return *name_; }
+  const ::Type::Base &datatype() const { assert(type_); return *type_; }
+  const ::Type::Base &pos_type() const { assert(pos_type_); return *pos_type_; }
+  bool cyk() const { return cyk_; }
+  const std::list<Statement::Var_Decl*> &ns() const { return ns_; }
 
-      const Fn_Def &fn_is_tab() const { return *fn_is_tab_; }
-      const Fn_Def &fn_untab() const { assert(fn_untab_); return *fn_untab_; }
-      void set_fn_untab(Fn_Def *d) { fn_untab_=d; }
-      const Fn_Def &fn_tab() const { return *fn_tab_; }
-      const Fn_Def &fn_get_tab() const { return *fn_get_tab_; }
-      const Fn_Def &fn_size() const { return *fn_size_; }
+  const Fn_Def &fn_is_tab() const { return *fn_is_tab_; }
+  const Fn_Def &fn_untab() const { assert(fn_untab_); return *fn_untab_; }
+  void set_fn_untab(Fn_Def *d) { fn_untab_=d; }
+  const Fn_Def &fn_tab() const { return *fn_tab_; }
+  const Fn_Def &fn_get_tab() const { return *fn_get_tab_; }
+  const Fn_Def &fn_size() const { return *fn_size_; }
 
-      const Symbol::NT &nt() const { return nt_; }
+  const Symbol::NT &nt() const { return nt_; }
 
-  };
+};
 
-}
+}  // namespace Statement
 
 
-#endif
+#endif  // SRC_STATEMENT_TABLE_DECL_HH_

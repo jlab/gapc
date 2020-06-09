@@ -21,29 +21,27 @@
 
 }}} */
 
+#include <algorithm>
 #include "while.hh"
 #include "../printer.hh"
 #include "../expr.hh"
 
 namespace Statement {
 
-  While::While(Expr::Base *e, const Loc &l)
-    : Block_Base(WHILE), expr_(e)
-  {
-  }
-
-  void While::print(Printer::Base &p) const
-  {
-    p.print(*this);
-  }
-
-  Base *While::copy() const
-  {
-    While *o = new While(*this);
-    Block_Base::copy(*o);
-    if (expr_)
-      o->expr_ = expr_->copy();
-    return o;
-  }
-
+While::While(Expr::Base *e, const Loc &l)
+  : Block_Base(WHILE), expr_(e) {
 }
+
+void While::print(Printer::Base &p) const {
+  p.print(*this);
+}
+
+Base *While::copy() const {
+  While *o = new While(*this);
+  Block_Base::copy(*o);
+  if (expr_)
+    o->expr_ = expr_->copy();
+  return o;
+}
+
+}  // namespace Statement

@@ -28,15 +28,12 @@
 
 namespace Statement {
 
-  Marker_Decl::Marker_Decl(const Symbol::NT &nt)
-        : Base(MARKER_DECL)
-  {
-    name_ = "marker_nt_" + *nt.name;
-  }
-
-  void Marker_Decl::print(Printer::Base &p) const
-  {
-    p.print(*this);
-  }
-
+Marker_Decl::Marker_Decl(const Symbol::NT &nt) : Base(MARKER_DECL) {
+  name_ = "marker_nt_" + *nt.name;
 }
+
+void Marker_Decl::print(Printer::Base &p) const {
+  p.print(*this);
+}
+
+}  // namespace Statement

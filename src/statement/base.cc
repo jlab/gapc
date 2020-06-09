@@ -21,18 +21,17 @@
 
 }}} */
 
+#include <cstdlib>
+
 #include "base.hh"
 
 #include "../cc.hh"
 
 #include "../fn_def.hh"
 
-#include <cstdlib>
-
 Statement::Base::~Base() {}
 
-std::ostream &operator<<(std::ostream &s, const Statement::Base &b)
-{
+std::ostream &operator<<(std::ostream &s, const Statement::Base &b) {
   Printer::CC cc(s);
   b.print(cc);
   return s;
@@ -40,44 +39,35 @@ std::ostream &operator<<(std::ostream &s, const Statement::Base &b)
 
 namespace Statement {
 
-  iterator begin(std::list<Statement::Base*> &l)
-  {
-    return Iterator(l);
-  }
-
-  iterator begin(Fn_Def &fn)
-  {
-    return Iterator(fn.stmts);
-  }
-
-  iterator end()
-  {
-    return Iterator();
-  }
-
+iterator begin(std::list<Statement::Base*> &l) {
+  return Iterator(l);
 }
 
+iterator begin(Fn_Def &fn) {
+  return Iterator(fn.stmts);
+}
 
-std::list<Statement::Base*> *Statement::Base::stmts()
-{
+iterator end() {
+  return Iterator();
+}
+
+}  // namespace Statement
+
+
+std::list<Statement::Base*> *Statement::Base::stmts() {
   std::abort();
   return 0;
 }
 
-Statement::Var_Decl *Statement::Base::var_decl()
-{
+Statement::Var_Decl *Statement::Base::var_decl() {
   std::abort();
   return 0;
 }
 
-void Statement::Base::replace(Var_Decl &decl, Expr::Base *expr)
-{
+void Statement::Base::replace(Var_Decl &decl, Expr::Base *expr) {
 }
 
-Statement::Base *Statement::Base::copy() const
-{
+Statement::Base *Statement::Base::copy() const {
   assert(23 == 0);
   return 0;
 }
-
-
