@@ -31,28 +31,23 @@
 namespace SpecializeGrammar {
 
 
-  class AddSpecialAxiomToCFG {
+class AddSpecialAxiomToCFG {
+ public:
+    AddSpecialAxiomToCFG();
+    ~AddSpecialAxiomToCFG();
+
+    // Adds two new rules to the grammar and annotated both
+    // productions with attributes. the first production
+    // defining the axiom, will be annotated as designated
+    // axiom-production. The second production will be
+    // annotated with a choice-function-attribute which
+    // hints the gap-code generator which choice function
+    // to use for the production.
+    void addSpecialAxiom(CFG::CFG* grammar);
+};
 
 
-    public:
-
-      AddSpecialAxiomToCFG();
-      ~AddSpecialAxiomToCFG();
-
-      // Adds two new rules to the grammar and annotated both
-      // productions with attributes. the first production
-      // defining the axiom, will be annotated as designated
-      // axiom-production. The second production will be
-      // annotated with a choice-function-attribute which
-      // hints the gap-code generator which choice function
-      // to use for the production.
-      void addSpecialAxiom(CFG::CFG* grammar);
-
-
-  };
-
-
-}  // SpecializeGrammar
+}  // namespace SpecializeGrammar
 
 
 #endif  // SRC_SPECIALIZE_GRAMMAR_ADD_SPECIAL_AXIOM_TO_CFG_HH_

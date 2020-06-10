@@ -24,7 +24,7 @@
 #include "set_of_cycle_sets.hh"
 
 #include <cassert>
-
+#include <string>
 
 Util::SetOfCycleSets::SetOfCycleSets() {
 }

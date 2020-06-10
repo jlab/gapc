@@ -31,18 +31,14 @@
 namespace SpecializeGrammar {
 
 
-  class CycleBreakPointAttribute : public Util::Attribute {
+class CycleBreakPointAttribute : public Util::Attribute {
+ public:
+    CycleBreakPointAttribute();
+    CycleBreakPointAttribute(CycleBreakPointAttribute& a);
+    virtual ~CycleBreakPointAttribute();
 
-    public:
-
-      CycleBreakPointAttribute();
-      CycleBreakPointAttribute(CycleBreakPointAttribute& a);
-      virtual ~CycleBreakPointAttribute();
-
-      virtual Attribute* clone();
-
-
-  };
+    virtual Attribute* clone();
+};
 
 
 }  // namespace SpecializeGrammar

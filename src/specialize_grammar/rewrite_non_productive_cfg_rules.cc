@@ -23,7 +23,7 @@
 
 #include "rewrite_non_productive_cfg_rules.hh"
 
-
+#include <string>
 #include <cassert>
 
 #include "../log.hh"
@@ -141,8 +141,7 @@ CFG::Base* SpecializeGrammar::RewriteNonProductiveCFGRules::
       CFG::NonTerminal* nonTerminal = dynamic_cast<CFG::NonTerminal*> (b);
       if (!Util::CycleSetUtils::elementIsNullable(nonTerminal)) {
         return nonTerminal->clone();
-      }
-      else {
+      } else {
         // If the non-terminal can derive epsilon, we want only
         // that part of the non-terminal, which cannot derive epsilon,
         // hence we use the "_no_eps" suffix.
@@ -153,8 +152,7 @@ CFG::Base* SpecializeGrammar::RewriteNonProductiveCFGRules::
             nonTerminalWithoutEpsilonName);
           copyAttributes(nonTerminal, newNonTerminal);
           return newNonTerminal;
-        }
-        else {
+        } else {
           return NULL;
         }
       }
@@ -202,8 +200,7 @@ CFG::Base* SpecializeGrammar::RewriteNonProductiveCFGRules::
         // we return nothing, since this is not a valid result
         // containing only productions which can not derive epsilon.
         return NULL;
-      }
-      else if (allElementsAreNonTerminals) {
+      } else if (allElementsAreNonTerminals) {
         // Only for those sequences which contain elements that
         // are part of a cycle, we do this extra work. The second
         // condition that must be met is that all elements that
@@ -213,7 +210,8 @@ CFG::Base* SpecializeGrammar::RewriteNonProductiveCFGRules::
           // this single sequence. All alternatives will be stored
           // in the newAlternative CFG node, and returned at
           // the end of this block.
-          CFG::ProductionAlternative* newAlternative = new CFG::ProductionAlternative();
+          CFG::ProductionAlternative* newAlternative =
+            new CFG::ProductionAlternative();
 
           for (std::list<int>::iterator p = positionOfCycleElements.begin();
                p != positionOfCycleElements.end(); p++) {
@@ -237,8 +235,7 @@ CFG::Base* SpecializeGrammar::RewriteNonProductiveCFGRules::
                   // is there any requirement imposed on this
                   // element??
                 }
-              }
-              else {
+              } else {
                 if (Util::CycleSetUtils::elementIsNullable(*i)) {
                   nullableElementsCount++;
                 }
@@ -280,23 +277,20 @@ CFG::Base* SpecializeGrammar::RewriteNonProductiveCFGRules::
                     sequenceElement)) {
                     newNonTerminal = dynamic_cast<CFG::NonTerminal*> (
                       sequenceElement->clone());
-                  }
-                  else {
+                  } else {
                     newNonTerminal = new CFG::NonTerminal(new std::string(
                       *sequenceElement->getName() + "_no_eps"));
                   }
                   copyAttributes(sequenceElement, newNonTerminal);
                   newSequence->append(newNonTerminal);
-                }
-                else {
+                } else {
                   // Divisible by two means the pure epsilon rule,
                   // otherwise we use the pure-non-epsilon rule.
                   std::string* newNonTerminalName = NULL;
                   if (code % 2 == 0) {
                     newNonTerminalName = new std::string(
                       *sequenceElement->getName() + "_eps");
-                  }
-                  else {
+                  } else {
                     newNonTerminalName = new std::string(
                       *sequenceElement->getName() + "_no_eps");
                   }
@@ -323,7 +317,6 @@ CFG::Base* SpecializeGrammar::RewriteNonProductiveCFGRules::
       // are non-terminals, and exactly one element is part of
       // a cycle.
       return sequence->clone();
-
     }
     case CFG::PRODUCTION_ALTERNATIVE: {
       CFG::ProductionAlternative* alternative =
@@ -403,8 +396,7 @@ CFG::Base* SpecializeGrammar::RewriteNonProductiveCFGRules::
         newNonTerminal->setAttribute(new EpsilonOnlyAttribute());
         copyAttributes(nonTerminal, newNonTerminal);
         return newNonTerminal;
-      }
-      else {
+      } else {
         return NULL;
       }
     }

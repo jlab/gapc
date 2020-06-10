@@ -1,9 +1,3 @@
-
-
-
-#ifndef SRC_SPECIALIZE_GRAMMAR_DESIGNATED_AXIOM_ATTRIBUTE_HH_
-#define SRC_SPECIALIZE_GRAMMAR_DESIGNATED_AXIOM_ATTRIBUTE_HH_
-
 /* {{{
 
     This file is part of gapc (GAPC - Grammars, Algebras, Products - Compiler;
@@ -27,34 +21,30 @@
 
 }}} */
 
+
+#ifndef SRC_SPECIALIZE_GRAMMAR_DESIGNATED_AXIOM_ATTRIBUTE_HH_
+#define SRC_SPECIALIZE_GRAMMAR_DESIGNATED_AXIOM_ATTRIBUTE_HH_
+
+#include <string>
 #include "../util/attribute.hh"
 
-
 namespace SpecializeGrammar {
+class DesignatedAxiomAttribute : public Util::Attribute {
+ private:
+    // The original name of the axiom the designated
+    // axiom-grammar-rule replaces.
+    std::string* originalAxiomName;
 
+ public:
+    DesignatedAxiomAttribute(std::string* originalAxiomName);
+    DesignatedAxiomAttribute(DesignatedAxiomAttribute& a);
+    virtual ~DesignatedAxiomAttribute();
 
-  class DesignatedAxiomAttribute : public Util::Attribute {
+    // Returns the original name of the axiom.
+    std::string* getOriginalAxiomName();
 
-    private:
-
-      // The original name of the axiom the designated
-      // axiom-grammar-rule replaces.
-      std::string* originalAxiomName;
-
-
-    public:
-
-      DesignatedAxiomAttribute(std::string* originalAxiomName);
-      DesignatedAxiomAttribute(DesignatedAxiomAttribute& a);
-      virtual ~DesignatedAxiomAttribute();
-
-      // Returns the original name of the axiom.
-      std::string* getOriginalAxiomName();
-
-      virtual Util::Attribute* clone();
-
-
-  };
+    virtual Util::Attribute* clone();
+};
 
 
 }  // namespace SpecializeGrammar

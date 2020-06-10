@@ -21,11 +21,15 @@
 
 }}} */
 
+#include <vector>
+#include <list>
+#include <string>
+#include <utility>
+
 #include "create_specialized_grammar.hh"
 
 
 #include "boost/format.hpp"
-#include <utility>
 
 #include "../ambiguity_cfg_gen/generate_ambiguity_cfg.hh"
 #include "../arg.hh"
@@ -131,7 +135,7 @@ AST* SpecializeGrammar::CreateSpecializedGrammar::createGrammar(
   // do some annotation first, before we can start to generate
   // the gap program output.
 
-  //std::cout << "annotate FIRST in grammar" << std::endl;
+  // std::cout << "annotate FIRST in grammar" << std::endl;
   Util::AnnotateTheSetFirst theSetFirstAnnotator;
   theSetFirstAnnotator.annotateGrammar(cfg);
 
@@ -144,10 +148,10 @@ AST* SpecializeGrammar::CreateSpecializedGrammar::createGrammar(
   // grammar productions will be
   //
   RewriteNonProductiveCFGRules rewriteNonProductiveRule;
-  //cfg = rewriteNonProductiveRule.rewriteGrammar(cfg);
+  // cfg = rewriteNonProductiveRule.rewriteGrammar(cfg);
 
-  //CFG::UnusedProductionsRemover unusedProductionRemover;
-  //cfg = unusedProductionRemover.removeUnusedProductions(cfg);
+  // CFG::UnusedProductionsRemover unusedProductionRemover;
+  // cfg = unusedProductionRemover.removeUnusedProductions(cfg);
 
   // Restart all annotations again, we have changed the grammar
   // too much.
@@ -198,7 +202,7 @@ AST* SpecializeGrammar::CreateSpecializedGrammar::createGrammar(
   //////////////////////////////////////////////////////
   //////////////////////////////////////////////////////
 
-  //AST* ast = new AST();
+  // AST* ast = new AST();
   this->ast = new AST();
 
   // Store the name of the signature of the source program,
@@ -287,8 +291,8 @@ Grammar* SpecializeGrammar::CreateSpecializedGrammar::createGrammar(
   this->signature->args = signatureArgs;
 
   // the parser.y calls
-  //Signature *s = new Signature(sig_name, @1 + @2)
-  //driver.ast.add_sig_types(sig_args, s);
+  // Signature *s = new Signature(sig_name, @1 + @2)
+  // driver.ast.add_sig_types(sig_args, s);
 
 
   std::list<CFG::GrammarProduction*> productions = grammar->getProductions();
@@ -446,8 +450,7 @@ std::pair<Alt::Base*, SpecializeGrammar::CreateSpecializedGrammar::
         createAlgebraFunction(infoContext, algebraFunctionName, VOID, b);
 
         resultType = ANSWER;
-      }
-      else {
+      } else {
         resultType = ALPHABET;
       }
 
@@ -480,8 +483,7 @@ std::pair<Alt::Base*, SpecializeGrammar::CreateSpecializedGrammar::
         simple->args = args;
         rhsResult = simple;
         resultType = ALPHABET;
-      }
-      else {
+      } else {
         Alt::Simple* simple = new Alt::Simple(
           new std::string("ROPE"), location);
         // add a filter to the ROPE parser, because match with a
@@ -559,8 +561,7 @@ std::pair<Alt::Base*, SpecializeGrammar::CreateSpecializedGrammar::
         createAlgebraFunction(infoContext, algebraFunctionName, VOID, b);
 
         resultType = ANSWER;
-      }
-      else {
+      } else {
         resultType = ALPHABET;
       }
 
@@ -605,8 +606,7 @@ std::pair<Alt::Base*, SpecializeGrammar::CreateSpecializedGrammar::
           infoContext, algebraFunctionName, parameterTypes, parameterValues);
 
         resultType = ANSWER;
-      }
-      else {
+      } else {
         // This may not happen, because in GAP all sequences
         // are applied to an algebra function.
         throw LogError(
@@ -694,11 +694,11 @@ Type::Base* SpecializeGrammar::CreateSpecializedGrammar::
       return createSignatureVoidType();
     }
     case ANSWER: {
-      //return createSignatureAnswerType();
+      // return createSignatureAnswerType();
       return createSignatureType(new std::string("answer"));
     }
     case ALPHABET: {
-      //return getAlphabetType();
+      // return getAlphabetType();
       return createSignatureType(new std::string("alphabet"));
     }
     case ALPHABET_STRING: {
@@ -787,7 +787,8 @@ Alt::Base* SpecializeGrammar::CreateSpecializedGrammar::
   createAlgebraFunctionCallWrapper(
     std::string* algebraFunctionName, std::list<Fn_Arg::Base*> args) {
   Loc location;
-  Alt::Simple* algebraFunctionCall = new Alt::Simple(algebraFunctionName, location);
+  Alt::Simple* algebraFunctionCall = new Alt::Simple(
+    algebraFunctionName, location);
   algebraFunctionCall->args = args;
   return algebraFunctionCall;
 }
@@ -908,7 +909,7 @@ void SpecializeGrammar::CreateSpecializedGrammar::createChoiceFunction() {
   Mode mode;
   mode.set(Mode::PRETTY);
   choiceFunction->set_mode(mode);
-  //choiceFunction->set_mode(Mode(Mode::NONE));
+  // choiceFunction->set_mode(Mode(Mode::NONE));
 
   this->algebraFunctionDefinitions[*choiceFunctionName] = choiceFunction;
 }
@@ -962,7 +963,8 @@ void SpecializeGrammar::CreateSpecializedGrammar::
   // to a grammar rule name of the resulting grammar.
   Expr::Fn_Call* getRuleNameCallExpr = new Expr::Fn_Call(new std::string(
     theGetRuleNameFunctionName));
-  getRuleNameCallExpr->add_arg(new Expr::Const(new Const::String(*originalAxiomName)));
+  getRuleNameCallExpr->add_arg(new Expr::Const(
+    new Const::String(*originalAxiomName)));
   getRuleNameCallExpr->add_arg(new Var_Acc::Comp(new Var_Acc::Plain(
     new std::string(theAlgebraResultVariableName)),
     new std::string(theResultShapeFieldName)));
@@ -1102,7 +1104,7 @@ void SpecializeGrammar::CreateSpecializedGrammar::createAlgebraFunction(
       boost::format("%1%") % pos++));
     Expr::Base* exprI = NULL;
     Expr::Base* exprS = NULL;
-    switch(*i) {
+    switch (*i) {
       case ANSWER: {
         // exprI = new Expr::Vacc (parameterName, new std::string (
         //   theResultShapeFieldName));
@@ -1131,16 +1133,14 @@ void SpecializeGrammar::CreateSpecializedGrammar::createAlgebraFunction(
     if (exprI != NULL) {
       if (initExpr == NULL) {
         initExpr = exprI;
-      }
-      else {
+      } else {
         initExpr = create_Rope_PLUS_Rope_Expression(initExpr, exprI);
       }
     }
     if (exprS != NULL) {
       if (shapeExpr == NULL) {
         shapeExpr = exprS;
-      }
-      else {
+      } else {
         shapeExpr = create_Rope_PLUS_Rope_Expression(shapeExpr, exprS);
       }
     }
@@ -1151,8 +1151,7 @@ void SpecializeGrammar::CreateSpecializedGrammar::createAlgebraFunction(
     alg_resultVar = new Statement::Var_Decl(
       createAlgebraFunctionAnswerType(), new std::string(
         theAlgebraResultVariableName));
-  }
-  else {
+  } else {
     alg_resultVar = new Statement::Var_Decl(
       createAlgebraFunctionAnswerType(), new std::string(
         theAlgebraResultVariableName), initExpr);
@@ -1194,8 +1193,7 @@ void SpecializeGrammar::CreateSpecializedGrammar::createAlgebraFunction(
       statements.end(),
       algebraFunctionArguments->begin(), algebraFunctionArguments->end());
     delete(algebraFunctionArguments);
-  }
-  else {
+  } else {
     std::list<Fn_Arg::Base*> originalArguments =
       this->algebraFunctionInfoAttribute->getAlgebraFunctionArguments();
     std::list<CFG::Base*> orderedParameterValues =
@@ -1277,8 +1275,7 @@ void SpecializeGrammar::CreateSpecializedGrammar::createAlgebraFunction(
         delete(resultStatements);
         statements.push_back(create_InsertProduction_Call(
           alg_resultVar, alg_ntVar, alg_bodyVar));
-      }
-      else {
+      } else {
         std::list<Statement::Base*>* resultStatements =
           createHiddenFunctionCallNoAlgFn(
             nonTerminalNameTheFragmentIsDefinedIn, alg_ntVar, alg_bodyVar,
@@ -1465,8 +1462,7 @@ Expr::Base* SpecializeGrammar::CreateSpecializedGrammar::
     Expr::Base* argResult = createFunctionCallArgument(NULL, *i);
     if (result == NULL) {
       result = argResult;
-    }
-    else {
+    } else {
       result = create_Rope_PLUS_Rope_Expression(
         result, new Expr::Const(new Const::String(", ")));
       result = create_Rope_PLUS_Rope_Expression(result, argResult);
@@ -1526,8 +1522,7 @@ Expr::Base* SpecializeGrammar::CreateSpecializedGrammar::
           new std::string(theResultShapeFieldName)));
 
         return getRuleNameCallExpr;
-      }
-      else {
+      } else {
         std::cout << "infoContext is NULL" << std::endl;
         // In this case we process an unbound non-terminal, which
         // stems from the original algebra function call from the
@@ -1544,10 +1539,10 @@ Expr::Base* SpecializeGrammar::CreateSpecializedGrammar::
       return new Expr::Const(new Const::String("CHAR"));
     }
     case CFG::PRODUCTION_SEQUENCE: {
-      //break;
+      // break;
     }
     case CFG::PRODUCTION_ALTERNATIVE: {
-      //break;
+      // break;
     }
     default: {
       throw LogError("gap-00646: Unhandled CFG node type.");
@@ -1667,8 +1662,7 @@ Expr::Base* SpecializeGrammar::CreateSpecializedGrammar::
         getRuleNameCallExpr->add_arg(new Expr::Const(new Const::String(
           *nonTerminal->getName())));
         getRuleNameCallExpr->add_arg(new Expr::Const(new Const::String("")));
-      }
-      else {
+      } else {
         getRuleNameCallExpr->add_arg(new Expr::Const(new Const::String(
           *nonTerminal->getName())));
         getRuleNameCallExpr->add_arg(new Var_Acc::Comp(new Var_Acc::Plain(
@@ -1682,10 +1676,10 @@ Expr::Base* SpecializeGrammar::CreateSpecializedGrammar::
       return new Expr::Const(new Const::String("CHAR"));
     }
     case CFG::PRODUCTION_SEQUENCE: {
-      //break;
+      // break;
     }
     case CFG::PRODUCTION_ALTERNATIVE: {
-      //break;
+      // break;
     }
     default: {
       throw LogError("gap-00646: Unhandled CFG node type.");
@@ -1742,7 +1736,8 @@ std::list<Statement::Base*>* SpecializeGrammar::CreateSpecializedGrammar::
 
   // After the rule name has been created, we build the
   // body of the production.
-  //Expr::Base* alg_ruleBodyExpr = createHiddenFunctionCallArguments (infoContext, arguments);
+  // Expr::Base* alg_ruleBodyExpr = createHiddenFunctionCallArguments
+  // (infoContext, arguments);
   Expr::Base* alg_ruleBodyExpr = createHiddenFunctionCallArguments(
     infoContext, orderedParameterValues);
   alg_ruleBodyExpr = create_Rope_PLUS_Rope_Expression(new Expr::Const(
@@ -1768,8 +1763,7 @@ Expr::Base* SpecializeGrammar::CreateSpecializedGrammar::
     Expr::Base* argResult = createHiddenFunctionCallArgument(NULL, *i);
     if (result == NULL) {
       result = argResult;
-    }
-    else {
+    } else {
       result = create_Rope_PLUS_Rope_Expression(result, new Expr::Const(
         new Const::String(", ")));
       result = create_Rope_PLUS_Rope_Expression(result, argResult);
@@ -1817,8 +1811,7 @@ Expr::Base* SpecializeGrammar::CreateSpecializedGrammar::
         getRuleNameCallExpr->add_arg(new Expr::Const(new Const::String(
           *nonTerminal->getName())));
         getRuleNameCallExpr->add_arg(new Expr::Const(new Const::String("")));
-      }
-      else {
+      } else {
         getRuleNameCallExpr->add_arg(new Expr::Const(new Const::String(
           *nonTerminal->getName())));
         getRuleNameCallExpr->add_arg(new Var_Acc::Comp(new Var_Acc::Plain(
@@ -1832,10 +1825,10 @@ Expr::Base* SpecializeGrammar::CreateSpecializedGrammar::
       return new Expr::Const(new Const::String("CHAR"));
     }
     case CFG::PRODUCTION_SEQUENCE: {
-      //break;
+      // break;
     }
     case CFG::PRODUCTION_ALTERNATIVE: {
-      //break;
+      // break;
     }
     default: {
       throw LogError("gap-00646: Unhandled CFG node type.");
@@ -1867,8 +1860,7 @@ Expr::Base* SpecializeGrammar::CreateSpecializedGrammar::
     std::string combinedValue =
       *getConstantString(expr1) + *getConstantString(expr2);
     return new Expr::Const(new Const::String(combinedValue));
-  }
-  else {
+  } else {
     return new Expr::Plus(expr1, expr2);
   }
 }
@@ -1887,8 +1879,7 @@ std::string* SpecializeGrammar::CreateSpecializedGrammar::getConstantString(
     if (cnst->base->is(Const::STRING)) {
       Const::String* cnstStr = dynamic_cast<Const::String*>(cnst->base);
       return cnstStr->s;
-    }
-    else if (cnst->base->is(Const::CHAR)) {
+    } else if (cnst->base->is(Const::CHAR)) {
       Const::Char* chr = dynamic_cast<Const::Char*>(cnst->base);
       return new std::string(1, chr->c);
     }
@@ -1986,7 +1977,8 @@ Statement::Base* SpecializeGrammar::CreateSpecializedGrammar::alg_append(
 
 
 Statement::Base* SpecializeGrammar::CreateSpecializedGrammar::alg_append(
-  Statement::Var_Decl* variableToAppendTo, Statement::Var_Decl* appendedVariable) {
+  Statement::Var_Decl* variableToAppendTo,
+  Statement::Var_Decl* appendedVariable) {
   Statement::Fn_Call* appendCommaCall = new Statement::Fn_Call("append");
   appendCommaCall->add_arg(*variableToAppendTo);
   appendCommaCall->add_arg(*appendedVariable);

@@ -21,6 +21,7 @@
 
 }}} */
 
+#include <string>
 #include "choice_function_application_attribute.hh"
 
 

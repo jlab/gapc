@@ -26,7 +26,6 @@
 
 SpecializeGrammar::CycleBreakPointAttribute::CycleBreakPointAttribute()
   : Attribute("SpecializeGrammar::CycleBreakPointAttribute") {
-
 }
 
 
@@ -37,7 +36,6 @@ SpecializeGrammar::CycleBreakPointAttribute::CycleBreakPointAttribute(
 
 
 SpecializeGrammar::CycleBreakPointAttribute::~CycleBreakPointAttribute() {
-
 }
 
 

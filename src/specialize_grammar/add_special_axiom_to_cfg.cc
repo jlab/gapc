@@ -21,6 +21,7 @@
 
 }}} */
 
+#include <string>
 #include "add_special_axiom_to_cfg.hh"
 #include "choice_function_application_attribute.hh"
 #include "designated_axiom_attribute.hh"

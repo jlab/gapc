@@ -35,31 +35,25 @@
 namespace SpecializeGrammar {
 
 
-  class HiddenCFGFragmentsAttribute : public Util::Attribute {
+class HiddenCFGFragmentsAttribute : public Util::Attribute {
+ private:
+    // The list of all hidden CFG fragments.
+    std::list<CFG::Base*> hiddenFragments;
 
-    private:
+ public:
+    HiddenCFGFragmentsAttribute();
+    HiddenCFGFragmentsAttribute(HiddenCFGFragmentsAttribute& a);
+    virtual ~HiddenCFGFragmentsAttribute();
 
-      // The list of all hidden CFG fragments.
-      std::list<CFG::Base*> hiddenFragments;
+    void addHiddenFragment(CFG::Base* b);
+    void addHiddenFragments(std::set<CFG::Base*>* fragments);
 
+    typedef std::list<CFG::Base*>::iterator iterator;
+    iterator begin();
+    iterator end();
 
-    public:
-
-      HiddenCFGFragmentsAttribute();
-      HiddenCFGFragmentsAttribute(HiddenCFGFragmentsAttribute& a);
-      virtual ~HiddenCFGFragmentsAttribute();
-
-      void addHiddenFragment(CFG::Base* b);
-      void addHiddenFragments(std::set<CFG::Base*>* fragments);
-
-      typedef std::list<CFG::Base*>::iterator iterator;
-      iterator begin();
-      iterator end();
-
-      virtual Util::Attribute* clone();
-
-
-  };
+    virtual Util::Attribute* clone();
+};
 
 
 }  // namespace SpecializeGrammar

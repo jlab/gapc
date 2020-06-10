@@ -24,7 +24,8 @@
 #ifndef SRC_SPECIALIZE_GRAMMAR_CYCLE_PATH_INFO_ATTRIBUTE_HH_
 #define SRC_SPECIALIZE_GRAMMAR_CYCLE_PATH_INFO_ATTRIBUTE_HH_
 
-
+#include <string>
+#include <utility>
 #include <list>
 #include <set>
 
@@ -35,32 +36,27 @@
 namespace Util {
 
 
-  class CyclePathInfoAttribute : public Attribute {
+class CyclePathInfoAttribute : public Attribute {
+ private:
+    std::list< std::pair<std::string, CFG::Base*> > elements;
 
-    private:
+ public:
+    CyclePathInfoAttribute();
+    CyclePathInfoAttribute(CyclePathInfoAttribute& a);
+    virtual ~CyclePathInfoAttribute();
 
-      std::list< std::pair<std::string, CFG::Base*> > elements;
+    void addElement(std::string nonTerminalName, CFG::Base* fragment);
+    void addElements(
+      std::list< std::pair<std::string, CFG::Base*> >* elems,
+      unsigned int startPos);
 
+    typedef std::list< std::pair<std::string, CFG::Base*> >
+      ::iterator iterator;
+    iterator begin();
+    iterator end();
 
-    public:
-
-      CyclePathInfoAttribute();
-      CyclePathInfoAttribute(CyclePathInfoAttribute& a);
-      virtual ~CyclePathInfoAttribute();
-
-      void addElement(std::string nonTerminalName, CFG::Base* fragment);
-      void addElements(
-        std::list< std::pair<std::string, CFG::Base*> >* elems,
-        unsigned int startPos);
-
-      typedef std::list< std::pair<std::string, CFG::Base*> >
-        ::iterator iterator;
-      iterator begin();
-      iterator end();
-
-      virtual Attribute* clone();
-
-  };
+    virtual Attribute* clone();
+};
 
 
 }  // namespace Util

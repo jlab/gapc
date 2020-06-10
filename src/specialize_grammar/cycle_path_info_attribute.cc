@@ -21,6 +21,8 @@
 
 }}} */
 
+#include <utility>
+#include <string>
 #include "cycle_path_info_attribute.hh"
 
 
@@ -53,7 +55,7 @@ void Util::CyclePathInfoAttribute::addElements(
        elems->begin(); i != elems->end(); i++, pos++) {
     if (pos >= startPos) {
       this->elements.push_back(std::pair<std::string, CFG::Base*>(
-        (*i).first,(*i).second));
+        (*i).first, (*i).second));
     }
   }
 }

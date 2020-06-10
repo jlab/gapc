@@ -21,6 +21,7 @@
 
 }}} */
 
+#include <string>
 #include "designated_axiom_attribute.hh"
 
 

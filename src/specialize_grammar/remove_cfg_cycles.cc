@@ -24,7 +24,10 @@
 
 #include "remove_cfg_cycles.hh"
 
-
+#include <list>
+#include <utility>
+#include <string>
+#include <set>
 #include <iostream>
 #include <cassert>
 
@@ -56,7 +59,7 @@ CFG::CFG* SpecializeGrammar::RemoveCFGCycles::removeCycles(CFG::CFG* grammar) {
   Util::NamingDomain* namingDomain = new Util::NamingDomain();
   // First create all non-terminal aliases for the dead-end
   // grammar productions...
-  //reserveFixedNonTerminalNames (namingDomain);
+  // reserveFixedNonTerminalNames (namingDomain);
   // ...and an additional layer of naming domain.
   namingDomain = new Util::NamingDomain(namingDomain);
   transformProduction(this->oldGrammar->getAxiom(), callTrace, namingDomain);
@@ -90,7 +93,7 @@ void SpecializeGrammar::RemoveCFGCycles::transformProduction(
   Util::CallTrace callTrace, Util::NamingDomain* namingDomain) {
   CFG::GrammarProduction* production = this->oldGrammar->getProduction(
     productionNT);
-  //std::set<Util::CycleSet*> cycleSets = getCycleSets (production);
+  // std::set<Util::CycleSet*> cycleSets = getCycleSets (production);
   // Instead of the call above, we now want the cycle information
   // for a non-terminal directly. By this we know exactly if the non-terminal
   // path followed lies on a cycle.
@@ -155,8 +158,7 @@ void SpecializeGrammar::RemoveCFGCycles::transformCycleProduction(
     // in our set of collapsed non-terminals, before we go
     // on with processing
     this->collapsedProductions.insert(*newNonTerminalName);
-  }
-  else {
+  } else {
     newProduction->rhs =(CFG::ProductionAlternative*)rhsResult;
     // Before the new production can be added to the new grammar,
     // we must annotate the grammar production with a hideaway
@@ -184,7 +186,7 @@ void SpecializeGrammar::RemoveCFGCycles::transformCycleProduction(
         new Util::CyclePathInfoAttribute();
       for (std::set<CyclePathInfo*>::iterator i = setOfCycleSetInfos->begin();
            i != setOfCycleSetInfos->end(); i++) {
-        cyclePathInfoAttribute->addElements((*i)->path,(*i)->startPosInPath);
+        cyclePathInfoAttribute->addElements((*i)->path, (*i)->startPosInPath);
       }
       newProduction->setAttribute(cyclePathInfoAttribute);
     }
@@ -238,7 +240,7 @@ CFG::Base* SpecializeGrammar::RemoveCFGCycles::transformCycleElement(
       // visitedNonTerminals.end())
       // because we only cut off a cycling non-terminal, if it is a
       // backward directed reference.
-      //if (nonTerminalIsBackReference (nt, callTrace)) {
+      // if (nonTerminalIsBackReference (nt, callTrace)) {
       if (nonTerminalClosesCycle(nt, callTrace)) {
         // Since this is the breaking element of a cycle, we annotate
         // it with an attribute. This helps us later identifying the
@@ -256,8 +258,7 @@ CFG::Base* SpecializeGrammar::RemoveCFGCycles::transformCycleElement(
 
         // Then just return NULL as a sign that we drop this element.
         return NULL;
-      }
-      else {
+      } else {
         // Before the recursive call to 'transformProduction' is made,
         // we create an additional layer of the naming-domain, and query
         // the name of the non-terminal. This creates a unique new name
@@ -265,7 +266,8 @@ CFG::Base* SpecializeGrammar::RemoveCFGCycles::transformCycleElement(
         // because productions for non-terminal calls on a cycle track
         // can collaps. This kind of productions are not correct for those
         // non-terminals which are not part of a cycle.
-        Util::NamingDomain* newNamingDomain = new Util::NamingDomain(namingDomain);
+        Util::NamingDomain* newNamingDomain = new Util::NamingDomain(
+          namingDomain);
         // Get an alias name for the non-terminal.
         std::string* newNonTerminalName = newNamingDomain->getAlias(
           nt->getName());
@@ -302,7 +304,7 @@ CFG::Base* SpecializeGrammar::RemoveCFGCycles::transformCycleElement(
       }
     }
     case CFG::PRODUCTION_SEQUENCE: {
-      std::cout << "cyclic sequence ";Printer::PrettyPrintCOut pp; pp.ppBase(
+      std::cout << "cyclic sequence "; Printer::PrettyPrintCOut pp; pp.ppBase(
         NULL, b); std::cout << std::endl;
       CFG::ProductionSequence* oldSequence =
         dynamic_cast<CFG::ProductionSequence*>(b);
@@ -381,12 +383,10 @@ CFG::Base* SpecializeGrammar::RemoveCFGCycles::transformCycleElement(
               // The cycle was broken at exactly this point,
               // thus we hide away the whole sequence.
               hideTheWholeSequence = true;
-            }
-            else {
+            } else {
               newSequence->append(transformedProductiveElement);
             }
-          }
-          else {
+          } else {
             CFG::Base* transformedResult = transformElementStrict(
               *i, callTrace, namingDomain);
             newSequence->append(transformedResult);
@@ -398,8 +398,7 @@ CFG::Base* SpecializeGrammar::RemoveCFGCycles::transformCycleElement(
         if (hideTheWholeSequence) {
           return NULL;
         }
-      }
-      else {
+      } else {
         // Then transform each element according to our analysis
         // of each sequence element.
         for (CFG::ProductionSequence::iterator i = oldSequence->begin();
@@ -416,7 +415,7 @@ CFG::Base* SpecializeGrammar::RemoveCFGCycles::transformCycleElement(
       return newSequence;
     }
     case CFG::PRODUCTION_ALTERNATIVE: {
-      std::cout << "cyclic alternative ";Printer::PrettyPrintCOut pp;
+      std::cout << "cyclic alternative "; Printer::PrettyPrintCOut pp;
         pp.ppBase(NULL, b); std::cout << std::endl;
       CFG::ProductionAlternative* oldAlternatives =
         dynamic_cast<CFG::ProductionAlternative*>(b);
@@ -446,8 +445,7 @@ CFG::Base* SpecializeGrammar::RemoveCFGCycles::transformCycleElement(
           // maintained by the naming-domain instance.
           insertCFGFragmentIntoHideawayMap(
             callTrace.peek().first, translateNaming(*i, namingDomain));
-        }
-        else {
+        } else {
           newAlternatives->addAlternative(transformedElement);
         }
         // Now before the loop starts over again, remove the top
@@ -479,7 +477,7 @@ CFG::Base* SpecializeGrammar::RemoveCFGCycles::transformElementStrict(
   CFG::Base* b, Util::CallTrace callTrace, Util::NamingDomain* namingDomain) {
   switch (b->getType()) {
     case CFG::BASE_WRAPPER: {
-      std::cout << "strict wrapper ";Printer::PrettyPrintCOut pp; pp.ppBase(
+      std::cout << "strict wrapper "; Printer::PrettyPrintCOut pp; pp.ppBase(
         NULL, b); std::cout << std::endl;
       CFG::BaseWrapper* wrapper = dynamic_cast<CFG::BaseWrapper*>(b);
 
@@ -492,7 +490,7 @@ CFG::Base* SpecializeGrammar::RemoveCFGCycles::transformElementStrict(
       return result;
     }
     case CFG::NONTERMINAL: {
-      std::cout << "strict nonterminal ";Printer::PrettyPrintCOut pp;
+      std::cout << "strict nonterminal "; Printer::PrettyPrintCOut pp;
         pp.ppBase(NULL, b); std::cout << std::endl;
       CFG::NonTerminal* nonTerminal = dynamic_cast<CFG::NonTerminal*> (b);
       // If the call-trace does not contain this non-terminal,
@@ -516,7 +514,7 @@ CFG::Base* SpecializeGrammar::RemoveCFGCycles::transformElementStrict(
       return newNonTerminal;
     }
     case CFG::PRODUCTION_SEQUENCE: {
-      std::cout << "strict sequence ";Printer::PrettyPrintCOut pp; pp.ppBase(
+      std::cout << "strict sequence "; Printer::PrettyPrintCOut pp; pp.ppBase(
         NULL, b); std::cout << std::endl;
       CFG::ProductionSequence* oldSequence =
         dynamic_cast<CFG::ProductionSequence*> (b);
@@ -532,7 +530,7 @@ CFG::Base* SpecializeGrammar::RemoveCFGCycles::transformElementStrict(
       return newSequence;
     }
     case CFG::PRODUCTION_ALTERNATIVE: {
-      std::cout << "strict alternative ";Printer::PrettyPrintCOut pp;
+      std::cout << "strict alternative "; Printer::PrettyPrintCOut pp;
         pp.ppBase(NULL, b); std::cout << std::endl;
       CFG::ProductionAlternative* oldAlternatives =
         dynamic_cast<CFG::ProductionAlternative*>(b);
@@ -695,8 +693,7 @@ std::set<Util::CycleSet*> SpecializeGrammar::RemoveCFGCycles::getCycleSets(
   if (cycleAttribute != NULL) {
     std::cout << "-found a cycleset for fragment" << std::endl;
     return cycleAttribute->getCycleSets();
-  }
-  else {
+  } else {
     std::cout << "-found NO cycleset for fragment" << std::endl;
     return std::set<Util::CycleSet*>();
   }
@@ -719,8 +716,7 @@ std::set<Util::CycleSet*> SpecializeGrammar::RemoveCFGCycles::getCycleMarkSets(
   if (cycleMarkAttribute != NULL) {
     std::cout << "-found a cycleMarkSet for fragment" << std::endl;
     return cycleMarkAttribute->getCycleSets();
-  }
-  else {
+  } else {
     std::cout << "-found NO cycleMarkSet for fragment" << std::endl;
     return std::set<Util::CycleSet*>();
   }
@@ -735,8 +731,7 @@ std::set<Util::CycleSet*> SpecializeGrammar::RemoveCFGCycles::getCycleSets(
   if (cycleAttribute != NULL) {
     std::cout << "-found a cycleset for production" << std::endl;
     return cycleAttribute->getCycleSets();
-  }
-  else {
+  } else {
     std::cout << "-found NO cycleset for production" << std::endl;
     return std::set<Util::CycleSet*>();
   }
@@ -751,8 +746,7 @@ bool SpecializeGrammar::RemoveCFGCycles::elementIsReducible(CFG::Base* b) {
 
   if (reducibleAttribute != NULL) {
     return true;
-  }
-  else {
+  } else {
     return false;
   }
 }
@@ -769,8 +763,7 @@ bool SpecializeGrammar::RemoveCFGCycles::nonTerminalIsBackReference(
     assert(cycleSet != NULL);
     if (cycleSet == NULL) {
       return true;
-    }
-    else {
+    } else {
       return cycleSet->isBackReference(nonTerminal, sourceNonTerminal);
     }
   }

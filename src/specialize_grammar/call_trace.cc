@@ -21,6 +21,8 @@
 
 }}} */
 
+#include <utility>
+#include <string>
 #include "call_trace.hh"
 
 
