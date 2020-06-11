@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef RTLIB_BENCH_HH
-#define RTLIB_BENCH_HH
+#ifndef RTLIB_BENCH_HH_
+#define RTLIB_BENCH_HH_
 
 #ifdef STATS
 
@@ -103,5 +103,4 @@ namespace gapc {
 
 }
 
-#endif
-
+#endif  // RTLIB_BENCH_HH_

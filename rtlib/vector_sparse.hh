@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef VECTOR_SPARSE_HH
-#define VECTOR_SPARSE_HH
+#ifndef RTLIB_VECTOR_SPARSE_HH_
+#define RTLIB_VECTOR_SPARSE_HH_
 
 #include <cstdlib>
 
@@ -38,7 +38,7 @@ class Stapel {
   private:
     T *array;
     U top_, size_;
-    
+
     Stapel(const Stapel &);
     Stapel &operator=(const Stapel &);
   public:
@@ -95,7 +95,7 @@ class Stapel {
 
     typedef T* iterator;
 
-  
+
     iterator begin() { return array; }
     iterator end() { return array + top_; }
 
@@ -276,4 +276,4 @@ namespace std {
 }
 */
 
-#endif
+#endif  // RTLIB_VECTOR_SPARSE_HH_

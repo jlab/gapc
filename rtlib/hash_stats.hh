@@ -1,5 +1,5 @@
-#ifndef HASH_STATS
-#define HASH_STATS
+#ifndef RTLIB_HASH_STATS_HH_
+#define RTLIB_HASH_STATS_HH_
 
 // workaround Sun CC 12 Segmentation fault
 #if defined(__SUNPRO_CC) && __SUNPRO_CC <= 0x5100
@@ -18,7 +18,7 @@
 
 namespace Hash {
 
-#ifdef STATS 
+#ifdef STATS
   namespace ba = boost::accumulators;
 
 
@@ -90,7 +90,7 @@ namespace Hash {
       << ba::variance(coll_acc) << " (var)\n"
       << "Probe length: " << ba::mean(probe_acc) << " (mean) "
       << ba::max(probe_acc) << " (max) " << ba::sum(probe_acc) << "(sum)"
-      << " " << ba::variance(probe_acc) << " (var)\n" 
+      << " " << ba::variance(probe_acc) << " (var)\n"
       << "Reallocs: " << reallocs
       << " Hi water load: " << ba::max(hi_water_load)
       << " Internal resizes: " << internal_resizes
@@ -131,4 +131,4 @@ namespace Hash {
 
 }
 
-#endif
+#endif  // RTLIB_HASH_STATS_HH_

@@ -1,5 +1,5 @@
-#ifndef MOVE_HH
-#define MOVE_HH
+#ifndef RTLIB_MOVE_HH_
+#define RTLIB_MOVE_HH_
 
 template <typename T>
 inline
@@ -17,4 +17,4 @@ void move(std::pair<A, B> &a, std::pair<A, B> &b)
 }
 
 
-#endif
+#endif  // RTLIB_MOVE_HH_

@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef SHAPE_ALPH_HH
-#define SHAPE_ALPH_HH
+#ifndef RTLIB_SHAPE_ALPH_HH_
+#define RTLIB_SHAPE_ALPH_HH_
 
 template <typename T, typename Size>
 struct ShapeAlph {
@@ -66,4 +66,4 @@ struct ShapeAlph {
   }
 };
 
-#endif
+#endif  // RTLIB_SHAPE_ALPH_HH_

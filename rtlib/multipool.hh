@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef MULTIPOOL_HH
-#define MULTIPOOL_HH
+#ifndef RTLIB_MULTIPOOL_HH_
+#define RTLIB_MULTIPOOL_HH_
 
 
 #include "map_pool.hh"
@@ -105,4 +105,4 @@ class MultiPool {
     }
 };
 
-#endif
+#endif  // RTLIB_MULTIPOOL_HH_

@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef SHAPE_HH
-#define SHAPE_HH
+#ifndef RTLIB_SHAPE_HH_
+#define RTLIB_SHAPE_HH_
 
 #include "multipool.hh"
 
@@ -808,5 +808,4 @@ back(Fiber<T, Size, alphset> &a, char r = 0)
   return *i;
 }
 
-#endif
-
+#endif  // RTLIB_SHAPE_HH_

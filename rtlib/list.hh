@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef LIST_HH
-#define LIST_HH
+#ifndef RTLIB_LIST_HH_
+#define RTLIB_LIST_HH_
 
 #include "empty.hh"
 #include "erase.hh"
@@ -107,7 +107,7 @@ inline bool isEmpty(const List_Ref<T, pos_int> &x)
 // destructors on lists or auto called upon function end and therefore not needed
 template<class T, typename pos_int>
 inline void erase(List_Ref<T, pos_int> &x)
-{   
+{
 }
 
 // removes all elements from the list
@@ -132,8 +132,8 @@ inline void append(List_Ref<T, pos_int> &x, List_Ref<T, pos_int> &e)
   if (isEmpty(e))
     return;
   assert(&x.ref() != &e.ref());
-  
-  std::copy(e.ref().begin(), e.ref().end(), std::back_inserter(x.ref())); 
+
+  std::copy(e.ref().begin(), e.ref().end(), std::back_inserter(x.ref()));
 }
 
 template<class T, typename pos_int>
@@ -168,7 +168,7 @@ inline void sort_list(Iterator begin, Iterator end, Compare &c)
    std::sort(begin, end, c);
 }
 
- 
+
 
 
 #include <iostream>
@@ -228,7 +228,7 @@ unique(std::pair<Iterator, Iterator> &p)
 //  Hash::set<type> set;
 //  for (; p.first != p.second; ++p.first)
 //    set.insert(*p.first);
-//  
+//
 //  List_Ref<type> l;
 //  for (typename Hash::set<type>::iterator j = set.begin(); j!=set.end(); ++j)
 //    l.ref().push_back(*j);
@@ -247,4 +247,4 @@ inline List_Ref<T, pos_int> unique(List_Ref<T, pos_int> &x)
 }
 
 
-#endif
+#endif  // RTLIB_LIST_HH_

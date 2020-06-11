@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef BITOPS_HH
-#define BITOPS_HH
+#ifndef RTLIB_BITOPS_HH_
+#define RTLIB_BITOPS_HH_
 
 #include <cassert>
 
@@ -214,4 +214,4 @@ namespace hash_to_uint32 {
 }
 
 
-#endif
+#endif  // RTLIB_BITOPS_HH_

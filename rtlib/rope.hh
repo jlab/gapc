@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef ROPE_HH
-#define ROPE_HH
+#ifndef RTLIB_ROPE_HH_
+#define RTLIB_ROPE_HH_
 
 #include "cstr.h"
 #include "bitops.hh"
@@ -309,7 +309,7 @@ namespace rope {
           last = r.last;
           ++first->refcount;
         } else {
-          last = copy_blocks(first, r.first); 
+          last = copy_blocks(first, r.first);
         }
         return *this;
       }
@@ -330,7 +330,7 @@ namespace rope {
           first = last = new Block<Refcount>();
           return;
         }
-        
+
         if (!last->right_available(l))
           last = last->extend_right();
       }
@@ -849,4 +849,4 @@ void swap<rope::Ref<rope::Ref_Count> >(rope::Ref<rope::Ref_Count> &a, rope::Ref<
 
 
 
-#endif
+#endif  // RTLIB_ROPE_HH_

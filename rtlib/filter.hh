@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef RT_FILTER_HH
-#define RT_FILTER_HH
+#ifndef RTLIB_FILTER_HH_
+#define RTLIB_FILTER_HH_
 
 #include "string.hh"
 #include "sequence.hh"
@@ -136,4 +136,4 @@ inline bool samesize(const Basic_Sequence<a1, pos_type> &s1,
 }
 
 
-#endif
+#endif  // RTLIB_FILTER_HH_

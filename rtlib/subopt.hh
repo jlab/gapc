@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef SUBOPT_HH
-#define SUBOPT_HH
+#ifndef RTLIB_SUBOPT_HH_
+#define RTLIB_SUBOPT_HH_
 
 #include <vector>
 
@@ -191,4 +191,4 @@ inline void append_min_subopt(List_Ref<T, pos_int> &x, List_Ref<T, pos_int> &e,
 
 
 
-#endif
+#endif  // RTLIB_SUBOPT_HH_

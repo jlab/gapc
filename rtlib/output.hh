@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef OUTPUT_HH
-#define OUTPUT_HH
+#ifndef RTLIB_OUTPUT_HH_
+#define RTLIB_OUTPUT_HH_
 
 #include <utility>
 #include <ostream>
@@ -35,4 +35,4 @@ inline std::ostream &operator<<(std::ostream &out, const std::pair<L, R> &p)
   return out;
 }
 
-#endif
+#endif  // RTLIB_OUTPUT_HH_

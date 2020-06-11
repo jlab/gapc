@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef RT_TERMINAL_HH
-#define RT_TERMINAL_HH
+#ifndef RTLIB_TERMINAL_HH_
+#define RTLIB_TERMINAL_HH_
 
 #include "empty.hh"
 #include "string.hh"
@@ -255,4 +255,4 @@ inline int SEQ1(Basic_Sequence<alphabet, pos_type> &seq, T i, T j)
 }
 
 
-#endif
+#endif  // RTLIB_TERMINAL_HH_

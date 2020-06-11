@@ -21,33 +21,33 @@
 
 }}} */
 
-#ifndef REF_HH
-#define REF_HH
+#ifndef RTLIB_REF_HH_
+#define RTLIB_REF_HH_
 
 #include <boost/shared_ptr.hpp>
 
 namespace Ref {
 
   template<class T>
-    class Lazy 
+    class Lazy
     {
       public:
-      
+
       boost::shared_ptr<T> l;
-      
+
       protected:
 
         void lazy()
         {
           if (!l.use_count()) l.reset(new T());
         }
-        
+
         void copy(const Lazy &r)
         {
           l = r.l;
         }
       public:
-          
+
         typedef T Type;
 
         typedef typename T::iterator iterator;
@@ -63,7 +63,7 @@ namespace Ref {
 
         ~Lazy()
         {
-          
+
         }
 
         Lazy &operator=(const Lazy &r)
@@ -73,13 +73,13 @@ namespace Ref {
         }
 
         T *operator->() { lazy(); return l.get(); }
-        
-        T &ref() { lazy(); return *l.get(); }
-        
 
-        const T &const_ref() const { assert(l.use_count());  return *l.get(); } 
+        T &ref() { lazy(); return *l.get(); }
+
+
+        const T &const_ref() const { assert(l.use_count());  return *l.get(); }
     };
 
 }
 
-#endif
+#endif  // RTLIB_REF_HH_

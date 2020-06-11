@@ -1,5 +1,5 @@
-#ifndef RULES
-#define RULES
+#ifndef RTLIB_RULES_HH_
+#define RTLIB_RULES_HH_
 
 
 #include "boost/format.hpp"
@@ -8,38 +8,38 @@
 
 //this file creates the datatype "rules" for Bellman's GAP which is a double hash and should hold production rules of a grammar. This is necessary for generating thermodynamic matchers given a specific shape string.
 struct rules {
-	
+
 	bool empty_;
-	
+
 	Rope shape;
 	Rope signatureName;
 	Rope axiomName;
 	std::map<Rope, std::map<Rope, bool> > productions;
-	
-	
+
+
 	rules() : empty_ (false) {
 	}
-	
-	
+
+
 	//rules(int i) : empty_(false) {
 	//}
-	
-	
+
+
 	rules& operator+= (const rules &a) {
 		return *this;
 	}
-	
-	
+
+
 	void insertProduction (Rope nt, Rope rhs) {
 		productions[nt].insert(std::pair<Rope,bool> (rhs,true));
 	}
-	
-	
+
+
 	void setShape (Rope s) {
 		shape = s;
 	}
-	
-	
+
+
 	Rope toRope() const {
 		Rope res = "grammar grmmr uses " + signatureName + " (axiom = " + axiomName + ") {\n";
 		std::map<Rope, std::map<Rope, bool> >::const_iterator nt;
@@ -59,8 +59,8 @@ struct rules {
 		append (res, "}");
 		return res;
 	}
-	
-	
+
+
 };
 
 
@@ -77,12 +77,12 @@ inline std::ostream &operator<<(std::ostream &s, const rules &r) {
 
 
 inline void empty(rules &e) {
-	e.empty_ = true; 
+	e.empty_ = true;
 }
 
 
 inline bool isEmpty(const rules &e) {
-	return e.empty_; 
+	return e.empty_;
 }
 
 
@@ -108,10 +108,10 @@ inline void appendShape(rules &me, Rope y) {
 	}
 	else {
 		res = me.shape;
-		
+
 		std::ostringstream left;
 		left << me.shape;
-		
+
 		if (left.str()[left.str().length()-1] == '_') {
 			std::ostringstream right;
 			right << y;
@@ -170,12 +170,12 @@ inline rules merge (std::pair<List<rules, unsigned char>::Iterator, List<rules, 
 inline rules merge (List_Ref<rules>& xs) {
 	rules res;
 	Rope shape;
-	
+
 	for (List_Ref<rules>::iterator i = xs->begin(); i != xs->end(); ++i) {
 		shape = (*i).shape;
 		res = res + *i;
 	}
-	
+
 	res.shape = shape;
 	return res;
 }
@@ -187,7 +187,7 @@ inline rules merge (List_Ref<rules>& xs) {
 // no shape is the same as in any other rules instance of the result.
 inline List_Ref<rules> groupByShape (List_Ref<rules>& xs) {
 	std::map<Rope, rules> shapeMap;
-	
+
 	for (List_Ref<rules>::iterator i = xs->begin(); i != xs->end(); ++i) {
 		rules r;
 		if (shapeMap.find ((*i).shape) != shapeMap.end()) {
@@ -196,7 +196,7 @@ inline List_Ref<rules> groupByShape (List_Ref<rules>& xs) {
 		r = r + *i;
 		shapeMap[(*i).shape] = r;
 	}
-	
+
 	List_Ref<rules> result;
 	for (std::map<Rope, rules>::iterator i = shapeMap.begin(); i != shapeMap.end(); i++) {
 		result->push_back ((*i).second);
@@ -213,11 +213,11 @@ inline Rope getRuleNameDebug (const Rope& r, const Rope& shape) {
 inline Rope getRuleName (const Rope& r, const Rope& shape) {
 	static std::map<Rope, Rope> mapping;
 	static unsigned int ruleCounter = 0;
-	
+
 #ifdef SPECIALIZE_GRAMMAR_DEBUG
 	return getRuleNameDebug (r, shape);
 #endif
-	
+
 	Rope queryName = r + "#" + shape;
 	if (mapping.find (queryName) == mapping.end()) {
 		Rope newRuleName = Rope ("auto_gen_rule_");
@@ -262,4 +262,4 @@ inline bool matchString (const Basic_Sequence<alphabet, pos_type> &seq, T i, T j
 
 
 
-#endif
+#endif  // RTLIB_RULES_HH_

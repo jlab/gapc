@@ -1,56 +1,56 @@
-/* 
+/*
  * File:   pareto_dom_sort.hh
  * Author: gatter
  *
  * Created on September 9, 2015, 9:09 AM
  */
 
-#ifndef PARETO_DOM_SORT_HH
-#define	PARETO_DOM_SORT_HH
+#ifndef RTLIB_PARETO_DOM_SORT_HH_
+#define	RTLIB_PARETO_DOM_SORT_HH_
 
 
 template<class T, typename Iterator, typename Compare>
 void pareto_domination_sort(List_Ref<T> &answers, Iterator begin, Iterator end, Compare &c)
 {
-   
+
     if(begin==end) {
         return;
     }
-    
+
 //   std::cout << "IN --------" << std::endl;
 //   for (Iterator i = begin; i!=end; ++i){
 //       std::cout << *i << std::endl;
-//   } 
-//    
-//   std::cout << "--------" << std::endl; 
-    
+//   }
+//
+//   std::cout << "--------" << std::endl;
+
    const int dim = c.dim;
-  
+
   Iterator m1 = begin;
   std::advance(m1, std::distance(begin, end) / 2);
-   
+
   Iterator m2 = m1;
-  
+
   bool left = true;
   bool right = true;
-  
+
   if(m2 == begin) {
       left = false;
   }
-  
+
   while(left || right) {
-       
+
     if(left) {
-        
+
 //        std::cout << "LEFT" << std::endl;
 
         Iterator m = m2;
         --m;
-        
+
         bool add = true;
         for (typename List_Ref<T>::iterator answer = answers.ref().begin(); answer!=answers.ref().end(); ){
 
-          bool less = false;  
+          bool less = false;
           bool better = false;
           for (int i = 1; i<= dim; ++i) {
               int res = c(*answer, *m, i);
@@ -85,22 +85,22 @@ void pareto_domination_sort(List_Ref<T> &answers, Iterator begin, Iterator end, 
         {
           answers.ref().push_back(*m);
         }
-        
+
         --m2;
         if (m2 == begin) {
             left = false;
         }
-        
+
     }
-    
-    if(right) {  
-        
+
+    if(right) {
+
 //        std::cout << "RIGHT" << std::endl;
-        
+
         bool add = true;
         for (typename List_Ref<T>::iterator answer = answers.ref().begin(); answer!=answers.ref().end(); ){
 
-          bool less = false;  
+          bool less = false;
           bool better = false;
           for (int i = 1; i<= dim; ++i) {
               int res = c(*answer, *m1, i);
@@ -135,21 +135,20 @@ void pareto_domination_sort(List_Ref<T> &answers, Iterator begin, Iterator end, 
         {
           answers.ref().push_back(*m1);
         }
-        
+
         ++m1;
         if (m1 == end) {
             right = false;
         }
     }
 
-    
-  }    
 
-   
+  }
+
+
 }
 
 
 
 
-#endif	/* PARETO_DOM_SORT_HH */
-
+#endif	// RTLIB_PARETO_DOM_SORT_HH_

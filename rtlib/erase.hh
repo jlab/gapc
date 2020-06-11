@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef ERASE_HH
-#define ERASE_HH
+#ifndef RTLIB_ERASE_HH_
+#define RTLIB_ERASE_HH_
 
 // no-op for bultin
 // no-op for String -> does ref-counting and non-pointer usage
@@ -47,4 +47,4 @@ template<typename T1, typename T2> inline void erase(T1 &x1, T2 &x2)
   erase(x2);
 }
 
-#endif
+#endif  // RTLIB_ERASE_HH_

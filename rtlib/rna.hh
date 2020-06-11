@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef RNA_HH
-#define RNA_HH
+#ifndef RTLIB_RNA_HH_
+#define RTLIB_RNA_HH_
 
 #include "sequence.hh"
 #include "subsequence.hh"
@@ -658,4 +658,4 @@ class iupac_filter {
 };
 
 
-#endif
+#endif  // RTLIB_RNA_HH_

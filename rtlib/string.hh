@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef STRING_HH
-#define STRING_HH
+#ifndef RTLIB_STRING_HH_
+#define RTLIB_STRING_HH_
 
 // FIXME profile this
 #include "pool.hh"
@@ -153,7 +153,7 @@ class String {
       }
 
       ~Block()
-      { 
+      {
         for (iterator i = begin(); i != end(); ++i)
           del(*i);
       }
@@ -553,4 +553,4 @@ inline uint32_t hashable_value(const String &str)
   return hash;
 }
 
-#endif
+#endif  // RTLIB_STRING_HH_

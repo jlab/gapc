@@ -24,8 +24,8 @@
 
 
 
-#ifndef MAP_POOL_HH
-#define MAP_POOL_HH
+#ifndef RTLIB_MAP_POOL_HH_
+#define RTLIB_MAP_POOL_HH_
 
 #if defined(__APPLE__) && defined(__MACH__)
 	#define _DARWIN_C_SOURCE
@@ -122,7 +122,7 @@ namespace Map
 #ifdef NO_MMAP
     typename Mapper = MallocMapper
 #else
-    typename Mapper = MapMapper 
+    typename Mapper = MapMapper
 #endif
   >
   class Block {
@@ -331,4 +331,4 @@ namespace Map
 
 }
 
-#endif
+#endif  // RTLIB_MAP_POOL_HH_

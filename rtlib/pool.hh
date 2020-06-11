@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef POOL_HH
-#define POOL_HH
+#ifndef RTLIB_POOL_HH_
+#define RTLIB_POOL_HH_
 
 #include "map_pool.hh"
 
@@ -70,4 +70,4 @@ class Pool {
     }
 };
 
-#endif
+#endif  // RTLIB_POOL_HH_

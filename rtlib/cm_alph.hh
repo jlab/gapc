@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef CM_ALPH_HH
-#define CM_ALPH_HH
+#ifndef RTLIB_CM_ALPH_HH_
+#define RTLIB_CM_ALPH_HH_
 
 /*
 
@@ -115,4 +115,4 @@ struct CmAlph {
   }
 };
 
-#endif
+#endif  // RTLIB_CM_ALPH_HH_

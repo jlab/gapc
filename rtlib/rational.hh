@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef RATIONAL_HH
-#define RATIONAL_HH
+#ifndef RTLIB_RATIONAL_HH_
+#define RTLIB_RATIONAL_HH_
 
 #include <gmpxx.h>
 
@@ -33,7 +33,7 @@ typedef mpq_class Rational;
 #include "sequence.hh"
 
 template<typename pos_type>
-inline Rational  CONST_RATIO(Sequence &seq, pos_type i, pos_type j, 
+inline Rational  CONST_RATIO(Sequence &seq, pos_type i, pos_type j,
     const Rational &x)
 {
   assert(i == j);
@@ -51,4 +51,4 @@ inline bool isEmpty(const Rational &x)
   return x == -1;
 }
 
-#endif
+#endif  // RTLIB_RATIONAL_HH_

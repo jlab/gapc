@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef RTLIB_BACKTRACK_HH
-#define RTLIB_BACKTRACK_HH
+#ifndef RTLIB_BACKTRACK_HH_
+#define RTLIB_BACKTRACK_HH_
 
 #include <cassert>
 
@@ -97,7 +97,7 @@ class Backtrace_List : public virtual Backtrace<Value, pos_int> {
     {
       list.push_back(x);
     }
-    
+
     intrusive_ptr<Eval_List<Value> > eval()
     {
       intrusive_ptr<Eval_List<Value> > l = new Eval_List<Value>();
@@ -551,5 +551,4 @@ intrusive_ptr<Backtrace<T, pos_int> > execute_backtrace_k_one
 
 // end --kbacktrack
 
-#endif
-
+#endif  // RTLIB_BACKTRACK_HH_

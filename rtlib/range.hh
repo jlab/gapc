@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef RANGE_HH
-#define RANGE_HH
+#ifndef RTLIB_RANGE_HH_
+#define RTLIB_RANGE_HH_
 
 #include "list.hh"
 
@@ -60,10 +60,10 @@ namespace Proxy {
 
 template<typename Itr, typename Fn>
 class Iterator : public std::iterator<std::random_access_iterator_tag, typename Fn::result_type> {
- 
+
   private:
     Itr curr;
-    
+
   public:
     typedef typename Fn::result_type value_type;
     typedef typename Itr::difference_type difference_type;
@@ -72,9 +72,9 @@ class Iterator : public std::iterator<std::random_access_iterator_tag, typename 
     typedef typename Fn::result_type& reference;
 
     Iterator() {}
-    
+
     Iterator(Itr i) : curr(i) {}
-    
+
     Iterator(const Iterator &other) {
         curr = other.curr;
     }
@@ -84,13 +84,13 @@ class Iterator : public std::iterator<std::random_access_iterator_tag, typename 
       ++curr;
       return *this;
     }
-    
+
     Iterator &operator--()
     {
       --curr;
       return *this;
     }
-    
+
     typename Fn::result_type &operator*()
     {
       return Fn()(*curr);
@@ -107,71 +107,71 @@ class Iterator : public std::iterator<std::random_access_iterator_tag, typename 
       return !(*this == other);
     }
      // random access
-     
+
     difference_type operator-(const Iterator &other ) const
     {
       return curr - other.curr;
     }
-    
+
 //    Iterator &operator=(Iterator &o)
 //    {
 //      curr = o.curr;
 //      return *this;
 //    }
-    
+
     Iterator &operator=(const Iterator &o)
     {
       curr = o.curr;
       return *this;
     }
-      
+
     bool operator<(const Iterator &other) const
     {
       return curr < other.curr;
-    } 
-     
+    }
+
     bool operator>(const Iterator &other) const
     {
       return curr > other.curr;
-    } 
-    
+    }
+
     bool operator<=(const Iterator &other) const
     {
       return curr <= other.curr;
-    } 
-     
+    }
+
     bool operator>=(const Iterator &other) const
     {
       return curr >= other.curr;
-    } 
+    }
 
     Iterator &operator+(difference_type n)
     {
       return *(new Iterator(curr+n));
     }
-    
+
     Iterator &operator+=(difference_type n)
     {
       curr +=n;
       return *this;
     }
-    
+
     Iterator &operator-(difference_type n)
     {
         return *(new Iterator(curr-n));
     }
-    
+
     Iterator &operator-=(difference_type n)
     {
       curr -=n;
       return *this;
     }
- 
+
     const typename Fn::result_type & operator [] (difference_type n)
     {
       return Fn()(curr[n]);
     }
- 
+
 };
 
 }
@@ -198,4 +198,4 @@ splice_right(std::pair<Iterator, Iterator> p)
 
 
 
-#endif
+#endif  // RTLIB_RANGE_HH_

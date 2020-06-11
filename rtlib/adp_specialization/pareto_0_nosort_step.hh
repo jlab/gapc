@@ -1,12 +1,12 @@
-/* 
+/*
  * File:   pareto_0_nosort_step.hh
  * Author: gatter
  *
  * Created on June 29, 2015, 2:57 PM
  */
 
-#ifndef PARETO_0_NOSORT_STEP_HH
-#define	PARETO_0_NOSORT_STEP_HH
+#ifndef RTLIB_ADP_SPECIALIZATION_PARETO_0_NOSORT_STEP_HH_
+#define	RTLIB_ADP_SPECIALIZATION_PARETO_0_NOSORT_STEP_HH_
 
 #if __cplusplus >= 201103L
 #define _MOVE(__val) std::move(__val)
@@ -20,12 +20,12 @@
 // append with no sort Pareto
 template<class T, typename Compare>
 inline void append(List_Ref<T> &answers, T &in, Compare &c, const bool keep_equal) {
-        
+
     const int dim = c.dim;
     bool add = true;
     for (typename List_Ref<T>::iterator answer = answers.ref().begin(); answer!=answers.ref().end(); ){
-      
-      bool less = false;  
+
+      bool less = false;
       bool better = false;
       for (int i = 1; i<= dim; ++i) {
           int res = c(*answer, in, i);
@@ -39,7 +39,7 @@ inline void append(List_Ref<T> &answers, T &in, Compare &c, const bool keep_equa
               default:
                   break;
           }
-          
+
           if (better && less) {
               break;
           }
@@ -56,12 +56,12 @@ inline void append(List_Ref<T> &answers, T &in, Compare &c, const bool keep_equa
           ++answer;
       }
     }
-    
+
     if (add == true)
     {
       answers.ref().push_back(_MOVE(in));
-    } 
-    
+    }
+
 }
 
 
@@ -69,32 +69,32 @@ inline void append(List_Ref<T> &answers, T &in, Compare &c, const bool keep_equa
 template<class T, typename Compare>
 inline void append(List_Ref<T> &answers, List_Ref<T> &inserts, Compare &c, const bool keep_equal)
 {
-    
-  // basic security tests  
+
+  // basic security tests
   if (isEmpty(inserts))
     return;
   assert(&answers.ref() != &inserts.ref());
-  
+
   if (isEmpty(answers)) {
        _MOVE_RANGE(inserts.ref().begin(), inserts.ref().end(), std::back_inserter(answers.ref()));
       return;
   }
-  
+
   //insert into bigger one
   if (answers.ref().size() < inserts.ref().size()) {
       std::swap(inserts, answers);
       List_Ref<T> &temp = inserts;
   }
-  
+
   // do the real work
   const int dim = c.dim;
-  
+
   for(typename List_Ref<T>::iterator in = inserts.ref().begin(); in != inserts.ref().end(); in++) {
-      
+
     bool add = true;
     for (typename List_Ref<T>::iterator answer = answers.ref().begin(); answer!=answers.ref().end(); ){
-     
-      bool less = false;  
+
+      bool less = false;
       bool better = false;
       for (int i = 1; i<= dim; ++i) {
           int res = c(*answer, *in, i);
@@ -108,12 +108,12 @@ inline void append(List_Ref<T> &answers, List_Ref<T> &inserts, Compare &c, const
               default:
                   break;
           }
-          
+
           if (better && less) {
               break;
           }
       }
-      
+
       if (better && less) { // no domination
           ++answer;
       } else if (better || (!better && !less && !keep_equal) ) { // answer is always better or equal or all values equal
@@ -126,16 +126,15 @@ inline void append(List_Ref<T> &answers, List_Ref<T> &inserts, Compare &c, const
           ++answer;
       }
     }
-    
+
     if (add == true)
     {
       answers.ref().push_back(_MOVE(*in));
-    } 
+    }
   }
-  
+
 }
 
 
 
-#endif	/* PARETO_0_NOSORT_STEP_HH */
-
+#endif	// RTLIB_ADP_SPECIALIZATION_PARETO_0_NOSORT_STEP_HH_

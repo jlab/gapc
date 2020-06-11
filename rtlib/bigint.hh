@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef BIGINT_HH 
-#define BIGINT_HH
+#ifndef RTLIB_BIGINT_HH_
+#define RTLIB_BIGINT_HH_
 
 #ifdef USE_GMP_INT
 
@@ -39,4 +39,4 @@ typedef uint64_t BigInt;
 
 #endif
 
-#endif
+#endif  // RTLIB_BIGINT_HH_

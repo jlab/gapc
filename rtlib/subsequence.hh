@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef SUBSEQUENCE_HH
-#define SUBSEQUENCE_HH
+#ifndef RTLIB_SUBSEQUENCE_HH_
+#define RTLIB_SUBSEQUENCE_HH_
 
 #include "sequence.hh"
 
@@ -161,4 +161,4 @@ inline void append_deep(rope::Ref<X> &str, const Basic_Subsequence<alphabet, pos
     str.append(*i);
 }
 
-#endif
+#endif  // RTLIB_SUBSEQUENCE_HH_

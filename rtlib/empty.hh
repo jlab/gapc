@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef EMPTY_HH
-#define EMPTY_HH
+#ifndef RTLIB_EMPTY_HH_
+#define RTLIB_EMPTY_HH_
 
 #include <limits>
 #include <cassert>
@@ -186,4 +186,4 @@ template<typename T1, typename T2> inline bool is_not_empty(const T1 &x1, const 
 }
 
 
-#endif
+#endif  // RTLIB_EMPTY_HH_

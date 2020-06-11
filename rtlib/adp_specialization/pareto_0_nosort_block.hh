@@ -1,12 +1,12 @@
-/* 
+/*
  * File:   pareto_0_nosort_block.hh
  * Author: gatter
  *
  * Created on July 21, 2015, 12:33 PM
  */
 
-#ifndef PARETO_0_NOSORT_BLOCK_HH
-#define	PARETO_0_NOSORT_BLOCK_HH
+#ifndef RTLIB_ADP_SPECIALIZATION_PARETO_0_NOSORT_BLOCK_HH_
+#define	RTLIB_ADP_SPECIALIZATION_PARETO_0_NOSORT_BLOCK_HH_
 
 #if __cplusplus >= 201103L
 #define _MOVE(__val) std::move(__val)
@@ -30,25 +30,25 @@ template<class T, typename Compare>
 inline void join_step(List_Ref<T> &answers, typename List_Ref<T>::iterator &i_begin,
         typename List_Ref<T>::iterator &i_end, Compare &c, const bool keep_equal)
 {
-    
-  // basic security tests  
+
+  // basic security tests
   if (i_begin == i_end)
     return;
-  
+
   if (isEmpty(answers)) {
        _MOVE_RANGE(i_begin, i_end, std::back_inserter(answers.ref()));
       return;
   }
-  
+
   // do the real work
   const int dim = c.dim;
-  
+
   for(typename List_Ref<T>::iterator in = i_begin; in != i_end; in++) {
-      
+
     bool add = true;
     for (typename List_Ref<T>::iterator answer = answers.ref().begin(); answer!=answers.ref().end(); ){
-     
-      bool less = false;  
+
+      bool less = false;
       bool better = false;
       for (int i = 1; i<= dim; ++i) {
           int res = c(*answer, *in, i);
@@ -62,12 +62,12 @@ inline void join_step(List_Ref<T> &answers, typename List_Ref<T>::iterator &i_be
               default:
                   break;
           }
-          
+
           if (better && less) {
               break;
           }
       }
-      
+
       if (better && less) { // no domination
           ++answer;
       } else if (better || (!better && !less && !keep_equal) ) { // answer is always better or equal or all values equal
@@ -80,31 +80,31 @@ inline void join_step(List_Ref<T> &answers, typename List_Ref<T>::iterator &i_be
           ++answer;
       }
     }
-    
+
     if (add == true)
     {
       answers.ref().push_back(_MOVE(*in));
-    } 
+    }
   }
-  
+
 }
 
 
 template<class T, typename Compare>
 inline void join_marked_multi_to_two_all(List_Ref<T> &x, List_Ref<int> &markers, Compare &c, const bool keep_equal) {
-    
+
     std::deque<List_Ref<T> > merges;
-    
+
     typename List_Ref<T>::iterator s1_start, middle, s2_end;
-       
+
     typename List_Ref<int>::iterator p1 = markers.ref().begin();
     typename List_Ref<int>::iterator p2 = markers.ref().begin();
     typename List_Ref<int>::iterator x_end = markers.ref().end();
     p2++;
-    
+
     s1_start = x.ref().begin();
     int start = 0;
-    
+
     for(; p2 != x_end && p1 != x_end ; p1+=2, p2+=2) {
 
         // get iterator
@@ -113,20 +113,20 @@ inline void join_marked_multi_to_two_all(List_Ref<T> &x, List_Ref<int> &markers,
 
         s2_end = x.ref().begin();
         std::advance(s2_end, *p2);
-        
+
         // do the actual join
         List_Ref<T> e;
         merges.push_back(e);
-        
+
         if ( (*p1-start) > (*p2 - *p1) ) { // first list longer than second
-            
+
             _MOVE_RANGE(s1_start, middle, std::back_inserter(merges.back().ref()));
             join_step(merges.back(), middle, s2_end, c, keep_equal);
         } else {
             _MOVE_RANGE(middle, s2_end, std::back_inserter(merges.back().ref()));
             join_step(merges.back(), s1_start, middle, c, keep_equal);
         }
-        
+
         s1_start = s2_end;
         start = *p2;
     }
@@ -139,17 +139,17 @@ inline void join_marked_multi_to_two_all(List_Ref<T> &x, List_Ref<int> &markers,
         merges.push_back(e);
         _MOVE_RANGE(s1_start, end, std::back_inserter(merges.back().ref()));
     }
-    
-    
+
+
     while (merges.size() > 1) {
-        
+
             std::deque<List_Ref<T> > new_merges;
-        
+
             typename List_Ref<List_Ref<T> >::iterator m1 = merges.begin();
             typename List_Ref<List_Ref<T> >::iterator m2 = merges.begin();
             typename List_Ref<List_Ref<T> >::iterator m_end = merges.end();
             ++m2;
-            
+
             for(; m2 != m_end && m1 != m_end ; m1+=2, m2+=2) {
 
                 // do the actual join
@@ -163,10 +163,10 @@ inline void join_marked_multi_to_two_all(List_Ref<T> &x, List_Ref<int> &markers,
             if (m1 != m_end) {
                 new_merges.push_back(_MOVE(*m1));
             }
-            
+
             merges = _MOVE(new_merges);
     }
-   
+
     x = _MOVE(merges.front());
 }
 
@@ -177,10 +177,9 @@ inline void join_marked(List_Ref<T> &x, List_Ref<int> &markers, Compare &c, cons
     if (markers.ref().size() <= 1) {
         return;
     }
-    
+
     join_marked_multi_to_two_all(x, markers, c, keep_equal);
-    
+
 }
 
-#endif	/* PARETO_0_NOSORT_BLOCK_HH */
-
+#endif	// RTLIB_ADP_SPECIALIZATION_PARETO_0_NOSORT_BLOCK_HH_

@@ -22,16 +22,16 @@
 }}} */
 
 
-#ifndef ADP_HH
-#define ADP_HH
+#ifndef RTLIB_ADP_HH_
+#define RTLIB_ADP_HH_
 
-#include "empty.hh" 
-#include "algebra.hh" 
-#include "erase.hh" 
-#include "list.hh" 
+#include "empty.hh"
+#include "algebra.hh"
+#include "erase.hh"
+#include "list.hh"
 #include "sequence.hh"
 #include "string.hh"
-#include "table.hh" 
+#include "table.hh"
 #include "terminal.hh"
 
 #include "filter.hh"
@@ -62,4 +62,4 @@ using std::min;
 
 typedef int nosuchtype;
 
-#endif
+#endif  // RTLIB_ADP_HH_

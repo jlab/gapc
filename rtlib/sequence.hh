@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef SEQUENCE
-#define SEQUENCE
+#ifndef RTLIB_SEQUENCE_HH_
+#define RTLIB_SEQUENCE_HH_
 
 #include <cstring>
 #include <cassert>
@@ -363,4 +363,4 @@ inline void char_to_upper(Basic_Sequence<alphabet, pos_type> &seq)
     *i = std::toupper(*i);
 }
 
-#endif
+#endif  // RTLIB_SEQUENCE_HH_

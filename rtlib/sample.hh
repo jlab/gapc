@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef SAMPLE_HH
-#define SAMPLE_HH
+#ifndef RTLIB_SAMPLE_HH_
+#define RTLIB_SAMPLE_HH_
 
 
 #ifdef USE_GSL
@@ -135,5 +135,4 @@ namespace scil {
 
 #endif
 
-#endif
-
+#endif  // RTLIB_SAMPLE_HH_

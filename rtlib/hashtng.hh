@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef HASH_HH
-#define HASH_HH
+#ifndef RTLIB_HASHTNG_HH_
+#define RTLIB_HASHTNG_HH_
 
 #include "bitops.hh"
 #include "move.hh"
@@ -78,11 +78,11 @@ namespace Hash {
     {
       uint32_t i = 32 - count_leading_zeroes(m) - 1;
       assert(m == size_to_next_power(m));
-      uint32_t s = 2654435769;  
+      uint32_t s = 2654435769;
       uint64_t k = kk;
       uint64_t t = s * k & 0x00000000FFFFFFFF;
       return t >> (32 - i);
-    } 
+    }
   };
 
   template <typename T>
@@ -485,4 +485,4 @@ std::ostream &operator<<(std::ostream &out, Hash::Ref<T, I> &x)
 #undef HASH_SHRINK
 #undef HASH_STAT
 
-#endif
+#endif  // RTLIB_HASHTNG_HH_

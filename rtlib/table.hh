@@ -24,8 +24,8 @@
 
 // FIXME tables are codegen-erated now
 
-#ifndef RT_TABLE_HH
-#define RT_TABLE_HH
+#ifndef RTLIB_TABLE_HH_
+#define RTLIB_TABLE_HH_
 
 #include "sequence.hh"
 #include "list.hh"
@@ -213,7 +213,7 @@ namespace Table {
         void print_stats(std::ostream &o, std::string name)
         {
           o << "Table " << name << "(const):\t"
-            << "(" << count << " entries, " 
+            << "(" << count << " entries, "
             <<  elements.size() << " map count) used\n";
         }
 
@@ -371,7 +371,7 @@ namespace Table {
         void print_stats(std::ostream &o, std::string name)
         {
           o << "Table " << name << "(linear):\t"
-            << ratio() << " % (" << count << " entries, " 
+            << ratio() << " % (" << count << " entries, "
             <<  map.size() << " map count) used\n";
         }
 
@@ -458,7 +458,7 @@ namespace Table {
     }
   };
 
-  template <typename T, 
+  template <typename T,
            template<typename, typename> class Mode = Unger,
            typename pos_type = unsigned int, class Index = DiagIndex<pos_type> >
     class Quadratic {
@@ -630,7 +630,7 @@ namespace Table {
         {
           return (double) (100 * count) / ((double) index(n) );
         }
-        
+
         void print_stats(std::ostream &o, std::string name)
         {
           o << "Table " << name << ":\t"
@@ -641,7 +641,7 @@ namespace Table {
         {
         }
 #endif
-        
+
     };
 
 #ifdef WINDOW_MODE
@@ -682,4 +682,4 @@ inline void tabulate(Tab &t, pos_type i, pos_type j,
   t.tabulate(i, j, e);
 }
 
-#endif
+#endif  // RTLIB_TABLE_HH_

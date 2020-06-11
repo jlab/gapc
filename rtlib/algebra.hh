@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef RT_ALGEBRA_HH
-#define RT_ALGEBRA_HH
+#ifndef RTLIB_ALGEBRA_HH_
+#define RTLIB_ALGEBRA_HH_
 
 #include "empty.hh"
 
@@ -216,7 +216,7 @@ bitsum(std::pair<Iterator, Iterator> &p)
 #include "asymptotics.hh"
 
 /*
- * FIXME delete since second version is ok - only used 
+ * FIXME delete since second version is ok - only used
  * for testing/prototype purpose, for real uses
  * classify-optimization with kbacktrack and hashtable
  * kicks in
@@ -374,4 +374,4 @@ sample_filter(List_Ref<std::pair<S, T>, pos_int> &x)
 
 #endif
 
-#endif
+#endif  // RTLIB_ALGEBRA_HH_

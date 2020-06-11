@@ -1,5 +1,5 @@
-#ifndef ASYMPTOTICS_HH
-#define ASYMPTOTICS_HH
+#ifndef RTLIB_ASYMPTOTICS_HH_
+#define RTLIB_ASYMPTOTICS_HH_
 
 #include <cmath>
 
@@ -14,4 +14,4 @@ namespace Asymptotics
   }
 }
 
-#endif
+#endif  // RTLIB_ASYMPTOTICS_HH_

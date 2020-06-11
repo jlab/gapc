@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef SINGLETON_HH
-#define SINGLETON_HH
+#ifndef RTLIB_SINGLETON_HH_
+#define RTLIB_SINGLETON_HH_
 
 template <typename T>
 class Singleton {
@@ -43,4 +43,4 @@ T Singleton<T>::obj;
 
 #endif
 
-#endif
+#endif  // RTLIB_SINGLETON_HH_

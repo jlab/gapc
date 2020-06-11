@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef HASHLIST_HH
-#define HASHLIST_HH
+#ifndef RTLIB_HASHLIST_HH_
+#define RTLIB_HASHLIST_HH_
 
 #include "ref.hh"
 #include "list.hh"
@@ -154,4 +154,4 @@ std::ostream &operator<<(std::ostream &out, Hash_List<T, I> &x)
   return out;
 }
 
-#endif
+#endif  // HASHLIST_HH

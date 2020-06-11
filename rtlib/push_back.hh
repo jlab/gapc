@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef PUSH_BACK_HH
-#define PUSH_BACK_HH
+#ifndef RTLIB_PUSH_BACK_HH_
+#define RTLIB_PUSH_BACK_HH_
 
 #include "list.hh"
 
@@ -301,4 +301,4 @@ inline void append_class_syn(List_Ref<T, pos_int> &x, List_Ref<T, pos_int> &e)
     push_back_class_syn(x, *i);
 }
 
-#endif
+#endif  // RTLIB_PUSH_BACK_HH_
