@@ -306,7 +306,8 @@ List_Ref<T> list(T t)
 template <typename Iterator>
 inline
 List_Ref<typename std::iterator_traits<Iterator>::value_type>
-xminimum(typename std::iterator_traits<Iterator>::value_type k, std::pair<Iterator, Iterator> &p)
+xminimum(typename std::iterator_traits<Iterator>::value_type k,
+         std::pair<Iterator, Iterator> &p)
 {
   typedef typename std::iterator_traits<Iterator>::value_type type;
   List_Ref<type> l;

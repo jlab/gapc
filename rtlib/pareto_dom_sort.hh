@@ -10,7 +10,8 @@
 
 
 template<class T, typename Iterator, typename Compare>
-void pareto_domination_sort(List_Ref<T> &answers, Iterator begin, Iterator end, Compare &c)
+void pareto_domination_sort(
+  List_Ref<T> &answers, Iterator begin, Iterator end, Compare &c)
 {
 
     if(begin==end) {
@@ -48,7 +49,8 @@ void pareto_domination_sort(List_Ref<T> &answers, Iterator begin, Iterator end, 
         --m;
 
         bool add = true;
-        for (typename List_Ref<T>::iterator answer = answers.ref().begin(); answer!=answers.ref().end(); ){
+        for (typename List_Ref<T>::iterator answer = answers.ref().begin();
+             answer!=answers.ref().end(); ){
 
           bool less = false;
           bool better = false;
@@ -72,7 +74,8 @@ void pareto_domination_sort(List_Ref<T> &answers, Iterator begin, Iterator end, 
 
           if (better && less) { // no domination
               ++answer;
-          } else if (better) { // answer is always better or equal or all values equal
+          } else if (better) {
+              // answer is always better or equal or all values equal
               add = false;
               break;
           } else { // less && !better
@@ -98,7 +101,8 @@ void pareto_domination_sort(List_Ref<T> &answers, Iterator begin, Iterator end, 
 //        std::cout << "RIGHT" << std::endl;
 
         bool add = true;
-        for (typename List_Ref<T>::iterator answer = answers.ref().begin(); answer!=answers.ref().end(); ){
+        for (typename List_Ref<T>::iterator answer = answers.ref().begin();
+             answer!=answers.ref().end(); ){
 
           bool less = false;
           bool better = false;
@@ -122,7 +126,8 @@ void pareto_domination_sort(List_Ref<T> &answers, Iterator begin, Iterator end, 
 
           if (better && less) { // no domination
               ++answer;
-          } else if (better) { // answer is always better or equal or all values equal
+          } else if (better) {
+              // answer is always better or equal or all values equal
               add = false;
               break;
           } else { // less && !better

@@ -155,7 +155,8 @@ template<typename T, typename U> inline void empty(Basic_Subsequence<T, U> &p)
   p.empty();
 }
 
-template <typename T, typename U> inline bool isEmpty(const Basic_Subsequence<T, U> &p)
+template <typename T, typename U> inline bool isEmpty(
+  const Basic_Subsequence<T, U> &p)
 {
   return p.isEmpty();
 }
@@ -180,7 +181,8 @@ template<typename T> inline bool is_not_empty(const T &x)
 }
 
 // For multi-track:
-template<typename T1, typename T2> inline bool is_not_empty(const T1 &x1, const T2 &x2)
+template<typename T1, typename T2> inline bool is_not_empty(
+  const T1 &x1, const T2 &x2)
 {
   return !(isEmpty(x1) || isEmpty(x2));
 }

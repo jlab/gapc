@@ -179,8 +179,9 @@ namespace Table {
         }
 
         template<typename alphabet, typename seqpos>
-        void init(const Basic_Sequence<alphabet, seqpos> &seq, const std::string &name_)
-        {
+        void init(
+          const Basic_Sequence<alphabet, seqpos> &seq,
+          const std::string &name_) {
           n = seq.size();
         }
 
@@ -218,8 +219,9 @@ namespace Table {
         }
 
         template<typename alphabet, typename seqpos>
-        void window_init(const Basic_Sequence<alphabet, seqpos> &seq, pos_type w_size,
-            pos_type w_inc) {}
+        void window_init(
+          const Basic_Sequence<alphabet, seqpos> &seq, pos_type w_size,
+          pos_type w_inc) {}
         void window_increment() {}
 
     };
@@ -327,8 +329,9 @@ namespace Table {
         }
 
         template<typename alphabet, typename seqpos>
-        void init(const Basic_Sequence<alphabet, seqpos> &seq, const std::string &name_)
-        {
+        void init(
+          const Basic_Sequence<alphabet, seqpos> &seq,
+          const std::string &name_) {
           n = seq.size();
           init();
         }
@@ -376,8 +379,9 @@ namespace Table {
         }
 
         template<typename alphabet, typename seqpos>
-        void window_init(const Basic_Sequence<alphabet, seqpos> &seq, pos_type w_size,
-            pos_type w_inc) {}
+        void window_init(
+          const Basic_Sequence<alphabet, seqpos> &seq, pos_type w_size,
+          pos_type w_inc) {}
         void window_increment() {}
     };
 #endif
@@ -447,7 +451,8 @@ namespace Table {
       if (a>b)
         std::swap(a, b);
 
-      //std::cerr << "i " << i << " j " << j << " a " << a << " b " << b << std::endl;
+      // std::cerr << "i " << i << " j " << j << " a " <<
+      // a << " b " << b << std::endl;
 
       return index(a, b, window_size);
     }
@@ -528,8 +533,9 @@ namespace Table {
         }
 
         template<typename alphabet, typename seqpos>
-        void init(const Basic_Sequence<alphabet, seqpos> &seq, const std::string &name_)
-        {
+        void init(
+          const Basic_Sequence<alphabet, seqpos> &seq,
+          const std::string &name_) {
 #ifdef STATS
           count = 0;
 #endif
@@ -547,9 +553,8 @@ namespace Table {
 
 #ifdef WINDOW_MODE
         template<typename alphabet, typename seqpos>
-        void window_init(const Basic_Sequence<alphabet, seqpos> &seq, pos_type w_size,
-            pos_type w_inc)
-        {
+        void window_init(const Basic_Sequence<alphabet, seqpos> &seq,
+          pos_type w_size, pos_type w_inc) {
 #ifdef STATS
           count = 0;
 #endif
@@ -581,8 +586,9 @@ namespace Table {
         }
 #else
         template<typename alphabet, typename seqpos>
-        void window_init(const Basic_Sequence<alphabet, seqpos> &seq, pos_type w_size,
-            pos_type w_inc) {}
+        void window_init(
+          const Basic_Sequence<alphabet, seqpos> &seq, pos_type w_size,
+          pos_type w_inc) {}
         void window_increment() {}
 #endif
 

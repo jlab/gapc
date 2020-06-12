@@ -89,7 +89,8 @@ class Backtrace_List : public virtual Backtrace<Value, pos_int> {
     std::list<intrusive_ptr<Backtrace<Value, pos_int> > > list;
   public:
 
-    typedef typename std::list<intrusive_ptr<Backtrace<Value, pos_int> > >::iterator iterator;
+    typedef typename std::list<intrusive_ptr<Backtrace<Value,
+      pos_int> > >::iterator iterator;
     iterator begin() { return list.begin(); }
     iterator end() { return list.end(); }
 
@@ -101,7 +102,8 @@ class Backtrace_List : public virtual Backtrace<Value, pos_int> {
     intrusive_ptr<Eval_List<Value> > eval()
     {
       intrusive_ptr<Eval_List<Value> > l = new Eval_List<Value>();
-      for (typename std::list<intrusive_ptr< Backtrace<Value, pos_int> > >::iterator i =
+      for (typename std::list<intrusive_ptr< Backtrace<Value,
+        pos_int> > >::iterator i =
            list.begin();
            i != list.end(); ++i) {
         intrusive_ptr<Backtrace<Value, pos_int> > bt = *i;
@@ -160,8 +162,10 @@ intrusive_ptr<Backtrace<T, pos_int> > exe_bt
      & list,
    bool allow_cooptimal)
 {
-  typedef List<std::pair<S, intrusive_ptr<Backtrace<T, pos_int> > >, ref_int> list_t;
-  intrusive_ptr<Backtrace_List<T, pos_int> > ret(new Backtrace_List<T, pos_int>());
+  typedef List<std::pair<S, intrusive_ptr<Backtrace<T,
+    pos_int> > >, ref_int> list_t;
+  intrusive_ptr<Backtrace_List<T, pos_int> > ret(
+    new Backtrace_List<T, pos_int>());
   if (isEmpty(list)) {
     //assert(false);
     return ret;
@@ -231,7 +235,8 @@ intrusive_ptr<Backtrace<T, pos_int>  > execute_backtrack_one
 
 template<typename Value, typename pos_int>
 inline
-intrusive_ptr<Eval_List<Value> > evaluate(intrusive_ptr<Backtrace<Value, pos_int> > bt)
+intrusive_ptr<Eval_List<Value> > evaluate(
+  intrusive_ptr<Backtrace<Value, pos_int> > bt)
 {
   assert(bt);
   if (!bt->evaluated)

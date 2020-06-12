@@ -65,7 +65,8 @@ template<class T, typename pos_int>
 inline
 std::ostream &operator<<(std::ostream &out, const List<T, pos_int> &list)
 {
-  for (typename List<T, pos_int>::const_iterator i = list.begin(); i != list.end(); ++i)
+  for (typename List<T, pos_int>::const_iterator i = list.begin();
+       i != list.end(); ++i)
     out << *i << '\n';
   return out;
 }
@@ -104,7 +105,8 @@ inline bool isEmpty(const List_Ref<T, pos_int> &x)
 }
 
 // erase is meant as a destructor
-// destructors on lists or auto called upon function end and therefore not needed
+// destructors on lists or auto called upon function end and therefore not
+// needed
 template<class T, typename pos_int>
 inline void erase(List_Ref<T, pos_int> &x)
 {
@@ -149,13 +151,15 @@ inline T get_back(List_Ref<T, pos_int> &x)
 }
 
 template<class T, typename pos_int>
-inline typename List_Ref<T, pos_int>::iterator erase_element(List_Ref<T, pos_int> &x, typename List_Ref<T, pos_int>::iterator e)
+inline typename List_Ref<T, pos_int>::iterator erase_element(
+  List_Ref<T, pos_int> &x, typename List_Ref<T, pos_int>::iterator e)
 {
   return x.ref().erase(e);
 }
 
 template<class T, typename pos_int>
-inline typename List_Ref<T, pos_int>::iterator insert_element(List_Ref<T, pos_int> &x, typename List_Ref<T, pos_int>::iterator e, T i)
+inline typename List_Ref<T, pos_int>::iterator insert_element(
+  List_Ref<T, pos_int> &x, typename List_Ref<T, pos_int>::iterator e, T i)
 {
   return x.ref().insert(e, i);
 }

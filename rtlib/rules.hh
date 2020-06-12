@@ -6,7 +6,9 @@
 #include <iostream>
 
 
-//this file creates the datatype "rules" for Bellman's GAP which is a double hash and should hold production rules of a grammar. This is necessary for generating thermodynamic matchers given a specific shape string.
+// this file creates the datatype "rules" for Bellman's GAP which is a double
+// hash and should hold production rules of a grammar. This is necessary for
+// generating thermodynamic matchers given a specific shape string.
 struct rules {
 
 	bool empty_;
@@ -41,7 +43,8 @@ struct rules {
 
 
 	Rope toRope() const {
-		Rope res = "grammar grmmr uses " + signatureName + " (axiom = " + axiomName + ") {\n";
+		Rope res = "grammar grmmr uses " + signatureName +
+			" (axiom = " + axiomName + ") {\n";
 		std::map<Rope, std::map<Rope, bool> >::const_iterator nt;
 		std::map<Rope, bool>::const_iterator rhs;
 		for(nt = productions.begin(); nt != productions.end(); nt++) {
@@ -96,8 +99,11 @@ inline void setShape(rules &me, Rope s) {
 }
 
 
-//In level 1 it might happen that two subshapes must be concatenated that both have unpaired bases at their tail and head, e.g. []_ and _[].
-//In such a case, the concatenation is not simply ++ ([]_ + _[] != []__[]), but must recognize the double unpaired stretch and fuse them into one, such that []_ + _[] = []_[]
+// In level 1 it might happen that two subshapes must be concatenated that both
+// have unpaired bases at their tail and head, e.g. []_ and _[].
+// In such a case, the concatenation is not simply ++ ([]_ + _[] != []__[]),
+// but must recognize the double unpaired stretch and fuse them into one, such
+// that []_ + _[] = []_[]
 inline void appendShape(rules &me, Rope y) {
 	Rope res;
 	if (me.shape.size() <= 0) {
@@ -150,8 +156,11 @@ inline Rope toRope (const rules &me) {
 
 
 // NOT USED, see 'merge' below.
-//for choice function: combines rules of several parses, which is necessary for the ambiguous grammar for shape level 1 and macrostate
-inline rules merge (std::pair<List<rules, unsigned char>::Iterator, List<rules, unsigned char>::Iterator>& xs) {
+// for choice function: combines rules of several parses, which is necessary
+// for the ambiguous grammar for shape level 1 and macrostate
+inline rules merge(
+	std::pair<List<rules, unsigned char>::Iterator,
+	List<rules, unsigned char>::Iterator>& xs) {
 	rules res;
 	if (xs.first == xs.second) {
 		empty(res);
@@ -198,7 +207,8 @@ inline List_Ref<rules> groupByShape (List_Ref<rules>& xs) {
 	}
 
 	List_Ref<rules> result;
-	for (std::map<Rope, rules>::iterator i = shapeMap.begin(); i != shapeMap.end(); i++) {
+	for (std::map<Rope, rules>::iterator i = shapeMap.begin();
+	     i != shapeMap.end(); i++) {
 		result->push_back ((*i).second);
 	}
 	return result;
@@ -248,7 +258,9 @@ typedef Rope string_type;
 // by byte content) with the current input sequence section
 // between i and j.
 template<typename alphabet, typename pos_type, typename T>
-inline bool matchString (const Basic_Sequence<alphabet, pos_type> &seq, T i, T j, const std::string str) {
+inline bool matchString(
+	const Basic_Sequence<alphabet, pos_type> &seq, T i, T j,
+	const std::string str) {
 	if (j - i != str.size()) {
 		return false;
 	}

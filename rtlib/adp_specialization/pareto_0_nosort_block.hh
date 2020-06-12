@@ -27,9 +27,9 @@ inline void mark_position(List_Ref<T> &x, List_Ref<int> &markers) {
 
 // append with no sort Pareto
 template<class T, typename Compare>
-inline void join_step(List_Ref<T> &answers, typename List_Ref<T>::iterator &i_begin,
-        typename List_Ref<T>::iterator &i_end, Compare &c, const bool keep_equal)
-{
+inline void join_step(
+  List_Ref<T> &answers, typename List_Ref<T>::iterator &i_begin,
+  typename List_Ref<T>::iterator &i_end, Compare &c, const bool keep_equal) {
 
   // basic security tests
   if (i_begin == i_end)
@@ -46,8 +46,8 @@ inline void join_step(List_Ref<T> &answers, typename List_Ref<T>::iterator &i_be
   for(typename List_Ref<T>::iterator in = i_begin; in != i_end; in++) {
 
     bool add = true;
-    for (typename List_Ref<T>::iterator answer = answers.ref().begin(); answer!=answers.ref().end(); ){
-
+    for (typename List_Ref<T>::iterator answer = answers.ref().begin();
+         answer!=answers.ref().end(); ) {
       bool less = false;
       bool better = false;
       for (int i = 1; i<= dim; ++i) {
@@ -70,7 +70,8 @@ inline void join_step(List_Ref<T> &answers, typename List_Ref<T>::iterator &i_be
 
       if (better && less) { // no domination
           ++answer;
-      } else if (better || (!better && !less && !keep_equal) ) { // answer is always better or equal or all values equal
+      } else if (better || (!better && !less && !keep_equal) ) {
+        // answer is always better or equal or all values equal
           add = false;
           break;
       } else if (less){ // less && !better
@@ -91,7 +92,8 @@ inline void join_step(List_Ref<T> &answers, typename List_Ref<T>::iterator &i_be
 
 
 template<class T, typename Compare>
-inline void join_marked_multi_to_two_all(List_Ref<T> &x, List_Ref<int> &markers, Compare &c, const bool keep_equal) {
+inline void join_marked_multi_to_two_all(
+  List_Ref<T> &x, List_Ref<int> &markers, Compare &c, const bool keep_equal) {
 
     std::deque<List_Ref<T> > merges;
 
@@ -120,10 +122,12 @@ inline void join_marked_multi_to_two_all(List_Ref<T> &x, List_Ref<int> &markers,
 
         if ( (*p1-start) > (*p2 - *p1) ) { // first list longer than second
 
-            _MOVE_RANGE(s1_start, middle, std::back_inserter(merges.back().ref()));
+            _MOVE_RANGE(s1_start, middle, std::back_inserter(
+              merges.back().ref()));
             join_step(merges.back(), middle, s2_end, c, keep_equal);
         } else {
-            _MOVE_RANGE(middle, s2_end, std::back_inserter(merges.back().ref()));
+            _MOVE_RANGE(middle, s2_end, std::back_inserter(
+              merges.back().ref()));
             join_step(merges.back(), s1_start, middle, c, keep_equal);
         }
 
@@ -172,8 +176,8 @@ inline void join_marked_multi_to_two_all(List_Ref<T> &x, List_Ref<int> &markers,
 
 
 template<class T, typename Compare>
-inline void join_marked(List_Ref<T> &x, List_Ref<int> &markers, Compare &c, const bool keep_equal)
-{
+inline void join_marked(
+  List_Ref<T> &x, List_Ref<int> &markers, Compare &c, const bool keep_equal) {
     if (markers.ref().size() <= 1) {
         return;
     }

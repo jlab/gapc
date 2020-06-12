@@ -106,14 +106,14 @@ inline pos_type seq_size(const Basic_Subsequence<alphabet, pos_type> &sub)
 }
 
 template<typename alphabet, typename pos_type>
-inline alphabet seq_char(const Basic_Subsequence<alphabet, pos_type> &sub, pos_type i)
-{
+inline alphabet seq_char(
+  const Basic_Subsequence<alphabet, pos_type> &sub, pos_type i) {
   return sub.seq->seq[i];
 }
 
 template<typename alphabet, typename pos_type>
-inline alphabet seq_char(const Basic_Subsequence<alphabet, pos_type> &sub, int i)
-{
+inline alphabet seq_char(
+  const Basic_Subsequence<alphabet, pos_type> &sub, int i) {
   return seq_char(sub, pos_type(i));
 }
 
@@ -133,8 +133,8 @@ inline pos_type rows(const Basic_Subsequence<alphabet, pos_type> &sub)
 
 template<typename alphabet, typename pos_type>
 inline
-std::ostream &operator<<(std::ostream &s, const Basic_Subsequence<alphabet, pos_type> &seq)
-{
+std::ostream &operator<<(
+  std::ostream &s, const Basic_Subsequence<alphabet, pos_type> &seq) {
   s << '<' << seq.i << ", " << seq.j << '>';
   return s;
 }
@@ -142,8 +142,8 @@ std::ostream &operator<<(std::ostream &s, const Basic_Subsequence<alphabet, pos_
 #include "rope.hh"
 
 template<typename X, typename alphabet, typename pos_type>
-inline void append(rope::Ref<X> &str, const Basic_Subsequence<alphabet, pos_type> &sub)
-{
+inline void append(
+  rope::Ref<X> &str, const Basic_Subsequence<alphabet, pos_type> &sub) {
   typename rope::Ref<X> t;
   t.append('<');
   t.append(int(sub.i));
@@ -154,10 +154,10 @@ inline void append(rope::Ref<X> &str, const Basic_Subsequence<alphabet, pos_type
 }
 
 template<typename X, typename alphabet, typename pos_type>
-inline void append_deep(rope::Ref<X> &str, const Basic_Subsequence<alphabet, pos_type> &sub)
-{
-  for (typename Basic_Subsequence<alphabet, pos_type>::const_iterator i = sub.begin();
-      i != sub.end(); ++i)
+inline void append_deep(
+  rope::Ref<X> &str, const Basic_Subsequence<alphabet, pos_type> &sub) {
+  for (typename Basic_Subsequence<alphabet, pos_type>::const_iterator i =
+       sub.begin(); i != sub.end(); ++i)
     str.append(*i);
 }
 

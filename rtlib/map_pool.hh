@@ -240,7 +240,8 @@ namespace Map
 #ifdef POOL_DEBUG
     size_t Block_Size = 23
 #else
-    size_t Block_Size = 100 * 1024 * 1024 / (sizeof(Entry<Type>*) + sizeof(Type) )
+    size_t Block_Size = 100 * 1024 * 1024 / (
+			sizeof(Entry<Type>*) + sizeof(Type) )
 #endif
   >
   class Pool {

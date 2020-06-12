@@ -21,8 +21,9 @@
 
 // specialized algorithm for 2 dimensions
 template<class T, typename Compare>
-inline void join_2d_drop(T &ref, typename List_Ref<T>::iterator &it, typename List_Ref<T>::iterator end, Compare &c, const bool keep_equal) {
-
+inline void join_2d_drop(
+  T &ref, typename List_Ref<T>::iterator &it,
+  typename List_Ref<T>::iterator end, Compare &c, const bool keep_equal) {
     if (keep_equal) {
         while( it!= end && c(ref, *it, 2) > 0) {
             ++it;
@@ -37,8 +38,9 @@ inline void join_2d_drop(T &ref, typename List_Ref<T>::iterator &it, typename Li
 
 // specialized algorithm for 2 dimensions
 template<class T, typename Compare>
-inline void join_2d_step(List_Ref<T> &answers, List_Ref<T> &inserts, Compare &c, const bool keep_equal) {
-
+inline void join_2d_step(
+  List_Ref<T> &answers, List_Ref<T> &inserts,
+  Compare &c, const bool keep_equal) {
     typename List_Ref<T>::iterator a_it = answers.ref().begin();
     typename List_Ref<T>::iterator i_it = inserts.ref().begin();
 
@@ -70,7 +72,8 @@ inline void join_2d_step(List_Ref<T> &answers, List_Ref<T> &inserts, Compare &c,
                 switch (c2) {
                     case -1:
                         ++a_it;
-                        join_2d_drop(*i_it, a_it, answers.ref().end(), c, keep_equal);
+                        join_2d_drop(
+                          *i_it, a_it, answers.ref().end(), c, keep_equal);
                         break;
                     case 0:
                         ++a_it;
@@ -85,7 +88,8 @@ inline void join_2d_step(List_Ref<T> &answers, List_Ref<T> &inserts, Compare &c,
                 switch (c2) {
                     case -1:
                         ++a_it;
-                        join_2d_drop(*i_it, a_it, answers.ref().end(), c, keep_equal);
+                        join_2d_drop(
+                          *i_it, a_it, answers.ref().end(), c, keep_equal);
                         new_list.ref().push_back(_MOVE(*i_it));
                         ++i_it;
                         break;
@@ -99,7 +103,8 @@ inline void join_2d_step(List_Ref<T> &answers, List_Ref<T> &inserts, Compare &c,
                         break;
                     case 1:
                          ++i_it;
-                        join_2d_drop(*a_it, i_it, inserts.ref().end(), c, keep_equal);
+                        join_2d_drop(
+                          *a_it, i_it, inserts.ref().end(), c, keep_equal);
                         new_list.ref().push_back(_MOVE(*a_it));
                         ++a_it;
                         break;
@@ -114,7 +119,8 @@ inline void join_2d_step(List_Ref<T> &answers, List_Ref<T> &inserts, Compare &c,
                         break;
                     case 1:
                         ++i_it;
-                        join_2d_drop(*a_it, i_it, inserts.ref().end(), c, keep_equal);
+                        join_2d_drop(
+                          *a_it, i_it, inserts.ref().end(), c, keep_equal);
                         break;
                 }
                 new_list.ref().push_back(_MOVE(*a_it));
@@ -129,8 +135,9 @@ inline void join_2d_step(List_Ref<T> &answers, List_Ref<T> &inserts, Compare &c,
 
 // generalized algorithm for >2 dimensions
 template<class T, typename Compare, typename Sorter>
-inline void join_all_step(List_Ref<T> &answers, List_Ref<T> &inserts, Compare &c, Sorter &s, const bool keep_equal)
-{
+inline void join_all_step(
+  List_Ref<T> &answers, List_Ref<T> &inserts,
+  Compare &c, Sorter &s, const bool keep_equal) {
 
     typename List_Ref<T>::iterator a_it = answers.ref().begin();
     typename List_Ref<T>::iterator i_it = inserts.ref().begin();
@@ -142,7 +149,8 @@ inline void join_all_step(List_Ref<T> &answers, List_Ref<T> &inserts, Compare &c
 
          // from which list to add next
          typename List_Ref<T>::iterator next;
-         if (i_it == inserts.ref().end() || (a_it != answers.ref().end() && s(*a_it, *i_it))) {
+         if (i_it == inserts.ref().end() ||
+            (a_it != answers.ref().end() && s(*a_it, *i_it))) {
              next = a_it;
              ++a_it;
          } else {
@@ -174,8 +182,8 @@ inline void join_all_step(List_Ref<T> &answers, List_Ref<T> &inserts, Compare &c
 
          // move through answers so far
          bool add = true;
-         for(typename List_Ref<T>::iterator n = new_list.ref().begin(); n != new_list.ref().end(); ++n ) {
-
+         for (typename List_Ref<T>::iterator n = new_list.ref().begin();
+              n != new_list.ref().end(); ++n ) {
              bool dominates = true;
              for(int i=2; i <= c.dim; ++i ) {
                  if( c( *next, *n, i) > 0) {
@@ -201,9 +209,9 @@ inline void join_all_step(List_Ref<T> &answers, List_Ref<T> &inserts, Compare &c
 
 // only insert one element, 2D
 template<class T, typename Compare, typename Sorter>
-inline void join_insert_one_2d(List_Ref<T> &answers, T &insert, Compare &c, Sorter &s, const bool keep_equal)
-{
-
+inline void join_insert_one_2d(
+  List_Ref<T> &answers, T &insert, Compare &c, Sorter &s,
+  const bool keep_equal) {
     // find insert position
     typename List_Ref<T>::iterator a_it = answers.ref().begin();
 
@@ -219,7 +227,8 @@ inline void join_insert_one_2d(List_Ref<T> &answers, T &insert, Compare &c, Sort
 
         if (comp < 0) {
             a_it = answers.ref().insert(a_it, insert);
-        } else if (comp == 0 && c(*a_it, insert, 1)==0) { // special equal inserts
+        } else if (comp == 0 && c(*a_it, insert, 1)==0) {
+            // special equal inserts
             a_it = answers.ref().insert(a_it, insert);
         }
 
@@ -227,7 +236,8 @@ inline void join_insert_one_2d(List_Ref<T> &answers, T &insert, Compare &c, Sort
 
         while( a_it != answers.ref().end() && c(*a_it, insert, 1) == 0 ) {
             int o = c(*a_it, insert, 2);
-            if ( o < 0 || (o == 0 && c(*a_it, insert, 1) != 0)) { // keep equal!
+            if ( o < 0 || (o == 0 && c(*a_it, insert, 1) != 0)) {
+                // keep equal!
                 a_it = answers.ref().erase(a_it);
             }
         }
@@ -248,8 +258,9 @@ inline void join_insert_one_2d(List_Ref<T> &answers, T &insert, Compare &c, Sort
 
 // only insert one element, 3D+
 template<class T, typename Compare, typename Sorter>
-inline void join_insert_one_all(List_Ref<T> &answers, T &insert, Compare &c, Sorter &s, const bool keep_equal)
-{
+inline void join_insert_one_all(
+  List_Ref<T> &answers, T &insert, Compare &c, Sorter &s,
+  const bool keep_equal) {
 
     List_Ref<T> inserts;
     inserts.ref().push_back(insert);
@@ -260,8 +271,9 @@ inline void join_insert_one_all(List_Ref<T> &answers, T &insert, Compare &c, Sor
 
 // append with sorted Pareto
 template<class T, typename Compare, typename Sorter>
-inline void append(List_Ref<T> &answers, T &insert, Compare &c, Sorter &s, const bool keep_equal)
-{
+inline void append(
+  List_Ref<T> &answers, T &insert, Compare &c, Sorter &s,
+  const bool keep_equal) {
 
     if (isEmpty(answers)) {
       answers.ref().push_back(insert);
@@ -279,8 +291,9 @@ inline void append(List_Ref<T> &answers, T &insert, Compare &c, Sorter &s, const
 
 // append with sorted Pareto
 template<class T, typename Compare, typename Sorter>
-inline void append(List_Ref<T> &answers, List_Ref<T> &inserts, Compare &c, Sorter &s, const bool keep_equal)
-{
+inline void append(
+  List_Ref<T> &answers, List_Ref<T> &inserts, Compare &c, Sorter &s,
+  const bool keep_equal) {
 
   // basic security tests
   if (isEmpty(inserts)) {
@@ -288,7 +301,9 @@ inline void append(List_Ref<T> &answers, List_Ref<T> &inserts, Compare &c, Sorte
   }
 
   if (isEmpty(answers)) {
-       _MOVE_RANGE(inserts.ref().begin(), inserts.ref().end(), std::back_inserter(answers.ref()));
+       _MOVE_RANGE(
+         inserts.ref().begin(), inserts.ref().end(),
+         std::back_inserter(answers.ref()));
       return;
   }
 

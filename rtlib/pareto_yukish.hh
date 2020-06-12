@@ -71,7 +71,9 @@ template<class T>
 struct y_split {
     public:
        y_split() {}
-       y_split(int depth, bool unsplittable, typename y_list<T>::iterator begin, typename y_list<T>::iterator end) {
+       y_split(
+         int depth, bool unsplittable, typename y_list<T>::iterator begin,
+         typename y_list<T>::iterator end) {
            this->depth = depth;
            this->begin = begin;
            this->end = end;
@@ -163,7 +165,9 @@ struct y_sorter {
 
 // sorts the given subset of the list, starting at dimension s
 template<class T, typename Compare>
-void y_sortList(typename y_list<T>::iterator begin, typename y_list<T>::iterator end, Compare &c,  int s,  int dim) {
+void y_sortList(
+  typename y_list<T>::iterator begin, typename y_list<T>::iterator end,
+  Compare &c,  int s,  int dim) {
 
   y_sorter<T, Compare> sortob = y_sorter<T, Compare>(s,dim,c);
   std::sort(begin, end, sortob);
@@ -180,7 +184,10 @@ void y_join_deque( y_list<T> &x, y_list<T> &y) {
 /////-------------------------- Split Marry -------------------------------
 
 template<class T, typename Compare>
-typename y_in_list<y_split<T> >::iterator y_sortedSplitMarry_inner1(y_in_list<y_split<T> > &splits, typename y_in_list<y_split<T> >::iterator in , y_split<T> ob, Compare &c, int d, int dim, T &median) {
+typename y_in_list<y_split<T> >::iterator y_sortedSplitMarry_inner1(
+  y_in_list<y_split<T> > &splits,
+  typename y_in_list<y_split<T> >::iterator in , y_split<T> ob, Compare &c,
+  int d, int dim, T &median) {
 
     if (ob.begin == ob.end) {
         return in;
@@ -207,14 +214,18 @@ typename y_in_list<y_split<T> >::iterator y_sortedSplitMarry_inner1(y_in_list<y_
     }
 
 
-    in = splits.insert(in , y_split<T>(ob.depth+1, unsplittable, store, ob.end));
+    in = splits.insert(in , y_split<T>(
+      ob.depth+1, unsplittable, store, ob.end));
     in++;
-    in = splits.insert(in , y_split<T>(ob.depth+1, unsplittable, ob.begin, store));
+    in = splits.insert(in , y_split<T>(
+      ob.depth+1, unsplittable, ob.begin, store));
     return in;
 }
 
 template<class T, typename Compare>
-typename y_in_list<y_split<T> >::iterator y_sortedSplitMarry_inner2(y_in_list<y_split<T> > &splits, typename y_in_list<y_split<T> >::iterator in , y_split<T> ob, Compare &c, int d, int dim, const T &median) {
+typename y_in_list<y_split<T> >::iterator y_sortedSplitMarry_inner2(
+  y_in_list<y_split<T> > &splits, typename y_in_list<y_split<T> >::iterator in,
+  y_split<T> ob, Compare &c, int d, int dim, const T &median) {
 
     if (ob.begin == ob.end) {
         return in;
@@ -232,15 +243,20 @@ typename y_in_list<y_split<T> >::iterator y_sortedSplitMarry_inner2(y_in_list<y_
         unsplittable = true;
     }
 
-    in = splits.insert(in , y_split<T>(ob.depth+1, unsplittable, store, ob.end));
+    in = splits.insert(in , y_split<T>(
+      ob.depth+1, unsplittable, store, ob.end));
     in++;
-    in = splits.insert(in , y_split<T>(ob.depth+1, unsplittable, ob.begin, store));
+    in = splits.insert(in , y_split<T>(
+      ob.depth+1, unsplittable, ob.begin, store));
     return in;
 }
 
 template<class T, typename Compare>
-void y_sortDoubleSplit(y_in_list<y_split<T> > &splits_x, y_in_list<y_split<T> > &splits_y,
-         y_list<T> &x , typename y_list<T>::iterator y_begin, typename y_list<T>::iterator y_end, Compare &c, int s, int dim, int blocksize) {
+void y_sortDoubleSplit(
+  y_in_list<y_split<T> > &splits_x, y_in_list<y_split<T> > &splits_y,
+  y_list<T> &x , typename y_list<T>::iterator y_begin,
+  typename y_list<T>::iterator y_end,
+  Compare &c, int s, int dim, int blocksize) {
 
 
     // add first lists to splits
@@ -255,21 +271,23 @@ void y_sortDoubleSplit(y_in_list<y_split<T> > &splits_x, y_in_list<y_split<T> > 
           typename y_in_list<y_split<T> >::iterator s_y = splits_y.begin();
 
           for( ; s_x != splits_x.end() && s_y != splits_y.end(); s_x++, s_y++) {
+            if (std::distance(s_x->begin, s_x->end) > blocksize &&
+                std::distance(s_y->begin, s_y->end) > blocksize
+                    && !s_x->unsplittable && !s_y->unsplittable) {
 
-              if ( std::distance(s_x->begin, s_x->end) > blocksize && std::distance(s_y->begin, s_y->end) > blocksize
-                      && !s_x->unsplittable && !s_y->unsplittable) {
+                y_split<T> ob_y = *s_y;
+                y_split<T> ob_x = *s_x;
 
-                  y_split<T> ob_y = *s_y;
-                  y_split<T> ob_x = *s_x;
+                s_x = splits_x.erase(s_x);
+                s_y = splits_y.erase(s_y);
 
-                  s_x = splits_x.erase(s_x);
-                  s_y = splits_y.erase(s_y);
-
-                  T median;
-                  s_x = y_sortedSplitMarry_inner1(splits_x, s_x , ob_x, c,  s, dim, median);
-                  s_y = y_sortedSplitMarry_inner2(splits_y, s_y , ob_y, c,  s, dim, median);
-                  continue_split = true;
-              }
+                T median;
+                s_x = y_sortedSplitMarry_inner1(
+                  splits_x, s_x , ob_x, c,  s, dim, median);
+                s_y = y_sortedSplitMarry_inner2(
+                  splits_y, s_y , ob_y, c,  s, dim, median);
+                continue_split = true;
+            }
           }
     }
 
@@ -292,7 +310,9 @@ bool y_marry2d_comperator(const T &c1, const T  &c2, Compare &c, int s, int dim)
 }
 
 template<class T, typename Compare>
-void y_marry2d( y_list<T> &answers ,  y_list<T> &x, typename y_list<T>::iterator y_begin, typename y_list<T>::iterator y_end , Compare &c, int s, int dim) {
+void y_marry2d(
+  y_list<T> &answers ,  y_list<T> &x, typename y_list<T>::iterator y_begin,
+  typename y_list<T>::iterator y_end , Compare &c, int s, int dim) {
 
     if(y_begin == y_end) { // handle empty case, nothing to dominate
         y_join_deque(answers, x);
@@ -320,7 +340,8 @@ void y_marry2d( y_list<T> &answers ,  y_list<T> &x, typename y_list<T>::iterator
         snext_y++;
 
         // test if next y or next x
-        if( snext_y != y_end && y_marry2d_comperator(*snext_y, *s_x, c, s, dim) ) {
+        if( snext_y != y_end && y_marry2d_comperator(
+          *snext_y, *s_x, c, s, dim) ) {
            // add y, because y better
             s_y++;
 
@@ -339,12 +360,15 @@ void y_marry2d( y_list<T> &answers ,  y_list<T> &x, typename y_list<T>::iterator
 }
 
 template<class T, typename Compare>
-void y_marryBrute(y_list<T>  &answers, const y_split<T> &x, const y_split<T> &y, Compare &c, int s, int dim) {
+void y_marryBrute(
+  y_list<T> &answers, const y_split<T> &x, const y_split<T> &y, Compare &c,
+  int s, int dim) {
 
     for(typename y_list<T>::iterator el_x = x.begin; el_x != x.end; ++el_x) {
 
         bool add = true;
-        for(typename y_list<T>::iterator el_y = y.begin; el_y != y.end; ++el_y) {
+        for(typename y_list<T>::iterator el_y = y.begin;
+            el_y != y.end; ++el_y) {
 
           if (y_dominates( *el_y, *el_x , c, s, dim) ) {
                add = false;
@@ -361,7 +385,10 @@ void y_marryBrute(y_list<T>  &answers, const y_split<T> &x, const y_split<T> &y,
 
 
 template<class T, typename Compare>
-void y_marry(y_list<T> &answers , y_list<T> &x, typename y_list<T>::iterator y_begin, typename y_list<T>::iterator y_end , Compare &c, int s, int dim, int blocksize) {
+void y_marry(
+  y_list<T> &answers , y_list<T> &x, typename y_list<T>::iterator y_begin,
+  typename y_list<T>::iterator y_end , Compare &c, int s, int dim,
+  int blocksize) {
 
     // x and y need to be sorted for all cases
     y_sortList<T, Compare>(x.begin(), x.end(), c, s, dim);
@@ -375,7 +402,8 @@ void y_marry(y_list<T> &answers , y_list<T> &x, typename y_list<T>::iterator y_b
     // flattened trees to store splits
     y_in_list<y_split<T> > raw_splits_x;
     y_in_list<y_split<T> > raw_splits_y;
-    y_sortDoubleSplit(raw_splits_x, raw_splits_y, x, y_begin, y_end, c, s, dim, blocksize);
+    y_sortDoubleSplit(
+      raw_splits_x, raw_splits_y, x, y_begin, y_end, c, s, dim, blocksize);
 
     // apply brute solving to all on base level
     typename y_in_list<y_split<T> >::iterator s_x = raw_splits_x.begin();
@@ -383,7 +411,8 @@ void y_marry(y_list<T> &answers , y_list<T> &x, typename y_list<T>::iterator y_b
 
     y_in_list<Deleter<y_split_p<T> > >  splits_x;
 
-    for(; s_x != raw_splits_x.end() && s_y != raw_splits_y.end(); ++s_x, ++s_y) {
+    for (; s_x != raw_splits_x.end() && s_y != raw_splits_y.end();
+         ++s_x, ++s_y) {
 
         y_split_p<T> * tmp = new y_split_p<T>(s_x->depth);
         y_marryBrute(tmp->list, *s_x, *s_y, c, s, dim);
@@ -394,12 +423,15 @@ void y_marry(y_list<T> &answers , y_list<T> &x, typename y_list<T>::iterator y_b
     // join up bottom up, x can bee seen as already married
     while(splits_x.size() > 1) {
 
-        typename y_in_list<Deleter<y_split_p<T> > > ::iterator s_x = splits_x.begin();
+        typename y_in_list<Deleter<y_split_p<T> > > ::iterator s_x =
+          splits_x.begin();
         typename y_in_list<y_split<T> >::iterator s_y = raw_splits_y.begin();
 
-        for(; s_x != splits_x.end() && s_y != raw_splits_y.end(); ++s_x, ++s_y) {
+        for (; s_x != splits_x.end() && s_y != raw_splits_y.end();
+             ++s_x, ++s_y) {
 
-             typename y_in_list<Deleter<y_split_p<T> > > ::iterator snext_x = s_x;
+             typename y_in_list<Deleter<y_split_p<T> > > ::iterator snext_x =
+              s_x;
              snext_x++;
              typename y_in_list<y_split<T> >::iterator snext_y = s_y;
              snext_y++;
@@ -413,7 +445,9 @@ void y_marry(y_list<T> &answers , y_list<T> &x, typename y_list<T>::iterator y_b
 
                 y_split_p<T> * tmp = new y_split_p<T>((*s_x)->depth-1);
 
-                y_marry(tmp->list, (*s_x)->list, snext_y->begin, snext_y->end, c, s+1, dim, blocksize);
+                y_marry(
+                  tmp->list, (*s_x)->list, snext_y->begin, snext_y->end, c,
+                  s+1, dim, blocksize);
                 y_join_deque(tmp->list, (*snext_x)->list);
 
                 s_x = splits_x.erase(s_x,s_x+2);
@@ -423,7 +457,8 @@ void y_marry(y_list<T> &answers , y_list<T> &x, typename y_list<T>::iterator y_b
                 y_split<T> ynexttmp = *snext_y;
 
                 s_y = raw_splits_y.erase(s_y,s_y+2);
-                s_y = raw_splits_y.insert(s_y, y_split<T>((*s_x)->depth, false, ynexttmp.begin, ytmp.end) );
+                s_y = raw_splits_y.insert(s_y, y_split<T>(
+                  (*s_x)->depth, false, ynexttmp.begin, ytmp.end) );
 
                 break;
             }
@@ -435,14 +470,18 @@ void y_marry(y_list<T> &answers , y_list<T> &x, typename y_list<T>::iterator y_b
 }
 
 template<class T, typename Compare>
-void y_marry(y_list<T> &answers , y_list<T> &x, y_list<T> &y, Compare &c, int s, int dim, int blocksize) {
+void y_marry(y_list<T> &answers , y_list<T> &x, y_list<T> &y, Compare &c,
+  int s, int dim, int blocksize) {
     y_marry(answers, x, y.begin(), y.end(), c, s, dim, blocksize);
 }
 
 /////-------------------------- Split DC -------------------------------
 
 template<class T, typename Iterator, typename Compare>
-typename y_in_list<y_split_it<T, Iterator> >::iterator y_sortedSplit_inner( y_in_list<y_split_it<T, Iterator> > &splits, typename y_in_list<y_split_it<T, Iterator> >::iterator in ,y_split_it<T, Iterator> ob, Compare &c, int d, int dim) {
+typename y_in_list<y_split_it<T, Iterator> >::iterator y_sortedSplit_inner(
+  y_in_list<y_split_it<T, Iterator> > &splits,
+  typename y_in_list<y_split_it<T, Iterator> >::iterator in ,
+  y_split_it<T, Iterator> ob, Compare &c, int d, int dim) {
 
     if (ob.begin == ob.end) {
         return in;
@@ -463,15 +502,19 @@ typename y_in_list<y_split_it<T, Iterator> >::iterator y_sortedSplit_inner( y_in
         unsplittable = true;
     }
 
-    in = splits.insert(in , y_split_it<T, Iterator>(ob.depth+1, unsplittable, store, ob.end));
+    in = splits.insert(
+      in , y_split_it<T, Iterator>(ob.depth+1, unsplittable, store, ob.end));
     in++;
-    in = splits.insert(in , y_split_it<T, Iterator>(ob.depth+1, unsplittable, ob.begin, store));
+    in = splits.insert(
+      in , y_split_it<T, Iterator>(ob.depth+1, unsplittable, ob.begin, store));
     return in;
 }
 
 
 template<class T, typename Iterator, typename Compare>
-void y_sortedSplit( y_in_list<y_split_it<T, Iterator> > &splits, Iterator begin, Iterator end, Compare &c, int blocksize, int dim) {
+void y_sortedSplit(
+  y_in_list<y_split_it<T, Iterator> > &splits, Iterator begin, Iterator end,
+  Compare &c, int blocksize, int dim) {
 
     // add first list to split
     splits.push_back( y_split_it<T, Iterator>(1, false, begin, end) );
@@ -480,10 +523,12 @@ void y_sortedSplit( y_in_list<y_split_it<T, Iterator> > &splits, Iterator begin,
     while (continue_split) {
           continue_split = false;
 
-          for(typename y_in_list<y_split_it<T, Iterator> >::iterator s = splits.begin()
+          for (typename y_in_list<y_split_it<T, Iterator> >::iterator s =
+               splits.begin()
                   ; s != splits.end(); s++) {
 
-              if ( std::distance((*s).begin, (*s).end) > blocksize && !(*s).unsplittable) {
+              if ( std::distance((*s).begin, (*s).end) > blocksize && !(
+                *s).unsplittable) {
 
                   y_split_it<T, Iterator> ob = *s;
                   s = splits.erase(s);
@@ -500,7 +545,8 @@ void y_sortedSplit( y_in_list<y_split_it<T, Iterator> > &splits, Iterator begin,
 /////-------------------------- Brute Solve SC -------------------------------
 
 template<class T, typename Iterator, typename Compare>
-void y_bruteSolveSC(y_list<T> &answers, Iterator begin, Iterator end, Compare &c, int dim) {
+void y_bruteSolveSC(
+  y_list<T> &answers, Iterator begin, Iterator end, Compare &c, int dim) {
 
     // n^2 adding
    Iterator ref = begin;
@@ -511,7 +557,8 @@ void y_bruteSolveSC(y_list<T> &answers, Iterator begin, Iterator end, Compare &c
    for(; ref != end; ++ref) {
        bool add = true;
 
-       for( typename y_list<T>::iterator ans = answers.begin(); ans != answers.end();ans++) {
+       for (typename y_list<T>::iterator ans = answers.begin();
+            ans != answers.end();ans++) {
 
            if (y_dominates( *ans, *ref , c, 2, dim)) {
                add = false;
@@ -529,7 +576,9 @@ void y_bruteSolveSC(y_list<T> &answers, Iterator begin, Iterator end, Compare &c
 
 
 template<class T, typename Iterator, typename Compare>
- void y_recSolveDC(y_list<T> &answers ,Iterator begin, Iterator end, Compare &c, int dim, int blocksize) {
+ void y_recSolveDC(
+   y_list<T> &answers ,Iterator begin, Iterator end, Compare &c, int dim,
+   int blocksize) {
 
     // split up the problem until blocksize is reached
 
@@ -539,57 +588,58 @@ template<class T, typename Iterator, typename Compare>
 
     y_in_list<Deleter<y_split_p<T> > >  splits;
     // apply brute solving to all
-    for(typename y_in_list<y_split_it<T, Iterator> >::iterator s = raw_splits.begin()
-                  ; s != raw_splits.end(); ++s) {
-
+    for (typename y_in_list<y_split_it<T, Iterator> >::iterator s =
+         raw_splits.begin(); s != raw_splits.end(); ++s) {
         y_split_p<T>* tmp = new y_split_p<T>(s->depth);
         y_bruteSolveSC(tmp->list ,s->begin, s->end, c, dim);
         splits.push_back(tmp);
     }
 
     while(splits.size() > 1) {
+      for (typename y_in_list<Deleter<y_split_p<T> > >::iterator s =
+           splits.begin(); s != splits.end(); s++) {
+            typename y_in_list<Deleter<y_split_p<T> > >::iterator snext = s;
+            snext++;
 
-            for(typename y_in_list<Deleter<y_split_p<T> > >::iterator s = splits.begin()
-                  ; s != splits.end(); s++) {
-
-                  typename y_in_list<Deleter<y_split_p<T> > >::iterator snext = s;
-                  snext++;
-
-                  if (snext == splits.end()) {
-                      break;
-                  }
-
-                  // is the level matching?
-                  if((*s)->depth == (*snext)->depth) {
-
-                      y_split_p<T>* tmp = new y_split_p<T>((*s)->depth-1);
-                      y_marry(tmp->list, (*s)->list, (*snext)->list, c, 2, dim, blocksize);
-
-                      y_join_deque(tmp->list, (*snext)->list);
-
-                      s = splits.erase(s,s+2);
-
-                      s = splits.insert(s,tmp);
-                      break;
-                  }
+            if (snext == splits.end()) {
+                break;
             }
+
+            // is the level matching?
+            if((*s)->depth == (*snext)->depth) {
+
+                y_split_p<T>* tmp = new y_split_p<T>((*s)->depth-1);
+                y_marry(tmp->list, (*s)->list, (
+                  *snext)->list, c, 2, dim, blocksize);
+
+                y_join_deque(tmp->list, (*snext)->list);
+
+                s = splits.erase(s,s+2);
+
+                s = splits.insert(s,tmp);
+                break;
+            }
+      }
     }
 
-    answers.insert(answers.end(), splits.front()->list.begin(), splits.front()->list.end());
+    answers.insert(
+      answers.end(), splits.front()->list.begin(), splits.front()->list.end());
 }
 
 /////-------------------------- Main -------------------------------
 
 template<class T, typename Iterator, typename Compare>
-void pareto_yukish(List_Ref<T> &ret_answers, Iterator begin, Iterator end, Compare &c, int dim, int blocksize)
-{
+void pareto_yukish(
+  List_Ref<T> &ret_answers, Iterator begin, Iterator end, Compare &c,
+  int dim, int blocksize) {
 
    // solve it
    y_list<T> answers;
    y_recSolveDC(answers, begin, end, c, dim, blocksize);
 
 
-   ret_answers.ref().insert(ret_answers.ref().begin(), answers.begin(), answers.end());
+   ret_answers.ref().insert(
+     ret_answers.ref().begin(), answers.begin(), answers.end());
 
 }
 

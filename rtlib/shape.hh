@@ -579,7 +579,9 @@ T Fiber<T, Size, alphset>::null_elem(0);
 
 #ifdef __APPLE__
   // work around weird Mac OS X type ambiguity problems
-  // cf. http://stackoverflow.com/questions/11603818/why-is-there-ambiguity-between-uint32-t-and-uint64-t-when-using-size-t-on-mac-os
+  // cf. http://stackoverflow.com/questions/11603818/
+  // why-is-there-ambiguity-between-uint32-t-and-uint64-t-
+  // when-using-size-t-on-mac-os
 
   #ifdef __x86_64__
     typedef Fiber<uint64_t, unsigned char> Shape;

@@ -58,7 +58,8 @@ class Hash_List_Back {
       } else {
         Hash_t &set = Singleton<Hash_t>::ref();
         set.hint(4096);
-        for (typename List<T>::iterator i = list->begin(); i != list->end(); ++i)
+        for (typename List<T>::iterator i = list->begin();
+             i != list->end(); ++i)
           set.add(*i);
         List_Ref<T> l;
         size = 0;

@@ -59,7 +59,8 @@ struct select2nd : public std::unary_function<Pair,typename Pair::second_type> {
 namespace Proxy {
 
 template<typename Itr, typename Fn>
-class Iterator : public std::iterator<std::random_access_iterator_tag, typename Fn::result_type> {
+class Iterator : public std::iterator<std::random_access_iterator_tag,
+  typename Fn::result_type> {
 
   private:
     Itr curr;
@@ -182,7 +183,8 @@ std::pair<Proxy::Iterator<Iterator, select1st<typename Iterator::value_type> >,
   Proxy::Iterator<Iterator, select1st<typename Iterator::value_type> > >
 splice_left(std::pair<Iterator, Iterator> p)
 {
-  typedef Proxy::Iterator<Iterator, select1st<typename Iterator::value_type> > foo;
+  typedef Proxy::Iterator<Iterator, select1st<
+    typename Iterator::value_type> > foo;
   return std::make_pair(foo(p.first), foo(p.second));
 }
 
@@ -192,7 +194,8 @@ std::pair<Proxy::Iterator<Iterator, select2nd<typename Iterator::value_type> >,
   Proxy::Iterator<Iterator, select2nd<typename Iterator::value_type> > >
 splice_right(std::pair<Iterator, Iterator> p)
 {
-  typedef Proxy::Iterator<Iterator, select2nd<typename Iterator::value_type> > foo;
+  typedef Proxy::Iterator<Iterator, select2nd<
+    typename Iterator::value_type> > foo;
   return std::make_pair(foo(p.first), foo(p.second));
 }
 

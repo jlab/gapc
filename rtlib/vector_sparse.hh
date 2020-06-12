@@ -142,7 +142,8 @@ class Vector_Sparse {
     }
     ~Vector_Sparse()
     {
-      for (typename Stapel<U>::iterator i = stack.begin(); i != stack.end(); ++i)
+      for (typename Stapel<U>::iterator i = stack.begin();
+           i != stack.end(); ++i)
         array[*i].~T();
       std::free(array);
     }
@@ -230,15 +231,21 @@ class Vector_Sparse {
         typedef T* pointer;
         typedef T& reference;
 
-        difference_type operator-(const Iterator &other) const { assert(i>other.i); return i-other.i; }
+        difference_type operator-(const Iterator &other) const {
+          assert(i>other.i); return i-other.i;
+        }
         Iterator operator+(U a) const { return Iterator(v, i+a); }
         Iterator operator-(U a) const { return Iterator(v, i-a); }
-        Iterator &operator=(const Iterator &other) { assert(&v == &other.v); i = other.i; return *this; }
+        Iterator &operator=(const Iterator &other) {
+          assert(&v == &other.v); i = other.i; return *this;
+        }
         Iterator &operator--() { --i; return *this;}
         Iterator operator--(int) { Iterator r(*this); --i; return r;}
         bool operator<(const Iterator &other) const { return i < other.i; }
 
-        bool operator==(const Iterator &o) const { assert(&v == &o.v); return i == o.i; }
+        bool operator==(const Iterator &o) const {
+          assert(&v == &o.v); return i == o.i;
+        }
         bool operator!=(const Iterator &o) const { return !(*this == o); }
         T &operator*() { return v(*i); }
         Iterator &operator++() { ++i; return *this; }

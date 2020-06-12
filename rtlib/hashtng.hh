@@ -324,7 +324,8 @@ struct compare {
             std::vector<bool> b(used_);
             swap(init, b);
             U j = 0;
-            for (typename Vector_Sparse<T, U>::iterator  x = a.begin(); j<newend; ++x, ++j) {
+            for (typename Vector_Sparse<T, U>::iterator  x = a.begin();
+                 j<newend; ++x, ++j) {
               array.init(j, *x);
               init[j] = true;
             }

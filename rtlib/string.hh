@@ -409,8 +409,8 @@ class String {
           else
             fwd();
         }
-        Iterator(bool b)
-          : i(0), block(NULL), end(true), in_seq(false), in_rep(false), rep(0) {}
+        Iterator(bool b) : i(0), block(NULL), end(true), in_seq(false),
+          in_rep(false), rep(0) {}
 
         void operator++()
         {
@@ -531,8 +531,8 @@ inline void append(String &str, const char *c, int i)
 }
 
 template<typename alphabet, typename pos_type>
-inline void append(String &str, const Basic_Subsequence<alphabet, pos_type> &sub)
-{
+inline void append(
+  String &str, const Basic_Subsequence<alphabet, pos_type> &sub) {
   String t;
   t.append('<');
   t.append(int(sub.i));

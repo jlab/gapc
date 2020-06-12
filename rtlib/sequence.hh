@@ -348,8 +348,8 @@ inline char upper_case(char c)
 }
 
 //template<typename alphabet, typename pos_type>
-inline const char &column(const M_Char /*<alphabet, pos_type>*/ &c, /*pos_type*/ unsigned l)
-{
+inline const char &column(
+  const M_Char /*<alphabet, pos_type>*/ &c, /*pos_type*/ unsigned l) {
   return c.column(l);
 }
 

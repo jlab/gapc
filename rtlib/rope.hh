@@ -498,8 +498,10 @@ namespace rope {
             }
           }
         protected:
-          Const_Iterator(Ref<Refcount> &r) : ref(r), i(0), j(0), z(0) { init(); }
-          Const_Iterator(Ref<Refcount> &r, Ref<Refcount> &rr) : ref(r), i(0), j(0), z(0) { }
+          Const_Iterator(
+            Ref<Refcount> &r) : ref(r), i(0), j(0), z(0) { init(); }
+          Const_Iterator(
+            Ref<Refcount> &r, Ref<Refcount> &rr) : ref(r), i(0), j(0), z(0) { }
         public:
           unsigned char &operator*() { assert(i); return i->array[j]; }
           Const_Iterator &operator++()
@@ -525,8 +527,12 @@ namespace rope {
             }
             return *this;
           }
-          bool operator==(const Const_Iterator &other) const { assert(ref == other.ref); return i == other.i && j == other.j; }
-          bool operator!=(const Const_Iterator &other) const { return !(*this == other); }
+          bool operator==(const Const_Iterator &other) const {
+            assert(ref == other.ref); return i == other.i && j == other.j;
+          }
+          bool operator!=(const Const_Iterator &other) const {
+            return !(*this == other);
+          }
       };
 
       class Iterator : public Const_Iterator {
@@ -534,9 +540,12 @@ namespace rope {
           friend class Ref<Refcount>;
         protected:
           Iterator(Ref<Refcount> &r) : Const_Iterator(r) {}
-          Iterator(Ref<Refcount> &r, Ref<Refcount> &rr) : Const_Iterator(r, r) {}
+          Iterator(Ref<Refcount> &r, Ref<Refcount> &rr) : Const_Iterator(r, r) {
+          }
         public:
-          unsigned char operator*() const { assert(this->i); return this->i->array[this->j]; }
+          unsigned char operator*() const {
+            assert(this->i); return this->i->array[this->j];
+          }
       };
 
       typedef Iterator iterator;
@@ -729,7 +738,8 @@ inline void append(rope::Ref<X> &str, double i)
 }
 
 
-//Stefan Janssen: returns the first character of the rope, if not empty. For the empty case it returns the fallback character 0.
+//Stefan Janssen: returns the first character of the rope, if not empty. For
+// the empty case it returns the fallback character 0.
 template<typename X>
 inline char front(const rope::Ref<X> &str, char r = 0) {
   if (str.size() <= 0) {
@@ -739,8 +749,11 @@ inline char front(const rope::Ref<X> &str, char r = 0) {
   }
 }
 
-//Stefan Janssen: returns the last character of the rope, if not empty. For the empty case it returns the fallback character 0.
-//FIXME: I am not happy with the iteration through the whole rope, but since I don't fully understand the ADT for rope I'm not sure if there is a better solution.
+// Stefan Janssen: returns the last character of the rope, if not empty. For the
+// empty case it returns the fallback character 0.
+// FIXME: I am not happy with the iteration through the whole rope, but since I
+// don't fully understand the ADT for rope I'm not sure if there is a better
+// solution.
 template<typename X>
 inline char back(const rope::Ref<X> &str, char r = 0) {
 	rope::Ref<X> &x = const_cast<rope::Ref<X>&>(str);
@@ -755,8 +768,12 @@ inline char back(const rope::Ref<X> &str, char r = 0) {
 	}
 }
 
-//Stefan Janssen: returns everything but the first character of the rope, if not empty and contains more than one letter. Otherwise it returns the empty rope.
-//FIXME: I am not happy with the iteration through the whole rope, but since I don't fully understand the ADT for rope I'm not sure if there is a better solution.
+// Stefan Janssen: returns everything but the first character of the rope, if
+// not empty and contains more than one letter. Otherwise it returns the empty
+// rope.
+// FIXME: I am not happy with the iteration through the whole rope, but since
+// I don't fully understand the ADT for rope I'm not sure if there is a better
+// solution.
 template<typename X>
 inline Rope tail(const rope::Ref<X> &str) {
 	rope::Ref<X> &x = const_cast<rope::Ref<X>&>(str);
@@ -839,8 +856,8 @@ namespace std {
 
 template <>
 inline
-void swap<rope::Ref<rope::Ref_Count> >(rope::Ref<rope::Ref_Count> &a, rope::Ref<rope::Ref_Count> &b)
-{
+void swap<rope::Ref<rope::Ref_Count> >(
+  rope::Ref<rope::Ref_Count> &a, rope::Ref<rope::Ref_Count> &b) {
   a.swap(b);
 }
 

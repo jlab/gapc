@@ -46,8 +46,8 @@ inline T & left_most(T &e)
 }
 
 template<typename A, typename B>
-inline typename Left_Return<std::pair<A, B> >::type  & left_most(std::pair<A, B> &x)
-{
+inline typename Left_Return<std::pair<A, B> >::type  & left_most(
+  std::pair<A, B> &x) {
   return left_most(x.first);
 }
 
@@ -73,7 +73,8 @@ inline const T & left_most(const T &e)
 }
 
 template<typename A, typename B>
-inline typename Const_Left_Return<const std::pair<A, B> >::type  & left_most(const std::pair<A, B> &x)
+inline typename Const_Left_Return<const std::pair<A, B> >::type  & left_most(
+  const std::pair<A, B> &x)
 {
   return left_most(x.first);
 }
