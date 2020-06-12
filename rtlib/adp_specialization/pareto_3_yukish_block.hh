@@ -6,7 +6,7 @@
  */
 
 #ifndef RTLIB_ADP_SPECIALIZATION_PARETO_3_YUKISH_BLOCK_HH_
-#define	RTLIB_ADP_SPECIALIZATION_PARETO_3_YUKISH_BLOCK_HH_
+#define RTLIB_ADP_SPECIALIZATION_PARETO_3_YUKISH_BLOCK_HH_
 
 
 #if __cplusplus >= 201103L
@@ -80,7 +80,7 @@ template <typename T>
 class yp_deleter {
 public:
   yp_deleter(T* pointer) {
-	l.reset(pointer);
+  l.reset(pointer);
   }
   yp_deleter(const yp_deleter& deleter) {
     yp_deleter* d = const_cast<yp_deleter*>(&deleter);
@@ -798,4 +798,4 @@ inline void mark_position(List_Ref<T> &x, List_Ref<int> &markers) {
         markers.ref().push_back(s);
 }
 
-#endif	// RTLIB_ADP_SPECIALIZATION_PARETO_3_YUKISH_BLOCK_HH_
+#endif  // RTLIB_ADP_SPECIALIZATION_PARETO_3_YUKISH_BLOCK_HH_

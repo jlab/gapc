@@ -6,14 +6,12 @@
  */
 
 #ifndef RTLIB_PARETO_DOM_SORT_HH_
-#define	RTLIB_PARETO_DOM_SORT_HH_
+#define RTLIB_PARETO_DOM_SORT_HH_
 
 
 template<class T, typename Iterator, typename Compare>
 void pareto_domination_sort(
-  List_Ref<T> &answers, Iterator begin, Iterator end, Compare &c)
-{
-
+  List_Ref<T> &answers, Iterator begin, Iterator end, Compare &c) {
     if(begin==end) {
         return;
     }
@@ -156,4 +154,4 @@ void pareto_domination_sort(
 
 
 
-#endif	// RTLIB_PARETO_DOM_SORT_HH_
+#endif  // RTLIB_PARETO_DOM_SORT_HH_

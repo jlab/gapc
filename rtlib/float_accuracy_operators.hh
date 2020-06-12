@@ -6,7 +6,7 @@
  */
 
 #ifndef RTLIB_FLOAT_ACCURACY_OPERATORS_HH_
-#define	RTLIB_FLOAT_ACCURACY_OPERATORS_HH_
+#define  RTLIB_FLOAT_ACCURACY_OPERATORS_HH_
 
 #include <utility>
 #include <math.h>
@@ -36,4 +36,4 @@ inline bool operator==(
          std::fabs(__x.second - __y.second) < depsilon;
 }
 
-#endif	// RTLIB_FLOAT_ACCURACY_OPERATORS_HH_
+#endif  // RTLIB_FLOAT_ACCURACY_OPERATORS_HH_

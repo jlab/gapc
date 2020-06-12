@@ -28,7 +28,7 @@
 #define RTLIB_MAP_POOL_HH_
 
 #if defined(__APPLE__) && defined(__MACH__)
-	#define _DARWIN_C_SOURCE
+  #define _DARWIN_C_SOURCE
 #endif
 
 
@@ -241,7 +241,7 @@ namespace Map
     size_t Block_Size = 23
 #else
     size_t Block_Size = 100 * 1024 * 1024 / (
-			sizeof(Entry<Type>*) + sizeof(Type) )
+      sizeof(Entry<Type>*) + sizeof(Type) )
 #endif
   >
   class Pool {

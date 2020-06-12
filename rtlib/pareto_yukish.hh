@@ -23,7 +23,7 @@
 
 
 #ifndef RTLIB_PARETO_YUKISH_HH_
-#define	RTLIB_PARETO_YUKISH_HH_
+#define RTLIB_PARETO_YUKISH_HH_
 
 
 #include "list.hh"
@@ -100,7 +100,7 @@ template <typename T>
 class Deleter {
 public:
   Deleter(T* pointer) {
-	l.reset(pointer);
+  l.reset(pointer);
   }
   Deleter(const Deleter& deleter) {
     Deleter* d = const_cast<Deleter*>(&deleter);
@@ -643,4 +643,4 @@ void pareto_yukish(
 
 }
 
-#endif	// RTLIB_PARETO_YUKISH_HH_
+#endif  // RTLIB_PARETO_YUKISH_HH_

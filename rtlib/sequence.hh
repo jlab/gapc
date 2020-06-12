@@ -328,7 +328,7 @@ inline char lower_case(char c)
   if (c == '_')
     return c;
   if (c == '+')
-	  return c;
+    return c;
   if (c < 'a')
     return c+('a'-'A');
   else
@@ -340,7 +340,7 @@ inline char upper_case(char c)
   if (c == '_')
     return c;
   if (c == '+')
-	  return c;
+    return c;
   if (c >= 'a')
     return c-('a'-'A');
   else

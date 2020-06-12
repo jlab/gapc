@@ -743,9 +743,9 @@ inline void append(rope::Ref<X> &str, double i)
 template<typename X>
 inline char front(const rope::Ref<X> &str, char r = 0) {
   if (str.size() <= 0) {
-	  return r;
+    return r;
   } else {
-	  return str.front();
+    return str.front();
   }
 }
 
@@ -756,16 +756,16 @@ inline char front(const rope::Ref<X> &str, char r = 0) {
 // solution.
 template<typename X>
 inline char back(const rope::Ref<X> &str, char r = 0) {
-	rope::Ref<X> &x = const_cast<rope::Ref<X>&>(str);
-	typename rope::Ref<X>::iterator it = x.begin();
-	if (str.size() <= 0) {
-		return r;
-	} else {
-		for (unsigned int i = 0; i < str.size()-1; i++) {
-			++it;
-		}
-		return *it;
-	}
+  rope::Ref<X> &x = const_cast<rope::Ref<X>&>(str);
+  typename rope::Ref<X>::iterator it = x.begin();
+  if (str.size() <= 0) {
+    return r;
+  } else {
+    for (unsigned int i = 0; i < str.size()-1; i++) {
+      ++it;
+    }
+    return *it;
+  }
 }
 
 // Stefan Janssen: returns everything but the first character of the rope, if
@@ -776,19 +776,19 @@ inline char back(const rope::Ref<X> &str, char r = 0) {
 // solution.
 template<typename X>
 inline Rope tail(const rope::Ref<X> &str) {
-	rope::Ref<X> &x = const_cast<rope::Ref<X>&>(str);
-	typename rope::Ref<X>::iterator it = x.begin();
-	Rope res;
-	if (str.size() < 2) {
-		res.empty();
-	} else {
-		++it;
-		for (unsigned int i = 1; i < str.size(); ++i) {
-			append(res, (char) *it);
-			++it;
-		}
-	}
-	return res;
+  rope::Ref<X> &x = const_cast<rope::Ref<X>&>(str);
+  typename rope::Ref<X>::iterator it = x.begin();
+  Rope res;
+  if (str.size() < 2) {
+    res.empty();
+  } else {
+    ++it;
+    for (unsigned int i = 1; i < str.size(); ++i) {
+      append(res, (char) *it);
+      ++it;
+    }
+  }
+  return res;
 }
 
 

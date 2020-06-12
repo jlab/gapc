@@ -73,13 +73,13 @@ inline bool basepairing(const Basic_Sequence<alphabet, pos_type> &seq,
   for (unsigned k = 0; k < seq.rows(); ++k) {
     // GAP-GAP pairs doesn't count at all!
     // Thus, the denominator is not seq.rows() but valid+invalid pairs.
-  	if ((char(seq.row(k)[i]) == GAP_BASE) &&
+    if ((char(seq.row(k)[i]) == GAP_BASE) &&
         (char(seq.row(k)[j-1]) == GAP_BASE)) continue;
       if (basepairing(seq.row(k), i, j)) {
         valid += 100;
-  	} else {
-  	  invalid += 100;
-  	}
+    } else {
+      invalid += 100;
+    }
   }
   assert(threshold>=0);
   return 100.0 * float(valid)/(valid+invalid) >= unsigned(threshold);
@@ -687,49 +687,49 @@ class iupac_filter {
    *     }
    */
       for (pos_type posText = 0; posText<seq.size(); ++posText) {
-    	  bool matchAtPosText = true;
-    	  for (pos_type posPattern = 0;
+        bool matchAtPosText = true;
+        for (pos_type posPattern = 0;
              posPattern<m && posText+posPattern<seq.size(); ++posPattern) {
-    		  if (not match(seq[posText+posPattern], pattern[posPattern])) {
-    			  matchAtPosText = false;
-    			  break;
-    		  }
-    	  }
-    	  if (matchAtPosText) {
-    		  this->mark(posText, posText+m);
-    	  }
+          if (not match(seq[posText+posPattern], pattern[posPattern])) {
+            matchAtPosText = false;
+            break;
+          }
+        }
+        if (matchAtPosText) {
+          this->mark(posText, posText+m);
+        }
       }
     }
     void init(const Basic_Sequence<M_Char, pos_type> &seq, const char *pat)
-	{
+  {
       array.init(seq.size());
 
-	  pos_type m = std::strlen(pat);
-	  std::vector<char> pattern(pat, pat+m);
-	  convert_iupac(pattern);
-	  for (pos_type posText = 0; posText<seq.size(); ++posText) {
-		  bool matchAtPosText = true;
-		  for (pos_type posPattern = 0;
+    pos_type m = std::strlen(pat);
+    std::vector<char> pattern(pat, pat+m);
+    convert_iupac(pattern);
+    for (pos_type posText = 0; posText<seq.size(); ++posText) {
+      bool matchAtPosText = true;
+      for (pos_type posPattern = 0;
            posPattern<m && posText+posPattern<seq.size(); ++posPattern) {
-			  bool colmatch = true;
-			  for (pos_type row = 0; row < seq.rows(); row++) {
-				  char base = column(seq.seq[posText+posPattern],row);
-				  if (not match(base, pattern[posPattern])) {
-					  colmatch = false;
-					  break;
-				  }
-			  }
+        bool colmatch = true;
+        for (pos_type row = 0; row < seq.rows(); row++) {
+          char base = column(seq.seq[posText+posPattern],row);
+          if (not match(base, pattern[posPattern])) {
+            colmatch = false;
+            break;
+          }
+        }
 
-			  if (not colmatch) {
-				  matchAtPosText = false;
-				  break;
-			  }
-		  }
-		  if (matchAtPosText) {
-			  this->mark(posText, posText+m);
-		  }
-		}
-	}
+        if (not colmatch) {
+          matchAtPosText = false;
+          break;
+        }
+      }
+      if (matchAtPosText) {
+        this->mark(posText, posText+m);
+      }
+    }
+  }
     bool query(pos_type a, pos_type b)
     {
       assert(a<=b);
