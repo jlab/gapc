@@ -172,14 +172,14 @@ void y_sortList(
 }
 
 
-//adds y to x
+// adds y to x
 template<class T>
 void y_join_deque( y_list<T> &x, y_list<T> &y) {
 
     _MOVE_RANGE(y.begin(), y.end(), std::back_inserter(x));
 }
 
-/////-------------------------- Split Marry -------------------------------
+// ///-------------------------- Split Marry -------------------------------
 
 template<class T, typename Compare>
 typename y_in_list<y_split<T> >::iterator y_sortedSplitMarry_inner1(
@@ -291,7 +291,7 @@ void y_sortDoubleSplit(
 
 }
 
-/////-------------------------- Marry -------------------------------
+// ///-------------------------- Marry -------------------------------
 
 template<class T, typename Compare>
 bool y_marry2d_comperator(const T &c1, const T  &c2, Compare &c, int s, int dim) {
@@ -472,7 +472,7 @@ void y_marry(y_list<T> &answers , y_list<T> &x, y_list<T> &y, Compare &c,
     y_marry(answers, x, y.begin(), y.end(), c, s, dim, blocksize);
 }
 
-/////-------------------------- Split DC -------------------------------
+// ///-------------------------- Split DC -------------------------------
 
 template<class T, typename Iterator, typename Compare>
 typename y_in_list<y_split_it<T, Iterator> >::iterator y_sortedSplit_inner(
@@ -539,7 +539,7 @@ void y_sortedSplit(
 }
 
 
-/////-------------------------- Brute Solve SC -------------------------------
+// ///-------------------------- Brute Solve SC -------------------------------
 
 template<class T, typename Iterator, typename Compare>
 void y_bruteSolveSC(
@@ -569,7 +569,7 @@ void y_bruteSolveSC(
    }
 }
 
-/////--------------------------  Solve DC -------------------------------
+// ///--------------------------  Solve DC -------------------------------
 
 
 template<class T, typename Iterator, typename Compare>
@@ -623,7 +623,7 @@ template<class T, typename Iterator, typename Compare>
       answers.end(), splits.front()->list.begin(), splits.front()->list.end());
 }
 
-/////-------------------------- Main -------------------------------
+// ///-------------------------- Main -------------------------------
 
 template<class T, typename Iterator, typename Compare>
 void pareto_yukish(

@@ -98,8 +98,8 @@ inline alphabet CHAR(Basic_Sequence<alphabet, pos_type> &seq, T i, T j, X c) {
   }
 }
 
-//template<typename Seq, typename pos_type>
-//inline typename Seq::alphabet_type CHAR(Seq &seq, pos_type i, pos_type j)
+// template<typename Seq, typename pos_type>
+// inline typename Seq::alphabet_type CHAR(Seq &seq, pos_type i, pos_type j)
 template<typename alphabet, typename pos_type, typename T>
 inline alphabet CHAR(Basic_Sequence<alphabet, pos_type> &seq, T i, T j) {
   assert(i+1 == j);

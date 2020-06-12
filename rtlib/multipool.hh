@@ -82,7 +82,7 @@ class MultiPool {
 #ifndef NDEBUG
       if (n > max_n) {
         max_n = n;
-        //std::cerr << "MAX N: " << max_n << '\n';
+        // std::cerr << "MAX N: " << max_n << '\n';
       }
 #endif
       extend(n);

@@ -34,7 +34,7 @@
 #include <map>
 #include <cstdlib>
 
-//FIXME
+// FIXME
 #include <iostream>
 
 namespace Table {
@@ -527,7 +527,7 @@ namespace Table {
           }
           for (pos_type i = index.first; i < index.first + inc; ++i)
             for (pos_type j = i; j <= index.last; ++j) {
-              //std::cerr << "Delete: ";
+              // std::cerr << "Delete: ";
               marker.un_tabulate(index(i, j, index.last));
             }
           index.first += inc;

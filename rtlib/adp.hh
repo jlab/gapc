@@ -25,6 +25,10 @@
 #ifndef RTLIB_ADP_HH_
 #define RTLIB_ADP_HH_
 
+#include <algorithm>
+// needed for uint64_t (Integer ...)
+#include <boost/cstdint.hpp>
+
 #include "empty.hh"
 #include "algebra.hh"
 #include "erase.hh"
@@ -51,11 +55,6 @@
 #include "bench.hh"
 
 #include "rope.hh"
-
-// needed for uint64_t (Integer ...)
-#include <boost/cstdint.hpp>
-
-#include <algorithm>
 
 using std::max;
 using std::min;

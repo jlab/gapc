@@ -43,7 +43,7 @@ inline void empty(Rational &x) {
   x = -1;
 }
 
-//template<> inline bool isEmpty(double x)
+// template<> inline bool isEmpty(double x)
 inline bool isEmpty(const Rational &x) {
   return x == -1;
 }

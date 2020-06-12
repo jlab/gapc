@@ -40,38 +40,38 @@ template<typename T> inline bool isEmpty(const T &x) {
 }
 
 
-//template<> inline void empty(int &x)
+// template<> inline void empty(int &x)
 inline void empty(char &x) {
   x = '~' + 1;
 }
 
-//template<> inline bool isEmpty(int x)
+// template<> inline bool isEmpty(int x)
 inline bool isEmpty(char x) {
   return x == '~' + 1;
 }
 
-//template<> inline void empty(int &x)
+// template<> inline void empty(int &x)
 inline void empty(int &x) {
   x = std::numeric_limits<int>::max();
 }
 
-//template<> inline bool isEmpty(int x)
+// template<> inline bool isEmpty(int x)
 inline bool isEmpty(int x) {
   return x == std::numeric_limits<int>::max();
 }
 
-//template<> inline void empty(double &x)
+// template<> inline void empty(double &x)
 inline void empty(double &x) {
-  //assert( std::numeric_limits<double>::has_quiet_NaN );
-  //x = std::numeric_limits<double>::quiet_NaN();
+  // assert( std::numeric_limits<double>::has_quiet_NaN );
+  // x = std::numeric_limits<double>::quiet_NaN();
   assert( std::numeric_limits<double>::has_infinity );
   x = std::numeric_limits<double>::infinity();
 }
 
-//template<> inline bool isEmpty(double x)
+// template<> inline bool isEmpty(double x)
 inline bool isEmpty(double x) {
-  //assert( std::numeric_limits<double>::has_quiet_NaN );
-  //return x != x;
+  // assert( std::numeric_limits<double>::has_quiet_NaN );
+  // return x != x;
   assert( std::numeric_limits<double>::has_infinity );
   return x == std::numeric_limits<double>::infinity();
 }
@@ -90,7 +90,7 @@ inline void empty(bool &x) {
   x = false;
 }
 
-//template<> inline bool isEmpty(double x)
+// template<> inline bool isEmpty(double x)
 inline bool isEmpty(bool x) {
   return !x;
 }
@@ -98,12 +98,12 @@ inline bool isEmpty(bool x) {
 
 #include "string.hh"
 
-//template<> inline void empty(String &s)
+// template<> inline void empty(String &s)
 inline void empty(String &s) {
   s.empty();
 }
 
-//template<> inline bool isEmpty(const String &s)
+// template<> inline bool isEmpty(const String &s)
 inline bool isEmpty(const String &s) {
   return s.isEmpty();
 }

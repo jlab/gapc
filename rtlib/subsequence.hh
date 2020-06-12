@@ -67,8 +67,8 @@ class Basic_Subsequence {
     }
 
     alphabet operator[](pos_type x) const {
-      //assert(x < j);
-      //assert(x >= i);
+      // assert(x < j);
+      // assert(x >= i);
       assert(seq);
       return (*seq)[x];
     }

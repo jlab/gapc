@@ -77,8 +77,8 @@ namespace rope {
       enum { block_size = Refcount::block_size };
     private:
 
-      //enum { RL , LR } Dir;
-      //Dir dir;
+      // enum { RL , LR } Dir;
+      // Dir dir;
 
       Block<Refcount> &operator=(const Block<Refcount> &r);
       Block(const Block<Refcount> &r);
@@ -90,7 +90,7 @@ namespace rope {
     public:
       Refcount refcount;
       Block()
-        : //dir(LR),
+        : // dir(LR),
         pos(0), next(0) {
       }
       ~Block() {
@@ -682,7 +682,7 @@ inline void append(rope::Ref<X> &str, double i) {
 }
 
 
-//Stefan Janssen: returns the first character of the rope, if not empty. For
+// Stefan Janssen: returns the first character of the rope, if not empty. For
 // the empty case it returns the fallback character 0.
 template<typename X>
 inline char front(const rope::Ref<X> &str, char r = 0) {

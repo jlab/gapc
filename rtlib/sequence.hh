@@ -196,7 +196,7 @@ struct Copier<M_Char> {
           }
         }
       }
-      //assert(row_size_);
+      // assert(row_size_);
       if (!row_size_ && a)
         row_size_ = a;
       if (l>0 && x[l-1] == '#')
@@ -321,7 +321,7 @@ inline char upper_case(char c) {
     return c;
 }
 
-//template<typename alphabet, typename pos_type>
+// template<typename alphabet, typename pos_type>
 inline const char &column(
   const M_Char /*<alphabet, pos_type>*/ &c, /*pos_type*/ unsigned l) {
   return c.column(l);

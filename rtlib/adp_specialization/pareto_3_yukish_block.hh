@@ -191,13 +191,13 @@ void yp_sortList(
 }
 
 
-//adds y to x
+// adds y to x
 template<class T>
 void yp_join_deque( yp_list<T> &x, yp_list<T> &y) {
     _MOVE_RANGE(y.begin(), y.end(), std::back_inserter(x));
 }
 
-//adds y to x
+// adds y to x
 template<class T>
 void yp_join_deque(
   yp_list<T> &x, typename yp_list<T>::iterator &y_begin,
@@ -206,7 +206,7 @@ void yp_join_deque(
 }
 
 
-/////-------------------------- Split Marry -------------------------------
+// ///-------------------------- Split Marry -------------------------------
 
 template<class T, typename Compare>
 typename yp_in_list<yp_split<T> >::iterator yp_sortedSplitMarryp_inner1(
@@ -351,7 +351,7 @@ void yp_sortDoubleSplit(
 
 }
 
-/////-------------------------- Marry -------------------------------
+// ///-------------------------- Marry -------------------------------
 
 
 template<class T, typename Compare>
@@ -479,7 +479,7 @@ void yp_marryBrute(
 }
 
 
-//------------- dominating marry ------------------
+// ------------- dominating marry ------------------
 
 
 template<class T, typename Compare, typename Sorter>

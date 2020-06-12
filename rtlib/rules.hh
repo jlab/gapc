@@ -23,8 +23,8 @@ struct rules {
   }
 
 
-  //rules(int i) : empty_(false) {
-  //}
+  // rules(int i) : empty_(false) {
+  // }
 
 
   rules& operator+= (const rules &a) {
@@ -72,7 +72,7 @@ inline std::ostream &operator<<(std::ostream &s, const rules &r) {
     s << 'E';
   }
   else {
-    //~ s << "==== rep = '" << r.shape << "' === \n";
+    // ~ s << "==== rep = '" << r.shape << "' === \n";
     s << r.toRope();
   }
   return s;

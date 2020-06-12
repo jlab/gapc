@@ -67,7 +67,7 @@ find_first_set(T t) {
   return slow_ffs(t);
 }
 
-////
+// //
 
 template <typename T>
 int
@@ -112,7 +112,7 @@ count_leading_zeroes(T t) {
   return slow_clz(t);
 }
 
-////
+// //
 
 template<typename T>
 inline
@@ -127,7 +127,7 @@ size_to_next_power(T t) {
     return ret;
 }
 
-////
+// //
 #include "shape_alph.hh"
 
 namespace hash_to_uint32 {

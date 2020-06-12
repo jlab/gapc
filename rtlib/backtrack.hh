@@ -72,7 +72,7 @@ class Backtrace {
 
     virtual intrusive_ptr<Eval_List<Value> > eval() = 0;
 
-    //virtual bool is_proxy() const { return false; }
+    // virtual bool is_proxy() const { return false; }
 
     virtual void print(std::ostream &out) { assert(0); }
 
@@ -160,7 +160,7 @@ intrusive_ptr<Backtrace<T, pos_int> > exe_bt
   intrusive_ptr<Backtrace_List<T, pos_int> > ret(
     new Backtrace_List<T, pos_int>());
   if (isEmpty(list)) {
-    //assert(false);
+    // assert(false);
     return ret;
   }
   list_t &l = list.ref();
@@ -201,7 +201,7 @@ intrusive_ptr<Backtrace<T, pos_int>  > execute_backtrack
   intrusive_ptr<Backtrace_List<T, pos_int> > ret =
     new Backtrace_List<T, pos_int>();
   if (isEmpty(tuple)) {
-    //assert(false);
+    // assert(false);
     return ret;
   }
   intrusive_ptr<Backtrace<T, pos_int> > sec = tuple.second;
@@ -454,7 +454,7 @@ intrusive_ptr<Backtrace<T, pos_int> > exe_bt_k
   intrusive_ptr<Backtrace_List<T, pos_int> >
     ret(new Backtrace_List_Score<S, T, pos_int>());
   if (isEmpty(list)) {
-    //assert(false);
+    // assert(false);
     return ret;
   }
   list_t &l = list.ref();
@@ -487,7 +487,7 @@ intrusive_ptr<Backtrace<T, pos_int> > execute_backtrack_k
   intrusive_ptr<Backtrace_List<T, pos_int> > ret =
     new Backtrace_List<T, pos_int>();
   if (isEmpty(tuple)) {
-    //assert(false);
+    // assert(false);
     return ret;
   }
   set_value(tuple);

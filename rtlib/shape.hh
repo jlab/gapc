@@ -34,7 +34,7 @@
 
 #include <boost/cstdint.hpp>
 
-//remove
+// remove
 #include <bitset>
 #include <iostream>
 
@@ -331,7 +331,7 @@ class Fiber {
           assert(i>=char_width);
 
           alphset alph;
-          //std::cout << "\tXX i: " << size_t(i) << std::endl;
+          // std::cout << "\tXX i: " << size_t(i) << std::endl;
           T mask = 0;
           if (i != 4)
             mask = T(-1) >> bits-(i-char_width);
@@ -364,7 +364,7 @@ class Fiber {
         p = first_pos(*l);
         assert(p!=bits-1);
       }
-      //std::cerr << "rbegin: " << int(p) << std::endl;
+      // std::cerr << "rbegin: " << int(p) << std::endl;
       if (p)
         p = p + char_width + 1;
       else
@@ -384,7 +384,7 @@ class Fiber {
       Size x = first_pos(*dst);
       Size y = first_pos(*src);
       if ((x+1)/char_width < chars-(y+1)/char_width) {
-      //if (x < y) {
+      // if (x < y) {
         *dst |= *src >> bits-1-x;
         ++dst;
         *dst |= *src << 1+x;
@@ -406,10 +406,10 @@ class Fiber {
       size_t n = other.char_length();
       if (chars - m%chars <= n) {
         Size rest = n-(chars-m%chars);
-        Size add = rest/chars + 1;//(rest%chars ? 1 : 0);
-        //if (!add)
+        Size add = rest/chars + 1;// (rest%chars ? 1 : 0);
+        // if (!add)
         //  add = 1;
-        Size old = m/chars + 1 ;//(m%chars ? 1 : 0);
+        Size old = m/chars + 1 ;// (m%chars ? 1 : 0);
         T *t = alloc(old + add);
         copy(t, array, m/chars + (m%chars ? 1 : 0));
         dealloc(array, old);
@@ -704,7 +704,7 @@ push_before_back(Fiber<T, Size, alphset> &a, char c, char d) {
   }
   j.set(d);
   a.append(c);
-  //assert(false);
+  // assert(false);
   return a;
 }
 

@@ -83,7 +83,7 @@ inline void append(
       return;
   }
 
-  //insert into bigger one
+  // insert into bigger one
   if (answers.ref().size() < inserts.ref().size()) {
       std::swap(inserts, answers);
       List_Ref<T> &temp = inserts;

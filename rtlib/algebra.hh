@@ -25,14 +25,13 @@
 #ifndef RTLIB_ALGEBRA_HH_
 #define RTLIB_ALGEBRA_HH_
 
-#include "empty.hh"
-
 #include <algorithm>
 #include <numeric>
 
-// FIXME remove
-//#include <iostream>
+#include "empty.hh"
 
+// FIXME remove
+// #include <iostream>
 template <typename T>
 inline T round_to_digit(int offset, T number) {
     return std::floor(number * offset + 0.5f);
@@ -177,7 +176,7 @@ typename std::iterator_traits<Itr>::value_type bitsum(Itr begin, Itr end) {
     return n;
   }
   assert(!isEmpty(*begin));
-  n = pow (2,*begin);
+  n = pow(2,*begin);
   ++begin;
   for (; begin != end; ++begin) {
     assert(!isEmpty(*begin));
@@ -223,11 +222,11 @@ unique(std::pair<Iterator, Iterator> &p) {
 }
 */
 
-//template <typename Iterator>
-//inline
-//List_Ref<typename std::iterator_traits<Iterator>::value_type>
-//unique(std::pair<Iterator, Iterator> &p)
-//{
+// template <typename Iterator>
+// inline
+// List_Ref<typename std::iterator_traits<Iterator>::value_type>
+// unique(std::pair<Iterator, Iterator> &p)
+// {
 //  typedef typename std::iterator_traits<Iterator>::value_type type;
 //
 //  Hash::Set<type> set;
@@ -239,7 +238,7 @@ unique(std::pair<Iterator, Iterator> &p) {
 //    move(l.ref().push_back_ref(), *j);
 //
 //  return l;
-//}
+// }
 
 
 template <typename Iterator>

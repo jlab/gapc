@@ -43,16 +43,16 @@ class Pool {
     Pool &operator=(const Pool&);
   public:
     Pool() {
-      //pool = new Map::Pool<K>();
+      // pool = new Map::Pool<K>();
     }
 
     ~Pool() {
-      //delete pool;
+      // delete pool;
     }
 
     void purge() {
       assert(false);
-      //delete pool;
+      // delete pool;
     }
 
     K * malloc() {

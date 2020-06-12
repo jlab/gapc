@@ -59,7 +59,7 @@ class String {
         Block &operator=(const Block &b);
       public:
         uint32_t ref_count;
-      //enum { size = 27 };
+      // enum { size = 27 };
       enum { size = 59 };
       enum { SEQ_END, SEQ, LINK, REP };
 

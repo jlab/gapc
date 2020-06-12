@@ -75,7 +75,7 @@ class Hash_List_Back {
       ++size;
     }
 
-    //bool isEmpty() const { return !list.l || list.const_ref().isEmpty(); }
+    // bool isEmpty() const { return !list.l || list.const_ref().isEmpty(); }
     bool isEmpty() const { return ::isEmpty(list); }
 
     typedef typename List<T>::iterator iterator;

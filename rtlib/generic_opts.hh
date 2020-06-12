@@ -35,7 +35,7 @@
 
 #include <cassert>
 
-//define _XOPEN_SOURCE=500
+// define _XOPEN_SOURCE=500
 
 #include <unistd.h>
 #include <cstdlib>

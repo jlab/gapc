@@ -87,11 +87,11 @@ namespace Hash {
   template <typename T>
   struct Size2pow {
     T initial() const {
-      //return 512;
-      //return 4;
-      //return 8;
-      //return 32;
-      //return 16;
+      // return 512;
+      // return 4;
+      // return 8;
+      // return 32;
+      // return 16;
       return HASH_INITIAL;
     }
     T expand(T size) const {

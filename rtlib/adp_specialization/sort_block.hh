@@ -899,7 +899,7 @@ void join_sort_queue(List_Ref<T> &l, List_Ref<int> &markers, Compare &c) {
 
 template<class T, typename Compare>
 inline void full_sort(List_Ref<T> &x, Compare &c) {
-    //s_sorter<T> sortob = s_sorter<T>(dim,c);
+    // s_sorter<T> sortob = s_sorter<T>(dim,c);
     std::sort(x.ref().begin(), x.ref().end(), c);
 }
 
