@@ -48,15 +48,12 @@ namespace rope {
       enum { ENABLED = 1, block_size = 60 };
 
       Ref_Count()
-        : i(1)
-      {
+        : i(1) {
       }
-      void operator++()
-      {
+      void operator++() {
         ++i;
       }
-      void operator--()
-      {
+      void operator--() {
         assert(i>0);
         --i;
       }
@@ -67,11 +64,9 @@ namespace rope {
     private:
     public:
       enum { ENABLED = 0, block_size = 64 };
-      void operator++()
-      {
+      void operator++() {
       }
-      void operator--()
-      {
+      void operator--() {
       }
       bool operator==(uint32_t x) const { assert(!x); return true; }
   };
@@ -96,37 +91,31 @@ namespace rope {
       Refcount refcount;
       Block()
         : //dir(LR),
-        pos(0), next(0)
-      {
+        pos(0), next(0) {
       }
-      ~Block()
-      {
+      ~Block() {
         assert(refcount == 0);
       }
 
       unsigned char free_space() const { return block_size-pos; }
       unsigned char size() const { return pos; }
 
-      bool right_available(unsigned char x) const
-      {
+      bool right_available(unsigned char x) const {
         return x <= free_space();
       }
 
-      Block<Refcount> *extend_right()
-      {
+      Block<Refcount> *extend_right() {
         assert(!next);
         next = new Block<Refcount>();
         return next;
       }
 
-      void append(char c)
-      {
+      void append(char c) {
         assert(right_available(1));
         array[pos++] = c;
       }
 
-      Block<Refcount> *append(Block<Refcount> *o)
-      {
+      Block<Refcount> *append(Block<Refcount> *o) {
         assert(!next);
         if (free_space() < o->size()) {
           std::memcpy(array+pos, o->array, free_space());
@@ -143,8 +132,7 @@ namespace rope {
         }
       }
 
-      const char *append(const char *x, uint32_t &len)
-      {
+      const char *append(const char *x, uint32_t &len) {
 #ifndef NDEBUG
         assert(len <= std::strlen(x));
 #endif
@@ -162,8 +150,7 @@ namespace rope {
         }
       }
 
-      void append(char x, uint32_t &len)
-      {
+      void append(char x, uint32_t &len) {
         if (free_space() < len) {
           std::memset(array+pos, x, free_space());
           len -= free_space();
@@ -190,22 +177,18 @@ namespace rope {
       unsigned char pos;
     public:
       Readonly()
-        : pos(0)
-      {
+        : pos(0) {
       }
       Readonly(bool b)
-        : pos(0)
-      {
+        : pos(0) {
         assert(!b);
       }
-      Readonly<Ref_Count> &operator=(bool b)
-      {
+      Readonly<Ref_Count> &operator=(bool b) {
         assert(!b);
         pos = 0;
         return *this;
       }
-      Readonly<Ref_Count> &operator=(unsigned char p)
-      {
+      Readonly<Ref_Count> &operator=(unsigned char p) {
         pos = p;
         return *this;
       }
@@ -217,19 +200,15 @@ namespace rope {
   class Readonly<No_Ref_Count> {
     private:
     public:
-      Readonly()
-      {
+      Readonly() {
       }
-      Readonly(bool b)
-      {
+      Readonly(bool b) {
         assert(!b);
       }
-      Readonly<No_Ref_Count> &operator=(bool b)
-      {
+      Readonly<No_Ref_Count> &operator=(bool b) {
         return *this;
       }
-      Readonly<No_Ref_Count> &operator=(unsigned char p)
-      {
+      Readonly<No_Ref_Count> &operator=(unsigned char p) {
         return *this;
       }
       bool operator==(bool b) const { return false; }
@@ -247,8 +226,7 @@ namespace rope {
       bool empty_;
       Readonly<Refcount> readonly;
 
-      void del()
-      {
+      void del() {
         if (first) {
           --first->refcount;
           if (first->refcount == 0) {
@@ -268,8 +246,7 @@ namespace rope {
         empty_ = false;
       }
 
-      Block<Refcount> *copy_blocks(Block<Refcount>* dest, Block<Refcount>* src)
-      {
+      Block<Refcount> *copy_blocks(Block<Refcount>* dest, Block<Refcount>* src) {
         Block<Refcount>* x = dest;
         Block<Refcount>* y = src;
         while (y) {
@@ -288,8 +265,7 @@ namespace rope {
         return x;
       }
 
-      Ref &copy(const Ref<Refcount> &r)
-      {
+      Ref &copy(const Ref<Refcount> &r) {
         if (r.empty_) {
           del();
           empty_ = true;
@@ -314,8 +290,7 @@ namespace rope {
         return *this;
       }
 
-      void right_alloc(unsigned char l)
-      {
+      void right_alloc(unsigned char l) {
         assert(l == 1);
         empty_ = false;
         if (readonly == true) {
@@ -337,28 +312,23 @@ namespace rope {
 
     public:
       Ref()
-        : first(0), last(0), empty_(false), readonly(false)
-      {
+        : first(0), last(0), empty_(false), readonly(false) {
       }
 
       Ref(const Ref<Refcount> &r)
-        : first(0), last(0), empty_(false), readonly(false)
-      {
+        : first(0), last(0), empty_(false), readonly(false) {
         copy(r);
       }
-      ~Ref()
-      {
+      ~Ref() {
         del();
       }
 
-      Ref &operator=(const Ref<Refcount> &r)
-      {
+      Ref &operator=(const Ref<Refcount> &r) {
         del();
         return copy(r);
       }
 
-      void move(Ref<Refcount> &o)
-      {
+      void move(Ref<Refcount> &o) {
         del();
         first = o.first;
         last = o.last;
@@ -369,8 +339,7 @@ namespace rope {
         o.readonly = false;
       }
 
-      void swap(Ref<Refcount> &o)
-      {
+      void swap(Ref<Refcount> &o) {
         using std::swap;
         swap(first, o.first);
         swap(last, o.last);
@@ -378,15 +347,13 @@ namespace rope {
         swap(empty_, o.empty_);
       }
 
-      void append(char c)
-      {
+      void append(char c) {
         right_alloc(1);
         assert(last);
         last->append(c);
       }
 
-      void append(const Ref<Refcount> &o)
-      {
+      void append(const Ref<Refcount> &o) {
         if (!o.first)
           return;
         right_alloc(1);
@@ -399,8 +366,7 @@ namespace rope {
         last = x;
       }
 
-      void append(const char *s, uint32_t len)
-      {
+      void append(const char *s, uint32_t len) {
         if (!len)
           return;
         right_alloc(1);
@@ -411,8 +377,7 @@ namespace rope {
         }
       }
 
-      void append(int j)
-      {
+      void append(int j) {
         char s[12];
         unsigned char len;
         char *x = int_to_str(s, &len, j);
@@ -420,8 +385,7 @@ namespace rope {
         append(x, len);
       }
 
-      void append(char c, uint32_t len)
-      {
+      void append(char c, uint32_t len) {
         if (!len)
           return;
         right_alloc(1);
@@ -432,22 +396,19 @@ namespace rope {
         }
       }
 
-      void append(const char *s)
-      {
+      void append(const char *s) {
         append(s, std::strlen(s));
       }
 
       Ref(const char *s)
-        : first(0), last(0), empty_(false), readonly(false)
-      {
+        : first(0), last(0), empty_(false), readonly(false) {
         assert(s);
         if (s && *s)
           append(s);
       }
 
       template <typename O>
-      void put(O &o) const
-      {
+      void put(O &o) const {
         if (readonly == true) {
           Block<Refcount>* i = first;
           while (i) {
@@ -480,8 +441,7 @@ namespace rope {
           unsigned char j, z;
 
         private:
-          void init()
-          {
+          void init() {
             if (ref.readonly == true) {
               i = ref.first;
               if (i) {
@@ -504,8 +464,7 @@ namespace rope {
             Ref<Refcount> &r, Ref<Refcount> &rr) : ref(r), i(0), j(0), z(0) { }
         public:
           unsigned char &operator*() { assert(i); return i->array[j]; }
-          Const_Iterator &operator++()
-          {
+          Const_Iterator &operator++() {
             if (ref.readonly == true) {
               if (i == ref.last)
                 z = ref.readonly();
@@ -555,8 +514,7 @@ namespace rope {
       const_iterator begin() const { return Const_Iterator(*this); }
       const_iterator end() const { return Const_Iterator(*this, *this); }
 
-      size_t size() const
-      {
+      size_t size() const {
         size_t r = 0;
         if (readonly == true) {
           Block<Refcount>* i = first;
@@ -581,15 +539,13 @@ namespace rope {
         return r;
       }
 
-      void empty()
-      {
+      void empty() {
         empty_ = true;
       }
 
       bool isEmpty() const { return empty_; }
 
-      bool operator==(const Ref<Refcount> &o) const
-      {
+      bool operator==(const Ref<Refcount> &o) const {
         Block<Refcount>* a = first;
         Block<Refcount>* b = o.first;
         while (a && b) {
@@ -603,13 +559,11 @@ namespace rope {
         return a == b;
       }
 
-      bool operator!=(const Ref<Refcount> &o) const
-      {
+      bool operator!=(const Ref<Refcount> &o) const {
         return !(*this == o);
       }
 
-      bool operator<(const Ref<Refcount> &o) const
-      {
+      bool operator<(const Ref<Refcount> &o) const {
         Block<Refcount>* a = first;
         Block<Refcount>* b = o.first;
         while (a && b) {
@@ -630,8 +584,7 @@ namespace rope {
         return false;
       }
 
-      uint32_t hashable_value() const
-      {
+      uint32_t hashable_value() const {
         hash_to_uint32::djb hash_fn;
         uint32_t hash = hash_fn.initial();
 
@@ -661,8 +614,7 @@ namespace rope {
         return hash;
       }
 
-      char front() const
-      {
+      char front() const {
         assert(!isEmpty());
         return *first->array;
       }
@@ -681,16 +633,14 @@ template<typename X>
 Pool<rope::Block<X> > rope::Ref<X>::pool;
 
 template<typename X>
-void *rope::Block<X>::operator new(size_t t) noexcept(false)
-{
+void *rope::Block<X>::operator new(size_t t) noexcept(false) {
   assert(t == sizeof(Block<X>));
   Block<X> *r = rope::Ref<X>::pool.malloc();
   return r;
 }
 
 template<typename X>
-void rope::Block<X>::operator delete(void *b) noexcept(false)
-{
+void rope::Block<X>::operator delete(void *b) noexcept(false) {
 
 
   if (!b)
@@ -699,39 +649,33 @@ void rope::Block<X>::operator delete(void *b) noexcept(false)
 }
 
 template<class T, typename X>
-inline void append(rope::Ref<X> &str, const T &x)
-{
+inline void append(rope::Ref<X> &str, const T &x) {
   str.append(x);
 }
 
 template<class T, typename X>
-inline void append(rope::Ref<X> &str, char c, T i)
-{
+inline void append(rope::Ref<X> &str, char c, T i) {
   assert(i>=0);
   str.append(c, uint32_t(i));
 }
 
 template<typename X>
-inline void append(rope::Ref<X> &str, const char *c, int i)
-{
+inline void append(rope::Ref<X> &str, const char *c, int i) {
   str.append(c, i);
 }
 
 template<typename X>
-inline void append(rope::Ref<X> &str, const char *c)
-{
+inline void append(rope::Ref<X> &str, const char *c) {
   str.append(c);
 }
 
 template<typename X>
-inline void append(rope::Ref<X> &str, unsigned int i)
-{
+inline void append(rope::Ref<X> &str, unsigned int i) {
   str.append(int(i));
 }
 
 template<typename X>
-inline void append(rope::Ref<X> &str, double i)
-{
+inline void append(rope::Ref<X> &str, double i) {
   std::ostringstream o;
   o << i;
   str.append(o.str().c_str(), o.str().size());
@@ -793,14 +737,12 @@ inline Rope tail(const rope::Ref<X> &str) {
 
 
 template<typename X>
-inline size_t size(const rope::Ref<X> &str)
-{
+inline size_t size(const rope::Ref<X> &str) {
   return str.size();
 }
 
 inline
-Rope operator+(const Rope &a, const Rope &b)
-{
+Rope operator+(const Rope &a, const Rope &b) {
   Rope r;
   append(r, a);
   append(r, b);
@@ -808,8 +750,7 @@ Rope operator+(const Rope &a, const Rope &b)
 }
 
 inline
-Rope operator+(const Rope &a, char b)
-{
+Rope operator+(const Rope &a, char b) {
   Rope r;
   append(r, a);
   append(r, b);
@@ -817,8 +758,7 @@ Rope operator+(const Rope &a, char b)
 }
 
 inline
-Rope operator+(char a, const Rope &b)
-{
+Rope operator+(char a, const Rope &b) {
   Rope r;
   append(r, a);
   append(r, b);
@@ -831,23 +771,20 @@ Rope operator+(char a, const Rope &b)
 namespace Hash {
 
 template<typename X>
-inline uint32_t hashable_value(const rope::Ref<X> &str)
-{
+inline uint32_t hashable_value(const rope::Ref<X> &str) {
   return str.hashable_value();
 }
 
 }
 
 template<typename X>
-inline uint32_t hashable_value(const rope::Ref<X> &str)
-{
+inline uint32_t hashable_value(const rope::Ref<X> &str) {
   return str.hashable_value();
 }
 
 template <typename X>
 inline
-void move(rope::Ref<X> &a, rope::Ref<X> &b)
-{
+void move(rope::Ref<X> &a, rope::Ref<X> &b) {
   a.move(b);
 }
 

@@ -53,17 +53,13 @@ namespace Table {
   class CYK {
     private:
     public:
-      void resize(pos_type x) const
-      {
+      void resize(pos_type x) const {
       }
-      void tabulate(pos_type x) const
-      {
+      void tabulate(pos_type x) const {
       }
-      void un_tabulate(pos_type x) const
-      {
+      void un_tabulate(pos_type x) const {
       }
-      bool is_tabulated(pos_type x) const
-      {
+      bool is_tabulated(pos_type x) const {
         assert(0);
         std::abort();
         return false;
@@ -78,20 +74,16 @@ namespace Table {
     private:
       std::vector<bool> tabulated;
     public:
-      void resize(pos_type x)
-      {
+      void resize(pos_type x) {
         tabulated.resize(x);
       }
-      void tabulate(pos_type x)
-      {
+      void tabulate(pos_type x) {
         tabulated[x] = true;
       }
-      void un_tabulate(pos_type x)
-      {
+      void un_tabulate(pos_type x) {
         tabulated[x] = false;
       }
-      bool is_tabulated(pos_type x) const
-      {
+      bool is_tabulated(pos_type x) const {
         return tabulated[x];
       }
       bool no_check() const { return false; }
@@ -103,19 +95,15 @@ namespace Table {
       private:
         std::map<pos_type, bool> tabulated;
       public:
-        void resize(pos_type x) const
-        {
+        void resize(pos_type x) const {
         }
-        void tabulate(pos_type x)
-        {
+        void tabulate(pos_type x) {
           tabulated[x] = true;
         }
-        void un_tabulate(pos_type x)
-        {
+        void un_tabulate(pos_type x) {
           tabulated[x] = false;
         }
-        bool is_tabulated(pos_type x) const
-        {
+        bool is_tabulated(pos_type x) const {
           return tabulated.find(x) != tabulated.end();
         }
         bool no_check() const { return false; }
@@ -143,8 +131,7 @@ namespace Table {
         Mode<pos_type, TAG::CONSTANT> marker;
         std::map<pos_type, T> elements;
 
-        pos_type index(pos_type i, pos_type j)
-        {
+        pos_type index(pos_type i, pos_type j) {
           assert(i<=n);
           assert(j<=n);
           return i * (n+1) + j;
@@ -156,22 +143,18 @@ namespace Table {
 
         template<typename alphabet, typename seqpos>
         Constant(const Basic_Sequence<alphabet, seqpos> &seq)
-          : count(0)
-        {
+          : count(0) {
           n = seq.size();
         }
 
         Constant(pos_type l)
-          : n(l), count(0)
-        {
+          : n(l), count(0) {
         }
 
         Constant()
-          : n(0), count(0)
-        {}
+          : n(0), count(0) {}
 
-        void clear()
-        {
+        void clear() {
           n = 0;
           count = 0;
           marker.clear();
@@ -185,19 +168,16 @@ namespace Table {
           n = seq.size();
         }
 
-        bool is_tabulated(pos_type i, pos_type j)
-        {
+        bool is_tabulated(pos_type i, pos_type j) {
           return marker.is_tabulated(index(i,j));
         }
 
-        T &get_tabulated(pos_type i, pos_type j)
-        {
+        T &get_tabulated(pos_type i, pos_type j) {
           assert(marker.no_check() || is_tabulated(i, j));
           return elements[index(i, j)];
         }
 
-        void tabulate(pos_type i, pos_type j, T &element)
-        {
+        void tabulate(pos_type i, pos_type j, T &element) {
           assert(marker.no_check() || !is_tabulated(i, j));
           elements[index(i, j)] = element;
           marker.tabulate(index(i, j));
@@ -206,13 +186,11 @@ namespace Table {
 #endif
         }
 
-        double ratio()
-        {
+        double ratio() {
           return (double) (100 * count) / ((double) ((n*(n+1))/2));
         }
 
-        void print_stats(std::ostream &o, std::string name)
-        {
+        void print_stats(std::ostream &o, std::string name) {
           o << "Table " << name << "(const):\t"
             << "(" << count << " entries, "
             <<  elements.size() << " map count) used\n";
@@ -238,24 +216,20 @@ namespace Table {
 
   template <typename pos_type>
     struct Lin<Left, pos_type> {
-      static pos_type row(pos_type i, pos_type j)
-      {
+      static pos_type row(pos_type i, pos_type j) {
         return i;
       }
-      static pos_type col(pos_type i, pos_type j)
-      {
+      static pos_type col(pos_type i, pos_type j) {
         return j;
       }
     };
 
   template <typename pos_type>
     struct Lin<Right, pos_type> {
-      static pos_type row(pos_type i, pos_type j)
-      {
+      static pos_type row(pos_type i, pos_type j) {
         return j;
       }
-      static pos_type col(pos_type i, pos_type j)
-      {
+      static pos_type col(pos_type i, pos_type j) {
         return i;
       }
     };
@@ -273,23 +247,20 @@ namespace Table {
         pos_type row;
         pos_type rows;
 
-        pos_type index(pos_type i, pos_type j)
-        {
+        pos_type index(pos_type i, pos_type j) {
           assert(i<=n);
           assert(j<=n);
           return i * (n+1) + j;
         }
 
-        void init()
-        {
+        void init() {
           row = 0;
           rows = 1;
           marker.resize(n+1);
           elements.resize(n+1);
         }
 
-        void resize()
-        {
+        void resize() {
           rows *= 2;
           pos_type s = n+1;
           marker.resize(rows * s);
@@ -304,22 +275,19 @@ namespace Table {
 
         template<typename alphabet, typename seqpos>
         Linear(const Basic_Sequence<alphabet, seqpos> &seq)
-          : count(0)
-        {
+          : count(0) {
           n = seq.size();
           init();
         }
 
         Linear(pos_type l)
-          : n(l), count(0)
-        {
+          : n(l), count(0) {
           init();
         }
 
         Linear() : n(0), count(0) {}
 
-        void clear()
-        {
+        void clear() {
           n = 0;
           count = 0;
           marker.clear();
@@ -336,8 +304,7 @@ namespace Table {
           init();
         }
 
-        bool is_tabulated(pos_type i, pos_type j)
-        {
+        bool is_tabulated(pos_type i, pos_type j) {
           assert(i<=n);
           assert(j<=n);
           if (map.find(M::row(i,j)) == map.end())
@@ -345,14 +312,12 @@ namespace Table {
           return marker.is_tabulated(index(map[M::row(i,j)], M::col(i, j)));
         }
 
-        T &get_tabulated(pos_type i, pos_type j)
-        {
+        T &get_tabulated(pos_type i, pos_type j) {
           assert(marker.no_check() || is_tabulated(i, j));
           return elements[index(map[M::row(i,j)], M::col(i, j))];
         }
 
-        void tabulate(pos_type i, pos_type j, T &element)
-        {
+        void tabulate(pos_type i, pos_type j, T &element) {
           assert(marker.no_check() || !is_tabulated(i, j));
           if (map.find(M::row(i, j)) == map.end()) {
             map.insert(std::pair<pos_type, pos_type>(M::row(i, j), row++));
@@ -366,13 +331,11 @@ namespace Table {
 #endif
         }
 
-        double ratio()
-        {
+        double ratio() {
           return (double) (100 * count) / ((double) (elements.size()));
         }
 
-        void print_stats(std::ostream &o, std::string name)
-        {
+        void print_stats(std::ostream &o, std::string name) {
           o << "Table " << name << "(linear):\t"
             << ratio() << " % (" << count << " entries, "
             <<  map.size() << " map count) used\n";
@@ -388,45 +351,39 @@ namespace Table {
 
   template <typename pos_type = unsigned int>
   struct RawIndex {
-    pos_type operator()(pos_type i, pos_type j, pos_type n) const
-    {
+    pos_type operator()(pos_type i, pos_type j, pos_type n) const {
       assert(i<=n);
       assert(j<=n);
       return i * (n+1) + j;
     }
 
-    pos_type operator()(pos_type n) const
-    {
+    pos_type operator()(pos_type n) const {
       return (n+1)*(n+1);
     }
   };
 
   template <typename pos_type = unsigned int>
   struct DiagIndex {
-    pos_type operator()(pos_type i, pos_type j, pos_type n) const
-    {
+    pos_type operator()(pos_type i, pos_type j, pos_type n) const {
       assert(i<=j);
       assert(j<=n);
       return (j*(j+1))/2 + i;
     }
 
-    pos_type operator()(pos_type n) const
-    {
+    pos_type operator()(pos_type n) const {
       return (n*(n+1))/2 + n + 1;
     }
   };
 
   template <typename pos_type = unsigned int>
   struct Diag2Index {
-    pos_type operator()(pos_type i, pos_type j, pos_type n) const
-    {
+    pos_type operator()(pos_type i, pos_type j, pos_type n) const {
       assert(i<=j);
       assert(j<=n);
       return i*(n-2)+j;
     }
 
-    pos_type operator()(pos_type n) const
-    {
+    pos_type operator()(pos_type n) const {
       return (n*(n+1))/2 + n + 1;
     }
   };
@@ -440,8 +397,7 @@ namespace Table {
     pos_type first;
     pos_type last;
 
-    pos_type operator()(pos_type i, pos_type j, pos_type n) const
-    {
+    pos_type operator()(pos_type i, pos_type j, pos_type n) const {
       assert(i>=first);
       assert(j<=seq_size);
       assert(j<=first+window_size);
@@ -457,8 +413,7 @@ namespace Table {
       return index(a, b, window_size);
     }
 
-    pos_type operator()(pos_type n) const
-    {
+    pos_type operator()(pos_type n) const {
       return index(window_size);
     }
   };
@@ -482,8 +437,7 @@ namespace Table {
         std::string name;
 #endif
 
-        void init()
-        {
+        void init() {
           pos_type s = index(n);
           marker.resize(s);
           elements.resize(s);
@@ -500,8 +454,7 @@ namespace Table {
         Quadratic(const Basic_Sequence<alphabet, seqpos> &seq)
 #ifdef STATS
           : count(0)
-#endif
-        {
+#endif {
           n = seq.size();
           init();
         }
@@ -510,8 +463,7 @@ namespace Table {
           : n(l)
 #ifdef STATS
             , count(0)
-#endif
-        {
+#endif {
           init();
         }
 
@@ -519,11 +471,9 @@ namespace Table {
           : n(0)
 #ifdef STATS
             , count(0)
-#endif
-        {}
+#endif {}
 
-        void clear()
-        {
+        void clear() {
 #ifdef STATS
           count = 0;
 #endif
@@ -569,8 +519,7 @@ namespace Table {
           init();
         }
 
-        void window_increment()
-        {
+        void window_increment() {
           pos_type inc = index.window_inc;
           if (index.first + index.window_inc > index.seq_size) {
             inc = std::min(index.seq_size - index.first, index.window_inc);
@@ -592,8 +541,7 @@ namespace Table {
         void window_increment() {}
 #endif
 
-        bool is_tabulated(pos_type i, pos_type j)
-        {
+        bool is_tabulated(pos_type i, pos_type j) {
 #ifdef TRACE
           std::cerr << name << " 0 " << i << ' ' << j
             << " x"<< '\n';
@@ -601,8 +549,7 @@ namespace Table {
           return marker.is_tabulated(index(i, j, n));
         }
 
-        T &get_tabulated(pos_type i, pos_type j)
-        {
+        T &get_tabulated(pos_type i, pos_type j) {
 #ifdef TRACE
           std::cerr << name << " 1 " << i << ' ' << j
             << ' ' << left_most(elements[index(i,j,n)]) << '\n';
@@ -611,8 +558,7 @@ namespace Table {
           return elements[index(i, j, n)];
         }
 
-        void tabulate(pos_type i, pos_type j, T &element)
-        {
+        void tabulate(pos_type i, pos_type j, T &element) {
 #ifdef TRACE
           std::cerr << name << " 2 " << i << ' ' << j
             << " x " << '\n';
@@ -632,19 +578,16 @@ namespace Table {
 
 
 #ifdef STATS
-        double ratio()
-        {
+        double ratio() {
           return (double) (100 * count) / ((double) index(n) );
         }
 
-        void print_stats(std::ostream &o, std::string name)
-        {
+        void print_stats(std::ostream &o, std::string name) {
           o << "Table " << name << ":\t"
             << ratio() << " % (" << count << " entries) used\n";
         }
 #else
-        void print_stats(std::ostream &o, std::string name)
-        {
+        void print_stats(std::ostream &o, std::string name) {
         }
 #endif
 
@@ -670,21 +613,18 @@ namespace Table {
 }
 
 template <class Tab, typename pos_type>
-inline bool is_tabulated(Tab &t, pos_type i, pos_type j)
-{
+inline bool is_tabulated(Tab &t, pos_type i, pos_type j) {
   return t.is_tabulated(i, j);
 }
 
 template <class Tab, typename pos_type>
-inline typename Tab::element_type &get_tabulated(Tab &t, pos_type i, pos_type j)
-{
+inline typename Tab::element_type &get_tabulated(Tab &t, pos_type i, pos_type j) {
   return t.get_tabulated(i, j);
 }
 
 template <class Tab, typename pos_type>
 inline void tabulate(Tab &t, pos_type i, pos_type j,
-    typename Tab::element_type &e)
-{
+    typename Tab::element_type &e) {
   t.tabulate(i, j, e);
 }
 

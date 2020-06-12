@@ -49,8 +49,7 @@ class MultiPool {
     MultiPool(const MultiPool &);
     MultiPool &operator=(const MultiPool&);
 
-    void extend(size_t n)
-    {
+    void extend(size_t n) {
       size_t old = pools.size();
       if (n<=old)
         return;
@@ -63,26 +62,22 @@ class MultiPool {
     MultiPool()
 #ifndef NDEBUG
       : max_n(0)
-#endif
-    {
+#endif {
       pools.resize(1);
       pools[0] = new pool_t(1);
     }
 
-    ~MultiPool()
-    {
+    ~MultiPool() {
       for (typename std::vector<pool_t*>::iterator i = pools.begin();
           i!=pools.end(); ++i)
         delete *i;
     }
 
-    void purge()
-    {
+    void purge() {
       assert(false);
     }
 
-    K * malloc(size_t n)
-    {
+    K * malloc(size_t n) {
       assert(n);
 #ifndef NDEBUG
       if (n > max_n) {
@@ -97,8 +92,7 @@ class MultiPool {
       return r;
     }
 
-    void free(K *x, size_t n)
-    {
+    void free(K *x, size_t n) {
       assert(x);
       assert(n<=pools.size());
       pools[n-1]->free(x);

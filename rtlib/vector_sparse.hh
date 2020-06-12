@@ -43,26 +43,21 @@ class Stapel {
     Stapel &operator=(const Stapel &);
   public:
     Stapel()
-      : array(0), top_(0), size_(0)
-    {
+      : array(0), top_(0), size_(0) {
     }
     Stapel(U i)
-      : array(0), top_(0), size_(0)
-    {
+      : array(0), top_(0), size_(0) {
       resize(i);
     }
-    ~Stapel()
-    {
+    ~Stapel() {
       std::free(array);
     }
-    void swapper(Stapel<T, U> &o)
-    {
+    void swapper(Stapel<T, U> &o) {
       swap(array, o.array);
       swap(top_, o.top_);
       swap(size_, o.size_);
     }
-    void resize(U i)
-    {
+    void resize(U i) {
       if (i <= size_)
         return;
       if (!array) {
@@ -77,18 +72,15 @@ class Stapel {
         size_ = i;
       }
     }
-    void push(const T &t)
-    {
+    void push(const T &t) {
       assert(top_ < size_);
       array[top_++] = t;
     }
-    T &pop()
-    {
+    T &pop() {
       assert(top_);
       return array[top_--];
     }
-    T &top()
-    {
+    T &top() {
       assert(top_);
       return array[top_-1];
     }
@@ -101,20 +93,17 @@ class Stapel {
 
     typedef std::reverse_iterator<iterator> reverse_iterator;
 
-    reverse_iterator rbegin()
-    {
+    reverse_iterator rbegin() {
       return reverse_iterator(end());
     }
-    reverse_iterator rend()
-    {
+    reverse_iterator rend() {
       return reverse_iterator(begin());
     }
 };
 
 template <typename T, typename U>
   inline
-  void swap(Stapel<T, U> &a, Stapel<T, U> &b)
-  {
+  void swap(Stapel<T, U> &a, Stapel<T, U> &b) {
     a.swapper(b);
   }
 
@@ -133,23 +122,19 @@ class Vector_Sparse {
     Vector_Sparse &operator=(const Vector_Sparse &);
   public:
     Vector_Sparse()
-      : array(0), size_(0)
-    {}
+      : array(0), size_(0) {}
     Vector_Sparse(U i)
-      : array(0), size_(0)
-    {
+      : array(0), size_(0) {
       resize(i);
     }
-    ~Vector_Sparse()
-    {
+    ~Vector_Sparse() {
       for (typename Stapel<U>::iterator i = stack.begin();
            i != stack.end(); ++i)
         array[*i].~T();
       std::free(array);
     }
 
-    void swapper(Vector_Sparse<T, U> &o)
-    {
+    void swapper(Vector_Sparse<T, U> &o) {
       swap(array, o.array);
       swap(size_, o.size_);
       swap(stack, o.stack);
@@ -158,21 +143,18 @@ class Vector_Sparse {
 #endif
     }
 
-    T &operator()(U i)
-    {
+    T &operator()(U i) {
       assert(i<size_);
       assert(init_[i]);
       return array[i];
     }
-    const T &operator()(U i) const
-    {
+    const T &operator()(U i) const {
       assert(i<size_);
       assert(init_[i]);
       return array[i];
     }
 
-    void init(U i, const T &t)
-    {
+    void init(U i, const T &t) {
       assert(i<size_);
       assert(!init_[i]);
 #ifndef NDEBUG
@@ -182,15 +164,13 @@ class Vector_Sparse {
       stack.push(i);
     }
 
-    void operator()(U i, const T &t)
-    {
+    void operator()(U i, const T &t) {
       assert(i<size_);
       assert(init_[i]);
       array[i] = t;
     }
 
-    void resize(U i)
-    {
+    void resize(U i) {
       stack.resize(i);
 #ifndef NDEBUG
       init_.resize(i);
@@ -220,8 +200,7 @@ class Vector_Sparse {
         Vector_Sparse<T, U> &v;
       protected:
         Iterator(Vector_Sparse<T, U> &a, itr x)
-          : v(a)
-        {
+          : v(a) {
           i = x;
         }
       public:
@@ -254,12 +233,10 @@ class Vector_Sparse {
     typedef Iterator iterator;
 
 
-    iterator begin()
-    {
+    iterator begin() {
       return iterator(*this, stack.begin());
     }
-    iterator end()
-    {
+    iterator end() {
       return iterator(*this, stack.end());
     }
 
@@ -267,8 +244,7 @@ class Vector_Sparse {
 
 template <typename T, typename U>
   inline
-  void swap(Vector_Sparse<T, U> &a, Vector_Sparse<T, U> &b)
-  {
+  void swap(Vector_Sparse<T, U> &a, Vector_Sparse<T, U> &b) {
     a.swapper(b);
   }
 
@@ -277,8 +253,7 @@ template <typename T, typename U>
 namespace std {
   template<typename T, typename U>
     struct iterator_traits<typename Vector_Sparse<T,U>::iterator>
-      : public std::iterator<, T>
-    {
+      : public std::iterator<, T> {
     };
 }
 */

@@ -3,13 +3,10 @@
 
 #include <cmath>
 
-namespace Asymptotics
-{
-
+namespace Asymptotics {
   template <typename T>
   T
-  inline shape5(T length)
-  {
+  inline shape5(T length) {
     return std::pow(1.108, double(length));
   }
 }

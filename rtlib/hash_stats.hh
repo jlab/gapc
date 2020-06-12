@@ -44,46 +44,36 @@ namespace Hash {
 
     Stats()
       : collisions_(0), internal_resizes(0), reallocs(0),
-        coll_per_round(0), size_per_round(0)
-    {}
+        coll_per_round(0), size_per_round(0) {}
 
-    void collision()
-    {
+    void collision() {
       collisions_++;
       coll_per_round++;
     }
-    void internal_resize()
-    {
+    void internal_resize() {
       internal_resizes++;
     }
-    void realloc()
-    {
+    void realloc() {
       reallocs++;
     }
-    void load(size_t i)
-    {
+    void load(size_t i) {
       hi_water_load(i);
     }
-    void use(size_t i)
-    {
+    void use(size_t i) {
       hi_water_use(i);
     }
-    void probe(double i)
-    {
+    void probe(double i) {
       probe_acc(i);
     }
-    void reset()
-    {
+    void reset() {
       assert(size_per_round);
       coll_acc(double(coll_per_round)/double(size_per_round)*100);
       coll_per_round = 0;
     }
-    void size(size_t s)
-    {
+    void size(size_t s) {
       size_per_round = std::max(s, size_per_round);
     }
-    void put(std::ostream &o) const
-    {
+    void put(std::ostream &o) const {
     o << "\nCollisions: " << collisions_
       << " \%Collisions per round: " << ba::mean(coll_acc) << " (mean) "
       << ba::max(coll_acc) << " (max) "
@@ -96,8 +86,7 @@ namespace Hash {
       << " Internal resizes: " << internal_resizes
       << " Hi water use: " << ba::max(hi_water_use);
     }
-    double collisions() const
-    {
+    double collisions() const {
       return collisions_;
     }
   };
@@ -117,15 +106,13 @@ namespace Hash {
   };
 
 #ifdef STATS
-  inline std::ostream &operator<<(std::ostream &o, const Stats &stats)
-  {
+  inline std::ostream &operator<<(std::ostream &o, const Stats &stats) {
     stats.put(o);
     return o;
   }
 #endif
 
-  inline std::ostream &operator<<(std::ostream &o, const NoStats &stats)
-  {
+  inline std::ostream &operator<<(std::ostream &o, const NoStats &stats) {
     return o;
   }
 

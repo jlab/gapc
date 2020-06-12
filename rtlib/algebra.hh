@@ -41,8 +41,7 @@ inline T round_to_digit(int offset, T number) {
 template <typename Itr>
 inline
 typename std::iterator_traits<Itr>::value_type
-minimum(Itr begin, Itr end)
-{
+minimum(Itr begin, Itr end) {
   if (begin == end) {
     typename std::iterator_traits<Itr>::value_type r;
     empty(r);
@@ -59,37 +58,32 @@ minimum(Itr begin, Itr end)
 template <typename Iterator>
 inline
 typename std::iterator_traits<Iterator>::value_type
-minimum(std::pair<Iterator, Iterator> &p)
-{
+minimum(std::pair<Iterator, Iterator> &p) {
   return minimum(p.first, p.second);
 }
 
 template <typename T>
 inline
-T minimum(T t)
-{
+T minimum(T t) {
   return t;
 }
 
 template <typename T>
 inline
-T maximum(T t)
-{
+T maximum(T t) {
   return t;
 }
 
 template <typename T>
 inline
-T sum(T t)
-{
+T sum(T t) {
   return t;
 }
 
 template <typename Itr>
 inline
 typename std::iterator_traits<Itr>::value_type
-maximum(Itr begin, Itr end)
-{
+maximum(Itr begin, Itr end) {
   if (begin == end) {
     typename std::iterator_traits<Itr>::value_type r;
     empty(r);
@@ -106,15 +100,13 @@ maximum(Itr begin, Itr end)
 template <typename Iterator>
 inline
 typename std::iterator_traits<Iterator>::value_type
-maximum(std::pair<Iterator, Iterator> &p)
-{
+maximum(std::pair<Iterator, Iterator> &p) {
   return maximum(p.first, p.second);
 }
 
 template <typename Itr>
 inline
-typename std::iterator_traits<Itr>::value_type sum(Itr begin, Itr end)
-{
+typename std::iterator_traits<Itr>::value_type sum(Itr begin, Itr end) {
   typename std::iterator_traits<Itr>::value_type n;
   if (begin == end) {
     empty(n);
@@ -133,8 +125,7 @@ typename std::iterator_traits<Itr>::value_type sum(Itr begin, Itr end)
 template <typename Iterator>
 inline
 typename std::iterator_traits<Iterator>::value_type
-sum(std::pair<Iterator, Iterator> &p)
-{
+sum(std::pair<Iterator, Iterator> &p) {
   return sum(p.first, p.second);
 }
 
@@ -142,15 +133,13 @@ sum(std::pair<Iterator, Iterator> &p)
 
 template <typename T>
 inline
-T expsum(T t)
-{
+T expsum(T t) {
   return t;
 }
 
 template <typename Itr>
 inline
-typename std::iterator_traits<Itr>::value_type expsum(Itr begin, Itr end)
-{
+typename std::iterator_traits<Itr>::value_type expsum(Itr begin, Itr end) {
   typename std::iterator_traits<Itr>::value_type n;
   if (begin == end) {
     empty(n);
@@ -169,22 +158,19 @@ typename std::iterator_traits<Itr>::value_type expsum(Itr begin, Itr end)
 template <typename Iterator>
 inline
 typename std::iterator_traits<Iterator>::value_type
-expsum(std::pair<Iterator, Iterator> &p)
-{
+expsum(std::pair<Iterator, Iterator> &p) {
   return expsum(p.first, p.second);
 }
 
 template <typename T>
 inline
-T bitsum(T t)
-{
+T bitsum(T t) {
   return t;
 }
 
 template <typename Itr>
 inline
-typename std::iterator_traits<Itr>::value_type bitsum(Itr begin, Itr end)
-{
+typename std::iterator_traits<Itr>::value_type bitsum(Itr begin, Itr end) {
   typename std::iterator_traits<Itr>::value_type n;
   if (begin == end) {
     empty(n);
@@ -203,8 +189,7 @@ typename std::iterator_traits<Itr>::value_type bitsum(Itr begin, Itr end)
 template <typename Iterator>
 inline
 typename std::iterator_traits<Iterator>::value_type
-bitsum(std::pair<Iterator, Iterator> &p)
-{
+bitsum(std::pair<Iterator, Iterator> &p) {
   return bitsum(p.first, p.second);
 }
 
@@ -224,8 +209,7 @@ bitsum(std::pair<Iterator, Iterator> &p)
 template <typename Iterator>
 inline
 List_Ref<typename std::iterator_traits<Iterator>::value_type>
-unique(std::pair<Iterator, Iterator> &p)
-{
+unique(std::pair<Iterator, Iterator> &p) {
   typedef typename std::iterator_traits<Iterator>::value_type type;
   Hash::Set<type> &set = Singleton<Hash::Set<type> >::ref();
   for (; p.first != p.second; ++p.first)
@@ -261,8 +245,7 @@ unique(std::pair<Iterator, Iterator> &p)
 template <typename Iterator>
 inline
 List_Ref<typename std::iterator_traits<Iterator>::value_type>
-unique2(std::pair<Iterator, Iterator> &p)
-{
+unique2(std::pair<Iterator, Iterator> &p) {
   typedef typename std::iterator_traits<Iterator>::value_type type;
   List_Ref<type> ret;
   List<type> & l = ret.ref();
@@ -282,8 +265,7 @@ unique2(std::pair<Iterator, Iterator> &p)
 template <typename Iterator>
 inline
 List_Ref<typename std::iterator_traits<Iterator>::value_type>
-gt_zero(std::pair<Iterator, Iterator> &p)
-{
+gt_zero(std::pair<Iterator, Iterator> &p) {
   typedef typename std::iterator_traits<Iterator>::value_type type;
   List_Ref<type> l;
   for (Iterator i = p.first; i != p.second; ++i)
@@ -294,8 +276,7 @@ gt_zero(std::pair<Iterator, Iterator> &p)
 
 template <typename T>
 inline
-List_Ref<T> list(T t)
-{
+List_Ref<T> list(T t) {
   List_Ref<T> r;
   if (is_not_empty(t))
     push_back(r, t);
@@ -307,8 +288,7 @@ template <typename Iterator>
 inline
 List_Ref<typename std::iterator_traits<Iterator>::value_type>
 xminimum(typename std::iterator_traits<Iterator>::value_type k,
-         std::pair<Iterator, Iterator> &p)
-{
+         std::pair<Iterator, Iterator> &p) {
   typedef typename std::iterator_traits<Iterator>::value_type type;
   List_Ref<type> l;
   for (; p.first != p.second; ++p.first)
@@ -324,18 +304,15 @@ xminimum(typename std::iterator_traits<Iterator>::value_type k,
 template <typename Iterator>
 inline
 typename std::iterator_traits<Iterator>::value_type
-sample(std::pair<Iterator, Iterator> &p)
-{
+sample(std::pair<Iterator, Iterator> &p) {
   Singleton<scil::ran_discrete>::ref().clear();
   for (; p.first != p.second; ++p.first)
     Singleton<scil::ran_discrete>::ref().push_back(*p.first);
   return Singleton<scil::ran_discrete>::ref().sample();
 }
 
-struct DoubleToDouble
-{
-  double operator()(double d) const
-  {
+struct DoubleToDouble {
+  double operator()(double d) const {
     return d;
   }
 };
@@ -344,8 +321,7 @@ template<typename S, typename T, typename pos_int, typename XToDouble>
 inline
 List_Ref<std::pair<S, T>, pos_int>
 sample_filter(List_Ref<std::pair<S, T>, pos_int> &x,
-    XToDouble todouble)
-{
+    XToDouble todouble) {
   List<std::pair<S, T>, pos_int> &l = x.ref();
   List_Ref<std::pair<S, T>, pos_int> ret;
   List<std::pair<S, T>, pos_int> &r = ret.ref();
@@ -368,8 +344,7 @@ sample_filter(List_Ref<std::pair<S, T>, pos_int> &x,
 template<typename S, typename T, typename pos_int>
 inline
 List_Ref<std::pair<S, T>, pos_int>
-sample_filter(List_Ref<std::pair<S, T>, pos_int> &x)
-{
+sample_filter(List_Ref<std::pair<S, T>, pos_int> &x) {
   return sample_filter(x, DoubleToDouble() );
 }
 

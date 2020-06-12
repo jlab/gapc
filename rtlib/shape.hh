@@ -56,49 +56,42 @@ class Fiber {
 
     static MultiPool<T> pool;
 
-    T *alloc(Size n)
-    {
+    T *alloc(Size n) {
       assert(n);
       // alloced memory must be zeroed!
       return pool.malloc(n);
     }
 
-    void dealloc(T *t, Size n)
-    {
+    void dealloc(T *t, Size n) {
       assert(t);
       assert(n);
       pool.free(t, n);
     }
 
-    Size length() const
-    {
+    Size length() const {
       Size l = 1;
       for (T *a = array; *a & T(-1)  >> bits-char_width; ++a)
         ++l;
       return l;
     }
 
-    void copy(T *t, T *s, Size l)
-    {
+    void copy(T *t, T *s, Size l) {
       std::memcpy(t, s, l*sizeof(T));
     }
 
     static T null_elem;
 
-    bool is_null_elem() const
-    {
+    bool is_null_elem() const {
       return array == &null_elem;
     }
 
   public:
     T *array;
 
-    Fiber() : array(&null_elem)
-    {
+    Fiber() : array(&null_elem) {
     }
 
-    Fiber(const Fiber<T, Size, alphset> &other)
-    {
+    Fiber(const Fiber<T, Size, alphset> &other) {
       if (other.isEmpty())
         array = 0;
       else if (other.is_null_elem())
@@ -109,8 +102,7 @@ class Fiber {
       }
     }
 
-    Fiber &operator=(const Fiber<T, Size, alphset> &other)
-    {
+    Fiber &operator=(const Fiber<T, Size, alphset> &other) {
       if (!(isEmpty() || is_null_elem()))
         dealloc(array, length());
       if (other.isEmpty())
@@ -124,14 +116,12 @@ class Fiber {
       return *this;
     }
 
-    ~Fiber()
-    {
+    ~Fiber() {
       if (!(isEmpty() || is_null_elem()))
         dealloc(array, length());
     }
 
-    bool operator==(char c) const
-    {
+    bool operator==(char c) const {
       if (isEmpty())
         return false;
       if (is_null_elem())
@@ -142,13 +132,11 @@ class Fiber {
       return c == alph.to_char(*array, bits-char_width);
     }
 
-    bool operator!=(char c) const
-    {
+    bool operator!=(char c) const {
       return !(*this == c);
     }
 
-    bool operator==(const Fiber<T, Size, alphset> &other) const
-    {
+    bool operator==(const Fiber<T, Size, alphset> &other) const {
       if (isEmpty() && other.isEmpty())
         return true;
       if (isEmpty() || other.isEmpty())
@@ -162,13 +150,11 @@ class Fiber {
       return !std::memcmp(array, other.array, length()*sizeof(T));
     }
 
-    bool operator!=(const Fiber<T, Size, alphset> &other) const
-    {
+    bool operator!=(const Fiber<T, Size, alphset> &other) const {
       return !(*this == other);
     }
 
-    bool operator<(const Fiber<T, Size, alphset> &other) const
-    {
+    bool operator<(const Fiber<T, Size, alphset> &other) const {
       assert(!isEmpty() && !other.isEmpty());
       if (is_null_elem() && other.is_null_elem())
         return false;
@@ -184,8 +170,7 @@ class Fiber {
 
   private:
 
-    size_t char_length() const
-    {
+    size_t char_length() const {
       T *t = array;
       Size l = 0;
       for (;;) {
@@ -201,15 +186,13 @@ class Fiber {
     }
 
 
-    T *last(T *a) const
-    {
+    T *last(T *a) const {
       for (; *a & T(-1) >> bits-char_width; ++a)
         ;
       return a;
     }
 
-    Size first_pos(T a) const
-    {
+    Size first_pos(T a) const {
 #if !HAVE_EFFICIENT_FFS
       if (a & T(-1) >> bits-char_width)
         return 0;
@@ -229,16 +212,14 @@ class Fiber {
 #endif
     }
 
-    void lazy()
-    {
+    void lazy() {
       if (isEmpty() || is_null_elem())
         array = alloc(1);
     }
 
   public:
 
-    void append(char x)
-    {
+    void append(char x) {
       lazy();
       T *t = last(array);
       if (*t & T(-1) >> bits-2*char_width) {
@@ -254,14 +235,12 @@ class Fiber {
     }
 
     Fiber(char c)
-     : array(&null_elem)
-    {
+     : array(&null_elem) {
       append(c);
     }
 
     Fiber(const char *s)
-     : array(&null_elem)
-    {
+     : array(&null_elem) {
       assert(s);
       assert(*s && s[1] && !s[2]);
       append(*s);
@@ -275,16 +254,14 @@ class Fiber {
         char c;
       public:
         Iterator(T *t)
-          : a(t), i(bits), c(0)
-        {
+          : a(t), i(bits), c(0) {
           alphset alph;
           if (!a)
             return;
           c = alph.to_char(*a, i-char_width);
           assert(c);
         }
-        Iterator &operator++()
-        {
+        Iterator &operator++() {
           alphset alph;
           i -= char_width;
           if (i && (c = alph.to_char(*a, i-char_width)))
@@ -300,16 +277,13 @@ class Fiber {
             a = 0;
           return *this;
         }
-        char operator*() const
-        {
+        char operator*() const {
           return c;
         }
-        bool operator==(const Iterator &itr) const
-        {
+        bool operator==(const Iterator &itr) const {
           return !a ? a == itr.a : (a == itr.a && i == itr.i);
         }
-        bool operator!=(const Iterator &itr) const
-        {
+        bool operator!=(const Iterator &itr) const {
           return !(*this == itr);
         }
     };
@@ -326,19 +300,15 @@ class Fiber {
         Size i;
       public:
         Reverse_Iterator()
-          : a(0), beg(0), i(0)
-        {
+          : a(0), beg(0), i(0) {
         }
         Reverse_Iterator(T *t)
-          : a(t), beg(0), i(bits+char_width)
-        {
+          : a(t), beg(0), i(bits+char_width) {
         }
         Reverse_Iterator(T *t, Size u, T *b)
-          : a(t), beg(b), i(u)
-        {
+          : a(t), beg(b), i(u) {
         }
-        Reverse_Iterator &operator++()
-        {
+        Reverse_Iterator &operator++() {
           assert(i<=bits+char_width);
           i += char_width;
           if (i>bits) {
@@ -349,17 +319,14 @@ class Fiber {
           }
           return *this;
         }
-        char operator*() const
-        {
+        char operator*() const {
           alphset alph;
           return alph.to_char(*a, i-char_width);
         }
-        void drop()
-        {
+        void drop() {
           *a &= T(-1) << i;
         }
-        void set(char c)
-        {
+        void set(char c) {
           assert(i<=bits);
           assert(i>=char_width);
 
@@ -376,20 +343,17 @@ class Fiber {
 
           return;
         }
-        bool operator==(const Reverse_Iterator &itr) const
-        {
+        bool operator==(const Reverse_Iterator &itr) const {
           return !a ? a == itr.a : (a == itr.a && i == itr.i);
         }
-        bool operator!=(const Reverse_Iterator &itr) const
-        {
+        bool operator!=(const Reverse_Iterator &itr) const {
           return !(*this == itr);
         }
     };
 
     typedef Reverse_Iterator reverse_iterator;
 
-    reverse_iterator rbegin() const
-    {
+    reverse_iterator rbegin() const {
       if (is_null_elem() || isEmpty())
         return reverse_iterator();
       T *l = last(array);
@@ -407,8 +371,7 @@ class Fiber {
         p = char_width;
       return reverse_iterator(l, p, array);
     }
-    reverse_iterator rend() const
-    {
+    reverse_iterator rend() const {
       if (is_null_elem() || isEmpty())
         return reverse_iterator();
       return reverse_iterator(array);
@@ -417,8 +380,7 @@ class Fiber {
 
   private:
 
-    void app(T *& dst, T *src) const
-    {
+    void app(T *& dst, T *src) const {
       Size x = first_pos(*dst);
       Size y = first_pos(*src);
       if ((x+1)/char_width < chars-(y+1)/char_width) {
@@ -434,8 +396,7 @@ class Fiber {
     }
 
   public:
-    void append(const Fiber<T, Size, alphset> &other)
-    {
+    void append(const Fiber<T, Size, alphset> &other) {
       if (other.is_null_elem())
         return;
       lazy();
@@ -466,8 +427,7 @@ class Fiber {
       }
     }
 
-    void print()
-    {
+    void print() {
       assert(!isEmpty());
       std::cerr << "========" << std::endl;
       T *t = array;
@@ -489,8 +449,7 @@ class Fiber {
       std::cerr << std::endl << "========" << std::endl;
     }
 
-    void put(std::ostream &o) const
-    {
+    void put(std::ostream &o) const {
       for (iterator i = begin(); i!=end(); ++i)
         o << *i;
       return;
@@ -516,15 +475,13 @@ class Fiber {
       }
     }
 
-    void empty()
-    {
+    void empty() {
       if (!(isEmpty() || is_null_elem()))
         dealloc(array, length());
       array = 0;
     }
 
-    bool isEmpty() const
-    {
+    bool isEmpty() const {
       return !array;
     }
 
@@ -536,8 +493,7 @@ class Fiber {
 
     // for different string hash fns see:
     // http://www.cse.yorku.ca/~oz/hash.html
-    uint32_t hashable_value() const
-    {
+    uint32_t hashable_value() const {
       Hash_Fn hash_fn;
       assert(!isEmpty());
       T *t = array;
@@ -552,15 +508,13 @@ class Fiber {
       return hash;
     }
 
-    void swap(Fiber<T, Size, alphset> &other)
-    {
+    void swap(Fiber<T, Size, alphset> &other) {
       T *t = array;
       array = other.array;
       other.array = t;
     }
 
-    void move(Fiber<T, Size, alphset> &other)
-    {
+    void move(Fiber<T, Size, alphset> &other) {
       if (!(isEmpty() || is_null_elem()))
         dealloc(array, length());
       array = other.array;
@@ -595,28 +549,24 @@ T Fiber<T, Size, alphset>::null_elem(0);
 
 template <typename T, typename Size, typename alphset >
 inline
-std::ostream &operator<<(std::ostream &o, const Fiber<T, Size, alphset> &f)
-{
+std::ostream &operator<<(std::ostream &o, const Fiber<T, Size, alphset> &f) {
   f.put(o);
   return o;
 }
 
 template <typename T, typename Size, typename alphset >
 inline void append(Fiber<T, Size, alphset> &s,
-    const Fiber<T, Size, alphset> &x)
-{
+    const Fiber<T, Size, alphset> &x) {
   s.append(x);
 }
 
 template <typename T, typename Size, typename alphset >
-inline void append(Fiber<T, Size, alphset> &s, char c)
-{
+inline void append(Fiber<T, Size, alphset> &s, char c) {
   s.append(c);
 }
 
 template <typename T, typename Size, typename alphset >
-inline void append(Fiber<T, Size, alphset> &s, const char *c, int i)
-{
+inline void append(Fiber<T, Size, alphset> &s, const char *c, int i) {
   assert(i == 2);
   s.append(*c);
   s.append(*(c+1));
@@ -626,8 +576,7 @@ inline void append(Fiber<T, Size, alphset> &s, const char *c, int i)
 template <typename T, typename Size, typename alphset >
 inline
 Fiber<T, Size, alphset> operator+(const Fiber<T, Size, alphset> &a,
-    const Fiber<T, Size, alphset> &b)
-{
+    const Fiber<T, Size, alphset> &b) {
   Fiber<T, Size, alphset> r;
   append(r, a);
   append(r, b);
@@ -637,8 +586,7 @@ Fiber<T, Size, alphset> operator+(const Fiber<T, Size, alphset> &a,
 template <typename T, typename Size, typename alphset >
 inline
 Fiber<T, Size, alphset> operator+(const Fiber<T, Size, alphset> &a,
-    char b)
-{
+    char b) {
   Fiber<T, Size, alphset> r;
   append(r, a);
   append(r, b);
@@ -648,8 +596,7 @@ Fiber<T, Size, alphset> operator+(const Fiber<T, Size, alphset> &a,
 template <typename T, typename Size, typename alphset >
 inline
 Fiber<T, Size, alphset> operator+(char a,
-    const Fiber<T, Size, alphset> &b)
-{
+    const Fiber<T, Size, alphset> &b) {
   Fiber<T, Size, alphset> r;
   append(r, a);
   append(r, b);
@@ -659,8 +606,7 @@ Fiber<T, Size, alphset> operator+(char a,
 template <typename T, typename Size, typename alphset >
 inline
 Fiber<T, Size, alphset> operator+(const Fiber<T, Size, alphset> &a,
-    const char *b)
-{
+    const char *b) {
   Fiber<T, Size, alphset> r;
   append(r, a);
   append(r, b, std::strlen(b));
@@ -670,8 +616,7 @@ Fiber<T, Size, alphset> operator+(const Fiber<T, Size, alphset> &a,
 template <typename T, typename Size, typename alphset >
 inline
 Fiber<T, Size, alphset> operator+(const char *a,
-    const Fiber<T, Size, alphset> &b)
-{
+    const Fiber<T, Size, alphset> &b) {
   Fiber<T, Size, alphset> r;
   append(r, a, std::strlen(a));
   append(r, b);
@@ -680,42 +625,36 @@ Fiber<T, Size, alphset> operator+(const char *a,
 
 
 template <typename T, typename Size, typename alphset >
-inline void empty(Fiber<T, Size, alphset> &s)
-{
+inline void empty(Fiber<T, Size, alphset> &s) {
   s.empty();
 }
 
 template <typename T, typename Size, typename alphset >
-inline bool isEmpty(const Fiber<T, Size, alphset> &s)
-{
+inline bool isEmpty(const Fiber<T, Size, alphset> &s) {
   return s.isEmpty();
 }
 
 template <typename T, typename Size, typename alphset >
-inline uint32_t hashable_value(const Fiber<T, Size, alphset> &shape)
-{
+inline uint32_t hashable_value(const Fiber<T, Size, alphset> &shape) {
   return shape.hashable_value();
 }
 
 template <typename T, typename Size, typename alphset >
 inline
-void swap(Fiber<T, Size, alphset> &a, Fiber<T, Size, alphset> &b)
-{
+void swap(Fiber<T, Size, alphset> &a, Fiber<T, Size, alphset> &b) {
   a.swap(b);
 }
 
 template <typename T, typename Size, typename alphset >
 inline
-void move(Fiber<T, Size, alphset> &a, Fiber<T, Size, alphset> &b)
-{
+void move(Fiber<T, Size, alphset> &a, Fiber<T, Size, alphset> &b) {
   a.move(b);
 }
 
 template <typename T, typename Size, typename alphset >
 inline
 Fiber<T, Size, alphset>
-push_after_front(Fiber<T, Size, alphset> &a, char c, char d)
-{
+push_after_front(Fiber<T, Size, alphset> &a, char c, char d) {
   typedef Fiber<T, Size, alphset> X;
   X ret;
   typename X::iterator i = a.begin();
@@ -738,8 +677,7 @@ push_after_front(Fiber<T, Size, alphset> &a, char c, char d)
 template <typename T, typename Size, typename alphset >
 inline
 Fiber<T, Size, alphset> &
-push_before_back(Fiber<T, Size, alphset> &a, char c, char d)
-{
+push_before_back(Fiber<T, Size, alphset> &a, char c, char d) {
   typedef Fiber<T, Size, alphset> X;
   typename X::reverse_iterator i = a.rbegin();
   typename X::reverse_iterator j = a.rbegin();
@@ -773,8 +711,7 @@ push_before_back(Fiber<T, Size, alphset> &a, char c, char d)
 template <typename T, typename Size, typename alphset >
 inline
 char
-front(Fiber<T, Size, alphset> &a, char r = 0)
-{
+front(Fiber<T, Size, alphset> &a, char r = 0) {
   typedef Fiber<T, Size, alphset> X;
   typename X::iterator i = a.begin();
   if (i == a.end())
@@ -786,8 +723,7 @@ front(Fiber<T, Size, alphset> &a, char r = 0)
 template <typename T, typename Size, typename alphset >
 inline
 Fiber<T, Size, alphset>
-tail(Fiber<T, Size, alphset> &a)
-{
+tail(Fiber<T, Size, alphset> &a) {
   typedef Fiber<T, Size, alphset> X;
   X x;
   typename X::iterator i = a.begin();
@@ -801,8 +737,7 @@ tail(Fiber<T, Size, alphset> &a)
 template <typename T, typename Size, typename alphset >
 inline
 char
-back(Fiber<T, Size, alphset> &a, char r = 0)
-{
+back(Fiber<T, Size, alphset> &a, char r = 0) {
   typedef Fiber<T, Size, alphset> X;
   typename X::reverse_iterator i = a.rbegin();
   if (i == a.rend())

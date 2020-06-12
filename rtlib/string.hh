@@ -49,8 +49,7 @@ class String {
 
     class Block {
       private:
-        void del(Block *b)
-        {
+        void del(Block *b) {
           assert(b->ref_count);
           b->dec_ref();
           if (!b->ref_count)
@@ -67,8 +66,7 @@ class String {
       unsigned char pos;
       unsigned char array[size]; // FIXME size template param?
 
-      Block *get_link(unsigned char k)
-      {
+      Block *get_link(unsigned char k) {
         assert(k>0);
         assert(array[k-1] == LINK);
         Block *b = NULL;
@@ -82,15 +80,13 @@ class String {
           Block *b;
           unsigned char i;
         public:
-          Iterator(Block *block) : b(block), i(0)
-          {
+          Iterator(Block *block) : b(block), i(0) {
             this->operator++();
           }
 
           Iterator(Block *block, Block *other) : b(block), i(b->pos+1) {}
 
-          Iterator &operator++()
-          {
+          Iterator &operator++() {
             for (; i < b->pos; i++)
               switch (b->array[i]) {
                 case LINK :
@@ -117,20 +113,17 @@ class String {
             return *this;
           }
 
-          Block *operator*()
-          {
+          Block *operator*() {
             unsigned char k = i - sizeof(Block*);
             Block *r = b->get_link(k);
             return r;
           }
 
-          bool operator==(const Iterator &itr) const
-          {
+          bool operator==(const Iterator &itr) const {
             return b == itr.b && i == itr.i;
           }
 
-          bool operator!=(const Iterator &itr) const
-          {
+          bool operator!=(const Iterator &itr) const {
             return !(*this == itr);
           }
       };
@@ -144,16 +137,14 @@ class String {
       }
 
       Block(const Block &b)
-        : ref_count(1), pos(b.pos)
-      {
+        : ref_count(1), pos(b.pos) {
         for (unsigned char i = 0; i < pos; ++i)
           array[i] = b.array[i];
         for (iterator i = begin(); i != end(); ++i)
           (*i)->inc_ref();
       }
 
-      ~Block()
-      {
+      ~Block() {
         for (iterator i = begin(); i != end(); ++i)
           del(*i);
       }
@@ -169,8 +160,7 @@ class String {
         array[pos++] = SEQ_END;
       }
 
-      void append(const char *s, unsigned char length)
-      {
+      void append(const char *s, unsigned char length) {
         assert(pos + length + 2 <= size);
         if (!length)
           return;
@@ -182,8 +172,7 @@ class String {
         array[pos++] = SEQ_END;
       }
 
-      void append(int j)
-      {
+      void append(int j) {
         char s[12];
         unsigned char len;
         char *x = int_to_str(s, &len, j);
@@ -199,8 +188,7 @@ class String {
           array[pos++] = ((unsigned char*)&b)[i];
       }
 
-      void append(char c, uint32_t l)
-      {
+      void append(char c, uint32_t l) {
         assert(pos + 1 + sizeof(uint32_t)  <= size);
         array[pos++] = REP;
         array[pos++] = c;
@@ -224,8 +212,7 @@ class String {
     bool readonly;
     bool empty_;
 
-    void del()
-    {
+    void del() {
       if (!block)
         return;
       assert(block->ref_count);
@@ -236,8 +223,7 @@ class String {
       }
     }
 
-    void check_copy()
-    {
+    void check_copy() {
       if (readonly) {
         Block *t = new Block(*block);
         del();
@@ -245,18 +231,15 @@ class String {
       }
     }
   public:
-    String() : block(NULL), readonly(false), empty_(false)
-    {
+    String() : block(NULL), readonly(false), empty_(false) {
     }
 
-    void lazy_alloc()
-    {
+    void lazy_alloc() {
       if (!block)
         block = new Block();
     }
 
-    String(const String &s)
-    {
+    String(const String &s) {
       block = s.block;
       if (block) {
         block->inc_ref();
@@ -266,8 +249,7 @@ class String {
       empty_ = s.empty_;
     }
 
-    ~String()
-    {
+    ~String() {
       del();
     }
 
@@ -294,34 +276,29 @@ class String {
       block->append(s.block);
     }
 
-    void append(int i)
-    {
+    void append(int i) {
       lazy_alloc();
       empty_ = false;
       check_copy();
       block->append(i);
     }
 
-    void append(char c, uint32_t l)
-    {
+    void append(char c, uint32_t l) {
       lazy_alloc();
       empty_ = false;
       check_copy();
       block->append(c, l);
     }
 
-    void empty()
-    {
+    void empty() {
       empty_ = true;
     }
 
-    bool isEmpty() const
-    {
+    bool isEmpty() const {
       return empty_;
     }
 
-    void put(std::ostream &s) const
-    {
+    void put(std::ostream &s) const {
       if (block)
         block->put(s);
     }
@@ -337,8 +314,7 @@ class String {
         bool in_rep;
         uint32_t rep;
 
-        void fwd()
-        {
+        void fwd() {
           while (true) {
             assert (i<=block->pos);
             if (i == block->pos)
@@ -402,8 +378,7 @@ class String {
 
       public:
         Iterator(Block *b)
-          : i(0), block(b), end(false), in_seq(false), in_rep(false), rep(0)
-        {
+          : i(0), block(b), end(false), in_seq(false), in_rep(false), rep(0) {
           if (!b)
             end = true;
           else
@@ -412,28 +387,24 @@ class String {
         Iterator(bool b) : i(0), block(NULL), end(true), in_seq(false),
           in_rep(false), rep(0) {}
 
-        void operator++()
-        {
+        void operator++() {
           if (!in_rep)
             ++i;
           fwd();
         }
 
-        char operator*() const
-        {
+        char operator*() const {
           return block->array[i];
         }
 
-        bool operator==(const Iterator &itr) const
-        {
+        bool operator==(const Iterator &itr) const {
           if (end)
             if (itr.end)
               return true;
           return i == itr.i && block == itr.block;
         }
 
-        bool operator!=(const Iterator &itr) const
-        {
+        bool operator!=(const Iterator &itr) const {
           return !(*this == itr);
         }
     };
@@ -446,8 +417,7 @@ class String {
     // alternative: use static end ...
     iterator end() const { return Iterator(true); }
 
-    bool operator==(const String &s) const
-    {
+    bool operator==(const String &s) const {
       iterator j = s.begin();
       iterator i = begin();
       for (; i != end() && j != s.end(); ++i, ++j)
@@ -456,13 +426,11 @@ class String {
       return !(i != end() || j != end());
     }
 
-    bool operator!=(const String &s) const
-    {
+    bool operator!=(const String &s) const {
       return !(*this == s);
     }
 
-    String &operator=(const String &s)
-    {
+    String &operator=(const String &s) {
       Block *t = s.block;
       if (t)
         t->inc_ref();
@@ -476,8 +444,7 @@ class String {
       return *this;
     }
 
-    bool operator<(const String &s) const
-    {
+    bool operator<(const String &s) const {
       iterator j = s.begin();
       iterator i = begin();
       for (; i != end() && j != s.end(); ++i, ++j)
@@ -492,8 +459,7 @@ class String {
       return false;
     }
 
-    bool operator>(const String &s) const
-    {
+    bool operator>(const String &s) const {
       iterator j = s.begin();
       iterator i = begin();
       for (; i != end() && j != s.end(); ++i, ++j)
@@ -514,19 +480,16 @@ std::ostream &operator<<(std::ostream &s, const String &str);
 
 
 template<class T>
-inline void append(String &str, const T &x)
-{
+inline void append(String &str, const T &x) {
   str.append(x);
 }
 
 template<class T>
-inline void append(String &str, char c, T i)
-{
+inline void append(String &str, char c, T i) {
   str.append(c, (uint32_t) i);
 }
 
-inline void append(String &str, const char *c, int i)
-{
+inline void append(String &str, const char *c, int i) {
   str.append(c, i);
 }
 
@@ -544,8 +507,7 @@ inline void append(
 
 #include "bitops.hh"
 
-inline uint32_t hashable_value(const String &str)
-{
+inline uint32_t hashable_value(const String &str) {
   hash_to_uint32::djb hash_fn;
   uint32_t hash = hash_fn.initial();
   for (String::iterator i = str.begin(); i != str.end(); ++i)

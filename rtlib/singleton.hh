@@ -30,8 +30,7 @@ class Singleton {
     static T obj;
   public:
     Singleton()  {}
-    static T & ref()
-    {
+    static T & ref() {
       return obj;
     }
 };

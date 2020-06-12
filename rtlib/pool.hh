@@ -42,29 +42,24 @@ class Pool {
     Pool(const Pool &);
     Pool &operator=(const Pool&);
   public:
-    Pool()
-    {
+    Pool() {
       //pool = new Map::Pool<K>();
     }
 
-    ~Pool()
-    {
+    ~Pool() {
       //delete pool;
     }
 
-    void purge()
-    {
+    void purge() {
       assert(false);
       //delete pool;
     }
 
-    K * malloc()
-    {
+    K * malloc() {
       return pool.malloc();
     }
 
-    void free(K *x)
-    {
+    void free(K *x) {
       assert(x);
       pool.free(x);
     }

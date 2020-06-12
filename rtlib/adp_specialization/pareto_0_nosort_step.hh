@@ -58,8 +58,7 @@ inline void append(
       }
     }
 
-    if (add == true)
-    {
+    if (add == true) {
       answers.ref().push_back(_MOVE(in));
     }
 
@@ -132,8 +131,7 @@ inline void append(
       }
     }
 
-    if (add == true)
-    {
+    if (add == true) {
       answers.ref().push_back(_MOVE(*in));
     }
   }

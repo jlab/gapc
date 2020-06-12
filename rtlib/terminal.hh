@@ -35,29 +35,25 @@
 
 
 template<typename pos_type>
-inline double CONST_FLOAT(Sequence &seq, pos_type i, pos_type j, double d)
-{
+inline double CONST_FLOAT(Sequence &seq, pos_type i, pos_type j, double d) {
   assert(i == j);
   return d;
 }
 
 template<typename pos_type>
-inline int CONST_INT(Sequence &seq, pos_type i, pos_type j, int d)
-{
+inline int CONST_INT(Sequence &seq, pos_type i, pos_type j, int d) {
   assert(i == j);
   return d;
 }
 
 template<typename pos_type>
-inline char CONST_CHAR(Sequence &seq, pos_type i, pos_type j, char d)
-{
+inline char CONST_CHAR(Sequence &seq, pos_type i, pos_type j, char d) {
   assert(i == j);
   return d;
 }
 
 template<typename pos_type>
-inline Rope CONST_ROPE(Sequence &seq, pos_type i, pos_type j, const char *d)
-{
+inline Rope CONST_ROPE(Sequence &seq, pos_type i, pos_type j, const char *d) {
   assert(i == j);
   Rope r;
   r.append(d);
@@ -65,8 +61,7 @@ inline Rope CONST_ROPE(Sequence &seq, pos_type i, pos_type j, const char *d)
 }
 
 template<typename pos_type>
-inline int INT(Sequence &seq, pos_type i, pos_type j)
-{
+inline int INT(Sequence &seq, pos_type i, pos_type j) {
   assert(i<j);
   int result = 0;
   for (pos_type a = i; a < j; a++) {
@@ -81,8 +76,7 @@ inline int INT(Sequence &seq, pos_type i, pos_type j)
 }
 
 template<typename alphabet, typename pos_type, typename T>
-inline alphabet NON(Basic_Sequence<alphabet, pos_type> &seq, T i, T j)
-{
+inline alphabet NON(Basic_Sequence<alphabet, pos_type> &seq, T i, T j) {
   assert(i+1 == j);
   double d = seq[i];
   if (d != d)
@@ -93,8 +87,7 @@ inline alphabet NON(Basic_Sequence<alphabet, pos_type> &seq, T i, T j)
 }
 
 template<typename alphabet, typename pos_type, typename T, typename X>
-inline alphabet CHAR(Basic_Sequence<alphabet, pos_type> &seq, T i, T j, X c)
-{
+inline alphabet CHAR(Basic_Sequence<alphabet, pos_type> &seq, T i, T j, X c) {
   assert(i+1 == j);
   if (seq[i] == c)
     return c;
@@ -108,44 +101,36 @@ inline alphabet CHAR(Basic_Sequence<alphabet, pos_type> &seq, T i, T j, X c)
 //template<typename Seq, typename pos_type>
 //inline typename Seq::alphabet_type CHAR(Seq &seq, pos_type i, pos_type j)
 template<typename alphabet, typename pos_type, typename T>
-inline alphabet CHAR(Basic_Sequence<alphabet, pos_type> &seq, T i, T j)
-{
+inline alphabet CHAR(Basic_Sequence<alphabet, pos_type> &seq, T i, T j) {
   assert(i+1 == j);
   return seq[i];
 }
 
 template <typename alphabet>
-struct Sep
-{
+struct Sep {
 };
 template<>
-struct Sep<char>
-{
+struct Sep<char> {
   char sep() const { return '$'; }
 };
 #include <limits>
 template<>
-struct Sep<double>
-{
-  double sep() const
-  {
+struct Sep<double> {
+  double sep() const {
     assert( std::numeric_limits<double>::has_quiet_NaN );
     return std::numeric_limits<double>::quiet_NaN();
   }
 };
 template<>
-struct Sep<float>
-{
-  float sep() const
-  {
+struct Sep<float> {
+  float sep() const {
     assert( std::numeric_limits<float>::has_quiet_NaN );
     return std::numeric_limits<float>::quiet_NaN();
   }
 };
 
 template<typename alphabet, typename pos_type, typename T>
-inline alphabet CHAR_SEP(Basic_Sequence<alphabet, pos_type> &seq, T i, T j)
-{
+inline alphabet CHAR_SEP(Basic_Sequence<alphabet, pos_type> &seq, T i, T j) {
   assert(i+1 == j);
   Sep<alphabet> sep;
   if (seq[i] == sep.sep()) {
@@ -158,15 +143,13 @@ inline alphabet CHAR_SEP(Basic_Sequence<alphabet, pos_type> &seq, T i, T j)
 
 
 template<typename alphabet, typename pos_type, typename T>
-inline bool EMPTY(Basic_Sequence<alphabet, pos_type> &seq, T i, T j)
-{
+inline bool EMPTY(Basic_Sequence<alphabet, pos_type> &seq, T i, T j) {
   return i == j;
 }
 
 // deprecated
 template<typename alphabet, typename pos_type, typename T>
-inline String STRING(Basic_Sequence<alphabet, pos_type> &seq, T i, T j)
-{
+inline String STRING(Basic_Sequence<alphabet, pos_type> &seq, T i, T j) {
   assert(i < j);
   assert(0);
   // use ROPE
@@ -174,8 +157,7 @@ inline String STRING(Basic_Sequence<alphabet, pos_type> &seq, T i, T j)
 }
 
 template<typename alphabet, typename pos_type, typename T>
-inline Rope ROPE(Basic_Sequence<alphabet, pos_type> &seq, T i, T j)
-{
+inline Rope ROPE(Basic_Sequence<alphabet, pos_type> &seq, T i, T j) {
   assert(i < j);
   Rope r;
   r.append(seq.begin() + i, j-i);
@@ -183,8 +165,7 @@ inline Rope ROPE(Basic_Sequence<alphabet, pos_type> &seq, T i, T j)
 }
 
 template<typename alphabet, typename pos_type, typename T>
-inline Rope ROPE0(Basic_Sequence<alphabet, pos_type> &seq, T i, T j)
-{
+inline Rope ROPE0(Basic_Sequence<alphabet, pos_type> &seq, T i, T j) {
   assert(i <= j);
   Rope r;
   r.append(seq.begin() + i, j-i);
@@ -193,8 +174,7 @@ inline Rope ROPE0(Basic_Sequence<alphabet, pos_type> &seq, T i, T j)
 
 template<typename alphabet, typename pos_type, typename T>
 inline Basic_Subsequence<alphabet, pos_type>
-REGION(Basic_Sequence<alphabet, pos_type> &seq, T i, T j)
-{
+REGION(Basic_Sequence<alphabet, pos_type> &seq, T i, T j) {
   assert(i < j);
   return Basic_Subsequence<alphabet, pos_type>(seq, i, j);
 }
@@ -203,16 +183,14 @@ REGION(Basic_Sequence<alphabet, pos_type> &seq, T i, T j)
 // XXX deprecated
 template<typename alphabet, typename pos_type, typename T>
 inline Basic_Subsequence<alphabet, pos_type>
-UREGION(Basic_Sequence<alphabet, pos_type> &seq, T i, T j)
-{
+UREGION(Basic_Sequence<alphabet, pos_type> &seq, T i, T j) {
   assert(i <= j);
   return Basic_Subsequence<alphabet, pos_type>(seq, i, j);
 }
 
 template<typename alphabet, typename pos_type, typename T>
 inline Basic_Subsequence<alphabet, pos_type>
-REGION0(Basic_Sequence<alphabet, pos_type> &seq, T i, T j)
-{
+REGION0(Basic_Sequence<alphabet, pos_type> &seq, T i, T j) {
   assert(i <= j);
   return Basic_Subsequence<alphabet, pos_type>(seq, i, j);
 }
@@ -220,16 +198,14 @@ REGION0(Basic_Sequence<alphabet, pos_type> &seq, T i, T j)
 
 template<typename alphabet, typename pos_type, typename T>
 inline Basic_Subsequence<alphabet, pos_type>
-BASE(Basic_Sequence<alphabet, pos_type> &seq, T i, T j)
-{
+BASE(Basic_Sequence<alphabet, pos_type> &seq, T i, T j) {
   assert(i+1 == j);
   return Basic_Subsequence<alphabet, pos_type>(seq, i, j);
 }
 
 template<typename alphabet, typename pos_type, typename T>
 inline Basic_Subsequence<alphabet, pos_type>
-LOC(Basic_Sequence<alphabet, pos_type> &seq, T i, T j)
-{
+LOC(Basic_Sequence<alphabet, pos_type> &seq, T i, T j) {
   assert(i == j);
   return Basic_Subsequence<alphabet, pos_type>(seq, i, j);
 }
@@ -241,15 +217,13 @@ LOC(Basic_Sequence<alphabet, pos_type> &seq, T i, T j)
 // for example in adpfold or local alignment
 
 template<typename alphabet, typename pos_type, typename T>
-inline int SEQ(Basic_Sequence<alphabet, pos_type> &seq, T i, T j)
-{
+inline int SEQ(Basic_Sequence<alphabet, pos_type> &seq, T i, T j) {
   assert(i <= j);
   return j - i;
 }
 
 template<typename alphabet, typename pos_type, typename T>
-inline int SEQ1(Basic_Sequence<alphabet, pos_type> &seq, T i, T j)
-{
+inline int SEQ1(Basic_Sequence<alphabet, pos_type> &seq, T i, T j) {
   assert(i < j);
   return j - i;
 }

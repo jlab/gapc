@@ -35,8 +35,7 @@
 
 template<typename alphabet = char>
 struct Copier {
-  std::pair<alphabet*, size_t> copy(const char *x, size_t l) const
-  {
+  std::pair<alphabet*, size_t> copy(const char *x, size_t l) const {
     alphabet *r = new char[l];
     std::memcpy(r, x, l);
     return std::make_pair(r, l);
@@ -50,8 +49,7 @@ struct Copier {
 #include <errno.h>
 template<>
 struct Copier<double> {
-  std::pair<double*, size_t> copy(const char *x, size_t l) const
-  {
+  std::pair<double*, size_t> copy(const char *x, size_t l) const {
     std::stringstream s;
     s << x;
     std::vector<double> v;
@@ -79,8 +77,7 @@ struct Copier<double> {
 
 template<>
 struct Copier<float> {
-  std::pair<float*, size_t> copy(const char *x, size_t l) const
-  {
+  std::pair<float*, size_t> copy(const char *x, size_t l) const {
     std::stringstream s;
     s << x;
     std::vector<float> v;
@@ -108,8 +105,7 @@ struct Copier<float> {
 
 template<>
 struct Copier<int> {
-  std::pair<int*, size_t> copy(const char *x, size_t l) const
-  {
+  std::pair<int*, size_t> copy(const char *x, size_t l) const {
     std::stringstream s;
     s << x;
     std::vector<int> v;
@@ -144,20 +140,16 @@ class M_Char {
     alphabet *begin;
   public:
     M_Char()
-      : begin(0)
-    {
+      : begin(0) {
     }
     M_Char(alphabet *x)
-      : begin(x)
-    {
+      : begin(x) {
       assert(x);
     }
-    alphabet &column(pos_type x)
-    {
+    alphabet &column(pos_type x) {
       return *(begin + x);
     }
-    const alphabet &column(pos_type x) const
-    {
+    const alphabet &column(pos_type x) const {
       return *(begin + x);
     }
 };
@@ -176,16 +168,13 @@ struct Copier<M_Char> {
     Copier &operator=(const Copier &c);
   public:
     Copier()
-      : seq(0), src(0), rows_(0), row_size_(0)
-    {
+      : seq(0), src(0), rows_(0), row_size_(0) {
     }
-    ~Copier()
-    {
+    ~Copier() {
       delete[] seq;
       delete[] src;
     }
-    std::pair<alphabet*, size_t> copy(const char *x, size_t l) // const
-    {
+    std::pair<alphabet*, size_t> copy(const char *x, size_t l) // const {
       Copier<char> c;
       std::pair<char*, size_t> u = c.copy(x, l);
       src = u.first;
@@ -224,15 +213,13 @@ struct Copier<M_Char> {
       return std::make_pair(r, row_size_);
     }
     pos_type rows() const { return rows_; }
-    alphabet2 *row(alphabet *t, pos_type x)
-    {
+    alphabet2 *row(alphabet *t, pos_type x) {
       assert(src);
       assert(x<rows_);
       pos_type off = x * (row_size_+1);
       return src + off;
     }
-    const alphabet2 *row(alphabet *t, pos_type x) const
-    {
+    const alphabet2 *row(alphabet *t, pos_type x) const {
       assert(src);
       assert(x<rows_);
       pos_type off = x * (row_size_+1);
@@ -248,8 +235,7 @@ class Basic_Sequence {
     alphabet *seq;
     pos_type n;
 
-    void copy(const char *s, pos_type l)
-    {
+    void copy(const char *s, pos_type l) {
       delete[] seq;
 
       std::pair<alphabet*, size_t> p = copier.copy(s, l);
@@ -260,40 +246,33 @@ class Basic_Sequence {
     typedef alphabet alphabet_type;
     typedef char alphabet2;
     Basic_Sequence(alphabet *s, pos_type l)
-      : seq(0)
-    {
+      : seq(0) {
       copy(s, l);
     }
     Basic_Sequence(alphabet *s)
-      : seq(0)
-    {
+      : seq(0) {
       n = std::strlen(s);
       copy(s, n);
     }
     Basic_Sequence()
       : seq(0), n(0) {}
     Basic_Sequence(const Basic_Sequence &o)
-      : seq(0)
-    {
+      : seq(0) {
       copy(o.seq, o.n);
     }
-    ~Basic_Sequence()
-    {
+    ~Basic_Sequence() {
       delete[] seq;
     }
-    Basic_Sequence &operator=(const Basic_Sequence &o)
-    {
+    Basic_Sequence &operator=(const Basic_Sequence &o) {
       copy(o.seq, o.n);
       return *this;
     }
 
-    alphabet &operator[](pos_type x)
-    {
+    alphabet &operator[](pos_type x) {
       assert(x < n);
       return seq[x];
     }
-    const alphabet &operator[](pos_type x) const
-    {
+    const alphabet &operator[](pos_type x) const {
       assert(x < n);
       return seq[x];
     }
@@ -305,17 +284,14 @@ class Basic_Sequence {
     alphabet * begin() { return seq; }
     alphabet * end() { return seq + n; }
 
-    pos_type rows() const
-    {
+    pos_type rows() const {
       return copier.rows();
     }
-    alphabet2 *row(pos_type row)
-    {
+    alphabet2 *row(pos_type row) {
       assert(row < copier.rows());
       return copier.row(seq, row);
     }
-    const alphabet2 *row(pos_type row) const
-    {
+    const alphabet2 *row(pos_type row) const {
       assert(row < copier.rows());
       return copier.row(seq, row);
     }
@@ -323,8 +299,7 @@ class Basic_Sequence {
 
 typedef Basic_Sequence<> Sequence;
 
-inline char lower_case(char c)
-{
+inline char lower_case(char c) {
   if (c == '_')
     return c;
   if (c == '+')
@@ -335,8 +310,7 @@ inline char lower_case(char c)
     return c;
 }
 
-inline char upper_case(char c)
-{
+inline char upper_case(char c) {
   if (c == '_')
     return c;
   if (c == '+')
@@ -356,8 +330,7 @@ inline const char &column(
 #include <cctype>
 
 template<typename alphabet, typename pos_type>
-inline void char_to_upper(Basic_Sequence<alphabet, pos_type> &seq)
-{
+inline void char_to_upper(Basic_Sequence<alphabet, pos_type> &seq) {
   for (typename Basic_Sequence<alphabet, pos_type>::iterator i = seq.begin();
        i != seq.end(); ++i)
     *i = std::toupper(*i);

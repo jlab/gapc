@@ -34,20 +34,17 @@ typedef mpq_class Rational;
 
 template<typename pos_type>
 inline Rational  CONST_RATIO(Sequence &seq, pos_type i, pos_type j,
-    const Rational &x)
-{
+    const Rational &x) {
   assert(i == j);
   return x;
 }
 
-inline void empty(Rational &x)
-{
+inline void empty(Rational &x) {
   x = -1;
 }
 
 //template<> inline bool isEmpty(double x)
-inline bool isEmpty(const Rational &x)
-{
+inline bool isEmpty(const Rational &x) {
   return x == -1;
 }
 

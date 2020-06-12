@@ -29,21 +29,18 @@
 namespace Ref {
 
   template<class T>
-    class Lazy
-    {
+    class Lazy {
       public:
 
       boost::shared_ptr<T> l;
 
       protected:
 
-        void lazy()
-        {
+        void lazy() {
           if (!l.use_count()) l.reset(new T());
         }
 
-        void copy(const Lazy &r)
-        {
+        void copy(const Lazy &r) {
           l = r.l;
         }
       public:
@@ -52,22 +49,18 @@ namespace Ref {
 
         typedef typename T::iterator iterator;
 
-        Lazy()
-        {
+        Lazy() {
         }
 
-        Lazy(const Lazy &r)
-        {
+        Lazy(const Lazy &r) {
           copy(r);
         }
 
-        ~Lazy()
-        {
+        ~Lazy() {
 
         }
 
-        Lazy &operator=(const Lazy &r)
-        {
+        Lazy &operator=(const Lazy &r) {
           copy(r);
           return *this;
         }

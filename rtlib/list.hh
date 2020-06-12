@@ -63,8 +63,7 @@ class List : public std::deque<T> {
 
 template<class T, typename pos_int>
 inline
-std::ostream &operator<<(std::ostream &out, const List<T, pos_int> &list)
-{
+std::ostream &operator<<(std::ostream &out, const List<T, pos_int> &list) {
   for (typename List<T, pos_int>::const_iterator i = list.begin();
        i != list.end(); ++i)
     out << *i << '\n';
@@ -74,24 +73,21 @@ std::ostream &operator<<(std::ostream &out, const List<T, pos_int> &list)
 #include "ref.hh"
 
 template<class T, typename pos_int = unsigned char>
-class List_Ref : public ::Ref::Lazy<List<T, pos_int> >
-{
+class List_Ref : public ::Ref::Lazy<List<T, pos_int> > {
     public:
         typedef typename List<T, pos_int>::reverse_iterator reverse_iterator;
 };
 
 template<class T, typename pos_int>
 inline
-std::ostream &operator<<(std::ostream &out, const List_Ref<T, pos_int> &list)
-{
+std::ostream &operator<<(std::ostream &out, const List_Ref<T, pos_int> &list) {
   if (list.l)
     out << list.const_ref();
   return out;
 }
 
 template<class T, typename pos_int>
-inline void empty(List_Ref<T, pos_int> &x)
-{
+inline void empty(List_Ref<T, pos_int> &x) {
   // empty as explicit initialization which is not needed with lists
   // could delete computed answers in previous alternatives ...
   //if (!isEmpty(x))
@@ -99,8 +95,7 @@ inline void empty(List_Ref<T, pos_int> &x)
 }
 
 template<class T, typename pos_int>
-inline bool isEmpty(const List_Ref<T, pos_int> &x)
-{
+inline bool isEmpty(const List_Ref<T, pos_int> &x) {
   return !x.l || x.const_ref().empty();
 }
 
@@ -108,29 +103,25 @@ inline bool isEmpty(const List_Ref<T, pos_int> &x)
 // destructors on lists or auto called upon function end and therefore not
 // needed
 template<class T, typename pos_int>
-inline void erase(List_Ref<T, pos_int> &x)
-{
+inline void erase(List_Ref<T, pos_int> &x) {
 }
 
 // removes all elements from the list
 template<class T, typename pos_int>
-inline void clear(List_Ref<T, pos_int> &x)
-{
+inline void clear(List_Ref<T, pos_int> &x) {
     if(x.l) {
         x.ref().clear();
     }
 }
 
 template<class T, typename pos_int>
-inline void push_back(List_Ref<T, pos_int> &x, const T &e)
-{
+inline void push_back(List_Ref<T, pos_int> &x, const T &e) {
   assert(is_not_empty(e));
   x.ref().push_back(e);
 }
 
 template<class T, typename pos_int>
-inline void append(List_Ref<T, pos_int> &x, List_Ref<T, pos_int> &e)
-{
+inline void append(List_Ref<T, pos_int> &x, List_Ref<T, pos_int> &e) {
   if (isEmpty(e))
     return;
   assert(&x.ref() != &e.ref());
@@ -139,36 +130,31 @@ inline void append(List_Ref<T, pos_int> &x, List_Ref<T, pos_int> &e)
 }
 
 template<class T, typename pos_int>
-inline T get_front(List_Ref<T, pos_int> &x)
-{
+inline T get_front(List_Ref<T, pos_int> &x) {
     return x.ref().front();
 }
 
 template<class T, typename pos_int>
-inline T get_back(List_Ref<T, pos_int> &x)
-{
+inline T get_back(List_Ref<T, pos_int> &x) {
     return x.ref().back();
 }
 
 template<class T, typename pos_int>
 inline typename List_Ref<T, pos_int>::iterator erase_element(
-  List_Ref<T, pos_int> &x, typename List_Ref<T, pos_int>::iterator e)
-{
+  List_Ref<T, pos_int> &x, typename List_Ref<T, pos_int>::iterator e) {
   return x.ref().erase(e);
 }
 
 template<class T, typename pos_int>
 inline typename List_Ref<T, pos_int>::iterator insert_element(
-  List_Ref<T, pos_int> &x, typename List_Ref<T, pos_int>::iterator e, T i)
-{
+  List_Ref<T, pos_int> &x, typename List_Ref<T, pos_int>::iterator e, T i) {
   return x.ref().insert(e, i);
 }
 
 
 
 template<typename Iterator, typename Compare>
-inline void sort_list(Iterator begin, Iterator end, Compare &c)
-{
+inline void sort_list(Iterator begin, Iterator end, Compare &c) {
    std::sort(begin, end, c);
 }
 
@@ -183,8 +169,7 @@ inline void sort_list(Iterator begin, Iterator end, Compare &c)
 template <typename Iterator>
 inline
 List_Ref<typename std::iterator_traits<Iterator>::value_type>
-unique(std::pair<Iterator, Iterator> &p)
-{
+unique(std::pair<Iterator, Iterator> &p) {
   typedef typename std::iterator_traits<Iterator>::value_type type;
 
   Hash::Set<type> set;
@@ -243,8 +228,7 @@ unique(std::pair<Iterator, Iterator> &p)
 #include "algebra.hh"
 
 template<class T, typename pos_int>
-inline List_Ref<T, pos_int> unique(List_Ref<T, pos_int> &x)
-{
+inline List_Ref<T, pos_int> unique(List_Ref<T, pos_int> &x) {
   typedef typename List_Ref<T, pos_int>::iterator itr;
   std::pair<itr, itr> p = std::make_pair(x.ref().begin(), x.ref().end());
   return unique(p);

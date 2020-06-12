@@ -36,8 +36,7 @@
 #include <cassert>
 
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
   gapc::Opts opts;
   try {
     opts.parse(argc, argv);
@@ -56,8 +55,8 @@ int main(int argc, char **argv)
 
   // actual performance gains like 20%
   // see also http://www.ddj.com/cpp/184401305
- 
-  // workaround stupid Sun CC std::cout to fd0 after sync_with_stdio 
+
+  // workaround stupid Sun CC std::cout to fd0 after sync_with_stdio
   // with -m64 and stlport4 bug:
   // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6804239
 #if defined(__SUNPRO_CC) && __SUNPRO_CC <= 0x5100
@@ -70,7 +69,7 @@ int main(int argc, char **argv)
 #ifdef FLOAT_ACC
   std::cout << std::setprecision(FLOAT_ACC) << std::fixed;
 #endif
-  
+
 #ifdef WINDOW_MODE
   unsigned n = obj.t_0_seq.size();
   for (unsigned int i = 0; ; i+=opts.window_increment) {
@@ -116,4 +115,3 @@ int main(int argc, char **argv)
 
   return 0;
 }
-

@@ -55,12 +55,10 @@
 //
 //     -> no
 
-namespace Map
-{
+namespace Map {
 
   struct MapMapper {
-    void *map(size_t l) const
-    {
+    void *map(size_t l) const {
       void *ret = mmap(0, l, PROT_READ | PROT_WRITE, MAP_PRIVATE
 // http://predef.sourceforge.net/preos.html#sec20
 #if defined(__APPLE__) && defined(__MACH__)
@@ -75,8 +73,7 @@ namespace Map
       }
       return ret;
     }
-    void unmap(void *x, size_t l) const
-    {
+    void unmap(void *x, size_t l) const {
       int ret = munmap(x, l);
       if (ret == -1) {
         std::perror(0);
@@ -86,14 +83,12 @@ namespace Map
   };
 
   struct MallocMapper {
-    void *map(size_t l) const
-    {
+    void *map(size_t l) const {
       void *ret = std::malloc(l);
       assert(ret);
       return ret;
     }
-    void unmap(void *x, size_t l) const
-    {
+    void unmap(void *x, size_t l) const {
       std::free(x);
     }
   };
@@ -108,8 +103,7 @@ namespace Map
       // payload ...
     public:
       Entry()
-        : next_(0)
-      {
+        : next_(0) {
       }
       entry_t *next() { return next_; }
       void set_next(entry_t *n) { next_ = n; }
@@ -140,12 +134,10 @@ namespace Map
       size_t used;
       size_t multiplicity;
 
-      size_t entry_size() const
-      {
+      size_t entry_size() const {
         return sizeof(entry_t*) + sizeof(Type) * multiplicity;
       }
-      void init()
-      {
+      void init() {
 #ifdef POOL_DEBUG
         array = static_cast<void**>(std::malloc(sizeof(void*)*size));
         for (size_t i = 0; i<size; ++i)
@@ -157,18 +149,15 @@ namespace Map
     public:
       Block()
         : used(0),
-          multiplicity(1)
-      {
+          multiplicity(1) {
         init();
       }
       Block(size_t c)
         : used(0),
-          multiplicity(c)
-      {
+          multiplicity(c) {
         init();
       }
-      ~Block()
-      {
+      ~Block() {
 #ifdef POOL_DEBUG
         for (size_t i = 0; i<size; ++i)
           std::free(array[i]);
@@ -179,8 +168,7 @@ namespace Map
       }
       bool is_full() const { return used == size; }
 
-      entry_t *malloc()
-      {
+      entry_t *malloc() {
         assert(!is_full());
         entry_t *ret;
 #ifdef POOL_DEBUG
@@ -210,23 +198,19 @@ namespace Map
     public:
       Pool()
         : count(0),
-          multiplicity(1)
-      {
+          multiplicity(1) {
         pool = new boost::pool<>(sizeof(Type));
       }
       Pool(size_t m)
         : count(0),
-          multiplicity(m)
-      {
+          multiplicity(m) {
         pool = new boost::pool<>(sizeof(Type)*multiplicity);
       }
-      Type *malloc()
-      {
+      Type *malloc() {
         count++;
         return static_cast<Type*>(pool->malloc());
       }
-      void free(Type *t)
-      {
+      void free(Type *t) {
         assert(t);
         count--;
         pool->free(t);
@@ -257,13 +241,11 @@ namespace Map
 
       size_t multiplicity;
 
-      entry_t *to_entry(Type *t) const
-      {
+      entry_t *to_entry(Type *t) const {
         size_t *x = reinterpret_cast<size_t*>(t);
         return reinterpret_cast<entry_t*>(x-1);
       }
-      void init()
-      {
+      void init() {
         blocks.push_back(new block_t(multiplicity));
         head = blocks.back()->malloc();
         assert(head);
@@ -274,8 +256,7 @@ namespace Map
 #ifndef NDEBUG
           count(0),
 #endif
-          multiplicity(1)
-      {
+          multiplicity(1) {
         init();
       }
 
@@ -284,21 +265,18 @@ namespace Map
 #ifndef NDEBUG
           count(0),
 #endif
-          multiplicity(c)
-      {
+          multiplicity(c) {
         init();
       }
 
-      ~Pool()
-      {
+      ~Pool() {
         for (typename std::vector<block_t*>::iterator i = blocks.begin();
             i != blocks.end(); ++i)
           delete *i;
         assert(!count);
       }
 
-      Type *malloc()
-      {
+      Type *malloc() {
         assert(head);
 #ifndef NDEBUG
         count++;
@@ -316,8 +294,7 @@ namespace Map
         return ret->payload();
       }
 
-      void free(Type *t)
-      {
+      void free(Type *t) {
         assert(t);
 #ifndef NDEBUG
         count--;

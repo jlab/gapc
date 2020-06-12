@@ -82,8 +82,7 @@ inline void join_step(
       }
     }
 
-    if (add == true)
-    {
+    if (add == true) {
       answers.ref().push_back(_MOVE(*in));
     }
   }

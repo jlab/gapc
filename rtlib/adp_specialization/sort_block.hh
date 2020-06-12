@@ -917,8 +917,7 @@ inline void mark_position(List_Ref<T> &x, List_Ref<int> &markers) {
 
 extern const float switch_base;
 
-inline float fast_log2 (float val)
-{
+inline float fast_log2 (float val) {
   // assert (val > 0);
 
    int * const  exp_ptr = reinterpret_cast <int *> (&val);
@@ -931,8 +930,7 @@ inline float fast_log2 (float val)
    return (val + log_2);
 }
 
-inline float fast_log (const float &val)
-{
+inline float fast_log (const float &val) {
    return (fast_log2 (val) * 1.07991428f);
 }
 
@@ -940,8 +938,7 @@ inline float fast_log (const float &val)
 // ---------------- MAIN  ---------------
 
 template<class T, typename Compare>
-inline void join_marked(List_Ref<T> &x, List_Ref<int> &markers, Compare &c)
-{
+inline void join_marked(List_Ref<T> &x, List_Ref<int> &markers, Compare &c) {
     if (markers.ref().size() <= 1) {
         return;
     }

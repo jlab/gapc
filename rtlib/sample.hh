@@ -51,21 +51,18 @@ namespace scil {
       gsl_rng *t;
     public:
       rng()
-        : t(0)
-      {
+        : t(0) {
         gsl_rng_env_setup();
         const gsl_rng_type *rng_type = gsl_rng_default;
         t = gsl_rng_alloc(rng_type);
       }
 
-      ~rng()
-      {
+      ~rng() {
         assert(t);
         gsl_rng_free(t);
       }
 
-      const gsl_rng *operator*() const
-      {
+      const gsl_rng *operator*() const {
         return t;
       }
   };
@@ -79,53 +76,44 @@ namespace scil {
       State state;
     public:
       ran_discrete()
-        : x(0), r(Singleton<scil::rng>::ref()), state(CLEAR)
-      {
+        : x(0), r(Singleton<scil::rng>::ref()), state(CLEAR) {
         array.reserve(4096/sizeof(double));
       }
       ran_discrete(rng &a)
-        : x(0), r(a), state(CLEAR)
-      {
+        : x(0), r(a), state(CLEAR) {
         array.reserve(4096/sizeof(double));
       }
       ran_discrete(rng &a, size_t b)
-        : x(0), r(a), state(CLEAR)
-      {
+        : x(0), r(a), state(CLEAR) {
         array.reserve(b);
       }
-      ~ran_discrete()
-      {
+      ~ran_discrete() {
         if (x)
           gsl_ran_discrete_free(x);
       }
-      void clear()
-      {
+      void clear() {
         state = CLEAR;
         array.resize(0);
       }
-      void push_back(double d)
-      {
+      void push_back(double d) {
         assert(state == CLEAR || state == PUSH);
         state = PUSH;
         array.push_back(d);
       }
-      void init()
-      {
+      void init() {
         assert(state == PUSH);
         state = SAMPLE;
         if (x)
           gsl_ran_discrete_free(x);
         x = gsl_ran_discrete_preproc(array.size(), &array[0]);
       }
-      size_t sample()
-      {
+      size_t sample() {
         assert(state == SAMPLE);
         size_t s = gsl_ran_discrete(*r, x);
         assert(s < array.size());
         return s;
       }
-      double sample_value()
-      {
+      double sample_value() {
         size_t k = sample();
         return array[k];
       }

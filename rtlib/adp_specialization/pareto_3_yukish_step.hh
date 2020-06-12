@@ -89,8 +89,7 @@ public:
 
   boost::shared_ptr<T> l;
 
-  T operator*()
-  {
+  T operator*() {
       return *l.get();
   }
 
@@ -149,8 +148,7 @@ struct yp_sorter {
      int s, dim;
      Compare c;
 
-     bool operator () (T *c1, T  *c2)
-     {
+     bool operator () (T *c1, T  *c2) {
          for (int i=s; i<=dim; i++) {
 
              int sort = c(*c1, *c2, i);
@@ -173,8 +171,7 @@ struct yp_fullsorter {
 
      Sorter c;
 
-     bool operator () (T *c1, T  *c2)
-     {
+     bool operator () (T *c1, T  *c2) {
         return c(*c1, *c2);
      }
  };
@@ -722,8 +719,7 @@ inline void append(
       }
     }
 
-    if (add == true)
-    {
+    if (add == true) {
       answers.ref().push_back(_MOVE(in));
     }
 

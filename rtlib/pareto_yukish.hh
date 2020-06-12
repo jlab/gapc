@@ -109,8 +109,7 @@ public:
 
   boost::shared_ptr<T> l;
 
-  T operator*()
-  {
+  T operator*() {
       return *l.get();
   }
 
@@ -148,8 +147,7 @@ struct y_sorter {
      int s, dim;
      Compare c;
 
-     bool operator () (const T &c1, const T  &c2)
-     {
+     bool operator () (const T &c1, const T  &c2) {
          for (int i=s; i<=dim; i++) {
 
              int sort = c(c1, c2, i);
@@ -296,8 +294,7 @@ void y_sortDoubleSplit(
 /////-------------------------- Marry -------------------------------
 
 template<class T, typename Compare>
-bool y_marry2d_comperator(const T &c1, const T  &c2, Compare &c, int s, int dim)
-{
+bool y_marry2d_comperator(const T &c1, const T  &c2, Compare &c, int s, int dim) {
     for (int i=s; i<=dim; i++) {
 
          int sort = c(c1, c2, i);

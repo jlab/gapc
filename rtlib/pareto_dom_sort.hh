@@ -82,8 +82,7 @@ void pareto_domination_sort(
           }
         }
 
-        if (add == true)
-        {
+        if (add == true) {
           answers.ref().push_back(*m);
         }
 
@@ -134,8 +133,7 @@ void pareto_domination_sort(
           }
         }
 
-        if (add == true)
-        {
+        if (add == true) {
           answers.ref().push_back(*m1);
         }
 

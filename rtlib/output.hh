@@ -29,8 +29,7 @@
 #include <ostream>
 
 template<typename L, typename R>
-inline std::ostream &operator<<(std::ostream &out, const std::pair<L, R> &p)
-{
+inline std::ostream &operator<<(std::ostream &out, const std::pair<L, R> &p) {
   out << "( " << p.first << " , " << p.second << " )";
   return out;
 }

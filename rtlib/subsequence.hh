@@ -37,44 +37,36 @@ class Basic_Subsequence {
 
     Basic_Subsequence(const Basic_Sequence<alphabet, pos_type> &s,
         pos_type a, pos_type b)
-      : seq(&s), i(a), j(b)
-    {
+      : seq(&s), i(a), j(b) {
     }
 
-    alphabet &front()
-    {
+    alphabet &front() {
       assert(seq);
       return (*seq)[i];
     }
-    const alphabet &front() const
-    {
+    const alphabet &front() const {
       assert(seq);
       return (*seq)[i];
     }
 
-    alphabet &back()
-    {
+    alphabet &back() {
       assert(seq);
       return (*seq)[j-1];
     }
 
-    void empty()
-    {
+    void empty() {
       seq = NULL;
     }
 
-    bool isEmpty() const
-    {
+    bool isEmpty() const {
       return !seq;
     }
 
-    pos_type size() const
-    {
+    pos_type size() const {
       return j-i;
     }
 
-    alphabet operator[](pos_type x) const
-    {
+    alphabet operator[](pos_type x) const {
       //assert(x < j);
       //assert(x >= i);
       assert(seq);
@@ -93,14 +85,12 @@ class Basic_Subsequence {
 typedef Basic_Subsequence<> Subsequence;
 
 template<typename alphabet, typename pos_type>
-inline pos_type size(const Basic_Subsequence<alphabet, pos_type> &sub)
-{
+inline pos_type size(const Basic_Subsequence<alphabet, pos_type> &sub) {
   return sub.size();
 }
 
 template<typename alphabet, typename pos_type>
-inline pos_type seq_size(const Basic_Subsequence<alphabet, pos_type> &sub)
-{
+inline pos_type seq_size(const Basic_Subsequence<alphabet, pos_type> &sub) {
   assert(sub.seq);
   return sub.seq->size();
 }
@@ -118,14 +108,12 @@ inline alphabet seq_char(
 }
 
 template<typename alphabet, typename pos_type>
-inline const alphabet &front(const Basic_Subsequence<alphabet, pos_type> &sub)
-{
+inline const alphabet &front(const Basic_Subsequence<alphabet, pos_type> &sub) {
   return sub.front();
 }
 
 template<typename alphabet, typename pos_type>
-inline pos_type rows(const Basic_Subsequence<alphabet, pos_type> &sub)
-{
+inline pos_type rows(const Basic_Subsequence<alphabet, pos_type> &sub) {
   return sub.seq->rows();
 }
 

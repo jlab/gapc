@@ -30,8 +30,7 @@
 template<typename T>
 inline
 std::pair<typename List<T>::iterator, typename List<T>::iterator>
-get_range(List_Ref<T> &x)
-{
+get_range(List_Ref<T> &x) {
   return std::pair<typename List<T>::iterator, typename List<T>::iterator>
     (x.ref().begin(), x.ref().end());
 }
@@ -80,37 +79,31 @@ class Iterator : public std::iterator<std::random_access_iterator_tag,
         curr = other.curr;
     }
 
-    Iterator &operator++()
-    {
+    Iterator &operator++() {
       ++curr;
       return *this;
     }
 
-    Iterator &operator--()
-    {
+    Iterator &operator--() {
       --curr;
       return *this;
     }
 
-    typename Fn::result_type &operator*()
-    {
+    typename Fn::result_type &operator*() {
       return Fn()(*curr);
     }
 
 
-    bool operator==(const Iterator &other) const
-    {
+    bool operator==(const Iterator &other) const {
       return curr == other.curr;
     }
 
-    bool operator!=(const Iterator &other) const
-    {
+    bool operator!=(const Iterator &other) const {
       return !(*this == other);
     }
      // random access
 
-    difference_type operator-(const Iterator &other ) const
-    {
+    difference_type operator-(const Iterator &other ) const {
       return curr - other.curr;
     }
 
@@ -120,56 +113,46 @@ class Iterator : public std::iterator<std::random_access_iterator_tag,
 //      return *this;
 //    }
 
-    Iterator &operator=(const Iterator &o)
-    {
+    Iterator &operator=(const Iterator &o) {
       curr = o.curr;
       return *this;
     }
 
-    bool operator<(const Iterator &other) const
-    {
+    bool operator<(const Iterator &other) const {
       return curr < other.curr;
     }
 
-    bool operator>(const Iterator &other) const
-    {
+    bool operator>(const Iterator &other) const {
       return curr > other.curr;
     }
 
-    bool operator<=(const Iterator &other) const
-    {
+    bool operator<=(const Iterator &other) const {
       return curr <= other.curr;
     }
 
-    bool operator>=(const Iterator &other) const
-    {
+    bool operator>=(const Iterator &other) const {
       return curr >= other.curr;
     }
 
-    Iterator &operator+(difference_type n)
-    {
+    Iterator &operator+(difference_type n) {
       return *(new Iterator(curr+n));
     }
 
-    Iterator &operator+=(difference_type n)
-    {
+    Iterator &operator+=(difference_type n) {
       curr +=n;
       return *this;
     }
 
-    Iterator &operator-(difference_type n)
-    {
+    Iterator &operator-(difference_type n) {
         return *(new Iterator(curr-n));
     }
 
-    Iterator &operator-=(difference_type n)
-    {
+    Iterator &operator-=(difference_type n) {
       curr -=n;
       return *this;
     }
 
-    const typename Fn::result_type & operator [] (difference_type n)
-    {
+    const typename Fn::result_type & operator [] (difference_type n) {
       return Fn()(curr[n]);
     }
 
@@ -181,8 +164,7 @@ template <typename Iterator>
 inline
 std::pair<Proxy::Iterator<Iterator, select1st<typename Iterator::value_type> >,
   Proxy::Iterator<Iterator, select1st<typename Iterator::value_type> > >
-splice_left(std::pair<Iterator, Iterator> p)
-{
+splice_left(std::pair<Iterator, Iterator> p) {
   typedef Proxy::Iterator<Iterator, select1st<
     typename Iterator::value_type> > foo;
   return std::make_pair(foo(p.first), foo(p.second));
@@ -192,8 +174,7 @@ template <typename Iterator>
 inline
 std::pair<Proxy::Iterator<Iterator, select2nd<typename Iterator::value_type> >,
   Proxy::Iterator<Iterator, select2nd<typename Iterator::value_type> > >
-splice_right(std::pair<Iterator, Iterator> p)
-{
+splice_right(std::pair<Iterator, Iterator> p) {
   typedef Proxy::Iterator<Iterator, select2nd<
     typename Iterator::value_type> > foo;
   return std::make_pair(foo(p.first), foo(p.second));

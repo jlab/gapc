@@ -36,8 +36,7 @@ extern "C" {
 
 template<typename alphabet, typename T>
 inline bool basepairing(const alphabet *seq,
-    T i, T j)
-{
+    T i, T j) {
   if (j<=i+1)
     return false;
 
@@ -51,8 +50,7 @@ inline bool basepairing(const alphabet *seq,
 
 template<typename alphabet, typename pos_type, typename T>
 inline bool basepairing(const Basic_Sequence<alphabet, pos_type> &seq,
-    T i, T j)
-{
+    T i, T j) {
   if (j<=i+1)
     return false;
   for (unsigned k = 0; k < seq.rows(); ++k)
@@ -87,15 +85,13 @@ inline bool basepairing(const Basic_Sequence<alphabet, pos_type> &seq,
 
 template<typename alphabet, typename pos_type, typename T>
 inline bool stackpairing(const Basic_Sequence<alphabet, pos_type> &seq,
-    T i, T j)
-{
+    T i, T j) {
   return (i+3 < j) && basepairing(seq, i, j) && basepairing(seq, i+1, j-1);
 }
 
 template<typename alphabet, typename pos_type, typename T>
 inline bool stackpairing(const Basic_Sequence<alphabet, pos_type> &seq,
-    T i, T j, int threshold)
-{
+    T i, T j, int threshold) {
   return (i+3 < j) && basepairing(seq, i, j, threshold)
                    && basepairing(seq, i+1, j-1, threshold);
 }
@@ -109,14 +105,12 @@ class BaseException : public std::exception {
     char z;
     char *msg;
   public:
-    BaseException(char c) : std::exception(), z(c), msg(0)
-    {
+    BaseException(char c) : std::exception(), z(c), msg(0) {
       msg = new char[100];
       msg[0] = 0;
     }
     ~BaseException() throw() { delete[] msg; }
-    const char* what() const throw()
-    {
+    const char* what() const throw() {
       if (!*msg) {
         std::strcpy(msg, "Unknown base '");
         unsigned l = std::strlen(msg);
@@ -128,8 +122,7 @@ class BaseException : public std::exception {
     }
 };
 
-inline int char_to_base(char a)
-{
+inline int char_to_base(char a) {
   char c = upper_case(a);
   for (int i = 0; i <= SEPARATOR_BASE; ++i) {
     if (c == BASE_CHARS[i]) {
@@ -140,8 +133,7 @@ inline int char_to_base(char a)
   return 0;
 }
 
-inline char base_to_char(int a)
-{
+inline char base_to_char(int a) {
   if (a < SEPARATOR_BASE+1) {
     return BASE_CHARS[a];
   } else {
@@ -150,20 +142,17 @@ inline char base_to_char(int a)
   return 0;
 }
 
-inline void to_base(char &a, unsigned rows)
-{
+inline void to_base(char &a, unsigned rows) {
   a = char_to_base(a);
 }
 
-inline void to_base(M_Char &m, unsigned rows)
-{
+inline void to_base(M_Char &m, unsigned rows) {
   for (unsigned r = 0; r < rows; ++r)
     m.column(r) = char_to_base(m.column(r));
 }
 
 template<typename pos_type>
-inline void char_to_rna(Basic_Sequence<M_Char, pos_type> &seq)
-{
+inline void char_to_rna(Basic_Sequence<M_Char, pos_type> &seq) {
   typedef char alphabet2;
   for (typename Basic_Sequence<M_Char, pos_type>::iterator i = seq.begin();
        i != seq.end(); ++i)
@@ -176,8 +165,7 @@ inline void char_to_rna(Basic_Sequence<M_Char, pos_type> &seq)
 }
 
 template<typename alphabet, typename pos_type>
-inline void char_to_rna(Basic_Sequence<alphabet, pos_type> &seq)
-{
+inline void char_to_rna(Basic_Sequence<alphabet, pos_type> &seq) {
   typedef char alphabet2;
   for (typename Basic_Sequence<alphabet, pos_type>::iterator i = seq.begin();
        i != seq.end(); ++i)
@@ -220,8 +208,7 @@ inline void append_deep_rna(
 */
 template<typename alphabet, typename pos_type>
 inline int termau_energy(const Basic_Subsequence<alphabet, pos_type> &a,
-    const Basic_Subsequence<alphabet, pos_type> &b)
-{
+    const Basic_Subsequence<alphabet, pos_type> &b) {
   int energy = 0;
   assert(a.seq->rows() == b.seq->rows());
 
@@ -241,8 +228,7 @@ inline int termau_energy(const Basic_Subsequence<alphabet, pos_type> &a,
    3'-end of the unpaired loop region
 */
 template<typename alphabet, typename pos_type>
-inline int hl_energy(const Basic_Subsequence<alphabet, pos_type> &a)
-{
+inline int hl_energy(const Basic_Subsequence<alphabet, pos_type> &a) {
   int energy = 0;
 
   for (unsigned k = 0; k < a.seq->rows(); k++)
@@ -257,8 +243,7 @@ inline int hl_energy(const Basic_Subsequence<alphabet, pos_type> &a)
    larger than 4
 */
 template<typename alphabet, typename pos_type>
-inline int hl_energy_stem(const Basic_Subsequence<alphabet, pos_type> &a)
-{
+inline int hl_energy_stem(const Basic_Subsequence<alphabet, pos_type> &a) {
   int energy = 0;
 
   for (unsigned k = 0; k < a.seq->rows(); k++)
@@ -284,8 +269,7 @@ inline int hl_energy_stem(const Basic_Subsequence<alphabet, pos_type> &a)
 */
 template<typename alphabet, typename pos_type>
 inline int il_energy(const Basic_Subsequence<alphabet, pos_type> &a,
-    const Basic_Subsequence<alphabet, pos_type> &b)
-{
+    const Basic_Subsequence<alphabet, pos_type> &b) {
   int energy = 0;
   assert(a.seq->rows() == b.seq->rows());
 
@@ -311,8 +295,7 @@ inline int il_energy(const Basic_Subsequence<alphabet, pos_type> &a,
 */
 template<typename alphabet, typename pos_type>
 inline int bl_energy(const Basic_Subsequence<alphabet, pos_type> &lr,
-    const Basic_Subsequence<alphabet, pos_type> &rb)
-{
+    const Basic_Subsequence<alphabet, pos_type> &rb) {
   int energy = 0;
   assert(lr.seq->rows() == rb.seq->rows());
 
@@ -338,8 +321,7 @@ inline int bl_energy(const Basic_Subsequence<alphabet, pos_type> &lr,
 */
 template<typename alphabet, typename pos_type>
 inline int br_energy(const Basic_Subsequence<alphabet, pos_type> &lb,
-    const Basic_Subsequence<alphabet, pos_type> &rr)
-{
+    const Basic_Subsequence<alphabet, pos_type> &rr) {
   int energy = 0;
   assert(lb.seq->rows() == rr.seq->rows());
 
@@ -362,8 +344,7 @@ inline int br_energy(const Basic_Subsequence<alphabet, pos_type> &lb,
 */
 template<typename alphabet, typename pos_type>
 inline int sr_energy(const Basic_Subsequence<alphabet, pos_type> &a,
-    const Basic_Subsequence<alphabet, pos_type> &b)
-{
+    const Basic_Subsequence<alphabet, pos_type> &b) {
   int energy = 0;
   assert(a.seq->rows() == b.seq->rows());
 
@@ -380,8 +361,7 @@ inline int sr_energy(const Basic_Subsequence<alphabet, pos_type> &a,
    pseudoknot or csr kissing hairpin
 */
 template<typename alphabet, typename pos_type>
-inline int sr_pk_energy(char a, char b, char c, char d)
-{
+inline int sr_pk_energy(char a, char b, char c, char d) {
   return sr_pk_energy(a,b,c,d);
 }
 
@@ -398,8 +378,7 @@ inline int sr_pk_energy(char a, char b, char c, char d)
 */
 template<typename alphabet, typename pos_type>
 inline int dl_energy(const Basic_Subsequence<alphabet, pos_type> &a,
-    const Basic_Subsequence<alphabet, pos_type> &b)
-{
+    const Basic_Subsequence<alphabet, pos_type> &b) {
   int energy = 0;
   assert(a.seq->rows() == b.seq->rows());
 
@@ -422,8 +401,7 @@ inline int dl_energy(const Basic_Subsequence<alphabet, pos_type> &a,
 */
 template<typename alphabet, typename pos_type>
 inline int dr_energy(const Basic_Subsequence<alphabet, pos_type> &a,
-    const Basic_Subsequence<alphabet, pos_type> &b)
-{
+    const Basic_Subsequence<alphabet, pos_type> &b) {
   int energy = 0;
   assert(a.seq->rows() == b.seq->rows());
 
@@ -446,8 +424,7 @@ inline int dr_energy(const Basic_Subsequence<alphabet, pos_type> &a,
 */
 template<typename alphabet, typename pos_type>
 inline int dli_energy(const Basic_Subsequence<alphabet, pos_type> &a,
-    const Basic_Subsequence<alphabet, pos_type> &b)
-{
+    const Basic_Subsequence<alphabet, pos_type> &b) {
   int energy = 0;
   assert(a.seq->rows() == b.seq->rows());
 
@@ -470,8 +447,7 @@ inline int dli_energy(const Basic_Subsequence<alphabet, pos_type> &a,
 */
 template<typename alphabet, typename pos_type>
 inline int dri_energy(const Basic_Subsequence<alphabet, pos_type> &a,
-    const Basic_Subsequence<alphabet, pos_type> &b)
-{
+    const Basic_Subsequence<alphabet, pos_type> &b) {
   int energy = 0;
   assert(a.seq->rows() == b.seq->rows());
 
@@ -494,8 +470,7 @@ inline int dri_energy(const Basic_Subsequence<alphabet, pos_type> &a,
 */
 template<typename alphabet, typename pos_type>
 inline int ext_mismatch_energy(const Basic_Subsequence<alphabet, pos_type> &a,
-    const Basic_Subsequence<alphabet, pos_type> &b)
-{
+    const Basic_Subsequence<alphabet, pos_type> &b) {
   int energy = 0;
   assert(a.seq->rows() == b.seq->rows());
 
@@ -518,8 +493,7 @@ inline int ext_mismatch_energy(const Basic_Subsequence<alphabet, pos_type> &a,
 */
 template<typename alphabet, typename pos_type>
 inline int ml_mismatch_energy(const Basic_Subsequence<alphabet, pos_type> &a,
-    const Basic_Subsequence<alphabet, pos_type> &b)
-{
+    const Basic_Subsequence<alphabet, pos_type> &b) {
   int energy = 0;
   assert(a.seq->rows() == b.seq->rows());
 
@@ -556,8 +530,7 @@ int sbase_energy();
         unpaired bases
 */
 template<typename alphabet, typename pos_type>
-inline int ss_energy(const Basic_Subsequence<alphabet, pos_type> &a)
-{
+inline int ss_energy(const Basic_Subsequence<alphabet, pos_type> &a) {
   int energy = 0;
 
   for (unsigned k = 0; k < a.seq->rows(); k++)
@@ -577,8 +550,7 @@ inline int ss_energy(const Basic_Subsequence<alphabet, pos_type> &a)
      c) the bit encoded 3' partner of the basepair terminating the stem
 */
 template<typename alphabet, typename pos_type>
-inline int dl_dangle_dg(enum base_t dangle, enum base_t i, enum base_t j)
-{
+inline int dl_dangle_dg(enum base_t dangle, enum base_t i, enum base_t j) {
   return dl_dangle_dg(dangle, i, j);
 }
 
@@ -593,8 +565,7 @@ inline int dl_dangle_dg(enum base_t dangle, enum base_t i, enum base_t j)
      c) the bit encoded dangling base
 */
 template<typename alphabet, typename pos_type>
-inline int dr_dangle_dg(enum base_t i, enum base_t j, enum base_t dangle)
-{
+inline int dr_dangle_dg(enum base_t i, enum base_t j, enum base_t dangle) {
   return dr_dangle_dg(i, j, dangle);
 }
 
@@ -613,8 +584,7 @@ class iupac_filter {
     };
     matrix_t array;
 
-    bool match(char base,  char iupac) const
-    {
+    bool match(char base,  char iupac) const {
       assert(base>=0);
       assert(base<6);
       assert(iupac>=0);
@@ -622,8 +592,7 @@ class iupac_filter {
 
       return iupac_match(base, iupac);
     }
-    void convert_iupac(std::vector<char> &v) const
-    {
+    void convert_iupac(std::vector<char> &v) const {
       for (pos_type i=0; i<v.size(); ++i) {
         char c = lower_case(v[i]);
         switch (c) {
@@ -644,8 +613,7 @@ class iupac_filter {
         };
       }
     }
-    void mark(pos_type i, pos_type j)
-    {
+    void mark(pos_type i, pos_type j) {
       if (array.get(i, j))
         return;
       for (pos_type x = i; x>0; --x) {
@@ -665,8 +633,7 @@ class iupac_filter {
       }
     }
   public:
-    void init(const Basic_Sequence<char, pos_type> &seq, const char *pat)
-    {
+    void init(const Basic_Sequence<char, pos_type> &seq, const char *pat) {
       array.init(seq.size());
 
       pos_type m = std::strlen(pat);
@@ -700,8 +667,7 @@ class iupac_filter {
         }
       }
     }
-    void init(const Basic_Sequence<M_Char, pos_type> &seq, const char *pat)
-  {
+    void init(const Basic_Sequence<M_Char, pos_type> &seq, const char *pat) {
       array.init(seq.size());
 
     pos_type m = std::strlen(pat);
@@ -730,8 +696,7 @@ class iupac_filter {
       }
     }
   }
-    bool query(pos_type a, pos_type b)
-    {
+    bool query(pos_type a, pos_type b) {
       assert(a<=b);
       return array.get(a, b);
     }

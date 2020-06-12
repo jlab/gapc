@@ -48,11 +48,9 @@ class Hash_List_Back {
     uint32_t ref_count;
 
     Hash_List_Back()
-      : size(0), ref_count(1)
-    {
+      : size(0), ref_count(1) {
     }
-    void filter()
-    {
+    void filter() {
       if (inspector.filter()) {
         std::abort();
       } else {
@@ -72,8 +70,7 @@ class Hash_List_Back {
         list = l;
       }
     }
-    void add(const T &t)
-    {
+    void add(const T &t) {
       list->push_back(t);
       ++size;
     }
@@ -97,21 +94,18 @@ class Hash_List : public ::Ref::Lazy<Hash_List_Back<T, I> > {
 #include "empty.hh"
 
 template<class T, class I>
-inline void hash_filter(Hash_List<T, I> &x)
-{
+inline void hash_filter(Hash_List<T, I> &x) {
   x->filter();
 }
 
 template<class T, class I>
-inline void push_back(Hash_List<T, I> &x, const T &e)
-{
+inline void push_back(Hash_List<T, I> &x, const T &e) {
   assert(is_not_empty(e));
   x->add(e);
 }
 
 template<class T, class I>
-inline void append(Hash_List<T, I> &x, Hash_List<T, I> &e)
-{
+inline void append(Hash_List<T, I> &x, Hash_List<T, I> &e) {
   if (isEmpty(e))
     return;
   assert(&x.ref() != &e.ref());
@@ -120,33 +114,28 @@ inline void append(Hash_List<T, I> &x, Hash_List<T, I> &e)
 }
 
 template<class T, class I, typename Iterator>
-inline void append_filter(Hash_List<T, I> &x, std::pair<Iterator, Iterator> i)
-{
+inline void append_filter(Hash_List<T, I> &x, std::pair<Iterator, Iterator> i) {
   for (Iterator a = i.first; a != i.second; ++a)
     push_back(x, *a);
   hash_filter(x);
 }
 
 template<class T, class I>
-inline void empty(Hash_List<T, I> &x)
-{
+inline void empty(Hash_List<T, I> &x) {
 }
 
 template<class T, class I>
-inline bool isEmpty(const Hash_List<T, I> &x)
-{
+inline bool isEmpty(const Hash_List<T, I> &x) {
   return !x.l || x.const_ref().isEmpty();
 }
 
 template<class T, class I>
-inline void erase(Hash_List<T, I> &x)
-{
+inline void erase(Hash_List<T, I> &x) {
 }
 
 template<class T, class I>
 inline
-std::ostream &operator<<(std::ostream &out, Hash_List<T, I> &x)
-{
+std::ostream &operator<<(std::ostream &out, Hash_List<T, I> &x) {
   if (isEmpty(x))
     return out;
   typename Hash_List<T, I>::Type &h = x.ref();

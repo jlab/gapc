@@ -59,14 +59,12 @@ template <typename T, typename Size>
 struct CmAlph {
   enum { char_width = 4 };
   private:
-  void set_one(T &t, Size n) const
-  {
+  void set_one(T &t, Size n) const {
     T x = T(1) << n;
     t |= x;
   }
   public:
-  void operator()(T &t, char x, Size l) const
-  {
+  void operator()(T &t, char x, Size l) const {
     switch (x) {
       case 'M' :
         t |= T(1) << l-3;
@@ -98,8 +96,7 @@ struct CmAlph {
       default: assert(false);
     }
   }
-  char to_char(T &t, Size i) const
-  {
+  char to_char(T &t, Size i) const {
     switch (t >> i & T(15)) {
       case 1 : return 'M';
       case 2 : return 'D';

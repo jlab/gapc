@@ -31,8 +31,7 @@
 
 template<typename alphabet, typename pos_type, typename T>
 inline bool char_basepairing(const Basic_Sequence<alphabet, pos_type> &seq,
-    T i, T j)
-{
+    T i, T j) {
   if (j<=i+1)
     return false;
   char a = lower_case(seq[i]);
@@ -73,37 +72,32 @@ inline bool char_basepairing(const Basic_Sequence<alphabet, pos_type> &seq,
 
 template<typename alphabet, typename pos_type, typename T>
 inline bool minsize(const Basic_Sequence<alphabet, pos_type> &seq, T i, T j,
-    int l)
-{
+    int l) {
   return j-i >= (pos_type) l;
 }
 
 template<typename alphabet, typename pos_type, typename T>
 inline bool maxsize(const Basic_Sequence<alphabet, pos_type> &seq, T i, T j,
-    int l)
-{
+    int l) {
   return j-i <= (pos_type) l;
 }
 
 
 template<typename alphabet, typename pos_type, typename T>
-inline bool equal(const Basic_Sequence<alphabet, pos_type> &seq, T i, T j)
-{
+inline bool equal(const Basic_Sequence<alphabet, pos_type> &seq, T i, T j) {
   if (j<=i+1)
     return false;
   return seq[i] == seq[j-1];
 }
 
 template<typename alphabet, typename pos_type, typename T>
-inline bool all(const Basic_Sequence<alphabet, pos_type> &seq, T i, T j)
-{
+inline bool all(const Basic_Sequence<alphabet, pos_type> &seq, T i, T j) {
   return true;
 }
 
 template<typename alphabet, typename pos_type, typename T>
 inline bool onlychar(const Basic_Sequence<alphabet, pos_type> &seq,
-                     T i, T j, alphabet x)
-{
+                     T i, T j, alphabet x) {
   if (j<i)
     return false;
 
@@ -117,8 +111,7 @@ inline bool onlychar(const Basic_Sequence<alphabet, pos_type> &seq,
 template<typename a1, typename a2, typename pos_type, typename T>
 inline bool samesize(const Basic_Sequence<a1, pos_type> &s1,
     T i1, T j1,
-    T i2, T j2)
-{
+    T i2, T j2) {
   assert(i1<=j1);
   assert(i2<=j2);
   return j1-i1 == j2-i2;
@@ -128,8 +121,7 @@ template<typename a1, typename pos_type, typename T>
 inline bool samesize(const Basic_Sequence<a1, pos_type> &s1,
     T i1, T j1,
     T i3, T j3,
-    T i2, T j2)
-{
+    T i2, T j2) {
   assert(i1<=j1);
   assert(i2<=j2);
   return j1-i1 == j2-i2;

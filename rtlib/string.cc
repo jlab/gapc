@@ -28,22 +28,19 @@
 // like in list?
 Pool<String::Block> String::pool;
 
-void *String::Block::operator new(size_t t) noexcept(false)
-{
+void *String::Block::operator new(size_t t) noexcept(false) {
   assert(t == sizeof(Block));
   Block *r = pool.malloc();
   return r;
 }
 
-void String::Block::operator delete(void *b) noexcept(false)
-{
+void String::Block::operator delete(void *b) noexcept(false) {
   if (!b)
     return;
   pool.free(static_cast<Block*>(b));
 }
 
-void String::Block::put(std::ostream &s) const
-{ 
+void String::Block::put(std::ostream &s) const {
   unsigned char i;
   for (i = 0; i<pos; ) {
     switch (array[i]) {
@@ -79,9 +76,7 @@ void String::Block::put(std::ostream &s) const
   assert(i == pos || i == pos+1);
 }
 
-std::ostream &operator<<(std::ostream &s, const String &str)
-{
+std::ostream &operator<<(std::ostream &s, const String &str) {
   str.put(s);
   return s;
 }
-

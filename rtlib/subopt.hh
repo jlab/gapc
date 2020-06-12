@@ -36,19 +36,16 @@ class Marker {
     Table::DiagIndex<pos_type> index;
   public:
     Marker()
-      : n(0)
-    {
+      : n(0) {
     }
 
-    void init(pos_type x)
-    {
+    void init(pos_type x) {
       n = x;
       pos_type t = index(n);
       array.resize(t);
     }
 
-    void set(pos_type i, pos_type j)
-    {
+    void set(pos_type i, pos_type j) {
       assert(i <= n);
       assert(j <= n);
 
@@ -59,8 +56,7 @@ class Marker {
       array[t] = true;
     }
 
-    bool is_set(pos_type i, pos_type j) const
-    {
+    bool is_set(pos_type i, pos_type j) const {
       assert(i <= n);
       assert(j <= n);
 
@@ -75,15 +71,13 @@ class Marker {
 
 template<typename pos_type>
 inline
-bool is_marked(Marker<pos_type> *marker, pos_type i, pos_type j)
-{
+bool is_marked(Marker<pos_type> *marker, pos_type i, pos_type j) {
   return marker->is_set(i, j);
 }
 
 template<typename pos_type>
 inline
-void mark(Marker<pos_type> &marker, pos_type i, pos_type j)
-{
+void mark(Marker<pos_type> &marker, pos_type i, pos_type j) {
   marker.set(i, j);
 }
 
@@ -102,8 +96,7 @@ class Backtrace_Dummy : public Backtrace<Value, pos_int> {
 template <typename Value, typename pos_int>
 inline
 intrusive_ptr<Backtrace<Value, pos_int> > dummy_bt(
-    const intrusive_ptr<Backtrace<Value, pos_int> > &x)
-{
+    const intrusive_ptr<Backtrace<Value, pos_int> > &x) {
   static intrusive_ptr<Backtrace<Value, pos_int> > t =
     new Backtrace_Dummy<Value, pos_int>();
   return t;
@@ -116,8 +109,7 @@ inline void push_back_min_subopt(List_Ref<T, pos_int> &x, T &e,
     D delta,
     Marker<pos_type> &marker,
     pos_type i,
-    pos_type j)
-{
+    pos_type j) {
   assert(!isEmpty(e));
 
   if (left_most(e)-score > delta)
@@ -175,8 +167,7 @@ inline void append_min_subopt(List_Ref<T, pos_int> &x, List_Ref<T, pos_int> &e,
     D delta,
     Marker<pos_type> &marker,
     pos_type u,
-    pos_type v)
-{
+    pos_type v) {
   if (isEmpty(e))
     return;
   assert(&x.ref() != &e.ref());

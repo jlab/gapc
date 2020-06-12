@@ -28,14 +28,12 @@ template <typename T, typename Size>
 struct ShapeAlph {
   enum { char_width = 2 };
   private:
-  void set_one(T &t, Size n) const
-  {
+  void set_one(T &t, Size n) const {
     T x = T(1) << n;
     t |= x;
   }
   public:
-  void operator()(T &t, char x, Size l) const
-  {
+  void operator()(T &t, char x, Size l) const {
     switch (x) {
       case '[' :
         t |= T(1) << l-1;
@@ -55,8 +53,7 @@ struct ShapeAlph {
       default: assert(false);
     }
   }
-  char to_char(T &t, Size i) const
-  {
+  char to_char(T &t, Size i) const {
     switch (t >> i & T(3)) {
       case 1 : return '[';
       case 2 : return ']';

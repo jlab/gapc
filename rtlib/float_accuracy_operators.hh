@@ -15,23 +15,20 @@ extern const double depsilon;
 
 template <class _T1>
 inline bool operator==(
-  const std::pair<_T1, double>& __x, const std::pair<_T1, double>& __y)
-{
+  const std::pair<_T1, double>& __x, const std::pair<_T1, double>& __y) {
   return __x.first == __y.first &&
          std::fabs(__x.second - __y.second) < depsilon;
 }
 
 template <class _T2>
 inline bool operator==(
-  const std::pair<double, _T2>& __x, const std::pair<double, _T2>& __y)
-{
+  const std::pair<double, _T2>& __x, const std::pair<double, _T2>& __y) {
   return std::fabs(__x.first - __y.first) < depsilon &&
          __x.second == __y.second;
 }
 
 inline bool operator==(
-  const std::pair<double, double>& __x, const std::pair<double, double>& __y)
-{
+  const std::pair<double, double>& __x, const std::pair<double, double>& __y) {
   return std::fabs(__x.first - __y.first) < depsilon &&
          std::fabs(__x.second - __y.second) < depsilon;
 }
