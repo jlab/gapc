@@ -459,7 +459,8 @@ class Quadratic {
     Quadratic(const Basic_Sequence<alphabet, seqpos> &seq)
 #ifdef STATS
       : count(0)
-#endif {
+#endif
+    {
       n = seq.size();
       init();
     }
@@ -468,7 +469,8 @@ class Quadratic {
         : n(l)
 #ifdef STATS
           , count(0)
-#endif {
+#endif
+      {
         init();
       }
 
@@ -476,7 +478,8 @@ class Quadratic {
         : n(0)
 #ifdef STATS
           , count(0)
-#endif {}
+#endif
+      {}
 
       void clear() {
 #ifdef STATS

@@ -61,7 +61,8 @@ class MultiPool {
     MultiPool()
 #ifndef NDEBUG
       : max_n(0)
-#endif {
+#endif
+    {
       pools.resize(1);
       pools[0] = new pool_t(1);
     }
