@@ -1,16 +1,41 @@
+/* {{{
+
+    This file is part of gapc (GAPC - Grammars, Algebras, Products - Compiler;
+      a system to compile algebraic dynamic programming programs)
+
+    Copyright (C) 2008-2011  Georg Sauthoff
+         email: gsauthof@techfak.uni-bielefeld.de or gsauthof@sdf.lonestar.org
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+}}} */
+
 #ifndef RTLIB_RULES_HH_
 #define RTLIB_RULES_HH_
 
 
-#include "boost/format.hpp"
 #include <iostream>
+#include <utility>
+#include <map>
+#include <string>
+#include "boost/format.hpp"
 
 
 // this file creates the datatype "rules" for Bellman's GAP which is a double
 // hash and should hold production rules of a grammar. This is necessary for
 // generating thermodynamic matchers given a specific shape string.
 struct rules {
-
   bool empty_;
 
   Rope shape;
@@ -19,7 +44,7 @@ struct rules {
   std::map<Rope, std::map<Rope, bool> > productions;
 
 
-  rules() : empty_ (false) {
+  rules() : empty_(false) {
   }
 
 
@@ -32,12 +57,12 @@ struct rules {
   }
 
 
-  void insertProduction (Rope nt, Rope rhs) {
-    productions[nt].insert(std::pair<Rope,bool> (rhs,true));
+  void insertProduction(Rope nt, Rope rhs) {
+    productions[nt].insert(std::pair<Rope, bool> (rhs, true));
   }
 
 
-  void setShape (Rope s) {
+  void setShape(Rope s) {
     shape = s;
   }
 
@@ -47,31 +72,28 @@ struct rules {
       " (axiom = " + axiomName + ") {\n";
     std::map<Rope, std::map<Rope, bool> >::const_iterator nt;
     std::map<Rope, bool>::const_iterator rhs;
-    for(nt = productions.begin(); nt != productions.end(); nt++) {
-      append (res, "  ", 2);
-      append (res, nt->first);
-      append (res, " = ", 3);
+    for (nt = productions.begin(); nt != productions.end(); nt++) {
+      append(res, "  ", 2);
+      append(res, nt->first);
+      append(res, " = ", 3);
       for (rhs = nt->second.begin(); rhs != nt->second.end(); rhs++) {
         append(res, rhs->first);
         if (rhs != (--nt->second.end())) {
-          append (res, " | ");
+          append(res, " | ");
         }
       }
-      append (res, " # h;\n", 6);
+      append(res, " # h;\n", 6);
     }
-    append (res, "}");
+    append(res, "}");
     return res;
   }
-
-
 };
 
 
 inline std::ostream &operator<<(std::ostream &s, const rules &r) {
   if (r.empty_) {
     s << 'E';
-  }
-  else {
+  } else {
     // ~ s << "==== rep = '" << r.shape << "' === \n";
     s << r.toRope();
   }
@@ -108,11 +130,9 @@ inline void appendShape(rules &me, Rope y) {
   Rope res;
   if (me.shape.size() <= 0) {
     res = y;
-  }
-  else if (y.size() <= 0) {
+  } else if (y.size() <= 0) {
     res = me.shape;
-  }
-  else {
+  } else {
     res = me.shape;
 
     std::ostringstream left;
@@ -127,8 +147,7 @@ inline void appendShape(rules &me, Rope y) {
       for (unsigned int i = 1; i < right.str().length(); i++) {
         append(res, right.str()[i]);
       }
-    }
-    else {
+    } else {
       append(res, y);
     }
   }
@@ -141,16 +160,17 @@ inline rules operator+ (const rules &x, const rules &y) {
   res.setShape(x.shape + y.shape);
   std::map<Rope, std::map<Rope, bool> >::const_iterator nt;
   std::map<Rope, bool>::const_iterator rhs;
-  for(nt = y.productions.begin(); nt != y.productions.end(); nt++) {
+  for (nt = y.productions.begin(); nt != y.productions.end(); nt++) {
     for (rhs = nt->second.begin(); rhs != nt->second.end(); rhs++) {
-      res.productions[nt->first].insert(std::pair<Rope,bool>(rhs->first, true));
+      res.productions[nt->first].insert(std::pair<Rope, bool>(
+        rhs->first, true));
     }
   }
   return res;
 }
 
 
-inline Rope toRope (const rules &me) {
+inline Rope toRope(const rules &me) {
   return me.toRope();
 }
 
@@ -166,17 +186,17 @@ inline rules merge(
     empty(res);
     return res;
   }
-  assert (!isEmpty(*xs.first));
+  assert(!isEmpty(*xs.first));
   for (; xs.first != xs.second; ++xs.first) {
     Rope shape = (*(xs.first)).shape;
     res = res + *xs.first;
-    setShape (res, shape);
+    setShape(res, shape);
   }
   return res;
 }
 
 
-inline rules merge (List_Ref<rules>& xs) {
+inline rules merge(List_Ref<rules>& xs) {
   rules res;
   Rope shape;
 
@@ -194,12 +214,12 @@ inline rules merge (List_Ref<rules>& xs) {
 // parameter 'xs' is merged into a result rules instance if their
 // shapes are equal. Hence the result list contains rules where
 // no shape is the same as in any other rules instance of the result.
-inline List_Ref<rules> groupByShape (List_Ref<rules>& xs) {
+inline List_Ref<rules> groupByShape(List_Ref<rules>& xs) {
   std::map<Rope, rules> shapeMap;
 
   for (List_Ref<rules>::iterator i = xs->begin(); i != xs->end(); ++i) {
     rules r;
-    if (shapeMap.find ((*i).shape) != shapeMap.end()) {
+    if (shapeMap.find((*i).shape) != shapeMap.end()) {
       r = shapeMap[(*i).shape];
     }
     r = r + *i;
@@ -209,41 +229,41 @@ inline List_Ref<rules> groupByShape (List_Ref<rules>& xs) {
   List_Ref<rules> result;
   for (std::map<Rope, rules>::iterator i = shapeMap.begin();
        i != shapeMap.end(); i++) {
-    result->push_back ((*i).second);
+    result->push_back((*i).second);
   }
   return result;
 }
 
 
-inline Rope getRuleNameDebug (const Rope& r, const Rope& shape) {
+inline Rope getRuleNameDebug(const Rope& r, const Rope& shape) {
   return r + "_" + shape;
 }
 
 
-inline Rope getRuleName (const Rope& r, const Rope& shape) {
+inline Rope getRuleName(const Rope& r, const Rope& shape) {
   static std::map<Rope, Rope> mapping;
   static unsigned int ruleCounter = 0;
 
 #ifdef SPECIALIZE_GRAMMAR_DEBUG
-  return getRuleNameDebug (r, shape);
+  return getRuleNameDebug(r, shape);
 #endif
 
   Rope queryName = r + "#" + shape;
-  if (mapping.find (queryName) == mapping.end()) {
-    Rope newRuleName = Rope ("auto_gen_rule_");
-    append (newRuleName, ruleCounter++);
+  if (mapping.find(queryName) == mapping.end()) {
+    Rope newRuleName = Rope("auto_gen_rule_");
+    append(newRuleName, ruleCounter++);
     mapping[queryName] = newRuleName;
   }
   return mapping[queryName];
 }
 
 
-inline void setAxiomName (rules& r, Rope axiom) {
+inline void setAxiomName(rules& r, Rope axiom) {
   r.axiomName = axiom;
 }
 
 
-inline void setSignatureName (rules& r, Rope sig) {
+inline void setSignatureName(rules& r, Rope sig) {
   r.signatureName = sig;
 }
 
@@ -265,7 +285,7 @@ inline bool matchString(
     return false;
   }
   for (int pos = 0; pos < str.size(); pos++) {
-    if (str.at (pos) != seq[i + pos]) {
+    if (str.at(pos) != seq[i + pos]) {
       return false;
     }
   }

@@ -25,23 +25,24 @@
 #ifndef RTLIB_POOL_HH_
 #define RTLIB_POOL_HH_
 
-#include "map_pool.hh"
+#include <cassert>
+#include <cstdlib>
 
 // tr1 has it
 #include <boost/cstdint.hpp>
 
-#include <cassert>
-#include <cstdlib>
+#include "map_pool.hh"
 
 // no element destructors are called from the pool destructor
 template <class K>
 class Pool {
-  private:
+ private:
     Map::Pool<K> pool;
 
     Pool(const Pool &);
     Pool &operator=(const Pool&);
-  public:
+
+ public:
     Pool() {
       // pool = new Map::Pool<K>();
     }

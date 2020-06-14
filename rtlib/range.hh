@@ -25,6 +25,11 @@
 #ifndef RTLIB_RANGE_HH_
 #define RTLIB_RANGE_HH_
 
+#include <functional>
+#include <iterator>
+#include <iostream>
+#include <utility>
+
 #include "list.hh"
 
 template<typename T>
@@ -35,36 +40,32 @@ get_range(List_Ref<T> &x) {
     (x.ref().begin(), x.ref().end());
 }
 
-#include <functional>
 
 template<typename Pair>
-struct select1st : public std::unary_function<Pair,typename Pair::first_type> {
-   typename Pair::first_type & operator() ( Pair &p)  {
+struct select1st : public std::unary_function<Pair, typename Pair::first_type> {
+  typename Pair::first_type & operator() (Pair &p)  {
     return p.first;
   }
 };
 
 template<typename Pair>
-struct select2nd : public std::unary_function<Pair,typename Pair::second_type> {
-   typename Pair::second_type & operator() ( Pair &p)  {
+struct select2nd : public std::unary_function<Pair,
+  typename Pair::second_type> {
+    typename Pair::second_type & operator() (Pair &p)  {
     return p.second;
   }
 };
 
-#include <iterator>
-
-#include <iostream>
 
 namespace Proxy {
 
 template<typename Itr, typename Fn>
 class Iterator : public std::iterator<std::random_access_iterator_tag,
   typename Fn::result_type> {
-
-  private:
+ private:
     Itr curr;
 
-  public:
+ public:
     typedef typename Fn::result_type value_type;
     typedef typename Itr::difference_type difference_type;
     typedef typename Itr::iterator_category iterator_category;
@@ -103,7 +104,7 @@ class Iterator : public std::iterator<std::random_access_iterator_tag,
     }
      // random access
 
-    difference_type operator-(const Iterator &other ) const {
+    difference_type operator-(const Iterator &other) const {
       return curr - other.curr;
     }
 
@@ -148,17 +149,16 @@ class Iterator : public std::iterator<std::random_access_iterator_tag,
     }
 
     Iterator &operator-=(difference_type n) {
-      curr -=n;
+      curr -= n;
       return *this;
     }
 
-    const typename Fn::result_type & operator [] (difference_type n) {
+    const typename Fn::result_type & operator[](difference_type n) {
       return Fn()(curr[n]);
     }
-
 };
 
-}
+}  // namespace Proxy
 
 template <typename Iterator>
 inline

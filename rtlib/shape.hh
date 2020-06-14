@@ -25,18 +25,22 @@
 #ifndef RTLIB_SHAPE_HH_
 #define RTLIB_SHAPE_HH_
 
-#include "multipool.hh"
 
-
-#include <cassert>
-#include <cstring>
-#include <algorithm>
-
-#include <boost/cstdint.hpp>
 
 // remove
 #include <bitset>
 #include <iostream>
+#include <cassert>
+#include <cstring>
+#include <algorithm>
+#include <utility>
+
+#include <boost/cstdint.hpp>
+
+#include "shape_alph.hh"
+#include "bitops.hh"
+#include "multipool.hh"
+
 
 #ifndef HAVE_EFFICIENT_FFS
   #ifdef __GNUC__
@@ -44,13 +48,9 @@
   #endif
 #endif
 
-
-#include "shape_alph.hh"
-#include "bitops.hh"
-
 template <typename T, typename Size, typename alphset = ShapeAlph<T, Size> >
 class Fiber {
-  private:
+ private:
     enum { bits = sizeof(T)*8, char_width = alphset::char_width,
       chars = bits/char_width };
 
@@ -85,18 +85,18 @@ class Fiber {
       return array == &null_elem;
     }
 
-  public:
+ public:
     T *array;
 
     Fiber() : array(&null_elem) {
     }
 
     Fiber(const Fiber<T, Size, alphset> &other) {
-      if (other.isEmpty())
+      if (other.isEmpty()) {
         array = 0;
-      else if (other.is_null_elem())
+      } else if (other.is_null_elem()) {
         array = &null_elem;
-      else {
+      } else {
         array = alloc(other.length());
         copy(array, other.array, other.length());
       }
@@ -105,11 +105,11 @@ class Fiber {
     Fiber &operator=(const Fiber<T, Size, alphset> &other) {
       if (!(isEmpty() || is_null_elem()))
         dealloc(array, length());
-      if (other.isEmpty())
+      if (other.isEmpty()) {
         array = 0;
-      else if (other.is_null_elem())
+      } else if (other.is_null_elem()) {
         array = &null_elem;
-      else {
+      } else {
         array = alloc(other.length());
         copy(array, other.array, other.length());
       }
@@ -168,8 +168,7 @@ class Fiber {
       return std::memcmp(array, other.array, m*sizeof(T)) < 0;
     }
 
-  private:
-
+ private:
     size_t char_length() const {
       T *t = array;
       Size l = 0;
@@ -177,8 +176,9 @@ class Fiber {
         if (*t & T(-1) >> bits-char_width) {
           ++t;
           l+=chars;
-        } else
+        } else {
           break;
+        }
       }
       Size a = first_pos(*t);
       l+= (bits - a - 1) / char_width;
@@ -187,8 +187,7 @@ class Fiber {
 
 
     T *last(T *a) const {
-      for (; *a & T(-1) >> bits-char_width; ++a)
-        ;
+      for (; *a & T(-1) >> bits-char_width; ++a) {}
       return a;
     }
 
@@ -217,8 +216,7 @@ class Fiber {
         array = alloc(1);
     }
 
-  public:
-
+ public:
     void append(char x) {
       lazy();
       T *t = last(array);
@@ -248,11 +246,12 @@ class Fiber {
     }
 
     class Iterator {
-      private:
+     private:
         T *a;
         Size i;
         char c;
-      public:
+
+     public:
         Iterator(T *t)
           : a(t), i(bits), c(0) {
           alphset alph;
@@ -273,8 +272,9 @@ class Fiber {
             c = alph.to_char(*a, i-char_width);
             if (!c)
               a = 0;
-          } else
+          } else {
             a = 0;
+          }
           return *this;
         }
         char operator*() const {
@@ -294,11 +294,12 @@ class Fiber {
     iterator end() const { return iterator(0); }
 
     class Reverse_Iterator {
-      private:
+     private:
         T *a;
         T *beg;
         Size i;
-      public:
+
+     public:
         Reverse_Iterator()
           : a(0), beg(0), i(0) {
         }
@@ -309,12 +310,12 @@ class Fiber {
           : a(t), beg(b), i(u) {
         }
         Reverse_Iterator &operator++() {
-          assert(i<=bits+char_width);
+          assert(i <= bits+char_width);
           i += char_width;
-          if (i>bits) {
-            if (beg<a) {
+          if (i > bits) {
+            if (beg < a) {
               a--;
-              i=char_width;
+              i = char_width;
             }
           }
           return *this;
@@ -327,8 +328,8 @@ class Fiber {
           *a &= T(-1) << i;
         }
         void set(char c) {
-          assert(i<=bits);
-          assert(i>=char_width);
+          assert(i <= bits);
+          assert(i >= char_width);
 
           alphset alph;
           // std::cout << "\tXX i: " << size_t(i) << std::endl;
@@ -362,7 +363,7 @@ class Fiber {
         assert(array < l);
         l--;
         p = first_pos(*l);
-        assert(p!=bits-1);
+        assert(p != bits-1);
       }
       // std::cerr << "rbegin: " << int(p) << std::endl;
       if (p)
@@ -378,8 +379,7 @@ class Fiber {
     }
 
 
-  private:
-
+ private:
     void app(T *& dst, T *src) const {
       Size x = first_pos(*dst);
       Size y = first_pos(*src);
@@ -395,7 +395,7 @@ class Fiber {
         ++dst;
     }
 
-  public:
+ public:
     void append(const Fiber<T, Size, alphset> &other) {
       if (other.is_null_elem())
         return;
@@ -406,18 +406,17 @@ class Fiber {
       size_t n = other.char_length();
       if (chars - m%chars <= n) {
         Size rest = n-(chars-m%chars);
-        Size add = rest/chars + 1;// (rest%chars ? 1 : 0);
+        Size add = rest/chars + 1;  // (rest%chars ? 1 : 0);
         // if (!add)
         //  add = 1;
-        Size old = m/chars + 1 ;// (m%chars ? 1 : 0);
+        Size old = m/chars + 1;  // (m%chars ? 1 : 0);
         T *t = alloc(old + add);
         copy(t, array, m/chars + (m%chars ? 1 : 0));
         dealloc(array, old);
         array = t;
       }
       T *a = array;
-      for (; *a & T(-1)  >> bits-char_width; ++a)
-        ;
+      for (; *a & T(-1)  >> bits-char_width; ++a) {}
       for (T *t = other.array;;) {
         app(a, t);
         if (*t & T(-1)  >> bits-char_width)
@@ -432,26 +431,28 @@ class Fiber {
       std::cerr << "========" << std::endl;
       T *t = array;
       for (;;) {
-        for (Size i = 1; i<=bits; i++) {
-          if (*t & T(1) << bits-i)
+        for (Size i = 1; i <= bits; i++) {
+          if (*t & T(1) << bits-i) {
             std::cerr << 1;
-          else
+          } else {
             std::cerr << 0;
+          }
         }
         if (*t & T(-1)  >> bits-char_width) {
           ++t;
           std::cerr << std::endl;
-        }
-        else
+        } else {
           break;
+        }
         std::cerr << "--------" << std::endl;
       }
       std::cerr << std::endl << "========" << std::endl;
     }
 
     void put(std::ostream &o) const {
-      for (iterator i = begin(); i!=end(); ++i)
+      for (iterator i = begin(); i != end(); ++i) {
         o << *i;
+      }
       return;
 
 
@@ -461,7 +462,7 @@ class Fiber {
       alphset alph;
       T *t = array;
       for (;;) {
-        for (Size i = bits; i>0; i-=char_width) {
+        for (Size i = bits; i > 0; i-=char_width) {
           char c = alph.to_char(*t, i-char_width);
           if (c)
             o << c;
@@ -522,7 +523,6 @@ class Fiber {
     }
 
     size_t size() const { return char_length(); }
-
 };
 
 template <typename T, typename Size, typename alphset>
@@ -669,7 +669,7 @@ push_after_front(Fiber<T, Size, alphset> &a, char c, char d) {
     return ret;
   }
   ret.append(d);
-  for (; i!=a.end(); ++i)
+  for (; i != a.end(); ++i)
     ret.append(*i);
   return ret;
 }
@@ -717,7 +717,6 @@ front(Fiber<T, Size, alphset> &a, char r = 0) {
   if (i == a.end())
     return r;
   return *i;
-
 }
 
 template <typename T, typename Size, typename alphset >

@@ -26,7 +26,7 @@
 #define RTLIB_VECTOR_SPARSE_HH_
 
 #include <cstdlib>
-
+#include <utility>
 #include <vector>
 
 #include <iterator>
@@ -35,13 +35,14 @@ using std::swap;
 
 template <typename T, typename U = size_t>
 class Stapel {
-  private:
+ private:
     T *array;
     U top_, size_;
 
     Stapel(const Stapel &);
     Stapel &operator=(const Stapel &);
-  public:
+
+ public:
     Stapel()
       : array(0), top_(0), size_(0) {
     }
@@ -111,7 +112,7 @@ template <typename T, typename U>
 
 template <typename T, typename U = size_t>
 class Vector_Sparse {
-  private:
+ private:
     T *array;
     U size_;
     Stapel<U> stack;
@@ -120,7 +121,8 @@ class Vector_Sparse {
 #endif
     Vector_Sparse(const Vector_Sparse &);
     Vector_Sparse &operator=(const Vector_Sparse &);
-  public:
+
+ public:
     Vector_Sparse()
       : array(0), size_(0) {}
     Vector_Sparse(U i)
@@ -144,18 +146,18 @@ class Vector_Sparse {
     }
 
     T &operator()(U i) {
-      assert(i<size_);
+      assert(i < size_);
       assert(init_[i]);
       return array[i];
     }
     const T &operator()(U i) const {
-      assert(i<size_);
+      assert(i < size_);
       assert(init_[i]);
       return array[i];
     }
 
     void init(U i, const T &t) {
-      assert(i<size_);
+      assert(i < size_);
       assert(!init_[i]);
 #ifndef NDEBUG
       init_[i] = true;
@@ -165,7 +167,7 @@ class Vector_Sparse {
     }
 
     void operator()(U i, const T &t) {
-      assert(i<size_);
+      assert(i < size_);
       assert(init_[i]);
       array[i] = t;
     }
@@ -193,17 +195,19 @@ class Vector_Sparse {
     U size() const { return size_; }
 
     class Iterator {
-      private:
+     private:
         friend class Vector_Sparse;
         typedef typename Stapel<U>::iterator itr;
         itr i;
         Vector_Sparse<T, U> &v;
-      protected:
+
+     protected:
         Iterator(Vector_Sparse<T, U> &a, itr x)
           : v(a) {
           i = x;
         }
-      public:
+
+     public:
         typedef T value_type;
         typedef std::random_access_iterator_tag iterator_category;
         typedef U difference_type;
@@ -211,7 +215,7 @@ class Vector_Sparse {
         typedef T& reference;
 
         difference_type operator-(const Iterator &other) const {
-          assert(i>other.i); return i-other.i;
+          assert(i > other.i); return i-other.i;
         }
         Iterator operator+(U a) const { return Iterator(v, i+a); }
         Iterator operator-(U a) const { return Iterator(v, i-a); }
@@ -239,7 +243,6 @@ class Vector_Sparse {
     iterator end() {
       return iterator(*this, stack.end());
     }
-
 };
 
 template <typename T, typename U>

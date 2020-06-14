@@ -25,19 +25,23 @@
 #ifndef RTLIB_RNA_HH_
 #define RTLIB_RNA_HH_
 
-#include "sequence.hh"
-#include "subsequence.hh"
-
+#include <cstring>
+#include <exception>
+#include <cmath>
+#include <vector>
 #include <cstring>
 
 extern "C" {
 #include <rnalib.h>
 }
 
+
+#include "sequence.hh"
+#include "subsequence.hh"
+
 template<typename alphabet, typename T>
-inline bool basepairing(const alphabet *seq,
-    T i, T j) {
-  if (j<=i+1)
+inline bool basepairing(const alphabet *seq, T i, T j) {
+  if (j <= i+1)
     return false;
 
   int basepair = bp_index(seq[i], seq[j-1]);
@@ -51,7 +55,7 @@ inline bool basepairing(const alphabet *seq,
 template<typename alphabet, typename pos_type, typename T>
 inline bool basepairing(const Basic_Sequence<alphabet, pos_type> &seq,
     T i, T j) {
-  if (j<=i+1)
+  if (j <= i+1)
     return false;
   for (unsigned k = 0; k < seq.rows(); ++k)
     if (!basepairing(seq.row(k), i, j))
@@ -64,7 +68,7 @@ template<typename alphabet, typename pos_type, typename T>
 // between 0 and 1.0?
 inline bool basepairing(const Basic_Sequence<alphabet, pos_type> &seq,
     T i, T j, int threshold) {
-  if (j<=i+1)
+  if (j <= i+1)
     return false;
   unsigned valid = 0;
   unsigned invalid = 0;
@@ -72,14 +76,16 @@ inline bool basepairing(const Basic_Sequence<alphabet, pos_type> &seq,
     // GAP-GAP pairs doesn't count at all!
     // Thus, the denominator is not seq.rows() but valid+invalid pairs.
     if ((char(seq.row(k)[i]) == GAP_BASE) &&
-        (char(seq.row(k)[j-1]) == GAP_BASE)) continue;
-      if (basepairing(seq.row(k), i, j)) {
+        (char(seq.row(k)[j-1]) == GAP_BASE)) {
+      continue;
+    }
+    if (basepairing(seq.row(k), i, j)) {
         valid += 100;
     } else {
       invalid += 100;
     }
   }
-  assert(threshold>=0);
+  assert(threshold >= 0);
   return 100.0 * float(valid)/(valid+invalid) >= unsigned(threshold);
 }
 
@@ -96,15 +102,12 @@ inline bool stackpairing(const Basic_Sequence<alphabet, pos_type> &seq,
                    && basepairing(seq, i+1, j-1, threshold);
 }
 
-#include <exception>
-
-#include <cstring>
-
 class BaseException : public std::exception {
-  private:
+ private:
     char z;
     char *msg;
-  public:
+
+ public:
     BaseException(char c) : std::exception(), z(c), msg(0) {
       msg = new char[100];
       msg[0] = 0;
@@ -178,8 +181,6 @@ inline void char_to_rna(Basic_Sequence<alphabet, pos_type> &seq) {
       *s = char_to_base(*s);
   }
 }
-
-#include <cmath>
 
 using std::exp;
 
@@ -362,7 +363,7 @@ inline int sr_energy(const Basic_Subsequence<alphabet, pos_type> &a,
 */
 template<typename alphabet, typename pos_type>
 inline int sr_pk_energy(char a, char b, char c, char d) {
-  return sr_pk_energy(a,b,c,d);
+  return sr_pk_energy(a, b, c, d);
 }
 
 /*
@@ -573,7 +574,7 @@ inline int dr_dangle_dg(enum base_t i, enum base_t j, enum base_t dangle) {
 
 template<typename alphabet = char, typename pos_type = unsigned int>
 class iupac_filter {
-  private:
+ private:
     struct matrix_t {
       std::vector<bool> v;
       Table::DiagIndex<pos_type> index;
@@ -585,15 +586,15 @@ class iupac_filter {
     matrix_t array;
 
     bool match(char base,  char iupac) const {
-      assert(base>=0);
-      assert(base<6);
-      assert(iupac>=0);
-      assert(iupac<13);
+      assert(base >= 0);
+      assert(base < 6);
+      assert(iupac >= 0);
+      assert(iupac < 13);
 
       return iupac_match(base, iupac);
     }
     void convert_iupac(std::vector<char> &v) const {
-      for (pos_type i=0; i<v.size(); ++i) {
+      for (pos_type i=0; i < v.size(); ++i) {
         char c = lower_case(v[i]);
         switch (c) {
           case 'n' : v[i] = 0; break;
@@ -610,29 +611,30 @@ class iupac_filter {
           case 'v' : v[i] = 11; break;
           case 'y' : v[i] = 12; break;
           default: throw BaseException(v[i]);
-        };
+        }
       }
     }
     void mark(pos_type i, pos_type j) {
       if (array.get(i, j))
         return;
-      for (pos_type x = i; x>0; --x) {
+      for (pos_type x = i; x > 0; --x) {
         if (array.get(x, j))
           break;
-        for (pos_type y = j; y<=array.n; ++y) {
+        for (pos_type y = j; y <= array.n; ++y) {
           if (array.get(x, y))
             break;
           array.set(x, y, true);
         }
       }
       pos_type x = 0;
-      for (pos_type y = j; y<=array.n; ++y) {
+      for (pos_type y = j; y <= array.n; ++y) {
         if (array.get(x, y))
           break;
         array.set(x, y, true);
       }
     }
-  public:
+
+ public:
     void init(const Basic_Sequence<char, pos_type> &seq, const char *pat) {
       array.init(seq.size());
 
@@ -653,11 +655,11 @@ class iupac_filter {
    *       std::swap(v, w);
    *     }
    */
-      for (pos_type posText = 0; posText<seq.size(); ++posText) {
+      for (pos_type posText = 0; posText < seq.size(); ++posText) {
         bool matchAtPosText = true;
         for (pos_type posPattern = 0;
-             posPattern<m && posText+posPattern<seq.size(); ++posPattern) {
-          if (not match(seq[posText+posPattern], pattern[posPattern])) {
+             posPattern < m && posText+posPattern < seq.size(); ++posPattern) {
+          if (!match(seq[posText+posPattern], pattern[posPattern])) {
             matchAtPosText = false;
             break;
           }
@@ -673,20 +675,20 @@ class iupac_filter {
     pos_type m = std::strlen(pat);
     std::vector<char> pattern(pat, pat+m);
     convert_iupac(pattern);
-    for (pos_type posText = 0; posText<seq.size(); ++posText) {
+    for (pos_type posText = 0; posText < seq.size(); ++posText) {
       bool matchAtPosText = true;
       for (pos_type posPattern = 0;
-           posPattern<m && posText+posPattern<seq.size(); ++posPattern) {
+           posPattern < m && posText+posPattern < seq.size(); ++posPattern) {
         bool colmatch = true;
         for (pos_type row = 0; row < seq.rows(); row++) {
-          char base = column(seq.seq[posText+posPattern],row);
-          if (not match(base, pattern[posPattern])) {
+          char base = column(seq.seq[posText+posPattern], row);
+          if (!match(base, pattern[posPattern])) {
             colmatch = false;
             break;
           }
         }
 
-        if (not colmatch) {
+        if (!colmatch) {
           matchAtPosText = false;
           break;
         }
@@ -697,7 +699,7 @@ class iupac_filter {
     }
   }
     bool query(pos_type a, pos_type b) {
-      assert(a<=b);
+      assert(a <= b);
       return array.get(a, b);
     }
 };

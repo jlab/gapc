@@ -1,20 +1,43 @@
-/*
- * File:   pareto_1_sorted_block.hh
- * Author: gatter
- *
- * Created on July 6, 2015, 10:31 AM
- */
+/* {{{
+
+    This file is part of gapc (GAPC - Grammars, Algebras, Products - Compiler;
+      a system to compile algebraic dynamic programming programs)
+
+    Copyright (C) 2008-2011  Georg Sauthoff
+         email: gsauthof@techfak.uni-bielefeld.de or gsauthof@sdf.lonestar.org
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    * Author: gatter
+    *
+    * Created on July 6, 2015, 10:31 AM
+
+}}} */
+
 
 #ifndef RTLIB_ADP_SPECIALIZATION_PARETO_1_SORTED_BLOCK_HH_
 #define RTLIB_ADP_SPECIALIZATION_PARETO_1_SORTED_BLOCK_HH_
 
+#include <deque>
+#include <algorithm>
 
 #if __cplusplus >= 201103L
 #define _MOVE(__val) std::move(__val)
-#define _MOVE_RANGE(__it1,__it2,__in) std::move(__it1,__it2,__in)
+#define _MOVE_RANGE(__it1, __it2, __in) std::move(__it1, __it2, __in)
 #else
 #define _MOVE(__val) (__val)
-#define _MOVE_RANGE(__it1,__it2,__in) std::copy(__it1,__it2,__in)
+#define _MOVE_RANGE(__it1, __it2, __in) std::copy(__it1, __it2, __in)
 #endif
 
 
@@ -27,15 +50,14 @@ inline void join_2d_drop(
   T &ref, typename List_Ref<T>::iterator &it,
   typename List_Ref<T>::iterator end, Compare &c, const bool keep_equal) {
     if (keep_equal) {
-        while( it!= end && c(ref, *it, 2) > 0) {
+        while (it!= end && c(ref, *it, 2) > 0) {
             ++it;
         }
     } else {
-        while( it!= end && c(ref, *it, 2) >= 0) {
+        while (it!= end && c(ref, *it, 2) >= 0) {
             ++it;
         }
     }
-
 }
 
 // specialized algorithm for 2 dimensions
@@ -43,23 +65,23 @@ template<class T, typename Compare>
 inline void join_2d_step(
   typename List_Ref<T>::iterator &a_begin,
   typename List_Ref<T>::iterator &a_end,
-  typename List_Ref<T>::iterator &i_begin, typename List_Ref<T>::iterator &i_end,
+  typename List_Ref<T>::iterator &i_begin,
+  typename List_Ref<T>::iterator &i_end,
   List_Ref<T> &res, Compare &c, const bool keep_equal) {
     typename List_Ref<T>::iterator a_it = a_begin;
     typename List_Ref<T>::iterator i_it = i_begin;
 
     // ended by return
-    while(true) {
-
+    while (true) {
         // end conditions lists are empty
         if (i_it == i_end) {
-            for(;a_it != a_end;++a_it) {
+            for (; a_it != a_end; ++a_it) {
                 res.ref().push_back(_MOVE(*a_it));
             }
             break;
         }
-        if (a_it == a_end ) {
-            for(;i_it != i_end;++i_it) {
+        if (a_it == a_end) {
+            for (; i_it != i_end; ++i_it) {
                 res.ref().push_back(_MOVE(*i_it));
             }
             break;
@@ -68,7 +90,7 @@ inline void join_2d_step(
         int c1 = c(*a_it, *i_it, 1);
         int c2 = c(*a_it, *i_it, 2);
 
-        switch(c1) {
+        switch (c1) {
             case -1:
                 switch (c2) {
                     case -1:
@@ -125,14 +147,13 @@ inline void join_2d_step(
                 break;
         }
     }
-
 }
 
 
 template<class T, typename Compare>
 inline void join_marked_multi_to_two_2D(
   List_Ref<T> &x, List_Ref<int> &markers, Compare &c, const bool keep_equal) {
-    if (markers.ref().size()<= 1) { // already sorted
+    if (markers.ref().size()<= 1) {  // already sorted
         return;
     }
 
@@ -147,8 +168,7 @@ inline void join_marked_multi_to_two_2D(
 
     s1_start = x.ref().begin();
 
-    for(; p2 != x_end && p1 != x_end ; p1+=2, p2+=2) {
-
+    for (; p2 != x_end && p1 != x_end ; p1+=2, p2+=2) {
         // get iterator
         middle = x.ref().begin();
         std::advance(middle, *p1);
@@ -176,7 +196,6 @@ inline void join_marked_multi_to_two_2D(
 
 
     while (merges.size() > 1) {
-
             std::deque<List_Ref<T> > new_merges;
 
             typename List_Ref<List_Ref<T> >::iterator m1 = merges.begin();
@@ -184,8 +203,7 @@ inline void join_marked_multi_to_two_2D(
             typename List_Ref<List_Ref<T> >::iterator m_end = merges.end();
             ++m2;
 
-            for(; m2 != m_end && m1 != m_end ; m1+=2, m2+=2) {
-
+            for (; m2 != m_end && m1 != m_end ; m1+=2, m2+=2) {
                 // do the actual join
                 List_Ref<T> e;
                 new_merges.push_back(e);
@@ -197,7 +215,6 @@ inline void join_marked_multi_to_two_2D(
 
                 join_2d_step(
                   s1_s , s1_e, s2_s , s2_e, new_merges.back(), c, keep_equal);
-
             }
 
             if (m1 != m_end) {
@@ -222,14 +239,11 @@ inline void join_all_step(
   typename List_Ref<T>::iterator &i_begin,
   typename List_Ref<T>::iterator &i_end,
   List_Ref<T> &new_list, Compare &c, Sorter &s, const bool keep_equal) {
-
-
     typename List_Ref<T>::iterator a_it = a_begin;
     typename List_Ref<T>::iterator i_it = i_begin;
 
 
-    while(a_it != a_end || i_it != i_end) {
-
+    while (a_it != a_end || i_it != i_end) {
          // from which list to add next
          typename List_Ref<T>::iterator next;
          if (i_it == i_end || (a_it != a_end && s(*a_it, *i_it))) {
@@ -250,8 +264,8 @@ inline void join_all_step(
          if (keep_equal) {
              // test if element is the same as last inserted
              bool equal = true;
-             for(int i=1; i <= c.dim; ++i ) {
-                 if( c( *next, new_list.ref().back(), i) != 0) {
+             for (int i=1; i <= c.dim; ++i) {
+                 if (c(*next, new_list.ref().back(), i) != 0) {
                      equal = false;
                      break;
                  }
@@ -267,8 +281,8 @@ inline void join_all_step(
          for (typename List_Ref<T>::iterator n = new_list.ref().begin();
               n != new_list.ref().end(); ++n ) {
              bool dominates = true;
-             for(int i=2; i <= c.dim; ++i ) {
-                 if( c( *next, *n, i) > 0) {
+             for (int i=2; i <= c.dim; ++i) {
+                 if (c(*next, *n, i) > 0) {
                      dominates = false;
                      break;
                  }
@@ -277,14 +291,12 @@ inline void join_all_step(
                  add = false;
                  break;
              }
-
          }
 
          if (add) {
              new_list.ref().push_back(_MOVE(*next));
          }
     }
-
 }
 
 
@@ -292,7 +304,7 @@ template<class T, typename Compare, typename Sorter>
 inline void join_marked_multi_to_two_all(
   List_Ref<T> &x, List_Ref<int> &markers,
   Compare &c, Sorter &s, const bool keep_equal) {
-    if (markers.ref().size()<= 1) { // already sorted
+    if (markers.ref().size()<= 1) {  // already sorted
         return;
     }
 
@@ -307,8 +319,7 @@ inline void join_marked_multi_to_two_all(
 
     s1_start = x.ref().begin();
 
-    for(; p2 != x_end && p1 != x_end ; p1+=2, p2+=2) {
-
+    for (; p2 != x_end && p1 != x_end ; p1+=2, p2+=2) {
         // get iterator
         middle = x.ref().begin();
         std::advance(middle, *p1);
@@ -336,7 +347,6 @@ inline void join_marked_multi_to_two_all(
 
 
     while (merges.size() > 1) {
-
             std::deque<List_Ref<T> > new_merges;
 
             typename List_Ref<List_Ref<T> >::iterator m1 = merges.begin();
@@ -344,8 +354,7 @@ inline void join_marked_multi_to_two_all(
             typename List_Ref<List_Ref<T> >::iterator m_end = merges.end();
             ++m2;
 
-            for(; m2 != m_end && m1 != m_end ; m1+=2, m2+=2) {
-
+            for (; m2 != m_end && m1 != m_end ; m1+=2, m2+=2) {
                 // do the actual join
                 List_Ref<T> e;
                 new_merges.push_back(e);
@@ -358,7 +367,6 @@ inline void join_marked_multi_to_two_all(
                 join_all_step(
                   s1_s , s1_e, s2_s , s2_e,
                   new_merges.back(), c, s, keep_equal);
-
             }
 
             if (m1 != m_end) {
@@ -376,7 +384,7 @@ inline void join_marked_multi_to_two_all(
 
 template<class T, typename Compare, typename Sorter>
 inline void join_sorted_2d(
-  List_Ref<T> &x,Compare &c, Sorter &s, const bool keep_equal) {
+  List_Ref<T> &x, Compare &c, Sorter &s, const bool keep_equal) {
     // full sorting
     std::sort(x.ref().begin(), x.ref().end(), s);
 
@@ -385,8 +393,7 @@ inline void join_sorted_2d(
     // lex
     for (typename List_Ref<T>::iterator e = x.ref().begin();
          e != x.ref().end(); ++e) {
-
-        if(isEmpty(new_list)) {
+        if (isEmpty(new_list)) {
             new_list.ref().push_back(_MOVE(*e));
             continue;
         }
@@ -406,7 +413,7 @@ inline void join_sorted_2d(
                     break;
             }
         } else {
-            if(c(*e, new_list.ref().back(), 2) > 0) {
+            if (c(*e, new_list.ref().back(), 2) > 0) {
                 new_list.ref().push_back(_MOVE(*e));
             }
         }
@@ -420,7 +427,7 @@ inline void join_sorted_2d(
 
 template<class T, typename Compare, typename Sorter>
 inline void join_sorted_all(
-  List_Ref<T> &x,Compare &c, Sorter &s, const bool keep_equal) {
+  List_Ref<T> &x, Compare &c, Sorter &s, const bool keep_equal) {
     // full sorting
     std::sort(x.ref().begin(), x.ref().end(), s);
 
@@ -429,8 +436,7 @@ inline void join_sorted_all(
     // lex n²
     for (typename List_Ref<T>::iterator e = x.ref().begin();
          e != x.ref().end(); ++e) {
-
-        if(isEmpty(new_list)) {
+        if (isEmpty(new_list)) {
             new_list.ref().push_back(_MOVE(*e));
             continue;
         }
@@ -438,8 +444,8 @@ inline void join_sorted_all(
         if (keep_equal) {
              // test if element is the same as last inserted
              bool equal = true;
-             for(int i=1; i <= c.dim; ++i ) {
-                 if( c( *e, new_list.ref().back(), i) != 0) {
+             for (int i=1; i <= c.dim; ++i) {
+                 if (c(*e, new_list.ref().back(), i) != 0) {
                      equal = false;
                      break;
                  }
@@ -454,8 +460,8 @@ inline void join_sorted_all(
         for (typename List_Ref<T>::iterator n = new_list.ref().begin();
              n != new_list.ref().end(); ++n) {
             bool dominates = true;
-             for(int i=2; i <= c.dim; ++i ) {
-                 if( c( *e, *n, i) > 0) {
+             for (int i=2; i <= c.dim; ++i) {
+                 if (c(*e, *n, i) > 0) {
                      dominates = false;
                      break;
                  }
@@ -466,7 +472,7 @@ inline void join_sorted_all(
              }
         }
 
-        if(add) {
+        if (add) {
             new_list.ref().push_back(_MOVE(*e));
         }
     }
@@ -479,7 +485,7 @@ inline void join_sorted_all(
 template<class T>
 inline void mark_position(List_Ref<T> &x, List_Ref<int> &markers) {
     int s = x.ref().size();
-    if (s!=0 && (markers.ref().empty() || s != markers.ref().back()) )
+    if (s != 0 && (markers.ref().empty() || s != markers.ref().back()) )
         markers.ref().push_back(s);
 }
 
@@ -495,7 +501,7 @@ inline void join_marked(
         return;
     }
 
-    if(c.dim == 2) {
+    if (c.dim == 2) {
           join_marked_multi_to_two_2D(x, markers, c, keep_equal);
 //        join_sorted_2d(x,c,s, keep_equal);
 
@@ -573,7 +579,6 @@ inline void join_marked(
 //        }
 //
 //        join_sorted_all(x,c,s, keep_equal);
-
     }
 }
 

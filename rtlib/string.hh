@@ -25,6 +25,16 @@
 #ifndef RTLIB_STRING_HH_
 #define RTLIB_STRING_HH_
 
+#include <new>
+#include <cassert>
+#include <cstring>
+#include <utility>
+#include <ostream>
+#include <stack>
+
+// tr1 has it
+#include <boost/cstdint.hpp>
+
 // FIXME profile this
 #include "pool.hh"
 
@@ -32,23 +42,14 @@
 
 #include "cstr.h"
 
-// tr1 has it
-#include <boost/cstdint.hpp>
 
 
-#include <new>
-#include <cassert>
-#include <cstring>
-
-#include <ostream>
-#include <stack>
 
 
 class String {
-  private:
-
+ private:
     class Block {
-      private:
+     private:
         void del(Block *b) {
           assert(b->ref_count);
           b->dec_ref();
@@ -57,17 +58,18 @@ class String {
         }
 
         Block &operator=(const Block &b);
-      public:
+
+     public:
         uint32_t ref_count;
       // enum { size = 27 };
       enum { size = 59 };
       enum { SEQ_END, SEQ, LINK, REP };
 
       unsigned char pos;
-      unsigned char array[size]; // FIXME size template param?
+      unsigned char array[size];  // FIXME size template param?
 
       Block *get_link(unsigned char k) {
-        assert(k>0);
+        assert(k > 0);
         assert(array[k-1] == LINK);
         Block *b = NULL;
         for (unsigned char j = 0; j < sizeof(Block*); ++j)
@@ -76,10 +78,11 @@ class String {
       }
 
       class Iterator {
-        private:
+       private:
           Block *b;
           unsigned char i;
-        public:
+
+       public:
           Iterator(Block *block) : b(block), i(0) {
             this->operator++();
           }
@@ -92,13 +95,13 @@ class String {
                 case LINK :
                   i++;
                   i += sizeof(Block*);
-                  assert(i<=b->pos);
+                  assert(i <= b->pos);
                   return *this;
                   break;
                 case SEQ :
                   for (; b->array[i] != SEQ_END; i++) {
-                    ;
-                    assert(i<b->pos);
+                    {}
+                    assert(i < b->pos);
                   }
                   break;
                 case REP :
@@ -206,7 +209,7 @@ class String {
       void put(std::ostream &s) const;
     };
 
-   static Pool<Block> pool;
+    static Pool<Block> pool;
 
     Block *block;
     bool readonly;
@@ -230,7 +233,8 @@ class String {
         block = t;
       }
     }
-  public:
+
+ public:
     String() : block(NULL), readonly(false), empty_(false) {
     }
 
@@ -244,8 +248,9 @@ class String {
       if (block) {
         block->inc_ref();
         readonly = true;
-      } else
+      } else {
         readonly = false;
+      }
       empty_ = s.empty_;
     }
 
@@ -304,7 +309,7 @@ class String {
     }
 
     class Iterator {
-      private:
+     private:
         std::stack<std::pair<Block*, unsigned char> > stack;
         unsigned char i;
         Block *block;
@@ -316,18 +321,18 @@ class String {
 
         void fwd() {
           while (true) {
-            assert (i<=block->pos);
-            if (i == block->pos)
+            assert(i <= block->pos);
+            if (i == block->pos) {
               if (stack.empty()) {
                 end = true;
                 return;
-              }
-              else {
+              } else {
                 block = stack.top().first;
                 i = stack.top().second;
                 stack.pop();
                 continue;
               }
+            }
             if (in_seq) {
               if (block->array[i] == Block::SEQ_END) {
                 ++i;
@@ -335,7 +340,7 @@ class String {
               } else {
                 return;
               }
-            } else
+            } else {
               if (in_rep) {
                 if (!rep) {
                   i++;
@@ -346,7 +351,7 @@ class String {
                   return;
                 }
               }
-            else {
+            } else {
               switch (block->array[i]) {
                 case Block::SEQ:
                   ++i;
@@ -376,7 +381,7 @@ class String {
           }
         }
 
-      public:
+     public:
         Iterator(Block *b)
           : i(0), block(b), end(false), in_seq(false), in_rep(false), rep(0) {
           if (!b)
@@ -473,7 +478,6 @@ class String {
         return false;
       return false;
     }
-
 };
 
 std::ostream &operator<<(std::ostream &s, const String &str);

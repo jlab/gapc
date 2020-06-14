@@ -24,11 +24,13 @@
 #ifndef RTLIB_SUBSEQUENCE_HH_
 #define RTLIB_SUBSEQUENCE_HH_
 
+#include <ostream>
+
 #include "sequence.hh"
 
 template<typename alphabet = char, typename pos_type = unsigned int>
 class Basic_Subsequence {
-  public:
+ public:
     const Basic_Sequence<alphabet, pos_type> *seq;
     pos_type i;
     pos_type j;
@@ -79,7 +81,6 @@ class Basic_Subsequence {
     iterator end() { assert(seq); return seq->seq+j; }
     const_iterator begin() const { assert(seq); return seq->seq+i; }
     const_iterator end() const { assert(seq); return seq->seq+j; }
-
 };
 
 typedef Basic_Subsequence<> Subsequence;
@@ -117,7 +118,6 @@ inline pos_type rows(const Basic_Subsequence<alphabet, pos_type> &sub) {
   return sub.seq->rows();
 }
 
-#include <ostream>
 
 template<typename alphabet, typename pos_type>
 inline

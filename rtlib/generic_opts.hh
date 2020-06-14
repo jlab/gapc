@@ -25,6 +25,7 @@
 #define RTLIB_GENERIC_OPTS_HH_
 
 
+#include <unistd.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -37,15 +38,17 @@
 
 // define _XOPEN_SOURCE=500
 
-#include <unistd.h>
 #include <cstdlib>
+#include <string>
+#include <utility>
 
 namespace gapc {
 
 class OptException : public std::exception {
-  private:
+ private:
     std::string msg;
-  public:
+
+ public:
     OptException(const std::string &s) : std::exception(), msg(s) {
     }
     ~OptException() throw() { }
@@ -55,10 +58,11 @@ class OptException : public std::exception {
 };
 
 class Opts {
-  private:
+ private:
     Opts(const Opts&);
     Opts &operator=(const Opts&);
-  public:
+
+ public:
     typedef std::vector<std::pair<const char*, unsigned> > inputs_t;
     inputs_t inputs;
     bool window_mode;
@@ -207,9 +211,8 @@ class Opts {
       librna_read_param_file(par_filename);
 #endif
     }
-
 };
 
-}
+}  // namespace gapc
 
 #endif  // RTLIB_GENERIC_OPTS_HH_

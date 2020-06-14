@@ -73,7 +73,7 @@ template <typename T>
 int
 inline
 slow_clz(T t) {
-  for (unsigned int i = sizeof(T) * 8; i>0; --i)
+  for (unsigned int i = sizeof(T) * 8; i > 0; --i)
     if (t & T(1) << i-1)
       return sizeof(T)*8 - i;
   assert(false);
@@ -131,71 +131,69 @@ size_to_next_power(T t) {
 #include "shape_alph.hh"
 
 namespace hash_to_uint32 {
+struct djb_slow {
+  uint32_t initial() const { return 5381; }
 
-  struct djb_slow {
-    uint32_t initial() const { return 5381; }
+  void next(uint32_t &hash, uint64_t t) const {
+    hash = hash * 33 + uint32_t(t);
+    hash = hash * 33 + uint32_t(t>>32);
+  }
+};
 
-    void next(uint32_t &hash, uint64_t t) const {
-      hash = hash * 33 + uint32_t(t);
-      hash = hash * 33 + uint32_t(t>>32);
-    }
+struct djb {
+  uint32_t initial() const { return 5381; }
 
-  };
+  void next(uint32_t &hash, uint64_t t) const {
+    hash = ((hash << 5) + hash) + uint32_t(t);
+    hash = ((hash << 5) + hash) + uint32_t(t>>32);
+  }
 
-  struct djb {
-    uint32_t initial() const { return 5381; }
+  void next(uint32_t &hash, uint32_t t) const {
+    hash = ((hash << 5) + hash) + t;
+  }
 
-    void next(uint32_t &hash, uint64_t t) const {
-      hash = ((hash << 5) + hash) + uint32_t(t);
-      hash = ((hash << 5) + hash) + uint32_t(t>>32);
-    }
+  void next(uint32_t &hash, char t) const {
+    hash = ((hash << 5) + hash) + uint32_t(t);
+  }
+};
 
-    void next(uint32_t &hash, uint32_t t) const {
-      hash = ((hash << 5) + hash) + t;
-    }
+struct djb_chars {
+  uint32_t initial() const { return 5381; }
 
-    void next(uint32_t &hash, char t) const {
-      hash = ((hash << 5) + hash) + uint32_t(t);
-    }
-  };
-
-  struct djb_chars {
-    uint32_t initial() const { return 5381; }
-
-    void next(uint32_t &hash, uint64_t t) const {
-      ShapeAlph<uint64_t, unsigned char> alph;
-      uint64_t *x = &t;
-      for (;;) {
-        for (unsigned char i = 64; i>0; i-=2) {
-          char c = alph.to_char(*x, i-2);
-          if (c)
-            hash = hash * 33 + c;
-          else
-            break;
-        }
-        break;
-        //
-        if (*x & uint64_t(-1)  >> 64-2)
-          ++x;
+  void next(uint32_t &hash, uint64_t t) const {
+    ShapeAlph<uint64_t, unsigned char> alph;
+    uint64_t *x = &t;
+    for (;;) {
+      for (unsigned char i = 64; i > 40; i -= 2) {
+        char c = alph.to_char(*x, i-2);
+        if (c)
+          hash = hash * 33 + c;
         else
           break;
       }
+      break;
+      //
+      if (*x & uint64_t(-1)  >> 64-2)
+        ++x;
+      else
+        break;
     }
-  };
+  }
+};
 
-  struct sdbm {
-    uint32_t initial() const { return 0; }
+struct sdbm {
+  uint32_t initial() const { return 0; }
 
-    void next(uint32_t &hash, uint64_t t) const {
-      hash = uint32_t(t) + (hash << 6) + (hash << 16) - hash;
-      hash = uint32_t(t >> 32) + (hash << 6) + (hash << 16) - hash;
-    }
-    template<typename T>
-    void next(uint32_t &hash, T t) const {
-      hash = t + (hash << 6) + (hash << 16) - hash;
-    }
-  };
-}
+  void next(uint32_t &hash, uint64_t t) const {
+    hash = uint32_t(t) + (hash << 6) + (hash << 16) - hash;
+    hash = uint32_t(t >> 32) + (hash << 6) + (hash << 16) - hash;
+  }
+  template<typename T>
+  void next(uint32_t &hash, T t) const {
+    hash = t + (hash << 6) + (hash << 16) - hash;
+  }
+};
+}  // namespace hash_to_uint32
 
 
 #endif  // RTLIB_BITOPS_HH_

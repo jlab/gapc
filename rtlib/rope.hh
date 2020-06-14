@@ -24,609 +24,610 @@
 #ifndef RTLIB_ROPE_HH_
 #define RTLIB_ROPE_HH_
 
+#include <cassert>
+#include <iostream>
+#include <algorithm>
+#include <cstring>
+#include <utility>
+
+#include <boost/cstdint.hpp>
+
 #include "cstr.h"
 #include "bitops.hh"
 
 #include "pool.hh"
 
-#include <cassert>
-
-#include <cstring>
-
-#include <boost/cstdint.hpp>
-
-#include <iostream>
-
-#include <algorithm>
-
 namespace rope {
+class Ref_Count {
+ private:
+  uint32_t i;
 
-  class Ref_Count {
-    private:
-      uint32_t i;
-    public:
-      enum { ENABLED = 1, block_size = 60 };
+ public:
+  enum { ENABLED = 1, block_size = 60 };
 
-      Ref_Count()
-        : i(1) {
-      }
-      void operator++() {
-        ++i;
-      }
-      void operator--() {
-        assert(i>0);
-        --i;
-      }
-      bool operator==(uint32_t x) const { return i == x; }
-  };
+  Ref_Count()
+    : i(1) {
+  }
+  void operator++() {
+    ++i;
+  }
+  void operator--() {
+    assert(i > 0);
+    --i;
+  }
+  bool operator==(uint32_t x) const { return i == x; }
+};
 
-  class No_Ref_Count {
-    private:
-    public:
-      enum { ENABLED = 0, block_size = 64 };
-      void operator++() {
-      }
-      void operator--() {
-      }
-      bool operator==(uint32_t x) const { assert(!x); return true; }
-  };
+class No_Ref_Count {
+ private:
+ public:
+  enum { ENABLED = 0, block_size = 64 };
+  void operator++() {
+  }
+  void operator--() {
+  }
+  bool operator==(uint32_t x) const { assert(!x); return true; }
+};
 
-  template<typename Refcount = Ref_Count>
-  class Block {
-    public:
-      enum { block_size = Refcount::block_size };
-    private:
+template<typename Refcount = Ref_Count>
+class Block {
+ public:
+    enum { block_size = Refcount::block_size };
 
-      // enum { RL , LR } Dir;
-      // Dir dir;
+ private:
+    // enum { RL , LR } Dir;
+    // Dir dir;
 
-      Block<Refcount> &operator=(const Block<Refcount> &r);
-      Block(const Block<Refcount> &r);
-    public:
-      unsigned char pos;
-      Block<Refcount> *next;
-      unsigned char array[block_size];
+    Block<Refcount> &operator=(const Block<Refcount> &r);
+    Block(const Block<Refcount> &r);
 
-    public:
-      Refcount refcount;
-      Block()
-        : // dir(LR),
-        pos(0), next(0) {
-      }
-      ~Block() {
-        assert(refcount == 0);
-      }
+ public:
+    unsigned char pos;
+    Block<Refcount> *next;
+    unsigned char array[block_size];
 
-      unsigned char free_space() const { return block_size-pos; }
-      unsigned char size() const { return pos; }
+ public:
+    Refcount refcount;
+    Block()
+      :  // dir(LR),
+      pos(0), next(0) {
+    }
+    ~Block() {
+      assert(refcount == 0);
+    }
 
-      bool right_available(unsigned char x) const {
-        return x <= free_space();
-      }
+    unsigned char free_space() const { return block_size-pos; }
+    unsigned char size() const { return pos; }
 
-      Block<Refcount> *extend_right() {
-        assert(!next);
+    bool right_available(unsigned char x) const {
+      return x <= free_space();
+    }
+
+    Block<Refcount> *extend_right() {
+      assert(!next);
+      next = new Block<Refcount>();
+      return next;
+    }
+
+    void append(char c) {
+      assert(right_available(1));
+      array[pos++] = c;
+    }
+
+    Block<Refcount> *append(Block<Refcount> *o) {
+      assert(!next);
+      if (free_space() < o->size()) {
+        std::memcpy(array+pos, o->array, free_space());
         next = new Block<Refcount>();
+        std::memcpy(next->array, o->array+free_space(),
+            o->pos - free_space());
+        next->pos = o->pos - free_space();
+        pos = block_size;
         return next;
+      } else {
+        std::memcpy(array+pos, o->array, o->pos);
+        pos += o->pos;
+        return this;
       }
+    }
 
-      void append(char c) {
-        assert(right_available(1));
-        array[pos++] = c;
-      }
-
-      Block<Refcount> *append(Block<Refcount> *o) {
-        assert(!next);
-        if (free_space() < o->size()) {
-          std::memcpy(array+pos, o->array, free_space());
-          next = new Block<Refcount>();
-          std::memcpy(next->array, o->array+free_space(),
-              o->pos - free_space());
-          next->pos = o->pos - free_space();
-          pos = block_size;
-          return next;
-        } else {
-          std::memcpy(array+pos, o->array, o->pos);
-          pos += o->pos;
-          return this;
-        }
-      }
-
-      const char *append(const char *x, uint32_t &len) {
+    const char *append(const char *x, uint32_t &len) {
 #ifndef NDEBUG
-        assert(len <= std::strlen(x));
+      assert(len <= std::strlen(x));
 #endif
-        if (free_space() < len) {
-          std::memcpy(array+pos, x, free_space());
-          len -= free_space();
-          x += free_space();
-          pos = block_size;
-          return x;
-        } else {
-          std::memcpy(array+pos, x, len);
-          pos += len;
-          len = 0;
-          return 0;
-        }
-      }
-
-      void append(char x, uint32_t &len) {
-        if (free_space() < len) {
-          std::memset(array+pos, x, free_space());
-          len -= free_space();
-          pos = block_size;
-        } else {
-          std::memset(array+pos, x, len);
-          pos += len;
-          len = 0;
-        }
-      }
-
-      void *operator new(size_t t) noexcept(false);
-      void operator delete(void *b)noexcept(false);
-
-  };
-
-  template<typename T>
-    class Readonly {
-    };
-
-  template<>
-  class Readonly<Ref_Count> {
-    private:
-      unsigned char pos;
-    public:
-      Readonly()
-        : pos(0) {
-      }
-      Readonly(bool b)
-        : pos(0) {
-        assert(!b);
-      }
-      Readonly<Ref_Count> &operator=(bool b) {
-        assert(!b);
-        pos = 0;
-        return *this;
-      }
-      Readonly<Ref_Count> &operator=(unsigned char p) {
-        pos = p;
-        return *this;
-      }
-      bool operator==(bool b) const { return b == bool(pos); }
-      unsigned char operator()() const { return pos; }
-  };
-
-  template<>
-  class Readonly<No_Ref_Count> {
-    private:
-    public:
-      Readonly() {
-      }
-      Readonly(bool b) {
-        assert(!b);
-      }
-      Readonly<No_Ref_Count> &operator=(bool b) {
-        return *this;
-      }
-      Readonly<No_Ref_Count> &operator=(unsigned char p) {
-        return *this;
-      }
-      bool operator==(bool b) const { return false; }
-      unsigned char operator()() const { assert(false); return 0; }
-  };
-
-  template<typename Refcount = Ref_Count>
-  class Ref {
-    public:
-      static Pool<Block<Refcount> > pool;
-    private:
-
-      Block<Refcount> *first;
-      Block<Refcount> *last;
-      bool empty_;
-      Readonly<Refcount> readonly;
-
-      void del() {
-        if (first) {
-          --first->refcount;
-          if (first->refcount == 0) {
-            Block<Refcount>* x = first->next;
-            delete first;
-            while (x) {
-              assert(x->refcount == 1);
-              --x->refcount;
-              Block<Refcount>* t = x;
-              x = x->next;
-              delete t;
-            }
-          }
-        }
-        readonly = false;
-        first = last = 0;
-        empty_ = false;
-      }
-
-      Block<Refcount> *copy_blocks(Block<Refcount>* dest, Block<Refcount>* src) {
-        Block<Refcount>* x = dest;
-        Block<Refcount>* y = src;
-        while (y) {
-          assert(x->refcount == 1);
-          x->pos = y->pos;
-          std::memcpy(x->array, y->array, y->pos);
-          y = y->next;
-          if (y && !x->next)
-            x->next = new Block<Refcount>();
-          x = x->next;
-        }
-        if (!x) {
-          assert(dest);
-          x = dest;
-        }
+      if (free_space() < len) {
+        std::memcpy(array+pos, x, free_space());
+        len -= free_space();
+        x += free_space();
+        pos = block_size;
         return x;
+      } else {
+        std::memcpy(array+pos, x, len);
+        pos += len;
+        len = 0;
+        return 0;
       }
+    }
 
-      Ref &copy(const Ref<Refcount> &r) {
-        if (r.empty_) {
-          del();
-          empty_ = true;
-          return *this;
+    void append(char x, uint32_t &len) {
+      if (free_space() < len) {
+        std::memset(array+pos, x, free_space());
+        len -= free_space();
+        pos = block_size;
+      } else {
+        std::memset(array+pos, x, len);
+        pos += len;
+        len = 0;
+      }
+    }
+
+    void *operator new(size_t t) noexcept(false);
+    void operator delete(void *b)noexcept(false);
+};
+
+template<typename T> class Readonly {
+};
+
+template<>
+class Readonly<Ref_Count> {
+ private:
+    unsigned char pos;
+
+ public:
+    Readonly()
+      : pos(0) {
+    }
+    Readonly(bool b)
+      : pos(0) {
+      assert(!b);
+    }
+    Readonly<Ref_Count> &operator=(bool b) {
+      assert(!b);
+      pos = 0;
+      return *this;
+    }
+    Readonly<Ref_Count> &operator=(unsigned char p) {
+      pos = p;
+      return *this;
+    }
+    bool operator==(bool b) const { return b == bool(pos); }
+    unsigned char operator()() const { return pos; }
+};
+
+template<>
+class Readonly<No_Ref_Count> {
+ private:
+ public:
+    Readonly() {
+    }
+    Readonly(bool b) {
+      assert(!b);
+    }
+    Readonly<No_Ref_Count> &operator=(bool b) {
+      return *this;
+    }
+    Readonly<No_Ref_Count> &operator=(unsigned char p) {
+      return *this;
+    }
+    bool operator==(bool b) const { return false; }
+    unsigned char operator()() const { assert(false); return 0; }
+};
+
+template<typename Refcount = Ref_Count>
+class Ref {
+ public:
+    static Pool<Block<Refcount> > pool;
+
+ private:
+    Block<Refcount> *first;
+    Block<Refcount> *last;
+    bool empty_;
+    Readonly<Refcount> readonly;
+
+    void del() {
+      if (first) {
+        --first->refcount;
+        if (first->refcount == 0) {
+          Block<Refcount>* x = first->next;
+          delete first;
+          while (x) {
+            assert(x->refcount == 1);
+            --x->refcount;
+            Block<Refcount>* t = x;
+            x = x->next;
+            delete t;
+          }
         }
-        if (!first && !r.first)
-          return *this;
-        if (first && !r.first) {
-          del();
-          return *this;
-        }
+      }
+      readonly = false;
+      first = last = 0;
+      empty_ = false;
+    }
+
+    Block<Refcount> *copy_blocks(Block<Refcount>* dest, Block<Refcount>* src) {
+      Block<Refcount>* x = dest;
+      Block<Refcount>* y = src;
+      while (y) {
+        assert(x->refcount == 1);
+        x->pos = y->pos;
+        std::memcpy(x->array, y->array, y->pos);
+        y = y->next;
+        if (y && !x->next)
+          x->next = new Block<Refcount>();
+        x = x->next;
+      }
+      if (!x) {
+        assert(dest);
+        x = dest;
+      }
+      return x;
+    }
+
+    Ref &copy(const Ref<Refcount> &r) {
+      if (r.empty_) {
         del();
-        if (Refcount::ENABLED) {
-          assert(r.last->pos);
-          readonly = r.last->pos;
-          first = r.first;
-          last = r.last;
-          ++first->refcount;
-        } else {
-          last = copy_blocks(first, r.first);
-        }
+        empty_ = true;
         return *this;
       }
+      if (!first && !r.first)
+        return *this;
+      if (first && !r.first) {
+        del();
+        return *this;
+      }
+      del();
+      if (Refcount::ENABLED) {
+        assert(r.last->pos);
+        readonly = r.last->pos;
+        first = r.first;
+        last = r.last;
+        ++first->refcount;
+      } else {
+        last = copy_blocks(first, r.first);
+      }
+      return *this;
+    }
 
-      void right_alloc(unsigned char l) {
-        assert(l == 1);
-        empty_ = false;
-        if (readonly == true) {
-          Block<Refcount> *tfirst = new Block<Refcount>();
-          Block<Refcount> *tlast = copy_blocks(tfirst, first);
-          del();
-          first = tfirst;
-          last = tlast;
-          return;
-        }
-        if (!first) {
-          first = last = new Block<Refcount>();
-          return;
-        }
+    void right_alloc(unsigned char l) {
+      assert(l == 1);
+      empty_ = false;
+      if (readonly == true) {
+        Block<Refcount> *tfirst = new Block<Refcount>();
+        Block<Refcount> *tlast = copy_blocks(tfirst, first);
+        del();
+        first = tfirst;
+        last = tlast;
+        return;
+      }
+      if (!first) {
+        first = last = new Block<Refcount>();
+        return;
+      }
 
-        if (!last->right_available(l))
+      if (!last->right_available(l))
+        last = last->extend_right();
+    }
+
+ public:
+    Ref()
+      : first(0), last(0), empty_(false), readonly(false) {
+    }
+
+    Ref(const Ref<Refcount> &r)
+      : first(0), last(0), empty_(false), readonly(false) {
+      copy(r);
+    }
+    ~Ref() {
+      del();
+    }
+
+    Ref &operator=(const Ref<Refcount> &r) {
+      del();
+      return copy(r);
+    }
+
+    void move(Ref<Refcount> &o) {
+      del();
+      first = o.first;
+      last = o.last;
+      empty_ = o.empty_;
+      readonly = o.readonly;
+      o.first = o.last = 0;
+      o.empty_ = false;
+      o.readonly = false;
+    }
+
+    void swap(Ref<Refcount> &o) {
+      using std::swap;
+      swap(first, o.first);
+      swap(last, o.last);
+      swap(readonly, o.readonly);
+      swap(empty_, o.empty_);
+    }
+
+    void append(char c) {
+      right_alloc(1);
+      assert(last);
+      last->append(c);
+    }
+
+    void append(const Ref<Refcount> &o) {
+      if (!o.first)
+        return;
+      right_alloc(1);
+      Block<Refcount>* x = last;
+      Block<Refcount>* y = o.first;
+      while (y) {
+        x = x->append(y);
+        y = y->next;
+      }
+      last = x;
+    }
+
+    void append(const char *s, uint32_t len) {
+      if (!len)
+        return;
+      right_alloc(1);
+      while (s) {
+        if (!last->right_available(1))
           last = last->extend_right();
+        s = last->append(s, len);
       }
+    }
 
-    public:
-      Ref()
-        : first(0), last(0), empty_(false), readonly(false) {
-      }
+    void append(int j) {
+      char s[12];
+      unsigned char len;
+      char *x = int_to_str(s, &len, j);
+      assert(len);
+      append(x, len);
+    }
 
-      Ref(const Ref<Refcount> &r)
-        : first(0), last(0), empty_(false), readonly(false) {
-        copy(r);
+    void append(char c, uint32_t len) {
+      if (!len)
+        return;
+      right_alloc(1);
+      while (len) {
+        if (!last->right_available(1))
+          last = last->extend_right();
+        last->append(c, len);
       }
-      ~Ref() {
-        del();
-      }
+    }
 
-      Ref &operator=(const Ref<Refcount> &r) {
-        del();
-        return copy(r);
-      }
+    void append(const char *s) {
+      append(s, std::strlen(s));
+    }
 
-      void move(Ref<Refcount> &o) {
-        del();
-        first = o.first;
-        last = o.last;
-        empty_ = o.empty_;
-        readonly = o.readonly;
-        o.first = o.last = 0;
-        o.empty_ = false;
-        o.readonly = false;
-      }
+    Ref(const char *s)
+      : first(0), last(0), empty_(false), readonly(false) {
+      assert(s);
+      if (s && *s)
+        append(s);
+    }
 
-      void swap(Ref<Refcount> &o) {
-        using std::swap;
-        swap(first, o.first);
-        swap(last, o.last);
-        swap(readonly, o.readonly);
-        swap(empty_, o.empty_);
-      }
-
-      void append(char c) {
-        right_alloc(1);
-        assert(last);
-        last->append(c);
-      }
-
-      void append(const Ref<Refcount> &o) {
-        if (!o.first)
-          return;
-        right_alloc(1);
-        Block<Refcount>* x = last;
-        Block<Refcount>* y = o.first;
-        while (y) {
-          x = x->append(y);
-          y = y->next;
-        }
-        last = x;
-      }
-
-      void append(const char *s, uint32_t len) {
-        if (!len)
-          return;
-        right_alloc(1);
-        while (s) {
-          if (!last->right_available(1))
-            last = last->extend_right();
-          s = last->append(s, len);
-        }
-      }
-
-      void append(int j) {
-        char s[12];
-        unsigned char len;
-        char *x = int_to_str(s, &len, j);
-        assert(len);
-        append(x, len);
-      }
-
-      void append(char c, uint32_t len) {
-        if (!len)
-          return;
-        right_alloc(1);
-        while (len) {
-          if (!last->right_available(1))
-            last = last->extend_right();
-          last->append(c, len);
-        }
-      }
-
-      void append(const char *s) {
-        append(s, std::strlen(s));
-      }
-
-      Ref(const char *s)
-        : first(0), last(0), empty_(false), readonly(false) {
-        assert(s);
-        if (s && *s)
-          append(s);
-      }
-
-      template <typename O>
-      void put(O &o) const {
-        if (readonly == true) {
-          Block<Refcount>* i = first;
-          while (i) {
-            unsigned char z = 0;
-            if (i == last)
-              z = readonly();
-            else {
-              z = i->size();
-              assert(z == Block<Refcount>::block_size);
-            }
-            for (unsigned char j = 0; j<z; ++j)
-              o << i->array[j];
-            i = i->next;
+    template <typename O>
+    void put(O &o) const {
+      if (readonly == true) {
+        Block<Refcount>* i = first;
+        while (i) {
+          unsigned char z = 0;
+          if (i == last) {
+            z = readonly();
+          } else {
+            z = i->size();
+            assert(z == Block<Refcount>::block_size);
           }
-        } else {
-          Block<Refcount>* i = first;
-          while (i) {
-            for (unsigned char j = 0; j<i->size(); ++j)
-              o << i->array[j];
-            i = i->next;
-          }
+          for (unsigned char j = 0; j < z; ++j)
+            o << i->array[j];
+          i = i->next;
+        }
+      } else {
+        Block<Refcount>* i = first;
+        while (i) {
+          for (unsigned char j = 0; j < i->size(); ++j)
+            o << i->array[j];
+          i = i->next;
         }
       }
+    }
 
-      class Const_Iterator {
-        protected:
-          friend class Ref<Refcount>;
-          Ref<Refcount> &ref;
-          Block<Refcount> *i;
-          unsigned char j, z;
+    class Const_Iterator {
+     protected:
+        friend class Ref<Refcount>;
+        Ref<Refcount> &ref;
+        Block<Refcount> *i;
+        unsigned char j, z;
 
-        private:
-          void init() {
-            if (ref.readonly == true) {
-              i = ref.first;
-              if (i) {
-                z = 0;
-                if (i == ref.last)
-                  z = ref.readonly();
-                else {
-                  z = i->size();
-                  assert(z == Block<Refcount>::block_size);
-                }
-              }
-            } else {
-              i = ref.first;
-            }
-          }
-        protected:
-          Const_Iterator(
-            Ref<Refcount> &r) : ref(r), i(0), j(0), z(0) { init(); }
-          Const_Iterator(
-            Ref<Refcount> &r, Ref<Refcount> &rr) : ref(r), i(0), j(0), z(0) { }
-        public:
-          unsigned char &operator*() { assert(i); return i->array[j]; }
-          Const_Iterator &operator++() {
-            if (ref.readonly == true) {
-              if (i == ref.last)
+     private:
+        void init() {
+          if (ref.readonly == true) {
+            i = ref.first;
+            if (i) {
+              z = 0;
+              if (i == ref.last) {
                 z = ref.readonly();
-              else {
+              } else {
                 z = i->size();
                 assert(z == Block<Refcount>::block_size);
               }
-              ++j;
-              if (j>=z) {
-                i = i->next;
-                j = 0;
-              }
+            }
+          } else {
+            i = ref.first;
+          }
+        }
+
+     protected:
+        Const_Iterator(
+          Ref<Refcount> &r) : ref(r), i(0), j(0), z(0) { init(); }
+        Const_Iterator(
+          Ref<Refcount> &r, Ref<Refcount> &rr) : ref(r), i(0), j(0), z(0) { }
+
+     public:
+        unsigned char &operator*() { assert(i); return i->array[j]; }
+        Const_Iterator &operator++() {
+          if (ref.readonly == true) {
+            if (i == ref.last) {
+              z = ref.readonly();
             } else {
-              ++j;
-              if (j>=i->size()) {
-                i = i->next;
-                j = 0;
-              }
-            }
-            return *this;
-          }
-          bool operator==(const Const_Iterator &other) const {
-            assert(ref == other.ref); return i == other.i && j == other.j;
-          }
-          bool operator!=(const Const_Iterator &other) const {
-            return !(*this == other);
-          }
-      };
-
-      class Iterator : public Const_Iterator {
-        private:
-          friend class Ref<Refcount>;
-        protected:
-          Iterator(Ref<Refcount> &r) : Const_Iterator(r) {}
-          Iterator(Ref<Refcount> &r, Ref<Refcount> &rr) : Const_Iterator(r, r) {
-          }
-        public:
-          unsigned char operator*() const {
-            assert(this->i); return this->i->array[this->j];
-          }
-      };
-
-      typedef Iterator iterator;
-      iterator begin() { return Iterator(*this); }
-      iterator end() { return Iterator(*this, *this); }
-      typedef Const_Iterator const_iterator;
-      const_iterator begin() const { return Const_Iterator(*this); }
-      const_iterator end() const { return Const_Iterator(*this, *this); }
-
-      size_t size() const {
-        size_t r = 0;
-        if (readonly == true) {
-          Block<Refcount>* i = first;
-          while (i) {
-            unsigned char z = 0;
-            if (i == last)
-              z = readonly();
-            else {
               z = i->size();
               assert(z == Block<Refcount>::block_size);
             }
-            r += z;
-            i = i->next;
+            ++j;
+            if (j >= z) {
+              i = i->next;
+              j = 0;
+            }
+          } else {
+            ++j;
+            if (j >= i->size()) {
+              i = i->next;
+              j = 0;
+            }
           }
-        } else {
-          Block<Refcount>* i = first;
-          while (i) {
-            r += i->size();
-            i = i->next;
+          return *this;
+        }
+        bool operator==(const Const_Iterator &other) const {
+          assert(ref == other.ref); return i == other.i && j == other.j;
+        }
+        bool operator!=(const Const_Iterator &other) const {
+          return !(*this == other);
+        }
+    };
+
+    class Iterator : public Const_Iterator {
+     private:
+        friend class Ref<Refcount>;
+
+     protected:
+        Iterator(Ref<Refcount> &r) : Const_Iterator(r) {}
+        Iterator(Ref<Refcount> &r, Ref<Refcount> &rr) : Const_Iterator(r, r) {
+        }
+
+     public:
+        unsigned char operator*() const {
+          assert(this->i); return this->i->array[this->j];
+        }
+    };
+
+    typedef Iterator iterator;
+    iterator begin() { return Iterator(*this); }
+    iterator end() { return Iterator(*this, *this); }
+    typedef Const_Iterator const_iterator;
+    const_iterator begin() const { return Const_Iterator(*this); }
+    const_iterator end() const { return Const_Iterator(*this, *this); }
+
+    size_t size() const {
+      size_t r = 0;
+      if (readonly == true) {
+        Block<Refcount>* i = first;
+        while (i) {
+          unsigned char z = 0;
+          if (i == last) {
+            z = readonly();
+          } else {
+            z = i->size();
+            assert(z == Block<Refcount>::block_size);
           }
+          r += z;
+          i = i->next;
         }
-        return r;
-      }
-
-      void empty() {
-        empty_ = true;
-      }
-
-      bool isEmpty() const { return empty_; }
-
-      bool operator==(const Ref<Refcount> &o) const {
-        Block<Refcount>* a = first;
-        Block<Refcount>* b = o.first;
-        while (a && b) {
-          if (a->pos != b->pos)
-            return false;
-          if (std::memcmp(a->array, b->array, a->pos))
-            return false;
-          a = a->next;
-          b = b->next;
+      } else {
+        Block<Refcount>* i = first;
+        while (i) {
+          r += i->size();
+          i = i->next;
         }
-        return a == b;
       }
+      return r;
+    }
 
-      bool operator!=(const Ref<Refcount> &o) const {
-        return !(*this == o);
-      }
+    void empty() {
+      empty_ = true;
+    }
 
-      bool operator<(const Ref<Refcount> &o) const {
-        Block<Refcount>* a = first;
-        Block<Refcount>* b = o.first;
-        while (a && b) {
-          if (a->pos != b->pos)
-            return a->pos < b->pos;
-          int t = std::memcmp(a->array, b->array, a->pos);
-          if (t<0)
-            return true;
-          if (t>0)
-            return false;
-          a = a->next;
-          b = b->next;
-        }
-        if (a)
+    bool isEmpty() const { return empty_; }
+
+    bool operator==(const Ref<Refcount> &o) const {
+      Block<Refcount>* a = first;
+      Block<Refcount>* b = o.first;
+      while (a && b) {
+        if (a->pos != b->pos)
           return false;
-        if (b)
+        if (std::memcmp(a->array, b->array, a->pos))
+          return false;
+        a = a->next;
+        b = b->next;
+      }
+      return a == b;
+    }
+
+    bool operator!=(const Ref<Refcount> &o) const {
+      return !(*this == o);
+    }
+
+    bool operator<(const Ref<Refcount> &o) const {
+      Block<Refcount>* a = first;
+      Block<Refcount>* b = o.first;
+      while (a && b) {
+        if (a->pos != b->pos)
+          return a->pos < b->pos;
+        int t = std::memcmp(a->array, b->array, a->pos);
+        if (t < 0)
           return true;
+        if (t > 0)
+          return false;
+        a = a->next;
+        b = b->next;
+      }
+      if (a)
         return false;
-      }
+      if (b)
+        return true;
+      return false;
+    }
 
-      uint32_t hashable_value() const {
-        hash_to_uint32::djb hash_fn;
-        uint32_t hash = hash_fn.initial();
+    uint32_t hashable_value() const {
+      hash_to_uint32::djb hash_fn;
+      uint32_t hash = hash_fn.initial();
 
-        if (readonly == true) {
-          Block<Refcount>* i = first;
-          while (i) {
-            unsigned char z = 0;
-            if (i == last)
-              z = readonly();
-            else {
-              z = i->size();
-              assert(z == Block<Refcount>::block_size);
-            }
-            for (unsigned char j = 0; j<z; ++j)
-              hash_fn.next(hash, char(i->array[j]));
-            i = i->next;
+      if (readonly == true) {
+        Block<Refcount>* i = first;
+        while (i) {
+          unsigned char z = 0;
+          if (i == last) {
+            z = readonly();
+          } else {
+            z = i->size();
+            assert(z == Block<Refcount>::block_size);
           }
-        } else {
-          Block<Refcount>* i = first;
-          while (i) {
-            for (unsigned char j = 0; j<i->size(); ++j)
-              hash_fn.next(hash, char(i->array[j]));
-            i = i->next;
-          }
+          for (unsigned char j = 0; j < z; ++j)
+            hash_fn.next(hash, char(i->array[j]));
+          i = i->next;
         }
-
-        return hash;
+      } else {
+        Block<Refcount>* i = first;
+        while (i) {
+          for (unsigned char j = 0; j < i->size(); ++j)
+            hash_fn.next(hash, char(i->array[j]));
+          i = i->next;
+        }
       }
 
-      char front() const {
-        assert(!isEmpty());
-        return *first->array;
-      }
-  };
+      return hash;
+    }
 
-  template <typename O, typename Refcount>
-    inline O &operator<<(O &o, const Ref<Refcount>& r) { r.put(o); return o; }
+    char front() const {
+      assert(!isEmpty());
+      return *first->array;
+    }
+};
 
-}
+template <typename O, typename Refcount>
+  inline O &operator<<(O &o, const Ref<Refcount>& r) { r.put(o); return o; }
+
+}  // namespace rope
 
 typedef rope::Ref<rope::Ref_Count> Rope;
-
 
 
 template<typename X>
@@ -655,7 +656,7 @@ inline void append(rope::Ref<X> &str, const T &x) {
 
 template<class T, typename X>
 inline void append(rope::Ref<X> &str, char c, T i) {
-  assert(i>=0);
+  assert(i >= 0);
   str.append(c, uint32_t(i));
 }
 
@@ -799,7 +800,7 @@ void swap<rope::Ref<rope::Ref_Count> >(
 }
 
 
-}
+}  // namespace std
 
 
 

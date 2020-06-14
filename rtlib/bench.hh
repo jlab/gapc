@@ -35,10 +35,10 @@
 typedef boost::posix_time::ptime datum_t;
 
 class Bench {
-  private:
+ private:
     std::list<std::pair<datum_t, std::string> > list;
-  public:
 
+ public:
     void add_event(const std::string &desc) {
       boost::posix_time::ptime a
         = boost::posix_time::microsec_clock::universal_time();
@@ -96,6 +96,6 @@ namespace gapc {
 #endif
     }
 
-}
+}  // namespace gapc
 
 #endif  // RTLIB_BENCH_HH_

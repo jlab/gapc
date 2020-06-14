@@ -42,7 +42,7 @@ void String::Block::operator delete(void *b) noexcept(false) {
 
 void String::Block::put(std::ostream &s) const {
   unsigned char i;
-  for (i = 0; i<pos; ) {
+  for (i = 0; i < pos; ) {
     switch (array[i]) {
       case LINK :
         ++i;

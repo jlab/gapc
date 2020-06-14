@@ -24,16 +24,17 @@
 #ifndef RTLIB_HASHLIST_HH_
 #define RTLIB_HASHLIST_HH_
 
+#include <cstdlib>
+#include <utility>
 #include "ref.hh"
 #include "list.hh"
 
-// TODO gapc should automatically select this, unless filtering is detected
-
-#include <cstdlib>
+// TODO(who?) gapc should automatically select this, unless filtering is
+// detected
 
 template<class T, class I>
 class Hash_List_Back {
-  private:
+ private:
     typedef Hash::Set<T, I, uint32_t,
             Hash::Multhash, Hash::Size2pow, Hash::RecordPositions> Hash_t;
 
@@ -44,7 +45,8 @@ class Hash_List_Back {
 
     Hash_List_Back(const Hash_List_Back&);
     Hash_List_Back &operator=(const Hash_List_Back &);
-  public:
+
+ public:
     uint32_t ref_count;
 
     Hash_List_Back()
@@ -62,7 +64,7 @@ class Hash_List_Back {
         List_Ref<T> l;
         size = 0;
         for (typename Hash_t::discard_iterator i = set.discard_begin();
-            i!=set.discard_end(); ++i) {
+            i != set.discard_end(); ++i) {
           move(l.ref().push_back_ref(), *i);
           ++size;
         }
@@ -86,8 +88,8 @@ class Hash_List_Back {
 
 template<class T, class I>
 class Hash_List : public ::Ref::Lazy<Hash_List_Back<T, I> > {
-  private:
-  public:
+ private:
+ public:
 };
 
 
@@ -144,4 +146,4 @@ std::ostream &operator<<(std::ostream &out, Hash_List<T, I> &x) {
   return out;
 }
 
-#endif  // HASHLIST_HH
+#endif  // RTLIB_HASHLIST_HH_

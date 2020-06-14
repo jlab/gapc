@@ -25,20 +25,19 @@
 #ifndef RTLIB_MULTIPOOL_HH_
 #define RTLIB_MULTIPOOL_HH_
 
-
-#include "map_pool.hh"
-
-// tr1 has it
-#include <boost/cstdint.hpp>
-
 #include <cassert>
 #include <cstring>
 
 #include <vector>
 
+// tr1 has it
+#include <boost/cstdint.hpp>
+
+#include "map_pool.hh"
+
 template <class K>
 class MultiPool {
-  private:
+ private:
     typedef Map::Pool<K> pool_t;
 
     std::vector<pool_t*> pools;
@@ -51,14 +50,14 @@ class MultiPool {
 
     void extend(size_t n) {
       size_t old = pools.size();
-      if (n<=old)
+      if (n <= old)
         return;
       pools.resize(n);
-      for (size_t i = old; i<n; ++i)
+      for (size_t i = old; i < n; ++i)
         pools[i] = new pool_t((i+1));
     }
 
-  public:
+ public:
     MultiPool()
 #ifndef NDEBUG
       : max_n(0)
@@ -69,7 +68,7 @@ class MultiPool {
 
     ~MultiPool() {
       for (typename std::vector<pool_t*>::iterator i = pools.begin();
-          i!=pools.end(); ++i)
+          i != pools.end(); ++i)
         delete *i;
     }
 
@@ -94,7 +93,7 @@ class MultiPool {
 
     void free(K *x, size_t n) {
       assert(x);
-      assert(n<=pools.size());
+      assert(n <= pools.size());
       pools[n-1]->free(x);
     }
 };

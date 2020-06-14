@@ -25,13 +25,15 @@
 #ifndef RTLIB_TERMINAL_HH_
 #define RTLIB_TERMINAL_HH_
 
+#include <cassert>
+#include <cstring>
+#include <limits>
+
 #include "empty.hh"
 #include "string.hh"
 #include "sequence.hh"
 #include "subsequence.hh"
 
-#include <cassert>
-#include <cstring>
 
 
 template<typename pos_type>
@@ -62,7 +64,7 @@ inline Rope CONST_ROPE(Sequence &seq, pos_type i, pos_type j, const char *d) {
 
 template<typename pos_type>
 inline int INT(Sequence &seq, pos_type i, pos_type j) {
-  assert(i<j);
+  assert(i < j);
   int result = 0;
   for (pos_type a = i; a < j; a++) {
     if (seq[a] < '0' || seq[a] > '9') {
@@ -89,9 +91,9 @@ inline alphabet NON(Basic_Sequence<alphabet, pos_type> &seq, T i, T j) {
 template<typename alphabet, typename pos_type, typename T, typename X>
 inline alphabet CHAR(Basic_Sequence<alphabet, pos_type> &seq, T i, T j, X c) {
   assert(i+1 == j);
-  if (seq[i] == c)
+  if (seq[i] == c) {
     return c;
-  else {
+  } else {
     alphabet r;
     empty(r);
     return r;
@@ -113,18 +115,17 @@ template<>
 struct Sep<char> {
   char sep() const { return '$'; }
 };
-#include <limits>
 template<>
 struct Sep<double> {
   double sep() const {
-    assert( std::numeric_limits<double>::has_quiet_NaN );
+    assert(std::numeric_limits<double>::has_quiet_NaN);
     return std::numeric_limits<double>::quiet_NaN();
   }
 };
 template<>
 struct Sep<float> {
   float sep() const {
-    assert( std::numeric_limits<float>::has_quiet_NaN );
+    assert(std::numeric_limits<float>::has_quiet_NaN);
     return std::numeric_limits<float>::quiet_NaN();
   }
 };
@@ -137,8 +138,9 @@ inline alphabet CHAR_SEP(Basic_Sequence<alphabet, pos_type> &seq, T i, T j) {
     alphabet r;
     empty(r);
     return r;
-  } else
+  } else {
     return seq[i];
+  }
 }
 
 

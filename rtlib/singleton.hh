@@ -26,9 +26,10 @@
 
 template <typename T>
 class Singleton {
-  private:
+ private:
     static T obj;
-  public:
+
+ public:
     Singleton()  {}
     static T & ref() {
       return obj;

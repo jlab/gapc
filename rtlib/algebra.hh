@@ -27,6 +27,7 @@
 
 #include <algorithm>
 #include <numeric>
+#include <utility>
 
 #include "empty.hh"
 
@@ -176,11 +177,11 @@ typename std::iterator_traits<Itr>::value_type bitsum(Itr begin, Itr end) {
     return n;
   }
   assert(!isEmpty(*begin));
-  n = pow(2,*begin);
+  n = pow(2, *begin);
   ++begin;
   for (; begin != end; ++begin) {
     assert(!isEmpty(*begin));
-    n += pow(2,*begin);
+    n += pow(2, *begin);
   }
   return log(n) / log(2.0);
 }

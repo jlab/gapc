@@ -30,11 +30,12 @@
 
 template <typename pos_type = unsigned int>
 class Marker {
-  private:
+ private:
     pos_type n;
     std::vector<bool> array;
     Table::DiagIndex<pos_type> index;
-  public:
+
+ public:
     Marker()
       : n(0) {
     }
@@ -88,9 +89,9 @@ void mark(Marker<pos_type> &marker, pos_type i, pos_type j) {
 
 template <typename Value, typename pos_int>
 class Backtrace_Dummy : public Backtrace<Value, pos_int> {
-  private:
-  public:
-    virtual intrusive_ptr<Eval_List<Value> > eval() { assert(0); return 0; };
+ private:
+ public:
+    virtual intrusive_ptr<Eval_List<Value> > eval() { assert(0); return 0; }
 };
 
 template <typename Value, typename pos_int>
@@ -158,7 +159,6 @@ inline void push_back_min_subopt(List_Ref<T, pos_int> &x, T &e,
     *itr = e;
     return;
   }
-
 }
 
 template<class T, typename pos_int, typename D, typename pos_type>

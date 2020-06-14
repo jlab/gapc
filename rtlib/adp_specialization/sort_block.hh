@@ -1,27 +1,45 @@
-/*
- * File:   sort_block.hh
- * Author: gatter
- *
- * Created on June 18, 2015, 4:13 PM
- */
+/* {{{
+
+    This file is part of gapc (GAPC - Grammars, Algebras, Products - Compiler;
+      a system to compile algebraic dynamic programming programs)
+
+    Copyright (C) 2008-2011  Georg Sauthoff
+         email: gsauthof@techfak.uni-bielefeld.de or gsauthof@sdf.lonestar.org
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    * Author: gatter
+    *
+    * Created on June 18, 2015, 4:13 PM
+
+}}} */
 
 #ifndef RTLIB_ADP_SPECIALIZATION_SORT_BLOCK_HH_
 #define RTLIB_ADP_SPECIALIZATION_SORT_BLOCK_HH_
 
-#include "../list.hh"
-
-
-#include <boost/shared_ptr.hpp>
-
 #include <math.h>
-
+#include <vector>
 #include <deque>
 #include <queue>
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
 #include <algorithm>
+
+#include <boost/shared_ptr.hpp>
 #include <boost/timer.hpp>
+
+#include "../list.hh"
 
 
 #if __cplusplus >= 201103L
@@ -37,7 +55,6 @@
 
 template<class T, typename Compare>
 inline void join_sort(List_Ref<T> &l, List_Ref<int> &markers, Compare &c) {
-
       // new list
   List_Ref<T> l2;
 
@@ -64,13 +81,12 @@ inline void join_sort(List_Ref<T> &l, List_Ref<int> &markers, Compare &c) {
 
   // do the sorting, yay
 
-  while(true) { // killed by break
+  while (true) {  // killed by break
     int min_index = -1;
     T min;
 
-    for(int j = 0; j < length; j++) {
-      if(itrs[j] != ends[j]) {
-
+    for (int j = 0; j < length; j++) {
+      if (itrs[j] != ends[j]) {
         if (min_index == -1) {
           min_index = j;
           min = *itrs[j];
@@ -85,7 +101,7 @@ inline void join_sort(List_Ref<T> &l, List_Ref<int> &markers, Compare &c) {
     }
 
     // exit condition
-    if ( min_index == -1) {
+    if (min_index == -1) {
       break;
     }
 
@@ -104,13 +120,10 @@ inline void join_sort(List_Ref<T> &l, List_Ref<int> &markers, Compare &c) {
 
 template<class T, typename Compare>
 struct join_marked_multi_comp {
-
-  join_marked_multi_comp(Compare &c)
-    : c(c) {}
-
+  join_marked_multi_comp(Compare &c) : c(c) {}
         Compare c;
 
-  public:
+ public:
     bool operator () (T c1, T c2) {
       return c(c1, c2);
     }
@@ -146,7 +159,7 @@ inline void join_marked_multi(
   std::vector<T > internal;
   std::priority_queue< T , std::vector<T >, join_marked_multi_comp<T, Compare> >
     temp_queue = std::priority_queue< T , std::vector<T >,
-    join_marked_multi_comp<T, Compare> >( comp2, internal);
+    join_marked_multi_comp<T, Compare> >(comp2, internal);
 
         // running iterator to go through list from right to left
         typename List_Ref<T>::reverse_iterator run_itr = l.ref().rbegin();
@@ -154,23 +167,21 @@ inline void join_marked_multi(
         int run_index = i - 1;
 
   // do the sorting, yay
-  while(true) { // killed by break
+  while (true) {  // killed by break
     int worst_index = -1;
 
             // only check entries that have not been completely processed yet
-    for(int j = 0; j < run_index + 1 ; j++) {
-
+    for (int j = 0; j < run_index + 1 ; j++) {
       // it's possible that lists have already been full processed below the
       // running index
-      if(starts[j] != ends[j]) {
-
-                                // initial condition
+      if (starts[j] != ends[j]) {
+        // initial condition
         if (worst_index == -1) {
           worst_index = j;
           continue;
         }
 
-                                // compare to get real worst
+        // compare to get real worst
         if (c(*ends[worst_index], *ends[j])) {
           worst_index = j;
         }
@@ -178,12 +189,10 @@ inline void join_marked_multi(
     }
 
     // do we even still have sublists to insert?
-    if ( worst_index == -1) {
-
+    if (worst_index == -1) {
         // exit condition, queue is also empty
         // if not we still need to move back the elements still in temp_queue
         while (!temp_queue.empty()) {
-
             // move over first queue element
             *run_itr  = _MOVE(temp_queue.top());
             temp_queue.pop();
@@ -200,16 +209,15 @@ inline void join_marked_multi(
 
       // so we DO have an index to the worst element
       // now compare it to queue
-      if (temp_queue.empty() ||  c(temp_queue.top() , *ends[worst_index]) ) {
-
+      if (temp_queue.empty() ||  c(temp_queue.top() , *ends[worst_index])) {
           // no elements in temp_queue or worst_index also worse than queue
           // worst_index has to be moved to current position
           // current position has to be queued
 
-          if ( run_itr !=  ends[worst_index] ) {
+          if (run_itr !=  ends[worst_index]) {
             // no moving if itr matches worst element
               if (ends[run_index] == run_itr) {
-                  temp_queue.push( _MOVE(*run_itr) );
+                  temp_queue.push(_MOVE(*run_itr));
                    // move end to the left in list (reverse iterator!)
                   ends[run_index]++;
               }
@@ -220,17 +228,14 @@ inline void join_marked_multi(
 
           // move end to the left in list (reverse iterator!)
           ends[worst_index]++;
-
       } else {
-
           // element in temp_queue is worst element
           // insert element into current position
           // save potential element at this position
 
           if (ends[run_index] == run_itr) {
-
               // we are at a position still pointed at, save value
-              temp_queue.push( _MOVE(*run_itr) );
+              temp_queue.push(_MOVE(*run_itr));
 
               // move end to the left in list (reverse iterator!)
               ends[run_index]++;
@@ -238,14 +243,13 @@ inline void join_marked_multi(
 
           *run_itr = _MOVE(temp_queue.top());
           temp_queue.pop();
-
       }
 
       // move left in list (reverse iterator!)
       run_itr++;
 
-      if (run_itr == starts[run_index]) { // did we pass a list border?
-          run_index--; // if
+      if (run_itr == starts[run_index]) {  // did we pass a list border?
+          run_index--;  // if
       }
 
       if (run_itr == l.ref().rend()) {
@@ -253,7 +257,6 @@ inline void join_marked_multi(
           delete[] ends;
           return;
       }
-
   }
 }
 
@@ -264,7 +267,6 @@ template<class T, typename Compare>
 inline void join_marked_two_alt(
   typename List_Ref<T>::iterator start, typename List_Ref<T>::iterator middle,
   typename List_Ref<T>::iterator end, Compare &c) {
-
         // init temp queue
   std::deque<T> temp_queue;
 
@@ -273,12 +275,12 @@ inline void join_marked_two_alt(
   // we need forward iterator for that
   typename List_Ref<T>::iterator ml = middle;
 
-  while (c( *ml, *start)) {
+  while (c(*ml, *start)) {
     // while the start of the right list is smaller than the start of the left
       temp_queue.push_back(_MOVE(*ml));
 
-      ml++; // move middle to right
-      if (ml == end) { // all elements are smaller than first list!
+      ml++;  // move middle to right
+      if (ml == end) {  // all elements are smaller than first list!
           _MOVE_BACKWARD(start, middle, ml);
           _MOVE_BACKWARD(
             temp_queue.begin(), temp_queue.end(), start+(temp_queue.size()));
@@ -286,12 +288,12 @@ inline void join_marked_two_alt(
       }
   }
 
-   typename List_Ref<T>::iterator nstart = start+temp_queue.size();
+  typename List_Ref<T>::iterator nstart = start+temp_queue.size();
 
-   if (ml != middle) {
+  if (ml != middle) {
       _MOVE_BACKWARD(start, middle, ml);
       _MOVE_BACKWARD(temp_queue.begin(), temp_queue.end(), nstart);
-   }
+  }
 
   // running iterator for left sublist only
   typename List_Ref<T>::reverse_iterator cl =
@@ -312,8 +314,8 @@ inline void join_marked_two_alt(
   temp_queue.clear();
 
   // find first disagreement
-  while (rmiddle!=run_itr && c(*cl, *run_itr)) { // left better than right
-          ++run_itr; // one to the left (reverse iterator)
+  while (rmiddle != run_itr && c(*cl, *run_itr)) {  // left better than right
+          ++run_itr;  // one to the left (reverse iterator)
   }
 
   if (run_itr == rmiddle) {
@@ -328,10 +330,10 @@ inline void join_marked_two_alt(
 
   // from here on temp_queue is never empty before the end!
 
-  ++run_itr; // one to the left (reverse iterator)
-  ++cl; // one to the left (reverse iterator)
+  ++run_itr;  // one to the left (reverse iterator)
+  ++cl;  // one to the left (reverse iterator)
 
-  if (cl == rstart) { // end condition, cl no longer interesting
+  if (cl == rstart) {  // end condition, cl no longer interesting
       while (run_itr != rmiddle) {
           temp_queue.push_back(_MOVE(*run_itr));
           *run_itr = _MOVE(temp_queue.front());
@@ -347,7 +349,6 @@ inline void join_marked_two_alt(
   // run until middle is reached
   // or start has reached it's end by break
   while (run_itr != rmiddle) {
-
       // find worst element
       // temp_queue.front() is ALWAYS guaranteed to be worse than run_itr
       if ( c(*cl, temp_queue.front() ) ) {
@@ -357,7 +358,7 @@ inline void join_marked_two_alt(
           *run_itr = _MOVE(temp_queue.front());
           temp_queue.pop_front();
 
-          ++run_itr; // one to the left (reverse iterator)
+          ++run_itr;  // one to the left (reverse iterator)
           // cl is not changed
       } else {
           // temp_queue.front() is better than cl ==> cl is worst
@@ -365,10 +366,10 @@ inline void join_marked_two_alt(
           temp_queue.push_back(_MOVE(*run_itr));
           *run_itr = _MOVE(*cl);
 
-          ++run_itr; // one to the left (reverse iterator)
-          ++cl; // one to the left (reverse iterator)
+          ++run_itr;  // one to the left (reverse iterator)
+          ++cl;  // one to the left (reverse iterator)
 
-          if (cl == rstart) { // end condition, cl no longer interesting
+          if (cl == rstart) {  // end condition, cl no longer interesting
               while (run_itr != rmiddle) {
                   temp_queue.push_back(_MOVE(*run_itr));
                   *run_itr = _MOVE(temp_queue.front());
@@ -381,42 +382,39 @@ inline void join_marked_two_alt(
       }
   }
 
-  while ( cl != rstart && !temp_queue.empty()) {
-
+  while (cl != rstart && !temp_queue.empty()) {
       // find worst element
       // run_itr in invalidated area
-      if ( c(*cl, temp_queue.front() ) ) {
+      if (c(*cl, temp_queue.front())) {
           // cl better than temp_queue.front() ==> temp_queue.front() is worst
 
           *run_itr = _MOVE(temp_queue.front());
           temp_queue.pop_front();
 
-          ++run_itr; // one to the left (reverse iterator)
+          ++run_itr;  // one to the left (reverse iterator)
           // cl is not changed
       } else {
           // temp_queue.front() is better than cl ==> cl is worst
 
           *run_itr = _MOVE(*cl);
 
-          ++run_itr; // one to the left (reverse iterator)
-          ++cl; // one to the left (reverse iterator)
-
+          ++run_itr;  // one to the left (reverse iterator)
+          ++cl;  // one to the left (reverse iterator)
       }
-
   }
 
   // now write out the remaining elements in temp_queue
   for (typename std::deque<T>::iterator i = temp_queue.begin();
        i!= temp_queue.end(); ++i) {
       *run_itr = _MOVE(*i);
-      ++run_itr; // one to the left (reverse iterator)
+      ++run_itr;  // one to the left (reverse iterator)
   }
 }
 
 template<class T, typename Compare>
 inline void join_marked_multi_to_two_merge_array_alt(
   List_Ref<T> &x, List_Ref<int> &markers, Compare &c) {
-    if (markers.ref().size()<= 1) { // already sorted
+    if (markers.ref().size() <= 1) {  // already sorted
         return;
     }
 
@@ -433,12 +431,11 @@ inline void join_marked_multi_to_two_merge_array_alt(
     typename List_Ref<int>::iterator x_end = markers.ref().end();
     p2++;
 
-    int i=0;
+    int i = 0;
 
     starts[0] = x.ref().begin();
 
-    for(; p2 != x_end && p1 != x_end ; p1+=2, p2+=2) {
-
+    for (; p2 != x_end && p1 != x_end ; p1+=2, p2+=2) {
         middles[i] = x.ref().begin();
         std::advance(middles[i], *p1);
 
@@ -447,7 +444,7 @@ inline void join_marked_multi_to_two_merge_array_alt(
 
         ++i;
 
-        if ( i < length) {
+        if (i < length) {
             starts[i] = ends[i-1];
         }
     }
@@ -462,17 +459,14 @@ inline void join_marked_multi_to_two_merge_array_alt(
     int merges_left = length;
 
     while (merges_left > 1) {
-
         int new_merges_count = 0;
 
         int j = 0;
         for (j = 0; j+1 <  merges_left; j+=2) {
-
             join_marked_two_alt<T>(starts[j], middles[j], ends[j], c);
 
             // execute p2
             if (middles[j+1] != ends[j+1]) {
-
                 join_marked_two_alt<T>(starts[j+1], middles[j+1], ends[j+1], c);
             }
 
@@ -480,7 +474,6 @@ inline void join_marked_multi_to_two_merge_array_alt(
             middles[new_merges_count] = ends[j];
             ends[new_merges_count] = ends[j+1];
             new_merges_count++;
-
         }
 
         if (j < merges_left) {
@@ -498,7 +491,6 @@ inline void join_marked_multi_to_two_merge_array_alt(
     delete[] starts;
     delete[] middles;
     delete[] ends;
-
 }
 
 
@@ -518,8 +510,9 @@ inline void join_marked_two(
         typename List_Ref<T>::reverse_iterator run_itr = end;
 
         // find first disagreement
-        while (middle!=run_itr && c(*cl, *run_itr)) { // left better than right
-                ++run_itr; // one to the left (reverse iterator)
+        while (middle != run_itr && c(*cl, *run_itr)) {
+          // left better than right
+                ++run_itr;  // one to the left (reverse iterator)
         }
 
         if (run_itr == middle) {
@@ -534,10 +527,10 @@ inline void join_marked_two(
 
         // from here on temp_queue is never empty before the end!
 
-        ++run_itr; // one to the left (reverse iterator)
-        ++cl; // one to the left (reverse iterator)
+        ++run_itr;  // one to the left (reverse iterator)
+        ++cl;  // one to the left (reverse iterator)
 
-        if (cl == start) { // end condition, cl no longer interesting
+        if (cl == start) {  // end condition, cl no longer interesting
             while (run_itr != middle) {
                 temp_queue.push_back(_MOVE(*run_itr));
                 *run_itr = _MOVE(temp_queue.front());
@@ -553,7 +546,6 @@ inline void join_marked_two(
         // run until middle is reached
         // or start has reached it's end by break
         while (run_itr != middle) {
-
             // find worst element
             // temp_queue.front() is ALWAYS guaranteed to be worse than run_itr
             if ( c(*cl, temp_queue.front() ) ) {
@@ -564,7 +556,7 @@ inline void join_marked_two(
                 *run_itr = _MOVE(temp_queue.front());
                 temp_queue.pop_front();
 
-                ++run_itr; // one to the left (reverse iterator)
+                ++run_itr;  // one to the left (reverse iterator)
                 // cl is not changed
             } else {
                 // temp_queue.front() is better than cl ==> cl is worst
@@ -572,10 +564,10 @@ inline void join_marked_two(
                 temp_queue.push_back(_MOVE(*run_itr));
                 *run_itr = _MOVE(*cl);
 
-                ++run_itr; // one to the left (reverse iterator)
-                ++cl; // one to the left (reverse iterator)
+                ++run_itr;  // one to the left (reverse iterator)
+                ++cl;  // one to the left (reverse iterator)
 
-                if (cl == start) { // end condition, cl no longer interesting
+                if (cl == start) {  // end condition, cl no longer interesting
                     while (run_itr != middle) {
                         temp_queue.push_back(_MOVE(*run_itr));
                         *run_itr = _MOVE(temp_queue.front());
@@ -588,46 +580,42 @@ inline void join_marked_two(
             }
         }
 
-        while ( cl != start && !temp_queue.empty()) {
-
+        while (cl != start && !temp_queue.empty()) {
             // find worst element
             // run_itr in invalidated area
 
-            if ( c(*cl, temp_queue.front() ) ) {
+            if (c(*cl, temp_queue.front())) {
                 // cl better than temp_queue.front() ==> temp_queue.front()
                 // is worst
 
                 *run_itr = _MOVE(temp_queue.front());
                 temp_queue.pop_front();
 
-                ++run_itr; // one to the left (reverse iterator)
+                ++run_itr;  // one to the left (reverse iterator)
                 // cl is not changed
             } else {
                 // temp_queue.front() is better than cl ==> cl is worst
 
                 *run_itr = _MOVE(*cl);
 
-                ++run_itr; // one to the left (reverse iterator)
-                ++cl; // one to the left (reverse iterator)
-
+                ++run_itr;  // one to the left (reverse iterator)
+                ++cl;  // one to the left (reverse iterator)
             }
-
         }
 
         // now write out the remaining elements in temp_queue
         for (typename std::deque<T>::iterator i = temp_queue.begin();
              i!= temp_queue.end(); ++i) {
             *run_itr = _MOVE(*i);
-            ++run_itr; // one to the left (reverse iterator)
+            ++run_itr;  // one to the left (reverse iterator)
         }
-
 }
 
 
 template<class T, typename Compare>
 inline void join_marked_multi_to_two_merge_array(
   List_Ref<T> &x, List_Ref<int> &markers, Compare &c) {
-    if (markers.ref().size()<= 1) { // already sorted
+    if (markers.ref().size()<= 1) {  // already sorted
         return;
     }
 
@@ -645,12 +633,11 @@ inline void join_marked_multi_to_two_merge_array(
     typename List_Ref<int>::iterator x_end = markers.ref().end();
     p2++;
 
-    int i=0;
+    int i = 0;
 
     starts[0] = x.ref().begin();
 
-    for(; p2 != x_end && p1 != x_end ; p1+=2, p2+=2) {
-
+    for (; p2 != x_end && p1 != x_end ; p1+=2, p2+=2) {
         middles[i] = x.ref().begin();
         std::advance(middles[i], *p1);
 
@@ -659,7 +646,7 @@ inline void join_marked_multi_to_two_merge_array(
 
         ++i;
 
-        if ( i < length) {
+        if (i < length) {
             starts[i] = ends[i-1];
         }
     }
@@ -674,7 +661,6 @@ inline void join_marked_multi_to_two_merge_array(
     int merges_left = length;
 
     while (merges_left > 1) {
-
         int new_merges_count = 0;
 
         int j = 0;
@@ -697,7 +683,6 @@ inline void join_marked_multi_to_two_merge_array(
             middles[new_merges_count] = ends[j];
             ends[new_merges_count] = ends[j+1];
             new_merges_count++;
-
         }
 
         if (j < merges_left) {
@@ -717,7 +702,6 @@ inline void join_marked_multi_to_two_merge_array(
     delete[] starts;
     delete[] middles;
     delete[] ends;
-
 }
 
 // ---------------- TWO with c++ in-place ---------------
@@ -725,7 +709,7 @@ inline void join_marked_multi_to_two_merge_array(
 template<class T, typename Compare>
 inline void join_marked_multi_to_two_merge_array_c(
   List_Ref<T> &x, List_Ref<int> &markers, Compare &c) {
-    if (markers.ref().size()<= 1) { // already sorted
+    if (markers.ref().size()<= 1) {  // already sorted
         return;
     }
 
@@ -743,12 +727,11 @@ inline void join_marked_multi_to_two_merge_array_c(
     typename List_Ref<int>::iterator x_end = markers.ref().end();
     p2++;
 
-    int i=0;
+    int i = 0;
 
     starts[0] = x.ref().begin();
 
-    for(; p2 != x_end && p1 != x_end ; p1+=2, p2+=2) {
-
+    for (; p2 != x_end && p1 != x_end ; p1+=2, p2+=2) {
         middles[i] = x.ref().begin();
         std::advance(middles[i], *p1);
 
@@ -757,7 +740,7 @@ inline void join_marked_multi_to_two_merge_array_c(
 
         ++i;
 
-        if ( i < length) {
+        if (i < length) {
             starts[i] = ends[i-1];
         }
     }
@@ -772,13 +755,10 @@ inline void join_marked_multi_to_two_merge_array_c(
     int merges_left = length;
 
     while (merges_left > 1) {
-
         int new_merges_count = 0;
 
         int j = 0;
         for (j = 0; j+1 <  merges_left; j+=2) {
-
-
             // execute 1
             std::inplace_merge(starts[j], middles[j], ends[j], c);
 
@@ -792,7 +772,6 @@ inline void join_marked_multi_to_two_merge_array_c(
             middles[new_merges_count] = ends[j];
             ends[new_merges_count] = ends[j+1];
             new_merges_count++;
-
         }
 
         if (j < merges_left) {
@@ -810,21 +789,19 @@ inline void join_marked_multi_to_two_merge_array_c(
     delete[] starts;
     delete[] middles;
     delete[] ends;
-
 }
 
 // ---------------- Join Queue  ---------------
 
 template<class T, typename Compare>
 struct s_int_comp {
-
   s_int_comp(typename std::deque<T>::iterator *itrs, Compare &c)
     : itrs(itrs), c(c) {}
 
   typename std::deque<T>::iterator *itrs;
         Compare c;
 
-  public:
+ public:
     bool operator () (int c1, int c2) {
       return !c(*itrs[c1], *itrs[c2]);
     }
@@ -833,7 +810,6 @@ struct s_int_comp {
 
 template<class T, typename Compare>
 void join_sort_queue(List_Ref<T> &l, List_Ref<int> &markers, Compare &c) {
-
   // new list
   List_Ref<T> l2;
 
@@ -876,8 +852,7 @@ void join_sort_queue(List_Ref<T> &l, List_Ref<int> &markers, Compare &c) {
   }
 
   // do the sorting, yay
-  while(!pq.empty()) {
-
+  while (!pq.empty()) {
     int it = pq.top();
     pq.pop();
 
@@ -909,7 +884,7 @@ inline void full_sort(List_Ref<T> &x, Compare &c) {
 template<class T>
 inline void mark_position(List_Ref<T> &x, List_Ref<int> &markers) {
     int s = x.ref().size();
-    if (s!=0 && (markers.ref().empty() || s != markers.ref().back()) )
+    if (s != 0 && (markers.ref().empty() || s != markers.ref().back()))
         markers.ref().push_back(s);
 }
 
@@ -917,21 +892,21 @@ inline void mark_position(List_Ref<T> &x, List_Ref<int> &markers) {
 
 extern const float switch_base;
 
-inline float fast_log2 (float val) {
+inline float fast_log2(float val) {
   // assert (val > 0);
 
-   int * const  exp_ptr = reinterpret_cast <int *> (&val);
-   int          x = *exp_ptr;
-   const int    log_2 = ((x >> 23) & 255) - 128;
-   x &= ~(255 << 23);
-   x += 127 << 23;
-   *exp_ptr = x;
+  int * const  exp_ptr = reinterpret_cast <int *> (&val);
+  int          x = *exp_ptr;
+  const int    log_2 = ((x >> 23) & 255) - 128;
+  x &= ~(255 << 23);
+  x += 127 << 23;
+  *exp_ptr = x;
 
-   return (val + log_2);
+  return (val + log_2);
 }
 
-inline float fast_log (const float &val) {
-   return (fast_log2 (val) * 1.07991428f);
+inline float fast_log(const float &val) {
+  return (fast_log2(val) * 1.07991428f);
 }
 
 
@@ -1057,7 +1032,6 @@ inline void join_marked(List_Ref<T> &x, List_Ref<int> &markers, Compare &c) {
 
 
       join_marked_multi_to_two_merge_array_c(x, markers, c);
-
 }
 
 

@@ -25,6 +25,8 @@
 #ifndef RTLIB_ERASE_HH_
 #define RTLIB_ERASE_HH_
 
+#include <utility>
+
 // no-op for bultin
 // no-op for String -> does ref-counting and non-pointer usage
 // List needs overloaded version

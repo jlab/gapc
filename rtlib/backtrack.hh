@@ -25,6 +25,7 @@
 #define RTLIB_BACKTRACK_HH_
 
 #include <cassert>
+#include <utility>
 
 // FIXME replace with more efficient version
 #include <list>
@@ -34,10 +35,11 @@ using boost::intrusive_ptr;
 
 template<typename Value>
 class Eval_List {
-  private:
+ private:
     // FIXME more efficient version ...
     std::list<Value> list;
-  public:
+
+ public:
     size_t count;
     Eval_List()
       : count(0) {
@@ -58,8 +60,8 @@ class Eval_List {
 
 template <typename Value, typename pos_int>
 class Backtrace {
-  private:
-  public:
+ private:
+ public:
     size_t count;
     intrusive_ptr<Eval_List<Value> > evaluated;
     Backtrace()
@@ -75,23 +77,22 @@ class Backtrace {
     // virtual bool is_proxy() const { return false; }
 
     virtual void print(std::ostream &out) { assert(0); }
-
 };
 
 
 template <typename Value, typename pos_int>
 class Backtrace_List : public virtual Backtrace<Value, pos_int> {
-  private:
+ private:
     // FIXME more efficient version
     std::list<intrusive_ptr<Backtrace<Value, pos_int> > > list;
-  public:
 
+ public:
     typedef typename std::list<intrusive_ptr<Backtrace<Value,
       pos_int> > >::iterator iterator;
     iterator begin() { return list.begin(); }
     iterator end() { return list.end(); }
 
-    void push_back(intrusive_ptr<Backtrace<Value,pos_int> > x) {
+    void push_back(intrusive_ptr<Backtrace<Value, pos_int> > x) {
       list.push_back(x);
     }
 
@@ -180,24 +181,24 @@ intrusive_ptr<Backtrace<T, pos_int> > exe_bt
 }
 template<typename S, typename T, typename pos_int, typename ref_int>
 inline
-intrusive_ptr<Backtrace<T, pos_int> > execute_backtrack
-   (List_Ref<std::pair<S, intrusive_ptr<Backtrace<T, pos_int> > >, ref_int>
-      & list) {
+intrusive_ptr<Backtrace<T, pos_int> > execute_backtrack(
+  List_Ref<std::pair<S, intrusive_ptr<Backtrace<T, pos_int> > >,
+  ref_int> & list) {
   return exe_bt(list, true);
 }
 
 template<typename S, typename T, typename pos_int, typename ref_int>
 inline
-intrusive_ptr<Backtrace<T, pos_int> > execute_backtrack_one
-   (List_Ref<std::pair<S, intrusive_ptr<Backtrace<T, pos_int> > >, ref_int>
-      & list) {
+intrusive_ptr<Backtrace<T, pos_int> > execute_backtrack_one(
+  List_Ref<std::pair<S, intrusive_ptr<Backtrace<T, pos_int> > >,
+  ref_int> & list) {
   return exe_bt(list, false);
 }
 
 template<typename S, typename T, typename pos_int>
 inline
-intrusive_ptr<Backtrace<T, pos_int>  > execute_backtrack
-   (std::pair<S, intrusive_ptr<Backtrace<T, pos_int> > > & tuple) {
+intrusive_ptr<Backtrace<T, pos_int>  > execute_backtrack(
+  std::pair<S, intrusive_ptr<Backtrace<T, pos_int> > > & tuple) {
   intrusive_ptr<Backtrace_List<T, pos_int> > ret =
     new Backtrace_List<T, pos_int>();
   if (isEmpty(tuple)) {
@@ -217,8 +218,8 @@ intrusive_ptr<Backtrace<T, pos_int>  > execute_backtrack
 
 template<typename S, typename T, typename pos_int>
 inline
-intrusive_ptr<Backtrace<T, pos_int>  > execute_backtrack_one
-   (std::pair<S, intrusive_ptr<Backtrace<T, pos_int> > > & tuple) {
+intrusive_ptr<Backtrace<T, pos_int>  > execute_backtrack_one(
+  std::pair<S, intrusive_ptr<Backtrace<T, pos_int> > > & tuple) {
   return execute_backtrack(tuple);
 }
 
@@ -336,12 +337,13 @@ inline void append_max_subopt(List_Ref<T, pos_int> &x, List_Ref<T, pos_int> &e,
 
 template<typename score_type, typename Value, typename pos_int>
 class Backtrace_Score : public virtual Backtrace<Value, pos_int> {
-  private:
+ private:
     score_type score_;
 #ifndef NDEBUG
     bool value_set;
 #endif
-  public:
+
+ public:
 #ifndef NDEBUG
     Backtrace_Score() : value_set(false) {}
 #endif
@@ -360,7 +362,6 @@ class Backtrace_Score : public virtual Backtrace<Value, pos_int> {
       assert(value_set);
       this->eval()->print(out, score_);
     }
-
 };
 
 // Hint:
@@ -373,7 +374,7 @@ class Backtrace_List_Score
 
 template <typename score_type, typename Klass, typename Value, typename pos_int>
 class Backtrace_NT_Back_Base {
-  protected:
+ protected:
     intrusive_ptr<Backtrace_List<Value, pos_int> > scores;
 
     Klass *klass;
@@ -382,7 +383,7 @@ class Backtrace_NT_Back_Base {
 
     virtual void backtrack() = 0;
 
-  public:
+ public:
     Backtrace_NT_Back_Base(Klass *klass_)
       : klass(klass_), count(0) {}
     virtual ~Backtrace_NT_Back_Base() {}
@@ -410,7 +411,6 @@ class Backtrace_NT_Back_Base {
     void add_ref() { count++; }
     void rm_ref() { assert(count); count--; }
     bool unref() const { return count == 0; }
-
 };
 
 template <typename score_type, typename Klass, typename Value, typename pos_int>
@@ -435,7 +435,8 @@ void intrusive_ptr_release(
 template<typename score_type, typename Value, typename pos_int>
 inline
 void
-set_value(std::pair<score_type, intrusive_ptr<Backtrace<Value, pos_int> > > &p) {
+set_value(
+  std::pair<score_type, intrusive_ptr<Backtrace<Value, pos_int> > > &p) {
   intrusive_ptr<Backtrace_Score<score_type, Value, pos_int> > bt
     = boost::dynamic_pointer_cast<Backtrace_Score<score_type, Value, pos_int> >
         (p.second);
@@ -460,30 +461,28 @@ intrusive_ptr<Backtrace<T, pos_int> > exe_bt_k
   list_t &l = list.ref();
   for (typename list_t::iterator i = l.begin();
        i != l.end(); ++i) {
-    set_value( *i );
+    set_value(*i);
     intrusive_ptr<Backtrace<T, pos_int> > sec = (*i).second;
     assert(sec);
     ret->push_back(sec);
     if (!allow_cooptimal)
       break;
-
   }
   return ret;
 }
 
 template<typename S, typename T, typename pos_int, typename ref_int>
 inline
-intrusive_ptr<Backtrace<T, pos_int> > execute_backtrack_k
-   (List_Ref<std::pair<S, intrusive_ptr<Backtrace<T, pos_int> > >, ref_int>
-      & list) {
+intrusive_ptr<Backtrace<T, pos_int> > execute_backtrack_k(
+  List_Ref<std::pair<S, intrusive_ptr<Backtrace<T, pos_int> > >,
+  ref_int> & list) {
   return exe_bt_k(list, true);
 }
 
 template<typename S, typename T, typename pos_int>
 inline
-intrusive_ptr<Backtrace<T, pos_int> > execute_backtrack_k
-   (std::pair<S, intrusive_ptr<Backtrace<T, pos_int> > >
-      & tuple) {
+intrusive_ptr<Backtrace<T, pos_int> > execute_backtrack_k(
+  std::pair<S, intrusive_ptr<Backtrace<T, pos_int> > > & tuple) {
   intrusive_ptr<Backtrace_List<T, pos_int> > ret =
     new Backtrace_List<T, pos_int>();
   if (isEmpty(tuple)) {
@@ -501,17 +500,16 @@ intrusive_ptr<Backtrace<T, pos_int> > execute_backtrack_k
 
 template<typename S, typename T, typename pos_int, typename ref_int>
 inline
-intrusive_ptr<Backtrace<T, pos_int> > execute_backtrace_k_one
-   (List_Ref<std::pair<S, intrusive_ptr<Backtrace<T, pos_int> > >, ref_int>
-      & list) {
+intrusive_ptr<Backtrace<T, pos_int> > execute_backtrace_k_one(
+  List_Ref<std::pair<S, intrusive_ptr<Backtrace<T, pos_int> > >,
+  ref_int> & list) {
   return exe_bt_k(list, false);
 }
 
 template<typename S, typename T, typename pos_int>
 inline
-intrusive_ptr<Backtrace<T, pos_int> > execute_backtrace_k_one
-   (std::pair<S, intrusive_ptr<Backtrace<T, pos_int> > >
-      & tuple) {
+intrusive_ptr<Backtrace<T, pos_int> > execute_backtrace_k_one(
+  std::pair<S, intrusive_ptr<Backtrace<T, pos_int> > > & tuple) {
   return execute_backtrack_k(tuple);
 }
 

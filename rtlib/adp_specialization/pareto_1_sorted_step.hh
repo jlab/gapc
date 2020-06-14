@@ -1,9 +1,29 @@
-/*
- * File:   pareto_1_sorted_step.hh
- * Author: gatter
- *
- * Created on July 6, 2015, 10:31 AM
- */
+/* {{{
+
+    This file is part of gapc (GAPC - Grammars, Algebras, Products - Compiler;
+      a system to compile algebraic dynamic programming programs)
+
+    Copyright (C) 2008-2011  Georg Sauthoff
+         email: gsauthof@techfak.uni-bielefeld.de or gsauthof@sdf.lonestar.org
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    * Author: gatter
+    *
+    * Created on July 6, 2015, 10:31 AM
+
+}}} */
+
 
 #ifndef RTLIB_ADP_SPECIALIZATION_PARETO_1_SORTED_STEP_HH_
 #define RTLIB_ADP_SPECIALIZATION_PARETO_1_SORTED_STEP_HH_
@@ -11,10 +31,10 @@
 
 #if __cplusplus >= 201103L
 #define _MOVE(__val) std::move(__val)
-#define _MOVE_RANGE(__it1,__it2,__in) std::move(__it1,__it2,__in)
+#define _MOVE_RANGE(__it1, __it2, __in) std::move(__it1, __it2, __in)
 #else
 #define _MOVE(__val) (__val)
-#define _MOVE_RANGE(__it1,__it2,__in) std::copy(__it1,__it2,__in)
+#define _MOVE_RANGE(__it1, __it2, __in) std::copy(__it1, __it2, __in)
 #endif
 
 
@@ -25,15 +45,14 @@ inline void join_2d_drop(
   T &ref, typename List_Ref<T>::iterator &it,
   typename List_Ref<T>::iterator end, Compare &c, const bool keep_equal) {
     if (keep_equal) {
-        while( it!= end && c(ref, *it, 2) > 0) {
+        while (it != end && c(ref, *it, 2) > 0) {
             ++it;
         }
     } else {
-        while( it!= end && c(ref, *it, 2) >= 0) {
+        while (it!= end && c(ref, *it, 2) >= 0) {
             ++it;
         }
     }
-
 }
 
 // specialized algorithm for 2 dimensions
@@ -48,17 +67,16 @@ inline void join_2d_step(
     List_Ref<T> new_list;
 
     // ended by return
-    while(true) {
-
+    while (true) {
         // end conditions lists are empty
         if (i_it == inserts.ref().end()) {
-            for(;a_it != answers.ref().end();++a_it) {
+            for (; a_it != answers.ref().end(); ++a_it) {
                 new_list.ref().push_back(_MOVE(*a_it));
             }
             break;
         }
-        if (a_it == answers.ref().end() ) {
-            for(;i_it != inserts.ref().end();++i_it) {
+        if (a_it == answers.ref().end()) {
+            for (; i_it != inserts.ref().end(); ++i_it) {
                 new_list.ref().push_back(_MOVE(*i_it));
             }
             break;
@@ -67,7 +85,7 @@ inline void join_2d_step(
         int c1 = c(*a_it, *i_it, 1);
         int c2 = c(*a_it, *i_it, 2);
 
-        switch(c1) {
+        switch (c1) {
             case -1:
                 switch (c2) {
                     case -1:
@@ -138,15 +156,13 @@ template<class T, typename Compare, typename Sorter>
 inline void join_all_step(
   List_Ref<T> &answers, List_Ref<T> &inserts,
   Compare &c, Sorter &s, const bool keep_equal) {
-
     typename List_Ref<T>::iterator a_it = answers.ref().begin();
     typename List_Ref<T>::iterator i_it = inserts.ref().begin();
 
     // new list
     List_Ref<T> new_list;
 
-    while(a_it != answers.ref().end() || i_it != inserts.ref().end()) {
-
+    while (a_it != answers.ref().end() || i_it != inserts.ref().end()) {
          // from which list to add next
          typename List_Ref<T>::iterator next;
          if (i_it == inserts.ref().end() ||
@@ -168,8 +184,8 @@ inline void join_all_step(
          if (keep_equal) {
              // test if element is the same as last inserted
              bool equal = true;
-             for(int i=1; i <= c.dim; ++i ) {
-                 if( c( *next, new_list.ref().back(), i) != 0) {
+             for (int i=1; i <= c.dim; ++i) {
+                 if (c(*next, new_list.ref().back(), i) != 0) {
                      equal = false;
                      break;
                  }
@@ -185,8 +201,8 @@ inline void join_all_step(
          for (typename List_Ref<T>::iterator n = new_list.ref().begin();
               n != new_list.ref().end(); ++n ) {
              bool dominates = true;
-             for(int i=2; i <= c.dim; ++i ) {
-                 if( c( *next, *n, i) > 0) {
+             for (int i=2; i <= c.dim; ++i) {
+                 if (c(*next, *n, i) > 0) {
                      dominates = false;
                      break;
                  }
@@ -195,7 +211,6 @@ inline void join_all_step(
                  add = false;
                  break;
              }
-
          }
 
          if (add) {
@@ -215,7 +230,7 @@ inline void join_insert_one_2d(
     // find insert position
     typename List_Ref<T>::iterator a_it = answers.ref().begin();
 
-    while(a_it != answers.ref().end() && s(*a_it, insert)){
+    while (a_it != answers.ref().end() && s(*a_it, insert)) {
         ++a_it;
     }
 
@@ -223,20 +238,18 @@ inline void join_insert_one_2d(
 
 
     if (keep_equal) {
-
-
         if (comp < 0) {
             a_it = answers.ref().insert(a_it, insert);
-        } else if (comp == 0 && c(*a_it, insert, 1)==0) {
+        } else if (comp == 0 && c(*a_it, insert, 1) == 0) {
             // special equal inserts
             a_it = answers.ref().insert(a_it, insert);
         }
 
         ++a_it;
 
-        while( a_it != answers.ref().end() && c(*a_it, insert, 1) == 0 ) {
+        while (a_it != answers.ref().end() && c(*a_it, insert, 1) == 0) {
             int o = c(*a_it, insert, 2);
-            if ( o < 0 || (o == 0 && c(*a_it, insert, 1) != 0)) {
+            if (o < 0 || (o == 0 && c(*a_it, insert, 1) != 0)) {
                 // keep equal!
                 a_it = answers.ref().erase(a_it);
             }
@@ -247,13 +260,12 @@ inline void join_insert_one_2d(
         }
         ++a_it;
 
-        while( a_it != answers.ref().end() && c(*a_it, insert, 1) == 0 ) {
+        while (a_it != answers.ref().end() && c(*a_it, insert, 1) == 0) {
             if (c(*a_it, insert, 2)  <= 0) {
                 a_it = answers.ref().erase(a_it);
             }
         }
     }
-
 }
 
 // only insert one element, 3D+
@@ -261,12 +273,10 @@ template<class T, typename Compare, typename Sorter>
 inline void join_insert_one_all(
   List_Ref<T> &answers, T &insert, Compare &c, Sorter &s,
   const bool keep_equal) {
-
     List_Ref<T> inserts;
     inserts.ref().push_back(insert);
 
     join_all_step(answers, inserts, c, s, keep_equal);
-
 }
 
 // append with sorted Pareto
@@ -274,7 +284,6 @@ template<class T, typename Compare, typename Sorter>
 inline void append(
   List_Ref<T> &answers, T &insert, Compare &c, Sorter &s,
   const bool keep_equal) {
-
     if (isEmpty(answers)) {
       answers.ref().push_back(insert);
       return;
@@ -286,7 +295,6 @@ inline void append(
     } else {
         join_insert_one_all(answers, insert, c, s, keep_equal);
     }
-
 }
 
 // append with sorted Pareto
@@ -294,7 +302,6 @@ template<class T, typename Compare, typename Sorter>
 inline void append(
   List_Ref<T> &answers, List_Ref<T> &inserts, Compare &c, Sorter &s,
   const bool keep_equal) {
-
   // basic security tests
   if (isEmpty(inserts)) {
     return;
@@ -315,7 +322,6 @@ inline void append(
   } else {
       join_all_step(answers, inserts, c, s, keep_equal);
   }
-
 }
 
 

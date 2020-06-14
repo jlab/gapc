@@ -58,12 +58,14 @@ raus reverse .-   >  0011  3   12
 template <typename T, typename Size>
 struct CmAlph {
   enum { char_width = 4 };
-  private:
+
+ private:
   void set_one(T &t, Size n) const {
     T x = T(1) << n;
     t |= x;
   }
-  public:
+
+ public:
   void operator()(T &t, char x, Size l) const {
     switch (x) {
       case 'M' :

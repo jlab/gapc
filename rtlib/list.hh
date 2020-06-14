@@ -25,14 +25,7 @@
 #ifndef RTLIB_LIST_HH_
 #define RTLIB_LIST_HH_
 
-#include "empty.hh"
-#include "erase.hh"
 
-// FIXME profile this
-#include "pool.hh"
-
-// tr1 has it
-#include <boost/cstdint.hpp>
 
 
 #include <deque>
@@ -42,6 +35,23 @@
 
 #include <iterator>
 #include <algorithm>
+#include <ostream>
+#include <iostream>
+#include <utility>
+// #include <set>
+
+// tr1 has it
+#include <boost/cstdint.hpp>
+
+
+#include "empty.hh"
+#include "erase.hh"
+
+// FIXME profile this
+#include "pool.hh"
+
+#include "output.hh"
+#include "hash.hh"
 
 // FIXME
 // #include <iostream>
@@ -54,12 +64,12 @@ class List_Ref;
 
 template <class T, typename pos_int = unsigned char>
 class List : public std::deque<T> {
-    public:
-        typedef typename std::deque<T>::reverse_iterator reverse_iterator;
+ public:
+  typedef typename std::deque<T>::reverse_iterator reverse_iterator;
 };
 
-#include <ostream>
-#include "output.hh"
+
+
 
 template<class T, typename pos_int>
 inline
@@ -74,8 +84,8 @@ std::ostream &operator<<(std::ostream &out, const List<T, pos_int> &list) {
 
 template<class T, typename pos_int = unsigned char>
 class List_Ref : public ::Ref::Lazy<List<T, pos_int> > {
-    public:
-        typedef typename List<T, pos_int>::reverse_iterator reverse_iterator;
+ public:
+  typedef typename List<T, pos_int>::reverse_iterator reverse_iterator;
 };
 
 template<class T, typename pos_int>
@@ -109,7 +119,7 @@ inline void erase(List_Ref<T, pos_int> &x) {
 // removes all elements from the list
 template<class T, typename pos_int>
 inline void clear(List_Ref<T, pos_int> &x) {
-    if(x.l) {
+    if (x.l) {
         x.ref().clear();
     }
 }
@@ -155,16 +165,8 @@ inline typename List_Ref<T, pos_int>::iterator insert_element(
 
 template<typename Iterator, typename Compare>
 inline void sort_list(Iterator begin, Iterator end, Compare &c) {
-   std::sort(begin, end, c);
+  std::sort(begin, end, c);
 }
-
-
-
-
-#include <iostream>
-// #include <set>
-
-#include "hash.hh"
 
 template <typename Iterator>
 inline
@@ -178,7 +180,7 @@ unique(std::pair<Iterator, Iterator> &p) {
   set.finalize();
   List_Ref<type> l;
   for (typename Hash::Set<type>::iterator j = set.begin();
-       j!=set.end(); ++j)
+       j != set.end(); ++j)
     l.ref().push_back(*j);
 
   return l;

@@ -64,7 +64,7 @@ inline bool isEmpty(int x) {
 inline void empty(double &x) {
   // assert( std::numeric_limits<double>::has_quiet_NaN );
   // x = std::numeric_limits<double>::quiet_NaN();
-  assert( std::numeric_limits<double>::has_infinity );
+  assert(std::numeric_limits<double>::has_infinity);
   x = std::numeric_limits<double>::infinity();
 }
 
@@ -72,16 +72,16 @@ inline void empty(double &x) {
 inline bool isEmpty(double x) {
   // assert( std::numeric_limits<double>::has_quiet_NaN );
   // return x != x;
-  assert( std::numeric_limits<double>::has_infinity );
+  assert(std::numeric_limits<double>::has_infinity);
   return x == std::numeric_limits<double>::infinity();
 }
 
 inline void empty(float &x) {
-  assert( std::numeric_limits<float>::has_infinity );
+  assert(std::numeric_limits<float>::has_infinity);
   x = std::numeric_limits<float>::infinity();
 }
 inline bool isEmpty(float x) {
-  assert( std::numeric_limits<float>::has_infinity );
+  assert(std::numeric_limits<float>::has_infinity);
   return x == std::numeric_limits<float>::infinity();
 }
 
@@ -140,8 +140,6 @@ template <typename T, typename U> inline bool isEmpty(
   const Basic_Subsequence<T, U> &p) {
   return p.isEmpty();
 }
-
-#include "rope.hh"
 
 template<typename X> inline void empty(rope::Ref<X> &p) {
   p.empty();

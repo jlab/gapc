@@ -45,81 +45,82 @@
 
 
 namespace scil {
+class rng {
+ private:
+    gsl_rng *t;
 
-  class rng {
-    private:
-      gsl_rng *t;
-    public:
-      rng()
-        : t(0) {
-        gsl_rng_env_setup();
-        const gsl_rng_type *rng_type = gsl_rng_default;
-        t = gsl_rng_alloc(rng_type);
-      }
+ public:
+    rng()
+      : t(0) {
+      gsl_rng_env_setup();
+      const gsl_rng_type *rng_type = gsl_rng_default;
+      t = gsl_rng_alloc(rng_type);
+    }
 
-      ~rng() {
-        assert(t);
-        gsl_rng_free(t);
-      }
+    ~rng() {
+      assert(t);
+      gsl_rng_free(t);
+    }
 
-      const gsl_rng *operator*() const {
-        return t;
-      }
-  };
+    const gsl_rng *operator*() const {
+      return t;
+    }
+};
 
-  class ran_discrete {
-    private:
-      gsl_ran_discrete_t *x;
-      rng &r;
-      std::vector<double> array;
-      enum State { CLEAR, PUSH, SAMPLE };
-      State state;
-    public:
-      ran_discrete()
-        : x(0), r(Singleton<scil::rng>::ref()), state(CLEAR) {
-        array.reserve(4096/sizeof(double));
-      }
-      ran_discrete(rng &a)
-        : x(0), r(a), state(CLEAR) {
-        array.reserve(4096/sizeof(double));
-      }
-      ran_discrete(rng &a, size_t b)
-        : x(0), r(a), state(CLEAR) {
-        array.reserve(b);
-      }
-      ~ran_discrete() {
-        if (x)
-          gsl_ran_discrete_free(x);
-      }
-      void clear() {
-        state = CLEAR;
-        array.resize(0);
-      }
-      void push_back(double d) {
-        assert(state == CLEAR || state == PUSH);
-        state = PUSH;
-        array.push_back(d);
-      }
-      void init() {
-        assert(state == PUSH);
-        state = SAMPLE;
-        if (x)
-          gsl_ran_discrete_free(x);
-        x = gsl_ran_discrete_preproc(array.size(), &array[0]);
-      }
-      size_t sample() {
-        assert(state == SAMPLE);
-        size_t s = gsl_ran_discrete(*r, x);
-        assert(s < array.size());
-        return s;
-      }
-      double sample_value() {
-        size_t k = sample();
-        return array[k];
-      }
-  };
+class ran_discrete {
+ private:
+    gsl_ran_discrete_t *x;
+    rng &r;
+    std::vector<double> array;
+    enum State { CLEAR, PUSH, SAMPLE };
+    State state;
 
-}
+ public:
+    ran_discrete()
+      : x(0), r(Singleton<scil::rng>::ref()), state(CLEAR) {
+      array.reserve(4096/sizeof(double));
+    }
+    ran_discrete(rng &a)
+      : x(0), r(a), state(CLEAR) {
+      array.reserve(4096/sizeof(double));
+    }
+    ran_discrete(rng &a, size_t b)
+      : x(0), r(a), state(CLEAR) {
+      array.reserve(b);
+    }
+    ~ran_discrete() {
+      if (x)
+        gsl_ran_discrete_free(x);
+    }
+    void clear() {
+      state = CLEAR;
+      array.resize(0);
+    }
+    void push_back(double d) {
+      assert(state == CLEAR || state == PUSH);
+      state = PUSH;
+      array.push_back(d);
+    }
+    void init() {
+      assert(state == PUSH);
+      state = SAMPLE;
+      if (x)
+        gsl_ran_discrete_free(x);
+      x = gsl_ran_discrete_preproc(array.size(), &array[0]);
+    }
+    size_t sample() {
+      assert(state == SAMPLE);
+      size_t s = gsl_ran_discrete(*r, x);
+      assert(s < array.size());
+      return s;
+    }
+    double sample_value() {
+      size_t k = sample();
+      return array[k];
+    }
+};
+
+}  // namespace scil
 
 #endif
 

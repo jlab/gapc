@@ -1,4 +1,4 @@
-//include project_name.hh
+// include project_name.hh
 
 /* {{{
 
@@ -24,17 +24,14 @@
 }}} */
 
 
+#include <iostream>
+#include <cassert>
+
 #include "rtlib/string.hh"
 #include "rtlib/list.hh"
 #include "rtlib/hash.hh"
 #include "rtlib/asymptotics.hh"
-
 #include "rtlib/generic_opts.hh"
-
-#include <iostream>
-
-#include <cassert>
-
 
 int main(int argc, char **argv) {
   gapc::Opts opts;
@@ -78,7 +75,7 @@ int main(int argc, char **argv) {
     std::cout << "Answer ("
       << i << ", " << right << ") :\n";
     obj.print_result(std::cout, res);
-    for (unsigned int j = 0; j<opts.repeats; ++j)
+    for (unsigned int j = 0; j < opts.repeats; ++j)
       obj.print_backtrack(std::cout, res);
     if (i+opts.window_size >= n)
       break;
@@ -100,7 +97,7 @@ int main(int argc, char **argv) {
 #ifdef TRACE
   std::cerr << "start backtrack\n";
 #endif
-  for (unsigned int i = 0; i<opts.repeats; ++i)
+  for (unsigned int i = 0; i < opts.repeats; ++i)
     obj.print_backtrack(std::cout, res);
   obj.print_subopt(std::cout, opts.delta);
 
