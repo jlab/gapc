@@ -21,11 +21,10 @@
 
 }}} */
 
-#ifndef RTLIB_GENERIC_OPTS_HH_
-#define RTLIB_GENERIC_OPTS_HH_
+#ifndef GENERIC_OPTS_HH
+#define GENERIC_OPTS_HH
 
 
-#include <unistd.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -36,33 +35,32 @@
 
 #include <cassert>
 
-// define _XOPEN_SOURCE=500
+//define _XOPEN_SOURCE=500
 
+#include <unistd.h>
 #include <cstdlib>
-#include <string>
-#include <utility>
 
 namespace gapc {
 
 class OptException : public std::exception {
- private:
+  private:
     std::string msg;
-
- public:
-    OptException(const std::string &s) : std::exception(), msg(s) {
+  public:
+    OptException(const std::string &s) : std::exception(), msg(s)
+    {
     }
     ~OptException() throw() { }
-    const char* what() const throw() {
+    const char* what() const throw()
+    {
       return msg.c_str();
     }
 };
 
 class Opts {
- private:
+  private:
     Opts(const Opts&);
     Opts &operator=(const Opts&);
-
- public:
+  public:
     typedef std::vector<std::pair<const char*, unsigned> > inputs_t;
     inputs_t inputs;
     bool window_mode;
@@ -84,15 +82,18 @@ class Opts {
       window_increment(0),
       delta(0),
       repeats(1),
-      k(3) {
+      k(3)
+    {
     }
 
-    ~Opts() {
+    ~Opts()
+    {
       for (inputs_t::iterator i = inputs.begin(); i != inputs.end(); ++i)
         delete[] (*i).first;
     }
 
-    void help(char **argv) {
+    void help(char **argv)
+    {
       std::cout << argv[0] << " ("
 #ifdef WINDOW_MODE
         << " (-[wi] [0-9]+)*"
@@ -103,7 +104,8 @@ class Opts {
         << " (-[drk] [0-9]+)* (-h)? (INPUT|-f INPUT-file)\n";
     }
 
-    void parse(int argc, char **argv) {
+    void parse(int argc, char **argv)
+    {
       int o = 0;
       char *input = 0;
 #ifdef RNALIB_H
@@ -118,7 +120,8 @@ class Opts {
 #endif
               "hd:r:k:")) != -1) {
         switch (o) {
-          case 'f' : {
+          case 'f' :
+            {
             std::ifstream file(optarg);
             file.exceptions(std::ios_base::badbit |
                 std::ios_base::failbit |
@@ -177,12 +180,14 @@ class Opts {
             repeats = std::atoi(optarg);
             break;
           case '?' :
-          case ':' : {
+          case ':' :
+            {
               std::ostringstream os;
               os << "Missing argument of " << char(optopt);
               throw OptException(os.str());
             }
-          default: {
+          default:
+            {
               std::ostringstream os;
               os << "Unknown Option: " << char(o);
               throw OptException(os.str());
@@ -211,8 +216,9 @@ class Opts {
       librna_read_param_file(par_filename);
 #endif
     }
+
 };
 
-}  // namespace gapc
+}
 
-#endif  // RTLIB_GENERIC_OPTS_HH_
+#endif
