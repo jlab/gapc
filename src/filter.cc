@@ -22,8 +22,6 @@
 }}} */
 
 
-
-
 #include "filter.hh"
 
 #include "log.hh"
@@ -31,9 +29,7 @@
 #include "const.hh"
 
 
-
-void Filter::init_builtin()
-{
+void Filter::init_builtin() {
   hashtable<std::string, Builtin>::iterator i;
   if ((i = table.find(*name)) != table.end()) {
     builtin = i->second;
@@ -46,32 +42,32 @@ void Filter::init_builtin()
       Expr::Base *e = args.front();
       if (e->is(Expr::CONST)) {
         Expr::Const *c  = dynamic_cast<Expr::Const*>(e);
-        if (!c->base->is(Const::INT))
+        if (!c->base->is(Const::INT)) {
           Log::instance()->error(e->location,
               "Not an integer as argument of filter " + (*name) + ".");
-        else {
+        } else {
           Const::Int *i = dynamic_cast<Const::Int*>(c->base);
-          if (i->i < 0)
+          if (i->i < 0) {
             Log::instance()->error(e->location,
                 "Negative argument makes no sense here.");
+          }
         }
-      } else
+      } else {
         Log::instance()->error(e->location,
             "Not an const as argument of filter " + (*name) + ".");
+      }
     }
   }
 }
 
 hashtable<std::string, Filter::Builtin> Filter::table;
 
-void Filter::init_table()
-{
+void Filter::init_table() {
   table["maxsize"] = MAX_SIZE;
   table["minsize"] = MIN_SIZE;
 }
 
-size_t Filter::uint_arg() const
-{
+size_t Filter::uint_arg() const {
   assert(args.size() == 1);
   Expr::Base *e = args.front();
   assert(e->is(Expr::CONST));
@@ -82,25 +78,21 @@ size_t Filter::uint_arg() const
   return size_t(i->i);
 }
 
-Filter::Filter(std::string *n, const Loc &l)
-  : builtin(NONE), stateful(false), instance(0), name(n), location(l), type(NO_TYPE)
-{
+Filter::Filter(std::string *n, const Loc &l) : builtin(NONE), stateful(false),
+  instance(0), name(n), location(l), type(NO_TYPE) {
     init_stateful_filters();
 }
 
-void Filter::init_stateful_filters()
-{
-  if (!(name->substr(0,3) == "sf_" || *name == "iupac"))
+void Filter::init_stateful_filters() {
+  if (!(name->substr(0, 3) == "sf_" || *name == "iupac"))
     return;
   static size_t counter = 0;
   instance = counter++;
   stateful = true;
 }
 
-std::string Filter::id() const
-{
+std::string Filter::id() const {
   std::ostringstream o;
   o << "filter_" << *name << instance;
   return o.str();
 }
-

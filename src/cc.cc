@@ -21,7 +21,7 @@
 
 }}} */
 
-
+#include <string>
 #include "cc.hh"
 
 #include "statement.hh"
@@ -33,8 +33,7 @@
 
 #include "var_acc.hh"
 
-void Printer::CC::print(const std::list<Statement::Base*> &stmts)
-{
+void Printer::CC::print(const std::list<Statement::Base*> &stmts) {
   stream << indent() << '{' << endl;
   inc_indent();
   for (std::list<Statement::Base*>::const_iterator i = stmts.begin();
@@ -44,8 +43,7 @@ void Printer::CC::print(const std::list<Statement::Base*> &stmts)
   stream << indent() << '}' << endl;
 }
 
-void Printer::CC::print(const Statement::For &stmt)
-{
+void Printer::CC::print(const Statement::For &stmt) {
   stream << indent() << "for(";
   stream << *stmt.var_decl;
   stream << ' '
@@ -56,8 +54,7 @@ void Printer::CC::print(const Statement::For &stmt)
   stream << stmt.statements;
 }
 
-void Printer::CC::print(const Statement::Var_Decl &stmt)
-{
+void Printer::CC::print(const Statement::Var_Decl &stmt) {
   assert(stmt.type);
   assert(stmt.name);
   stream << indent() << *stmt.type << ' ' << *stmt.name;
@@ -66,8 +63,7 @@ void Printer::CC::print(const Statement::Var_Decl &stmt)
   stream << ';';
 }
 
-void Printer::CC::print(const Statement::If &stmt)
-{
+void Printer::CC::print(const Statement::If &stmt) {
   stream << indent() << "if (" << *stmt.cond << ")" << endl;
   if (stmt.then.size() == 1)
     inc_indent();
@@ -84,27 +80,23 @@ void Printer::CC::print(const Statement::If &stmt)
     dec_indent();
 }
 
-void Printer::CC::print(const Statement::Return &stmt)
-{
+void Printer::CC::print(const Statement::Return &stmt) {
   stream << indent() << "return " << *stmt.expr << ';';
 }
 
-void Printer::CC::print(const Statement::Foreach &stmt)
-{
-  stream << indent() 
+void Printer::CC::print(const Statement::Foreach &stmt) {
+  stream << indent()
     << "foreach " << *stmt.elem->name << " in " << *stmt.container->name;
   print(stmt.statements);
 }
 
-void Printer::CC::print(const Statement::Var_Assign &stmt)
-{
+void Printer::CC::print(const Statement::Var_Assign &stmt) {
   stream << indent();
   stream << *stmt.acc;
   stream << " = " << *stmt.rhs << ";";
 }
 
-void Printer::CC::print(const Statement::Fn_Call &stmt)
-{
+void Printer::CC::print(const Statement::Fn_Call &stmt) {
   stream << indent() << stmt.name() << "( ";
   std::list<Expr::Base*>::const_iterator i = stmt.args.begin();
   if (i != stmt.args.end()) {
@@ -115,8 +107,7 @@ void Printer::CC::print(const Statement::Fn_Call &stmt)
   stream << ");";
 }
 
-void Printer::CC::print(const Statement::Block &stmt)
-{
+void Printer::CC::print(const Statement::Block &stmt) {
   stream << indent() << "{" << endl;
   inc_indent();
   for (std::list<Statement::Base*>::const_iterator i = stmt.statements.begin();
@@ -126,15 +117,15 @@ void Printer::CC::print(const Statement::Block &stmt)
   stream << indent() << "}" << endl;
 }
 
-void Printer::CC::print(const Fn_Def &fn_def)
-{
+void Printer::CC::print(const Fn_Def &fn_def) {
   if (fn_def.adaptor)
     stream << *fn_def.adaptor;
   stream << indent() << *fn_def.return_type << ' ';
-  if (fn_def.target_name().empty())
-    stream << *fn_def.name ;
-  else
+  if (fn_def.target_name().empty()) {
+    stream << *fn_def.name;
+  } else {
     stream << fn_def.target_name();
+  }
   stream << '(';
   std::list<std::string*>::const_iterator j = fn_def.names.begin();
   std::list<Type::Base*>::const_iterator i = fn_def.types.begin();
@@ -154,16 +145,14 @@ void Printer::CC::print(const Fn_Def &fn_def)
   stream << indent() << '}' << endl;
 }
 
-void Printer::CC::print(const Expr::Base &expr)
-{
+void Printer::CC::print(const Expr::Base &expr) {
   // Default pretty print
   external_out() << expr;
   // if needed use dispatch code like for statement
   // which is called by base class
 }
 
-void Printer::CC::print(const Type::Base &b)
-{
+void Printer::CC::print(const Type::Base &b) {
   // Default pretty print
   external_out() << b;
   // if needed use dispatch code like for statement
@@ -171,11 +160,9 @@ void Printer::CC::print(const Type::Base &b)
 }
 
 
-void Printer::CC::print(const Var_Acc::Base &b)
-{
+void Printer::CC::print(const Var_Acc::Base &b) {
   // Default pretty print
   external_out() << b;
   // if needed use dispatch code like for statement
   // which is called by base class
 }
-

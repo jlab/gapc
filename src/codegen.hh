@@ -21,111 +21,107 @@
 
 }}} */
 
-#ifndef CODEGEN_HH
-#define CODEGEN_HH
-
-#include "type_fwd.hh"
-#include "bool.hh"
+#ifndef SRC_CODEGEN_HH_
+#define SRC_CODEGEN_HH_
 
 #include <ostream>
 #include <cassert>
 
+#include "type_fwd.hh"
+#include "bool.hh"
+
 class AST;
 
 namespace Code {
+class Mode {
+ public:
+  enum Type { UNGER, CYK };
+  enum Bt_Type { FORWARD, BACKTRACK, SUBOPT };
 
+ private:
+  Type type;
+  Bt_Type bt_type;
 
-  class Mode {
-    public:
-      enum Type { UNGER, CYK };
-      enum Bt_Type { FORWARD, BACKTRACK, SUBOPT };
-    private:
-      Type type;
-      Bt_Type bt_type;
+  bool allow_cooptimal_;
+  bool keep_equal_;  // used for ADP specialization
+  bool kscoring_;
 
-      bool allow_cooptimal_;
-      bool keep_equal_; // used for ADP specialization
-      bool kscoring_;
+  Bool subopt_buddy_;
+  Bool marker_;
 
-      Bool subopt_buddy_;
-      Bool marker_;
+  Bool sample_;
 
-      Bool sample_;
-    public:
-      Mode()
-        : type(UNGER), bt_type(FORWARD),
-          allow_cooptimal_(true), keep_equal_(true),
-          kscoring_(false)
-      {
-      }
-      Mode(Type t, Bt_Type b)
-        : type(t), bt_type(b),
-          allow_cooptimal_(true), keep_equal_(true),
-          kscoring_(false)
-      {
-      }
-      void operator=(Type t) { type = t; }
-      //Type operator()() const { return type; }
-      bool operator==(Type t) const { return type == t; }
-      bool operator!=(Type t) const { return !(*this == t); }
+ public:
+  Mode()
+    : type(UNGER), bt_type(FORWARD),
+      allow_cooptimal_(true), keep_equal_(true),
+      kscoring_(false) {
+  }
+  Mode(Type t, Bt_Type b)
+    : type(t), bt_type(b),
+      allow_cooptimal_(true), keep_equal_(true),
+      kscoring_(false) {
+  }
+  void operator=(Type t) { type = t; }
+  // Type operator()() const { return type; }
+  bool operator==(Type t) const { return type == t; }
+  bool operator!=(Type t) const { return !(*this == t); }
 
-      void operator=(Bt_Type t) { bt_type = t; }
-      bool operator==(Bt_Type t) const { return bt_type == t; }
-      bool operator!=(Bt_Type t) const { return !(*this == t); }
+  void operator=(Bt_Type t) { bt_type = t; }
+  bool operator==(Bt_Type t) const { return bt_type == t; }
+  bool operator!=(Bt_Type t) const { return !(*this == t); }
 
-      void set_cooptimal(bool t) { allow_cooptimal_ = t; }
-      bool cooptimal() const { return allow_cooptimal_; }
+  void set_cooptimal(bool t) { allow_cooptimal_ = t; }
+  bool cooptimal() const { return allow_cooptimal_; }
 
-      void set_keep_cooptimal(bool t) { keep_equal_ = t; }
-      bool keep_cooptimal() const { return keep_equal_; }
-      
-      void set_kscoring(bool t) { kscoring_ = t; }
-      bool kscoring() const { return kscoring_; }
+  void set_keep_cooptimal(bool t) { keep_equal_ = t; }
+  bool keep_cooptimal() const { return keep_equal_; }
 
-      void put(std::ostream &o) const
-      {
-        o << "Type: ";
-        switch (type) {
-          case UNGER : o << "unger"; break;
-          case CYK : o << "cyk"; break;
-        }
-        o << " Bt_Type: ";
-        switch (bt_type) {
-          case FORWARD : o << "forward"; break;
-          case BACKTRACK : o << "backtrack"; break;
-          case SUBOPT : o << "subopt"; break;
-        }
-        o << '\n';
-      }
+  void set_kscoring(bool t) { kscoring_ = t; }
+  bool kscoring() const { return kscoring_; }
 
-      bool subopt_buddy() const { return subopt_buddy_; }
-      void set_subopt_buddy() { subopt_buddy_ = true; }
-
-      bool marker() const { return marker_; }
-      void set_marker() { marker_ = true; }
-
-      bool sample() const { return sample_; }
-      void set_sample(bool b) { sample_ = b; }
-  };
-
-  inline std::ostream &operator<<(std::ostream &o, const Mode &m)
-  {
-    m.put(o);
-    return o;
+  void put(std::ostream &o) const {
+    o << "Type: ";
+    switch (type) {
+      case UNGER : o << "unger"; break;
+      case CYK : o << "cyk"; break;
+    }
+    o << " Bt_Type: ";
+    switch (bt_type) {
+      case FORWARD : o << "forward"; break;
+      case BACKTRACK : o << "backtrack"; break;
+      case SUBOPT : o << "subopt"; break;
+    }
+    o << '\n';
   }
 
-  class Gen {
-    private:
-      Type::Base *return_type_;
-    public:
-      Gen() : return_type_(0) { }
-      Gen(AST &ast);
-      const Type::Base *return_type() const
-      {
-        assert(return_type_); return return_type_;
-      }
-  };
+  bool subopt_buddy() const { return subopt_buddy_; }
+  void set_subopt_buddy() { subopt_buddy_ = true; }
 
+  bool marker() const { return marker_; }
+  void set_marker() { marker_ = true; }
+
+  bool sample() const { return sample_; }
+  void set_sample(bool b) { sample_ = b; }
+};
+
+inline std::ostream &operator<<(std::ostream &o, const Mode &m) {
+  m.put(o);
+  return o;
 }
 
-#endif
+class Gen {
+ private:
+  Type::Base *return_type_;
+
+ public:
+  Gen() : return_type_(0) { }
+  Gen(AST &ast);
+  const Type::Base *return_type() const {
+    assert(return_type_); return return_type_;
+  }
+};
+
+}  // namespace Code
+
+#endif  // SRC_CODEGEN_HH_

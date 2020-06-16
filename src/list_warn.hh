@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef LIST_WARN_HH
-#define LIST_WARN_HH
+#ifndef SRC_LIST_WARN_HH_
+#define SRC_LIST_WARN_HH_
 
 #include "visitor.hh"
 
@@ -31,16 +31,15 @@ class Instance;
 class Fn_Def;
 
 class List_Warn : public Visitor {
-  private:
-    Instance *instance;
-    bool skip;
+ private:
+  Instance *instance;
+  bool skip;
 
-  public:
-    List_Warn() : instance(0), skip(false) {}
-    List_Warn(Instance *i) : instance(i), skip(false) {}
-    void visit(Symbol::NT &n);
-    void visit_begin(Alt::Block &a);
-
+ public:
+  List_Warn() : instance(0), skip(false) {}
+  List_Warn(Instance *i) : instance(i), skip(false) {}
+  void visit(Symbol::NT &n);
+  void visit_begin(Alt::Block &a);
 };
 
-#endif
+#endif  // SRC_LIST_WARN_HH_

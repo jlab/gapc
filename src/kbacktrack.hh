@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef KBACKTRACK_HH
-#define KBACKTRACK_HH
+#ifndef SRC_KBACKTRACK_HH_
+#define SRC_KBACKTRACK_HH_
 
 #include <list>
 
@@ -35,25 +35,24 @@ class AST;
 class Fn_Def;
 
 class KBacktrack : public Backtrack_Base {
-  private:
-    std::list<Fn_Def*> proxy_fns;
-    void gen_nt_proxy_fn(Fn_Def *fn, Type::Base *score_return_type);
+ private:
+  std::list<Fn_Def*> proxy_fns;
+  void gen_nt_proxy_fn(Fn_Def *fn, Type::Base *score_return_type);
 
-  public:
+ public:
+  void gen_instance(Algebra *score);
+  void gen_instance(Algebra *score, Product::Sort_Type sort);
+  void gen_instance(Algebra *score, Product::Base *base, Product::Sort_Type sort);
 
-    void gen_instance(Algebra *score);
-    void gen_instance(Algebra *score, Product::Sort_Type sort);
-    void gen_instance(Algebra *score, Product::Base *base, Product::Sort_Type sort);
-    
-    void apply_filter(Filter *f);
-    void gen_backtrack(AST &ast);
-    void gen_instance_code(AST &ast);
+  void apply_filter(Filter *f);
+  void gen_backtrack(AST &ast);
+  void gen_instance_code(AST &ast);
 
-    void gen_nt_decls(const std::list<Symbol::NT*> &nts);
+  void gen_nt_decls(const std::list<Symbol::NT*> &nts);
 
 
-    void print_header(Printer::Base &pp, AST &ast);
-    void print_body(Printer::Base &pp, AST &ast);
+  void print_header(Printer::Base &pp, AST &ast);
+  void print_body(Printer::Base &pp, AST &ast);
 };
 
-#endif
+#endif  // SRC_KBACKTRACK_HH_

@@ -22,14 +22,14 @@
 }}} */
 
 
-#ifndef HASHTABLE_H
-#define HASHTABLE_H
+#ifndef SRC_HASHTABLE_HH_
+#define SRC_HASHTABLE_HH_
 
 #include <map>
 
 // FIXME - implement real hashtable ...
-//typedef std::map hashtable;
+// typedef std::map hashtable;
 #define hashtable std::map
 
 
-#endif
+#endif  // SRC_HASHTABLE_HH_

@@ -22,33 +22,32 @@
 }}} */
 
 
-#ifndef LIST_VISITOR_HH
-#define LIST_VISITOR_HH
+#ifndef SRC_LIST_VISITOR_HH_
+#define SRC_LIST_VISITOR_HH_
 
 #include "visitor.hh"
 
 class List_Visitor : public Visitor {
-  public:
-    void visit(Symbol::Terminal &s);
+ public:
+  void visit(Symbol::Terminal &s);
 
-    void visit(Symbol::NT &n);
-    void visit_itr(Symbol::NT &n);
+  void visit(Symbol::NT &n);
+  void visit_itr(Symbol::NT &n);
 
-    void visit_begin(Alt::Simple &a);
-    void visit_end(Alt::Simple &a);
-    void visit_itr(Alt::Simple &a);
-    void visit(Alt::Link &a);
-    void visit_begin(Alt::Block &a);
-    void visit_itr(Alt::Block &a);
-    void visit_end(Alt::Block &a);
+  void visit_begin(Alt::Simple &a);
+  void visit_end(Alt::Simple &a);
+  void visit_itr(Alt::Simple &a);
+  void visit(Alt::Link &a);
+  void visit_begin(Alt::Block &a);
+  void visit_itr(Alt::Block &a);
+  void visit_end(Alt::Block &a);
 
-    void visit(Alt::Multi &a);
-    void visit_itr(Alt::Multi &a);
-    void visit_end(Alt::Multi &a);
+  void visit(Alt::Multi &a);
+  void visit_itr(Alt::Multi &a);
+  void visit_end(Alt::Multi &a);
 
-    void visit(Fn_Arg::Const &f);
-    void visit(Fn_Arg::Alt &f);
-
+  void visit(Fn_Arg::Const &f);
+  void visit(Fn_Arg::Alt &f);
 };
 
-#endif
+#endif  // SRC_LIST_VISITOR_HH_

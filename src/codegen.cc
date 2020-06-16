@@ -27,6 +27,5 @@
 #include "fn_def.hh"
 
 Code::Gen::Gen(AST &ast)
-  : return_type_(ast.grammar()->axiom->code()->return_type)
-{
+  : return_type_(ast.grammar()->axiom->code()->return_type) {
 }

@@ -21,7 +21,7 @@
 
 }}} */
 
-//#include "lexer.h"
+//  #include "lexer.h"
 
 #include "loc.hh"
 
@@ -33,35 +33,33 @@
 #include <cassert>
 
 Loc::Loc() : yy::location(), off(0), file(0) {}
-Loc::Loc(const yy::location &l) : yy::location(l), off(0), file(0) {  }
-
-std::string Loc::line() const
-{
-  assert(file);
-      int r;
-      char *buffer = new char[LINE_SIZE];
-      long fpos = std::ftell(file); CHECK_EXIT(fpos);
-      r = std::fseek(file, off, SEEK_SET); CHECK_EXIT(r);
-      char *t = std::fgets(buffer, LINE_SIZE, file);
-      if (!t) {
-        if (std::feof(file)) {
-          return std::string("<EOF>");
-        }
-        std::perror("fgets");
-        std::exit(1);
-      }
-      // XXX wtf?!?
-      if (std::strlen(buffer))
-        buffer[std::strlen(buffer)-1] = 0;
-      r = std::fseek(file, fpos, SEEK_SET); CHECK_EXIT(r);
-      std::string s(buffer);
-      delete[] buffer;
-      return s;
+Loc::Loc(const yy::location &l) : yy::location(l), off(0), file(0) {
 }
 
-void Loc::set_file(std::FILE* f)
-{
-  //assert(f);
+std::string Loc::line() const {
+  assert(file);
+  int r;
+  char *buffer = new char[LINE_SIZE];
+  long fpos = std::ftell(file); CHECK_EXIT(fpos);
+  r = std::fseek(file, off, SEEK_SET); CHECK_EXIT(r);
+  char *t = std::fgets(buffer, LINE_SIZE, file);
+  if (!t) {
+    if (std::feof(file)) {
+      return std::string("<EOF>");
+    }
+    std::perror("fgets");
+    std::exit(1);
+  }
+  // XXX wtf?!?
+  if (std::strlen(buffer))
+    buffer[std::strlen(buffer)-1] = 0;
+  r = std::fseek(file, fpos, SEEK_SET); CHECK_EXIT(r);
+  std::string s(buffer);
+  delete[] buffer;
+  return s;
+}
+
+void Loc::set_file(std::FILE* f) {
+  //  assert(f);
   file = f;
 }
-

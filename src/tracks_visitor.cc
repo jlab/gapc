@@ -24,8 +24,8 @@
 #include "tracks_visitor.hh"
 
 #include <sstream>
-#include "log.hh"
 
+#include "log.hh"
 #include "symbol.hh"
 #include "alt.hh"
 #include "fn_arg.hh"
@@ -34,12 +34,10 @@ Tracks_Visitor::Tracks_Visitor(Grammar &g)
   : skip(false), local_tracks(0), old_tracks(0),
     current_single_track(0),
     grammar(g),
-    again(false), error(false)
-{
+    again(false), error(false) {
 }
 
-void Tracks_Visitor::visit(Symbol::NT &n)
-{
+void Tracks_Visitor::visit(Symbol::NT &n) {
   local_tracks = n.tracks();
   current_single_track = n.track_pos();
   if (!local_tracks) {
@@ -50,18 +48,15 @@ void Tracks_Visitor::visit(Symbol::NT &n)
   skip = false;
 }
 
-void Tracks_Visitor::visit(Fn_Arg::Base &a)
-{
+void Tracks_Visitor::visit(Fn_Arg::Base &a) {
   a.set_tracks(local_tracks);
 }
 
-void Tracks_Visitor::visit(Alt::Base &a)
-{
+void Tracks_Visitor::visit(Alt::Base &a) {
   a.set_tracks(local_tracks, current_single_track);
 }
 
-void Tracks_Visitor::visit_begin(Alt::Simple &a)
-{
+void Tracks_Visitor::visit_begin(Alt::Simple &a) {
   a.set_tracks(local_tracks, current_single_track);
 
   if (a.has_index_overlay()) {
@@ -69,8 +64,7 @@ void Tracks_Visitor::visit_begin(Alt::Simple &a)
   }
 }
 
-Symbol::NT *Tracks_Visitor::different_track(Symbol::NT *nt, size_t track_pos)
-{
+Symbol::NT *Tracks_Visitor::different_track(Symbol::NT *nt, size_t track_pos) {
   key_t key(*nt->orig_name, track_pos);
   hashtable<key_t, Symbol::NT*>::iterator i = duplicates.find(key);
   if (i != duplicates.end()) {
@@ -83,8 +77,7 @@ Symbol::NT *Tracks_Visitor::different_track(Symbol::NT *nt, size_t track_pos)
   return x;
 }
 
-void Tracks_Visitor::visit(Alt::Link &a)
-{
+void Tracks_Visitor::visit(Alt::Link &a) {
   if (skip)
     return;
   size_t x = a.nt->tracks();
@@ -117,14 +110,14 @@ void Tracks_Visitor::visit(Alt::Link &a)
   }
 }
 
-void Tracks_Visitor::visit(Alt::Multi &a)
-{
+void Tracks_Visitor::visit(Alt::Multi &a) {
   if (skip)
     return;
   if (local_tracks != a.tracks() || a.tracks() == 1) {
     error = true;
     std::ostringstream o;
-    o << "Incompatible number of tracks: " << local_tracks << " vs. " << a.tracks();
+    o << "Incompatible number of tracks: " << local_tracks
+      << " vs. " << a.tracks();
     Log::instance()->error(a.location, o.str());
   }
   old_tracks = local_tracks;
@@ -133,19 +126,15 @@ void Tracks_Visitor::visit(Alt::Multi &a)
   current_single_track = 0;
 }
 
-void Tracks_Visitor::visit_itr(Alt::Multi &a)
-{
+void Tracks_Visitor::visit_itr(Alt::Multi &a) {
   if (skip)
     return;
   current_single_track++;
 }
 
-void Tracks_Visitor::visit_end(Alt::Multi &a)
-{
+void Tracks_Visitor::visit_end(Alt::Multi &a) {
   if (skip)
     return;
   local_tracks = old_tracks;
   current_single_track = 0;
 }
-
-

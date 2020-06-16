@@ -22,26 +22,30 @@
 }}} */
 
 
-#ifndef TABLE_HH
-#define TABLE_HH
+#ifndef SRC_TABLE_HH_
+#define SRC_TABLE_HH_
 
+#include <string>
 #include "yieldsize.hh"
 
 class Table {
-  public:
+ public:
     enum Dim { NONE, CONSTANT, LINEAR, QUADRATIC };
     enum Sticky { NO_INDEX, LEFT, RIGHT };
-  private:
+
+ private:
     Dim dim;
     bool const_bounded;
     Sticky sticky_;
-  public:
-    Yield::Poly up;
-  private:
 
+ public:
+    Yield::Poly up;
+
+ private:
     Yield::Size left_rest_;
     Yield::Size right_rest_;
-  public:
+
+ public:
     Table() : dim(NONE), const_bounded(false), sticky_(NO_INDEX)  {}
 
     bool bounded() const { return const_bounded; }
@@ -64,7 +68,7 @@ class Table {
         // to generate DIAG_LINEAR tables ...
         // if (const_bounded && d == QUADRATIC)
         //  dim = LINEAR;
-        //else
+        // else
           dim = d;
       }
       return *this;
@@ -83,19 +87,16 @@ class Table {
     void set_left_rest(const Yield::Size &a) { left_rest_ /= a; }
     void set_right_rest(const Yield::Size &a) { right_rest_ /= a; }
 
-    bool is_cyk_left() const
-    {
+    bool is_cyk_left() const {
       return dim == LINEAR && sticky_ == LEFT && left_rest_.high() == 0;
     }
-    bool is_cyk_right() const
-    {
+    bool is_cyk_right() const {
       return dim == LINEAR && sticky_ == RIGHT && right_rest_.high() == 0;
     }
     bool delete_left_index() const;
     bool delete_right_index() const;
 
-    bool is_cyk_const() const
-    {
+    bool is_cyk_const() const {
       return dim == CONSTANT &&
         left_rest_.high() == 0 && right_rest_.high() == 0;
     }
@@ -103,7 +104,7 @@ class Table {
     std::ostream &put(std::ostream &s) const {
       s << '(';
       switch (dim) {
-        case NONE : s << "none"; 
+        case NONE : s << "none";
                     break;
         case CONSTANT : s << "const";
                     break;
@@ -117,12 +118,10 @@ class Table {
     }
     void print(std::ostream &s) const;
     void print_short(std::ostream &s, const std::string &name) const;
-
 };
 
-inline std::ostream &operator<<(std::ostream &s, const Table &p)
-{
+inline std::ostream &operator<<(std::ostream &s, const Table &p) {
   return p.put(s);
 }
 
-#endif
+#endif  // SRC_TABLE_HH_

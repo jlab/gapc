@@ -21,6 +21,7 @@
 
 }}} */
 
+#include <string>
 #include "subopt_marker.hh"
 
 #include "algebra.hh"
@@ -48,11 +49,10 @@ void Subopt_Marker::gen_instance(Algebra *score) {
     gen_instance(score, Product::NONE);
 }
 
-void Subopt_Marker::gen_instance(Algebra *score, Product::Sort_Type sort)
-{ 
+void Subopt_Marker::gen_instance(Algebra *score, Product::Sort_Type sort) {
   score_algebra = score;
   Instance *i = new Instance(score, algebra);
-  if(sort != Product::NONE) {
+  if (sort != Product::NONE) {
     i->product->set_sorted_choice(sort);
   }
   i->product->init_fn_suffix("_bt");
@@ -62,16 +62,14 @@ void Subopt_Marker::gen_instance(Algebra *score, Product::Sort_Type sort)
   instance = i;
 }
 
-void Subopt_Marker::gen_instance(Algebra *score, Product::Base *base, Product::Sort_Type sort) {
-     
-  gen_instance(score,  sort);  
-    
+void Subopt_Marker::gen_instance(Algebra *score, Product::Base *base,
+                                 Product::Sort_Type sort) {
+  gen_instance(score,  sort);
+
   instance->product->set_sort_product((new Instance(base, algebra))->product);
-    
 }
 
-void Subopt_Marker::adjust_list_types(Fn_Def *fn, Fn_Def *fn_type)
-{
+void Subopt_Marker::adjust_list_types(Fn_Def *fn, Fn_Def *fn_type) {
   ::Type::List::Push_Type push_type = ::Type::List::NORMAL;
   switch (fn_type->choice_fn_type()) {
     case Expr::Fn_Call::MINIMUM :
@@ -108,8 +106,7 @@ void Subopt_Marker::adjust_list_types(Fn_Def *fn, Fn_Def *fn_type)
 
 #include "statement/fn_call.hh"
 
-void Subopt_Marker::add_subopt_fn_args(Fn_Def *fn, const Symbol::NT &nt)
-{
+void Subopt_Marker::add_subopt_fn_args(Fn_Def *fn, const Symbol::NT &nt) {
   for (Statement::iterator i = Statement::begin(fn->stmts);
        i != Statement::end(); ++i) {
     Statement::Base *s = *i;
@@ -134,7 +131,8 @@ void Subopt_Marker::add_subopt_fn_args(Fn_Def *fn, const Symbol::NT &nt)
                 f->args.push_back(new Expr::Vacc(*t));
                 ++t;
               } else {
-                f->args.push_back(new Expr::Vacc(new std::string("t_0_left_most")));
+                f->args.push_back(new Expr::Vacc(new std::string(
+                  "t_0_left_most")));
               }
               if (!nt.tables().front().delete_right_index()) {
                 f->args.push_back(new Expr::Vacc(*t));
@@ -150,22 +148,21 @@ void Subopt_Marker::add_subopt_fn_args(Fn_Def *fn, const Symbol::NT &nt)
   }
 }
 
-void Subopt_Marker::gen_backtrack(AST &ast)
-{
+void Subopt_Marker::gen_backtrack(AST &ast) {
   bool r = ast.check_instances(instance);
   assert(r);
   r = ast.insert_instance(instance);
   assert(r);
   remove_unused();
 
-  //ast.instance_grammar_eliminate_lists(instance);
+  // ast.instance_grammar_eliminate_lists(instance);
   Product::Two *t = dynamic_cast<Product::Two*>(instance->product);
   assert(t);
   t->right()->eliminate_lists();
   ast.grammar()->eliminate_lists();
 
   ast.grammar()->init_list_sizes();
-  //ast.warn_missing_choice_fns(instance);
+  // ast.warn_missing_choice_fns(instance);
   ast.grammar()->init_indices();
   ast.grammar()->init_decls("sub_");
 
@@ -190,13 +187,11 @@ void Subopt_Marker::gen_backtrack(AST &ast)
 
     marker_decls.push_back(new Statement::Marker_Decl(**i));
   }
-
 }
 
-void Subopt_Marker::gen_instance_code(AST &ast)
-{
+void Subopt_Marker::gen_instance_code(AST &ast) {
   instance->product->right_most()->codegen();
-  //ast.optimize_choice(*instance);
+  // ast.optimize_choice(*instance);
 
   instance->product->algebra()
     ->codegen(*dynamic_cast<Product::Two*>(instance->product));
@@ -230,8 +225,7 @@ void Subopt_Marker::gen_instance_code(AST &ast)
 
 
 
-void Subopt_Marker::print_header(Printer::Base &pp, AST &ast)
-{
+void Subopt_Marker::print_header(Printer::Base &pp, AST &ast) {
   pp.print_zero_decls(*ast.grammar());
 
   for (std::list<Symbol::NT*>::const_iterator i = ast.grammar()->nts().begin();
@@ -260,8 +254,7 @@ void Subopt_Marker::print_header(Printer::Base &pp, AST &ast)
   pp.end_fwd_decls();
 }
 
-void Subopt_Marker::print_body(Printer::Base &pp, AST &ast)
-{
+void Subopt_Marker::print_body(Printer::Base &pp, AST &ast) {
   ast.print_code(pp);
 
   instance->product->right_most()->print_code(pp);
@@ -273,5 +266,3 @@ void Subopt_Marker::gen_algebra(Signature &signature)
 {
 }
 */
-
-

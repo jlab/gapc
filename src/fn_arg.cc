@@ -21,6 +21,7 @@
 
 }}} */
 
+#include <algorithm>
 
 #include "fn_arg.hh"
 
@@ -34,15 +35,14 @@
 
 Fn_Arg::Base::Base(Type t, const Loc &l)
   : type(t), productive(false), datatype(NULL), terminal_type(false),
-  location(l)
-   {}
+  location(l) {
+  }
 
 Fn_Arg::Base::~Base() {}
 
 
 Fn_Arg::Const::Const(::Const::Base *e, const Loc &l)
-  : Base(CONST, l), expr_(e)
-{
+  : Base(CONST, l), expr_(e) {
   productive = true;
   terminal_type = true;
   list_size_ = 1;
@@ -50,46 +50,39 @@ Fn_Arg::Const::Const(::Const::Base *e, const Loc &l)
   init_multi_ys();
 }
 
-Fn_Arg::Base *Fn_Arg::Alt::clone()
-{
+Fn_Arg::Base *Fn_Arg::Alt::clone() {
   Alt *f = new Alt(*this);
   f->alt = alt->clone();
   return f;
 }
 
-Fn_Arg::Base *Fn_Arg::Const::clone()
-{
+Fn_Arg::Base *Fn_Arg::Const::clone() {
   Const *f = new Const(*this);
   return f;
 }
 
 bool Fn_Arg::Base::init_links(Grammar &grammar) { return true; }
 
-bool Fn_Arg::Alt::init_links(Grammar &g)
-{
+bool Fn_Arg::Alt::init_links(Grammar &g) {
   bool b = alt->init_links(g);
   return b;
 }
 
-bool Fn_Arg::Alt::init_productive()
-{
+bool Fn_Arg::Alt::init_productive() {
   bool r = alt->init_productive();
   productive = alt->is_productive();
   return r;
 }
 
-bool Fn_Arg::Const::init_productive()
-{
+bool Fn_Arg::Const::init_productive() {
   return false;
 }
 
-size_t Fn_Arg::Alt::width()
-{
+size_t Fn_Arg::Alt::width() {
   return alt->width();
 }
 
-size_t Fn_Arg::Const::width()
-{
+size_t Fn_Arg::Const::width() {
   if (expr_->yield_size().high() == Yield::UP)
     return 1;
   else
@@ -97,58 +90,50 @@ size_t Fn_Arg::Const::width()
 }
 
 
-void Fn_Arg::Alt::print_link(std::ostream &s)
-{
+void Fn_Arg::Alt::print_link(std::ostream &s) {
   alt->print_link(s);
 }
 
-void Fn_Arg::Const::print_link(std::ostream &s)
-{
+void Fn_Arg::Const::print_link(std::ostream &s) {
 }
 
-bool Fn_Arg::Alt::is(::Alt::Type t)
-{
+bool Fn_Arg::Alt::is(::Alt::Type t) {
   return alt->is(t);
 }
 
-bool Fn_Arg::Const::is(::Alt::Type t)
-{
+bool Fn_Arg::Const::is(::Alt::Type t) {
   return false;
 }
 
-Runtime::Poly Fn_Arg::Alt::runtime(std::list<Symbol::NT*> &active_list, Runtime::Poly accum_rt)
-{
+Runtime::Poly Fn_Arg::Alt::runtime(
+  std::list<Symbol::NT*> &active_list, Runtime::Poly accum_rt) {
   return alt->runtime(active_list, accum_rt);
 }
 
-Runtime::Poly Fn_Arg::Const::runtime(std::list<Symbol::NT*> &active_list, Runtime::Poly accum_rt)
-{
+Runtime::Poly Fn_Arg::Const::runtime(
+  std::list<Symbol::NT*> &active_list, Runtime::Poly accum_rt) {
   return 1;
   // just const, does not change the module test
   // return calls;
 }
 
-Runtime::Poly Fn_Arg::Alt::init_in_out()
-{
+Runtime::Poly Fn_Arg::Alt::init_in_out() {
   return alt->init_in_out();
 }
 
-Runtime::Poly Fn_Arg::Const::init_in_out()
-{
+Runtime::Poly Fn_Arg::Const::init_in_out() {
   // before: return calls
   // since this is just a const call, it make more sense to just return 1
   // (does not change the module test results, anyways)
   return 1;
 }
 
-bool Fn_Arg::Alt::set_data_type(::Type::Base *t, const Loc &l)
-{
+bool Fn_Arg::Alt::set_data_type(::Type::Base *t, const Loc &l) {
   bool b = ::Type::set_if_compatible(datatype, t, location, l);
-  return b ;
+  return b;
 }
 
-bool Fn_Arg::Const::set_data_type(::Type::Base *t, const Loc &l)
-{
+bool Fn_Arg::Const::set_data_type(::Type::Base *t, const Loc &l) {
   bool b = ::Type::set_if_compatible(datatype, t, location, l);
   bool r = expr_->set_data_type(t, l);
   return b && r;
@@ -158,8 +143,7 @@ bool Fn_Arg::Const::set_data_type(::Type::Base *t, const Loc &l)
 #include "symbol.hh"
 #include "fn_decl.hh"
 
-::Type::Status Fn_Arg::Alt::infer_missing_types()
-{
+::Type::Status Fn_Arg::Alt::infer_missing_types() {
   ::Type::Status r = alt->infer_missing_types();
 
   assert(datatype);
@@ -201,29 +185,30 @@ bool Fn_Arg::Const::set_data_type(::Type::Base *t, const Loc &l)
       ::Alt::Link *l = dynamic_cast< ::Alt::Link*>(alt);
       if (l->nt->is(Symbol::NONTERMINAL)) {
         Symbol::NT *nt = dynamic_cast<Symbol::NT*>(l->nt);
-        if (nt->has_eval_fn())
+        if (nt->has_eval_fn()) {
           b = set_data_type(t, nt->eval_decl->location);
-        else
+        } else {
           b = set_data_type(t, nt->location);
-      } else
+        }
+      } else {
         b = set_data_type(t, alt->location);
+      }
     } else {
       b = set_data_type(t, alt->location);
     }
     if (!b)
       return ::Type::ERROR;
     return r;
-  } else
+  } else {
     return std::max(r, ::Type::RUNNING);
+  }
 }
 
-::Type::Status Fn_Arg::Const::infer_missing_types()
-{
+::Type::Status Fn_Arg::Const::infer_missing_types() {
   return ::Type::READY;
 }
 
-void Fn_Arg::Alt::print_type(std::ostream &s)
-{
+void Fn_Arg::Alt::print_type(std::ostream &s) {
   if (datatype)
     s << *datatype;
   else
@@ -233,8 +218,7 @@ void Fn_Arg::Alt::print_type(std::ostream &s)
   s << " >";
 }
 
-void Fn_Arg::Const::print_type(std::ostream &s)
-{
+void Fn_Arg::Const::print_type(std::ostream &s) {
   if (datatype)
     s << *datatype;
   else
@@ -244,8 +228,7 @@ void Fn_Arg::Const::print_type(std::ostream &s)
   s << " >-";
 }
 
-bool Fn_Arg::Alt::returns_list()
-{
+bool Fn_Arg::Alt::returns_list() {
   if (alt->is(::Alt::MULTI)) {
     if (alt->data_type()->simple()->is(::Type::LIST))
       return true;
@@ -257,89 +240,79 @@ bool Fn_Arg::Alt::returns_list()
       if ((*i)->simple()->is(::Type::LIST))
         return true;
     return false;
-  } else
+  } else {
     return alt->data_type()->simple()->is(::Type::LIST);
+  }
 
   assert(!var_decls().empty());
-  for (std::vector<Statement::Var_Decl*>::const_iterator i = var_decls().begin();
-      i != var_decls().end(); ++i)
-    if (*i)
+  for (std::vector<Statement::Var_Decl*>::const_iterator i =
+       var_decls().begin(); i != var_decls().end(); ++i) {
+    if (*i) {
       return true;
+    }
+  }
   return false;
 }
 
-bool Fn_Arg::Const::returns_list()
-{
+bool Fn_Arg::Const::returns_list() {
   return expr_->data_type()->simple()->is(::Type::LIST);
 }
 
-::Type::Base *Fn_Arg::Alt::ext_data_type()
-{
+::Type::Base *Fn_Arg::Alt::ext_data_type() {
   return alt->data_type()->simple();
 }
 
-::Type::Base *Fn_Arg::Const::ext_data_type()
-{
+::Type::Base *Fn_Arg::Const::ext_data_type() {
   return expr_->data_type()->simple();
 }
 
-void Fn_Arg::Base::reset_types()
-{
+void Fn_Arg::Base::reset_types() {
   datatype = NULL;
 }
 
-const Yield::Poly& Fn_Arg::Alt::list_size() const
-{
+const Yield::Poly& Fn_Arg::Alt::list_size() const {
   return alt->list_size();
 }
 
-const Yield::Poly& Fn_Arg::Const::list_size() const
-{
+const Yield::Poly& Fn_Arg::Const::list_size() const {
   return list_size_;
 }
 
 
-void Fn_Arg::Alt::traverse(Visitor &v)
-{
+void Fn_Arg::Alt::traverse(Visitor &v) {
   v.visit(*dynamic_cast<Base*>(this));
   v.visit(*this);
   alt->traverse(v);
 }
 
-void Fn_Arg::Const::traverse(Visitor &v)
-{
+void Fn_Arg::Const::traverse(Visitor &v) {
   v.visit(*dynamic_cast<Base*>(this));
   v.visit(*this);
 }
 
-void Fn_Arg::Base::set_tracks(size_t t)
-{
+void Fn_Arg::Base::set_tracks(size_t t) {
   left_indices.resize(t);
   right_indices.resize(t);
 }
 
 void Fn_Arg::Base::init_indices(Expr::Base *left, Expr::Base *right,
-    unsigned int &k, size_t track)
-{
+    unsigned int &k, size_t track) {
   left_indices[track] = left;
   right_indices[track] = right;
 }
 
 void Fn_Arg::Alt::init_indices(Expr::Base *left, Expr::Base *right,
-    unsigned int &k, size_t track)
-{
+    unsigned int &k, size_t track) {
   Base::init_indices(left, right, k, track);
   alt->init_indices(left, right, k, track);
 }
 
 void Fn_Arg::Const::init_indices(Expr::Base *left, Expr::Base *right,
-    unsigned int &k, size_t track)
-{
+    unsigned int &k, size_t track) {
   Base::init_indices(left, right, k, track);
 }
 
-void Fn_Arg::Base::init_ret_decl(unsigned int i, const std::string &prefix)
-{
+void Fn_Arg::Base::init_ret_decl(unsigned int i, const std::string &prefix) {
   ret_decls_.clear();
   var_decls_.clear();
   std::ostringstream a;
@@ -353,12 +326,12 @@ void Fn_Arg::Base::init_ret_decl(unsigned int i, const std::string &prefix)
     Statement::Var_Decl *var_decl =  new Statement::Var_Decl(data_type(),
         new std::string(x.str()));
     var_decls_.push_back(var_decl);
-  } else
+  } else {
     var_decls_.push_back(0);
+  }
 }
 
-void Fn_Arg::Alt::init_ret_decl(unsigned int i, const std::string &prefix)
-{
+void Fn_Arg::Alt::init_ret_decl(unsigned int i, const std::string &prefix) {
   if (!alt->is(::Alt::MULTI)) {
     Base::init_ret_decl(i, prefix);
     return;
@@ -387,23 +360,22 @@ void Fn_Arg::Alt::init_ret_decl(unsigned int i, const std::string &prefix)
     }
     std::ostringstream v;
     v << prefix << "x_" << i << "_" << t;
-    Statement::Var_Decl *var_decl = 
+    Statement::Var_Decl *var_decl =
       new Statement::Var_Decl((*a)->simple(), new std::string(v.str()));
     var_decls_.push_back(var_decl);
   }
 }
 
-void Fn_Arg::Alt::codegen(AST &ast)
-{
+void Fn_Arg::Alt::codegen(AST &ast) {
   alt->codegen(ast);
-  //statements_ = alt->statements;
+  // statements_ = alt->statements;
   assert(!ret_decls_.empty());
   if (ret_decls_.size() == 1) {
     ret_decls_.front()->rhs = new Expr::Vacc(*alt->ret_decl);
     return;
   }
 
-  ::Alt::Multi *m = dynamic_cast< ::Alt::Multi*>(alt); 
+  ::Alt::Multi *m = dynamic_cast< ::Alt::Multi*>(alt);
   assert(m);
   assert(ret_decls_.size() == m->ret_decls().size());
   std::list<Statement::Var_Decl*>::const_iterator j = m->ret_decls().begin();
@@ -411,77 +383,63 @@ void Fn_Arg::Alt::codegen(AST &ast)
       ret_decls_.begin(); i != ret_decls_.end(); ++i, ++j)
     (*i)->rhs = new Expr::Vacc(**j);
 
-  //statements_.push_back(ret_decl);
+  // statements_.push_back(ret_decl);
 }
 
-void Fn_Arg::Const::codegen(AST &ast)
-{
+void Fn_Arg::Const::codegen(AST &ast) {
   assert(ret_decls_.size() == 1);
   ret_decls_.front()->rhs = new Expr::Const(expr_);
 }
 
-std::list<Statement::Base*> &Fn_Arg::Alt::statements()
-{
+std::list<Statement::Base*> &Fn_Arg::Alt::statements() {
   return alt->statements;
 }
 
-std::list<Statement::Base*> &Fn_Arg::Const::statements()
-{
+std::list<Statement::Base*> &Fn_Arg::Const::statements() {
   return statements_;
 }
 
-void Fn_Arg::Base::print_dot_edge(std::ostream &out, Symbol::NT &nt)
-{
+void Fn_Arg::Base::print_dot_edge(std::ostream &out, Symbol::NT &nt) {
 }
 
-void Fn_Arg::Alt::print_dot_edge(std::ostream &out, Symbol::NT &nt)
-{
-  alt->print_dot_edge(out,nt);
+void Fn_Arg::Alt::print_dot_edge(std::ostream &out, Symbol::NT &nt) {
+  alt->print_dot_edge(out, nt);
 }
 
-void Fn_Arg::Const::print(std::ostream &s)
-{
+void Fn_Arg::Const::print(std::ostream &s) {
   s << *expr_;
 }
 
-void Fn_Arg::Alt::print(std::ostream &s)
-{
+void Fn_Arg::Alt::print(std::ostream &s) {
   alt->print(s);
 }
 
 
-void Fn_Arg::Const::init_multi_ys()
-{
+void Fn_Arg::Const::init_multi_ys() {
   m_ys.set_tracks(1);
   m_ys(0) = expr_->yield_size();
 }
-const Yield::Multi &Fn_Arg::Alt::multi_ys() const
-{
+const Yield::Multi &Fn_Arg::Alt::multi_ys() const {
   return alt->multi_ys();
 }
-void Fn_Arg::Alt::init_multi_ys()
-{
+void Fn_Arg::Alt::init_multi_ys() {
   alt->init_multi_ys();
 }
 
-Statement::Var_Decl *Fn_Arg::Base::ret_decl()
-{
+Statement::Var_Decl *Fn_Arg::Base::ret_decl() {
   assert(ret_decls_.size() == 1);
   return ret_decls_.front();
 }
 
-Statement::Var_Decl *Fn_Arg::Base::var_decl()
-{
+Statement::Var_Decl *Fn_Arg::Base::var_decl() {
   assert(var_decls_.size() == 1);
   return var_decls_.front();
 }
 
-bool Fn_Arg::Alt::choice_set()
-{
+bool Fn_Arg::Alt::choice_set() {
   return alt->choice_set();
 }
 
-bool Fn_Arg::Const::choice_set()
-{
+bool Fn_Arg::Const::choice_set() {
   return false;
 }

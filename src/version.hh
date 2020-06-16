@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef VERSION_HH
-#define VERSION_HH
+#ifndef SRC_VERSION_HH_
+#define SRC_VERSION_HH_
 
 namespace gapc {
 
@@ -31,4 +31,4 @@ namespace gapc {
 
 }
 
-#endif
+#endif  // SRC_VERSION_HH_

@@ -21,31 +21,28 @@
 
 }}} */
 
-#ifndef STATEMENT_BLOCK_BASE_HH
-#define STATEMENT_BLOCK_BASE_HH
+#ifndef SRC_STATEMENT_BLOCK_BASE_HH_
+#define SRC_STATEMENT_BLOCK_BASE_HH_
 
+#include <list>
+#include <algorithm>
 #include "base.hh"
 
 namespace Statement {
-	
-	class Block_Base : public Base {
-				
-		public:
-			
-			std::list<Base*> statements;
-			Block_Base(Type t) : Base(t) {}
-			Block_Base(Type t, const Loc &l) : Base(t, l) {}
-			
-			std::list<Base*> *stmts();
-			
-			void push_back(Base *s) { statements.push_back(s); }
-			
-			void copy(Block_Base &o) const;
-			
-			
-	};
-	
-}
+class Block_Base : public Base {
+ public:
+    std::list<Base*> statements;
+    Block_Base(Type t) : Base(t) {}
+    Block_Base(Type t, const Loc &l) : Base(t, l) {}
+
+    std::list<Base*> *stmts();
+
+    void push_back(Base *s) { statements.push_back(s); }
+
+    void copy(Block_Base &o) const;
+};
+
+}  // namespace Statement
 
 
-#endif
+#endif  // SRC_STATEMENT_BLOCK_BASE_HH_

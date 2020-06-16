@@ -21,9 +21,11 @@
 
 }}} */
 
-#ifndef STATEMENT_BACKTRACE_DECL_HH
-#define STATEMENT_BACKTRACE_DECL_HH
+#ifndef SRC_STATEMENT_BACKTRACE_DECL_HH_
+#define SRC_STATEMENT_BACKTRACE_DECL_HH_
 
+#include <string>
+#include <list>
 
 #include "base.hh"
 #include "../type_fwd.hh"
@@ -35,103 +37,106 @@ class Fn_Def;
 
 namespace Statement {
 
-  class Backtrace_Decl : public Base {
-    private:
-      const Fn_Decl &fn_sig;
-      const Fn_Def &fn;
-      std::list<Fn_Def *> fns;
+class Backtrace_Decl : public Base {
+ private:
+    const Fn_Decl &fn_sig;
+    const Fn_Def &fn;
+    std::list<Fn_Def *> fns;
 
-      std::list<Statement::Var_Decl*> args;
-      std::list< ::Type::Base*> arg_types;
-      std::string name_;
+    std::list<Statement::Var_Decl*> args;
+    std::list< ::Type::Base*> arg_types;
+    std::string name_;
 
-      Fn_Def *eval_code_;
-      const Fn_Def *algebra_code_;
-
-
-
-      Statement::Foreach *bt_last;
-      Statement::Var_Decl *answer;
-      ::Type::Eval_List *elist_type;
-      std::list<Statement::Base*> stmts;
-      std::list<Statement::Foreach*> bt_loops;
-      std::list<Statement::Foreach*> eval_loops;
-      std::list<Statement::Base*> inner_stmts;
-      std::list<Statement::Base*> elist_stmts;
-      std::list<Statement::Var_Decl*> paras_;
-      std::list<Statement::Var_Decl*> eval_paras;
-      std::list<Statement::Var_Decl*> bt_paras;
-      std::list<Statement::Var_Decl*> elist_paras;
+    Fn_Def *eval_code_;
+    const Fn_Def *algebra_code_;
 
 
 
-      void add_arg(Para_Decl::Simple *p, const ::Type::Base *i);
-      void codegen_init();
+    Statement::Foreach *bt_last;
+    Statement::Var_Decl *answer;
+    ::Type::Eval_List *elist_type;
+    std::list<Statement::Base*> stmts;
+    std::list<Statement::Foreach*> bt_loops;
+    std::list<Statement::Foreach*> eval_loops;
+    std::list<Statement::Base*> inner_stmts;
+    std::list<Statement::Base*> elist_stmts;
+    std::list<Statement::Var_Decl*> paras_;
+    std::list<Statement::Var_Decl*> eval_paras;
+    std::list<Statement::Var_Decl*> bt_paras;
+    std::list<Statement::Var_Decl*> elist_paras;
 
-      void eval_outer();
-      void eval_inner();
-      void eval_end();
-      void codegen_eval();
 
-      void codegen_algebra_fn();
-    public:
-      std::string original_name;
-    private:
-      bool derive_bt_score_;
-      ::Type::Base *score_type_;
-    public:
-      Backtrace_Decl(const Fn_Decl &a, const Fn_Def &b);
 
-      void print(Printer::Base &p) const;
+    void add_arg(Para_Decl::Simple *p, const ::Type::Base *i);
+    void codegen_init();
 
-      void codegen();
+    void eval_outer();
+    void eval_inner();
+    void eval_end();
+    void codegen_eval();
 
-      const Fn_Def & eval_code() const { return *eval_code_; }
-      const std::list<Fn_Def*> &algebra_code_deps() const { return fns; }
-      const Fn_Def & algebra_code() const { return *algebra_code_; }
-      const std::string &name() const { return name_; }
+    void codegen_algebra_fn();
 
-      const std::list<Statement::Var_Decl*> & paras() const { return paras_; }
+ public:
+    std::string original_name;
 
-      void add_fns(const std::list<Fn_Def*> &l)
-      {
-        fns = l;
-      }
+ private:
+    bool derive_bt_score_;
+    ::Type::Base *score_type_;
 
-      void set_derive_bt_score() { derive_bt_score_ = true; }
-      bool derive_bt_score() const { return derive_bt_score_; }
-      const ::Type::Base &score_type() const;
-      void set_score_type(::Type::Base *t) { score_type_ = t; }
+ public:
+    Backtrace_Decl(const Fn_Decl &a, const Fn_Def &b);
 
-    public:
-      const std::list<Para_Decl::Base*> &ntparas() const;
-  };
+    void print(Printer::Base &p) const;
 
-  class Backtrace_NT_Decl : public Base {
-    private:
-      std::string name_;
-      ::Type::Base *score_type_;
+    void codegen();
 
-      std::list<std::string> track_args_;
+    const Fn_Def & eval_code() const { return *eval_code_; }
+    const std::list<Fn_Def*> &algebra_code_deps() const { return fns; }
+    const Fn_Def & algebra_code() const { return *algebra_code_; }
+    const std::string &name() const { return name_; }
 
-      std::list<Para_Decl::Base*> ntparas_;
+    const std::list<Statement::Var_Decl*> & paras() const { return paras_; }
 
-      void init(Symbol::NT &n);
-    public:
-      Backtrace_NT_Decl(Symbol::NT &n);
-      Backtrace_NT_Decl(Symbol::NT  &n, ::Type::Base *s);
+    void add_fns(const std::list<Fn_Def*> &l) {
+      fns = l;
+    }
 
-      void print(Printer::Base &p) const;
-      //void codegen();
-      
-      const std::string &name() const { return name_; }
-      ::Type::Base* score_type() const { return score_type_; }
+    void set_derive_bt_score() { derive_bt_score_ = true; }
+    bool derive_bt_score() const { return derive_bt_score_; }
+    const ::Type::Base &score_type() const;
+    void set_score_type(::Type::Base *t) { score_type_ = t; }
 
-      const std::list<std::string> &track_args() const { return track_args_; }
+ public:
+    const std::list<Para_Decl::Base*> &ntparas() const;
+};
 
-      const std::list<Para_Decl::Base*> &ntparas() const { return ntparas_; }
-  };
+class Backtrace_NT_Decl : public Base {
+ private:
+    std::string name_;
+    ::Type::Base *score_type_;
 
-}
+    std::list<std::string> track_args_;
 
-#endif
+    std::list<Para_Decl::Base*> ntparas_;
+
+    void init(Symbol::NT &n);
+
+ public:
+    Backtrace_NT_Decl(Symbol::NT &n);
+    Backtrace_NT_Decl(Symbol::NT  &n, ::Type::Base *s);
+
+    void print(Printer::Base &p) const;
+    // void codegen();
+
+    const std::string &name() const { return name_; }
+    ::Type::Base* score_type() const { return score_type_; }
+
+    const std::list<std::string> &track_args() const { return track_args_; }
+
+    const std::list<Para_Decl::Base*> &ntparas() const { return ntparas_; }
+};
+
+}  // namespace Statement
+
+#endif  // SRC_STATEMENT_BACKTRACE_DECL_HH_

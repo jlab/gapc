@@ -22,6 +22,8 @@
 }}} */
 
 
+#include <cassert>
+
 #include "algebra.hh"
 #include "log.hh"
 
@@ -41,20 +43,17 @@
 #include "mode.hh"
 
 
-#include <cassert>
 
 
 // create a joined algebra
-Algebra::Algebra(Algebra &a, Algebra &b)
-  : Signature_Base(), default_choice_fn_mode(0), signature(NULL), signature_name(NULL)
-
-{
-    
+Algebra::Algebra(Algebra &a, Algebra &b) :
+  Signature_Base(), default_choice_fn_mode(0), signature(NULL),
+  signature_name(NULL) {
   // join all params of both algebras
   // alphabet only needs to be added once,
   // all others are tupled for same string name
-  for (hashtable<std::string, Type::Base*>::iterator i = a.params.begin(); i != a.params.end(); ++i) {
-      
+  for (hashtable<std::string, Type::Base*>::iterator i = a.params.begin();
+       i != a.params.end(); ++i) {
     if (i->first == "alphabet") {
       params[i->first] = i->second;
       continue;
@@ -64,23 +63,23 @@ Algebra::Algebra(Algebra &a, Algebra &b)
     params[i->first] = new Type::Tuple(i->second, j->second);
   }
 
-  
+
   // join all functions as tuples on same string name
-  for (hashtable<std::string, Fn_Def*>::iterator i = a.fns.begin(); i != a.fns.end(); ++i) {
-      
+  for (hashtable<std::string, Fn_Def*>::iterator i = a.fns.begin();
+       i != a.fns.end(); ++i) {
     hashtable<std::string, Fn_Def*>::iterator j = b.fns.find(i->first);
     if (j == b.fns.end()) {
       continue;
     }
-    
+
     fns[i->first] = new Fn_Def(*i->second, *j->second);
   }
-  
+
   // find choice function in functions
   init_choice_fns();
   // join names
   name = new std::string(*a.name + "_" + *b.name);
-  
+
   // if signature is not the same we have a problem
   assert(a.signature == b.signature);
   signature = a.signature;
@@ -88,23 +87,21 @@ Algebra::Algebra(Algebra &a, Algebra &b)
 }
 
 // get function with name s
-Fn_Decl* Algebra::decl(const std::string &s)
-{
+Fn_Decl* Algebra::decl(const std::string &s) {
   hashtable<std::string, Fn_Def*>::iterator i = fns.find(s);
   if (i == fns.end())
     return NULL;
   return i->second;
 }
 
-void Algebra::set_params(hashtable<std::string, Type::Base*> *p)
-{
+void Algebra::set_params(hashtable<std::string, Type::Base*> *p) {
   params = *p;
 }
 
-// add the signature in p to map of signature h, if it is not already contained in h
+// add the signature in p to map of signature h, if it is not
+// already contained in h
 void Algebra::add_sig_var(hashtable<std::string, Type::Base*> &h,
-    std::pair<std::string*, Type::Base*> &p, const Loc &l)
-{
+    std::pair<std::string*, Type::Base*> &p, const Loc &l) {
   hashtable<std::string, Type::Base*>::iterator i = h.find(*p.first);
   if (i != h.end()) {
     Log::instance()->error(l, "Type assignment to " + i->first + " redefined");
@@ -115,25 +112,24 @@ void Algebra::add_sig_var(hashtable<std::string, Type::Base*> &h,
 }
 
 
-bool Algebra::check_signature(Signature &s)
-{
+bool Algebra::check_signature(Signature &s) {
   signature = &s;
   s.set_algebra(this);
   bool r = true;
-  
+
   // loop over all declarations
-  for (hashtable<std::string, Fn_Decl*>::iterator i = s.decls.begin(); i != s.decls.end(); ++i) {
-   
+  for (hashtable<std::string, Fn_Decl*>::iterator i = s.decls.begin();
+       i != s.decls.end(); ++i) {
     // get corresponding function by name
     hashtable<std::string, Fn_Def*>::iterator j = fns.find(i->first);
-    if (j == fns.end()) { // does such a function even exist?
+    if (j == fns.end()) {  // does such a function even exist?
       Log::instance()->error(i->second->location, "Signature function " +
           i->first + " not defined in Algebra " + *name);
       Log::instance()->error(location, "(here).");
       r = false;
       continue;
     }
-    
+
     // test types and number of parameters
     bool b = *i->second == *j->second;
     r = r && b;
@@ -146,12 +142,12 @@ bool Algebra::check_signature(Signature &s)
 
 
 // loop through all functions and filter out choice functions
-void Algebra::init_choice_fns()
-{
+void Algebra::init_choice_fns() {
   // FIXME
-  //assert(choice_fns.empty());
+  // assert(choice_fns.empty());
   // see Signature::setDecls ...
-  for (hashtable<std::string, Fn_Def*>::iterator i = fns.begin(); i != fns.end(); ++i) {
+  for (hashtable<std::string, Fn_Def*>::iterator i = fns.begin();
+       i != fns.end(); ++i) {
     if (i->second->is_Choice_Fn()) {
       if (default_choice_fn_mode && i->second->choice_mode() == ::Mode::NONE) {
          i->second->choice_mode().set(*default_choice_fn_mode);
@@ -161,8 +157,7 @@ void Algebra::init_choice_fns()
   }
 }
 
-void Algebra::set_fns(const hashtable<std::string, Fn_Def*> &h)
-{
+void Algebra::set_fns(const hashtable<std::string, Fn_Def*> &h) {
   if (fns.empty()) {
     fns = h;
   } else {
@@ -175,13 +170,12 @@ void Algebra::set_fns(const hashtable<std::string, Fn_Def*> &h)
 }
 
 // test if all arguments are set through the given parameters
-bool Algebra::check_params(Signature &s)
-{
+bool Algebra::check_params(Signature &s) {
   bool r = true;
   // loop over all arguments
-  for (hashtable<std::string, Arg*>::iterator i = s.args.begin(); i != s.args.end(); ++i) {
-      
-    // if no parameter exists for this needed argument, return false  
+  for (hashtable<std::string, Arg*>::iterator i = s.args.begin();
+       i != s.args.end(); ++i) {
+    // if no parameter exists for this needed argument, return false
     hashtable<std::string, Type::Base*>::iterator j = params.find(i->first);
     if (j == params.end()) {
       Log::instance()->error(location, "Signature argument " + i->first
@@ -194,8 +188,7 @@ bool Algebra::check_params(Signature &s)
 }
 
 // write current state to outputstrean
-std::ostream &Algebra::put(std::ostream &s) const
-{
+std::ostream &Algebra::put(std::ostream &s) const {
   s << "Algebra " << *name << ":" << std::endl;
   s << std::endl;
   for (hashtable<std::string, Type::Base*>::const_iterator i =
@@ -212,9 +205,9 @@ std::ostream &Algebra::put(std::ostream &s) const
 }
 
 // loop through all functions in the declaration and call annotate on them
-void Algebra::annotate_terminal_arguments(Signature &s)
-{
-  for (hashtable<std::string, Fn_Decl*>::iterator i = s.decls.begin(); i != s.decls.end(); ++i) {
+void Algebra::annotate_terminal_arguments(Signature &s) {
+  for (hashtable<std::string, Fn_Decl*>::iterator i = s.decls.begin();
+       i != s.decls.end(); ++i) {
     hashtable<std::string, Fn_Def*>::iterator j = fns.find(i->first);
     assert(j != fns.end());
     j->second->annotate_terminal_arguments(*i->second);
@@ -222,12 +215,11 @@ void Algebra::annotate_terminal_arguments(Signature &s)
 }
 
 // call codegen on all function pairs
-void Algebra::codegen(Product::Two &product)
-{
+void Algebra::codegen(Product::Two &product) {
   Algebra *a = product.left()->algebra();
   Algebra *b = product.right()->algebra();
-  for (hashtable<std::string, Fn_Def*>::iterator i = fns.begin(); i != fns.end(); ++i) {
-      
+  for (hashtable<std::string, Fn_Def*>::iterator i = fns.begin();
+       i != fns.end(); ++i) {
     hashtable<std::string, Fn_Def*>::iterator x = a->fns.find(i->first);
     assert(x != a->fns.end());
     hashtable<std::string, Fn_Def*>::iterator y = b->fns.find(i->first);
@@ -238,9 +230,9 @@ void Algebra::codegen(Product::Two &product)
 
 // call codegen on all functions
 // PRETTY is handled differently
-void Algebra::codegen()
-{
-  for (hashtable<std::string, Fn_Def*>::iterator i = choice_fns.begin(); i != choice_fns.end(); ++i) {
+void Algebra::codegen() {
+  for (hashtable<std::string, Fn_Def*>::iterator i = choice_fns.begin();
+       i != choice_fns.end(); ++i) {
     if (i->second->choice_mode() == Mode::PRETTY)
       continue;
     i->second->codegen();
@@ -248,33 +240,34 @@ void Algebra::codegen()
 }
 
 // call install choice on all functions
-void Algebra::install_choice_filter(Filter &filter)
-{
-  for (hashtable<std::string, Fn_Def*>::iterator i = choice_fns.begin(); i != choice_fns.end(); ++i) {
+void Algebra::install_choice_filter(Filter &filter) {
+  for (hashtable<std::string, Fn_Def*>::iterator i = choice_fns.begin();
+       i != choice_fns.end(); ++i) {
     i->second->install_choice_filter(filter);
   }
 }
 
 // add suffix s to all function names
-void Algebra::init_fn_suffix(const std::string &s)
-{
-  for (hashtable<std::string, Fn_Def*>::iterator i = fns.begin();i != fns.end(); ++i) {
+void Algebra::init_fn_suffix(const std::string &s) {
+  for (hashtable<std::string, Fn_Def*>::iterator i = fns.begin();
+       i != fns.end(); ++i) {
     i->second->init_fn_suffix(s);
   }
 }
 
-void Algebra::print_code(Printer::Base &s)
-{
-    s << endl;   
-  
+void Algebra::print_code(Printer::Base &s) {
+    s << endl;
+
   assert(signature);
-  for (hashtable<std::string, Fn_Def*>::iterator i = fns.begin(); i != fns.end(); ++i) {
+  for (hashtable<std::string, Fn_Def*>::iterator i = fns.begin();
+       i != fns.end(); ++i) {
     if (i->second->in_use() || signature->decl(i->first) )
       continue;
     s << *i->second;
   }
 
-  for (hashtable<std::string, Fn_Def*>::iterator i = fns.begin(); i != fns.end(); ++i) {
+  for (hashtable<std::string, Fn_Def*>::iterator i = fns.begin();
+       i != fns.end(); ++i) {
     if (!i->second->in_use())
       continue;
     s << *i->second;
@@ -283,10 +276,9 @@ void Algebra::print_code(Printer::Base &s)
 }
 
 
-void Algebra::derive_role()
-{
-  for (hashtable<std::string, Fn_Def*>::iterator i = choice_fns.begin(); i != choice_fns.end(); ++i) {
-
+void Algebra::derive_role() {
+  for (hashtable<std::string, Fn_Def*>::iterator i = choice_fns.begin();
+       i != choice_fns.end(); ++i) {
     Fn_Def *fn = i->second;
     ::Mode m = fn->choice_mode();
     ::Mode tmp = fn->derive_role();
@@ -314,18 +306,14 @@ void Algebra::derive_role()
           Log::instance()->warning(fn->location, o.str());
         }
     }
-
   }
-
 }
 
-void Algebra::set_default_choice_fn_mode(std::string *s)
-{
+void Algebra::set_default_choice_fn_mode(std::string *s) {
   default_choice_fn_mode = s;
 }
 
-Type::Base *Algebra::answer_type()
-{
+Type::Base *Algebra::answer_type() {
   Type::Base *ret = 0;
   for (hashtable<std::string, Fn_Def*>::iterator i = choice_fns.begin();
       i != choice_fns.end(); ++i) {
@@ -341,8 +329,7 @@ Type::Base *Algebra::answer_type()
   return ret;
 }
 
-bool Algebra::is_compatible(Mode::Type t)
-{
+bool Algebra::is_compatible(Mode::Type t) {
   bool r = true;
   for (hashtable<std::string, Fn_Def*>::iterator i = choice_fns.begin();
        i != choice_fns.end(); ++i) {
@@ -353,53 +340,48 @@ bool Algebra::is_compatible(Mode::Type t)
 }
 
 
-Fn_Def *Algebra::fn_def(const std::string &name)
-{
+Fn_Def *Algebra::fn_def(const std::string &name) {
   hashtable<std::string, Fn_Def*>::iterator i = fns.find(name);
   assert(i != fns.end());
   return i->second;
 }
 
 
-Fn_Def *Algebra::choice_fn(Fn_Def *f)
-{
+Fn_Def *Algebra::choice_fn(Fn_Def *f) {
   hashtable<std::string, Fn_Def*>::iterator i = choice_fns.find(*f->name);
   assert(i != choice_fns.end());
   return i->second;
 }
 
-void Algebra::add_choice_specialisations(Product::Two &product)
-{
+void Algebra::add_choice_specialisations(Product::Two &product) {
   Algebra *a = product.left()->algebra();
   Algebra *b = product.right()->algebra();
   for (hashtable<std::string, Fn_Def*>::iterator i=choice_fns.begin();
        i != choice_fns.end(); ++i) {
-      
     hashtable<std::string, Fn_Def*>::iterator x = a->fns.find(i->first);
     assert(x != a->fns.end());
     hashtable<std::string, Fn_Def*>::iterator y = b->fns.find(i->first);
     assert(y != b->fns.end());
-    
+
     i->second->add_choice_specialization(*x->second, *y->second, product);
-  }  
+  }
 }
 
 
-Algebra *Algebra::copy() const
-{
+Algebra *Algebra::copy() const {
   Algebra *o = new Algebra(*this);
   if (signature_name)
     o->signature_name = new std::string(*signature_name);
   o->fns.clear();
   o->choice_fns.clear();
-  for (hashtable<std::string, Fn_Def*>::const_iterator i = fns.begin(); i!=fns.end(); ++i) {
+  for (hashtable<std::string, Fn_Def*>::const_iterator i = fns.begin();
+       i != fns.end(); ++i) {
     Fn_Def *f = i->second->copy();
     o->fns[i->first] = f;
-    hashtable<std::string, Fn_Def*>::const_iterator j = choice_fns.find(i->first);
+    hashtable<std::string, Fn_Def*>::const_iterator j = choice_fns.find(
+      i->first);
     if (j != choice_fns.end())
       o->choice_fns[i->first] = f;
   }
   return o;
 }
-
-

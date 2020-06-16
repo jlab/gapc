@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef BACKTRACK_BASE_HH
-#define BACKTRACK_BASE_HH
+#ifndef SRC_BACKTRACK_BASE_HH_
+#define SRC_BACKTRACK_BASE_HH_
 
 #include <list>
 
@@ -36,52 +36,54 @@ class Signature;
 class Instance;
 class Algebra;
 namespace Statement {
-  class Backtrace_Decl;
-  class Backtrace_NT_Decl;
-}
+class Backtrace_Decl;
+class Backtrace_NT_Decl;
+}  // namespace Statement
 class Filter;
 
 class Backtrack_Base {
-  private:
-  protected:
-    Algebra *score_algebra;
-    Algebra *algebra;
-    Instance *instance;
-    Type::Base *value_type;
-    Type::Base *pos_type;
+ protected:
+  Algebra *score_algebra;
+  Algebra *algebra;
+  Instance *instance;
+  Type::Base *value_type;
+  Type::Base *pos_type;
 
-    std::list<Statement::Backtrace_Decl*> bt_decls;
-    std::list<Statement::Backtrace_NT_Decl*> bt_nt_decls;
+  std::list<Statement::Backtrace_Decl*> bt_decls;
+  std::list<Statement::Backtrace_NT_Decl*> bt_nt_decls;
 
-    void remove_unused();
-  public:
-    Backtrack_Base();
-    virtual ~Backtrack_Base() {};
+  void remove_unused();
 
-    void gen_backtraces(Product::Base *algebra, const Algebra &score);
-    virtual void gen_nt_decls(const std::list<Symbol::NT*> &nts);
-    virtual void gen_algebra(Signature &signature, Type::Base *alph);
+ public:
+  Backtrack_Base();
+  virtual ~Backtrack_Base() {
+  }
 
-    Algebra* get_gen_algebra() {
-        return algebra;
-    }
+  void gen_backtraces(Product::Base *algebra, const Algebra &score);
+  virtual void gen_nt_decls(const std::list<Symbol::NT*> &nts);
+  virtual void gen_algebra(Signature &signature, Type::Base *alph);
 
-    Instance *get_instance() {
-        return instance;
-    }
-    
-    virtual void gen_instance(Algebra *score) = 0;
-    virtual void gen_instance(Algebra *score, Product::Sort_Type sort) = 0;
-    
-    virtual void gen_instance(Algebra *score, Product::Base *base, Product::Sort_Type sort) = 0;
-    
-    virtual void apply_filter(Filter *f) {}
-    virtual void gen_backtrack(AST &ast) = 0;
-    virtual void gen_instance_code(AST &ast) = 0;
+  Algebra* get_gen_algebra() {
+      return algebra;
+  }
+
+  Instance *get_instance() {
+      return instance;
+  }
+
+  virtual void gen_instance(Algebra *score) = 0;
+  virtual void gen_instance(Algebra *score, Product::Sort_Type sort) = 0;
+
+  virtual void gen_instance(
+    Algebra *score, Product::Base *base, Product::Sort_Type sort) = 0;
+
+  virtual void apply_filter(Filter *f) {}
+  virtual void gen_backtrack(AST &ast) = 0;
+  virtual void gen_instance_code(AST &ast) = 0;
 
 
-    virtual void print_header(Printer::Base &pp, AST &ast) = 0;
-    virtual void print_body(Printer::Base &pp, AST &ast) = 0;
+  virtual void print_header(Printer::Base &pp, AST &ast) = 0;
+  virtual void print_body(Printer::Base &pp, AST &ast) = 0;
 };
 
-#endif
+#endif  // SRC_BACKTRACK_BASE_HH_

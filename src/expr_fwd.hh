@@ -22,22 +22,22 @@
 }}} */
 
 
-#ifndef EXPR_FWD_HH
-#define EXPR_FWD_HH
+#ifndef SRC_EXPR_FWD_HH_
+#define SRC_EXPR_FWD_HH_
 
 namespace Expr {
-  enum Type { PLUS, MINUS, TIMES, DIV, COMP, FN_CALL, VACC, CONST,
-              LESS_EQ, LESS, GREATER, GREATER_EQ, EQ, NOT_EQ,
-              AND, OR, NOT,
-              MAX, COND,
-              NEW, THIS, MOD };
+enum Type { PLUS, MINUS, TIMES, DIV, COMP, FN_CALL, VACC, CONST,
+            LESS_EQ, LESS, GREATER, GREATER_EQ, EQ, NOT_EQ,
+            AND, OR, NOT,
+            MAX, COND,
+            NEW, THIS, MOD };
 
-  class Base;
-  class Vacc;
-  class Fn_Call;
+class Base;
+class Vacc;
+class Fn_Call;
 
-  class New;
+class New;
 
-}
+}  // namespace Expr
 
-#endif
+#endif  // SRC_EXPR_FWD_HH_

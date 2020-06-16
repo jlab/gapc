@@ -22,48 +22,41 @@
 }}} */
 
 #include "base.hh"
-
+#include <algorithm>
 #include <cstdlib>
 
 Expr::Base::~Base() {}
 
 
-Statement::Var_Decl *Expr::Base::var_decl()
-{
+Statement::Var_Decl *Expr::Base::var_decl() {
   return NULL;
 }
 
-Expr::Vacc *Expr::Base::vacc()
-{
+Expr::Vacc *Expr::Base::vacc() {
   std::abort();
   return 0;
 }
 
-Expr::Fn_Call *Expr::Base::fn_call()
-{
+Expr::Fn_Call *Expr::Base::fn_call() {
   std::abort();
   return 0;
 }
 
-void Expr::Base::put(std::ostream &s) const
-{
+void Expr::Base::put(std::ostream &s) const {
 }
 
 
-void Expr::Two::put(std::ostream &s) const
-{
+void Expr::Two::put(std::ostream &s) const {
   assert(op != "");
   s << '(' << *left_ << ' ' << op << ' ' << *right_ << ')';
 }
 
-Expr::Base *Expr::Base::copy() const
-{
+Expr::Base *Expr::Base::copy() const {
   assert(42 == 0);
   return 0;
 }
 
-void Expr::Two::copy(Expr::Two &o) const
-{
+void Expr::Two::copy(Expr::Two &o) const {
   assert(left_);
   assert(right_);
   o.left_ = left_->copy();

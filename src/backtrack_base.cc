@@ -21,6 +21,7 @@
 
 }}} */
 
+#include <string>
 #include "backtrack_base.hh"
 #include "type.hh"
 #include "product.hh"
@@ -34,13 +35,11 @@
 
 
 Backtrack_Base::Backtrack_Base()
-  : score_algebra(0), algebra(0), instance(0), value_type(0), pos_type(0)
-{
+  : score_algebra(0), algebra(0), instance(0), value_type(0), pos_type(0) {
   pos_type = new Type::Size();
 }
 
-void Backtrack_Base::remove_unused()
-{
+void Backtrack_Base::remove_unused() {
   assert(instance);
   Algebra *a = instance->product->algebra();
   for (std::list<Statement::Backtrace_Decl*>::iterator i = bt_decls.begin();
@@ -53,12 +52,10 @@ void Backtrack_Base::remove_unused()
     else
       ++i;
   }
-
 }
 
 void Backtrack_Base::gen_backtraces(Product::Base *bt_product,
-    const Algebra &score)
-{
+    const Algebra &score) {
   bt_product->init_fn_suffix("");
   bt_product->codegen();
 
@@ -79,7 +76,8 @@ void Backtrack_Base::gen_backtraces(Product::Base *bt_product,
     Statement::Backtrace_Decl *bt_decl =
       new Statement::Backtrace_Decl(*decl, *fn);
 
-    hashtable<std::string, Fn_Def*>::const_iterator k = score.fns.find(*fn->name);
+    hashtable<std::string, Fn_Def*>::const_iterator k = score.fns.find(
+      *fn->name);
     assert(k != score.fns.end());
     bt_decl->set_score_type(k->second->return_type);
 
@@ -94,21 +92,16 @@ void Backtrack_Base::gen_backtraces(Product::Base *bt_product,
 }
 
 
-void Backtrack_Base::gen_nt_decls(const std::list<Symbol::NT*> &nts)
-{
+void Backtrack_Base::gen_nt_decls(const std::list<Symbol::NT*> &nts) {
   for (std::list<Symbol::NT*>::const_iterator i = nts.begin();
        i != nts.end(); ++i) {
     bt_nt_decls.push_back(new Statement::Backtrace_NT_Decl(*(*i)));
-
   }
 }
 
 
-void Backtrack_Base::gen_algebra(Signature &signature, Type::Base *alph)
-{
+void Backtrack_Base::gen_algebra(Signature &signature, Type::Base *alph) {
   Algebra *a = signature.generate_backtrace
     (new std::string("bt_algebra"), value_type, pos_type, alph);
   algebra = a;
 }
-
-

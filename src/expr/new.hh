@@ -21,50 +21,46 @@
 
 }}} */
 
-#ifndef EXPR_NEW_HH
-#define EXPR_NEW_HH
+#ifndef SRC_EXPR_NEW_HH_
+#define SRC_EXPR_NEW_HH_
+
+#include <list>
 
 #include "base.hh"
 #include "vacc.hh"
-
-#include <list>
 
 #include "../para_decl_fwd.hh"
 
 namespace Type { class Base; }
 
 namespace Expr {
-  class New : public Base {
-    private:
-      ::Type::Base *obj_;
-      std::list<Base*> args_;
-    public:
-      New(::Type::Base *x)
-        : Base(NEW), obj_(x)
-      {
-      }
-      template<typename Iterator>
-      void add_args(Iterator begin, Iterator end)
-      {
-        for (; begin != end; ++begin)
-          args_.push_back(new Vacc(*begin));
-      }
-      void add_args(const std::list<Para_Decl::Base*> &args);
-      void add_arg(Expr::Base *e) { args_.push_back(e); }
-      void put(std::ostream &s) const;
+class New : public Base {
+ private:
+    ::Type::Base *obj_;
+    std::list<Base*> args_;
 
-      const ::Type::Base *obj() const { return obj_; }
-      const std::list<Base*> &args() const { return args_; }
-  };
+ public:
+    New(::Type::Base *x) : Base(NEW), obj_(x) {
+    }
+    template<typename Iterator>
+    void add_args(Iterator begin, Iterator end) {
+      for (; begin != end; ++begin)
+        args_.push_back(new Vacc(*begin));
+    }
+    void add_args(const std::list<Para_Decl::Base*> &args);
+    void add_arg(Expr::Base *e) { args_.push_back(e); }
+    void put(std::ostream &s) const;
 
-  class This : public Base {
-    private:
-    public:
-      This()
-        : Base(THIS)
-      {}
-      void put(std::ostream &s) const;
-  };
-}
+    const ::Type::Base *obj() const { return obj_; }
+    const std::list<Base*> &args() const { return args_; }
+};
 
-#endif
+class This : public Base {
+ private:
+ public:
+    This() : Base(THIS) {}
+    void put(std::ostream &s) const;
+};
+}  // namespace Expr
+
+#endif  // SRC_EXPR_NEW_HH_

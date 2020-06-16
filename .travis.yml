@@ -21,6 +21,8 @@ addons:
       - libboost-all-dev
       - libgsl-dev
       - ghc
+      - python3
+      - python3-pip
 
 install:
   - ./configure
@@ -33,7 +35,11 @@ before_script:
   - cabal install random
   # obtain truth data from secondary github repository
   - git clone https://github.com/jlab/gapc-test-suite.git /home/travis/gapc-test-suite
+  # install c++ linter
+  - pip3 install cpplint
 script:
+  # c++ code style checks
+  #- cpplint src/* rtlib/*
   # manually compiling an example to check for raised warnings ...
   - cp testdata/grammar/elm.gap . && gapc -p "buyer * pretty2" elm.gap && make -f out.mf 2>&1 > /dev/null | tee make.stderr
   # ... and test if "warning: dynamic exception specifications are deprecated" are no longer triggered

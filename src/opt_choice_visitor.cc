@@ -26,35 +26,34 @@
 
 #include "fn_def.hh"
 
-void Opt_Choice_Visitor::visit(Alt::Base &b)
-{
-  //return;
-  if (in_choice_fn)
-    if (hash_decl)
+void Opt_Choice_Visitor::visit(Alt::Base &b) {
+  //  return;
+  if (in_choice_fn) {
+    if (hash_decl) {
       b.optimize_choice(push_type, hash_decl);
-    else
+    } else {
       b.optimize_choice(push_type);
-}
-
-void Opt_Choice_Visitor::visit(Symbol::NT &n)
-{
-  if (n.eval_fn && *n.eval_fn == *choice_fn->name) {
-    // Product::optimize_shuffle_products
-    // is able to invalidate this assertion
-    //Fn_Def *f = dynamic_cast<Fn_Def*>(n.eval_decl);
-    //Fn_Decl *fn = dynamic_cast<Fn_Decl*>(choice_fn);
-    //assert(fn == n.eval_decl);
-  
-    in_choice_fn = true;
-    if (hash_decl)
-      n.optimize_choice(push_type, hash_decl);
-    else
-      n.optimize_choice(push_type);
+    }
   }
 }
 
-void Opt_Choice_Visitor::visit_end(Symbol::NT &n)
-{
-  in_choice_fn = false;
+void Opt_Choice_Visitor::visit(Symbol::NT &n) {
+  if (n.eval_fn && *n.eval_fn == *choice_fn->name) {
+    // Product::optimize_shuffle_products
+    // is able to invalidate this assertion
+    // Fn_Def *f = dynamic_cast<Fn_Def*>(n.eval_decl);
+    // Fn_Decl *fn = dynamic_cast<Fn_Decl*>(choice_fn);
+    // assert(fn == n.eval_decl);
+
+    in_choice_fn = true;
+    if (hash_decl) {
+      n.optimize_choice(push_type, hash_decl);
+    } else {
+      n.optimize_choice(push_type);
+    }
+  }
 }
 
+void Opt_Choice_Visitor::visit_end(Symbol::NT &n) {
+  in_choice_fn = false;
+}

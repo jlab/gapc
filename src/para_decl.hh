@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef PARA_DECL
-#define PARA_DECL
+#ifndef SRC_PARA_DECL_HH_
+#define SRC_PARA_DECL_HH_
 
 #include <string>
 #include <list>
@@ -32,109 +32,84 @@
 #include "loc.hh"
 
 namespace Para_Decl {
-	
-	
-	// The types a subclass of Para_Decl::Base can have.
-	enum Type { SIMPLE, MULTI };
-	
-	
-	// FIXME location
-	class Base {
-		
-		private:
-			
-			Loc loc;
-			
-			// The type of the subclass.
-			Type type;
-			
-			
-		protected:
-			
-			Base (Type t) : type (t) {}
-			Base (const Loc &l, Type t) : loc(l), type (t) {}
-			virtual ~Base();
-			
-			
-		public:
-			
-			const Loc &location() const { return loc; }
-			
-			virtual void replace (::Type::Base *t) = 0;
-			
-			virtual Base *copy() const = 0;
-			
-			// Returns TRUE if the type of the instance is of a
-			// given type.
-			bool is (Type t) { return this->type == t; }
-			
-			
-	};
-	
-	
-	class Simple : public Base {
-		
-		private:
-			
-			::Type::Base *type_;
-			std::string *name_;
-			
-			
-		public:
-			
-			Simple (::Type::Base *t, std::string *n)
-				: Base (SIMPLE), type_(t), name_(n)
-			{
-			}
-			
-			Simple (::Type::Base *t, std::string *n, const Loc &l)
-				: Base (l, SIMPLE), type_(t), name_(n)
-			{
-			}
-			
-			::Type::Base* type() { return type_; }
-			std::string* name() { return name_; }
-			
-			void replace (::Type::Base *t) { type_ = t; }
-			void replace (std::string *n) { name_ = n; }
-			
-			Base *copy() const;
-			
-			
-	};
-	
-	
-	class Multi : public Base {
-		
-		private:
-			
-			std::list<Simple*> list_;
-			::Type::Base *type_;
-			
-			
-		public:
-			
-			Multi (const std::list<Simple*> &l)
-				: Base (MULTI), list_(l), type_(0)
-			{
-			}
-			
-			Multi (const std::list<Base*> &l, const Loc &lo);
-			
-			::Type::Base *type() { return type_; }
-			const std::list<Simple*> &list() const { return list_; }
-			
-			void replace (::Type::Base *t);
-			
-			Base *copy() const;
-			
-			
-	};
-	
-	
-}
+// The types a subclass of Para_Decl::Base can have.
+enum Type { SIMPLE, MULTI };
 
 
-#endif
+// FIXME location
+class Base {
+ private:
+  Loc loc;
+
+  // The type of the subclass.
+  Type type;
 
 
+ protected:
+  Base(Type t) : type(t) {}
+  Base(const Loc &l, Type t) : loc(l), type(t) {}
+  virtual ~Base();
+
+
+ public:
+  const Loc &location() const { return loc; }
+
+  virtual void replace(::Type::Base *t) = 0;
+
+  virtual Base *copy() const = 0;
+
+  // Returns TRUE if the type of the instance is of a
+  // given type.
+  bool is (Type t) { return this->type == t; }
+};
+
+
+class Simple : public Base {
+ private:
+  ::Type::Base *type_;
+  std::string *name_;
+
+
+ public:
+  Simple(::Type::Base *t, std::string *n) : Base(SIMPLE), type_(t), name_(n) {
+  }
+
+  Simple(::Type::Base *t, std::string *n, const Loc &l)
+    : Base(l, SIMPLE), type_(t), name_(n) {
+  }
+
+  ::Type::Base* type() { return type_; }
+  std::string* name() { return name_; }
+
+  void replace(::Type::Base *t) { type_ = t; }
+  void replace(std::string *n) { name_ = n; }
+
+  Base *copy() const;
+};
+
+
+class Multi : public Base {
+ private:
+  std::list<Simple*> list_;
+  ::Type::Base *type_;
+
+
+ public:
+  Multi(const std::list<Simple*> &l) : Base(MULTI), list_(l), type_(0) {
+  }
+
+  Multi(const std::list<Base*> &l, const Loc &lo);
+
+  ::Type::Base *type() { return type_; }
+  const std::list<Simple*> &list() const { return list_; }
+
+  void replace(::Type::Base *t);
+
+  Base *copy() const;
+};
+
+
+}  // namespace Para_Decl
+
+
+#endif  // SRC_PARA_DECL_HH_

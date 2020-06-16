@@ -22,28 +22,27 @@
 }}} */
 
 
-#ifndef INDEX_VISITOR_HH
-#define INDEX_VISITOR_HH
+#ifndef SRC_INDEX_VISITOR_HH_
+#define SRC_INDEX_VISITOR_HH_
 
 #include "visitor.hh"
 
 class Index_Visitor : public Visitor {
-  public:
-    void visit(Symbol::Terminal &s);
+ public:
+  void visit(Symbol::Terminal &s);
 
-    void visit(Symbol::NT &n);
-    void visit_itr(Symbol::NT &n);
-    void visit_end(Symbol::NT &n);
+  void visit(Symbol::NT &n);
+  void visit_itr(Symbol::NT &n);
+  void visit_end(Symbol::NT &n);
 
-    void visit_begin(Alt::Simple &a);
-    void visit(Alt::Link &a);
-    void visit_begin(Alt::Block &a);
-    void visit_itr(Alt::Block &a);
-    void visit_end(Alt::Block &a);
+  void visit_begin(Alt::Simple &a);
+  void visit(Alt::Link &a);
+  void visit_begin(Alt::Block &a);
+  void visit_itr(Alt::Block &a);
+  void visit_end(Alt::Block &a);
 
-    void visit(Fn_Arg::Const &f);
-    void visit(Fn_Arg::Alt &f);
-
+  void visit(Fn_Arg::Const &f);
+  void visit(Fn_Arg::Alt &f);
 };
 
-#endif
+#endif  // SRC_INDEX_VISITOR_HH_

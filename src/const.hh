@@ -22,269 +22,210 @@
 }}} */
 
 
-#ifndef CONST_HH
-#define CONST_HH
+#ifndef SRC_CONST_HH_
+#define SRC_CONST_HH_
 
+#include <string>
 #include "yieldsize.hh"
 #include "type.hh"
 #include "loc.hh"
 
 
 namespace Const {
+enum Type { CHAR, INT, FLOAT, STRING, SIZE, RATIONAL, BOOL };
 
 
-	enum Type { CHAR, INT, FLOAT, STRING, SIZE, RATIONAL, BOOL };
+class Base {
+ private:
+  Type type;
+
+ public:
+  Loc location;
+
+ protected:
+  Yield::Size ys;
+  ::Type::Base *datatype;
+  Base(Type t, const Loc &l) : type(t), location(l), datatype(NULL) {}
+  Base(Type t) : type(t), datatype(NULL) {}
+
+ public:
+  virtual ~Base();
 
 
-	class Base {
-			
-		private:
-			
-			Type type;
-			
-			
-		public:
-			
-			Loc location;
-			
-			
-		protected:
-			
-			Yield::Size ys;
-			::Type::Base *datatype;
-			Base(Type t, const Loc &l) : type(t), location(l), datatype(NULL) {}
-			Base(Type t) : type(t), datatype(NULL) {}
-			
-			
-		public:
-			
-			virtual ~Base();
-			
-			
-			bool is(Type t) {
-				return type == t;
-			}
-			
-			
-			const Yield::Size & yield_size() {
-				return ys;
-			}
-			
-			
-			::Type::Base *data_type() {
-				return datatype;
-			}
-			
-			
-			bool set_data_type(::Type::Base *t, const Loc &l) {
-				bool b = set_if_compatible (datatype, t, location, l);
-				return b;
-			}
-			
-			
-			void print_type(std::ostream &s);
-			
-			virtual void put(std::ostream &s);
-			
-			
-	};
+  bool is(Type t) {
+    return type == t;
+  }
 
 
-	class Number : public Base {
-			
-		protected:
-			
-			Number(const std::string &n, Type t, const Loc &l) : Base(t, l) {
-				uint32_t i = uint32_t(n.length());
-				ys.set(i, i);
-			}
-			
-			
-			Number(Type t) : Base(t) {}
-			
-			
-		public:
-			
-			virtual void setNegative();
-			
-			
-	};
-	
-	
-	class Char : public Base {
-		
-		private:
-		
-		
-		public:
-			
-			char c;
-			Char(const std::string &n, const Loc &l);
-			Char(char x) : Base(CHAR), c(x) {}
-			void put(std::ostream &s);
-			
-			
-	};
+  const Yield::Size & yield_size() {
+    return ys;
+  }
 
 
-	class Bool : public Base {
-			
-		private:
-		
-		
-		public:
-			
-			bool b;
-			Bool(bool t) : Base(BOOL), b(t) {
-			datatype = new ::Type::Bool();
-			}
-			void put(std::ostream &s);
-			
-			
-	};
+  ::Type::Base *data_type() {
+    return datatype;
+  }
 
 
-	class Int : public Number {
-			
-		private:
-		
-		
-		public:
-			
-			int i;
-			
-			Int(int n) : Number(INT) {
-				i = n;
-				datatype = new ::Type::Int();
-			}
-                        
-			Int(const std::string &n, const Loc &l) : Number(n, INT, l) {
-				std::istringstream(n) >> i;
-				datatype = new ::Type::Int();
-			}
-			
-			
-			void setNegative() {
-				Number::setNegative();
-				i = i*-1;
-			}
-			
-			
-			void put(std::ostream &s);
-			
-			
-	};
+  bool set_data_type(::Type::Base *t, const Loc &l) {
+    bool b = set_if_compatible(datatype, t, location, l);
+    return b;
+  }
 
 
-	class Float : public Number {
-			
-		private:
-		
-		
-		public:
-		
-			double f;
-			
-			
-			Float(const std::string &n, const Loc &l) : Number(n, FLOAT, l) {
-				std::istringstream(n) >> f;
-				datatype = new ::Type::Float();
-			}
-			
-			
-			Float(double d);
-			
-			
-			void setNegative() {
-				Number::setNegative();
-				f = f*-1.0;
-			}
-			
-			
-			void put(std::ostream &s);
-			
-			
-	};
+  void print_type(std::ostream &s);
+
+  virtual void put(std::ostream &s);
+};
 
 
-	class Size : public Number {
-			
-		public:
-			
-			size_t u;
-			
-			
-			Size(size_t a) : Number(SIZE), u(a) {
-				datatype = new ::Type::Size();
-			}
-			
-			
-			void setNegative() { assert(false); }
-			
-			void put(std::ostream &s);
-			
-			
-	};
+class Number : public Base {
+ protected:
+  Number(const std::string &n, Type t, const Loc &l) : Base(t, l) {
+    uint32_t i = uint32_t(n.length());
+    ys.set(i, i);
+  }
 
 
-	class String : public Base {
-			
-		private:
-		
-		
-		public:
-			
-			std::string *s;
-			
-			
-			String(std::string *n, const Loc &l) : Base(STRING, l), s(n) {
-				uint32_t i = uint32_t(n->length());
-				ys.set(i, i);
-				datatype = new ::Type::String();
-			}
-			
-			
-			String(const std::string &n) : Base(STRING) {
-				s = new std::string(n);
-			}
-			
-			
-			void put(std::ostream &s);
-			
-			
-	};
+  Number(Type t) : Base(t) {}
+
+ public:
+  virtual void setNegative();
+};
 
 
-	class Rational : public Base {
-			
-		public:
-			
-			std::string *a, *b;
-			
-			Rational(std::string *x, std::string *y, const Loc &l)
-				: Base(RATIONAL, l), a(x), b(y)
-			{
-				datatype = new ::Type::Rational();
-				uint32_t i = x->size() + y->size() + 1;
-				ys.set(i, i);
-			}
-			
-			
-			void put(std::ostream &s);
-			
-			
-	};
+class Char : public Base {
+ private:
+ public:
+  char c;
+  Char(const std::string &n, const Loc &l);
+  Char(char x) : Base(CHAR), c(x) {}
+  void put(std::ostream &s);
+};
 
-	
-	inline std::ostream &operator<<(std::ostream &s, Base &b)
-	{
-		b.put(s);
-		return s;
-	}
-	
-	
+
+class Bool : public Base {
+ private:
+ public:
+  bool b;
+  Bool(bool t) : Base(BOOL), b(t) {
+  datatype = new ::Type::Bool();
+  }
+  void put(std::ostream &s);
+};
+
+
+class Int : public Number {
+ private:
+ public:
+  int i;
+
+  Int(int n) : Number(INT) {
+    i = n;
+    datatype = new ::Type::Int();
+  }
+
+  Int(const std::string &n, const Loc &l) : Number(n, INT, l) {
+    std::istringstream(n) >> i;
+    datatype = new ::Type::Int();
+  }
+
+
+  void setNegative() {
+    Number::setNegative();
+    i = i*-1;
+  }
+
+
+  void put(std::ostream &s);
+};
+
+
+class Float : public Number {
+ private:
+ public:
+  double f;
+
+
+  Float(const std::string &n, const Loc &l) : Number(n, FLOAT, l) {
+    std::istringstream(n) >> f;
+    datatype = new ::Type::Float();
+  }
+
+
+  Float(double d);
+
+
+  void setNegative() {
+    Number::setNegative();
+    f = f*-1.0;
+  }
+
+
+  void put(std::ostream &s);
+};
+
+
+class Size : public Number {
+ public:
+  size_t u;
+
+  Size(size_t a) : Number(SIZE), u(a) {
+    datatype = new ::Type::Size();
+  }
+
+
+  void setNegative() { assert(false); }
+
+  void put(std::ostream &s);
+};
+
+
+class String : public Base {
+ private:
+ public:
+  std::string *s;
+
+
+  String(std::string *n, const Loc &l) : Base(STRING, l), s(n) {
+    uint32_t i = uint32_t(n->length());
+    ys.set(i, i);
+    datatype = new ::Type::String();
+  }
+
+
+  String(const std::string &n) : Base(STRING) {
+    s = new std::string(n);
+  }
+
+
+  void put(std::ostream &s);
+};
+
+
+class Rational : public Base {
+ public:
+  std::string *a, *b;
+
+  Rational(std::string *x, std::string *y, const Loc &l)
+    : Base(RATIONAL, l), a(x), b(y) {
+    datatype = new ::Type::Rational();
+    uint32_t i = x->size() + y->size() + 1;
+    ys.set(i, i);
+  }
+
+
+  void put(std::ostream &s);
+};
+
+
+inline std::ostream &operator<<(std::ostream &s, Base &b) {
+  b.put(s);
+  return s;
 }
 
 
-#endif
+}  // namespace Const
 
+
+#endif  // SRC_CONST_HH_

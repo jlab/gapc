@@ -21,50 +21,50 @@
 
 }}} */
 
+#include <string>
 #include "hash_decl.hh"
 
 #include "../printer.hh"
-
-Statement::Hash_Decl::Hash_Decl()
-  : Statement::Base(HASH_DECL), answer_type_(0)
-{
-}
-
-void Statement::Hash_Decl::print(Printer::Base &p) const
-{
-  p.print(*this);
-}
-
-void Statement::Hash_Decl::set_suffix(const std::string &n)
-{
-  name_ = "hash_" + n;
-}
-
 #include "../statement.hh"
 #include "../expr.hh"
 #include "../const.hh"
 
-void Statement::Hash_Decl::set_kbest(bool b)
-{
+
+Statement::Hash_Decl::Hash_Decl()
+  : Statement::Base(HASH_DECL), answer_type_(0) {
+}
+
+void Statement::Hash_Decl::print(Printer::Base &p) const {
+  p.print(*this);
+}
+
+void Statement::Hash_Decl::set_suffix(const std::string &n) {
+  name_ = "hash_" + n;
+}
+
+void Statement::Hash_Decl::set_kbest(bool b) {
   kbest_ = b;
   if (kbest_) {
-    cutoff_code_.push_back(new Statement::Return(new Expr::Const(new Const::Bool(true))));
-    k_code_.push_back(new Statement::Return(new Expr::Vacc(new std::string("k_"))));
+    cutoff_code_.push_back(
+      new Statement::Return(new Expr::Const(new Const::Bool(true))));
+    k_code_.push_back(
+      new Statement::Return(new Expr::Vacc(new std::string("k_"))));
   } else {
-    cutoff_code_.push_back(new Statement::Return(new Expr::Const(new Const::Bool(false))));
+    cutoff_code_.push_back(
+      new Statement::Return(new Expr::Const(new Const::Bool(false))));
     k_code_.push_back(new Statement::Return(new Expr::Const(0)));
   }
   if (equal_score_code_.empty())
-    equal_score_code_.push_back(new Statement::Return(new Expr::Const(new Const::Bool(false))));
+    equal_score_code_.push_back(
+      new Statement::Return(new Expr::Const(new Const::Bool(false))));
   if (compare_code_.empty())
-    compare_code_.push_back(new Statement::Return(new Expr::Const(new Const::Bool(false))));
+    compare_code_.push_back(
+      new Statement::Return(new Expr::Const(new Const::Bool(false))));
 }
 
-std::string Statement::Hash_Decl::ext_name() const
-{
+std::string Statement::Hash_Decl::ext_name() const {
   return class_name_ + "_insp_" + name_;
 }
-std::string Statement::Hash_Decl::name() const
-{
+std::string Statement::Hash_Decl::name() const {
   return class_name_ + "_" + name_;
 }

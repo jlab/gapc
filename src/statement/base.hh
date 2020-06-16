@@ -21,9 +21,14 @@
 
 }}} */
 
-#ifndef STATEMENT_BASE_HH
-#define STATEMENT_BASE_HH
+#ifndef SRC_STATEMENT_BASE_HH_
+#define SRC_STATEMENT_BASE_HH_
 
+
+#include <list>
+#include <stack>
+#include <cassert>
+#include <boost/tuple/tuple.hpp>
 
 #include "../loc.hh"
 
@@ -39,155 +44,126 @@ class Fn_Def;
 namespace Printer { class Base; }
 
 
-#include <boost/tuple/tuple.hpp>
-#include <list>
-#include <stack>
-#include <cassert>
-
 
 namespace Statement {
-	
-	enum Type { RETURN, IF, VAR_DECL, BLOCK, FOR, FOREACH,
-		VAR_ASSIGN, FN_CALL, BACKTRACE_DECL, BACKTRACE_NT_DECL,
-		HASH_DECL, BREAK, MARKER_DECL, TABLE_DECL, CONTINUE, WHILE,
-                DECREASE, INCREASE, SORTER, SWITCH
 
-	};
-	
-	
-	class Base {
-		
-		private:
-			
-			Type type;
-			
-			
-		public:
-			
-			Bool disabled_;
-			Loc location;
-			
-			
-		protected:
-			
-			Base(Type t) : type(t) {}
-			Base(Type t, const Loc& l) : type(t), location(l) {}
-			
-			
-		public:
-			
-			bool is(Type t) { return type == t; }
-			Type getType() { return this->type; };
-			
-			void disable() { disabled_ = true; }
-			bool is_disabled() const { return disabled_; }
-			
-			virtual ~Base();
-			virtual void print(Printer::Base &p) const = 0;
-			
-			virtual std::list<Base*> *stmts();
-			
-			virtual Var_Decl* var_decl();
-			virtual void replace(Var_Decl &decl, Expr::Base *expr);
-			
-			virtual Base *copy() const;
-			
-			
-	};
+enum Type { RETURN, IF, VAR_DECL, BLOCK, FOR, FOREACH,
+  VAR_ASSIGN, FN_CALL, BACKTRACE_DECL, BACKTRACE_NT_DECL,
+  HASH_DECL, BREAK, MARKER_DECL, TABLE_DECL, CONTINUE, WHILE,
+              DECREASE, INCREASE, SORTER, SWITCH
+};
 
 
-	
-	template <class Iterator> typename std::iterator_traits<Iterator>::value_type nest_for_loops(Iterator begin, Iterator end)
-	{
-		assert(begin != end);
-		typename std::iterator_traits<Iterator>::value_type last = *begin;
-		++begin;
-		for (; begin != end; ++begin) {
-			last->statements.push_back(*begin);
-			last = *begin;
-		}
-		return last;
-	}
-	
-	
-	class Iterator {
-		
-		private:
-			
-			std::list<Statement::Base*>::iterator i;
-			std::list<Statement::Base*>::iterator j;
-			typedef boost::tuple<std::list<Statement::Base*>::iterator,
-			std::list<Statement::Base*>::iterator,
-			std::list<Statement::Base*>*> stuple;
-			std::stack<stuple> stack;
-			bool end;
-			std::list<Statement::Base*>* list;
-			
-			void fwd();
-			
-			
-		public:
-			
-			Iterator(std::list<Statement::Base*> &l)
-				: end(false)
-			{
-				i = l.begin();
-				j = l.end();
-				list = &l;
-				fwd();
-			}
-			
-			
-			Iterator()
-				: end(true), list(0)
-			{
-			}
-			
-			
-			Iterator &operator++();
-			
-			
-			Statement::Base *&operator*()
-			{
-				assert(i != j);
-				assert(*i);
-				return *i;
-			}
-			
-			
-			void erase()
-			{
-				delete *i;
-				i = list->erase(i); 
-			}
-			
-			
-			bool operator==(const Iterator &itr) const
-			{
-				return end == itr.end;
-			}
-			
-			
-			bool operator!=(const Iterator &itr) const
-			{
-				return !(*this == itr);
-			}
-			
-			
-	};
-	
-	
-	typedef Iterator iterator;
-	
-	iterator begin(std::list<Statement::Base*> &l);
-	iterator begin(Fn_Def &fn);
-	iterator end();
-	
-	
+class Base {
+ private:
+    Type type;
+
+ public:
+    Bool disabled_;
+    Loc location;
+
+
+ protected:
+    Base(Type t) : type(t) {}
+    Base(Type t, const Loc& l) : type(t), location(l) {}
+
+ public:
+    bool is(Type t) { return type == t; }
+    Type getType() { return this->type; }
+
+    void disable() { disabled_ = true; }
+    bool is_disabled() const { return disabled_; }
+
+    virtual ~Base();
+    virtual void print(Printer::Base &p) const = 0;
+
+    virtual std::list<Base*> *stmts();
+
+    virtual Var_Decl* var_decl();
+    virtual void replace(Var_Decl &decl, Expr::Base *expr);
+
+    virtual Base *copy() const;
+};
+
+
+
+template <class Iterator> typename std::iterator_traits<Iterator>::value_type
+nest_for_loops(Iterator begin, Iterator end) {
+  assert(begin != end);
+  typename std::iterator_traits<Iterator>::value_type last = *begin;
+  ++begin;
+  for (; begin != end; ++begin) {
+    last->statements.push_back(*begin);
+    last = *begin;
+  }
+  return last;
 }
+
+
+class Iterator {
+ private:
+    std::list<Statement::Base*>::iterator i;
+    std::list<Statement::Base*>::iterator j;
+    typedef boost::tuple<std::list<Statement::Base*>::iterator,
+    std::list<Statement::Base*>::iterator,
+    std::list<Statement::Base*>*> stuple;
+    std::stack<stuple> stack;
+    bool end;
+    std::list<Statement::Base*>* list;
+
+    void fwd();
+
+ public:
+    Iterator(std::list<Statement::Base*> &l) : end(false) {
+      i = l.begin();
+      j = l.end();
+      list = &l;
+      fwd();
+    }
+
+
+    Iterator() : end(true), list(0)  {
+    }
+
+
+    Iterator &operator++();
+
+
+    Statement::Base *&operator*() {
+      assert(i != j);
+      assert(*i);
+      return *i;
+    }
+
+
+    void erase() {
+      delete *i;
+      i = list->erase(i);
+    }
+
+
+    bool operator==(const Iterator &itr) const {
+      return end == itr.end;
+    }
+
+
+    bool operator!=(const Iterator &itr) const {
+      return !(*this == itr);
+    }
+};
+
+
+typedef Iterator iterator;
+
+iterator begin(std::list<Statement::Base*> &l);
+iterator begin(Fn_Def &fn);
+iterator end();
+
+
+}  // namespace Statement
 
 
 // For debug purposes
 std::ostream &operator<<(std::ostream &s, const Statement::Base &b);
 
-#endif
+#endif  // SRC_STATEMENT_BASE_HH_

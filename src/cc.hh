@@ -22,36 +22,37 @@
 }}} */
 
 
-#ifndef CC_HH
-#define CC_HH
+#ifndef SRC_CC_HH_
+#define SRC_CC_HH_
 
+#include <list>
 #include "printer.hh"
 
 namespace Printer {
 
-  class CC : public Base {
-    public:
-      CC() : Base() {}
-      CC(std::ostream &o) : Base(o) {}
-      void print(const Statement::For &stmt);
-      void print(const Statement::Var_Decl &stmt);
-      void print(const Statement::If &stmt);
-      void print(const Statement::Return &stmt);
-      void print(const Statement::Foreach &stmt);
-      void print(const Statement::Var_Assign &stmt);
-      void print(const Statement::Fn_Call &stmt);
-      void print(const Statement::Block &stmt);
+class CC : public Base {
+ public:
+  CC() : Base() {}
+  CC(std::ostream &o) : Base(o) {}
+  void print(const Statement::For &stmt);
+  void print(const Statement::Var_Decl &stmt);
+  void print(const Statement::If &stmt);
+  void print(const Statement::Return &stmt);
+  void print(const Statement::Foreach &stmt);
+  void print(const Statement::Var_Assign &stmt);
+  void print(const Statement::Fn_Call &stmt);
+  void print(const Statement::Block &stmt);
 
-      void print(const Fn_Def &fn_def);
+  void print(const Fn_Def &fn_def);
 
 
-      void print(const std::list<Statement::Base*> &stmts);
+  void print(const std::list<Statement::Base*> &stmts);
 
-      void print(const Expr::Base &expr);
-      void print(const Type::Base &);
-      void print(const Var_Acc::Base &);
-  };
+  void print(const Expr::Base &expr);
+  void print(const Type::Base &);
+  void print(const Var_Acc::Base &);
+};
 
-}
+}  // namespace Printer
 
-#endif
+#endif  // SRC_CC_HH_

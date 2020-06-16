@@ -22,16 +22,15 @@
 }}} */
 
 
-#ifndef UNUSED_VISITOR_HH
-#define UNUSED_VISITOR_HH
+#ifndef SRC_UNUSED_VISITOR_HH_
+#define SRC_UNUSED_VISITOR_HH_
 
 #include "visitor.hh"
 
 class Unused_Visitor : public Visitor {
-  public:
+ public:
     void visit_begin(Alt::Simple &a);
     void visit(Symbol::NT &n);
-
 };
 
-#endif
+#endif  // SRC_UNUSED_VISITOR_HH_

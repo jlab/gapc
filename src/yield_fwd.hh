@@ -22,9 +22,13 @@
 }}} */
 
 
-#ifndef YIELD_FWD_HH
-#define YIELD_FWD_HH
+#ifndef SRC_YIELD_FWD_HH_
+#define SRC_YIELD_FWD_HH_
 
-namespace Yield { class Poly; class Size; class Multi; }
+namespace Yield {
+class Poly;
+class Size;
+class Multi;
+}
 
-#endif
+#endif  // SRC_YIELD_FWD_HH_
