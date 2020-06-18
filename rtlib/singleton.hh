@@ -21,17 +21,17 @@
 
 }}} */
 
-#ifndef SINGLETON_HH
-#define SINGLETON_HH
+#ifndef RTLIB_SINGLETON_HH_
+#define RTLIB_SINGLETON_HH_
 
 template <typename T>
 class Singleton {
-  private:
+ private:
     static T obj;
-  public:
+
+ public:
     Singleton()  {}
-    static T & ref()
-    {
+    static T & ref() {
       return obj;
     }
 };
@@ -43,4 +43,4 @@ T Singleton<T>::obj;
 
 #endif
 
-#endif
+#endif  // RTLIB_SINGLETON_HH_

@@ -3,8 +3,7 @@
 #define RTLIB_CSTR_H
 
 inline
-char *int_to_str(char *s, unsigned char *len, int j)
-{
+char *int_to_str(char *s, unsigned char *len, int j) {
   int i = j;
   s[11] = 0;
   char *c = s+9;

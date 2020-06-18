@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef EMPTY_HH
-#define EMPTY_HH
+#ifndef RTLIB_EMPTY_HH_
+#define RTLIB_EMPTY_HH_
 
 #include <limits>
 #include <cassert>
@@ -31,118 +31,100 @@
 #include <utility>
 
 
-template<typename T> inline void empty(T &x)
-{
+template<typename T> inline void empty(T &x) {
   x = 0;
 }
 
-template<typename T> inline bool isEmpty(const T &x)
-{
+template<typename T> inline bool isEmpty(const T &x) {
   return x == 0;
 }
 
 
-//template<> inline void empty(int &x)
-inline void empty(char &x)
-{
+// template<> inline void empty(int &x)
+inline void empty(char &x) {
   x = '~' + 1;
 }
 
-//template<> inline bool isEmpty(int x)
-inline bool isEmpty(char x)
-{
+// template<> inline bool isEmpty(int x)
+inline bool isEmpty(char x) {
   return x == '~' + 1;
 }
 
-//template<> inline void empty(int &x)
-inline void empty(int &x)
-{
+// template<> inline void empty(int &x)
+inline void empty(int &x) {
   x = std::numeric_limits<int>::max();
 }
 
-//template<> inline bool isEmpty(int x)
-inline bool isEmpty(int x)
-{
+// template<> inline bool isEmpty(int x)
+inline bool isEmpty(int x) {
   return x == std::numeric_limits<int>::max();
 }
 
-//template<> inline void empty(double &x)
-inline void empty(double &x)
-{
-  //assert( std::numeric_limits<double>::has_quiet_NaN );
-  //x = std::numeric_limits<double>::quiet_NaN();
-  assert( std::numeric_limits<double>::has_infinity );
+// template<> inline void empty(double &x)
+inline void empty(double &x) {
+  // assert( std::numeric_limits<double>::has_quiet_NaN );
+  // x = std::numeric_limits<double>::quiet_NaN();
+  assert(std::numeric_limits<double>::has_infinity);
   x = std::numeric_limits<double>::infinity();
 }
 
-//template<> inline bool isEmpty(double x)
-inline bool isEmpty(double x)
-{
-  //assert( std::numeric_limits<double>::has_quiet_NaN );
-  //return x != x;
-  assert( std::numeric_limits<double>::has_infinity );
+// template<> inline bool isEmpty(double x)
+inline bool isEmpty(double x) {
+  // assert( std::numeric_limits<double>::has_quiet_NaN );
+  // return x != x;
+  assert(std::numeric_limits<double>::has_infinity);
   return x == std::numeric_limits<double>::infinity();
 }
 
-inline void empty(float &x)
-{
-  assert( std::numeric_limits<float>::has_infinity );
+inline void empty(float &x) {
+  assert(std::numeric_limits<float>::has_infinity);
   x = std::numeric_limits<float>::infinity();
 }
-inline bool isEmpty(float x)
-{
-  assert( std::numeric_limits<float>::has_infinity );
+inline bool isEmpty(float x) {
+  assert(std::numeric_limits<float>::has_infinity);
   return x == std::numeric_limits<float>::infinity();
 }
 
 // for void representation - see cpp.cc Type::Void ...
-inline void empty(bool &x)
-{
+inline void empty(bool &x) {
   x = false;
 }
 
-//template<> inline bool isEmpty(double x)
-inline bool isEmpty(bool x)
-{
+// template<> inline bool isEmpty(double x)
+inline bool isEmpty(bool x) {
   return !x;
 }
 
 
 #include "string.hh"
 
-//template<> inline void empty(String &s)
-inline void empty(String &s)
-{
+// template<> inline void empty(String &s)
+inline void empty(String &s) {
   s.empty();
 }
 
-//template<> inline bool isEmpty(const String &s)
-inline bool isEmpty(const String &s)
-{
+// template<> inline bool isEmpty(const String &s)
+inline bool isEmpty(const String &s) {
   return s.isEmpty();
 }
 
 #include "rope.hh"
 
-inline void empty(Rope &s)
-{
+inline void empty(Rope &s) {
   s.empty();
 }
 
-inline bool isEmpty(const Rope &s)
-{
+inline bool isEmpty(const Rope &s) {
   return s.isEmpty();
 }
 
-template<typename T, typename U> inline void empty(std::pair<T, U> &p)
-{
+template<typename T, typename U> inline void empty(std::pair<T, U> &p) {
   empty(p.first);
   empty(p.second);
 }
 
 template <typename T, typename U>
-inline bool isEmpty(const std::pair<T, U> &p)
-{
+inline bool isEmpty(const std::pair<T, U> &p) {
   assert((isEmpty(p.first) || isEmpty(p.second))
          == (isEmpty(p.first) && isEmpty(p.second)));
   return isEmpty(p.first);
@@ -150,40 +132,34 @@ inline bool isEmpty(const std::pair<T, U> &p)
 
 #include "subsequence.hh"
 
-template<typename T, typename U> inline void empty(Basic_Subsequence<T, U> &p)
-{
+template<typename T, typename U> inline void empty(Basic_Subsequence<T, U> &p) {
   p.empty();
 }
 
-template <typename T, typename U> inline bool isEmpty(const Basic_Subsequence<T, U> &p)
-{
+template <typename T, typename U> inline bool isEmpty(
+  const Basic_Subsequence<T, U> &p) {
   return p.isEmpty();
 }
 
-#include "rope.hh"
-
-template<typename X> inline void empty(rope::Ref<X> &p)
-{
+template<typename X> inline void empty(rope::Ref<X> &p) {
   p.empty();
 }
 
-template <typename X> inline bool isEmpty(const rope::Ref<X> &p)
-{
+template <typename X> inline bool isEmpty(const rope::Ref<X> &p) {
   return p.isEmpty();
 }
 
 // FIXME this order is needed because of gcc resolution of dependent overloads
 
-template<typename T> inline bool is_not_empty(const T &x)
-{
+template<typename T> inline bool is_not_empty(const T &x) {
   return !isEmpty(x);
 }
 
 // For multi-track:
-template<typename T1, typename T2> inline bool is_not_empty(const T1 &x1, const T2 &x2)
-{
+template<typename T1, typename T2> inline bool is_not_empty(
+  const T1 &x1, const T2 &x2) {
   return !(isEmpty(x1) || isEmpty(x2));
 }
 
 
-#endif
+#endif  // RTLIB_EMPTY_HH_

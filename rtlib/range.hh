@@ -22,49 +22,50 @@
 }}} */
 
 
-#ifndef RANGE_HH
-#define RANGE_HH
+#ifndef RTLIB_RANGE_HH_
+#define RTLIB_RANGE_HH_
+
+#include <functional>
+#include <iterator>
+#include <iostream>
+#include <utility>
 
 #include "list.hh"
 
 template<typename T>
 inline
 std::pair<typename List<T>::iterator, typename List<T>::iterator>
-get_range(List_Ref<T> &x)
-{
+get_range(List_Ref<T> &x) {
   return std::pair<typename List<T>::iterator, typename List<T>::iterator>
     (x.ref().begin(), x.ref().end());
 }
 
-#include <functional>
 
 template<typename Pair>
-struct select1st : public std::unary_function<Pair,typename Pair::first_type> {
-   typename Pair::first_type & operator() ( Pair &p)  {
+struct select1st : public std::unary_function<Pair, typename Pair::first_type> {
+  typename Pair::first_type & operator() (Pair &p)  {
     return p.first;
   }
 };
 
 template<typename Pair>
-struct select2nd : public std::unary_function<Pair,typename Pair::second_type> {
-   typename Pair::second_type & operator() ( Pair &p)  {
+struct select2nd : public std::unary_function<Pair,
+  typename Pair::second_type> {
+    typename Pair::second_type & operator() (Pair &p)  {
     return p.second;
   }
 };
 
-#include <iterator>
-
-#include <iostream>
 
 namespace Proxy {
 
 template<typename Itr, typename Fn>
-class Iterator : public std::iterator<std::random_access_iterator_tag, typename Fn::result_type> {
- 
-  private:
+class Iterator : public std::iterator<std::random_access_iterator_tag,
+  typename Fn::result_type> {
+ private:
     Itr curr;
-    
-  public:
+
+ public:
     typedef typename Fn::result_type value_type;
     typedef typename Itr::difference_type difference_type;
     typedef typename Itr::iterator_category iterator_category;
@@ -72,117 +73,100 @@ class Iterator : public std::iterator<std::random_access_iterator_tag, typename 
     typedef typename Fn::result_type& reference;
 
     Iterator() {}
-    
+
     Iterator(Itr i) : curr(i) {}
-    
+
     Iterator(const Iterator &other) {
         curr = other.curr;
     }
 
-    Iterator &operator++()
-    {
+    Iterator &operator++() {
       ++curr;
       return *this;
     }
-    
-    Iterator &operator--()
-    {
+
+    Iterator &operator--() {
       --curr;
       return *this;
     }
-    
-    typename Fn::result_type &operator*()
-    {
+
+    typename Fn::result_type &operator*() {
       return Fn()(*curr);
     }
 
 
-    bool operator==(const Iterator &other) const
-    {
+    bool operator==(const Iterator &other) const {
       return curr == other.curr;
     }
 
-    bool operator!=(const Iterator &other) const
-    {
+    bool operator!=(const Iterator &other) const {
       return !(*this == other);
     }
      // random access
-     
-    difference_type operator-(const Iterator &other ) const
-    {
+
+    difference_type operator-(const Iterator &other) const {
       return curr - other.curr;
     }
-    
+
 //    Iterator &operator=(Iterator &o)
 //    {
 //      curr = o.curr;
 //      return *this;
 //    }
-    
-    Iterator &operator=(const Iterator &o)
-    {
+
+    Iterator &operator=(const Iterator &o) {
       curr = o.curr;
       return *this;
     }
-      
-    bool operator<(const Iterator &other) const
-    {
-      return curr < other.curr;
-    } 
-     
-    bool operator>(const Iterator &other) const
-    {
-      return curr > other.curr;
-    } 
-    
-    bool operator<=(const Iterator &other) const
-    {
-      return curr <= other.curr;
-    } 
-     
-    bool operator>=(const Iterator &other) const
-    {
-      return curr >= other.curr;
-    } 
 
-    Iterator &operator+(difference_type n)
-    {
+    bool operator<(const Iterator &other) const {
+      return curr < other.curr;
+    }
+
+    bool operator>(const Iterator &other) const {
+      return curr > other.curr;
+    }
+
+    bool operator<=(const Iterator &other) const {
+      return curr <= other.curr;
+    }
+
+    bool operator>=(const Iterator &other) const {
+      return curr >= other.curr;
+    }
+
+    Iterator &operator+(difference_type n) {
       return *(new Iterator(curr+n));
     }
-    
-    Iterator &operator+=(difference_type n)
-    {
+
+    Iterator &operator+=(difference_type n) {
       curr +=n;
       return *this;
     }
-    
-    Iterator &operator-(difference_type n)
-    {
+
+    Iterator &operator-(difference_type n) {
         return *(new Iterator(curr-n));
     }
-    
-    Iterator &operator-=(difference_type n)
-    {
-      curr -=n;
+
+    Iterator &operator-=(difference_type n) {
+      curr -= n;
       return *this;
     }
- 
-    const typename Fn::result_type & operator [] (difference_type n)
-    {
+
+    const typename Fn::result_type & operator[](difference_type n) {
       return Fn()(curr[n]);
     }
- 
 };
 
-}
+}  // namespace Proxy
 
 template <typename Iterator>
 inline
 std::pair<Proxy::Iterator<Iterator, select1st<typename Iterator::value_type> >,
   Proxy::Iterator<Iterator, select1st<typename Iterator::value_type> > >
-splice_left(std::pair<Iterator, Iterator> p)
-{
-  typedef Proxy::Iterator<Iterator, select1st<typename Iterator::value_type> > foo;
+splice_left(std::pair<Iterator, Iterator> p) {
+  typedef Proxy::Iterator<Iterator, select1st<
+    typename Iterator::value_type> > foo;
   return std::make_pair(foo(p.first), foo(p.second));
 }
 
@@ -190,12 +174,12 @@ template <typename Iterator>
 inline
 std::pair<Proxy::Iterator<Iterator, select2nd<typename Iterator::value_type> >,
   Proxy::Iterator<Iterator, select2nd<typename Iterator::value_type> > >
-splice_right(std::pair<Iterator, Iterator> p)
-{
-  typedef Proxy::Iterator<Iterator, select2nd<typename Iterator::value_type> > foo;
+splice_right(std::pair<Iterator, Iterator> p) {
+  typedef Proxy::Iterator<Iterator, select2nd<
+    typename Iterator::value_type> > foo;
   return std::make_pair(foo(p.first), foo(p.second));
 }
 
 
 
-#endif
+#endif  // RTLIB_RANGE_HH_

@@ -21,14 +21,16 @@
 
 }}} */
 
-#ifndef SUBSEQUENCE_HH
-#define SUBSEQUENCE_HH
+#ifndef RTLIB_SUBSEQUENCE_HH_
+#define RTLIB_SUBSEQUENCE_HH_
+
+#include <ostream>
 
 #include "sequence.hh"
 
 template<typename alphabet = char, typename pos_type = unsigned int>
 class Basic_Subsequence {
-  public:
+ public:
     const Basic_Sequence<alphabet, pos_type> *seq;
     pos_type i;
     pos_type j;
@@ -37,46 +39,38 @@ class Basic_Subsequence {
 
     Basic_Subsequence(const Basic_Sequence<alphabet, pos_type> &s,
         pos_type a, pos_type b)
-      : seq(&s), i(a), j(b)
-    {
+      : seq(&s), i(a), j(b) {
     }
 
-    alphabet &front()
-    {
+    alphabet &front() {
       assert(seq);
       return (*seq)[i];
     }
-    const alphabet &front() const
-    {
+    const alphabet &front() const {
       assert(seq);
       return (*seq)[i];
     }
 
-    alphabet &back()
-    {
+    alphabet &back() {
       assert(seq);
       return (*seq)[j-1];
     }
 
-    void empty()
-    {
+    void empty() {
       seq = NULL;
     }
 
-    bool isEmpty() const
-    {
+    bool isEmpty() const {
       return !seq;
     }
 
-    pos_type size() const
-    {
+    pos_type size() const {
       return j-i;
     }
 
-    alphabet operator[](pos_type x) const
-    {
-      //assert(x < j);
-      //assert(x >= i);
+    alphabet operator[](pos_type x) const {
+      // assert(x < j);
+      // assert(x >= i);
       assert(seq);
       return (*seq)[x];
     }
@@ -87,54 +81,48 @@ class Basic_Subsequence {
     iterator end() { assert(seq); return seq->seq+j; }
     const_iterator begin() const { assert(seq); return seq->seq+i; }
     const_iterator end() const { assert(seq); return seq->seq+j; }
-
 };
 
 typedef Basic_Subsequence<> Subsequence;
 
 template<typename alphabet, typename pos_type>
-inline pos_type size(const Basic_Subsequence<alphabet, pos_type> &sub)
-{
+inline pos_type size(const Basic_Subsequence<alphabet, pos_type> &sub) {
   return sub.size();
 }
 
 template<typename alphabet, typename pos_type>
-inline pos_type seq_size(const Basic_Subsequence<alphabet, pos_type> &sub)
-{
+inline pos_type seq_size(const Basic_Subsequence<alphabet, pos_type> &sub) {
   assert(sub.seq);
   return sub.seq->size();
 }
 
 template<typename alphabet, typename pos_type>
-inline alphabet seq_char(const Basic_Subsequence<alphabet, pos_type> &sub, pos_type i)
-{
+inline alphabet seq_char(
+  const Basic_Subsequence<alphabet, pos_type> &sub, pos_type i) {
   return sub.seq->seq[i];
 }
 
 template<typename alphabet, typename pos_type>
-inline alphabet seq_char(const Basic_Subsequence<alphabet, pos_type> &sub, int i)
-{
+inline alphabet seq_char(
+  const Basic_Subsequence<alphabet, pos_type> &sub, int i) {
   return seq_char(sub, pos_type(i));
 }
 
 template<typename alphabet, typename pos_type>
-inline const alphabet &front(const Basic_Subsequence<alphabet, pos_type> &sub)
-{
+inline const alphabet &front(const Basic_Subsequence<alphabet, pos_type> &sub) {
   return sub.front();
 }
 
 template<typename alphabet, typename pos_type>
-inline pos_type rows(const Basic_Subsequence<alphabet, pos_type> &sub)
-{
+inline pos_type rows(const Basic_Subsequence<alphabet, pos_type> &sub) {
   return sub.seq->rows();
 }
 
-#include <ostream>
 
 template<typename alphabet, typename pos_type>
 inline
-std::ostream &operator<<(std::ostream &s, const Basic_Subsequence<alphabet, pos_type> &seq)
-{
+std::ostream &operator<<(
+  std::ostream &s, const Basic_Subsequence<alphabet, pos_type> &seq) {
   s << '<' << seq.i << ", " << seq.j << '>';
   return s;
 }
@@ -142,8 +130,8 @@ std::ostream &operator<<(std::ostream &s, const Basic_Subsequence<alphabet, pos_
 #include "rope.hh"
 
 template<typename X, typename alphabet, typename pos_type>
-inline void append(rope::Ref<X> &str, const Basic_Subsequence<alphabet, pos_type> &sub)
-{
+inline void append(
+  rope::Ref<X> &str, const Basic_Subsequence<alphabet, pos_type> &sub) {
   typename rope::Ref<X> t;
   t.append('<');
   t.append(int(sub.i));
@@ -154,11 +142,11 @@ inline void append(rope::Ref<X> &str, const Basic_Subsequence<alphabet, pos_type
 }
 
 template<typename X, typename alphabet, typename pos_type>
-inline void append_deep(rope::Ref<X> &str, const Basic_Subsequence<alphabet, pos_type> &sub)
-{
-  for (typename Basic_Subsequence<alphabet, pos_type>::const_iterator i = sub.begin();
-      i != sub.end(); ++i)
+inline void append_deep(
+  rope::Ref<X> &str, const Basic_Subsequence<alphabet, pos_type> &sub) {
+  for (typename Basic_Subsequence<alphabet, pos_type>::const_iterator i =
+       sub.begin(); i != sub.end(); ++i)
     str.append(*i);
 }
 
-#endif
+#endif  // RTLIB_SUBSEQUENCE_HH_
