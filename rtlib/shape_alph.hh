@@ -21,42 +21,41 @@
 
 }}} */
 
-#ifndef SHAPE_ALPH_HH
-#define SHAPE_ALPH_HH
+#ifndef RTLIB_SHAPE_ALPH_HH_
+#define RTLIB_SHAPE_ALPH_HH_
 
 template <typename T, typename Size>
 struct ShapeAlph {
   enum { char_width = 2 };
-  private:
-  void set_one(T &t, Size n) const
-  {
+
+ private:
+  void set_one(T &t, Size n) const {
     T x = T(1) << n;
     t |= x;
   }
-  public:
-  void operator()(T &t, char x, Size l) const
-  {
+
+ public:
+  void operator()(T &t, char x, Size l) const {
     switch (x) {
       case '[' :
         t |= T(1) << l-1;
-        //set_zero(t, l);
-        //set_one(t, l-1);
+        // set_zero(t, l);
+        // set_one(t, l-1);
         break;
       case ']' :
         t |= T(2) << l-1;
-        //set_one(t, l);
-        //set_zero(t, l-1);
+        // set_one(t, l);
+        // set_zero(t, l-1);
         break;
       case '_' :
-        //set_one(t, l);
-        //set_one(t, l-1);
+        // set_one(t, l);
+        // set_one(t, l-1);
         t |= T(3) << l-1;
         break;
       default: assert(false);
     }
   }
-  char to_char(T &t, Size i) const
-  {
+  char to_char(T &t, Size i) const {
     switch (t >> i & T(3)) {
       case 1 : return '[';
       case 2 : return ']';
@@ -66,4 +65,4 @@ struct ShapeAlph {
   }
 };
 
-#endif
+#endif  // RTLIB_SHAPE_ALPH_HH_

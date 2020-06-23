@@ -22,29 +22,28 @@
 }}} */
 
 
-#ifndef ERASE_HH
-#define ERASE_HH
+#ifndef RTLIB_ERASE_HH_
+#define RTLIB_ERASE_HH_
+
+#include <utility>
 
 // no-op for bultin
 // no-op for String -> does ref-counting and non-pointer usage
 // List needs overloaded version
-template<typename T> inline void erase(T &x)
-{
+template<typename T> inline void erase(T &x) {
 }
 
 template<typename S, typename T>
 inline
-void erase(std::pair<S, T> &x)
-{
+void erase(std::pair<S, T> &x) {
   erase(x.first);
   erase(x.second);
 }
 
 // multi track versions:
-template<typename T1, typename T2> inline void erase(T1 &x1, T2 &x2)
-{
+template<typename T1, typename T2> inline void erase(T1 &x1, T2 &x2) {
   erase(x1);
   erase(x2);
 }
 
-#endif
+#endif  // RTLIB_ERASE_HH_
