@@ -46,28 +46,28 @@
 
 
 // create a joined algebra
-Algebra::Algebra(Algebra &a, Algebra &b) :
+Algebra::Algebra(const Algebra &a, const Algebra &b) :
   Signature_Base(), default_choice_fn_mode(0), signature(NULL),
   signature_name(NULL) {
   // join all params of both algebras
   // alphabet only needs to be added once,
   // all others are tupled for same string name
-  for (hashtable<std::string, Type::Base*>::iterator i = a.params.begin();
+  for (hashtable<std::string, Type::Base*>::const_iterator i = a.params.begin();
        i != a.params.end(); ++i) {
     if (i->first == "alphabet") {
       params[i->first] = i->second;
       continue;
     }
-    hashtable<std::string, Type::Base*>::iterator j = b.params.find(i->first);
+    hashtable<std::string, Type::Base*>::const_iterator j = b.params.find(i->first);
     assert(j != b.params.end());
     params[i->first] = new Type::Tuple(i->second, j->second);
   }
 
 
   // join all functions as tuples on same string name
-  for (hashtable<std::string, Fn_Def*>::iterator i = a.fns.begin();
+  for (hashtable<std::string, Fn_Def*>::const_iterator i = a.fns.begin();
        i != a.fns.end(); ++i) {
-    hashtable<std::string, Fn_Def*>::iterator j = b.fns.find(i->first);
+    hashtable<std::string, Fn_Def*>::const_iterator j = b.fns.find(i->first);
     if (j == b.fns.end()) {
       continue;
     }

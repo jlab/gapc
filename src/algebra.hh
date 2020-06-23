@@ -51,8 +51,6 @@ class Filter;
 
 
 class Algebra : public Signature_Base {
- public:
-
  private:
   std::string *default_choice_fn_mode;
   void init_choice_fns();
@@ -71,7 +69,7 @@ class Algebra : public Signature_Base {
       signature(NULL), signature_name(s) {
   }
 
-  Algebra(Algebra &a, Algebra &b);
+  Algebra(const Algebra &a, const Algebra &b);
 
 
   Algebra(std::string *n, Loc l)
@@ -79,7 +77,7 @@ class Algebra : public Signature_Base {
       signature(NULL), signature_name(NULL) {
   }
 
-  Algebra(std::string *n)
+  explicit Algebra(std::string *n)
     :  Signature_Base(n), default_choice_fn_mode(0),
       signature(NULL), signature_name(NULL) {
   }
