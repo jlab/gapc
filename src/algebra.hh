@@ -108,7 +108,7 @@ class Algebra : public Signature_Base {
     hashtable<std::string, Type::Base*> &h,
     std::pair<std::string*, Type::Base*> &p, const Loc &l);
 
-  bool check_signature(Signature &s);
+  bool check_signature(Signature *s);
 
   void set_fns(const hashtable<std::string, Fn_Def*> &h);
 

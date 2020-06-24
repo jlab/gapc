@@ -58,7 +58,8 @@ Algebra::Algebra(const Algebra &a, const Algebra &b) :
       params[i->first] = i->second;
       continue;
     }
-    hashtable<std::string, Type::Base*>::const_iterator j = b.params.find(i->first);
+    hashtable<std::string, Type::Base*>::const_iterator j =
+    b.params.find(i->first);
     assert(j != b.params.end());
     params[i->first] = new Type::Tuple(i->second, j->second);
   }
@@ -112,14 +113,14 @@ void Algebra::add_sig_var(hashtable<std::string, Type::Base*> &h,
 }
 
 
-bool Algebra::check_signature(Signature &s) {
-  signature = &s;
-  s.set_algebra(this);
+bool Algebra::check_signature(Signature *s) {
+  signature = s;
+  s->set_algebra(this);
   bool r = true;
 
   // loop over all declarations
-  for (hashtable<std::string, Fn_Decl*>::iterator i = s.decls.begin();
-       i != s.decls.end(); ++i) {
+  for (hashtable<std::string, Fn_Decl*>::iterator i = s->decls.begin();
+       i != s->decls.end(); ++i) {
     // get corresponding function by name
     hashtable<std::string, Fn_Def*>::iterator j = fns.find(i->first);
     if (j == fns.end()) {  // does such a function even exist?
@@ -136,7 +137,7 @@ bool Algebra::check_signature(Signature &s) {
     b = j->second->check_ntparas(*i->second);
     r = r && b;
   }
-  s.reset_algebra();
+  s->reset_algebra();
   return r;
 }
 
