@@ -21,65 +21,55 @@
 
 }}} */
 
-#ifndef REF_HH
-#define REF_HH
+#ifndef RTLIB_REF_HH_
+#define RTLIB_REF_HH_
 
+#include <algorithm>
 #include <boost/shared_ptr.hpp>
 
 namespace Ref {
+template<class T> class Lazy {
+ public:
+    boost::shared_ptr<T> l;
 
-  template<class T>
-    class Lazy 
-    {
-      public:
-      
-      boost::shared_ptr<T> l;
-      
-      protected:
+ protected:
+      void lazy() {
+        if (!l.use_count()) l.reset(new T());
+      }
 
-        void lazy()
-        {
-          if (!l.use_count()) l.reset(new T());
-        }
-        
-        void copy(const Lazy &r)
-        {
-          l = r.l;
-        }
-      public:
-          
-        typedef T Type;
+      void copy(const Lazy &r) {
+        l = r.l;
+      }
 
-        typedef typename T::iterator iterator;
+ public:
+      typedef T Type;
 
-        Lazy()
-        {
-        }
+      typedef typename T::iterator iterator;
 
-        Lazy(const Lazy &r)
-        {
-          copy(r);
-        }
+      Lazy() {
+      }
 
-        ~Lazy()
-        {
-          
-        }
+      Lazy(const Lazy &r) {
+        copy(r);
+      }
 
-        Lazy &operator=(const Lazy &r)
-        {
-          copy(r);
-          return *this;
-        }
+      ~Lazy() {
+      }
 
-        T *operator->() { lazy(); return l.get(); }
-        
-        T &ref() { lazy(); return *l.get(); }
-        
+      Lazy &operator=(const Lazy &r) {
+        copy(r);
+        return *this;
+      }
 
-        const T &const_ref() const { assert(l.use_count());  return *l.get(); } 
-    };
+      T *operator->() { lazy(); return l.get(); }
 
-}
+      T &ref() { lazy(); return *l.get(); }
 
-#endif
+
+      const T &const_ref() const {
+        assert(l.use_count());  return *l.get();
+      }
+};
+}  // namespace Ref
+
+#endif  // RTLIB_REF_HH_

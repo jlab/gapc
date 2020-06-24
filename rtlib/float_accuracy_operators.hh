@@ -1,34 +1,56 @@
-/* 
- * File:   float_accuracy_operators.hh
- * Author: gatter
- *
- * Created on July 15, 2015, 9:28 AM
- */
+/* {{{
 
-#ifndef FLOAT_ACCURACY_OPERATORS_HH
-#define	FLOAT_ACCURACY_OPERATORS_HH
+    This file is part of gapc (GAPC - Grammars, Algebras, Products - Compiler;
+      a system to compile algebraic dynamic programming programs)
 
-#include <utility> 
+    Copyright (C) 2008-2011  Georg Sauthoff
+         email: gsauthof@techfak.uni-bielefeld.de or gsauthof@sdf.lonestar.org
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    * Author: gatter
+    *
+    * Created on July 15, 2015, 9:28 AM
+
+}}} */
+
+#ifndef RTLIB_FLOAT_ACCURACY_OPERATORS_HH_
+#define  RTLIB_FLOAT_ACCURACY_OPERATORS_HH_
+
 #include <math.h>
+#include <utility>
 
 extern const double depsilon;
 
 template <class _T1>
-inline bool operator==(const std::pair<_T1, double>& __x, const std::pair<_T1, double>& __y)
-{  
-  return __x.first == __y.first && std::fabs(__x.second - __y.second) < depsilon; 
+inline bool operator==(
+  const std::pair<_T1, double>& __x, const std::pair<_T1, double>& __y) {
+  return __x.first == __y.first &&
+         std::fabs(__x.second - __y.second) < depsilon;
 }
 
 template <class _T2>
-inline bool operator==(const std::pair<double, _T2>& __x, const std::pair<double, _T2>& __y)
-{ 
-  return std::fabs(__x.first - __y.first) < depsilon && __x.second == __y.second; 
+inline bool operator==(
+  const std::pair<double, _T2>& __x, const std::pair<double, _T2>& __y) {
+  return std::fabs(__x.first - __y.first) < depsilon &&
+         __x.second == __y.second;
 }
 
-inline bool operator==(const std::pair<double, double>& __x, const std::pair<double, double>& __y)
-{ 
-  return std::fabs(__x.first - __y.first) < depsilon && std::fabs(__x.second - __y.second) < depsilon; 
+inline bool operator==(
+  const std::pair<double, double>& __x, const std::pair<double, double>& __y) {
+  return std::fabs(__x.first - __y.first) < depsilon &&
+         std::fabs(__x.second - __y.second) < depsilon;
 }
 
-#endif	/* FLOAT_ACCURACY_OPERATORS_HH */
-
+#endif  // RTLIB_FLOAT_ACCURACY_OPERATORS_HH_

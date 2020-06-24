@@ -22,11 +22,11 @@
 }}} */
 
 
-#ifndef VECTOR_SPARSE_HH
-#define VECTOR_SPARSE_HH
+#ifndef RTLIB_VECTOR_SPARSE_HH_
+#define RTLIB_VECTOR_SPARSE_HH_
 
 #include <cstdlib>
-
+#include <utility>
 #include <vector>
 
 #include <iterator>
@@ -35,34 +35,30 @@ using std::swap;
 
 template <typename T, typename U = size_t>
 class Stapel {
-  private:
+ private:
     T *array;
     U top_, size_;
-    
+
     Stapel(const Stapel &);
     Stapel &operator=(const Stapel &);
-  public:
+
+ public:
     Stapel()
-      : array(0), top_(0), size_(0)
-    {
+      : array(0), top_(0), size_(0) {
     }
     Stapel(U i)
-      : array(0), top_(0), size_(0)
-    {
+      : array(0), top_(0), size_(0) {
       resize(i);
     }
-    ~Stapel()
-    {
+    ~Stapel() {
       std::free(array);
     }
-    void swapper(Stapel<T, U> &o)
-    {
+    void swapper(Stapel<T, U> &o) {
       swap(array, o.array);
       swap(top_, o.top_);
       swap(size_, o.size_);
     }
-    void resize(U i)
-    {
+    void resize(U i) {
       if (i <= size_)
         return;
       if (!array) {
@@ -77,44 +73,38 @@ class Stapel {
         size_ = i;
       }
     }
-    void push(const T &t)
-    {
+    void push(const T &t) {
       assert(top_ < size_);
       array[top_++] = t;
     }
-    T &pop()
-    {
+    T &pop() {
       assert(top_);
       return array[top_--];
     }
-    T &top()
-    {
+    T &top() {
       assert(top_);
       return array[top_-1];
     }
 
     typedef T* iterator;
 
-  
+
     iterator begin() { return array; }
     iterator end() { return array + top_; }
 
     typedef std::reverse_iterator<iterator> reverse_iterator;
 
-    reverse_iterator rbegin()
-    {
+    reverse_iterator rbegin() {
       return reverse_iterator(end());
     }
-    reverse_iterator rend()
-    {
+    reverse_iterator rend() {
       return reverse_iterator(begin());
     }
 };
 
 template <typename T, typename U>
   inline
-  void swap(Stapel<T, U> &a, Stapel<T, U> &b)
-  {
+  void swap(Stapel<T, U> &a, Stapel<T, U> &b) {
     a.swapper(b);
   }
 
@@ -122,7 +112,7 @@ template <typename T, typename U>
 
 template <typename T, typename U = size_t>
 class Vector_Sparse {
-  private:
+ private:
     T *array;
     U size_;
     Stapel<U> stack;
@@ -131,24 +121,22 @@ class Vector_Sparse {
 #endif
     Vector_Sparse(const Vector_Sparse &);
     Vector_Sparse &operator=(const Vector_Sparse &);
-  public:
+
+ public:
     Vector_Sparse()
-      : array(0), size_(0)
-    {}
+      : array(0), size_(0) {}
     Vector_Sparse(U i)
-      : array(0), size_(0)
-    {
+      : array(0), size_(0) {
       resize(i);
     }
-    ~Vector_Sparse()
-    {
-      for (typename Stapel<U>::iterator i = stack.begin(); i != stack.end(); ++i)
+    ~Vector_Sparse() {
+      for (typename Stapel<U>::iterator i = stack.begin();
+           i != stack.end(); ++i)
         array[*i].~T();
       std::free(array);
     }
 
-    void swapper(Vector_Sparse<T, U> &o)
-    {
+    void swapper(Vector_Sparse<T, U> &o) {
       swap(array, o.array);
       swap(size_, o.size_);
       swap(stack, o.stack);
@@ -157,22 +145,19 @@ class Vector_Sparse {
 #endif
     }
 
-    T &operator()(U i)
-    {
-      assert(i<size_);
+    T &operator()(U i) {
+      assert(i < size_);
       assert(init_[i]);
       return array[i];
     }
-    const T &operator()(U i) const
-    {
-      assert(i<size_);
+    const T &operator()(U i) const {
+      assert(i < size_);
       assert(init_[i]);
       return array[i];
     }
 
-    void init(U i, const T &t)
-    {
-      assert(i<size_);
+    void init(U i, const T &t) {
+      assert(i < size_);
       assert(!init_[i]);
 #ifndef NDEBUG
       init_[i] = true;
@@ -181,15 +166,13 @@ class Vector_Sparse {
       stack.push(i);
     }
 
-    void operator()(U i, const T &t)
-    {
-      assert(i<size_);
+    void operator()(U i, const T &t) {
+      assert(i < size_);
       assert(init_[i]);
       array[i] = t;
     }
 
-    void resize(U i)
-    {
+    void resize(U i) {
       stack.resize(i);
 #ifndef NDEBUG
       init_.resize(i);
@@ -212,33 +195,40 @@ class Vector_Sparse {
     U size() const { return size_; }
 
     class Iterator {
-      private:
+     private:
         friend class Vector_Sparse;
         typedef typename Stapel<U>::iterator itr;
         itr i;
         Vector_Sparse<T, U> &v;
-      protected:
+
+     protected:
         Iterator(Vector_Sparse<T, U> &a, itr x)
-          : v(a)
-        {
+          : v(a) {
           i = x;
         }
-      public:
+
+     public:
         typedef T value_type;
         typedef std::random_access_iterator_tag iterator_category;
         typedef U difference_type;
         typedef T* pointer;
         typedef T& reference;
 
-        difference_type operator-(const Iterator &other) const { assert(i>other.i); return i-other.i; }
+        difference_type operator-(const Iterator &other) const {
+          assert(i > other.i); return i-other.i;
+        }
         Iterator operator+(U a) const { return Iterator(v, i+a); }
         Iterator operator-(U a) const { return Iterator(v, i-a); }
-        Iterator &operator=(const Iterator &other) { assert(&v == &other.v); i = other.i; return *this; }
+        Iterator &operator=(const Iterator &other) {
+          assert(&v == &other.v); i = other.i; return *this;
+        }
         Iterator &operator--() { --i; return *this;}
         Iterator operator--(int) { Iterator r(*this); --i; return r;}
         bool operator<(const Iterator &other) const { return i < other.i; }
 
-        bool operator==(const Iterator &o) const { assert(&v == &o.v); return i == o.i; }
+        bool operator==(const Iterator &o) const {
+          assert(&v == &o.v); return i == o.i;
+        }
         bool operator!=(const Iterator &o) const { return !(*this == o); }
         T &operator*() { return v(*i); }
         Iterator &operator++() { ++i; return *this; }
@@ -247,21 +237,17 @@ class Vector_Sparse {
     typedef Iterator iterator;
 
 
-    iterator begin()
-    {
+    iterator begin() {
       return iterator(*this, stack.begin());
     }
-    iterator end()
-    {
+    iterator end() {
       return iterator(*this, stack.end());
     }
-
 };
 
 template <typename T, typename U>
   inline
-  void swap(Vector_Sparse<T, U> &a, Vector_Sparse<T, U> &b)
-  {
+  void swap(Vector_Sparse<T, U> &a, Vector_Sparse<T, U> &b) {
     a.swapper(b);
   }
 
@@ -270,10 +256,9 @@ template <typename T, typename U>
 namespace std {
   template<typename T, typename U>
     struct iterator_traits<typename Vector_Sparse<T,U>::iterator>
-      : public std::iterator<, T>
-    {
+      : public std::iterator<, T> {
     };
 }
 */
 
-#endif
+#endif  // RTLIB_VECTOR_SPARSE_HH_

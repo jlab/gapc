@@ -22,16 +22,20 @@
 }}} */
 
 
-#ifndef ADP_HH
-#define ADP_HH
+#ifndef RTLIB_ADP_HH_
+#define RTLIB_ADP_HH_
 
-#include "empty.hh" 
-#include "algebra.hh" 
-#include "erase.hh" 
-#include "list.hh" 
+#include <algorithm>
+// needed for uint64_t (Integer ...)
+#include <boost/cstdint.hpp>
+
+#include "empty.hh"
+#include "algebra.hh"
+#include "erase.hh"
+#include "list.hh"
 #include "sequence.hh"
 #include "string.hh"
-#include "table.hh" 
+#include "table.hh"
 #include "terminal.hh"
 
 #include "filter.hh"
@@ -52,14 +56,9 @@
 
 #include "rope.hh"
 
-// needed for uint64_t (Integer ...)
-#include <boost/cstdint.hpp>
-
-#include <algorithm>
-
 using std::max;
 using std::min;
 
 typedef int nosuchtype;
 
-#endif
+#endif  // RTLIB_ADP_HH_

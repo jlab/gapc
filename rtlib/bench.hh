@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef RTLIB_BENCH_HH
-#define RTLIB_BENCH_HH
+#ifndef RTLIB_BENCH_HH_
+#define RTLIB_BENCH_HH_
 
 #ifdef STATS
 
@@ -35,19 +35,17 @@
 typedef boost::posix_time::ptime datum_t;
 
 class Bench {
-  private:
+ private:
     std::list<std::pair<datum_t, std::string> > list;
-  public:
 
-    void add_event(const std::string &desc)
-    {
+ public:
+    void add_event(const std::string &desc) {
       boost::posix_time::ptime a
         = boost::posix_time::microsec_clock::universal_time();
       list.push_back(std::make_pair(a, desc));
     }
 
-    void put(std::ostream &o) const
-    {
+    void put(std::ostream &o) const {
       o << "\n\nTimings:\n\n";
       std::list<std::pair<datum_t, std::string> >::const_iterator i =
         list.begin();
@@ -72,8 +70,7 @@ class Bench {
 };
 
 inline
-std::ostream &operator<<(std::ostream &o, const Bench &b)
-{
+std::ostream &operator<<(std::ostream &o, const Bench &b) {
   b.put(o);
   return o;
 }
@@ -85,8 +82,7 @@ std::ostream &operator<<(std::ostream &o, const Bench &b)
 namespace gapc {
 
   inline
-    void add_event(const std::string &s)
-    {
+    void add_event(const std::string &s) {
 #ifdef STATS
       Singleton<Bench>::ref().add_event(s);
 #endif
@@ -94,14 +90,12 @@ namespace gapc {
 
   template <typename O>
     inline
-    void print_events(O &o)
-    {
+    void print_events(O &o) {
 #ifdef STATS
       o << Singleton<Bench>::ref();
 #endif
     }
 
-}
+}  // namespace gapc
 
-#endif
-
+#endif  // RTLIB_BENCH_HH_
