@@ -118,7 +118,7 @@ class Algebra : public Signature_Base {
 
   std::ostream &put(std::ostream &s) const;
 
-  void annotate_terminal_arguments(Signature &s);
+  void annotate_terminal_arguments(const Signature &s);
 
   void codegen(Product::Two &product);
   void codegen();

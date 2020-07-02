@@ -206,8 +206,8 @@ std::ostream &Algebra::put(std::ostream &s) const {
 }
 
 // loop through all functions in the declaration and call annotate on them
-void Algebra::annotate_terminal_arguments(Signature &s) {
-  for (hashtable<std::string, Fn_Decl*>::iterator i = s.decls.begin();
+void Algebra::annotate_terminal_arguments(const Signature &s) {
+  for (hashtable<std::string, Fn_Decl*>::const_iterator i = s.decls.begin();
        i != s.decls.end(); ++i) {
     hashtable<std::string, Fn_Def*>::iterator j = fns.find(i->first);
     assert(j != fns.end());
