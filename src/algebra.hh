@@ -114,7 +114,7 @@ class Algebra : public Signature_Base {
 
   Fn_Def *fn_def(const std::string &name);
 
-  bool check_params(Signature &s);
+  bool check_params(const Signature &s);
 
   std::ostream &put(std::ostream &s) const;
 

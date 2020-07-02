@@ -171,10 +171,10 @@ void Algebra::set_fns(const hashtable<std::string, Fn_Def*> &h) {
 }
 
 // test if all arguments are set through the given parameters
-bool Algebra::check_params(Signature &s) {
+bool Algebra::check_params(const Signature &s) {
   bool r = true;
   // loop over all arguments
-  for (hashtable<std::string, Arg*>::iterator i = s.args.begin();
+  for (hashtable<std::string, Arg*>::const_iterator i = s.args.begin();
        i != s.args.end(); ++i) {
     // if no parameter exists for this needed argument, return false
     hashtable<std::string, Type::Base*>::iterator j = params.find(i->first);
