@@ -34,10 +34,9 @@ addons:
       - gsed
 
 install:
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then ./configure; fi
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then   ./configure CXXFLAGS=" -O3  -std=c++11 -MMD -MP -Wall -Wnon-virtual-dtor -Wno-unused-variable -Wno-parentheses "; fi
+  - ./configure
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then make; fi
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then make YACC=/usr/local/opt/bison@2.7/bin/bison; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then make YACC="/usr/local/opt/bison@2.7/bin/bison" CXXFLAGS=" -O3  -std=c++11 -MMD -MP -Wall -Wnon-virtual-dtor -Wno-unused-variable -Wno-parentheses "; fi
   - sudo make install
 before_script:
   # install missing ghc/haskell modules
