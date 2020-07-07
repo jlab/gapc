@@ -21,43 +21,39 @@
 
 }}} */
 
-#ifndef TYPE_MULTI_HH
-#define TYPE_MULTI_HH
+#ifndef SRC_TYPE_MULTI_HH_
+#define SRC_TYPE_MULTI_HH_
+
+#include <list>
 
 #include "base.hh"
-#include <list>
 
 #include "../para_decl.hh"
 
 
 namespace Type {
+class Multi : public Base {
+ private:
+    std::list<Base*> types_;
 
-  class Multi : public Base {
-    private:
-      std::list<Base*> types_;
-    public:
-      MAKE_CLONE(Multi);
-      Multi(const std::list<Base*> &ts,
-          const Loc &l)
-        : Base(MULTI, l), types_(ts)
-      {
-      }
-      Multi(const std::list<Base*> &ts)
-        : Base(MULTI), types_(ts)
-      {
-      }
+ public:
+    MAKE_CLONE(Multi);
+    Multi(const std::list<Base*> &ts, const Loc &l) :
+      Base(MULTI, l), types_(ts) {
+    }
+    Multi(const std::list<Base*> &ts) : Base(MULTI), types_(ts) {
+    }
 
-      bool is_eq(const Base & base) const;
+    bool is_eq(const Base & base) const;
 
-      void print(Printer::Base &s) const;
-      std::ostream & put(std::ostream &s) const;
+    void print(Printer::Base &s) const;
+    std::ostream & put(std::ostream &s) const;
 
-      const std::list<Base*> &types() const { return types_; }
-
-  };
+    const std::list<Base*> &types() const { return types_; }
+};
 
 
-}
+}  // namespace Type
 
 
-#endif
+#endif  // SRC_TYPE_MULTI_HH_

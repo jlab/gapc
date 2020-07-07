@@ -21,27 +21,24 @@
 
 }}} */
 
-#ifndef EXPR_MOD_HH
-#define EXPR_MOD_HH
+#ifndef SRC_EXPR_MOD_HH_
+#define SRC_EXPR_MOD_HH_
 
 #include "base.hh"
 
 namespace Expr {
 
-  class Mod: public Two {
-    public:
-      Mod(Base *l, Base *r)
-        : Two(MOD, l, r)
-      {
-        set_pretty_op("%");
-      }
-      Mod(Base *l, Base *r, const Loc &lo) : Two(DIV, l, r, lo)
-      {
-        set_pretty_op("%");
-      }
-      Base *copy() const;
-  };
+class Mod: public Two {
+ public:
+    Mod(Base *l, Base *r) : Two(MOD, l, r) {
+      set_pretty_op("%");
+    }
+    Mod(Base *l, Base *r, const Loc &lo) : Two(DIV, l, r, lo) {
+      set_pretty_op("%");
+    }
+    Base *copy() const;
+};
 
-}
+}  // namespace Expr
 
-#endif
+#endif  // SRC_EXPR_MOD_HH_

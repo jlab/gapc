@@ -25,14 +25,12 @@
 
 #include "../printer.hh"
 
-void Type::Multi::print(Printer::Base &s) const
-{
+void Type::Multi::print(Printer::Base &s) const {
   s.print(*this);
 }
 
 
-std::ostream & Type::Multi::put(std::ostream &s) const
-{
+std::ostream & Type::Multi::put(std::ostream &s) const {
   s << " < ";
 
   std::list<Base*>::const_iterator i = types_.begin();
@@ -50,8 +48,7 @@ std::ostream & Type::Multi::put(std::ostream &s) const
   return s;
 }
 
-bool Type::Multi::is_eq(const Base &base) const
-{
+bool Type::Multi::is_eq(const Base &base) const {
   const Multi *o = dynamic_cast<const Multi*>(base.const_simple());
   if (!o)
     return false;

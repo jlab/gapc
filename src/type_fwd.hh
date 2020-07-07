@@ -22,47 +22,47 @@
 }}} */
 
 
-#ifndef TYPE_FWD_HH
-#define TYPE_FWD_HH
+#ifndef SRC_TYPE_FWD_HH_
+#define SRC_TYPE_FWD_HH_
 
 namespace Type {
-  class Base;
-  class List;
-  class Tuple;
-  class TupleDef;
-  class Signature;
-  class Alphabet;
-  class Def;
-  class Choice;
-  class Void;
-  class RealVoid;
-  class Int;
-  class Integer;
-  class Size;
-  class Float;
-  class Single;
-  class String;
-  class Char;
-  class Bool;
-  class Usage;
-  class Range;
-  class Seq;
-  class Table;
-  class Subseq;
-  class Shape;
-  class Referencable;
-  class Rational;
-  class BigInt;
-  class External;
-  
-  class Eval_List;
-  class Backtrace;
-  class Backtrace_List;
+class Base;
+class List;
+class Tuple;
+class TupleDef;
+class Signature;
+class Alphabet;
+class Def;
+class Choice;
+class Void;
+class RealVoid;
+class Int;
+class Integer;
+class Size;
+class Float;
+class Single;
+class String;
+class Char;
+class Bool;
+class Usage;
+class Range;
+class Seq;
+class Table;
+class Subseq;
+class Shape;
+class Referencable;
+class Rational;
+class BigInt;
+class External;
 
-  class Name;
+class Eval_List;
+class Backtrace;
+class Backtrace_List;
 
-  class Multi;
-}
+class Name;
+
+class Multi;
+}  // namespace Type
 
 #include <string>
 #include <list>
@@ -71,4 +71,4 @@ namespace Type {
 typedef std::pair<Type::Name*, std::string*> Tuple_Pair;
 typedef std::list<Tuple_Pair*> Tuple_List;
 
-#endif
+#endif  // SRC_TYPE_FWD_HH_

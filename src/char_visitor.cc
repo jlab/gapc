@@ -29,30 +29,29 @@
 #include "type.hh"
 
 
-void Char_Visitor::visit_begin(Alt::Simple &a)
-{
+void Char_Visitor::visit_begin(Alt::Simple &a) {
   if (a.is_terminal()) {
     if (a.args.size() == 1 && *a.name == "CHAR")
       active = true;
   }
 }
 
-void Char_Visitor::visit_end(Alt::Simple &a)
-{
+void Char_Visitor::visit_end(Alt::Simple &a) {
   active = false;
 }
 
-void Char_Visitor::visit(Fn_Arg::Const &f)
-{
+void Char_Visitor::visit(Fn_Arg::Const &f) {
   if (!active)
     return;
   Type::Base *type = f.expr().data_type();
   bool found = false;
-  for (std::list<Type::Base*>::iterator i = list_.begin(); i!=list_.end(); ++i)
+  for (std::list<Type::Base*>::iterator i = list_.begin();
+       i != list_.end(); ++i) {
     if ((*i)->is_eq(*type)) {
       found = true;
       break;
     }
+  }
   if (!found)
     list_.push_back(type);
 }

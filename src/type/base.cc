@@ -28,46 +28,38 @@
 Type::Base::~Base() {}
 
 
-bool Type::Base::is(Type t) const
-{
+bool Type::Base::is(Type t) const {
   return type == t;
 }
 
-bool Type::Base::is_eq(const Base & base) const 
-{
+bool Type::Base::is_eq(const Base & base) const {
   return base.const_simple()->is(type);
 }
 
-Type::Base * Type::Base::simple() 
-{
+Type::Base * Type::Base::simple() {
   return this;
 }
 
 
-const Type::Base * Type::Base::const_simple() const 
-{
+const Type::Base * Type::Base::const_simple() const {
   return this;
 }
 
-Type::Base *Type::Base::left()
-{
+Type::Base *Type::Base::left() {
   std::abort();
   return 0;
 }
 
-Type::Base *Type::Base::right()
-{
+Type::Base *Type::Base::right() {
   std::abort();
   return 0;
 }
 
-Type::Base *Type::Base::component()
-{
+Type::Base *Type::Base::component() {
   std::abort();
   return 0;
 }
 
-Type::Base *Type::Base::deref()
-{
+Type::Base *Type::Base::deref() {
   return this;
 }

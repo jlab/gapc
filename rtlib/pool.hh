@@ -22,52 +22,48 @@
 }}} */
 
 
-#ifndef POOL_HH
-#define POOL_HH
-
-#include "map_pool.hh"
-
-// tr1 has it
-#include <boost/cstdint.hpp>
+#ifndef RTLIB_POOL_HH_
+#define RTLIB_POOL_HH_
 
 #include <cassert>
 #include <cstdlib>
 
+// tr1 has it
+#include <boost/cstdint.hpp>
+
+#include "map_pool.hh"
+
 // no element destructors are called from the pool destructor
 template <class K>
 class Pool {
-  private:
+ private:
     Map::Pool<K> pool;
 
     Pool(const Pool &);
     Pool &operator=(const Pool&);
-  public:
-    Pool()
-    {
-      //pool = new Map::Pool<K>();
+
+ public:
+    Pool() {
+      // pool = new Map::Pool<K>();
     }
 
-    ~Pool()
-    {
-      //delete pool;
+    ~Pool() {
+      // delete pool;
     }
 
-    void purge()
-    {
+    void purge() {
       assert(false);
-      //delete pool;
+      // delete pool;
     }
 
-    K * malloc()
-    {
+    K * malloc() {
       return pool.malloc();
     }
 
-    void free(K *x)
-    {
+    void free(K *x) {
       assert(x);
       pool.free(x);
     }
 };
 
-#endif
+#endif  // RTLIB_POOL_HH_

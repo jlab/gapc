@@ -25,8 +25,7 @@
 
 #include "../type.hh"
 
-void Expr::New::put(std::ostream &s) const
-{
+void Expr::New::put(std::ostream &s) const {
   s << " new " << *obj_ << '(';
   for (std::list<Base*>::const_iterator i = args_.begin();
        i != args_.end(); ++i)
@@ -34,15 +33,13 @@ void Expr::New::put(std::ostream &s) const
   s << ')';
 }
 
-void Expr::This::put(std::ostream &s) const
-{
+void Expr::This::put(std::ostream &s) const {
   s << "this";
 }
 
 #include "../para_decl.hh"
 
-void Expr::New::add_args(const std::list<Para_Decl::Base*> &args)
-{
+void Expr::New::add_args(const std::list<Para_Decl::Base*> &args) {
   for (std::list<Para_Decl::Base*>::const_iterator i = args.begin();
       i != args.end(); ++i) {
     Para_Decl::Simple *p = dynamic_cast<Para_Decl::Simple*>(*i);

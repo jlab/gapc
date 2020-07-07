@@ -26,8 +26,7 @@
 #include "log.hh"
 
 Const::Char::Char(const std::string &n, const Loc &l)
-  : Base(CHAR, l)
-{
+  : Base(CHAR, l) {
   assert(n.size() > 0);
   if (n[0] == '\\') {
     if (n.size() == 2 && n[1] < '0' && n[1] > '9') {
@@ -45,17 +44,17 @@ Const::Char::Char(const std::string &n, const Loc &l)
       Int i(suff, l);
       c = char(i.i);
     }
-  } else
+  } else {
     c = n[0];
+  }
 
-  ys.set(1,1);
+  ys.set(1, 1);
   datatype = new ::Type::Char();
 }
 
 Const::Base::~Base() {}
 
-void Const::Base::print_type(std::ostream &s)
-{
+void Const::Base::print_type(std::ostream &s) {
   if (datatype)
     s << *datatype;
   else
@@ -63,62 +62,50 @@ void Const::Base::print_type(std::ostream &s)
 }
 
 
-void Const::Base::put(std::ostream &s)
-{
+void Const::Base::put(std::ostream &s) {
 }
 
-void Const::Int::put(std::ostream &s)
-{
+void Const::Int::put(std::ostream &s) {
   s << i;
 }
 
-void Const::Size::put(std::ostream &s)
-{
+void Const::Size::put(std::ostream &s) {
   s << u;
 }
 
-void Const::Float::put(std::ostream &s)
-{
+void Const::Float::put(std::ostream &s) {
   s << std::scientific << f;
 }
 
-void Const::Char::put(std::ostream &s)
-{
-  if (c<32) {
-    //s << "\'\\x" << std::hex << int(c) << std::dec << '\'';
+void Const::Char::put(std::ostream &s) {
+  if (c < 32) {
+    // s << "\'\\x" << std::hex << int(c) << std::dec << '\'';
     s << int(c);
     return;
   }
   s << '\'' << c << '\'';
 }
 
-void Const::String::put(std::ostream &o)
-{
+void Const::String::put(std::ostream &o) {
   o << '"' << *s << '"';
 }
 
-void Const::Rational::put(std::ostream &o)
-{
+void Const::Rational::put(std::ostream &o) {
   o << "Rational(\"" << *a << "/" << *b << "\")";
 }
 
-void Const::Bool::put(std::ostream &o)
-{
+void Const::Bool::put(std::ostream &o) {
   o << (b ? "true" : "false");
 }
 
 
-void Const::Number::setNegative()
-{
+void Const::Number::setNegative() {
   Yield::Poly r(ys.high());
   r += 1;
   ys.set(ys.low(), r);
 }
 
 Const::Float::Float(double d)
-  : Number(FLOAT), f(d)
-{
+  : Number(FLOAT), f(d) {
   datatype = new ::Type::Float();
 }
-
-

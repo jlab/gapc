@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef SUBOPT_HH
-#define SUBOPT_HH
+#ifndef SRC_SUBOPT_HH_
+#define SRC_SUBOPT_HH_
 
 
 #include "backtrack_base.hh"
@@ -33,13 +33,15 @@ class AST;
 class Fn_Def;
 
 class Subopt : public Backtrack_Base {
-  private:
+ private:
     void adjust_list_types(Fn_Def *fn, Fn_Def *fn_type);
     void add_subopt_fn_args(Fn_Def *fn);
-  public:
+
+ public:
     void gen_instance(Algebra *score);
     void gen_instance(Algebra *score, Product::Sort_Type sort);
-    void gen_instance(Algebra *score, Product::Base *base, Product::Sort_Type sort);
+    void gen_instance(Algebra *score, Product::Base *base,
+                      Product::Sort_Type sort);
     void gen_backtrack(AST &ast);
     void gen_instance_code(AST &ast);
 
@@ -48,4 +50,4 @@ class Subopt : public Backtrack_Base {
     void print_body(Printer::Base &pp, AST &ast);
 };
 
-#endif
+#endif  // SRC_SUBOPT_HH_

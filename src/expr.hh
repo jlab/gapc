@@ -22,11 +22,9 @@
 }}} */
 
 
-#ifndef EXPR_HH
-#define EXPR_HH
+#ifndef SRC_EXPR_HH_
+#define SRC_EXPR_HH_
 
-
-#include "loc.hh"
 
 #include <string>
 #include <list>
@@ -34,6 +32,7 @@
 #include <cassert>
 #include <map>
 
+#include "loc.hh"
 #include "statement_fwd.hh"
 #include "type_fwd.hh"
 #include "const_fwd.hh"
@@ -50,211 +49,203 @@ class Filter;
 #include "expr/vacc.hh"
 
 namespace Expr {
+class Plus : public Two {
+ public:
+    Plus(Base *l, Base *r, const Loc &lo) : Two(PLUS, l, r, lo) {}
+    Plus(Base *l, Base *r) : Two(PLUS, l, r) {}
+
+    void put(std::ostream &s) const;
+
+    Base *copy() const;
+};
+
+class Minus : public Two {
+ public:
+    Minus(Base *l, Base *r, const Loc &lo) : Two(MINUS, l, r, lo) {}
+    Minus(Base *l, Base *r) : Two(MINUS, l, r) {}
+
+    void put(std::ostream &s) const;
+
+    Base *copy() const;
+};
+
+class Times: public Two {
+ public:
+    Times(Base *l, Base *r, const Loc &lo) : Two(TIMES, l, r, lo) {
+      set_pretty_op("*");
+    }
+
+    Times(Base *l, Base *r) : Two(TIMES, l, r) {
+      set_pretty_op("*");
+    }
+
+    Base *copy() const;
+};
+
+class Div: public Two {
+ public:
+    Div(Base *l, Base *r)
+      : Two(DIV, l, r) {
+      set_pretty_op("/");
+    }
+    Div(Base *l, Base *r, const Loc &lo) : Two(DIV, l, r, lo) {
+      set_pretty_op("/");
+    }
+
+    Base *copy() const;
+};
+
+class Comp : public Base {
+ public:
+    Base *expr;
+    Comp(Base *e, const Loc &l) : Base(COMP, l), expr(e) {}
+    void put(std::ostream &s) const;
+
+    Base *copy() const;
+};
+
+class Const : public Base {
+ public:
+  ::Const::Base *base;
+  Const(::Const::Base* b, const Loc &l) : Base(CONST, l), base(b) {}
+  Const(::Const::Base* b) : Base(CONST), base(b) {}
+  Const(const Yield::Poly &p);
+  Const(const Yield::Size &ys);
+  Const(int p);
+  Const(double d);
+  Const(const std::string &s);
+  Const(char c);
+
+    void put(std::ostream &s) const;
+
+    Base *copy() const;
+};
 
 
-  class Plus : public Two {
-    public:
-      Plus(Base *l, Base *r, const Loc &lo) : Two(PLUS, l, r, lo) {}
-      Plus(Base *l, Base *r) : Two(PLUS, l, r) {}
-
-      void put(std::ostream &s) const;
-
-      Base *copy() const;
-  };
-
-  class Minus : public Two {
-    public:
-      Minus(Base *l, Base *r, const Loc &lo) : Two(MINUS, l, r, lo) {}
-      Minus(Base *l, Base *r) : Two(MINUS, l, r) {}
-
-      void put(std::ostream &s) const;
-
-      Base *copy() const;
-  };
-
-  class Times: public Two {
-    public:
-      Times(Base *l, Base *r, const Loc &lo) : Two(TIMES, l, r, lo)
-      {
-        set_pretty_op("*");
-      }
-
-      Times(Base *l, Base *r) : Two(TIMES, l, r)
-      {
-        set_pretty_op("*");
-      }
-
-      Base *copy() const;
-  };
-
-  class Div: public Two {
-    public:
-      Div(Base *l, Base *r)
-        : Two(DIV, l, r)
-      {
-        set_pretty_op("/");
-      }
-      Div(Base *l, Base *r, const Loc &lo) : Two(DIV, l, r, lo)
-      {
-        set_pretty_op("/");
-      }
-
-      Base *copy() const;
-  };
-
-  class Comp : public Base {
-    public:
-      Base *expr;
-      Comp(Base *e, const Loc &l) : Base(COMP, l), expr(e) {}
-      void put(std::ostream &s) const;
-
-      Base *copy() const;
-
-  };
-
-  class Const : public Base {
-    public:
-    ::Const::Base *base;
-    Const (::Const::Base* b, const Loc &l) : Base(CONST, l), base(b) {}
-    Const (::Const::Base* b) : Base(CONST), base(b) {}
-    Const (const Yield::Poly &p);
-    Const(const Yield::Size &ys);
-    Const (int p);
-    Const(double d);
-    Const(const std::string &s);
-    Const(char c);
-
-      void put(std::ostream &s) const;
-
-      Base *copy() const;
-  };
+class Less_Eq : public Base {
+ public:
+    Base *lhs;
+    Base *rhs;
+    Less_Eq(Expr::Base *l, Expr::Base *r)
+      : Base(LESS_EQ), lhs(l), rhs(r) {}
+    Less_Eq(Expr::Base *l, Expr::Base *r, const Loc &loc)
+      : Base(LESS_EQ, loc), lhs(l), rhs(r) {}
+    Less_Eq(Base *l, const Yield::Poly &p);
 
 
-  class Less_Eq : public Base {
-    public:
-      Base *lhs;
-      Base *rhs;
-      Less_Eq(Expr::Base *l, Expr::Base *r)
-        : Base(LESS_EQ), lhs(l), rhs(r) {}
-      Less_Eq(Expr::Base *l, Expr::Base *r, const Loc &loc)
-        : Base(LESS_EQ, loc), lhs(l), rhs(r) {}
-      Less_Eq(Base *l, const Yield::Poly &p);
+    void put(std::ostream &s) const;
+
+    Base *copy() const;
+};
+
+class Less : public Two {
+ public:
+    Less(Base *l, Base *r)
+      : Two(LESS, l, r) {}
+    Less(Base *l, Base *r, const Loc &loc)
+      : Two(LESS, l, r, loc) {}
+    Less(Base *l, const Yield::Poly &p);
+    void put(std::ostream &s) const;
+
+    Base *copy() const;
+};
+
+class Greater : public Two {
+ public:
+    Greater(Base *l, Base *r)
+      : Two(GREATER, l, r) {}
+    Greater(Base *l, Base *r, const Loc &loc)
+      : Two(GREATER, l, r, loc) {}
+    Greater(Base *l, const Yield::Poly &p);
+    void put(std::ostream &s) const;
+
+    Base *copy() const;
+};
+
+class Greater_Eq : public Two {
+ public:
+    Greater_Eq(Base *l, Base *r)
+      : Two(GREATER_EQ, l, r) { set_pretty_op(">="); }
+    Greater_Eq(Base *l, Base *r, const Loc &loc)
+      : Two(GREATER_EQ, l, r, loc) { set_pretty_op(">="); }
+    Greater_Eq(Base *l, const Yield::Poly &p);
+
+    Base *copy() const;
+};
+
+class Eq : public Two {
+ public:
+    Eq(Base *l, Base *r)
+      : Two(EQ, l, r) { set_pretty_op("=="); }
+    Eq(Base *l, Base *r, const Loc &loc)
+      : Two(EQ, l, r, loc) { set_pretty_op("=="); }
+
+    Eq(Var_Acc::Base *vacc, Statement::Var_Decl *v);
+
+    Base *copy() const;
+};
+
+class Not_Eq : public Two {
+ public:
+    Not_Eq(Base *l, Base *r)
+      : Two(NOT_EQ, l, r) { set_pretty_op("!="); }
+    Not_Eq(Base *l, Base *r, const Loc &loc)
+      : Two(NOT_EQ, l, r, loc) { set_pretty_op("!="); }
+
+    Base *copy() const;
+};
 
 
-      void put(std::ostream &s) const;
+class And : public Two {
+ public:
+    And(Base *l, Base *r)
+      : Two(AND, l, r) {}
+    And(Base *l, Base *r, const Loc &loc)
+      : Two(AND, l, r, loc) {}
+    void put(std::ostream &s) const;
 
-      Base *copy() const;
-  };
+    Base *copy() const;
+};
 
-  class Less : public Two {
-    public:
-      Less(Base *l, Base *r)
-        : Two(LESS, l, r) {}
-      Less(Base *l, Base *r, const Loc &loc)
-        : Two(LESS, l, r, loc) {}
-      Less(Base *l, const Yield::Poly &p);
-      void put(std::ostream &s) const;
+class Or : public Two {
+ public:
+    Or(Base *l, Base *r)
+      : Two(OR, l, r) { set_pretty_op("||"); }
+    Or(Base *l, Base *r, const Loc &loc)
+      : Two(OR, l, r, loc) { set_pretty_op("||"); }
 
-      Base *copy() const;
-  };
+    Base *copy() const;
+};
 
-  class Greater : public Two {
-    public:
-      Greater(Base *l, Base *r)
-        : Two(GREATER, l, r) {}
-      Greater(Base *l, Base *r, const Loc &loc)
-        : Two(GREATER, l, r, loc) {}
-      Greater(Base *l, const Yield::Poly &p);
-      void put(std::ostream &s) const;
+class Max : public Base {
+ public:
+    Base *left, *right;
+    Max(Base *l, Base *r)
+      : Base(MAX), left(l), right(r) {}
+    void put(std::ostream &s) const;
+    Base *copy() const;
+};
 
-      Base *copy() const;
-  };
+class Cond : public Base {
+ public:
+    Base *cond, *then, *els;
+    Cond(Base *c, Base *t, Base *e)
+      : Base(COND), cond(c), then(t), els(e) {}
+    void put(std::ostream &s) const;
+    Base *copy() const;
+};
 
-  class Greater_Eq : public Two {
-    public:
-      Greater_Eq(Base *l, Base *r)
-        : Two(GREATER_EQ, l, r) { set_pretty_op(">="); }
-      Greater_Eq(Base *l, Base *r, const Loc &loc)
-        : Two(GREATER_EQ, l, r, loc) { set_pretty_op(">="); }
-      Greater_Eq(Base *l, const Yield::Poly &p);
-
-      Base *copy() const;
-  };
-
-  class Eq : public Two {
-    public:
-      Eq(Base *l, Base *r)
-        : Two(EQ, l, r) { set_pretty_op("=="); }
-      Eq(Base *l, Base *r, const Loc &loc)
-        : Two(EQ, l, r, loc) { set_pretty_op("=="); }
-
-      Eq(Var_Acc::Base *vacc, Statement::Var_Decl *v);
-
-      Base *copy() const;
-  };
-
-  class Not_Eq : public Two {
-    public:
-      Not_Eq(Base *l, Base *r)
-        : Two(NOT_EQ, l, r) { set_pretty_op("!="); }
-      Not_Eq(Base *l, Base *r, const Loc &loc)
-        : Two(NOT_EQ, l, r, loc) { set_pretty_op("!="); }
-
-      Base *copy() const;
-  };
+class Not : public Base {
+ public:
+    Base *base;
+    Not(Base *b, const Loc &l) : Base(NOT, l), base(b) { }
+    Not(Base *b) : Base(NOT), base(b) { }
+    void put(std::ostream &s) const;
+    Base *copy() const;
+};
 
 
-  class And : public Two {
-    public:
-      And(Base *l, Base *r)
-        : Two(AND, l, r) {}
-      And(Base *l, Base *r, const Loc &loc)
-        : Two(AND, l, r, loc) {}
-      void put(std::ostream &s) const;
-
-      Base *copy() const;
-  };
-
-  class Or : public Two {
-    public:
-      Or(Base *l, Base *r)
-        : Two(OR, l, r) { set_pretty_op("||"); }
-      Or(Base *l, Base *r, const Loc &loc)
-        : Two(OR, l, r, loc) { set_pretty_op("||"); }
-
-      Base *copy() const;
-  };
-
-  class Max : public Base {
-    public:
-      Base *left, *right;
-      Max(Base *l, Base *r)
-        : Base(MAX), left(l), right(r) {}
-      void put(std::ostream &s) const;
-      Base *copy() const;
-  };
-
-  class Cond : public Base {
-    public:
-      Base *cond, *then, *els;
-      Cond(Base *c, Base *t, Base *e)
-        : Base(COND), cond(c), then(t), els(e) {}
-      void put(std::ostream &s) const;
-      Base *copy() const;
-  };
-
-  class Not : public Base {
-    public:
-      Base *base;
-      Not(Base *b, const Loc &l) : Base(NOT, l), base(b) { }
-      Not(Base *b) : Base(NOT), base(b) { }
-      void put(std::ostream &s) const;
-      Base *copy() const;
-  };
- 
-
-}
+}  // namespace Expr
 
 
-#endif
-
+#endif  // SRC_EXPR_HH_

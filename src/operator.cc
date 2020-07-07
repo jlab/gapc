@@ -27,11 +27,10 @@
 
 
 // add new parameter to all lists
-void Operator::add_para(Type::Base *type, std::string *n)
-{
-    // no security checks like for functions
-    // because there is no user contact with this function
-    
+void Operator::add_para(Type::Base *type, std::string *n) {
+  // no security checks like for functions
+  // because there is no user contact with this function
+
   paras.push_back(new Para_Decl::Simple(type, n));
 }
 
@@ -39,8 +38,6 @@ void Operator::add_para(Type::Base *type, std::string *n)
 void Operator::add_const_value(Statement::Var_Decl *v) {
     // no sanity checks because only internal use
     // but, v MUST have a constant RHS
-    
+
     const_values.push_back(v);
 }
-
-

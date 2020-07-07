@@ -30,64 +30,55 @@
 
 
 namespace Para_Decl {
-	
-	
-	Base::~Base()
-	{
-	}
-	
-	
-	Multi::Multi (const std::list<Base*> &l, const Loc &lo)
-		: Base (lo, MULTI)
-	{
-		std::list< ::Type::Base*> types;
-		for (std::list<Base*>::const_iterator i = l.begin(); i != l.end(); ++i) {
-			Simple *s = dynamic_cast<Simple*> (*i);
-			if (!s) {
-				Log::instance()->error((*i)->location(), "No nested multi track declaration allowed.");
-				continue;
-			}
-			list_.push_back (s);
-			
-			types.push_back (s->type());
-		}
-		type_ = new ::Type::Multi (types, lo);
-	}
-	
-	
-	void Multi::replace (::Type::Base *t)
-	{
-		::Type::Multi *m = dynamic_cast< ::Type::Multi* > (t);
-		assert(m);
-		
-		assert(m->types().size() == list_.size());
-		std::list< ::Type::Base* >::const_iterator j = m->types().begin();
-		for (std::list<Para_Decl::Simple*>::iterator i = list_.begin(); i != list_.end(); ++i, ++j) {
-			(*i)->replace (*j);
-		}
-	}
-	
-	
-	Base *Simple::copy() const
-	{
-		Simple *o = new Simple(*this);
-		o->name_ = new std::string (*name_);
-		return o;
-	}
-	
-	
-	Base *Multi::copy() const
-	{
-		Multi *o = new Multi (*this);
-		o->list_.clear();
-		for (std::list<Simple*>::const_iterator i = list_.begin(); i != list_.end(); ++i) {
-			Simple *t = dynamic_cast<Simple*> ((*i)->copy());
-			assert (t);
-			o->list_.push_back (t);
-		}
-		return o;
-	}
-	
-	
+Base::~Base() {
 }
 
+Multi::Multi(const std::list<Base*> &l, const Loc &lo) : Base(lo, MULTI) {
+  std::list< ::Type::Base*> types;
+  for (std::list<Base*>::const_iterator i = l.begin(); i != l.end(); ++i) {
+    Simple *s = dynamic_cast<Simple*> (*i);
+    if (!s) {
+      Log::instance()->error((*i)->location(),
+        "No nested multi track declaration allowed.");
+      continue;
+    }
+    list_.push_back(s);
+
+    types.push_back(s->type());
+  }
+  type_ = new ::Type::Multi (types, lo);
+}
+
+
+void Multi::replace(::Type::Base *t) {
+  ::Type::Multi *m = dynamic_cast< ::Type::Multi* > (t);
+  assert(m);
+
+  assert(m->types().size() == list_.size());
+  std::list< ::Type::Base* >::const_iterator j = m->types().begin();
+  for (std::list<Para_Decl::Simple*>::iterator i = list_.begin();
+       i != list_.end(); ++i, ++j) {
+    (*i)->replace(*j);
+  }
+}
+
+
+Base *Simple::copy() const {
+  Simple *o = new Simple(*this);
+  o->name_ = new std::string(*name_);
+  return o;
+}
+
+
+Base *Multi::copy() const {
+  Multi *o = new Multi (*this);
+  o->list_.clear();
+  for (std::list<Simple*>::const_iterator i = list_.begin();
+       i != list_.end(); ++i) {
+    Simple *t = dynamic_cast<Simple*> ((*i)->copy());
+    assert(t);
+    o->list_.push_back(t);
+  }
+  return o;
+}
+}  // namespace Para_Decl

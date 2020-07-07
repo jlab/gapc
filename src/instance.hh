@@ -22,12 +22,12 @@
 }}} */
 
 
-#ifndef INSTANCE_HH
-#define INSTANCE_HH
-
-#include "loc.hh"
+#ifndef SRC_INSTANCE_HH_
+#define SRC_INSTANCE_HH_
 
 #include <string>
+
+#include "loc.hh"
 
 #include "printer_fwd.hh"
 #include "statement_fwd.hh"
@@ -41,66 +41,54 @@ class Fn_Def;
 
 
 class Instance {
-	
-		friend class yy::Parser;
-	
-	private:
-		
-		std::string *name_;
-		
-		
-	public:
-		
-		Product::Base *product;
-		
-		
-	private:
-		
-		Loc location;
-		Grammar *grammar_;
-		
-		
-	public:
-		
-		Instance(std::string *n, Product::Base *p, const Loc &l);
-		Instance(std::string *n, Product::Base *p, Grammar *g);
-		Instance(Algebra *a, Algebra *b);
-                Instance(Product::Base *a, Algebra *b);
-               
-		
-		const Loc &loc() const { return location; }
-		
-		void set_grammar(Grammar *g) { grammar_ = g; }
-		Grammar *grammar() { return grammar_; }
-		
-		bool init(Instance *instance);
-		
-		void eliminate_lists();
-		
-		std::ostream &put(std::ostream &s) const;
-		
-		void codegen();
-		
-		void print_code(Printer::Base &s);
-		
-		std::string *lookup(const std::string &n);
-		
-		std::string *name() { return name_; }
-		
-		Statement::Hash_Decl *generate_hash_decl(const Fn_Def &fn, bool kbest);
-		
-		bool replace_classified_product();
-		
-		void check_alphabets();
-		
-		
+    friend class yy::Parser;
+
+ private:
+  std::string *name_;
+
+ public:
+  Product::Base *product;
+
+ private:
+  Loc location;
+  Grammar *grammar_;
+
+ public:
+  Instance(std::string *n, Product::Base *p, const Loc &l);
+  Instance(std::string *n, Product::Base *p, Grammar *g);
+  Instance(Algebra *a, Algebra *b);
+  Instance(Product::Base *a, Algebra *b);
+
+
+  const Loc &loc() const { return location; }
+
+  void set_grammar(Grammar *g) { grammar_ = g; }
+  Grammar *grammar() { return grammar_; }
+
+  bool init(Instance *instance);
+
+  void eliminate_lists();
+
+  std::ostream &put(std::ostream &s) const;
+
+  void codegen();
+
+  void print_code(Printer::Base &s);
+
+  std::string *lookup(const std::string &n);
+
+  std::string *name() { return name_; }
+
+  Statement::Hash_Decl *generate_hash_decl(const Fn_Def &fn, bool kbest);
+
+  bool replace_classified_product();
+
+  void check_alphabets();
 };
 
-
-inline std::ostream &operator<<(std::ostream &s, const Instance &i)
-{
-	return i.put(s);
+inline std::ostream &operator<<(std::ostream &s, const Instance &i) {
+  return i.put(s);
 }
 
 
-#endif
+#endif  // SRC_INSTANCE_HH_

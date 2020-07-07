@@ -21,56 +21,52 @@
 
 }}} */
 
-#ifndef EXPR_VACC_HH
-#define EXPR_VACC_HH
+#ifndef SRC_EXPR_VACC_HH_
+#define SRC_EXPR_VACC_HH_
+
+#include <string>
+#include <ostream>
 
 #include "base.hh"
 
 #include "../statement_fwd.hh"
 #include "../var_acc_fwd.hh"
 
-#include <string>
-#include <ostream>
 
 
 namespace Expr {
-	
-	
-	class Vacc : public Base {
-		
-		public:
-		
-			Var_Acc::Base *var_acc;
-			
-			
-			Vacc(Var_Acc::Base *v, const Loc &l) : Base(VACC, l), var_acc(v) {
-			}
-			
-			
-			Vacc(Var_Acc::Base *v) : Base(VACC), var_acc(v) {
-			}
-			
-			
-			Vacc(std::string *n);
-			Vacc(Statement::Var_Decl &vdecl);
-			
-			Vacc(std::string* a, std::string *b);
-			std::string *name();
-			
-			void put(std::ostream &s) const;
-			
-			Statement::Var_Decl *var_decl();
-			
-			Vacc *vacc();
-			
-			Base *copy() const;
-			
-			
-	};
-	
-	
-}
 
 
-#endif
+class Vacc : public Base {
+ public:
+    Var_Acc::Base *var_acc;
 
+
+    Vacc(Var_Acc::Base *v, const Loc &l) : Base(VACC, l), var_acc(v) {
+    }
+
+
+    Vacc(Var_Acc::Base *v) : Base(VACC), var_acc(v) {
+    }
+
+
+    Vacc(std::string *n);
+    Vacc(Statement::Var_Decl &vdecl);
+
+    Vacc(std::string* a, std::string *b);
+    std::string *name();
+
+    void put(std::ostream &s) const;
+
+    Statement::Var_Decl *var_decl();
+
+    Vacc *vacc();
+
+    Base *copy() const;
+};
+
+
+}  // namespace Expr
+
+
+#endif  // SRC_EXPR_VACC_HH_

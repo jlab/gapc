@@ -22,14 +22,12 @@
 }}} */
 
 
-#ifndef PREFIX_HH
-#define PREFIX_HH
+#ifndef SRC_PREFIX_HH_
+#define SRC_PREFIX_HH_
 
 namespace gapc {
-
-  extern const char prefix[];
-  extern const char systemsuffix[];
-
+extern const char prefix[];
+extern const char systemsuffix[];
 }
 
-#endif
+#endif  // SRC_PREFIX_HH_

@@ -22,13 +22,13 @@
 }}} */
 
 
-#ifndef PRINTER_FWD_HH
-#define PRINTER_FWD_HH
+#ifndef SRC_PRINTER_FWD_HH_
+#define SRC_PRINTER_FWD_HH_
 
 namespace Printer {
-  class Base;
-  class CC;
-  class Cpp;
+class Base;
+class CC;
+class Cpp;
 };
 
-#endif
+#endif  // SRC_PRINTER_FWD_HH_

@@ -22,8 +22,12 @@
 }}} */
 
 
-#ifndef SIGNATURE_HH
-#define SIGNATURE_HH
+#ifndef SRC_SIGNATURE_HH_
+#define SRC_SIGNATURE_HH_
+
+#include <string>
+#include <iostream>
+#include <cassert>
 
 #include "hashtable.hh"
 #include "loc.hh"
@@ -33,11 +37,6 @@
 #include "algebra.hh"
 
 #include "mode.hh"
-
-
-#include <string>
-#include <iostream>
-#include <cassert>
 
 
 class Arg;
@@ -59,61 +58,57 @@ class Generate_Stmts;
 // an algebra must implement. It correspongs directly to
 // the notion of signature in Bellman's GAP.
 class Signature : public Signature_Base {
-	
-	private:
-		
-		Algebra *algebra;
-		
-		
-	public:
-		
-		hashtable <std::string, Arg*> args;
-		
-		hashtable <std::string, Fn_Decl*> decls;
-		hashtable <std::string, Fn_Decl*> choice_fns;
-		
-		Signature (std::string *n, const Loc &l) : Signature_Base (n, l), algebra (NULL) {}
-		
-		Fn_Decl* decl (const std::string &s);
-		
-		void setDecls (hashtable <std::string, Fn_Decl*> &d);
-		
-		void replace (Type::Base *a, Type::Base *b);
-		
-		void print();
-		
-		bool check();
-		
-		void set_args (hashtable<std::string, Arg*> &h);
-		
-		Type::Base *var_lookup (const Type::Signature *t);
-		Type::Base *var_lookup (const Type::Alphabet *t);
-		
-		void set_algebra (Algebra *a) {
-			assert(!algebra);
-			algebra = a;
-		}
-		
-		void reset_algebra() { algebra = NULL; }
-		
-		Algebra *generate (std::string *n, std::string *mode);
-		
-		
-	private:
-		
-		Algebra *generate_count (std::string *n);
-		Algebra *generate_enum (std::string *n);
-		Algebra *generate_algebra (std::string *n, Mode::Type mode_type, Type::Base *answer_type, Type::Base *alph, const Generate_Stmts &generate_stmts);
-		Algebra *generate_algebra (std::string *n, Mode::Type mode_type, Type::Base *answer_type, const Generate_Stmts &generate_stmts);
-		
-		
-	public:
-		
-		Algebra *generate_backtrace (std::string *n, Type::Base *value_type, Type::Base *pos_type, Type::Base *alph);
-		
-		
+ private:
+    Algebra *algebra;
+
+ public:
+    hashtable <std::string, Arg*> args;
+
+    hashtable <std::string, Fn_Decl*> decls;
+    hashtable <std::string, Fn_Decl*> choice_fns;
+
+    Signature(std::string *n, const Loc &l) : Signature_Base(n, l),
+              algebra(NULL) {}
+
+    Fn_Decl* decl(const std::string &s);
+
+    void setDecls(hashtable <std::string, Fn_Decl*> &d);
+
+    void replace(Type::Base *a, Type::Base *b);
+
+    void print();
+
+    bool check();
+
+    void set_args(hashtable<std::string, Arg*> &h);
+
+    Type::Base *var_lookup(const Type::Signature *t);
+    Type::Base *var_lookup(const Type::Alphabet *t);
+
+    void set_algebra(Algebra *a) {
+      assert(!algebra);
+      algebra = a;
+    }
+
+    void reset_algebra() { algebra = NULL; }
+
+    Algebra *generate(std::string *n, std::string *mode);
+
+ private:
+    Algebra *generate_count(std::string *n);
+    Algebra *generate_enum(std::string *n);
+    Algebra *generate_algebra(
+      std::string *n, Mode::Type mode_type, Type::Base *answer_type,
+      Type::Base *alph, const Generate_Stmts &generate_stmts);
+    Algebra *generate_algebra(
+      std::string *n, Mode::Type mode_type, Type::Base *answer_type,
+      const Generate_Stmts &generate_stmts);
+
+ public:
+    Algebra *generate_backtrace(
+      std::string *n, Type::Base *value_type, Type::Base *pos_type,
+      Type::Base *alph);
 };
 
 
-#endif
-
+#endif  // SRC_SIGNATURE_HH_

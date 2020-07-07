@@ -21,6 +21,8 @@
 
 }}} */
 
+#include <string>
+
 #include "kbacktrack.hh"
 
 #include "algebra.hh"
@@ -43,14 +45,12 @@
 
 
 void KBacktrack::gen_instance(Algebra *score) {
-    gen_instance(score, Product::NONE);
+  gen_instance(score, Product::NONE);
 }
 
-void KBacktrack::gen_instance(Algebra *score, Product::Sort_Type sort)
-{
-
+void KBacktrack::gen_instance(Algebra *score, Product::Sort_Type sort) {
   Instance *i = new Instance(score, algebra);
-  if(sort != Product::NONE) {
+  if (sort != Product::NONE) {
     i->product->set_sorted_choice(sort);
   }
   i->product = i->product->optimize_shuffle_products();
@@ -61,23 +61,20 @@ void KBacktrack::gen_instance(Algebra *score, Product::Sort_Type sort)
   instance = i;
 }
 
-void KBacktrack::gen_instance(Algebra *score, Product::Base *base, Product::Sort_Type sort) {
-     
-  gen_instance(score,  sort);  
-    
+void KBacktrack::gen_instance(Algebra *score, Product::Base *base,
+  Product::Sort_Type sort) {
+  gen_instance(score,  sort);
+
   instance->product->set_sort_product((new Instance(base, algebra))->product);
-    
 }
 
-void KBacktrack::apply_filter(Filter *f)
-{
+void KBacktrack::apply_filter(Filter *f) {
   assert(instance);
   instance->product->set_filter(f);
 }
 
 
-void KBacktrack::gen_backtrack(AST &ast)
-{
+void KBacktrack::gen_backtrack(AST &ast) {
   hashtable<std::string, Type::Base*> score_return_types;
   const std::list<Symbol::NT*> &nts = ast.grammar()->nts();
   for (std::list<Symbol::NT*>::const_iterator i = nts.begin();
@@ -97,14 +94,14 @@ void KBacktrack::gen_backtrack(AST &ast)
   assert(r);
   remove_unused();
 
-  //ast.instance_grammar_eliminate_lists(instance);
+  // ast.instance_grammar_eliminate_lists(instance);
   Product::Two *t = dynamic_cast<Product::Two*>(instance->product);
   assert(t);
   t->right()->eliminate_lists();
   ast.grammar()->eliminate_lists();
 
   ast.grammar()->init_list_sizes();
-  //ast.warn_missing_choice_fns(instance);
+  // ast.warn_missing_choice_fns(instance);
   ast.grammar()->init_indices();
   ast.grammar()->init_decls();
 
@@ -136,11 +133,9 @@ void KBacktrack::gen_backtrack(AST &ast)
     fn->return_type = bt_type;
     fn->set_target_name("bt_" + *fn->name);
   }
-
 }
 
-void KBacktrack::gen_instance_code(AST &ast)
-{
+void KBacktrack::gen_instance_code(AST &ast) {
   instance->product->right_most()->codegen();
 
   instance->product->algebra()
@@ -148,12 +143,12 @@ void KBacktrack::gen_instance_code(AST &ast)
   ast.optimize_choice(*instance);
   instance->product->install_choice_filter();
 
-  instance->product->algebra()->add_choice_specialisations(*dynamic_cast<Product::Two*>(instance->product));
+  instance->product->algebra()->add_choice_specialisations(
+    *dynamic_cast<Product::Two*>(instance->product));
 }
 
 
-void KBacktrack::gen_nt_proxy_fn(Fn_Def *fn, Type::Base *score_return_type)
-{
+void KBacktrack::gen_nt_proxy_fn(Fn_Def *fn, Type::Base *score_return_type) {
   Type::Base *t = fn->return_type->deref();
   Type::Base *u = score_return_type->deref();
   bool is_list = t->is(Type::LIST);
@@ -229,15 +224,17 @@ void KBacktrack::gen_nt_proxy_fn(Fn_Def *fn, Type::Base *score_return_type)
     Statement::Foreach *foreach = new Statement::Foreach(elem, ret);
     f->stmts.push_back(foreach);
     body = foreach->stmts();
-  } else
+  } else {
     body = &f->stmts;
+  }
 
   Statement::Var_Decl *tupel = 0;
   if (is_list) {
     tupel = new Statement::Var_Decl(t->component(), "tupel");
     body->push_back(tupel);
-  } else
+  } else {
     tupel = list;
+  }
   Statement::Var_Assign *ass1 = 0;
   if (u->is(Type::LIST))
     ass1 = new Statement::Var_Assign(new Var_Acc::Comp(*tupel, 0), *elem);
@@ -267,8 +264,7 @@ void KBacktrack::gen_nt_proxy_fn(Fn_Def *fn, Type::Base *score_return_type)
 }
 
 
-void KBacktrack::print_header(Printer::Base &pp, AST &ast)
-{
+void KBacktrack::print_header(Printer::Base &pp, AST &ast) {
   for (std::list<Statement::Backtrace_Decl*>::iterator i = bt_decls.begin();
        i != bt_decls.end(); ++i)
     pp << **i;
@@ -287,8 +283,7 @@ void KBacktrack::print_header(Printer::Base &pp, AST &ast)
   pp.end_fwd_decls();
 }
 
-void KBacktrack::print_body(Printer::Base &pp, AST &ast)
-{
+void KBacktrack::print_body(Printer::Base &pp, AST &ast) {
   for (std::list<Fn_Def*>::iterator i = proxy_fns.begin();
        i != proxy_fns.end(); ++i)
     pp << **i;
@@ -298,8 +293,7 @@ void KBacktrack::print_body(Printer::Base &pp, AST &ast)
   instance->product->algebra()->print_code(pp);
 }
 
-void KBacktrack::gen_nt_decls(const std::list<Symbol::NT*> &nts)
-{
+void KBacktrack::gen_nt_decls(const std::list<Symbol::NT*> &nts) {
   for (std::list<Symbol::NT*>::const_iterator i = nts.begin();
        i != nts.end(); ++i) {
     Type::Base *t = (*i)->data_type();
@@ -310,4 +304,3 @@ void KBacktrack::gen_nt_decls(const std::list<Symbol::NT*> &nts)
        i != bt_decls.end(); ++i)
     (*i)->set_derive_bt_score();
 }
-

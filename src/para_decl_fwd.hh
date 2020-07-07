@@ -21,13 +21,13 @@
 
 }}} */
 
-#ifndef PARA_DECL_FWD
-#define PARA_DECL_FWD
+#ifndef SRC_PARA_DECL_FWD_HH_
+#define SRC_PARA_DECL_FWD_HH_
 
 namespace Para_Decl {
-  class Base;
-  class Simple;
-  class Multi;
+class Base;
+class Simple;
+class Multi;
 }
 
-#endif
+#endif  // SRC_PARA_DECL_FWD_HH_

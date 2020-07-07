@@ -1,6 +1,28 @@
+/* {{{
 
-#ifndef LEXER_PRIV_H
-#define LEXER_PRIV_H
+    This file is part of gapc (GAPC - Grammars, Algebras, Products - Compiler;
+      a system to compile algebraic dynamic programming programs)
+
+    Copyright (C) 2008-2011  Georg Sauthoff
+         email: gsauthof@techfak.uni-bielefeld.de or gsauthof@sdf.lonestar.org
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+}}} */
+
+#ifndef SRC_LEXER_PRIV_H_
+#define SRC_LEXER_PRIV_H_
 
 #include <cstdio>
 
@@ -14,12 +36,12 @@
 #define YY_TYPEDEF_YY_BUFFER_STATE
 typedef struct yy_buffer_state *YY_BUFFER_STATE;
 #endif
-YY_BUFFER_STATE yy_scan_string (yyconst char *yy_str  );
+YY_BUFFER_STATE yy_scan_string(yyconst char *yy_str);
 
-//YY_BUFFER_STATE yy_new_buffer ( FILE *file, int size );
-YY_BUFFER_STATE yy_create_buffer ( std::FILE *file, int size );
+// YY_BUFFER_STATE yy_new_buffer ( FILE *file, int size );
+YY_BUFFER_STATE yy_create_buffer(std::FILE *file, int size);
 
-void yy_delete_buffer ( YY_BUFFER_STATE buffer );
+void yy_delete_buffer(YY_BUFFER_STATE buffer);
 
 /* Size of default input buffer. */
 #ifndef YY_BUF_SIZE
@@ -34,7 +56,7 @@ void yy_delete_buffer ( YY_BUFFER_STATE buffer );
 #endif /* __ia64__ */
 #endif
 
-void yypush_buffer_state ( YY_BUFFER_STATE buffer );
+void yypush_buffer_state(YY_BUFFER_STATE buffer);
 
 class Driver;
 
@@ -45,4 +67,4 @@ void init(Driver *d);
 
 }
 
-#endif
+#endif  // SRC_LEXER_PRIV_H_

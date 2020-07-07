@@ -21,20 +21,19 @@
 
 }}} */
 
+#include <algorithm>
+#include <list>
 #include "block_base.hh"
 
 
-std::list<Statement::Base*> *Statement::Block_Base::stmts()
-{
+std::list<Statement::Base*> *Statement::Block_Base::stmts() {
   return &statements;
 }
 
 
-void Statement::Block_Base::copy(Block_Base &o) const
-{
+void Statement::Block_Base::copy(Block_Base &o) const {
   o.statements.clear();
   for (std::list<Base*>::const_iterator i = statements.begin();
       i != statements.end(); ++i)
     o.statements.push_back((*i)->copy());
 }
-

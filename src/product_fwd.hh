@@ -22,9 +22,12 @@
 }}} */
 
 
-#ifndef PRODUCT_FWD
-#define PRODUCT_FWD
+#ifndef SRC_PRODUCT_FWD_HH_
+#define SRC_PRODUCT_FWD_HH_
 
-namespace Product { class Base; class Two; }
+namespace Product {
+class Base;
+class Two;
+}  // namespace Product
 
-#endif
+#endif  // SRC_PRODUCT_FWD_HH_

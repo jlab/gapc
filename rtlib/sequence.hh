@@ -22,21 +22,26 @@
 }}} */
 
 
-#ifndef SEQUENCE
-#define SEQUENCE
+#ifndef RTLIB_SEQUENCE_HH_
+#define RTLIB_SEQUENCE_HH_
+
+#include <errno.h>
 
 #include <cstring>
 #include <cassert>
+#include <string>
+#include <utility>
+#include <algorithm>
 
 #include <sstream>
 #include <vector>
+#include <cstdlib>
 
 #include <stdexcept>
 
 template<typename alphabet = char>
 struct Copier {
-  std::pair<alphabet*, size_t> copy(const char *x, size_t l) const
-  {
+  std::pair<alphabet*, size_t> copy(const char *x, size_t l) const {
     alphabet *r = new char[l];
     std::memcpy(r, x, l);
     return std::make_pair(r, l);
@@ -46,12 +51,9 @@ struct Copier {
   const char *row(char *seq, unsigned x) const { return seq; }
 };
 
-#include <cstdlib>
-#include <errno.h>
 template<>
 struct Copier<double> {
-  std::pair<double*, size_t> copy(const char *x, size_t l) const
-  {
+  std::pair<double*, size_t> copy(const char *x, size_t l) const {
     std::stringstream s;
     s << x;
     std::vector<double> v;
@@ -79,8 +81,7 @@ struct Copier<double> {
 
 template<>
 struct Copier<float> {
-  std::pair<float*, size_t> copy(const char *x, size_t l) const
-  {
+  std::pair<float*, size_t> copy(const char *x, size_t l) const {
     std::stringstream s;
     s << x;
     std::vector<float> v;
@@ -108,8 +109,7 @@ struct Copier<float> {
 
 template<>
 struct Copier<int> {
-  std::pair<int*, size_t> copy(const char *x, size_t l) const
-  {
+  std::pair<int*, size_t> copy(const char *x, size_t l) const {
     std::stringstream s;
     s << x;
     std::vector<int> v;
@@ -137,163 +137,152 @@ struct Copier<int> {
 
 
 class M_Char {
-  public:
+ public:
     typedef char alphabet;
     typedef unsigned pos_type;
-  private:
+
+ private:
     alphabet *begin;
-  public:
+
+ public:
     M_Char()
-      : begin(0)
-    {
+      : begin(0) {
     }
     M_Char(alphabet *x)
-      : begin(x)
-    {
+      : begin(x) {
       assert(x);
     }
-    alphabet &column(pos_type x)
-    {
+    alphabet &column(pos_type x) {
       return *(begin + x);
     }
-    const alphabet &column(pos_type x) const
-    {
+    const alphabet &column(pos_type x) const {
       return *(begin + x);
     }
 };
 
 template<>
 struct Copier<M_Char> {
-  public:
-    typedef M_Char alphabet;
-    typedef char alphabet2;
-    typedef unsigned pos_type;
-  private:
-    alphabet2 *seq;
-    alphabet2 *src;
-    pos_type rows_, row_size_;
-    Copier(const Copier &c);
-    Copier &operator=(const Copier &c);
-  public:
-    Copier()
-      : seq(0), src(0), rows_(0), row_size_(0)
-    {
-    }
-    ~Copier()
-    {
-      delete[] seq;
-      delete[] src;
-    }
-    std::pair<alphabet*, size_t> copy(const char *x, size_t l) // const
-    {
-      Copier<char> c;
-      std::pair<char*, size_t> u = c.copy(x, l);
-      src = u.first;
+ public:
+  typedef M_Char alphabet;
+  typedef char alphabet2;
+  typedef unsigned pos_type;
 
-      rows_ = 1;
-      row_size_ = 0;
-      size_t a = 0;
-      for (size_t i = 0; i<l; ++i, ++a) {
-        if (x[i] == '#') {
-          ++rows_;
-          if (!row_size_) {
-            row_size_ = a;
-            a = 0;
-          } else {
-            if (row_size_ != a-1) {
-              throw std::length_error("Row sizes mismatch.");
-            }
-            a = 0;
+ private:
+  alphabet2 *seq;
+  alphabet2 *src;
+  pos_type rows_, row_size_;
+  Copier(const Copier &c);
+  Copier &operator=(const Copier &c);
+
+ public:
+  Copier() : seq(0), src(0), rows_(0), row_size_(0) {
+  }
+  ~Copier() {
+    delete[] seq;
+    delete[] src;
+  }
+  std::pair<alphabet*, size_t> copy(const char *x, size_t l) {  // const
+    Copier<char> c;
+    std::pair<char*, size_t> u = c.copy(x, l);
+    src = u.first;
+
+    rows_ = 1;
+    row_size_ = 0;
+    size_t a = 0;
+    for (size_t i = 0; i < l; ++i, ++a) {
+      if (x[i] == '#') {
+        ++rows_;
+        if (!row_size_) {
+          row_size_ = a;
+          a = 0;
+        } else {
+          if (row_size_ != a-1) {
+            throw std::length_error("Row sizes mismatch.");
           }
+          a = 0;
         }
       }
-      //assert(row_size_);
-      if (!row_size_ && a)
-        row_size_ = a;
-      if (l>0 && x[l-1] == '#')
-        --rows_;
-      alphabet *r = new M_Char[row_size_];
-      seq = new alphabet2[row_size_ * rows_];
-      size_t j = 0;
-      for (size_t i = 0; i<row_size_; ++i) {
-        r[i] = M_Char(seq+j);
-        for (size_t k = 0; k<rows_; ++k) {
-          seq[j++] = x[i + k * (row_size_+1)];
-        }
+    }
+    // assert(row_size_);
+    if (!row_size_ && a)
+      row_size_ = a;
+    if (l > 0 && x[l-1] == '#')
+      --rows_;
+    alphabet *r = new M_Char[row_size_];
+    seq = new alphabet2[row_size_ * rows_];
+    size_t j = 0;
+    for (size_t i = 0; i < row_size_; ++i) {
+      r[i] = M_Char(seq+j);
+      for (size_t k = 0; k < rows_; ++k) {
+        seq[j++] = x[i + k * (row_size_+1)];
       }
-      return std::make_pair(r, row_size_);
     }
-    pos_type rows() const { return rows_; }
-    alphabet2 *row(alphabet *t, pos_type x)
-    {
-      assert(src);
-      assert(x<rows_);
-      pos_type off = x * (row_size_+1);
-      return src + off;
-    }
-    const alphabet2 *row(alphabet *t, pos_type x) const
-    {
-      assert(src);
-      assert(x<rows_);
-      pos_type off = x * (row_size_+1);
-      return src + off;
-    }
+    return std::make_pair(r, row_size_);
+  }
+  pos_type rows() const {
+    return rows_;
+  }
+  alphabet2 *row(alphabet *t, pos_type x) {
+    assert(src);
+    assert(x < rows_);
+    pos_type off = x * (row_size_+1);
+    return src + off;
+  }
+  const alphabet2 *row(alphabet *t, pos_type x) const {
+    assert(src);
+    assert(x < rows_);
+    pos_type off = x * (row_size_+1);
+    return src + off;
+  }
 };
 
 template<typename alphabet = char, typename pos_type = unsigned int>
 class Basic_Sequence {
-  private:
-    Copier<alphabet> copier; // to let Copier cleanup shared storage
-  public:
+ private:
+    Copier<alphabet> copier;  // to let Copier cleanup shared storage
+
+ public:
     alphabet *seq;
     pos_type n;
 
-    void copy(const char *s, pos_type l)
-    {
+    void copy(const char *s, pos_type l) {
       delete[] seq;
 
       std::pair<alphabet*, size_t> p = copier.copy(s, l);
       seq = p.first;
       n = p.second;
     }
-  public:
+
+ public:
     typedef alphabet alphabet_type;
     typedef char alphabet2;
     Basic_Sequence(alphabet *s, pos_type l)
-      : seq(0)
-    {
+      : seq(0) {
       copy(s, l);
     }
-    Basic_Sequence(alphabet *s)
-      : seq(0)
-    {
+    Basic_Sequence(alphabet *s) : seq(0) {
       n = std::strlen(s);
       copy(s, n);
     }
     Basic_Sequence()
       : seq(0), n(0) {}
     Basic_Sequence(const Basic_Sequence &o)
-      : seq(0)
-    {
+      : seq(0) {
       copy(o.seq, o.n);
     }
-    ~Basic_Sequence()
-    {
+    ~Basic_Sequence() {
       delete[] seq;
     }
-    Basic_Sequence &operator=(const Basic_Sequence &o)
-    {
+    Basic_Sequence &operator=(const Basic_Sequence &o) {
       copy(o.seq, o.n);
       return *this;
     }
 
-    alphabet &operator[](pos_type x)
-    {
+    alphabet &operator[](pos_type x) {
       assert(x < n);
       return seq[x];
     }
-    const alphabet &operator[](pos_type x) const
-    {
+    const alphabet &operator[](pos_type x) const {
       assert(x < n);
       return seq[x];
     }
@@ -305,17 +294,14 @@ class Basic_Sequence {
     alphabet * begin() { return seq; }
     alphabet * end() { return seq + n; }
 
-    pos_type rows() const
-    {
+    pos_type rows() const {
       return copier.rows();
     }
-    alphabet2 *row(pos_type row)
-    {
+    alphabet2 *row(pos_type row) {
       assert(row < copier.rows());
       return copier.row(seq, row);
     }
-    const alphabet2 *row(pos_type row) const
-    {
+    const alphabet2 *row(pos_type row) const {
       assert(row < copier.rows());
       return copier.row(seq, row);
     }
@@ -323,44 +309,41 @@ class Basic_Sequence {
 
 typedef Basic_Sequence<> Sequence;
 
-inline char lower_case(char c)
-{
+inline char lower_case(char c) {
   if (c == '_')
     return c;
   if (c == '+')
-	  return c;
+    return c;
   if (c < 'a')
     return c+('a'-'A');
   else
     return c;
 }
 
-inline char upper_case(char c)
-{
+inline char upper_case(char c) {
   if (c == '_')
     return c;
   if (c == '+')
-	  return c;
+    return c;
   if (c >= 'a')
     return c-('a'-'A');
   else
     return c;
 }
 
-//template<typename alphabet, typename pos_type>
-inline const char &column(const M_Char /*<alphabet, pos_type>*/ &c, /*pos_type*/ unsigned l)
-{
+// template<typename alphabet, typename pos_type>
+inline const char &column(
+  const M_Char /*<alphabet, pos_type>*/ &c, /*pos_type*/ unsigned l) {
   return c.column(l);
 }
 
 #include <cctype>
 
 template<typename alphabet, typename pos_type>
-inline void char_to_upper(Basic_Sequence<alphabet, pos_type> &seq)
-{
+inline void char_to_upper(Basic_Sequence<alphabet, pos_type> &seq) {
   for (typename Basic_Sequence<alphabet, pos_type>::iterator i = seq.begin();
        i != seq.end(); ++i)
     *i = std::toupper(*i);
 }
 
-#endif
+#endif  // RTLIB_SEQUENCE_HH_

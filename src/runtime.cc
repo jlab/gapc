@@ -24,19 +24,20 @@
 
 #include "runtime.hh"
 
-Runtime::Asm::Poly & Runtime::Asm::Poly::operator=(const Runtime::Poly &p)
-{
+Runtime::Asm::Poly & Runtime::Asm::Poly::operator=(const Runtime::Poly &p) {
   if (p.is_exp()) {
     set_exp();
     return *this;;
   }
   if (!p.degree()) {
-    if (!p[0])
+    if (!p[0]) {
       n = 0;
-    else n = 1;
-  }
-  else
+    } else {
+      n = 1;
+    }
+  } else {
     n = p.degree() + 1;
+  }
   return *this;
 }
 
@@ -53,8 +54,7 @@ bool Runtime::Asm::Poly::operator==(const Runtime::Poly &p) const {
 }
 
 Runtime::Poly::Poly(const Yield::Size &s)
-  : exponential(false)
-{
+  : exponential(false) {
   Yield::Poly p(s.high());
   if (s.low() < s.high())
     p -= s.low();
@@ -64,8 +64,7 @@ Runtime::Poly::Poly(const Yield::Size &s)
 }
 
 Runtime::Poly::Poly(const Yield::Multi &s)
-  : exponential(false)
-{
+  : exponential(false) {
   assert(s.tracks());
 
   Yield::Multi::const_iterator i = s.begin();
@@ -77,8 +76,7 @@ Runtime::Poly::Poly(const Yield::Multi &s)
 }
 
 Runtime::Poly::Poly(const Table &t)
-  : exponential(false)
-{
+  : exponential(false) {
   assert(t.type() != Table::NONE);
 
   Poly p;
@@ -92,7 +90,7 @@ Runtime::Poly::Poly(const Table &t)
       if (t.bounded())
         p = x;
       else
-        p.set(1,1);
+        p.set(1, 1);
       break;
     case Table::QUADRATIC :
       if (t.bounded())
@@ -111,12 +109,10 @@ Runtime::Poly::Poly(const Table &t)
     p *= Poly(t.right_rest());
 
   *this = p;
-
 }
 
 Runtime::Poly::Poly(const std::vector<Table> &t)
-  : exponential(false)
-{
+  : exponential(false) {
   Poly r(1);
   for (std::vector<Table>::const_iterator i = t.begin(); i != t.end(); ++i) {
     Poly p(*i);
@@ -127,8 +123,7 @@ Runtime::Poly::Poly(const std::vector<Table> &t)
 
 #include <cmath>
 
-void Runtime::Poly::divide_by_n()
-{
+void Runtime::Poly::divide_by_n() {
   if (exponential)
     return;
   if (!n) {
@@ -136,13 +131,14 @@ void Runtime::Poly::divide_by_n()
     double r = std::sqrt(double(coefficients[0]));
     coefficients[0] = r;
   }
-  if (n>0) {
+  if (n > 0) {
     --n;
     coefficients.erase(coefficients.begin());
-  }
-  else
-    if (!coefficients[0])
+  } else {
+    if (!coefficients[0]) {
       coefficients[0] = 1;
+    }
+  }
 }
 
 
@@ -164,15 +160,15 @@ std::ostream &Runtime::Poly::put(std::ostream &out) const {
         s << " + ";
       else
         first = false;
-      if (c>1)
+      if (c > 1)
         s << c;
       s << "n^" << i << ' ';
     }
   }
-  if (n>0 && coefficients[1]) {
+  if (n > 0 && coefficients[1]) {
     if (!first)
       s << " + ";
-    if (coefficients[1]>1)
+    if (coefficients[1] > 1)
       s << coefficients[1];
     s  << "n";
     first = false;
@@ -189,4 +185,3 @@ std::ostream &Runtime::Poly::put(std::ostream &out) const {
   out << s.str();
   return out;
 }
-

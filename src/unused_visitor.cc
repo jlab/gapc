@@ -21,6 +21,8 @@
 
 }}} */
 
+#include <cassert>
+
 #include "unused_visitor.hh"
 
 #include "alt.hh"
@@ -28,16 +30,13 @@
 
 #include "symbol.hh"
 
-#include <cassert>
 
-void Unused_Visitor::visit_begin(Alt::Simple &a)
-{
+void Unused_Visitor::visit_begin(Alt::Simple &a) {
   assert(a.decl);
   a.decl->set_in_use();
 }
 
-void Unused_Visitor::visit(Symbol::NT &n)
-{
+void Unused_Visitor::visit(Symbol::NT &n) {
   if (n.eval_decl)
     n.eval_decl->set_in_use();
 }

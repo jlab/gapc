@@ -22,15 +22,15 @@
 }}} */
 
 
-#ifndef ALT_FWD_HH
-#define ALT_FWD_HH
+#ifndef SRC_ALT_FWD_HH_
+#define SRC_ALT_FWD_HH_
 
 namespace Alt {
-  class Base;
-  class Simple;
-  class Link;
-  class Block;
-  class Multi;
-}
+class Base;
+class Simple;
+class Link;
+class Block;
+class Multi;
+}  // namespace Alt
 
-#endif
+#endif  // SRC_ALT_FWD_HH_

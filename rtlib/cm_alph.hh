@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef CM_ALPH_HH
-#define CM_ALPH_HH
+#ifndef RTLIB_CM_ALPH_HH_
+#define RTLIB_CM_ALPH_HH_
 
 /*
 
@@ -58,15 +58,15 @@ raus reverse .-   >  0011  3   12
 template <typename T, typename Size>
 struct CmAlph {
   enum { char_width = 4 };
-  private:
-  void set_one(T &t, Size n) const
-  {
+
+ private:
+  void set_one(T &t, Size n) const {
     T x = T(1) << n;
     t |= x;
   }
-  public:
-  void operator()(T &t, char x, Size l) const
-  {
+
+ public:
+  void operator()(T &t, char x, Size l) const {
     switch (x) {
       case 'M' :
         t |= T(1) << l-3;
@@ -98,8 +98,7 @@ struct CmAlph {
       default: assert(false);
     }
   }
-  char to_char(T &t, Size i) const
-  {
+  char to_char(T &t, Size i) const {
     switch (t >> i & T(15)) {
       case 1 : return 'M';
       case 2 : return 'D';
@@ -115,4 +114,4 @@ struct CmAlph {
   }
 };
 
-#endif
+#endif  // RTLIB_CM_ALPH_HH_

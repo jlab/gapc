@@ -21,25 +21,26 @@
 
 }}} */
 
+#include <string>
 #include "base.hh"
 
 #include "../symbol_fwd.hh"
 
 namespace Statement {
 
-  class Marker_Decl : public Base {
-    private:
-      std::string name_;
-    public:
-      Marker_Decl(const Symbol::NT &nt);
+class Marker_Decl : public Base {
+ private:
+    std::string name_;
 
-      const std::string &name() const
-      {
-        return name_;
-      }
+ public:
+    Marker_Decl(const Symbol::NT &nt);
 
-      void print(Printer::Base &p) const;
+    const std::string &name() const {
+      return name_;
+    }
 
-  };
+    void print(Printer::Base &p) const;
 
-}
+};
+
+}  // namespace Statement

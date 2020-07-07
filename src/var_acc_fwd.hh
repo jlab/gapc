@@ -22,9 +22,9 @@
 }}} */
 
 
-#ifndef VAR_ACC_FWD
-#define VAR_ACC_FWD
+#ifndef SRC_VAR_ACC_FWD_HH_
+#define SRC_VAR_ACC_FWD_HH_
 
 namespace Var_Acc { class Base; }
 
-#endif
+#endif  // SRC_VAR_ACC_FWD_HH_

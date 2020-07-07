@@ -30,8 +30,7 @@
 #include "../fn_def.hh"
 
 Expr::Fn_Call::Fn_Call(const Fn_Decl &f)
-  : Base(FN_CALL), name(f.name), builtin(NONE), type_param(NULL)
-{
+  : Base(FN_CALL), name(f.name), builtin(NONE), type_param(NULL) {
   const Fn_Def *x = dynamic_cast<const Fn_Def*>(&f);
   if (x) {
     if (x->target_name() != "")
@@ -40,8 +39,7 @@ Expr::Fn_Call::Fn_Call(const Fn_Decl &f)
 }
 
 Expr::Fn_Call::Fn_Call(const Fn_Def &f)
-  : Base(FN_CALL), name(f.name), builtin(NONE), type_param(NULL)
-{
+  : Base(FN_CALL), name(f.name), builtin(NONE), type_param(NULL) {
   for (std::list<std::string*>::const_iterator i = f.names.begin();
        i != f.names.end(); ++i) {
     Expr::Vacc *e = new Expr::Vacc(*i);
@@ -50,8 +48,7 @@ Expr::Fn_Call::Fn_Call(const Fn_Def &f)
 }
 
 Expr::Fn_Call::Fn_Call(std::string *n, const Loc &l)
-  : Base(FN_CALL, l), name(NULL), builtin(NONE), type_param(NULL)
-{
+  : Base(FN_CALL, l), name(NULL), builtin(NONE), type_param(NULL) {
   std::map<std::string, Builtin>::iterator i = map_string_to_builtin.find(*n);
   if (i == map_string_to_builtin.end())
     name = n;
@@ -60,8 +57,7 @@ Expr::Fn_Call::Fn_Call(std::string *n, const Loc &l)
 }
 
 Expr::Fn_Call::Fn_Call(const Filter &f)
-  : Base(FN_CALL), name(f.name), builtin(NONE), type_param(0)
-{
+  : Base(FN_CALL), name(f.name), builtin(NONE), type_param(0) {
   for (std::list<Base*>::const_iterator i = f.args.begin();
        i != f.args.end(); ++i)
     add_arg(*i);
@@ -71,8 +67,7 @@ Expr::Fn_Call::Fn_Call(const Filter &f)
 #include "../statement.hh"
 #include "../type/multi.hh"
 
-void Expr::Fn_Call::put_arg(std::ostream &s, Expr::Base *e) const
-{
+void Expr::Fn_Call::put_arg(std::ostream &s, Expr::Base *e) const {
   if (!e) {
     std::cerr << "Fn contains 0 arg: " << *name << '\n';
     assert(0);
@@ -106,8 +101,7 @@ void Expr::Fn_Call::put_arg(std::ostream &s, Expr::Base *e) const
   s << *e;
 }
 
-void Expr::Fn_Call::put(std::ostream &s) const
-{
+void Expr::Fn_Call::put(std::ostream &s) const {
   std::list<Base*>::const_iterator i = exprs.begin();
   if (is_obj) {
     assert(i != exprs.end());
@@ -140,7 +134,7 @@ const char * Expr::Fn_Call::map_builtin_to_string[] = {
   "splice_left",
   "get_range",
   "is_tabulated",
-  "get", //"get_tabulated",
+  "get",  // "get_tabulated",
   "isEmpty",
   "get_front",
   "get_back",
@@ -174,8 +168,7 @@ const char * Expr::Fn_Call::map_builtin_to_string[] = {
 std::map<std::string, Expr::Fn_Call::Builtin>
   Expr::Fn_Call::map_string_to_builtin;
 
-void Expr::Fn_Call::init_builtins()
-{
+void Expr::Fn_Call::init_builtins() {
   int i = NOT_EMPTY;
   while (map_builtin_to_string[i]) {
     map_string_to_builtin[map_builtin_to_string[i]] = Builtin(i);
@@ -184,14 +177,12 @@ void Expr::Fn_Call::init_builtins()
 }
 
 
-void Expr::Fn_Call::add_arg(Statement::Var_Decl &v)
-{
+void Expr::Fn_Call::add_arg(Statement::Var_Decl &v) {
   Expr::Vacc *e = new Expr::Vacc(v);
   exprs.push_back(e);
 }
 
-void Expr::Fn_Call::add(const std::vector<Statement::Var_Decl*> &l)
-{
+void Expr::Fn_Call::add(const std::vector<Statement::Var_Decl*> &l) {
   for (std::vector<Statement::Var_Decl*>::const_iterator i = l.begin();
        i != l.end(); ++i)
     add_arg(**i);
@@ -199,16 +190,14 @@ void Expr::Fn_Call::add(const std::vector<Statement::Var_Decl*> &l)
 
 #include "../statement/table_decl.hh"
 
-void Expr::Fn_Call::add_arg(const Statement::Table_Decl &v)
-{
+void Expr::Fn_Call::add_arg(const Statement::Table_Decl &v) {
   Expr::Vacc *e = new Expr::Vacc(new std::string(v.name()));
   exprs.push_back(e);
 }
 
 #include "../symbol.hh"
 
-void Expr::Fn_Call::add(const Statement::Table_Decl &v)
-{
+void Expr::Fn_Call::add(const Statement::Table_Decl &v) {
   is_obj = true;
 
   add_arg(new std::string(v.name()));
@@ -232,8 +221,7 @@ void Expr::Fn_Call::add(const Statement::Table_Decl &v)
 }
 
 void Expr::Fn_Call::add(const std::vector<Expr::Base*> &l,
-    const std::vector<Expr::Base*> &r)
-{
+    const std::vector<Expr::Base*> &r) {
   assert(l.size() == r.size());
   std::vector<Expr::Base*>::const_iterator j = r.begin();
   for (std::vector<Expr::Base*>::const_iterator i = l.begin(); i != l.end();
@@ -243,33 +231,28 @@ void Expr::Fn_Call::add(const std::vector<Expr::Base*> &l,
   }
 }
 
-void Expr::Fn_Call::add_arg(std::string *n)
-{
+void Expr::Fn_Call::add_arg(std::string *n) {
   Expr::Vacc *e = new Expr::Vacc(n);
   exprs.push_back(e);
 }
 
-void Expr::Fn_Call::add_arg(Expr::Base *e)
-{
+void Expr::Fn_Call::add_arg(Expr::Base *e) {
   assert(e);
   exprs.push_back(e);
 }
 
-void Expr::Fn_Call::add_arg(Var_Acc::Base *e)
-{
+void Expr::Fn_Call::add_arg(Var_Acc::Base *e) {
   exprs.push_back(new Expr::Vacc(e));
 }
 
 Expr::Fn_Call::Fn_Call(std::string *n, std::list<Statement::Var_Decl*> &l)
-  : Base(FN_CALL), name(n), builtin(NONE), type_param(0)
-{
+  : Base(FN_CALL), name(n), builtin(NONE), type_param(0) {
   for (std::list<Statement::Var_Decl*>::iterator i = l.begin(); i != l.end();
        ++i)
     exprs.push_back(new Expr::Vacc(**i));
 }
 
-void Expr::Fn_Call::replace(Statement::Var_Decl &decl, Expr::Base *expr)
-{
+void Expr::Fn_Call::replace(Statement::Var_Decl &decl, Expr::Base *expr) {
   for (std::list<Base*>::iterator i = exprs.begin(); i != exprs.end();
        ++i) {
     if (**i == decl)
@@ -277,18 +260,15 @@ void Expr::Fn_Call::replace(Statement::Var_Decl &decl, Expr::Base *expr)
   }
 }
 
-Expr::Fn_Call *Expr::Fn_Call::fn_call()
-{
+Expr::Fn_Call *Expr::Fn_Call::fn_call() {
   return this;
 }
 
-Expr::Fn_Call *Expr::Fn_Call::clone()
-{
+Expr::Fn_Call *Expr::Fn_Call::clone() {
   return new Fn_Call(*this);
 }
 
-void Expr::Fn_Call::add(const std::list<Para_Decl::Base*> &l)
-{
+void Expr::Fn_Call::add(const std::list<Para_Decl::Base*> &l) {
   for (std::list<Para_Decl::Base*>::const_iterator i = l.begin(); i != l.end();
        ++i) {
     Para_Decl::Simple *s = dynamic_cast<Para_Decl::Simple*>(*i);
@@ -297,13 +277,11 @@ void Expr::Fn_Call::add(const std::list<Para_Decl::Base*> &l)
   }
 }
 
-Expr::Base *Expr::Fn_Call::copy() const
-{
+Expr::Base *Expr::Fn_Call::copy() const {
   Fn_Call *o = new Fn_Call(*this);
   o->exprs.clear();
-  for (std::list<Base*>::const_iterator i = exprs.begin(); i!=exprs.end(); ++i)
+  for (std::list<Base*>::const_iterator i = exprs.begin();
+       i != exprs.end(); ++i)
     o->exprs.push_back((*i)->copy());
   return o;
 }
-
-

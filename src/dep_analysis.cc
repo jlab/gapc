@@ -21,6 +21,8 @@
 
 }}} */
 
+#include <utility>
+#include <algorithm>
 
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -30,9 +32,8 @@
 #include "symbol.hh"
 
 
-Dep_Analysis::Dep_Analysis(const hashtable<std::string, Symbol::Base*> &s)
- : symbols(s)
-{
+Dep_Analysis::Dep_Analysis(const hashtable<std::string, Symbol::Base*> &s) :
+  symbols(s) {
   size_t a = 0;
   int_map.resize(s.size());
   for (hashtable<std::string, Symbol::Base*>::const_iterator i = s.begin();
@@ -55,8 +56,7 @@ typedef boost::graph_traits<Graph>::vertex_descriptor Vertex;
 typedef std::pair<size_t, size_t> Edge;
 typedef std::list<Vertex> TOrdering;
 
-void Dep_Analysis::sort()
-{
+void Dep_Analysis::sort() {
   std::vector<std::string> debug_out;
 
   std::vector<Edge> edges;
@@ -74,8 +74,8 @@ void Dep_Analysis::sort()
 
     std::string debug_from(*a->first->name + " -> ");
 
-    for (std::list<Symbol::NT*>::iterator j = list.begin(); j!=list.end();
-        ++j) {
+    for (std::list<Symbol::NT*>::iterator j = list.begin(); j != list.end();
+         ++j) {
       hashtable<Symbol::NT*, size_t>::iterator a = nt_map.find(*j);
       assert(a != nt_map.end());
       size_t y = a->second;
@@ -96,7 +96,7 @@ void Dep_Analysis::sort()
   Graph g(edges.begin(), edges.end(), int_map.size());
   TOrdering res;
   boost::topological_sort(g, std::back_inserter(res));
-  for (TOrdering::iterator j = res.begin(); j!=res.end(); ++j)
+  for (TOrdering::iterator j = res.begin(); j != res.end(); ++j) {
     ordering.push_back(int_map[*j]);
+  }
 }
-

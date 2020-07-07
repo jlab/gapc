@@ -22,17 +22,16 @@
 }}} */
 
 
-#ifndef OUTPUT_HH
-#define OUTPUT_HH
+#ifndef RTLIB_OUTPUT_HH_
+#define RTLIB_OUTPUT_HH_
 
 #include <utility>
 #include <ostream>
 
 template<typename L, typename R>
-inline std::ostream &operator<<(std::ostream &out, const std::pair<L, R> &p)
-{
+inline std::ostream &operator<<(std::ostream &out, const std::pair<L, R> &p) {
   out << "( " << p.first << " , " << p.second << " )";
   return out;
 }
 
-#endif
+#endif  // RTLIB_OUTPUT_HH_

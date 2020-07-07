@@ -22,39 +22,36 @@
 }}} */
 
 
-#ifndef LOC_HH
-#define LOC_HH
-
-#include "location.hh"
+#ifndef SRC_LOC_HH_
+#define SRC_LOC_HH_
 
 #include <string>
 #include <cstdio>
 
+#include "location.hh"
+
 #define LINE_SIZE 160
-#define CHECK_EXIT(A) if ((A)<0) { std::fprintf(stderr, "%s:%d", __FILE__, __LINE__); std::perror(""); std::abort(); }
+#define CHECK_EXIT(A) if ((A) < 0) {std::fprintf(stderr, "%s:%d", __FILE__, __LINE__); std::perror(""); std::abort();}
 
 class Loc : public yy::location {
+ private:
+  long off;
+  std::FILE *file;
 
-  private:
-    long off;
-    std::FILE *file;
+ public:
+  // FIXME needed?
+  Loc();
+  Loc(const yy::location &l);
 
-  public:
-    // FIXME needed?
-    Loc();
-    Loc(const yy::location &l);
+  long offset() const { return off; }
+  void setOffset(long o) { off = o; }
+  void set_file(std::FILE* f);
+  std::FILE *file_ptr() const { return file; }
 
-    long offset() const { return off; }
-    void setOffset(long o) { off = o; }
-    void set_file(std::FILE* f);
-    std::FILE *file_ptr() const { return file; }
-
-    std::string line() const;
-
+  std::string line() const;
 };
 
-inline const Loc operator+ (const Loc& begin, const Loc& end)
-{
+inline const Loc operator+ (const Loc& begin, const Loc& end) {
   const yy::location &b = (begin);
   const yy::location &e = (end);
   yy::location r = b + e;
@@ -65,4 +62,4 @@ inline const Loc operator+ (const Loc& begin, const Loc& end)
 }
 
 
-#endif
+#endif  // SRC_LOC_HH_

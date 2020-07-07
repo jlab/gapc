@@ -27,14 +27,12 @@
 #include "log.hh"
 #include "loc.hh"
 
-void Arg::add_arg(hashtable<std::string, Arg*> &h, Arg* a)
-{
+void Arg::add_arg(hashtable<std::string, Arg*> &h, Arg* a) {
   if (h.find(*a->name) != h.end()) {
     Log::instance()->error(a->location,
         "Argument " + *a->name + " already defined");
     Log::instance()->error(h[*a->name]->location, "here.");
-  } else
+  } else {
     h[*a->name] = a;
+  }
 }
-
-

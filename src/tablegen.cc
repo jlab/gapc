@@ -21,15 +21,16 @@
 
 }}} */
 
-#include "tablegen.hh"
+#include <sstream>
+#include <algorithm>
 
+#include "tablegen.hh"
 #include "expr.hh"
 #include "expr/vacc.hh"
 #include "expr/mod.hh"
 #include "statement.hh"
 #include "type.hh"
-
-#include <sstream>
+#include "statement/fn_call.hh"
 
 typedef std::vector<Table>::const_iterator itr;
 
@@ -48,19 +49,16 @@ Tablegen::Tablegen()
   cond(0),
   dtype(0),
   cyk_(false),
-  window_mode_(false)
-{
+  window_mode_(false) {
   // FIXME?
   type = new ::Type::Size();
 
   ret_zero = new Statement::Return(new Expr::Vacc(new std::string("zero")));
 }
 
-#include "statement/fn_call.hh"
 
 void Tablegen::head(Expr::Base *&i, Expr::Base *&j, Expr::Base *&n,
-    const Table &table, size_t track)
-{
+    const Table &table, size_t track) {
   std::ostringstream si, sj, sn, slm, srm;
   si << "t_" << track << "_i";
   sj << "t_" << track << "_j";
@@ -78,8 +76,9 @@ void Tablegen::head(Expr::Base *&i, Expr::Base *&j, Expr::Base *&n,
   if (table.delete_left_index()) {
     iv->rhs = new Expr::Const(0);
     code.push_back(iv);
-  } else
+  } else {
     paras.push_back(iv);
+  }
 
   Statement::Var_Decl *jv =
     new Statement::Var_Decl(type, new std::string(sj.str()));
@@ -87,8 +86,9 @@ void Tablegen::head(Expr::Base *&i, Expr::Base *&j, Expr::Base *&n,
   if (table.delete_right_index()) {
     jv->rhs = n;
     code.push_back(jv);
-  } else
+  } else {
     paras.push_back(jv);
+  }
 
   Statement::Fn_Call *a1 = new Statement::Fn_Call(Statement::Fn_Call::ASSERT);
   a1->add_arg(new Expr::Less_Eq(i, j));
@@ -115,12 +115,10 @@ void Tablegen::head(Expr::Base *&i, Expr::Base *&j, Expr::Base *&n,
         new Expr::Greater(i, j), f);
     window_code.push_back(x);
   }
-
 }
 
 void Tablegen::offset_const(titr track, itr first, const itr &end,
-    Expr::Base *dim, Expr::Base *access )
-{
+    Expr::Base *dim, Expr::Base *access) {
   const Table &table = *first;
   const Yield::Size &left = table.left_rest();
   const Yield::Size &right = table.right_rest();
@@ -137,7 +135,8 @@ void Tablegen::offset_const(titr track, itr first, const itr &end,
   if (right.high() < Yield::UP)
     ors.push_back(new Expr::Greater(j,
           new Expr::Minus(n, new Expr::Const(right.high()))) );
-  Expr::Base *cond = Expr::seq_to_tree<Expr::Base, Expr::Or>(ors.begin(), ors.end());
+  Expr::Base *cond = Expr::seq_to_tree<Expr::Base, Expr::Or>(
+     ors.begin(), ors.end());
 
   Statement::If *guard = new Statement::If(cond, ret_zero);
   code.push_back(guard);
@@ -173,8 +172,7 @@ void Tablegen::offset_const(titr track, itr first, const itr &end,
 }
 
 void Tablegen::offset_left_lin(titr track, itr first, const itr &end,
-    Expr::Base *dim, Expr::Base *access )
-{
+    Expr::Base *dim, Expr::Base *access ) {
   const Table &table = *first;
   const Yield::Size &left = table.left_rest();
 
@@ -183,8 +181,7 @@ void Tablegen::offset_left_lin(titr track, itr first, const itr &end,
 
   Statement::If *guard = new Statement::If(
       new Expr::Greater(i, new Expr::Const(left.high())),
-      ret_zero
-      );
+      ret_zero);
   code.push_back(guard);
 
   access = new Expr::Plus(access, new Expr::Times(dim,
@@ -198,8 +195,7 @@ void Tablegen::offset_left_lin(titr track, itr first, const itr &end,
 }
 
 void Tablegen::offset_right_lin(titr track, itr first, const itr &end,
-    Expr::Base *dim, Expr::Base *access )
-{
+    Expr::Base *dim, Expr::Base *access) {
   const Table &table = *first;
   const Yield::Size &right = table.right_rest();
 
@@ -207,13 +203,15 @@ void Tablegen::offset_right_lin(titr track, itr first, const itr &end,
   Expr::Base *i, *j, *n;
   head(i, j, n, table, *track);
 
-  Expr::Base *cond = new Expr::Less(j, new Expr::Minus(n, new Expr::Const(right.high())));
-  if (right.low() != 0)
-    cond = new Expr::Or(cond, new Expr::Greater(j, new Expr::Minus(n, new Expr::Const(right.low()))));
+  Expr::Base *cond = new Expr::Less(j, new Expr::Minus(
+    n, new Expr::Const(right.high())));
+  if (right.low() != 0) {
+    cond = new Expr::Or(cond, new Expr::Greater(j, new Expr::Minus(
+      n, new Expr::Const(right.low()))));
+  }
   Statement::If *guard = new Statement::If(
       cond,
-      ret_zero
-      );
+      ret_zero);
   code.push_back(guard);
 
   std::ostringstream srj;
@@ -242,19 +240,16 @@ void Tablegen::offset_right_lin(titr track, itr first, const itr &end,
 }
 
 void Tablegen::offset_quad(titr track, itr first, const itr &end,
-    Expr::Base *dim, Expr::Base *access )
-{
+    Expr::Base *dim, Expr::Base *access) {
   const Table &table = *first;
 
   Expr::Base *i, *j, *n;
   head(i, j, n, table, *track);
 
   access = new Expr::Plus(access, new Expr::Times(dim,
-        new Expr::Plus(
-          new Expr::Div(new Expr::Times(j, new Expr::Plus(j, new Expr::Const(1))),
-            new Expr::Const(2)),
-          i)
-        ));
+    new Expr::Plus(
+      new Expr::Div(new Expr::Times(
+        j, new Expr::Plus(j, new Expr::Const(1))), new Expr::Const(2)), i)));
 
   Expr::Base *d = new Expr::Plus(new Expr::Plus(new Expr::Div(
       new Expr::Times(n, new Expr::Plus(n, new Expr::Const(1))),
@@ -276,11 +271,10 @@ void Tablegen::offset_quad(titr track, itr first, const itr &end,
 
 
 void Tablegen::offset(titr track, itr first, const itr &end,
-    Expr::Base *dim, Expr::Base *access)
-{
+    Expr::Base *dim, Expr::Base *access) {
   if (first == end) {
     size = dim;
-    off = access; 
+    off = access;
     return;
   }
 
@@ -306,20 +300,17 @@ void Tablegen::offset(titr track, itr first, const itr &end,
                 offset_quad(track, first, end, dim, access);
                 break;
   }
-
 }
 
-#include <algorithm>
 
-  struct ParaCmp {
-    bool operator()(const Statement::Var_Decl *a, const Statement::Var_Decl *b) const
-    {
-      return *a->name < *b->name;
-    }
-  };
+struct ParaCmp {
+  bool operator()(const Statement::Var_Decl *a,
+                  const Statement::Var_Decl *b) const {
+    return *a->name < *b->name;
+  }
+};
 
-void Tablegen::offset(size_t track_pos, itr f, const itr &e)
-{
+void Tablegen::offset(size_t track_pos, itr f, const itr &e) {
   window_code.clear();
   code.clear();
   paras.clear();
@@ -328,7 +319,7 @@ void Tablegen::offset(size_t track_pos, itr f, const itr &e)
 
   std::vector<size_t> tracks;
   for (size_t i = track_pos; i < track_pos + size_t(e-f); ++i)
-  //for (size_t i = 0; i < size_t(e-f); ++i)
+    // for (size_t i = 0; i < size_t(e-f); ++i)
     tracks.push_back(i);
   std::reverse(tracks.begin(), tracks.end());
 
@@ -357,8 +348,7 @@ void Tablegen::offset(size_t track_pos, itr f, const itr &e)
 #include "symbol.hh"
 
 Statement::Table_Decl *Tablegen::create(Symbol::NT &nt,
-    std::string *name, bool cyk)
-{
+    std::string *name, bool cyk) {
   cyk_ = cyk;
   std::list<Expr::Base*> ors;
   nt.gen_ys_guards(ors);
@@ -367,7 +357,7 @@ Statement::Table_Decl *Tablegen::create(Symbol::NT &nt,
       (ors.begin(), ors.end());
 
   // no clone, for ast->optimize_classify list tag optimization ...
-  //dtype = nt.data_type()->clone();
+  // dtype = nt.data_type()->clone();
   dtype = nt.data_type();
 
   ret_zero = new Statement::Return(new Expr::Const(new Const::Bool(true)));
@@ -395,8 +385,7 @@ Statement::Table_Decl *Tablegen::create(Symbol::NT &nt,
 #include "fn_def.hh"
 #include "var_acc.hh"
 
-Fn_Def *Tablegen::gen_is_tab()
-{
+Fn_Def *Tablegen::gen_is_tab() {
   Fn_Def *f = new Fn_Def(new Type::Bool(), new std::string("is_tabulated"));
   f->add_paras(paras);
 
@@ -421,8 +410,7 @@ Fn_Def *Tablegen::gen_is_tab()
   return f;
 }
 
-Fn_Def *Tablegen::gen_untab()
-{
+Fn_Def *Tablegen::gen_untab() {
   Fn_Def *f = new Fn_Def(new Type::RealVoid(), new std::string("un_tabulate"));
   f->add_paras(paras);
 
@@ -440,8 +428,7 @@ Fn_Def *Tablegen::gen_untab()
   return f;
 }
 
-Fn_Def *Tablegen::gen_tab()
-{
+Fn_Def *Tablegen::gen_tab() {
   Fn_Def *f = new Fn_Def(new Type::RealVoid(), new std::string("set"));
   f->add_paras(paras);
   // FIXME const & in dtype -> see cpp.cc in_fn_head
@@ -463,10 +450,11 @@ Fn_Def *Tablegen::gen_tab()
     Statement::Fn_Call *a = new Statement::Fn_Call(Statement::Fn_Call::ASSERT);
     Expr::Fn_Call *e = new Expr::Fn_Call(Expr::Fn_Call::IS_TABULATED);
     for (std::list<Statement::Var_Decl*>::iterator i = paras.begin();
-        i != paras.end(); ++i)
+         i != paras.end(); ++i) {
       e->add_arg(**i);
+    }
     a->add_arg(new Expr::Not(e));
-   c.push_back(a);
+    c.push_back(a);
   }
 
   c.insert(c.end(), window_code.begin(), window_code.end());
@@ -483,7 +471,8 @@ Fn_Def *Tablegen::gen_tab()
 
   if (!cyk_) {
     Statement::Var_Assign *y = new Statement::Var_Assign(
-        new Var_Acc::Array(new Var_Acc::Plain(new std::string("tabulated")), off),
+        new Var_Acc::Array(
+          new Var_Acc::Plain(new std::string("tabulated")), off),
         new Expr::Const(new Const::Bool(true)));
     c.push_back(y);
   }
@@ -492,8 +481,7 @@ Fn_Def *Tablegen::gen_tab()
   return f;
 }
 
-Fn_Def *Tablegen::gen_get_tab()
-{
+Fn_Def *Tablegen::gen_get_tab() {
   Fn_Def *f = new Fn_Def(new Type::Referencable(dtype), new std::string("get"));
   f->add_paras(paras);
 
@@ -509,7 +497,8 @@ Fn_Def *Tablegen::gen_get_tab()
 
   if (!cyk_) {
     Statement::Fn_Call *a = new Statement::Fn_Call(Statement::Fn_Call::ASSERT);
-    a->add_arg( new Var_Acc::Array(new Var_Acc::Plain(new std::string("tabulated")), off) );
+    a->add_arg(new Var_Acc::Array(
+      new Var_Acc::Plain(new std::string("tabulated")), off));
     c.push_back(a);
   }
 
@@ -525,18 +514,15 @@ Fn_Def *Tablegen::gen_get_tab()
   return f;
 }
 
-Fn_Def *Tablegen::gen_size()
-{
+Fn_Def *Tablegen::gen_size() {
   Fn_Def *f = new Fn_Def(type, new std::string("size"));
 
   std::list<Statement::Base*> c;
 
   Statement::Return *r = new Statement::Return(
-      window_mode_ ? window_size : size
-      );
+      window_mode_ ? window_size : size);
   c.push_back(r);
 
   f->set_statements(c);
   return f;
 }
-

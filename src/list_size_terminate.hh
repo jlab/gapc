@@ -22,25 +22,21 @@
 }}} */
 
 
-#ifndef LIST_SIZE_TERMINATE_HH
-#define LIST_SIZE_TERMINATE_HH
+#ifndef SRC_LIST_SIZE_TERMINATE_HH_
+#define SRC_LIST_SIZE_TERMINATE_HH_
 
 #include "visitor.hh"
 
 class List_Size_Terminate : public Visitor {
+ public:
+  void visit(Symbol::NT &n);
+  void visit(Alt::Base &a);
 
-  public:
-
-    void visit(Symbol::NT &n);
-
-    void visit(Alt::Base &a);
-
-    /*
-    void visit_begin(Alt::Simple &a);
-    void visit(Alt::Link &a);
-    void visit_begin(Alt::Block &a);
-    */
-
+  /*
+  void visit_begin(Alt::Simple &a);
+  void visit(Alt::Link &a);
+  void visit_begin(Alt::Block &a);
+  */
 };
 
-#endif
+#endif  // SRC_LIST_SIZE_TERMINATE_HH_
