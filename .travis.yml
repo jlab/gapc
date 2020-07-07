@@ -31,6 +31,7 @@ addons:
       - boost
       - gsl
       - gsed
+    update: true
 
 install:
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then ./configure; fi
