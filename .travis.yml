@@ -11,6 +11,7 @@ jobs:
     - os: linux
       dist: xenial # 16.04
     # earlier distributions are lacking libgsl-dev AND are no longer supported by Ubuntu
+    - os: osx
 
 addons:
   apt:
@@ -23,9 +24,17 @@ addons:
       - ghc
       - python3
       - python3-pip
+  homebrew:
+    packages:
+      - bison@2.7
+      - cmake
+      - boost
+      - gsl
+      - gsed
 
 install:
-  - ./configure
+  - ./configure [linux]
+  - ./configure CXXFLAGS =  -O3  -std=c++11 -MMD -MP -Wall -Wnon-virtual-dtor -Wno-unused-variable -Wno-parentheses [osx]
   - make
   - sudo make install
 before_script:
