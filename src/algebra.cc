@@ -241,10 +241,10 @@ void Algebra::codegen() {
 }
 
 // call install choice on all functions
-void Algebra::install_choice_filter(Filter &filter) {
+void Algebra::install_choice_filter(Filter *filter) {
   for (hashtable<std::string, Fn_Def*>::iterator i = choice_fns.begin();
        i != choice_fns.end(); ++i) {
-    i->second->install_choice_filter(filter);
+    i->second->install_choice_filter(*filter);
   }
 }
 

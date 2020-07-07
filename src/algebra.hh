@@ -134,7 +134,7 @@ class Algebra : public Signature_Base {
 
   bool is_compatible(Mode::Type t);
 
-  void install_choice_filter(Filter &filter);
+  void install_choice_filter(Filter *filter);
 
   void add_choice_specialisations(Product::Two &product);
 
