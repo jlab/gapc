@@ -23,3 +23,6 @@
 	rm $(tmpdir)/$(notdir $<)
 	# copy all generated files into working directory
 	cp $(tmpdir)/* $(dir $@)
+	# clean up temporary directory
+	rm $(tmpdir)/*
+	rmdir $(tmpdir)
