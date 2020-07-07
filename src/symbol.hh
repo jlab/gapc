@@ -148,7 +148,7 @@ class Base {
       return reachable;
     }
 
-    virtual bool init_links(Grammar &grammar) = 0;
+    virtual bool init_links(const Grammar &grammar) = 0;
 
     bool is_productive() {
       return productive;
@@ -264,7 +264,7 @@ class Terminal : public Base {
  public:
     Terminal(std::string *n, const Loc &l);
 
-    bool init_links(Grammar &grammar);
+    bool init_links(const Grammar &grammar);
 
     bool init_productive();
 
@@ -361,7 +361,7 @@ class NT : public Base {
     void set_eval_fn(std::string *n);
     bool set_eval_decl(Signature_Base &s);
 
-    bool init_links(Grammar &grammar);
+    bool init_links(const Grammar &grammar);
 
     bool init_productive();
 
