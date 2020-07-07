@@ -12,6 +12,7 @@ jobs:
     #  dist: xenial # 16.04
     # earlier distributions are lacking libgsl-dev AND are no longer supported by Ubuntu
     - os: osx
+      osx_image: xcode11
 
 addons:
   apt:
@@ -31,12 +32,12 @@ addons:
       - boost
       - gsl
       - gsed
-    update: true
 
 install:
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then ./configure; fi
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then   ./configure CXXFLAGS=" -O3  -std=c++11 -MMD -MP -Wall -Wnon-virtual-dtor -Wno-unused-variable -Wno-parentheses "; fi
-  - make
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then make; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then make YACC=/usr/local/opt/bison@2.7/bin/bison; fi
   - sudo make install
 before_script:
   # install missing ghc/haskell modules
