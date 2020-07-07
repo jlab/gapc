@@ -34,7 +34,7 @@ addons:
 
 install:
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then ./configure; fi
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then   ./configure CXXFLAGS =  -O3  -std=c++11 -MMD -MP -Wall -Wnon-virtual-dtor -Wno-unused-variable -Wno-parentheses; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then   ./configure CXXFLAGS=" -O3  -std=c++11 -MMD -MP -Wall -Wnon-virtual-dtor -Wno-unused-variable -Wno-parentheses "; fi
   - make
   - sudo make install
 before_script:
