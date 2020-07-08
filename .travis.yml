@@ -41,7 +41,8 @@ install:
   - sudo make install
 before_script:
   # install missing ghc/haskell modules
-  - sudo apt-get install cabal-install -y
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install cabal-install; fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install cabal-install -y; fi
   - cabal update
   - cabal install random
   # obtain truth data from secondary github repository
