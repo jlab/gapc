@@ -31,12 +31,17 @@ addons:
       - cmake
       - boost
       - gsl
-      - gsed
+      - gnu-sed
 
 install:
   - ./configure
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then make; fi
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then make YACC="/usr/local/opt/bison@2.7/bin/bison" CXXFLAGS=" -O3  -std=c++11 -MMD -MP -Wall -Wnon-virtual-dtor -Wno-unused-variable -Wno-parentheses "; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then \
+      export PATH="/usr/local/opt/bison@2.7/bin:$PATH"; \
+      sed "s/ -D_XOPEN_SOURCE=500 //" -i config.mf; \
+      sed "s/ -std=c++17 / -std=c++11 /" -i config.mf; \
+    fi
+  - cat config.mf
+  - make
   - sudo make install
 before_script:
   # install missing ghc/haskell modules
