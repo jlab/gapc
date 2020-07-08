@@ -35,7 +35,7 @@ addons:
 
 install:
   - ./configure
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then gsed "s|^YACC = .+$|YACC = /usr/local/opt/bison@2.7/bin/bison|" -i config.mf; gsed "s|^SED = .+$|SED = /usr/local/opt/gnu-sed/libexec/gnubin/sed|" -i config.mf; gsed "s/ -D_XOPEN_SOURCE=500 //" -i config.mf; gsed "s/ -std=c\+\+17 / -std=c\+\+11 /" -i config.mf; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then gsed -E "s|^YACC = .+$|YACC = /usr/local/opt/bison@2.7/bin/bison|" -i config.mf; gsed -E "s|^SED = .+$|SED = /usr/local/opt/gnu-sed/libexec/gnubin/sed|" -i config.mf; gsed -E "s/ -D_XOPEN_SOURCE=500 //" -i config.mf; gsed -E "s/ -std=c\+\+17 / -std=c\+\+11 /" -i config.mf; fi
   - cat config.mf
   - make
   - sudo make install
@@ -58,6 +58,7 @@ script:
   # run compiler test suite
   - make test-unit
   - make test-paral
-  - make test-mod TRUTH_DIR=/home/travis/gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then make test-mod TRUTH_DIR=/home/travis/gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then make test-mod TRUTH_DIR=/home/travis/gapc-test-suite/Truth TRUTH_SUFFIX=_osx; fi
   - make test-regress TRUTH_DIR=/home/travis/gapc-test-suite/Truth
   - make test-ambiguity TRUTH_DIR=/home/travis/gapc-test-suite/Truth
