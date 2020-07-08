@@ -18,7 +18,7 @@
 	#   if first bison attempt fails, we will try to apply a patch to the input in the tmpdir and rerun the code generation
 	$(YACC) $(YFLAGS) -o $(tmpdir)/$(notdir $@) $(tmpdir)/$(notdir $<) 2>&1 \
 	|| (echo "failed to generate parser, trying to patch input .y file..." && (patch $(tmpdir)/$(notdir $<) < $<_apiparserclass.patch && $(YACC) $(YFLAGS) -o $(tmpdir)/$(notdir $@) $(tmpdir)/$(notdir $<) 2>&1)) \
-	|| (echo "failed to generate parser, trying another patch on input .y file..." && (patch $(tmpdir)/$(notdir $<) < $<_osx.patch && $(YACC) $(YFLAGS) -o $(tmpdir)/$(notdir $@) $(tmpdir)/$(notdir $<) 2>&1))
+	|| (echo "failed to generate parser, trying another patch on input .y file..." && cp $< $(tmpdir)/ && (patch $(tmpdir)/$(notdir $<) < $<_osx.patch && $(YACC) $(YFLAGS) -o $(tmpdir)/$(notdir $@) $(tmpdir)/$(notdir $<) 2>&1))
 	# remove source file from temporary directiry
 	rm $(tmpdir)/$(notdir $<)
 	# copy all generated files into working directory
