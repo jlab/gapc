@@ -46,7 +46,7 @@ before_script:
   - cabal update
   - cabal install random
   # obtain truth data from secondary github repository
-  - git clone https://github.com/jlab/gapc-test-suite.git /home/travis/gapc-test-suite
+  - git clone https://github.com/jlab/gapc-test-suite.git $HOME/gapc-test-suite
   # install c++ linter
   - pip3 install cpplint
 script:
@@ -59,7 +59,7 @@ script:
   # run compiler test suite
   - make test-unit
   - make test-paral
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then make test-mod TRUTH_DIR=/home/travis/gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu; fi
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then make test-mod TRUTH_DIR=/home/travis/gapc-test-suite/Truth TRUTH_SUFFIX=_osx; fi
-  - make test-regress TRUTH_DIR=/home/travis/gapc-test-suite/Truth
-  - make test-ambiguity TRUTH_DIR=/home/travis/gapc-test-suite/Truth
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then make test-mod TRUTH_DIR=$HOME/gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then make test-mod TRUTH_DIR=$HOME/gapc-test-suite/Truth TRUTH_SUFFIX=_osx; fi
+  - make test-regress TRUTH_DIR=$HOME/gapc-test-suite/Truth
+  - make test-ambiguity TRUTH_DIR=$HOME/gapc-test-suite/Truth
