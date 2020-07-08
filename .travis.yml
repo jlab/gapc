@@ -44,7 +44,7 @@ before_script:
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install cabal-install; fi
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install cabal-install -y; fi
   - cabal update
-  - cabal install random
+  - cabal install --lib random
   # obtain truth data from secondary github repository
   - git clone https://github.com/jlab/gapc-test-suite.git $HOME/gapc-test-suite
   # install c++ linter
