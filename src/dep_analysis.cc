@@ -66,7 +66,7 @@ void Dep_Analysis::sort() {
     Symbol::NT* nt = dynamic_cast<Symbol::NT*>(i->second);
     if (!nt)
       continue;
-    std::list<Symbol::NT*> *list;
+    std::list<Symbol::NT*> *list = (std::list<Symbol::NT*> *)malloc(sizeof(list));
     nt->collect_lr_deps(list);
     hashtable<Symbol::NT*, size_t>::iterator a = nt_map.find(nt);
     assert(a != nt_map.end());
