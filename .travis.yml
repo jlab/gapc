@@ -33,6 +33,7 @@ addons:
       - gsl
       - gnu-sed
       - libomp
+      - gmp
 
 install:
   - ./configure
