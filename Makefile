@@ -123,7 +123,7 @@ gapc: LDLIBS =  $(BOOST_PROGRAM_OPTIONS_LIB)
 gapc: src/gapc.o $(MAIN_OBJ) src/version.o src/prefix.o
 	$(CXX) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 
-	
+
 # multi_rt_approx_rescore \
 
 stats \
@@ -147,6 +147,7 @@ include makefiles/lexyaccxx.mf
 clean:
 	rm -f $(TEMP)
 	$(MAKE) -C testdata/config-tests/ -f config.mf clean
+	rm -f testdata/unittest/expr_parser.{d,o,hh,output} testdata/unittest/expr_lexer.{l,d}
 
 # test target: only triggers dependency tracking
 .PHONY: depend
@@ -233,7 +234,7 @@ install: gapc librna/librna$(SO_SUFFIX)
 
 install-librna: librna/librna$(SO_SUFFIX)
 	$(SHELL) makefiles/run-librna.sh $(PREFIX)
-	
+
 ################################################################################
 # Tests
 ################################################################################
@@ -332,5 +333,3 @@ testdata/test/shapemfepfx/nowindow testdata/test/shapemfepfx/main:
 
 testdata/test/shrepmfesample/main:
 	$(MAKE) -C testdata/test/shrepmfesample all
-
-
