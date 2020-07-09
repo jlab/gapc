@@ -32,6 +32,7 @@ addons:
       - boost
       - gsl
       - gnu-sed
+      - libomp
 
 install:
   - ./configure

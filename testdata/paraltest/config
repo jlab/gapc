@@ -154,6 +154,10 @@ RUN_CPP_FLAGS=""
 
 CPPFLAGS_EXTRA="$DEFAULT_CPPFLAGS_EXTRA -fopenmp"
 LDLIBS_EXTRA="$DEFAULT_LDLIBS_EXTRA -fopenmp"
+if [ $(uname) = "Darwin" ]; then
+	CPPFLAGS_EXTRA="$DEFAULT_CPPFLAGS_EXTRA -Xpreprocessor -fopenmp -lomp "
+	LDLIBS_EXTRA="$DEFAULT_LDLIBS_EXTRA -Xpreprocessor -fopenmp -lomp -I\"$(brew --prefix libomp)/include\" -L\"$(brew --prefix libomp)/lib\""
+fi
 OMP_NUM_THREADS=2
 export OMP_NUM_THREADS
 GAPC="$DEFAULT_GAPC -t --cyk --backtrack"
