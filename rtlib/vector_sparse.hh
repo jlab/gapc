@@ -232,6 +232,15 @@ class Vector_Sparse {
         bool operator!=(const Iterator &o) const { return !(*this == o); }
         T &operator*() { return v(*i); }
         Iterator &operator++() { ++i; return *this; }
+        Iterator operator+=(const difference_type &other) {
+          return Iterator(v, i + other);
+        }
+        bool operator>(const Iterator &other) const {
+          return i > other.i;
+        }
+        bool operator>=(const Iterator &other) const {
+          return i >= other.i;
+        }
     };
 
     typedef Iterator iterator;
