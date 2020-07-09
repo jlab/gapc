@@ -170,7 +170,7 @@ class Base {
   }
 
   virtual void collect_lr_deps(
-    std::list<Symbol::NT*> &list, const Yield::Multi &left,
+    std::list<Symbol::NT*> *list, const Yield::Multi &left,
     const Yield::Multi &right) = 0;
 
   virtual size_t width() = 0;
@@ -347,7 +347,7 @@ class Simple : public Base {
   bool init_productive();
 
   void collect_lr_deps(
-    std::list<Symbol::NT*> &list, const Yield::Multi &left,
+    std::list<Symbol::NT*> *list, const Yield::Multi &left,
     const Yield::Multi &right);
 
   size_t width();
@@ -527,7 +527,7 @@ class Link : public Base {
   bool init_productive();
 
   void collect_lr_deps(
-    std::list<Symbol::NT*> &list, const Yield::Multi &left,
+    std::list<Symbol::NT*> *list, const Yield::Multi &left,
     const Yield::Multi &right);
 
   size_t width();
@@ -623,7 +623,7 @@ class Block : public Base {
   bool init_productive();
 
   void collect_lr_deps(
-    std::list<Symbol::NT*> &list, const Yield::Multi &left,
+    std::list<Symbol::NT*> *list, const Yield::Multi &left,
     const Yield::Multi &right);
 
   size_t width();
@@ -689,7 +689,7 @@ class Multi : public Base {
 
   bool init_productive();
   void collect_lr_deps(
-    std::list<Symbol::NT*> &list,
+    std::list<Symbol::NT*> *list,
     const Yield::Multi &left, const Yield::Multi &right);
 
   size_t width();

@@ -66,7 +66,7 @@ void Dep_Analysis::sort() {
     Symbol::NT* nt = dynamic_cast<Symbol::NT*>(i->second);
     if (!nt)
       continue;
-    std::list<Symbol::NT*> list;
+    std::list<Symbol::NT*> *list;
     nt->collect_lr_deps(list);
     hashtable<Symbol::NT*, size_t>::iterator a = nt_map.find(nt);
     assert(a != nt_map.end());
@@ -74,7 +74,7 @@ void Dep_Analysis::sort() {
 
     std::string debug_from(*a->first->name + " -> ");
 
-    for (std::list<Symbol::NT*>::iterator j = list.begin(); j != list.end();
+    for (std::list<Symbol::NT*>::iterator j = list->begin(); j != list->end();
          ++j) {
       hashtable<Symbol::NT*, size_t>::iterator a = nt_map.find(*j);
       assert(a != nt_map.end());

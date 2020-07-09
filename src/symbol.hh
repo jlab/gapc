@@ -365,7 +365,7 @@ class NT : public Base {
 
     bool init_productive();
 
-    void collect_lr_deps(std::list<NT*> &list);
+    void collect_lr_deps(std::list<NT*> *list);
 
     size_t width();
 

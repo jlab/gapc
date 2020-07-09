@@ -136,7 +136,7 @@ bool Symbol::NT::init_productive() {
   return r;
 }
 
-void Symbol::NT::collect_lr_deps(std::list<NT*> &list) {
+void Symbol::NT::collect_lr_deps(std::list<NT*> *list) {
   if (Log::instance()->is_debug()) {
     Log::o() << "\n Start collecting from: " << *name;
   }
