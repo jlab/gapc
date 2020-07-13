@@ -169,16 +169,21 @@ void Subopt::gen_backtrack(AST &ast) {
 void Subopt::gen_instance_code(AST &ast) {
   instance->product->right_most()->codegen();
   // ast.optimize_choice(*instance);
+  instance->product->algebra()->codegen(
+    *dynamic_cast<Product::Two*>(instance->product));
 
-  instance->product->algebra()
-    ->codegen(*dynamic_cast<Product::Two*>(instance->product));
-  for (hashtable<std::string, Fn_Def*>::iterator i =
-       instance->product->algebra()->choice_fns.begin();
-       i != instance->product->algebra()->choice_fns.end();
-       ++i) {
-    instance->product->algebra()->fns.erase(i->first);
-    instance->product->algebra()->choice_fns.erase(i);
+  // delete all choice functions. Since they occure in fns (the map of all
+  // functions) and in choice_fns (only choice functions), we need to delete
+  // them from both maps. Therefore we first iterate through all choice_fns
+  // elements and delete functions from *fns* according to their name ...
+  for (const auto& x : instance->product->algebra()->choice_fns) {
+    instance->product->algebra()->fns.erase(x.first);
   }
+  // ... and only then delete all functions in choice_fns
+  instance->product->algebra()->choice_fns.erase(
+    instance->product->algebra()->choice_fns.begin(),
+    instance->product->algebra()->choice_fns.end()
+  );
 }
 
 
