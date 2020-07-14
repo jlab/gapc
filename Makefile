@@ -195,7 +195,8 @@ librna/librna.a: $(LIBRNA_OBJ)
 src/version.txt:	
 	git log -1 --date=format:"%Y.%m.%d" --format="%ad" > $@
 
-
+src/version.cc: src/version.txt
+	printf "#include \"version.hh\"\n\nnamespace gapc {\nconst char version_id[] = \"`cat $<`\";\n}\n" > $@
 
 ################################################################################
 # PREFIX
