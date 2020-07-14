@@ -189,30 +189,13 @@ librna/librna.a: $(LIBRNA_OBJ)
 
 
 ################################################################################
-# Mercurial version generation
+# Git version generation
 ################################################################################
 
-ifeq "$(shell ls -d .hg 2>/dev/null)" ".hg"
+src/version.txt:	
+	git log -1 --date=format:"%Y.%m.%d" --format="%ad" > $@
 
-ifneq "$(hg)" ""
-src/version.txt: .hg/dirstate
-	$(HG) log -r . --template '{date|isodate} {node} {tags}' > $@
-	$(HG) id | grep '+' | $(SED) 's/^.\++.*$\/ wd modified/' >> $@
-else
-src/version.txt:
-	basename `pwd` > src/version.txt
 
-endif
-
-else
-
-src/version.txt:
-	basename `pwd` > src/version.txt
-
-endif
-
-src/version.cc: src/version.txt
-	printf "#include \"version.hh\"\n\nnamespace gapc {\nconst char version_id[] = \"`cat $<`\";\n}\n" > $@
 
 ################################################################################
 # PREFIX
