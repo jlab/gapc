@@ -282,6 +282,8 @@ testdata/unittest/expr_lexer.o: testdata/unittest/expr_parser.o
 
 testdata/unittest/tracks testdata/unittest/productive: $(MAIN_OBJ) src/prefix.o src/version.o
 
+testdata/unittest/vector_sparse: testdata/unittest/vector_sparse.o rtlib/string.o
+
 testdata/unittest/%: testdata/unittest/%.o
 	$(CXX) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 
