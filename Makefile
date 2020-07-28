@@ -192,8 +192,17 @@ librna/librna.a: $(LIBRNA_OBJ)
 # Git version generation
 ################################################################################
 
-src/version.txt:	
-	git log -1 --date=format:"%Y.%m.%d" --format="%ad" > $@
+BRANCH:=$(shell git rev-parse --abbrev-ref HEAD)
+
+.PHONY : src/version.txt
+
+ifeq ($(BRANCH),master)
+src/version.txt :
+	git log -1 --date=format:"%Y.%m.%d" --format="%ad" >$@
+else
+src/version.txt :
+	git log -1 --date=format:"%Y.%m.%d" --format="%ad"-$(BRANCH) >$@
+endif
 
 src/version.cc: src/version.txt
 	printf "#include \"version.hh\"\n\nnamespace gapc {\nconst char version_id[] = \"`cat $<`\";\n}\n" > $@
