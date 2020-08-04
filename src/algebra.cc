@@ -81,6 +81,7 @@ Algebra::Algebra(Algebra &a, Algebra &b) :
   name = new std::string(*a.name + "_" + *b.name);
 
   // if signature is not the same we have a problem
+  // but what would be the consequence of two equal signatures??
   assert(a.signature == b.signature);
   signature = a.signature;
   signature_name = a.signature_name;
