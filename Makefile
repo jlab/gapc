@@ -206,7 +206,7 @@ src/version.txt :
 endif
 
 src/version.cc: src/version.txt
-	printf "#include \"version.hh\"\n\nnamespace gapc {\nconst char version_id[] = \"`cat $<`\";\n}\n" > $@
+	printf "#include \"version.hh\"\n\nnamespace gapc {\n  const char version_id[] = \"`cat $<`\";\n}\n" > $@
 
 ################################################################################
 # PREFIX
