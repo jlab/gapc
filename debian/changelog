@@ -1,3 +1,21 @@
+bellmansgapc (2020.08.24-0ubuntu0ppa1~focal1) focal; urgency=medium
+
+  * switching from mercurial to git for version number generation
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Mon, 24 Aug 2020 17:00:00 +0200
+
+bellmansgapc (2020.08.24-0ubuntu0ppa1~bionic1) bionic; urgency=medium
+
+  * switching from mercurial to git for version number generation
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Mon, 24 Aug 2020 17:00:00 +0200
+
+bellmansgapc (2020.08.24-0ubuntu0ppa1~xenial1) xenial; urgency=medium
+
+  * switching from mercurial to git for version number generation
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Mon, 24 Aug 2020 17:00:00 +0200
+
 bellmansgapc (2020.01.08-0ubuntu0ppa1~focal1) bionic; urgency=medium
 
   * fixing deprecated syntax in parser.y file
