@@ -123,7 +123,7 @@ gapc: LDLIBS =  $(BOOST_PROGRAM_OPTIONS_LIB)
 gapc: src/gapc.o $(MAIN_OBJ) src/version.o src/prefix.o
 	$(CXX) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 
-	
+
 # multi_rt_approx_rescore \
 
 stats \
@@ -189,20 +189,22 @@ librna/librna.a: $(LIBRNA_OBJ)
 
 
 ################################################################################
-# Git version generation
+# version number generation
+# In principle, version number shall be sourced as the date of the latest commit
+# to the git repositoy.
+# Unfortunately, for the automatic launchpad builds, the .git directory is not
+# included to save space. Thus, for those situations, we must alternatively
+# source the version number from the debian/changelog file
 ################################################################################
-
-BRANCH:=$(shell git rev-parse --abbrev-ref HEAD)
-
-.PHONY : src/version.txt
-
-ifeq ($(BRANCH),master)
-src/version.txt :
-	git log -1 --date=format:"%Y.%m.%d" --format="%ad" >$@
-else
-src/version.txt :
-	git log -1 --date=format:"%Y.%m.%d" --format="%ad"-$(BRANCH) >$@
-endif
+src/version.txt:
+	@branch=$$(git rev-parse --abbrev-ref HEAD || echo "master"); \
+	date=$$(git log -1 --date=format:"%Y.%m.%d" --format="%ad" 2>/dev/null || grep "20..\...\..." debian/changelog -m 1 -o); \
+	if [ "$$branch" == "master" ]; then \
+	  version="$$date"; \
+	else \
+		version="$$date-$$branch"; \
+	fi; \
+	echo "$$version" >$@;
 
 src/version.cc: src/version.txt
 	printf "#include \"version.hh\"\n\nnamespace gapc {\n  const char version_id[] = \"`cat $<`\";\n}\n" > $@
@@ -226,7 +228,7 @@ install: gapc librna/librna$(SO_SUFFIX)
 
 install-librna: librna/librna$(SO_SUFFIX)
 	$(SHELL) makefiles/run-librna.sh $(PREFIX)
-	
+
 ################################################################################
 # Tests
 ################################################################################
@@ -325,5 +327,3 @@ testdata/test/shapemfepfx/nowindow testdata/test/shapemfepfx/main:
 
 testdata/test/shrepmfesample/main:
 	$(MAKE) -C testdata/test/shrepmfesample all
-
-
