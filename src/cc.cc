@@ -33,7 +33,10 @@
 
 #include "var_acc.hh"
 
+#include <iostream>
+
 void Printer::CC::print(const std::list<Statement::Base*> &stmts) {
+  std::cout << "\n called print of class cc \n";
   stream << indent() << '{' << endl;
   inc_indent();
   for (std::list<Statement::Base*>::const_iterator i = stmts.begin();
@@ -44,6 +47,7 @@ void Printer::CC::print(const std::list<Statement::Base*> &stmts) {
 }
 
 void Printer::CC::print(const Statement::For &stmt) {
+  std::cout << "\n called print of class cc \n";
   stream << indent() << "for(";
   stream << *stmt.var_decl;
   stream << ' '
@@ -55,6 +59,7 @@ void Printer::CC::print(const Statement::For &stmt) {
 }
 
 void Printer::CC::print(const Statement::Var_Decl &stmt) {
+  std::cout << "\n called print of class cc \n";
   assert(stmt.type);
   assert(stmt.name);
   stream << indent() << *stmt.type << ' ' << *stmt.name;
@@ -64,6 +69,7 @@ void Printer::CC::print(const Statement::Var_Decl &stmt) {
 }
 
 void Printer::CC::print(const Statement::If &stmt) {
+  std::cout << "\n called print of class cc \n";
   stream << indent() << "if (" << *stmt.cond << ")" << endl;
   if (stmt.then.size() == 1)
     inc_indent();
@@ -81,22 +87,26 @@ void Printer::CC::print(const Statement::If &stmt) {
 }
 
 void Printer::CC::print(const Statement::Return &stmt) {
+  std::cout << "\n called print of class cc \n";
   stream << indent() << "return " << *stmt.expr << ';';
 }
 
 void Printer::CC::print(const Statement::Foreach &stmt) {
+  std::cout << "\n called print of class cc \n";
   stream << indent()
     << "foreach " << *stmt.elem->name << " in " << *stmt.container->name;
   print(stmt.statements);
 }
 
 void Printer::CC::print(const Statement::Var_Assign &stmt) {
+  std::cout << "\n called print of class cc \n";
   stream << indent();
   stream << *stmt.acc;
   stream << " = " << *stmt.rhs << ";";
 }
 
 void Printer::CC::print(const Statement::Fn_Call &stmt) {
+  std::cout << "\n called print of class cc \n";
   stream << indent() << stmt.name() << "( ";
   std::list<Expr::Base*>::const_iterator i = stmt.args.begin();
   if (i != stmt.args.end()) {
@@ -108,6 +118,7 @@ void Printer::CC::print(const Statement::Fn_Call &stmt) {
 }
 
 void Printer::CC::print(const Statement::Block &stmt) {
+  std::cout << "\n called print of class cc \n";
   stream << indent() << "{" << endl;
   inc_indent();
   for (std::list<Statement::Base*>::const_iterator i = stmt.statements.begin();
@@ -118,6 +129,7 @@ void Printer::CC::print(const Statement::Block &stmt) {
 }
 
 void Printer::CC::print(const Fn_Def &fn_def) {
+  std::cout << "\n called print of class cc \n";
   if (fn_def.adaptor)
     stream << *fn_def.adaptor;
   stream << indent() << *fn_def.return_type << ' ';
@@ -146,6 +158,7 @@ void Printer::CC::print(const Fn_Def &fn_def) {
 }
 
 void Printer::CC::print(const Expr::Base &expr) {
+  std::cout << "\n called print of class cc \n";
   // Default pretty print
   external_out() << expr;
   // if needed use dispatch code like for statement
@@ -153,6 +166,7 @@ void Printer::CC::print(const Expr::Base &expr) {
 }
 
 void Printer::CC::print(const Type::Base &b) {
+  std::cout << "\n called print of class cc \n";
   // Default pretty print
   external_out() << b;
   // if needed use dispatch code like for statement
@@ -161,6 +175,7 @@ void Printer::CC::print(const Type::Base &b) {
 
 
 void Printer::CC::print(const Var_Acc::Base &b) {
+  std::cout << "\n called print of class cc \n";
   // Default pretty print
   external_out() << b;
   // if needed use dispatch code like for statement

@@ -22,11 +22,14 @@
 }}} */
 
 #include "adp_mode.hh"
+#include <iostream>
 
 bool ADP_Mode::is_step(Adp_Specialization s) {
+    std::cout << "\n called is_step of class adp_mode \n";
     return s == SORTED_STEP || s == PARETO_EAGER_STEP;
 }
 
 bool ADP_Mode::is_coopt_param(Adp_Specialization s) {
+    std::cout << "\n called is_coopt_param of class adp_mode \n";
     return s == PARETO_EAGER_STEP || s == PARETO_EAGER_BLOCK;
 }

@@ -32,9 +32,12 @@
 #include "statement/fn_call.hh"
 #include "fn_def.hh"
 
+#include <iostream>
+
 
 
 void Classify_Visitor::visit(Symbol::NT &n) {
+  std::cout << "\n called Classify_Visitor of class classify_visitor \n";
   if (!n.eval_decl) {
     if (!n.return_decl().type->simple()->is(Type::LIST))
       return;

@@ -212,7 +212,7 @@ src/version.cc: src/version.txt
 ################################################################################
 
 src/prefix.cc: config.mf
-	printf "#include \"prefix.hh\"\n\nnamespace gapc {\nconst char prefix[] = \"$(PREFIX)\";\nconst char systemsuffix[] = \"$(SYSTEM_SUFFIX)\";\n}\n" > $@
+	printf "#include \"prefix.hh\"\n\nnamespace gapc {\nconst char prefix[] = \"$(PREFIX)\";\n  const char systemsuffix[] = \"$(SYSTEM_SUFFIX)\";\n}\n" > $@
 
 
 ################################################################################

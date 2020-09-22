@@ -50,6 +50,9 @@
 #include "backtrack.hh"
 #include "subopt.hh"
 
+#include <iostream>
+
+
 AST::AST()
   :  product_(0),
     grammars_(0),
@@ -89,6 +92,7 @@ Type::Base *AST::get_type(const std::string &name) {
 
 
 void AST::add_type(std::string *name, const Loc &l, Type::Base *base) {
+  std::cout << "\n called add_type of class ast \n";
   hashtable<std::string, Type::Base*>::iterator i = types.find(*name);
   if (i == types.end()) {
     types[*name] = base;
@@ -101,6 +105,7 @@ void AST::add_type(std::string *name, const Loc &l, Type::Base *base) {
 
 
 void AST::add_sig_types(hashtable<std::string, Arg*> & args, Signature *s) {
+  std::cout << "\n called add_sig_types of class ast \n";
   for (hashtable<std::string, Arg*>::iterator i = args.begin();
        i != args.end(); ++i) {
     Arg *arg = i->second;
@@ -113,6 +118,7 @@ void AST::add_sig_types(hashtable<std::string, Arg*> & args, Signature *s) {
 
 
 bool AST::check_signature() {
+  std::cout << "\n called check_signature of class ast \n";
   bool r = true;
   bool b = signature->check();
   r = r && b;
@@ -123,6 +129,7 @@ bool AST::check_signature() {
 
 
 bool AST::check_algebras() {
+  std::cout << "\n called check_algebras of class ast \n";
   bool r = true;
   for (hashtable<std::string, Algebra*>::iterator i = algebras.begin();
        i != algebras.end(); ++i) {
@@ -134,6 +141,7 @@ bool AST::check_algebras() {
 
 
 bool AST::check_instances(Instance *instance) {
+  std::cout << "\n called check_instances of class ast \n";
   for (hashtable<std::string, Algebra*>::iterator i = algebras.begin();
        i != algebras.end(); ++i) {
     i->second->annotate_terminal_arguments(*signature);
@@ -152,6 +160,7 @@ bool AST::check_instances(Instance *instance) {
 
 
 void AST::print_instances(std::ostream &s) {
+  std::cout << "\n called print_instances of class ast \n";
   for (hashtable<std::string, Instance*>::iterator i = instances.begin();
        i != instances.end(); ++i) {
     s << *i->second << std::endl;
@@ -167,6 +176,7 @@ void AST::print_instances(std::ostream &s) {
  *    for the given instance name
  */
 Instance *AST::instance(const std::string &n) {
+  std::cout << "\n called instance of class ast \n";
   if (n.empty()) {
     if (first_instance) {
       return first_instance;
@@ -186,6 +196,7 @@ Instance *AST::instance(const std::string &n) {
 
 
 bool AST::insert_instance(std::string &n) {
+  std::cout << "\n called insert_instance of class ast \n";
   Instance *inst = instance(n);
   if (!inst) {
     return false;
@@ -195,6 +206,7 @@ bool AST::insert_instance(std::string &n) {
 }
 
 bool AST::insert_instance(Instance *inst) {
+  std::cout << "\n called insert_instances of class ast \n";
   assert(inst);
   instance_ = inst;
   grammar()->reset_types();
@@ -211,6 +223,7 @@ bool AST::insert_instance(Instance *inst) {
 
 
 bool AST::instance_grammar_eliminate_lists(std::string &n) {
+  std::cout << "\n called instance_grammar_eliminate_lists of class ast \n";
   Instance *inst = instance(n);
   if (!inst) {
     return false;
@@ -221,6 +234,7 @@ bool AST::instance_grammar_eliminate_lists(std::string &n) {
 
 
 bool AST::instance_grammar_eliminate_lists(Instance *inst) {
+  std::cout << "\n called instance_grammar_eliminate_lists of class ast \n";
   assert(inst);
   inst->eliminate_lists();
   grammar()->eliminate_lists();
@@ -231,18 +245,21 @@ bool AST::instance_grammar_eliminate_lists(Instance *inst) {
 // callable after insert_instance(), instance_grammar_eliminate_lists()
 //   and Grammar::init_list_sizes() are called
 void AST::warn_missing_choice_fns(Instance *instance) {
+  std::cout << "\n called warn_missing_choice of class ast \n";
   List_Warn lw(instance);
   grammar()->traverse(lw);
 }
 
 
 void AST::warn_missing_choice_fns() {
+  std::cout << "\n called warn_missing_choice_fns of class ast \n";
   List_Warn lw;
   grammar()->traverse(lw);
 }
 
 
 bool AST::tableDesignIsOptimal() {
+  std::cout << "\n called tableDesignIsOptimal of class ast \n";
   Runtime::Asm::Poly rt;
   rt  = grammar()->runtime();
   Runtime::Asm::Poly opt;
@@ -253,6 +270,7 @@ bool AST::tableDesignIsOptimal() {
 
 
 void AST::warn_user_table_conf_suboptimal() {
+  std::cout << "\n called warn_user_table_conf_suboptimal of class ast \n";
   Runtime::Asm::Poly rt;
   rt  = grammar()->runtime();
   Runtime::Asm::Poly opt;
@@ -284,17 +302,20 @@ void AST::warn_user_table_conf_suboptimal() {
 
 
 void AST::codegen() {
+  std::cout << "\n called codegen of class ast \n";
   sf_filter_code.clear();
   grammar()->codegen(*this);
 }
 
 
 void AST::print_code(Printer::Base &out) {
+  std::cout << "\n called print_code of class ast \n";
   grammar()->print_code(out);
 }
 
 
 void AST::derive_roles() {
+  std::cout << "\n called derive_roles of class ast \n";
   for (hashtable<std::string, Algebra*>::iterator i = algebras.begin();
       i != algebras.end(); ++i) {
     i->second->derive_role();
@@ -327,6 +348,7 @@ struct FixLink : public Visitor {
 
 
 void AST::optimize_choice(Instance &inst) {
+  std::cout << "\n called optimize_choice of class ast \n";
   if (!inst.product->contains_only_times())
     return;
 
@@ -390,6 +412,7 @@ void AST::optimize_choice(Instance &inst) {
 
 
 void AST::optimize_classify(Instance &inst) {
+  std::cout << "\n called optimize_classify of class ast \n";
   assert(inst.product);
   if (!inst.product->left_is_classify() || !inst.product->one_per_class()) {
     if (kbest) {
@@ -438,6 +461,7 @@ void AST::optimize_classify(Instance &inst) {
 }
 
 void AST::set_pareto_version(Instance &inst, int version) {
+    std::cout << "\n called set_pareto_version of class ast \n";
     for (Product::iterator i = Product::begin(inst.product);
          i != Product::end(); ++i) {
         Product::Pareto *p = dynamic_cast<Product::Pareto*>(*i);
@@ -449,6 +473,7 @@ void AST::set_pareto_version(Instance &inst, int version) {
 }
 
 void AST::set_pareto_dim(Instance &inst, bool dim) {
+    std::cout << "\n called set_pareto_dim of class ast \n";
     for (Product::iterator i = Product::begin(inst.product);
          i != Product::end(); ++i) {
         Product::Pareto *p = dynamic_cast<Product::Pareto*>(*i);
@@ -460,6 +485,7 @@ void AST::set_pareto_dim(Instance &inst, bool dim) {
 }
 
 void AST::set_pareto_cutoff(Instance &inst, int cutoff) {
+    std::cout << "\n called set_pareto_cutoff of class ast \n";
     pareto_cutoff = cutoff;
     for (Product::iterator i = Product::begin(inst.product);
          i != Product::end(); ++i) {
@@ -472,6 +498,7 @@ void AST::set_pareto_cutoff(Instance &inst, int cutoff) {
 }
 
 void AST::set_float_accuracy(Instance &inst, int float_accuracy) {
+    std::cout << "\n called set_float_accuracy of class ast \n";
     this->float_acc = float_accuracy;
     for (Product::iterator i = Product::begin(inst.product);
          i != Product::end(); ++i) {
@@ -513,6 +540,7 @@ const std::string AST::sorter_suffix = "_spec_sorter";
 
 void AST::set_adp_version(Instance &inst, int i, int step, int pareto) {
     // what to set?
+    std::cout << "\n called set_adp_version of class ast \n";
     ADP_Mode::Adp_Specialization spec;
     ADP_Mode::Adp_Join join = ADP_Mode::EMPTY;
 
@@ -594,6 +622,7 @@ void AST::set_adp_version(Instance &inst, int i, int step, int pareto) {
 void AST::duplicate_choice_functions(
   Algebra *a, std::string duplicate_suffix, std::string comperator_suffix,
   std::string sorter_suffix, std::string nullary_sort_suffix) {
+    std::cout << "\n called duplicate_choice_functions of class ast \n";
     hashtable<std::string, Fn_Def*> new_fncts;
 
     for (hashtable<std::string, Fn_Def*>::iterator i = a->fns.begin();
@@ -621,6 +650,7 @@ void AST::duplicate_choice_functions(
 }
 
 void AST::backtrack_gen(Backtrack_Base &bt) {
+  std::cout << "\n called backtrack_gen of class ast \n";
   assert(instance_);
   Algebra *score = instance_->product->bt_score_algebra();
 
@@ -677,6 +707,7 @@ void AST::backtrack_gen(Backtrack_Base &bt) {
 
 void AST::set_adp_header(
   int spec, int pareto, bool multi_pareto, int step_mode) {
+    std::cout << "\n called set_adp_header of class ast \n";
     rtlib_header = ADP_Mode::NONE;
     if (spec == 1) {
         if (step_mode) {
@@ -713,6 +744,7 @@ void AST::set_adp_header(
 }
 
 Instance *AST::split_instance_for_backtrack(std::string &n) {
+  std::cout << "\n called split_instance_for_backtrack of class ast \n";
   Instance *i = instance(n);
   if (!i) {
     return 0;
@@ -739,6 +771,7 @@ Instance *AST::split_instance_for_backtrack(std::string &n) {
 
 
 std::pair<Instance*, Instance*> AST::split_classified(const std::string &n) {
+  std::cout << "\n called split_classified of class ast \n";
   Instance *i = instance(n);
   if (!i) {
     throw LogError("Instance does not exist.");
@@ -778,6 +811,7 @@ std::pair<Instance*, Instance*> AST::split_classified(const std::string &n) {
 
 
 void AST::warn_unused_fns(Instance &inst) {
+  std::cout << "\n called warn_unused_fns of class ast \n";
   Unused_Visitor v;
   grammar()->traverse(v);
   hashtable<std::string, Fn_Def*> &fns = inst.product->algebra()->fns;
@@ -800,6 +834,7 @@ void AST::warn_unused_fns(Instance &inst) {
 
 
 void AST::check_backtrack(const Options &opts) {
+  std::cout << "\n called check_backtrack of class ast \n";
   if (opts.backtrack) {
     Algebra *a = instance_->product->algebra();
     for (hashtable<std::string, Fn_Def*>::iterator i = a->choice_fns.begin();
@@ -825,6 +860,7 @@ void AST::check_backtrack(const Options &opts) {
 
 
 void AST::set_tracks() {
+  std::cout << "\n called set_tracks of class ast \n";
   size_t tracks = grammar()->axiom->tracks();
   input.set_tracks(tracks);
 
@@ -841,6 +877,7 @@ void AST::set_tracks() {
 
 
 void AST::derive_temp_alphabet() {
+  std::cout << "\n called derive_temp_alphabet of class ast \n";
   set_tracks();
 
   Char_Visitor v;
@@ -871,6 +908,7 @@ void AST::derive_temp_alphabet() {
 
 // set the type of the input to read
 void AST::update_alphabet_types(Type::Base *res) {
+  std::cout << "\n called update_alphabet_types of class ast \n";
   hashtable<std::string, Type::Base*>::iterator i = types.find("alphabet");
   assert(i != types.end());
   dynamic_cast<Type::Alphabet*>(i->second)->temp = res;
@@ -903,6 +941,7 @@ void AST::update_alphabet_types(Type::Base *res) {
 
 
 void AST::update_seq_type(Instance &inst) {
+  std::cout << "\n called update_seq_type of class ast \n";
   Algebra *a = inst.product->algebra();
   assert(a);
   hashtable<std::string, Type::Base*>::iterator i = a->params.find("alphabet");
@@ -924,6 +963,7 @@ void AST::update_seq_type(Instance &inst) {
 
 
 void AST::set_window_mode(bool w) {
+  std::cout << "\n called set_window_mode of class ast \n";
   if (!w)
     return;
   if (grammar()->axiom->tracks() > 1)
@@ -936,6 +976,7 @@ void AST::set_window_mode(bool w) {
 
 
 bool AST::grammar_defined(const std::string &n) const {
+  std::cout << "\n called grammar_defined of class ast \n";
   assert(grammars_);
   for (std::list<Grammar*>::iterator i = grammars_->begin();
        i != grammars_->end(); ++i) {
@@ -951,6 +992,7 @@ bool AST::grammar_defined(const std::string &n) const {
  * Return the selected grammar.
  */
 Grammar *AST::grammar() const {
+  std::cout << "\n called grammar of class ast \n";
   assert(selected_grammar);
   return selected_grammar;
 }
@@ -960,6 +1002,7 @@ Grammar *AST::grammar() const {
  * Returns the grammar with the given name.
  */
 Grammar *AST::grammar(const std::string &n) {
+  std::cout << "\n called grammar of class ast \n";
   for (std::list<Grammar*>::iterator i = grammars_->begin();
        i != grammars_->end(); ++i) {
     if (*(*i)->name == n) {
@@ -971,6 +1014,7 @@ Grammar *AST::grammar(const std::string &n) {
 }
 
 void AST::set_grammars(std::list<Grammar*> *g) {
+  std::cout << "\n called set_grammars of class ast \n";
   grammars_ = g;
   if (!grammars_->empty()) {
     selected_grammar = grammars_->back();
@@ -998,6 +1042,7 @@ void AST::set_grammars(std::list<Grammar*> *g) {
  * sets the instance name found in the command line options.
  */
 void AST::select_grammar(const std::string &instname) {
+  std::cout << "\n called select_grammar of class ast \n";
   // If the instance name given by the parameter is empty, this
   // next assignment gets an instance that is defined first
   // in the source-code file.
@@ -1013,6 +1058,7 @@ void AST::select_grammar(const std::string &instname) {
 
 
 void AST::set_class_name(const std::string &n) {
+  std::cout << "\n called set_class_name of class ast \n";
   for (std::list<Statement::Hash_Decl*>::iterator i = hash_decls_.begin();
        i != hash_decls_.end(); ++i) {
     (*i)->set_class_name(n);
