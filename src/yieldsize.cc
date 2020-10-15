@@ -21,6 +21,7 @@
 
 }}} */
 
+#include <iostream>
 #include "yieldsize.hh"
 
 #include "filter.hh"
@@ -28,6 +29,7 @@
 namespace Yield {
 
   void Multi::put(std::ostream &s) const {
+    std::cout << "\n called put of class yieldsize \n";
     assert(!array.empty());
     s << '{';
     std::vector<Size>::const_iterator i = array.begin();
@@ -39,6 +41,7 @@ namespace Yield {
   }
 
   void Size::with_min(const Filter &f) {
+    std::cout << "\n called with_min of class yieldsize \n";
     if (f.type != Filter::WITH || !f.is(Filter::MIN_SIZE))
       return;
     uint32_t l = f.uint_arg();
@@ -46,6 +49,7 @@ namespace Yield {
       min = l;
   }
   void Size::with_max(const Filter &f) {
+    std::cout << "\n called with_max of class yieldsize \n";
     if (f.type != Filter::WITH || !f.is(Filter::MAX_SIZE))
       return;
     uint32_t l = f.uint_arg();
@@ -53,6 +57,7 @@ namespace Yield {
       max = l;
   }
   void Size::with(const std::list<Filter*> &l) {
+    std::cout << "\n called with of class yieldsize \n";
     for (std::list<Filter*>::const_iterator i = l.begin(); i != l.end(); ++i) {
       with_min(**i);
       with_max(**i);
@@ -60,6 +65,7 @@ namespace Yield {
   }
 
   void Multi::with(const std::vector<std::list<Filter*> > &l) {
+    std::cout << "\n called with of class yieldsize \n";
     if (l.empty())
       return;
     size_t a = array.size(), b = l.size();
@@ -71,6 +77,7 @@ namespace Yield {
   }
 
   bool Multi::is_low_zero() const {
+    std::cout << "\n called is_low_zero of class yieldsize \n";
     bool r = true;
     for (std::vector<Size>::const_iterator i = array.begin(); i != array.end();
         ++i) {
@@ -80,6 +87,7 @@ namespace Yield {
   }
 
   void Multi::min_high(const Multi &o) {
+    std::cout << "\n called min_high of class yieldsize \n";
     size_t a = array.size(), b = o.array.size();
     assert(a == b);
     std::vector<Size>::const_iterator j = o.array.begin();
@@ -89,6 +97,7 @@ namespace Yield {
         (*i).set_high((*j).high());
   }
   void Multi::max_high(const Multi &o) {
+    std::cout << "\n called max_high of class yieldsize \n";
     size_t a = array.size(), b = o.array.size();
     assert(a == b);
     std::vector<Size>::const_iterator j = o.array.begin();
@@ -98,6 +107,7 @@ namespace Yield {
         (*i).set_high((*j).high());
   }
   void Multi::sub_high_low(const Multi &o) {
+    std::cout << "\n called sub_high_low of class yieldsize \n";
     size_t a = array.size(), b = o.array.size();
     assert(a == b);
     std::vector<Size>::const_iterator j = o.array.begin();
@@ -108,6 +118,7 @@ namespace Yield {
   }
 
   bool Multi::leq_high(const Multi &o) const {
+    std::cout << "\n called leq_high of class yieldsize \n";
     bool r = false;
     size_t a = array.size(), b = o.array.size();
     assert(a == b);
@@ -119,6 +130,7 @@ namespace Yield {
   }
 
   bool Multi::has_moving() const {
+    std::cout << "\n called has_moving of class yieldsize \n";
     for (std::vector<Size>::const_iterator i = array.begin(); i != array.end();
          ++i)
       if ((*i).low() != (*i).high())

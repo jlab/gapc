@@ -24,6 +24,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <iostream>
 
 #include "symbol.hh"
 #include "signature.hh"
@@ -91,6 +92,7 @@ Symbol::NT::NT(std::string *n, const Loc &l)
  * Symbol::NT::init_links (Grammar &grammar).
  */
 bool Symbol::Terminal::init_links(Grammar &grammar) {
+  std::cout << "\n called init_links of class symbol \n";
   reachable = true;
   return true;
 }
@@ -105,6 +107,7 @@ bool Symbol::Terminal::init_links(Grammar &grammar) {
  * methods one by one.
  */
 bool Symbol::NT::init_links(Grammar &grammar) {
+  std::cout << "\n called init_links of class symbol \n";
   bool r = true;
   reachable = true;
   for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
@@ -116,11 +119,13 @@ bool Symbol::NT::init_links(Grammar &grammar) {
 
 
 bool Symbol::Terminal::init_productive() {
+  std::cout << "\n called init_productive of class symbol \n";
   return false;
 }
 
 
 bool Symbol::NT::init_productive() {
+  std::cout << "\n called init_productive of class symbol \n";
   bool r = false;
   bool t = productive;
 
@@ -137,6 +142,7 @@ bool Symbol::NT::init_productive() {
 }
 
 void Symbol::NT::collect_lr_deps(std::list<NT*> &list) {
+  std::cout << "\n called collect_lr_deps of class symbol \n";
   if (Log::instance()->is_debug()) {
     Log::o() << "\n Start collecting from: " << *name;
   }
@@ -149,6 +155,7 @@ void Symbol::NT::collect_lr_deps(std::list<NT*> &list) {
 
 
 size_t Symbol::Terminal::width() {
+  std::cout << "\n called width() of class symbol \n";
   if (ys.high() < Yield::UP)
     return 0;
   else
@@ -157,6 +164,7 @@ size_t Symbol::Terminal::width() {
 
 
 size_t Symbol::NT::width() {
+  std::cout << "\n called width() of class symbol \n";
   size_t r = 0;
   for (std::list<Alt::Base*>::iterator i = alts.begin();
       i != alts.end(); ++i) {
@@ -179,6 +187,7 @@ void Symbol::NT::init_table_dim(const Yield::Size &l, const Yield::Size &r,
                                 std::vector<Yield::Size> &temp_ls,
                                 std::vector<Yield::Size> &temp_rs,
                                 size_t track) {
+  std::cout << "\n called init_table_dim of class symbol \n";
   assert(track < table_dims.size());
   Table &table_dim = table_dims[track];
   assert(grammar_index_ < temp_ls.size());
@@ -292,6 +301,7 @@ void Symbol::Terminal::print_link(std::ostream &s) {
 }
 
 void Symbol::NT::print_link(std::ostream &s) {
+  std::cout << "\n called print_link of class symbol \n";
   s << "NT " << *name << ':';
   for (std::list<Alt::Base*>::iterator i = alts.begin();
       i != alts.end(); ++i) {
@@ -302,6 +312,7 @@ void Symbol::NT::print_link(std::ostream &s) {
 }
 
 std::ostream & Symbol::NT::put(std::ostream &s) const {
+  std::cout << "\n called put(std::ostream &s) of class symbol \n";
   s << (*name) << " ";
 
   for (Yield::Multi::const_iterator i = m_ys.begin(); i != m_ys.end(); ++i)
@@ -321,6 +332,7 @@ std::ostream & Symbol::NT::put(std::ostream &s) const {
 }
 
 std::ostream & Symbol::Terminal::put(std::ostream &s) const {
+  std::cout << "\n called put(std::ostream &s) of class symbol \n";
   s << "#" << (*name) << "# " << ys;
   return s;
 }
@@ -329,17 +341,20 @@ void Symbol::Terminal::clear_runtime() {
 }
 
 void Symbol::NT::clear_runtime() {
+  std::cout << "\n called clear_runtime of class symbol \n";
   rt_computed = false;
 }
 
 Runtime::Poly Symbol::Terminal::runtime(std::list<NT*> &active_list,
                                         const Runtime::Poly &accum_rt) {
+  std::cout << "\n called runtime of class symbol \n";
   Runtime::Poly rt(1);
   return rt;
 }
 
 // FIXME accumulated calls
 void Symbol::NT::set_rec(const Runtime::Poly &c) {
+  std::cout << "\n called set_recs of class symbol \n";
   assert(active);
   if (c == 1) {
     if (rec > 1)
@@ -353,6 +368,7 @@ void Symbol::NT::set_rec(const Runtime::Poly &c) {
 
 void Symbol::NT::set_recs(const Runtime::Poly &c,
                           std::list<NT*> &active_list) {
+  std::cout << "\n called set_recs of class symbol \n";
   /*
   std::cerr << "YYY active list: ";
   for (std::list<NT*>::iterator i = active_list.begin();
@@ -373,6 +389,7 @@ void Symbol::NT::set_recs(const Runtime::Poly &c,
 
 Runtime::Poly Symbol::NT::runtime(std::list<NT*> &active_list,
                                   const Runtime::Poly &accum_rt) {
+  std::cout << "\n called runtime of class symbol \n";
   if (rt_computed)
     return runtime_;
 
@@ -397,18 +414,22 @@ Runtime::Poly Symbol::NT::runtime(std::list<NT*> &active_list,
 }
 
 void Symbol::Terminal::init_in_out(const Runtime::Poly &p) {
+  std::cout << "\n called init_in_out of class symbol \n";
   return;
 }
 
 void Symbol::Terminal::init_in_out() {
+  std::cout << "\n called init_in_out of class symbol \n";
   return;
 }
 
 void Symbol::NT::init_in_out(const Runtime::Poly &p) {
+  std::cout << "\n called basename(const std::string &f) of class symbol \n";
   in_calls += p;
 }
 
 void Symbol::NT::init_in_out() {
+  std::cout << "\n called init_in_out of class symbol \n";
   for (std::list<Alt::Base*>::iterator i = alts.begin();
       i != alts.end(); ++i)
     out_calls += (*i)->init_in_out();
@@ -416,10 +437,12 @@ void Symbol::NT::init_in_out() {
 
 
 void Symbol::Base::put_table_conf(std::ostream &s) {
+  std::cout << "\n called put_table_conf of class symbol \n";
   assert(false);
 }
 
-void Symbol::NT::put_table_conf(std::ostream &s) {
+void Symbol::NT::put_table_conf(std::ostream &s) {+
+  std::cout << "\n called put_table_conf of class symbol \n";
   assert(tabulated);
   if (tracks_ == 1) {
     table_dims[0].print_short(s, *name);
@@ -440,6 +463,7 @@ void Symbol::Base::init_self_rec() {
 }
 
 void Symbol::NT::init_self_rec() {
+  std::cout << "\n called init_self_rec of class symbol \n";
   if (active) {
     if (self_rec_started)
       self_rec_count++;
@@ -452,6 +476,7 @@ void Symbol::NT::init_self_rec() {
 }
 
 bool Symbol::Base::set_data_type(::Type::Base *t, const Loc &l) {
+  std::cout << "\n called set_data_type of class symbol \n";
   if (!t)
     return true;
   bool b = ::Type::set_if_compatible(datatype, t, location, l);
@@ -459,6 +484,7 @@ bool Symbol::Base::set_data_type(::Type::Base *t, const Loc &l) {
 }
 
 bool Symbol::Base::set_data_type(::Type::Base *t) {
+  std::cout << "\n called set_data_type of class symbol \n";
   if (!t)
     return true;
   Loc l;
@@ -467,10 +493,12 @@ bool Symbol::Base::set_data_type(::Type::Base *t) {
 }
 
 bool Symbol::Terminal::insert_types(Signature_Base &s) {
+  std::cout << "\n called insert_types of class symbol \n";
   return true;
 }
 
 bool Symbol::NT::insert_types(Signature_Base &s) {
+  std::cout << "\n called insert_types of class symbol \n";
   if (eval_fn) {
     if (!set_eval_decl(s))
       return false;
@@ -486,10 +514,12 @@ bool Symbol::NT::insert_types(Signature_Base &s) {
 }
 
 Type::Status Symbol::Terminal::infer_missing_types() {
+  std::cout << "\n called infer_missing_types of class symbol \n";
   return ::Type::READY;
 }
 
 Type::Status Symbol::NT::infer_missing_types() {
+  std::cout << "\n called infer_missing_types of class symbol \n";
   ::Type::Status r = ::Type::READY;
   bool terminal_types = true;
   for (std::list<Alt::Base*>::iterator i = alts.begin();
@@ -511,6 +541,7 @@ Type::Status Symbol::NT::infer_missing_types() {
 }
 
 void Symbol::Terminal::print_type(std::ostream &s) {
+  std::cout << "\n called print_type of class symbol \n";
   s << "#" << *name << " (";
   if (datatype)
     s << *datatype;
@@ -520,6 +551,7 @@ void Symbol::Terminal::print_type(std::ostream &s) {
 }
 
 void Symbol::NT::print_type(std::ostream &s) {
+  std::cout << "\n called print_type of class symbol \n";
   s << *name << " (";
   if (datatype)
     s << *datatype;
@@ -553,6 +585,7 @@ struct SetADPSpecializations : public Visitor {
   }
 
   void visit(Alt::Base &b) {
+  	    std::cout << "\n called visit(Alt::Base &b) of class symbol \n";
             b.set_nullary(eval_nullary_fn);
             b.set_comparator(specialised_comparator_fn, specialised_sorter_fn);
 
@@ -565,6 +598,7 @@ struct SetADPSpecializations : public Visitor {
 void Symbol::NT::set_adp_specialization(ADP_Mode::Adp_Specialization a,
                                         std::string s_null, std::string s_comp,
                                         std::string s_sort) {
+    std::cout << "\n called set_adp_specialization of class symbol \n";
     // set the specialization value
     Base::set_adp_specialization(a);
 
@@ -599,11 +633,13 @@ void Symbol::NT::set_adp_specialization(ADP_Mode::Adp_Specialization a,
 
 // this is called at parse time
 void Symbol::NT::set_eval_fn(std::string *n) {
+  std::cout << "\n called set_eval_fn of class symbol \n";
   eval_fn = n;
 }
 
 // function reference is extracted from signature by name set at parsetime
 bool Symbol::NT::set_eval_decl(Signature_Base &s) {
+  std::cout << "\n called set_eval_decl of class symbol \n";
   if (!eval_fn)
     return false;
   eval_decl = s.decl(*eval_fn);
@@ -618,10 +654,12 @@ bool Symbol::NT::set_eval_decl(Signature_Base &s) {
 
 
 bool Symbol::Terminal::eliminate_lists() {
+  std::cout << "\n called eliminate_lists of class symbol \n";
   return false;
 }
 
 bool Symbol::NT::eliminate_lists() {
+  std::cout << "\n called eliminate_lists of class symbol \n";
   bool r = false;
   bool x = true;
   for (std::list<Alt::Base*>::iterator i = alts.begin();
@@ -662,15 +700,18 @@ bool Symbol::NT::eliminate_lists() {
 }
 
 void Symbol::NT::reset_types() {
+  std::cout << "\n called reset_types() of class symbol \n";
   datatype = NULL;
   eliminated = false;
 }
 
 bool Symbol::Terminal::init_list_sizes() {
+  std::cout << "\n called init_list_sizes() of class symbol \n";
   return false;
 }
 
 bool Symbol::NT::init_list_sizes() {
+  std::cout << "\n called init_list_sizes of class symbol \n";
   bool r = false;
   if (eval_decl && dynamic_cast<Fn_Def*>(eval_decl)) {
     if (dynamic_cast<Fn_Def*>(eval_decl)->choice_mode().number < Yield::UP) {
@@ -700,10 +741,12 @@ bool Symbol::NT::init_list_sizes() {
 }
 
 void Symbol::Terminal::traverse(Visitor &v) {
+  std::cout << "\n called traverse(Visitor &v) of class symbol \n";
   v.visit(*this);
 }
 
 void Symbol::NT::traverse(Visitor &v) {
+  std::cout << "\n called traverse(Visitor &v) of class symbol \n";
   v.visit(*this);
   for (std::list<Alt::Base*>::iterator i = alts.begin();
       i != alts.end(); ++i) {
@@ -714,6 +757,7 @@ void Symbol::NT::traverse(Visitor &v) {
 }
 
 void Symbol::NT::inline_nts(Grammar *grammar) {
+  std::cout << "\n called inline_nts of class symbol \n";
   for (std::list<Alt::Base*>::iterator i = alts.begin();
       i != alts.end(); ++i) {
     if (!(*i)->is(Alt::LINK))
@@ -733,6 +777,7 @@ void Symbol::NT::inline_nts(Grammar *grammar) {
 }
 
 bool Symbol::NT::is_inlineable() {
+  std::cout << "\n called is_inlineable of class symbol \n";
   if (terminal_type && alts.size() == 1)
     return true;
   if (alts.size() == 1 && !eval_decl && list_size_ == 1)
@@ -742,6 +787,7 @@ bool Symbol::NT::is_inlineable() {
 
 void Symbol::NT::init_indices(Expr::Vacc *left, Expr::Vacc *right,
                               unsigned int &k, size_t track) {
+  std::cout << "\n called init_indices of class symbol \n";
   assert(track < left_indices.size());
   assert(left);
   assert(right);
@@ -754,6 +800,7 @@ void Symbol::NT::init_indices(Expr::Vacc *left, Expr::Vacc *right,
 }
 
 Statement::Base *Symbol::NT::build_return_empty(const Code::Mode &mode) {
+  std::cout << "\n called build_return_empty of class symbol \n";
   if (mode == Code::Mode::BACKTRACK)
     return new Statement::Return(new Expr::Const(0));
   if (mode == Code::Mode::CYK && tabulated)
@@ -764,6 +811,7 @@ Statement::Base *Symbol::NT::build_return_empty(const Code::Mode &mode) {
 }
 
 void Symbol::NT::init_guards(Code::Mode mode) {
+  std::cout << "\n called init_guards(Code::Mode mode) of class symbol \n";
   guards.clear();
 
   std::list<Expr::Base*> cond_list;
@@ -785,6 +833,7 @@ void Symbol::NT::init_guards(Code::Mode mode) {
 }
 
 void Symbol::NT::gen_ys_guards(std::list<Expr::Base*> &ors) const {
+  std::cout << "\n called gen_ys_guards of class symbol \n";
   size_t t = 0;
   // std::vector<Table>::const_iterator b = tables_.begin();
   for (Yield::Multi::const_iterator a = m_ys.begin();
@@ -807,6 +856,7 @@ void Symbol::NT::gen_ys_guards(std::list<Expr::Base*> &ors) const {
 }
 
 void Symbol::NT::put_guards(std::ostream &s) {
+  std::cout << "\n called put_guards(std::ostream &s) of class symbol \n";
   s << *name << " = ";
   Printer::CC printer;
   for (std::list<Statement::If*>::iterator i = guards.begin();
@@ -818,6 +868,7 @@ void Symbol::NT::put_guards(std::ostream &s) {
 }
 
 ::Type::Base *Symbol::NT::data_type_before_eval() {
+  std::cout << "\n called data_type_before_eval of class symbol \n";
   if (eval_decl) {
     return eval_decl->types.front();
   } else {
@@ -830,6 +881,7 @@ void Symbol::NT::put_guards(std::ostream &s) {
 
 void Symbol::NT::add_specialised_arguments(Statement::Fn_Call *fn,
                                            bool keep_coopts) {
+  std::cout << "\n called add_specialised_arguments of class symbol \n";
     switch (adp_join) {
         case ADP_Mode::COMPERATOR:
             fn->add_arg(specialised_comparator_fn);
@@ -851,6 +903,7 @@ void Symbol::NT::add_specialised_arguments(Statement::Fn_Call *fn,
 }
 
 void Symbol::NT::set_ret_decl_rhs(Code::Mode mode) {
+  std::cout << "\n called set_ret_decl_rhs of class symbol \n";
   ret_decl = new Statement::Var_Decl(data_type_before_eval(),
       new std::string("answers"));
   post_alt_stmts.clear();
@@ -938,6 +991,7 @@ void Symbol::NT::set_ret_decl_rhs(Code::Mode mode) {
 void Symbol::NT::marker_code(const Code::Mode &mode,
     std::list<Statement::Base*> &ret_stmts,
     Expr::Base *v) const {
+  std::cout << "\n called marker_code of class symbol \n";
   if (!mode.marker())
     return;
 
@@ -960,6 +1014,7 @@ void Symbol::NT::marker_code(const Code::Mode &mode,
 }
 
 void Symbol::NT::init_ret_stmts(Code::Mode mode) {
+  std::cout << "\n called init_ret_stmts of class symbol \n";
   assert(table_decl);
   ret_stmts.clear();
   Expr::Vacc *ret = NULL;
@@ -1047,6 +1102,7 @@ void Symbol::NT::init_ret_stmts(Code::Mode mode) {
 #include "tablegen.hh"
 
 void Symbol::NT::init_table_decl(const AST &ast) {
+  std::cout << "\n called init_table_decl(const AST &ast) of class symbol \n";
   std::string n(*name + "_table");
   if (ast.code_mode() == Code::Mode::SUBOPT) {
     n = "bt_" + n;
@@ -1061,6 +1117,7 @@ void Symbol::NT::init_table_decl(const AST &ast) {
 #include <boost/algorithm/string/replace.hpp>
 
 void Symbol::NT::init_zero_decl() {
+  std::cout << "\n called init_zero_decl of class symbol \n";
   std::ostringstream o;
   o << *datatype << "_zero";
   std::string n(o.str());
@@ -1079,6 +1136,7 @@ void Symbol::NT::init_zero_decl() {
 }
 
 void Symbol::NT::init_table_code(const Code::Mode &mode) {
+  std::cout << "\n called init_table_code of class symbol \n";
   assert(table_decl);
   if (!tabulated)
     return;
@@ -1107,6 +1165,7 @@ void Symbol::NT::init_table_code(const Code::Mode &mode) {
 }
 
 void Symbol::NT::add_cyk_stub(AST &ast) {
+  std::cout << "\n called add_cyk_stub of class symbol \n";
   ::Type::Base *dt = new ::Type::Referencable(datatype);
   Fn_Def *f = new Fn_Def(dt, new std::string("nt_" + *name));
   f->add_para(*this);
@@ -1120,6 +1179,7 @@ void Symbol::NT::add_cyk_stub(AST &ast) {
 void Symbol::NT::subopt_header(AST &ast, Fn_Def *score_code,
     Fn_Def *f,
     std::list<Statement::Base*> &stmts) {
+  std::cout << "\n called subopt_header of class symbol \n";
   if (ast.code_mode() == Code::Mode::SUBOPT)  {
     ::Type::Base *score_type = datatype->component()->left();
     Expr::Fn_Call *score_fn = new Expr::Fn_Call(*f);
@@ -1148,6 +1208,7 @@ void Symbol::NT::subopt_header(AST &ast, Fn_Def *score_code,
 
 void Symbol::NT::marker_cond(Code::Mode &mode,
                              std::list<Expr::Base*> &cond) const {
+  std::cout << "\n called marker_cond of class symbol \n";
   if (!mode.subopt_buddy())
     return;
 
@@ -1174,12 +1235,14 @@ struct SetADPDisabled : public Visitor {
         :  disabled(b), keep_coopts(k) {}
 
   void visit(Alt::Base &b) {
+            std::cout << "\n called visit(Alt::Base &b) of class symbol \n";
             b.set_disable_specialisation(disabled);
             b.set_keep_coopts(keep_coopts);
   }
 };
 
 void Symbol::NT::codegen(AST &ast) {
+  std::cout << "\n called codegen(AST &ast) of class symbol \n";
   // disable specialisation if needed in backtrace mode
   SetADPDisabled v = SetADPDisabled(ast.code_mode() == Code::Mode::BACKTRACK &&
     tabulated, ast.code_mode().keep_cooptimal());
@@ -1293,6 +1356,7 @@ void Symbol::NT::codegen(AST &ast) {
 
 void Symbol::NT::replace(Statement::Var_Decl &decl,
                          Statement::iterator begin, Statement::iterator end) {
+  std::cout << "\n called replace of class symbol \n";
   if (begin == end)
     return;
   ++begin;
@@ -1302,6 +1366,7 @@ void Symbol::NT::replace(Statement::Var_Decl &decl,
 }
 
 void Symbol::NT::eliminate_list_ass() {
+  std::cout << "\n called eliminate_list_ass of class symbol \n";
   assert(!code_.empty());
   for (Statement::iterator i = Statement::begin(code_.back()->stmts);
        i != Statement::end(); ) {
@@ -1346,6 +1411,7 @@ void Symbol::Terminal::print_dot_edge(std::ostream &out) {
 }
 
 void Symbol::NT::print_dot_edge(std::ostream &out) {
+  std::cout << "\n called print_dot_edge of class symbol \n";
   for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     (*i)->print_dot_edge(out, *this);
   }
@@ -1353,6 +1419,7 @@ void Symbol::NT::print_dot_edge(std::ostream &out) {
 
 
 void Symbol::Base::print_dot_node(std::ostream &out) {
+  std::cout << "\n called print_dot_node of class symbol \n";
   if (tabulated) {
     out << *name << " [style=dotted];\n";
   } else {
@@ -1366,6 +1433,7 @@ void Symbol::Base::print_dot_node(std::ostream &out) {
 
 // This function is called to change the push type, for example to push_back_max
 void Symbol::NT::optimize_choice(::Type::List::Push_Type push) {
+  std::cout << "\n called optimize_choice of class symbol \n";
   if (!ret_decl->type->is(::Type::LIST))
     return;
   ::Type::List *l = dynamic_cast< ::Type::List*>(ret_decl->type);
@@ -1379,6 +1447,7 @@ void Symbol::NT::optimize_choice(::Type::List::Push_Type push) {
 
 void Symbol::NT::optimize_choice(::Type::List::Push_Type push,
                                  Statement::Hash_Decl *h) {
+  std::cout << "\n called optimize_choice of class symbol \n";
   if (!ret_decl->type->is(::Type::LIST))
     return;
   optimize_choice(push);
@@ -1400,12 +1469,14 @@ void Symbol::NT::optimize_choice(::Type::List::Push_Type push,
 
 
 void Symbol::NT::set_alts(const std::list<Alt::Base*> &a) {
+  std::cout << "\n called set_alts(const std::list<Alt::Base*> &a) of class symbol \n";
   alts = a;
   for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i)
     (*i)->top_level = true;
 }
 
 void Symbol::NT::set_tracks(size_t x, size_t y) {
+  std::cout << "\n called set_tracks(size_t x, size_t y) of class symbol \n";
   if (tracks_) {
     assert(tracks_ == x);
   }
@@ -1419,16 +1490,19 @@ void Symbol::NT::set_tracks(size_t x, size_t y) {
 }
 
 void Symbol::Base::set_tracks(size_t x, size_t y) {
+  std::cout << "\n called set_tracks(size_t x, size_t y) of class symbol \n";
   assert(0); std::abort();
 }
 
 
 void Symbol::Terminal::setup_multi_ys() {
+  std::cout << "\n called setup_multi_ys() of class symbol \n";
   m_ys.set_tracks(1);
   m_ys(0) = ys;
 }
 
 void Symbol::NT::setup_multi_ys() {
+  std::cout << "\n called setup_multi_ys() of class symbol \n";
   m_ys.set_tracks(tracks_);
   for (Yield::Multi::iterator i = m_ys.begin(); i != m_ys.end(); ++i)
     // with 0, UP ys of grammar/loopa is computed wrong!
@@ -1439,6 +1513,7 @@ void Symbol::Terminal::init_multi_ys() {
 }
 
 void Symbol::NT::init_multi_ys() {
+  std::cout << "\n called init_multi_ys of class symbol \n";
   Yield::Multi m;
   std::list<Alt::Base*>::iterator i = alts.begin();
   assert(i != alts.end());
@@ -1454,11 +1529,13 @@ void Symbol::NT::init_multi_ys() {
 
 bool Symbol::Base::multi_detect_loop(const Yield::Multi &left,
     const Yield::Multi &right, Symbol::NT *nt) {
+  std::cout << "\n called multi_detect_loop of class symbol \n";
   return false;
 }
 
 bool Symbol::NT::multi_detect_loop(const Yield::Multi &left,
     const Yield::Multi &right, Symbol::NT *nt) {
+  std::cout << "\n called multi_detect_loop of class symbol \n";
   if (active)
     return false;
   active = true;
@@ -1472,11 +1549,13 @@ bool Symbol::NT::multi_detect_loop(const Yield::Multi &left,
   return  r;
 }
 bool Symbol::Base::multi_detect_loop() {
+  std::cout << "\n called multi_detect_loop() of class symbol \n";
   assert(0);
   return false;
 }
 
 bool Symbol::NT::multi_detect_loop() {
+  std::cout << "\n called multi_detect_loop of class symbol \n";
   bool r = false;
   Yield::Multi p(tracks_);
   for (std::list<Alt::Base*>::const_iterator i = alts.begin();
@@ -1494,6 +1573,7 @@ bool Symbol::NT::multi_detect_loop() {
 void Symbol::NT::multi_propagate_max_filter(
     std::vector<Yield::Multi> &nt_sizes,
     const Yield::Multi &max_size) {
+  std::cout << "\n called multi_propagate_max_filter of class symbol \n";
   if (active)
     return;
   active = true;
@@ -1519,10 +1599,12 @@ void Symbol::NT::multi_propagate_max_filter(
 
 void Symbol::NT::multi_propagate_max_filter(
   std::vector<Yield::Multi> &nt_sizes) {
+  std::cout << "\n called multi_propagate_max_filter of class symbol \n";
   multi_propagate_max_filter(nt_sizes, m_ys);
 }
 
 void Symbol::NT::update_max_ys(const Yield::Multi &m) {
+  std::cout << "\n called update_max_ys(const Yield::Multi &m) of class symbol \n";
   if (Log::instance()->is_debug())
     std::cerr << "Multi max size of " << *name << " " << m << " old " << m_ys;
   m_ys.min_high(m);
@@ -1531,6 +1613,7 @@ void Symbol::NT::update_max_ys(const Yield::Multi &m) {
 }
 
 bool Symbol::NT::operator<(const NT &b) const {
+  std::cout << "\n called bool Symbol::NT::operator<(const NT &b) of class symbol \n";
   /*
      if (self_rec_count < b.self_rec_count)
      return true;
@@ -1555,6 +1638,7 @@ bool Symbol::NT::operator<(const NT &b) const {
 }
 
 void Symbol::NT::multi_init_calls() {
+  std::cout << "\n called multi_init_calls() of class symbol \n";
   for (std::list<Alt::Base*>::iterator i = alts.begin();
        i != alts.end(); ++i) {
     Runtime::Poly x(1);
@@ -1564,6 +1648,7 @@ void Symbol::NT::multi_init_calls() {
 
 
 Symbol::NT *Symbol::NT::clone(size_t track_pos) {
+  std::cout << "\n called clone(size_t track_pos) of class symbol \n";
   NT *nt = new NT(*this);
   std::ostringstream o;
   o << *orig_name << '_' << track_pos;
@@ -1576,6 +1661,7 @@ Symbol::NT *Symbol::NT::clone(size_t track_pos) {
 }
 
 void Symbol::NT::window_table_dim() {
+  std::cout << "\n called window_table_dim() of class symbol \n";
   assert(table_dims.size() == 1);
   Table &table = table_dims[0];
 
@@ -1585,6 +1671,7 @@ void Symbol::NT::window_table_dim() {
 }
 
 void Symbol::NT::set_ntargs(std::list<Para_Decl::Base*> *l) {
+  std::cout << "\n called set_ntargs(std::list<Para_Decl::Base*> *l) of class symbol \n";
   if (!l)
     return;
   if (l->empty()) {
@@ -1596,12 +1683,14 @@ void Symbol::NT::set_ntargs(std::list<Para_Decl::Base*> *l) {
 }
 
 void Symbol::Base::set_tabulated() {
+  std::cout << "\n called set_tabulated() of class symbol \n";
   if (never_tabulate_)
     return;
   tabulated = true;
 }
 
 void Symbol::Base::set_tabulated(bool b) {
+  std::cout << "\n called set_tabulated(bool b) of class symbol \n";
   if (never_tabulate_)
     return;
   tabulated = b;
@@ -1609,15 +1698,18 @@ void Symbol::Base::set_tabulated(bool b) {
 
 
 std::ostream & operator<<(std::ostream &s, const Symbol::Base &p) {
+  std::cout << "\n called std::ostream & operator<<(std::ostream &s, const Symbol::Base &p) of class symbol \n";
   return p.put(s);
 }
 
 
 void Symbol::Terminal::setPredefinedTerminalParser(bool isPredefined) {
+  std::cout << "\n called setPredefinedTerminalParser(bool isPredefined) of class symbol \n";
   this->predefinedTerminalParser = isPredefined;
 }
 
 
 bool Symbol::Terminal::isPredefinedTerminalParser() {
+  std::cout << "\n called isPredefinedTerminalParser of class symbol \n";
   return this->predefinedTerminalParser;
 }

@@ -23,6 +23,8 @@
 
 #include "mode.hh"
 
+#include <iostream>
+
 const Mode::Number Mode::map_type_to_number[] = {
   ZERO,  // NONE
   ONE,  // SYNOPTIC
@@ -46,18 +48,21 @@ const Mode::pair Mode::map_string_to_mode[] = {
 hashtable<std::string, Mode::Type> Mode::table;
 
 void Mode::set(Mode::Type t) {
+  std::cout << "\n called set(Mode::Type t) of class mode \n";
   number = map_type_to_number[t] > ONE ? Yield::UP :
     Yield::Poly((uint32_t) map_type_to_number[t]);
   type = t;
 }
 
 void Mode::init_table() {
+  std::cout << "\n called init_table() of class mode \n";
   for (unsigned int i = 0; map_string_to_mode[i].a != NULL; i++) {
     table[map_string_to_mode[i].a] = map_string_to_mode[i].b;
   }
 }
 
 bool Mode::set(const std::string &name) {
+  std::cout << "\n called set(const std::string &name) of class mode \n";
   assert(table.size());
   hashtable<std::string, Type>::iterator i = table.find(name);
   if (i == table.end())
@@ -67,6 +72,7 @@ bool Mode::set(const std::string &name) {
 }
 
 std::ostream &Mode::put(std::ostream &s) const {
+  std::cout << "\n called put(std::ostream &s) of class mode \n";
   assert(type == map_string_to_mode[type].b);
   s << map_string_to_mode[type].a << '(' << number << ')';
   return s;

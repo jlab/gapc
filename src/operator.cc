@@ -25,9 +25,13 @@
 #include "para_decl.hh"
 #include "statement.hh"
 
+#include <iostream>
+
 
 // add new parameter to all lists
 void Operator::add_para(Type::Base *type, std::string *n) {
+  std::cout << "\n called add_para(Type::Base *type, std::string *n) of class operator \n";
+
   // no security checks like for functions
   // because there is no user contact with this function
 
@@ -36,6 +40,7 @@ void Operator::add_para(Type::Base *type, std::string *n) {
 
 
 void Operator::add_const_value(Statement::Var_Decl *v) {
+  std::cout << "\n called add_const_value(Statement::Var_Decl *v) of class operator \n";
     // no sanity checks because only internal use
     // but, v MUST have a constant RHS
 

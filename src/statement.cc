@@ -39,6 +39,8 @@
 
 #include "operator.hh"
 
+#include <iostream>
+
 Statement::Sorter::Sorter(Operator *op, Var_Decl *l) :
   Block_Base(SORTER), list(l) {
     this->op = op->object;
@@ -80,61 +82,74 @@ Statement::Var_Decl *Statement::Var_Decl::clone() const {
 
 
 void Statement::Var_Decl::print(Printer::Base &p) const {
+  std::cout << "\n called print of class statement \n";
   p.print(*this);
 }
 
 
 void Statement::Return::print(Printer::Base &p) const {
+  std::cout << "\n called print of class statement \n";
   p.print(*this);
 }
 
 
 void Statement::Break::print(Printer::Base &p) const {
+  std::cout << "\n called print of class statement \n";
   p.print(*this);
 }
 
 void Statement::Decrease::print(Printer::Base &p) const {
+  std::cout << "\n called print of class statement \n";
   p.print(*this);
 }
 
 void Statement::Increase::print(Printer::Base &p) const {
+  std::cout << "\n called print of class statement \n";
   p.print(*this);
 }
 
 void Statement::Continue::print(Printer::Base &p) const {
+  std::cout << "\n called print of class statement \n";
   p.print(*this);
 }
 
 
 void Statement::If::print(Printer::Base &p) const {
+  std::cout << "\n called print of class statement \n";
   p.print(*this);
 }
 
 
 void Statement::Switch::print(Printer::Base &p) const {
+  std::cout << "\n called print of class statement \n";
   p.print(*this);
 }
 
 void Statement::For::print(Printer::Base &p) const {
+  std::cout << "\n called print of class statement \n";
   p.print(*this);
 }
 
 
 void Statement::Foreach::print(Printer::Base &p) const {
+  std::cout << "\n called print of class statement \n";
   p.print(*this);
 }
 
 void Statement::Sorter::print(Printer::Base &p) const {
+  std::cout << "\n called print of class statement \n";
   p.print(*this);
 }
 
 
 void Statement::Var_Assign::print(Printer::Base &p) const {
+  std::cout << "\n called print of class statement \n";
   p.print(*this);
 }
 
 
 void Statement::Block::print(Printer::Base &p) const {
+  std::cout << "\n called print of class statement \n";
   p.print(*this);
 }
 
@@ -218,6 +233,7 @@ Statement::Return::Return(std::string *n)
 
 
 void Statement::If::push(std::list<Base*> &l, Base* stmt) {
+  std::cout << "\n called push(std::list<Base*> &l, Base* stmt) of class statement \n";
   if (stmt->is(BLOCK)) {
     Block *b = dynamic_cast<Block*>(stmt);
     assert(b);
@@ -229,11 +245,13 @@ void Statement::If::push(std::list<Base*> &l, Base* stmt) {
 
 
 Statement::Var_Decl *Statement::Var_Decl::var_decl() {
+  std::cout << "\n called var_decl() of class statement \n";
   return this;
 }
 
 
 void Statement::Var_Decl::replace(Var_Decl &decl, Expr::Base *expr) {
+  std::cout << "\n called replace(Var_Decl &decl, Expr::Base *expr) of class statement \n";
   if (!rhs) {
     return;
   }
@@ -244,6 +262,7 @@ void Statement::Var_Decl::replace(Var_Decl &decl, Expr::Base *expr) {
 
 
 void Statement::Foreach::replace(Var_Decl &decl, Expr::Base *expr) {
+  std::cout << "\n called replace(Var_Decl &decl, Expr::Base *expr) of class statement \n";
   if (*container == decl) {
     Expr::Vacc *vacc = expr->vacc();
     assert(vacc->var_decl()->type->is(::Type::LIST));
@@ -257,6 +276,7 @@ void Statement::Foreach::replace(Var_Decl &decl, Expr::Base *expr) {
 
 
 void Statement::If::replace(Var_Decl &decl, Expr::Base *expr) {
+  std::cout << "\n called replace(Var_Decl &decl, Expr::Base *expr) of class statement \n";
   for (Expr::iterator i = Expr::begin(cond); i != Expr::end(); ++i) {
     if (!(*i)->is(Expr::FN_CALL)) {
       continue;
@@ -268,11 +288,13 @@ void Statement::If::replace(Var_Decl &decl, Expr::Base *expr) {
 
 
 bool Statement::Var_Decl::operator==(const Var_Decl &other) const {
+  std::cout << "\n called bool Statement::Var_Decl::operator==(const Var_Decl &other) of class statement \n";
   return this == &other;
 }
 
 
 void Statement::Iterator::fwd() {
+  std::cout << "\n called fwd() of class statement \n";
   while (true) {
     if (i == j) {
       if (stack.empty()) {
@@ -294,6 +316,7 @@ void Statement::Iterator::fwd() {
 
 
 Statement::Iterator &Statement::Iterator::operator++() {
+  std::cout << "\n called Statement::Iterator &Statement::Iterator::operator++() of class statement \n";
   if ((*i)->is(Statement::BLOCK) ||
       (*i)->is(Statement::FOREACH) ||
       (*i)->is(Statement::FOR)) {
@@ -325,6 +348,7 @@ Statement::Iterator &Statement::Iterator::operator++() {
 
 
 std::list<Statement::Base*> *Statement::Switch::add_case(std::string *n) {
+  std::cout << "\n called add_case(std::string *n) of class statement \n";
   std::string *name = new std::string(*n);
   std::list<Base*> cont;
   std::pair<std::string, std::list<Base*> > newCase = std::make_pair(
@@ -342,21 +366,25 @@ Statement::Foreach::Foreach(Var_Decl *i, Var_Decl *l)
 
 
 void Statement::Foreach::set_itr(bool x) {
+  std::cout << "\n called set_itr(bool x) of class statement \n";
   // elem = elem->clone();
   elem->set_itr(x);
 }
 
 void Statement::Foreach::set_iteration(bool b) {
-    iteration = b;
+  std::cout << "\n called set_iteration(bool b) of class statement \n";
+  iteration = b;
 }
 
 
 void Statement::Var_Assign::set_op(Expr::Type t) {
+  std::cout << "\n called var_decl()  of class statement \n";
   op_ = t;
 }
 
 
 std::string Statement::Var_Assign::op_str() const {
+  std::cout << "\n called op_str() of class statement \n";
   switch (op_) {
     case Expr::EQ:
       return std::string("=");
@@ -372,6 +400,7 @@ std::string Statement::Var_Assign::op_str() const {
 
 
 Statement::Base *Statement::Return::copy() const {
+  std::cout << "\n called copy() of class statement \n";
   Return *o = new Return(*this);
   if (expr) {
     o->expr = expr->copy();
@@ -380,27 +409,32 @@ Statement::Base *Statement::Return::copy() const {
 }
 
 Statement::Base *Statement::Break::copy() const {
+  std::cout << "\n called copy() of class statement \n";
   Break *o = new Break(*this);
   return o;
 }
 
 
 Statement::Base *Statement::Continue::copy() const {
+  std::cout << "\n called copy() of class statement \n";
   Continue *o = new Continue(*this);
   return o;
 }
 
 Statement::Base *Statement::Decrease::copy() const {
+  std::cout << "\n called copy() of class statement \n";
   Decrease *o = new Decrease(*this);
   return o;
 }
 
 Statement::Base *Statement::Increase::copy() const {
+  std::cout << "\n called var_decl()  of class statement \n";
   Increase *o = new Increase(*this);
   return o;
 }
 
 Statement::Base *Statement::If::copy() const {
+  std::cout << "\n called copy() of class statement \n";
   If *o = new If(*this);
   if (cond) {
     o->cond = cond->copy();
@@ -418,6 +452,7 @@ Statement::Base *Statement::If::copy() const {
 
 
 Statement::Base *Statement::Var_Decl::copy() const {
+  std::cout << "\n called copy() of class statement \n";
   Var_Decl *o = new Var_Decl(*this);
   if (rhs) {
     o->rhs = rhs->copy();
@@ -430,6 +465,7 @@ Statement::Base *Statement::Var_Decl::copy() const {
 
 
 Statement::Base *Statement::For::copy() const {
+  std::cout << "\n called copy() of class statement \n";
   For *o = new For(*this);
   Block_Base::copy(*o);
   if (cond) {
@@ -443,6 +479,7 @@ Statement::Base *Statement::For::copy() const {
 
 
 Statement::Base *Statement::Var_Assign::copy() const {
+  std::cout << "\n called copy() of class statement \n";
   Var_Assign *o = new Var_Assign(*this);
   if (rhs) {
     o->rhs = rhs->copy();
@@ -452,6 +489,7 @@ Statement::Base *Statement::Var_Assign::copy() const {
 
 
 Statement::Base *Statement::Block::copy() const {
+  std::cout << "\n called copy() of class statement \n";
   Block *o = new Block(*this);
   Block_Base::copy(*o);
   return o;

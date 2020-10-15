@@ -27,6 +27,7 @@
 #include "log.hh"
 
 #include "type/multi.hh"
+#include <iostream>
 
 
 namespace Para_Decl {
@@ -34,6 +35,7 @@ Base::~Base() {
 }
 
 Multi::Multi(const std::list<Base*> &l, const Loc &lo) : Base(lo, MULTI) {
+  std::cout << "\n called constructor Multi(const std::list<Base*> &l, const Loc &lo) of class para_decl \n";
   std::list< ::Type::Base*> types;
   for (std::list<Base*>::const_iterator i = l.begin(); i != l.end(); ++i) {
     Simple *s = dynamic_cast<Simple*> (*i);
@@ -51,6 +53,7 @@ Multi::Multi(const std::list<Base*> &l, const Loc &lo) : Base(lo, MULTI) {
 
 
 void Multi::replace(::Type::Base *t) {
+  std::cout << "\n called replace(::Type::Base *t) of class para_decl \n";
   ::Type::Multi *m = dynamic_cast< ::Type::Multi* > (t);
   assert(m);
 
@@ -64,6 +67,7 @@ void Multi::replace(::Type::Base *t) {
 
 
 Base *Simple::copy() const {
+  std::cout << "\n called copy() of class para_decl \n";
   Simple *o = new Simple(*this);
   o->name_ = new std::string(*name_);
   return o;
@@ -71,6 +75,7 @@ Base *Simple::copy() const {
 
 
 Base *Multi::copy() const {
+  std::cout << "\n called copy() of class para_decl \n";
   Multi *o = new Multi (*this);
   o->list_.clear();
   for (std::list<Simple*>::const_iterator i = list_.begin();

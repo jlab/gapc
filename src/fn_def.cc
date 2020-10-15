@@ -44,12 +44,14 @@
 #include "expr/fn_call.hh"
 
 #include "operator.hh"
+#include <iostream>
 
 
 // join two Function definitions into one
 Fn_Def::Fn_Def(Fn_Def &a, Fn_Def &b)
   :  adaptor(NULL), comparator(NULL), sorter(NULL),
     choice_fn_type_(Expr::Fn_Call::NONE) {
+  std::cout << "\n called Fn_Def of class fn_def \n";
   gen_type = a.gen_type;
   comperator_suffix = b.comperator_suffix;
   sorter_suffix = b.sorter_suffix;
@@ -166,6 +168,7 @@ Fn_Def::Fn_Def(Fn_Def &a, Fn_Def &b)
 // create definition from declaration
 Fn_Def::Fn_Def(const Fn_Decl &other)
   : Fn_Decl() {
+  std::cout << "\n called Fn_Def of class fn_def \n";
   return_type = other.return_type;
   types = other.types;
   name = other.name;
@@ -225,6 +228,7 @@ Fn_Def::Fn_Def(const Fn_Decl &other)
 
 
 void Fn_Def::set_paras(const std::list<Para_Decl::Base*> &l) {
+  std::cout << "\n called set_paras of class fn_def \n";
   // add parameters to list
   paras.insert(paras.end(), l.begin(), l.end());
 
@@ -257,6 +261,7 @@ void Fn_Def::set_paras(const std::list<Para_Decl::Base*> &l) {
 
 // copy over terminal status from given function to current function
 void Fn_Def::annotate_terminal_arguments(Fn_Decl &d) {
+  std::cout << "\n called annotate_terminal_arguments of class fn_def \n";
   assert(types_equal(d));
 
   // loop over all types of the given function together with types of the
@@ -285,6 +290,7 @@ void Fn_Def::annotate_terminal_arguments(Fn_Decl &d) {
 
 // add new parameter to all lists
 void Fn_Def::add_para(Type::Base *type, std::string *n) {
+  std::cout << "\n called add_para of class fn_def \n";
   names.push_back(n);
   types.push_back(type);
   hashtable<std::string, Type::Base*>::iterator i = parameters.find(*n);
@@ -309,6 +315,7 @@ void Fn_Def::add_paras(const std::list<Statement::Var_Decl*> &l) {
 
 // add a nonterminal
 void Fn_Def::add_para(Symbol::NT &nt) {
+  std::cout << "\n called add_para of class fn_def \n";
   Type::Base *t = new Type::Size();
 
   const std::vector<Table> &tables = nt.tables();
@@ -330,12 +337,14 @@ void Fn_Def::add_para(Symbol::NT &nt) {
 }
 
 void Fn_Def::set_statements(const std::list<Statement::Base*> &l) {
+  std::cout << "\n called set_statements of class fn_def \n";
   stmts = l;
 }
 
 void Fn_Def::init_var_decl(Para_Decl::Simple *a, Para_Decl::Simple *b,
     Para_Decl::Simple *c,
     const std::string &o1, const std::string &o2) {
+  std::cout << "\n called init_var_decl of class fn_def \n";
     Statement::Var_Decl *v =
       new Statement::Var_Decl(a->type(), new std::string(o1));
     Statement::Var_Decl *w =
@@ -361,6 +370,7 @@ void Fn_Def::init_var_decl(Para_Decl::Simple *a, Para_Decl::Simple *b,
 }
 
 void Fn_Def::init_var_decls(Fn_Def &a, Fn_Def &b) {
+  std::cout << "\n called init_var_decls of class fn_def \n";
   assert(a.paras.size() == b.paras.size());
   assert(a.paras.size() == paras.size());
   unsigned int z = 0;
@@ -404,12 +414,14 @@ void Fn_Def::init_var_decls(Fn_Def &a, Fn_Def &b) {
 }
 
 void Fn_Def::codegen() {
+  std::cout << "\n called codegen of class fn_def \n";
   adaptor = new Fn_Def(*this);
   adaptor->stmts.clear();
   init_range_iterator();
 }
 
 void Fn_Def::codegen(Fn_Def &a, Fn_Def &b, Product::Two &product) {
+  std::cout << "\n called codegen of class fn_def \n";
   assert(stmts.empty());
   if (choice_fn) {
     codegen_choice(a, b, product);
@@ -453,10 +465,12 @@ void Fn_Def::codegen(Fn_Def &a, Fn_Def &b, Product::Two &product) {
 }
 
 void Fn_Def::init_fn_suffix(const std::string &s) {
+  std::cout << "\n called init_fn_suffix of class fn_def \n";
   target_name_ = *name + s;
 }
 
 void Fn_Def::init_range_iterator(Fn_Def &a, Fn_Def &b, Product::Two &product) {
+  std::cout << "\n called init_range_iterator of class fn_def \n";
     adaptor = new Fn_Def(*this);
     adaptor->stmts.clear();
 
@@ -484,6 +498,7 @@ void Fn_Def::init_range_iterator(Fn_Def &a, Fn_Def &b, Product::Two &product) {
 }
 
 void Fn_Def::init_range_iterator() {
+  std::cout << "\n called init_range_iterator of class fn_def \n";
   adaptor->name = name;
   adaptor->names = names;
   adaptor->types = types;
@@ -510,6 +525,7 @@ void Fn_Def::init_range_iterator() {
 
 // generates struct for comparing at a specific dimension
 void Fn_Def::init_comparator_adaptor() {
+  std::cout << "\n called init_comparator_adaptor of class fn_def \n";
     std::string *name = new std::string(target_name_);
     name->append(*comperator_suffix);
 
@@ -522,6 +538,7 @@ void Fn_Def::init_comparator_adaptor() {
 
 // generates struct for comparing all dims at once
 void Fn_Def::init_sorter_adaptor() {
+  std::cout << "\n called init_sorter_adaptor of class fn_def \n";
     std::string *name = new std::string(target_name_);
     name->append(*sorter_suffix);
 
@@ -533,6 +550,7 @@ void Fn_Def::init_sorter_adaptor() {
 
 
 bool Fn_Def::is_pareto_instance(Product::Base &product) {
+  std::cout << "\n called is_pareto_instance of class fn_def \n";
     switch (product.type()) {
     case Product::SINGLE:
         return false;
@@ -549,6 +567,7 @@ bool Fn_Def::is_pareto_instance(Product::Base &product) {
 }
 
 int Fn_Def::codegen_compare(Product::Base &product) {
+  std::cout << "\n called codegen_compare of class fn_def \n";
   // create the adaptor
   init_comparator_adaptor();
 
@@ -590,6 +609,7 @@ int Fn_Def::codegen_compare(Product::Base &product) {
 }
 
 void Fn_Def::codegen_sorter(Product::Base &product) {
+  std::cout << "\n called codegen_sorter of class fn_def \n";
   // create the adaptor
   init_sorter_adaptor();
 
@@ -603,6 +623,7 @@ void Fn_Def::codegen_sorter(Product::Base &product) {
 
 
 void Fn_Def::add_simple_choice_fn_adaptor() {
+  std::cout << "\n called add_simple_choice_fn_adaptor of class fn_def \n";
   assert(adaptor);
   types = adaptor->types;
   adaptor = 0;
@@ -610,6 +631,7 @@ void Fn_Def::add_simple_choice_fn_adaptor() {
 }
 
 void Fn_Def::codegen_sorting_nullary(Product::Two &product) {
+  std::cout << "\n called codegen_sorting_nullary of class fn_def \n";
     std::string *name = new std::string(*nullary_sort_ob);
     name->append(*sorter_suffix);
 
@@ -626,6 +648,7 @@ void Fn_Def::codegen_sorting_nullary(Product::Two &product) {
 
 
 void Fn_Def::codegen_choice(Fn_Def &a, Fn_Def &b, Product::Two &product) {
+  std::cout << "\n called codegen_choice of class fn_def \n";
   // for specialized ADP or Sorted Pareto, generate a comparator on the
   // original choice function (only one is needed to original is chosen for
   // naming, no other reasons)
@@ -728,6 +751,7 @@ void Fn_Def::get_pareto_dimensions(
   int *i, int *D, Statement::Var_Decl *last_decl, std::string prefix,
   std::list<std::pair<Product::Base*, bool> > &products,
   std::list<Statement::Var_Decl*> &decls, int float_acc) {
+  std::cout << "\n called get_pareto_dimensions of class fn_def \n";
     if (product.left()->type() == Product::PARETO) {
         std::ostringstream temp_str;
         temp_str << prefix << "_temp_" << (*i+1);
@@ -815,6 +839,7 @@ void Fn_Def::get_pareto_dimensions(
 
 
 bool Fn_Def::get_sort_grab_list(std::list<bool> &o, Product::Base &product) {
+  std::cout << "\n called get_sort_grab_list of class fn_def \n";
     switch (product.type()) {
     case Product::SINGLE:
         return false;
@@ -845,6 +870,7 @@ bool Fn_Def::get_sort_grab_list(std::list<bool> &o, Product::Base &product) {
 
 void Fn_Def::codegen_multi_sort(
   Product::Base &product, std::list<Statement::Base*> *stmts) {
+  std::cout << "\n called codegen_multi_sort of class fn_def \n";
   // list elements
   Statement::Var_Decl *c1 = new Statement::Var_Decl(
     return_type->component(), "c1");
@@ -977,6 +1003,7 @@ void Fn_Def::codegen_multi_sort(
 
 
 void Fn_Def::codegen_times(Fn_Def &a, Fn_Def &b, Product::Two &product) {
+  std::cout << "\n called codegen_times of class fn_def \n";
   Statement::Var_Decl *answers = new Statement::Var_Decl(
     return_type, "answers");
   stmts.push_back(answers);
@@ -1039,6 +1066,7 @@ void Fn_Def::times_cg_with_rhs_choice(
   Fn_Def &a, Fn_Def &b, Product::Two &product,
   Statement::Var_Decl *answers, std::list<Statement::Base*> *loop_body,
   Statement::Var_Decl *elem) {
+  std::cout << "\n called times_cg_with_rhs_choice of class fn_def \n";
   Statement::Var_Decl *right_candidates = new Statement::Var_Decl(
       new Type::List(return_type->right()), "right_candidates");
   loop_body->push_back(right_candidates);
@@ -1118,6 +1146,7 @@ void Fn_Def::times_cg_without_rhs_choice(
   Fn_Def &a, Fn_Def &b, Product::Two &product,
   Statement::Var_Decl *answers, std::list<Statement::Base*> *loop_body,
   Statement::Var_Decl *elem) {
+  std::cout << "\n called Fn_Def of class fn_def \n";
   Statement::Var_Decl *input_list = new Statement::Var_Decl(
       types.front(), names.front(), new Expr::Vacc(names.front()));
   Statement::Var_Decl *tupel =
@@ -1158,6 +1187,7 @@ void Fn_Def::times_cg_without_rhs_choice(
 
 void Fn_Def::codegen_pareto_nosort(
   Fn_Def &a, Fn_Def &b, Product::Two &product) {
+  std::cout << "\n called codegen_pareto_nosort of class fn_def \n";
   // create  a variable to put all answers in
   assert(stmts.empty());
   Statement::Var_Decl *answers = new Statement::Var_Decl(
@@ -1449,6 +1479,7 @@ void Fn_Def::codegen_pareto_nosort(
 
 void Fn_Def::codegen_pareto_multi_nosort(
   Fn_Def &a, Fn_Def &b, Product::Two &product) {
+  std::cout << "\n called codegen_pareto_multi_nosort of class fn_def \n";
   // input list
   Statement::Var_Decl *input_list = new Statement::Var_Decl(
   types.front(), names.front(), new Expr::Vacc(names.front()));
@@ -1772,6 +1803,7 @@ void Fn_Def::codegen_pareto_multi_nosort(
 }
 
 void Fn_Def::codegen_pareto_isort(Fn_Def &a, Fn_Def &b, Product::Two &product) {
+  std::cout << "\n called codegen_pareto_isort of class fn_def \n";
   // create  a variable to put all answers in
   assert(stmts.empty());
   Statement::Var_Decl *answers = new Statement::Var_Decl(
@@ -2366,6 +2398,7 @@ void Fn_Def::codegen_pareto_multi_lex(Fn_Def &a, Fn_Def &b,
 Product::Two Fn_Def::codegen_pareto_move_to_first_all_dim(
   Statement::Var_Decl * & c1, Statement::Var_Decl * & c2,
   std::list<Statement::Base*> *stmts, Product::Base &product) {
+  std::cout << "\n called codegen_pareto_move_to_first_all_dim of class fn_def \n";
     // first find the beginning pareto entry
 
     // true : left
@@ -2447,6 +2480,7 @@ Product::Two Fn_Def::codegen_pareto_move_to_first_all_dim(
 int Fn_Def::codegen_pareto_comparator_all_dim(
   Statement::Var_Decl *c1, Statement::Var_Decl *c2, Statement::Var_Decl *dim,
   Operator &comp, Product::Base &product) {
+  std::cout << "\n called codegen_pareto_comparator_all_dim of class fn_def \n";
     // create access for all dimensions
   int i = 0;
   int D = 0;
@@ -2606,6 +2640,7 @@ int Fn_Def::codegen_pareto_comparator_all_dim(
 // generates the comparator element needed for advanced multi-dim pareto
 void Fn_Def::codegen_pareto_multi_yukish(Fn_Def &a, Fn_Def &b,
   Product::Two &product, int cutoff, int D) {
+  std::cout << "\n called codegen_pareto_domination_nosort of class fn_def \n";
     // real implementation is in rtlib, this just calls
     // the function passing the comparator
 
@@ -2646,6 +2681,7 @@ void Fn_Def::codegen_pareto_multi_yukish(Fn_Def &a, Fn_Def &b,
 // generates the comparator element needed for domination optimized nosort
 void Fn_Def::codegen_pareto_domination_nosort(Fn_Def &a, Fn_Def &b,
   Product::Two &product) {
+  std::cout << "\n called codegen_pareto_domination_nosort of class fn_def \n";
     // create  a variable to put all answers in
     assert(stmts.empty());
     Statement::Var_Decl *answers = new Statement::Var_Decl(
@@ -2674,6 +2710,7 @@ void Fn_Def::codegen_pareto_domination_nosort(Fn_Def &a, Fn_Def &b,
 
 
 void Fn_Def::codegen_pareto_lex(Fn_Def &a, Fn_Def &b, Product::Two &product) {
+  std::cout << "\n called codegen_pareto_lex of class fn_def \n";
   // input list
   Statement::Var_Decl *input_list = new Statement::Var_Decl(
   types.front(), names.front(), new Expr::Vacc(names.front()));
@@ -2860,17 +2897,20 @@ void Fn_Def::codegen_pareto_lex(Fn_Def &a, Fn_Def &b, Product::Two &product) {
 }
 
 void Fn_Def::codegen_takeone(Fn_Def &a, Fn_Def &b, Product::Two &product) {
+  std::cout << "\n called codegen_takeone of class fn_def \n";
   assert(product.left_mode(*name).number == Mode::ONE);
   codegen_times(a, b, product);
 }
 
 void Fn_Def::codegen_nop(Product::Two &product) {
+  std::cout << "\n called codegen_nop of class fn_def \n";
   Statement::Return *ret =
     new Statement::Return(new Expr::Vacc(names.front()));
   stmts.push_back(ret);
 }
 
 void Fn_Def::codegen_cartesian(Fn_Def &a, Fn_Def &b, Product::Two &product) {
+  std::cout << "\n called codegen_cartesian of class fn_def \n";
   // FIXME answers is no list?
   Statement::Var_Decl *answers = new Statement::Var_Decl(
       return_type, "answers");
@@ -2907,6 +2947,7 @@ void Fn_Def::codegen_cartesian(Fn_Def &a, Fn_Def &b, Product::Two &product) {
 }
 
 void Fn_Def::remove_return_list() {
+  std::cout << "\n called remove_return_list of class fn_def \n";
   if (stmts.empty())
     return;
   Statement::Base *s = stmts.back();
@@ -2937,6 +2978,7 @@ void Fn_Def::remove_return_list() {
 
 // set the kind of function (predefined types, modes, yield type)
 Mode Fn_Def::derive_role() const {
+  std::cout << "\n called derive_role of class fn_def \n";
   Mode r;
   r.set(Yield::UP);
   if (!stmts.back()->is(Statement::RETURN))
@@ -2983,6 +3025,7 @@ Mode Fn_Def::derive_role() const {
 
 // find type of the choice function
 Expr::Fn_Call::Builtin Fn_Def::choice_fn_type() const {
+  std::cout << "\n called Fn_Def of class fn_def \n";
   if (!choice_fn) {
     assert(choice_fn_type_ != Expr::Fn_Call::NONE);
     return choice_fn_type_;
@@ -3019,6 +3062,7 @@ Expr::Fn_Call::Builtin Fn_Def::choice_fn_type() const {
 }
 
 void Fn_Def::set_mode(std::string *s) {
+  std::cout << "\n called set_mode of class fn_def \n";
   if (!s)
     return;
   bool b = mode_.set(*s);
@@ -3026,6 +3070,7 @@ void Fn_Def::set_mode(std::string *s) {
 }
 
 void Fn_Def::reduce_return_type() {
+  std::cout << "\n called reduce_return_type of class fn_def \n";
   ::Type::Base *t = return_type;
   ::Type::List *l = dynamic_cast< ::Type::List*>(t->simple());
   assert(l);
@@ -3036,6 +3081,7 @@ void Fn_Def::reduce_return_type() {
 
 
 void Fn_Def::install_choice_filter(Filter &filter) {
+  std::cout << "\n called install_choice_filter of class fn_def \n";
   assert(choice_fn);
   Fn_Def *fn = adaptor;
   // ok, if Product::Nop, i.e. if product shuffle opt was applied
@@ -3073,6 +3119,7 @@ void Fn_Def::install_choice_filter(Filter &filter) {
 
 
 void Fn_Def::optimize_classify() {
+  std::cout << "\n called optimize_classify of class fn_def \n";
   adaptor = 0;
   std::list<Statement::Base*> s;
   s.push_back(stmts.front());
@@ -3100,6 +3147,7 @@ void Fn_Def::optimize_classify() {
 
 void Fn_Def::add_choice_specialization(
   Fn_Def &a, Fn_Def &b, Product::Two &product) {
+  std::cout << "\n called add_choice_specialization of class fn_def \n";
   Fn_Def *x = 0;
   Fn_Def *y = 0;
   if (gen_type == STANDARD &&
@@ -3216,6 +3264,7 @@ void Fn_Def::add_choice_specialization(
 
 void Fn_Def::replace_types(std::pair<std::string*, Type::Base*> &alph,
       std::pair<std::string*, Type::Base*> &answer) {
+  std::cout << "\n called replace_types of class fn_def \n";
   Fn_Decl::replace_types(alph, answer);
   assert(paras.size() == types.size());
   std::list<Para_Decl::Base*>::iterator j = paras.begin();
@@ -3225,6 +3274,7 @@ void Fn_Def::replace_types(std::pair<std::string*, Type::Base*> &alph,
 }
 
 Fn_Def *Fn_Def::copy_head(Type::Base *t, std::string *s) {
+  std::cout << "\n called copy_head of class fn_def \n";
   Fn_Def *f = new Fn_Def(t, s);
   f->types = types;
   f->names = names;
@@ -3233,6 +3283,7 @@ Fn_Def *Fn_Def::copy_head(Type::Base *t, std::string *s) {
 }
 
 void Fn_Def::set_ntparas(std::list<Para_Decl::Base*> *l) {
+  std::cout << "\n called set_ntparas of class fn_def \n";
   if (!l)
     return;
   ntparas_ = *l;
@@ -3245,6 +3296,7 @@ void Fn_Def::set_ntparas(std::list<Para_Decl::Base*> *l) {
 }
 
 bool Fn_Def::check_ntparas(const Fn_Decl &d) {
+  std::cout << "\n called check_ntparas of class fn_def \n";
   if (ntparas_.size() != d.nttypes().size()) {
     Log::instance()->error(location, "Number of nt parameters does not");
     Log::instance()->error(d.location, "match.");
@@ -3271,6 +3323,7 @@ bool Fn_Def::check_ntparas(const Fn_Decl &d) {
 }
 
 Fn_Def *Fn_Def::copy() const {
+  std::cout << "\n called copy of class fn_def \n";
   Fn_Def *o = new Fn_Def(*this);
   o->name = new std::string(*name);
   o->stmts.clear();

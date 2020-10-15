@@ -72,6 +72,7 @@ static void version() {
  * should build on).
  */
 static void parse_options(int argc, char **argv, Options &rec) {
+  std::cout << "\n called parse_options of class gapc \n";
   po::variables_map vm;
   po::options_description visible("Options");
   visible.add_options()
@@ -272,6 +273,7 @@ class Main {
 
   // classified product are replaced by times product
   void conv_classified_product(Options &opts) {
+    std::cout << "\n called conv_classified_product of class gapc \n";
     Instance *instance = driver.ast.instance(opts.instance);
     if (!instance) {
       return;
@@ -296,6 +298,7 @@ class Main {
    * marked for tabulation.
    */
   void front() {
+    std::cout << "\n called front of class gapc \n";
     // parses the command line options and fills the Options
     // instance "opts".
     parse_options(argc, argv, opts);
@@ -386,6 +389,7 @@ class Main {
    * of the product, then for both algebras of the product.
    */
   void back(Instance *i = 0, Instance *instance_buddy = 0) {
+  std::cout << "\n called back of class gapc \n";
     Instance *instance = i;
     if (!i || instance_buddy) {
       if (opts.backtrack || opts.subopt || opts.kbacktrack) {
@@ -623,6 +627,7 @@ class Main {
    * taken place.
    */
   void finish() {
+    std::cout << "\n called finish of class gapc \n";
     Printer::Cpp hh(driver.ast, opts.h_stream());
     hh.class_name = opts.class_name;
     hh.typedefs(code_);
@@ -635,6 +640,7 @@ class Main {
    * Precondition: the AST must have been created and configured.
    */
   void makefile() {
+    std::cout << "\n called makefile of class gapc \n";
     Printer::Cpp mm(driver.ast, opts.m_stream());
     mm.set_argv(argv, argc);
     mm.makefile(opts);
@@ -654,6 +660,7 @@ class Main {
    * This is the entry point where the software starts.
    */
   void runKernal() {
+    std::cout << "\n called runKernal of class gapc \n";
     makefile();
 
     conv_classified_product(opts);
@@ -689,6 +696,7 @@ class Main {
 
 
   void runAmbuigutyCFGGenerator() {
+    std::cout << "\n called runAmbuigutyCFGGenerator of class gapc \n";
     // The ambiguity check is base on the selected instance,
     // which can be obtained from the AST.
     Instance* instance = driver.ast.instance(opts.instance);
@@ -744,6 +752,7 @@ class Main {
 
 
   void runSpecializingGrammarGenerator() {
+    std::cout << "\n called runSpecializingGrammarGenerator of class gapc \n";
     SpecializeGrammar::CreateSpecializedGrammar grammarSpecializer;
     AST* newAst = grammarSpecializer.createGrammar(
       &driver.ast, &opts.instance);
@@ -759,6 +768,7 @@ class Main {
 
 
   std::string assembleCommandLineCall() {
+    std::cout << "\n called assembleCommandLineCall of class gapc \n";
     std::ostringstream cmdLineCall;
     bool firstLoopRun = true;
     for (int i = 0; i < argc; ++i) {
@@ -774,6 +784,7 @@ class Main {
 
 
   void run() {
+    std::cout << "\n called run of class gapc \n";
     // We need the front end because that is the place where
     // some post-processing of the AST takes place. Also this
     // is place where the command-line options are parsed.
@@ -798,6 +809,7 @@ class Main {
  * gapc.
  */
 int main(int argc, char **argv) {
+  std::cout << "\n called main of class gapc \n";
   Main m(argc, argv);
   try {
     m.run();

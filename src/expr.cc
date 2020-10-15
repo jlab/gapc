@@ -28,14 +28,18 @@
 
 #include "statement.hh"
 
+#include <iostream>
+
 
 Expr::Const::Const(const Yield::Poly &p) : Base(CONST) {
+  std::cout << "\n called Const of class expr \n";
   assert(p != Yield::UP);
   base = new ::Const::Size(p.konst());
 }
 
 Expr::Const::Const(const Yield::Size &ys)
   : Base(CONST) {
+  std::cout << "\n called Const of class expr \n";
   assert(ys.low() != Yield::UP);
   assert(ys.high() != Yield::UP);
   assert(ys.low().konst() <= ys.high().konst());
@@ -43,92 +47,112 @@ Expr::Const::Const(const Yield::Size &ys)
 }
 
 Expr::Const::Const(int p) : Base(CONST) {
+  std::cout << "\n called Const of class expr \n";
   base = new ::Const::Size(p);
 }
 
 Expr::Const::Const(double d) : Base(CONST) {
+  std::cout << "\n called Const of class expr \n";
   base = new ::Const::Float(d);
 }
 
 Expr::Const::Const(const std::string &s) : Base(CONST) {
+  std::cout << "\n called Const of class expr \n";
   base = new ::Const::String(s);
 }
 
 Expr::Const::Const(char c) : Base(CONST) {
+  std::cout << "\n called Const of class expr \n";
   base = new ::Const::Char(c);
 }
 
 Expr::Greater::Greater(Base *l, const Yield::Poly &p) : Two(GREATER, l, NULL) {
+  std::cout << "\n called Greater of class expr \n";
   Expr::Const *c = new Expr::Const(p);
   right_ = c;
 }
 
 Expr::Less::Less(Base *l, const Yield::Poly &p) : Two(LESS, l, NULL) {
+  std::cout << "\n called Less of class expr \n";
   Expr::Const *c = new Expr::Const(p);
   right_ = c;
 }
 
 Expr::Greater_Eq::Greater_Eq(Base *l, const Yield::Poly &p)
 : Two(GREATER_EQ, l, NULL) {
+  std::cout << "\n called Greater_Eq of class expr \n";
   set_pretty_op(">=");
   Expr::Const *c = new Expr::Const(p);
   right_ = c;
 }
 
 Expr::Less_Eq::Less_Eq(Base *l, const Yield::Poly &p) : Base(LESS_EQ), lhs(l) {
+  std::cout << "\n called Less_Eq of class expr \n";
   Expr::Const *c = new Expr::Const(p);
   rhs = c;
 }
 
 
 void Expr::Comp::put(std::ostream &s) const {
+  std::cout << "\n called put of class expr \n";
   s << " ( " << *expr << " ) ";
 }
 
 void Expr::Plus::put(std::ostream &s) const {
+  std::cout << "\n called put of class expr \n";
   s << '(' << *left_ << " + " << *right_ << ')';
 }
 
 void Expr::Minus::put(std::ostream &s) const {
+  std::cout << "\n called constructor of class expr \n";
   s << '(' << *left_ << " - " << *right_ << ')';
 }
 
 void Expr::Const::put(std::ostream &s) const {
+  std::cout << "\n called put of class expr \n";
   s << *base;
 }
 
 
 void Expr::Less_Eq::put(std::ostream &s) const {
+  std::cout << "\n called put of class expr \n";
   s << '(' << *lhs << " <= " << *rhs << ')';
 }
 
 void Expr::Less::put(std::ostream &s) const {
+  std::cout << "\n called put of class expr \n";
   s << '(' << *left_ << " < " << *right_ << ')';
 }
 
 
 void Expr::Greater::put(std::ostream &s) const {
+  std::cout << "\n called put of class expr \n";
   s << '(' << *left_ << " > " << *right_ << ')';
 }
 
 void Expr::And::put(std::ostream &s) const {
+  std::cout << "\n called put of class expr \n";
   s << '(' << *left_ << " && " << *right_ << ')';
 }
 
 void Expr::Max::put(std::ostream &s) const {
+  std::cout << "\n called put of class expr \n";
   s << "max(" << *left << " ," << *right << ')';
 }
 
 void Expr::Cond::put(std::ostream &s) const {
+  std::cout << "\n called put of class expr \n";
   s << '(' << *cond << ") ? (" << *then << ") : (" << *els << ')';
 }
 
 void Expr::Not::put(std::ostream &s) const {
+  std::cout << "\n called put of class expr \n";
   s << '!' << *base;
 }
 
 Expr::Eq::Eq(Var_Acc::Base *vacc, Statement::Var_Decl *v)
         : Two(EQ) {
+  std::cout << "\n called Eq of class expr \n";
   set_pretty_op("==");
   left_ = new Expr::Vacc(vacc);
   right_ = new Expr::Vacc(*v);
@@ -136,12 +160,14 @@ Expr::Eq::Eq(Var_Acc::Base *vacc, Statement::Var_Decl *v)
 
 
 Expr::Base *Expr::Base::plus(Base *b) {
+  std::cout << "\n called plus of class expr \n";
   assert(b);
   Expr::Plus *r = new Expr::Plus(this, b);
   return r;
 }
 
 Expr::Base *Expr::Base::plus(const Yield::Poly &p) {
+  std::cout << "\n called plus of class expr \n";
   assert(p != Yield::UP);
   if (p == 0)
     return this;
@@ -151,6 +177,7 @@ Expr::Base *Expr::Base::plus(const Yield::Poly &p) {
 }
 
 Expr::Base *Expr::Base::minus(Base *b) {
+  std::cout << "\n called minus of class expr \n";
   assert(b);
   assert(this);
   Expr::Minus *r = new Expr::Minus(this, b);
@@ -158,6 +185,7 @@ Expr::Base *Expr::Base::minus(Base *b) {
 }
 
 Expr::Base *Expr::Base::minus(const Yield::Poly &p) {
+  std::cout << "\n called minus of class expr \n";
   assert(p != Yield::UP);
   if (p == 0)
     return this;
@@ -178,17 +206,20 @@ bool operator==(Expr::Base &expr, const Statement::Var_Decl &decl) {
 }
 
 Expr::Base *Expr::Comp::copy() const {
+  std::cout << "\n called copy of class expr \n";
   Comp *o = new Comp(*this);
   o->expr = expr->copy();
   return o;
 }
 
 Expr::Base *Expr::Const::copy() const {
+  std::cout << "\n called copy of class expr \n";
   Const *o = new Const(*this);
   return o;
 }
 
 Expr::Base *Expr::Less_Eq::copy() const {
+  std::cout << "\n called copy of class expr \n";
   Less_Eq *o = new Less_Eq(*this);
   o->lhs = lhs->copy();
   o->rhs = rhs->copy();
@@ -196,6 +227,7 @@ Expr::Base *Expr::Less_Eq::copy() const {
 }
 
 Expr::Base *Expr::Max::copy() const {
+  std::cout << "\n called copy of class expr \n";
   Max *o = new Max(*this);
   o->left = left->copy();
   o->right = right->copy();
@@ -203,6 +235,7 @@ Expr::Base *Expr::Max::copy() const {
 }
 
 Expr::Base *Expr::Cond::copy() const {
+  std::cout << "\n called copy of class expr \n";
   Cond *o = new Cond(*this);
   o->cond = cond->copy();
   o->then = then->copy();
@@ -211,6 +244,7 @@ Expr::Base *Expr::Cond::copy() const {
 }
 
 Expr::Base *Expr::Not::copy() const {
+  std::cout << "\n called copy of class expr \n";
   Not *o = new Not(*this);
   o->base = base->copy();
   return o;

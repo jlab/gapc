@@ -22,6 +22,7 @@
 }}} */
 
 #include <string>
+#include <iostream>
 
 #include "terminal.hh"
 #include "loc.hh"
@@ -31,6 +32,7 @@
 
 
 void Terminal::add_predefined(Grammar &grammar) {
+  std::cout << "\n called add_predefined of class terminal \n";
   Loc l;
   std::string *s = new std::string("CHAR");
   Symbol::Terminal *t = new Symbol::Terminal(s, l);

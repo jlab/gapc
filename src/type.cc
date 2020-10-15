@@ -23,6 +23,7 @@
 
 
 #include <cassert>
+#include <iostream>
 
 #include "type.hh"
 #include "log.hh"
@@ -38,6 +39,7 @@ namespace Type {
   // first type instance is NULL, it is overwritten with
   // the second instance without checking both types.
   bool set_if_compatible(Base * &a, Base *b, const Loc &l1, const Loc &l2) {
+    std::cout << "\n called add_predefined of class type \n";
     if (!a && !b) {
       return true;
     }
@@ -79,6 +81,7 @@ Type::Tuple::Tuple(Base *a, Base *b) : Base(TUPLE) {
 
 
 void Type::Tuple::init(Tuple_List *l) {
+  std::cout << "\n called init of class type \n";
   for (Tuple_List::iterator i = l->begin(); i != l->end(); ++i) {
     Tuple_Pair *p = *i;
     if (members[*(p->second)]) {
@@ -96,6 +99,7 @@ void Type::Tuple::init(Tuple_List *l) {
 
 
 void Type::add_predefined(hashtable<std::string, Base*> &table) {
+  std::cout << "\n called add_predefined of class type \n";
   ::Type::Base *t = new ::Type::Int();
   std::string s = "int";
   table[s] = t;
@@ -163,6 +167,7 @@ bool Type::TypeDef::is(Type::Type t)
 
 
 bool Type::List::is_eq(const Base & base) const {
+  std::cout << "\n called is_eq of class type \n";
   const List *l = dynamic_cast<const List*> (base.const_simple());
   if (!l) {
     return false;
@@ -172,6 +177,7 @@ bool Type::List::is_eq(const Base & base) const {
 
 
 bool Type::Tuple::is_eq(const Base & base) const {
+  std::cout << "\n called is_eq of class type \n";
   const Tuple *t = dynamic_cast<const Tuple*>(base.const_simple());
   if (!t) {
     return false;
@@ -194,6 +200,7 @@ bool Type::Tuple::is_eq(const Base & base) const {
 
 
 bool Type::TupleDef::is_eq(const Base & base) const {
+  std::cout << "\n called is_eq of class type \n";
   const TupleDef *t = dynamic_cast<const TupleDef*>(base.const_simple());
   if (!t) {
     return false;
@@ -216,11 +223,13 @@ bool Type::TupleDef::is_eq(const Base & base) const {
 
 
 bool Type::Name::is_eq(Name & n) const {
+  std::cout << "\n called is_eq of class type \n";
   return lhs->const_simple()->is_eq(*n.lhs->const_simple());
 }
 
 
 bool Type::Signature::is_eq(const Base & base) const {
+  std::cout << "\n called is_eq of class type \n";
   Base *t = signature->var_lookup(this);
   if (t) {
     return t->is_eq(base);
@@ -236,6 +245,7 @@ bool Type::Signature::is_eq(const Base & base) const {
 
 
 bool Type::Alphabet::is_eq(const Base &base) const {
+  std::cout << "\n called is_eq of class type \n";
   assert(signature);
   Base *t = signature->var_lookup(this);
   if (t) {
@@ -249,6 +259,7 @@ bool Type::Alphabet::is_eq(const Base &base) const {
 
 
 bool Type::Range::is_eq(const Base & base) const {
+  std::cout << "\n called is_eq of class type \n";
   const Range * t = dynamic_cast<const Range*>(base.const_simple());
   if (!t) {
     return false;
@@ -258,16 +269,19 @@ bool Type::Range::is_eq(const Base & base) const {
 
 
 Type::Base * Type::Def::simple() {
+  std::cout << "\n called simple of class type \n";
   return rhs->simple();
 }
 
 
 Type::Base * Type::Usage::simple() {
+  std::cout << "\n called simple of class type \n";
   return base->simple();
 }
 
 
 Type::Base * Type::Signature::simple() {
+  std::cout << "\n called simple of class type \n";
   Base *t = signature->var_lookup(this);
   if (t) {
     return t;
@@ -277,6 +291,7 @@ Type::Base * Type::Signature::simple() {
 
 
 Type::Base *Type::Alphabet::simple() {
+  std::cout << "\n called simple of class type \n";
   assert(signature);
   Base *t = signature->var_lookup(this);
   if (t) {
@@ -290,16 +305,19 @@ Type::Base *Type::Alphabet::simple() {
 
 
 const Type::Base * Type::Def::const_simple() const {
+  std::cout << "\n called const_simple of class type \n";
   return rhs->const_simple();
 }
 
 
 const Type::Base * Type::Usage::const_simple() const {
+  std::cout << "\n called const_simple of class type \n";
   return base->const_simple();
 }
 
 
 const Type::Base * Type::Signature::const_simple() const {
+  std::cout << "\n called const_simple of class type \n";
   Base *t = signature->var_lookup(this);
   if (t) {
     return t;
@@ -309,6 +327,7 @@ const Type::Base * Type::Signature::const_simple() const {
 
 
 const Type::Base *Type::Alphabet::const_simple() const {
+  std::cout << "\n called const_simple of class type \n";
   assert(signature);
   Base *t = signature->var_lookup(this);
   if (t) {
@@ -322,16 +341,19 @@ const Type::Base *Type::Alphabet::const_simple() const {
 
 
 bool Type::Def::is_eq(const Base & base) const {
+  std::cout << "\n called is_eq of class type \n";
   return rhs->is_eq(*base.const_simple());
 }
 
 
 bool Type::Usage::is_eq(const Base & b) const {
+  std::cout << "\n called is_eq of class type \n";
   return base->is_eq(*b.const_simple());
 }
 
 
 bool Type::External::is_eq(const Base & base) const {
+  std::cout << "\n called is_eq of class type \n";
   const External *l = dynamic_cast<const External*>(base.const_simple());
   if (!l)
     return false;
@@ -340,6 +362,7 @@ bool Type::External::is_eq(const Base & base) const {
 
 
 std::ostream & Type::List::put(std::ostream &s) const {
+  std::cout << "\n called put of class type \n";
   if (of) {
     s << '[' << *of << ']';
   } else {
@@ -353,6 +376,7 @@ std::ostream & Type::List::put(std::ostream &s) const {
 
 
 std::ostream & Type::Tuple::put(std::ostream &s) const {
+  std::cout << "\n called put of class type \n";
   s << '(';
   for (Tuple_List::const_iterator i = list.begin(); i != list.end(); ++i) {
     s << *(*i)->first << ' ' << *(*i)->second << ", ";
@@ -363,12 +387,14 @@ std::ostream & Type::Tuple::put(std::ostream &s) const {
 
 
 std::ostream & Type::Name::put(std::ostream &s) const {
+  std::cout << "\n called put of class type \n";
   s << *lhs;
   return s;
 }
 
 
 std::ostream & Type::Alphabet::put(std::ostream &s) const {
+  std::cout << "\n called put of class type \n";
   assert(signature);
   Base *t = signature->var_lookup(this);
   if (t) {
@@ -385,84 +411,98 @@ std::ostream & Type::Alphabet::put(std::ostream &s) const {
 
 
 std::ostream & Type::Def::put(std::ostream &s) const {
+  std::cout << "\n called put of class type \n";
   s << *name << "{ " << *rhs << '}';
   return s;
 }
 
 
 std::ostream & Type::Usage::put(std::ostream &s) const {
+  std::cout << "\n called put of class type \n";
   s << *base;
   return s;
 }
 
 
 std::ostream & Type::Choice::put(std::ostream &s) const {
+  std::cout << "\n called put of class type \n";
   s << "choice " << *rest;
   return s;
 }
 
 
 std::ostream & Type::Void::put(std::ostream &s) const {
+  std::cout << "\n called put of class type \n";
   s << "void";
   return s;
 }
 
 
 std::ostream & Type::RealVoid::put(std::ostream &s) const {
+  std::cout << "\n called put of class type \n";
   s << "void";
   return s;
 }
 
 
 std::ostream & Type::Int::put(std::ostream &s) const {
+  std::cout << "\n called put of class type \n";
   s << "int";
   return s;
 }
 
 
 std::ostream & Type::Integer::put(std::ostream &s) const {
+  std::cout << "\n called put of class type \n";
   s << "integer";
   return s;
 }
 
 
 std::ostream & Type::Size::put(std::ostream &s) const {
+  std::cout << "\n called put of class type \n";
   s << "size";
   return s;
 }
 
 
 std::ostream & Type::Float::put(std::ostream &s) const {
+  std::cout << "\n called put of class type \n";
   s << "float";
   return s;
 }
 
 
 std::ostream & Type::Single::put(std::ostream &s) const {
+  std::cout << "\n called put of class type \n";
   s << "single";
   return s;
 }
 
 
 std::ostream & Type::String::put(std::ostream &s) const {
+  std::cout << "\n called put of class type \n";
   s << "string";
   return s;
 }
 
 
 std::ostream & Type::Char::put(std::ostream &s) const {
+  std::cout << "\n called put of class type \n";
   s << "char";
   return s;
 }
 
 
 std::ostream & Type::Bool::put(std::ostream &s) const {
+  std::cout << "\n called put of class type \n";
   s << "bool";
   return s;
 }
 
 
 std::ostream & Type::Signature::put(std::ostream &s) const {
+  std::cout << "\n called put of class type \n";
   Base *t = signature->var_lookup(this);
   if (t) {
     s << *t;
@@ -474,24 +514,28 @@ std::ostream & Type::Signature::put(std::ostream &s) const {
 
 
 std::ostream & Type::Range::put(std::ostream &s) const {
+  std::cout << "\n called put of class type \n";
   s << "Range of " << *element_type;
   return s;
 }
 
 
 std::ostream & Type::Seq::put(std::ostream &s) const {
+  std::cout << "\n called put of class type \n";
   s << "[Input-Sequence-Type of " << *element_type << ']';
   return s;
 }
 
 
 std::ostream & Type::Table::put(std::ostream &s) const {
+  std::cout << "\n called put of class type \n";
   s << "[Table of " << *element_type << ", " << *table << "]";
   return s;
 }
 
 
 Type::Base *Type::List::left() {
+  std::cout << "\n called left of class type \n";
   assert(of->simple()->is(TUPLE));
   Tuple *tuple = dynamic_cast<Tuple*> (of->simple());
   assert(tuple);
@@ -502,6 +546,7 @@ Type::Base *Type::List::left() {
 
 
 Type::Base *Type::Tuple::left() {
+  std::cout << "\n called left of class type \n";
   assert(list.size() == 2);
   std::pair<Name*, std::string*> *pair = list.front();
   return pair->first->lhs;
@@ -509,6 +554,7 @@ Type::Base *Type::Tuple::left() {
 
 
 Type::Base *Type::List::right() {
+  std::cout << "\n called right of class type \n";
   assert(of->simple()->is(TUPLE));
   Tuple *tuple = dynamic_cast<Tuple*>(of->simple());
   assert(tuple);
@@ -523,6 +569,7 @@ Type::Base *Type::List::right() {
 
 
 Type::Base *Type::Tuple::right() {
+  std::cout << "\n called right of class type \n";
   assert(list.size() == 2);
   std::list<std::pair<Name*, std::string*>*>::iterator i = list.begin();
   ++i;
@@ -534,6 +581,7 @@ Type::Base *Type::Tuple::right() {
 
 
 Type::Base *Type::List::component() {
+  std::cout << "\n called component of class type \n";
   /*assert(of->simple()->is(Type::TUPLE));
   Type::Tuple *tuple = dynamic_cast<Type::Tuple*>(of->simple());
   assert(tuple);
@@ -543,121 +591,145 @@ Type::Base *Type::List::component() {
 
 
 Type::Base *Type::Tuple::component() {
+  std::cout << "\n called component of class type \n";
   return simple();
 }
 
 
 Type::Base *Type::Referencable::deref() {
+  std::cout << "\n called deref of class type \n";
   return base;
 }
 
 
 void Type::Seq::print(Printer::Base &s) const {
+  std::cout << "\n called print of class type \n";
   s.print(*this);
 }
 
 
 void Type::List::print(Printer::Base &s) const {
+  std::cout << "\n called print of class type \n";
   s.print(*this);
 }
 
 
 void Type::Tuple::print(Printer::Base &s) const {
+  std::cout << "\n called print of class type \n";
   s.print(*this);
 }
 
 
 void Type::TupleDef::print(Printer::Base &s) const {
+  std::cout << "\n called print of class type \n";
   s.print(*this);
 }
 
 
 void Type::Signature::print(Printer::Base &s) const {
+  std::cout << "\n called print of class type \n";
   s.print(*this);
 }
 
 
 void Type::Alphabet::print(Printer::Base &s) const {
+  std::cout << "\n called print of class type \n";
   s.print(*this);
 }
 
 
 void Type::Def::print(Printer::Base &s) const {
+  std::cout << "\n called print of class type \n";
   s.print(*this);
 }
 
 
 void Type::Choice::print(Printer::Base &s) const {
+  std::cout << "\n called print of class type \n";
   s.print(*this);
 }
 
 
 void Type::Void::print(Printer::Base &s) const {
+  std::cout << "\n called print of class type \n";
   s.print(*this);
 }
 
 
 void Type::RealVoid::print(Printer::Base &s) const {
+  std::cout << "\n called print of class type \n";
   s.print(*this);
 }
 
 
 void Type::Int::print(Printer::Base &s) const {
+  std::cout << "\n called print of class type \n";
   s.print(*this);
 }
 
 
 void Type::Integer::print(Printer::Base &s) const {
+  std::cout << "\n called print of class type \n";
   s.print(*this);
 }
 
 
 void Type::Size::print(Printer::Base &s) const {
+  std::cout << "\n called print of class type \n";
   s.print(*this);
 }
 
 
 void Type::Float::print(Printer::Base &s) const {
+  std::cout << "\n called print of class type \n";
   s.print(*this);
 }
 
 
 void Type::Single::print(Printer::Base &s) const {
+  std::cout << "\n called print of class type \n";
   s.print(*this);
 }
 
 
 void Type::String::print(Printer::Base &s) const {
+  std::cout << "\n called print of class type \n";
   s.print(*this);
 }
 
 
 void Type::Char::print(Printer::Base &s) const {
+  std::cout << "\n called print of class type \n";
   s.print(*this);
 }
 
 
 void Type::Bool::print(Printer::Base &s) const {
+  std::cout << "\n called print of class type \n";
   s.print(*this);
 }
 
 
 void Type::Usage::print(Printer::Base &s) const {
+  std::cout << "\n called print of class type \n";
   s.print(*this);
 }
 
 
 void Type::Range::print(Printer::Base &s) const {
+  std::cout << "\n called print of class type \n";
   s.print(*this);
 }
 
 
 void Type::Table::print(Printer::Base &s) const {
+  std::cout << "\n called print of class type \n";
   s.print(*this);
 }
 
 
 std::string Type::List::push_str() const {
+  std::cout << "\n called push_str of class type \n";
   switch (push_type_) {
     case NORMAL : return std::string();
     case MIN : return std::string("min");
@@ -676,6 +748,7 @@ std::string Type::List::push_str() const {
 
 
 std::ostream & Type::Subseq::put(std::ostream &s) const {
+  std::cout << "\n called put of class type \n";
   if (seq) {
     s << "<Input-Sub-Sequence-Type of " << *seq << '>';
   } else {
@@ -686,11 +759,13 @@ std::ostream & Type::Subseq::put(std::ostream &s) const {
 
 
 void Type::Subseq::print(Printer::Base &s) const {
+  std::cout << "\n called print of class type \n";
   s.print(*this);
 }
 
 
 std::ostream & Type::Generic::put(std::ostream &s) const {
+  std::cout << "\n called put of class type \n";
   assert(!name.empty());
   s << name;
   return s;
@@ -698,21 +773,25 @@ std::ostream & Type::Generic::put(std::ostream &s) const {
 
 
 void Type::Shape::print(Printer::Base &s) const {
+  std::cout << "\n called print of class type \n";
   s.print(*this);
 }
 
 
 void Type::Rational::print(Printer::Base &s) const {
+  std::cout << "\n called print of class type \n";
   s.print(*this);
 }
 
 
 void Type::BigInt::print(Printer::Base &s) const {
+  std::cout << "\n called print of class type \n";
   s.print(*this);
 }
 
 
 std::ostream & Type::Referencable::put(std::ostream &s) const {
+  std::cout << "\n called put of class type \n";
   assert(base);
   s << *base << " & ";
   return s;
@@ -720,28 +799,33 @@ std::ostream & Type::Referencable::put(std::ostream &s) const {
 
 
 void Type::Referencable::print(Printer::Base &s) const {
+  std::cout << "\n called print of class type \n";
   s.print(*this);
 }
 
 
 std::ostream & Type::External::put(std::ostream &s) const {
+  std::cout << "\n called put of class type \n";
   s << *name;
   return s;
 }
 
 
 void Type::External::print(Printer::Base &s) const {
+  std::cout << "\n called print of class type \n";
   s.print(*this);
 }
 
 
 void Type::List::set_push_type(Push_Type x) {
+  std::cout << "\n called set_push_type of class type \n";
   // assert(push_type_ == NORMAL || push_type_ == x);
   push_type_ = x;
 }
 
 
 void Type::List::set_hash_decl(Statement::Hash_Decl *h) {
+  std::cout << "\n called set_hash_decl of class type \n";
   assert(h);
   hash_decl_ = h;
 }

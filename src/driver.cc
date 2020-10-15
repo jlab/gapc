@@ -36,7 +36,7 @@
 
 #include "lexer.h"
 #include "lexer_priv.h"
-
+#include <iostream>
 
 Driver::Driver() : from_stdin(false), trace_lexer(false), trace_parser(false),
   fail_later(false), filename_(0) {
@@ -45,6 +45,7 @@ Driver::Driver() : from_stdin(false), trace_lexer(false), trace_parser(false),
 
 
 bool Driver::parse() {
+  std::cout << "\n called parse of class driver \n";
   yy::Parser parser(*this, yy::Parser::token::START_PROGRAM);
   parser.set_debug_level(trace_parser);
   // parser.set_debug_level(true);
@@ -71,6 +72,7 @@ bool Driver::parse() {
 
 
 bool Driver::lexer_prepare(void) {
+  std::cout << "\n called lexer_prepare of class driver \n";
   // file_close();
   yy_flex_debug = trace_lexer;
   scanner::init(this);
@@ -81,6 +83,7 @@ bool Driver::lexer_prepare(void) {
 
 
 void Driver::file_close() {
+  std::cout << "\n called file_close of class driver \n";
   if (yyin != stdin && yyin != NULL) {
     std::fclose(yyin);
   }
@@ -93,6 +96,7 @@ void Driver::file_close() {
 
 
 bool Driver::file_open() {
+  std::cout << "\n called file_open of class driver \n";
   assert(filename_);
   if (!(yyin = std::fopen(filename_->c_str(), "r"))) {
     error(std::string("Can't open ") + *filename_ + std::string(": ") +
@@ -104,12 +108,14 @@ bool Driver::file_open() {
 
 
 void Driver::error(const std::string &m) {
+  std::cout << "\n called error of class driver \n";
   Log::instance()->error(m);
   fail_later = true;
 }
 
 
 void Driver::error(const Loc& l, const std::string& m) {
+  std::cout << "\n called error of class driver \n";
   Log::instance()->error(l, m);
   fail_later = true;
 }
@@ -119,6 +125,7 @@ void Driver::error(const Loc& l, const std::string& m) {
 
 
 void Driver::parse_product(const std::string &s) {
+  std::cout << "\n called parse_product of class driver \n";
   if (s.empty() || fail_later)
     return;
 
@@ -154,28 +161,33 @@ void Driver::parse_product(const std::string &s) {
 
 
 void Driver::setFilename(const std::string &s) {
+  std::cout << "\n called setFilename of class driver \n";
   filename_ = new std::string(s);
 }
 
 
 std::string *Driver::filename() {
+  std::cout << "\n called filename of class driver \n";
   assert(filename_);
   return filename_;
 }
 
 
 void Driver::setStdin(bool b) {
+  std::cout << "\n called setStdin of class driver \n";
   filename_ = new std::string("<stdin>");
   from_stdin = b;
 }
 
 
 void Driver::set_includes(const std::vector<std::string> &v) {
+  std::cout << "\n called parse of class driver \n";
   includes.insert(includes.end(), v.begin(), v.end());
 }
 
 
 void Driver::push_buffer(const std::string &s) {
+  std::cout << "\n called push_buffer of class driver \n";
   std::string f;
   for (std::vector<std::string>::iterator i = includes.begin();
        i != includes.end(); ++i) {

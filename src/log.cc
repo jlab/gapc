@@ -25,6 +25,7 @@
 #include "log.hh"
 
 #include <algorithm>
+#include <iostream>
 
 
 Log::Log() : seen_errs(false), debug_mode(false), error_count(0),
@@ -38,16 +39,19 @@ Log::~Log() {
 
 
 void Log::error(const std::string &m) {
+  std::cout << "\n called error(const std::string &m) of class log \n";
   writeLogMessage(NULL, m, ERROR);
 }
 
 
 void Log::error(const Loc& l, const std::string& m) {
+  std::cout << "\n called error(const Loc& l, const std::string& m) of class log \n";
   writeLogMessage(&l, m, ERROR);
 }
 
 
 void Log::error_continue(const Loc& l, const std::string& m) {
+  std::cout << "\n called error_continue(const Loc& l, const std::string& m) of class log \n";
   // HACK: DEBUG as a log level results in printing no
   // header which is the same as msg_continue(...)
   *out << std::endl;
@@ -56,46 +60,55 @@ void Log::error_continue(const Loc& l, const std::string& m) {
 
 
 void Log::warning(const Loc& l, const std::string& m) {
+  std::cout << "\n called warning(const Loc& l, const std::string& m) of class log \n";
   writeLogMessage(&l, m, WARN);
 }
 
 
 void Log::warning(const std::string& m) {
+  std::cout << "\n called warning(const std::string& m) of class log \n";
   writeLogMessage(NULL, m, WARN);
 }
 
 
 void Log::normalMessage(const Loc& l, const std::string& m) {
+  std::cout << "\n called normalMessage(const Loc& l, const std::string& m) of class log \n";
   writeLogMessage(&l, m, NORMAL);
 }
 
 
 void Log::normalMessage(const std::string& m) {
+  std::cout << "\n called normalMessage(const std::string& m) of class log \n";
   writeLogMessage(NULL, m, NORMAL);
 }
 
 
 void Log::verboseMessage(const Loc& l, const std::string& m) {
+  std::cout << "\n called verboseMessage(const Loc& l, const std::string& m) of class log \n";
   writeLogMessage(&l, m, VERBOSE);
 }
 
 
 void Log::verboseMessage(const std::string& m) {
+  std::cout << "\n called verboseMessage(const std::string& m) of class log \n";
   writeLogMessage(NULL, m, VERBOSE);
 }
 
 
 void Log::debugMessage(const Loc& l, const std::string& m) {
+  std::cout << "\n called debugMessage(const Loc& l, const std::string& m) of class log \n";
   writeLogMessage(&l, m, DEBUG);
 }
 
 
 void Log::debugMessage(const std::string& m) {
+  std::cout << "\n called debugMessage(const std::string& m) of class log \n";
   writeLogMessage(NULL, m, DEBUG);
 }
 
 
 void Log::inc_error() {
+  std::cout << "\n called inc_error() of class log \n";
   seen_errs = true;
   error_count++;
   if (error_count == 20) {
@@ -106,6 +119,7 @@ void Log::inc_error() {
 
 void Log::writeLogMessage(
   const Loc* l, const std::string &m, LogLevel messageLogLevel) {
+  std::cout << "\n called writeLogMessage(const Loc* l, const std::string &m, LogLevel messageLogLevel) of class log \n";
   // Filter the message according to its log level. The log level
   // of the message must be greater or equal than the log level
   // of the logger, otherwise we just return.
@@ -142,6 +156,7 @@ void Log::writeLogMessage(
 
 
 void Log::writeLogMessageContinued(const Loc* l, const std::string &m) {
+  std::cout << "\n called writeLogMessageContinued(const Loc* l, const std::string &m) of class log \n";
   // Depending on the presence of a location for the message
   // the message is simply printed out, or a source code location
   // mark is created.
@@ -159,6 +174,7 @@ void Log::writeLogMessageContinued(const Loc* l, const std::string &m) {
 
 void Log::build_message(
   std::ostream &out, const Loc &l, const std::string &m) {
+  std::cout << "\n called build_message(std::ostream &out, const Loc &l, const std::string &m) of class log \n";
   if (!l.begin.filename) {
     out << m << std::endl;
     return;
@@ -179,6 +195,7 @@ void Log::build_message(
 
 
 void Log::build_mark(const Loc& l, std::string &s) {
+  std::cout << "\n called build_mark(const Loc& l, std::string &s) of class log \n";
   // vanilla bison 2.3 counts columns from 0
   // with sed hack in makefiles/lexyaccxx.mf from 1
   size_t off = l.begin.column;
@@ -206,6 +223,7 @@ void Log::build_mark(const Loc& l, std::string &s) {
 
 
 void Log::set_debug(bool b) {
+  std::cout << "\n called set_debug(bool b) of class log \n";
   debug_mode = b;
   if (b == true) {
     this->logLevel = DEBUG;
@@ -223,6 +241,7 @@ Log *Log::self;
 
 
 LogError::LogError(const Loc &l, std::string m) {
+  std::cout << "\n called LogError(const Loc &l, std::string m) of class log \n";
   std::ostringstream o;
   o << "Error: \n";
   Log t;

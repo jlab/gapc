@@ -23,8 +23,10 @@
 
 
 #include "runtime.hh"
+#include <iostream>
 
 Runtime::Asm::Poly & Runtime::Asm::Poly::operator=(const Runtime::Poly &p) {
+  std::cout << "\n called Runtime::Asm::Poly & Runtime::Asm::Poly::operator=(const Runtime::Poly &p) of class runtime \n";
   if (p.is_exp()) {
     set_exp();
     return *this;;
@@ -42,6 +44,7 @@ Runtime::Asm::Poly & Runtime::Asm::Poly::operator=(const Runtime::Poly &p) {
 }
 
 bool Runtime::Asm::Poly::operator==(const Runtime::Poly &p) const {
+  std::cout << "\n called bool Runtime::Asm::Poly::operator==(const Runtime::Poly &p) of class runtime \n";
     if (is_exp() && p.is_exp())
       return true;
     if (is_exp() || p.is_exp())
@@ -55,6 +58,7 @@ bool Runtime::Asm::Poly::operator==(const Runtime::Poly &p) const {
 
 Runtime::Poly::Poly(const Yield::Size &s)
   : exponential(false) {
+  std::cout << "\n called Runtime::Poly::Poly(const Yield::Size &s) of class runtime \n";
   Yield::Poly p(s.high());
   if (s.low() < s.high())
     p -= s.low();
@@ -65,6 +69,7 @@ Runtime::Poly::Poly(const Yield::Size &s)
 
 Runtime::Poly::Poly(const Yield::Multi &s)
   : exponential(false) {
+  std::cout << "\n called Runtime::Poly::Poly(const Yield::Multi &s) of class runtime \n";
   assert(s.tracks());
 
   Yield::Multi::const_iterator i = s.begin();
@@ -77,6 +82,7 @@ Runtime::Poly::Poly(const Yield::Multi &s)
 
 Runtime::Poly::Poly(const Table &t)
   : exponential(false) {
+  std::cout << "\n called Runtime::Poly::Poly(const Table &t) of class runtime \n";
   assert(t.type() != Table::NONE);
 
   Poly p;
@@ -113,6 +119,7 @@ Runtime::Poly::Poly(const Table &t)
 
 Runtime::Poly::Poly(const std::vector<Table> &t)
   : exponential(false) {
+  std::cout << "\n called Runtime::Poly::Poly(const std::vector<Table> &t) of class runtime \n";
   Poly r(1);
   for (std::vector<Table>::const_iterator i = t.begin(); i != t.end(); ++i) {
     Poly p(*i);
@@ -124,6 +131,7 @@ Runtime::Poly::Poly(const std::vector<Table> &t)
 #include <cmath>
 
 void Runtime::Poly::divide_by_n() {
+  std::cout << "\n called divide_by_n() of class runtime \n";
   if (exponential)
     return;
   if (!n) {
@@ -145,6 +153,7 @@ void Runtime::Poly::divide_by_n() {
 #include <sstream>
 
 std::ostream &Runtime::Poly::put(std::ostream &out) const {
+  std::cout << "\n called put(std::ostream &out) of class runtime \n";
   // s.t. iomanip like setw work for the whole object
   std::ostringstream s;
   if (exponential) {

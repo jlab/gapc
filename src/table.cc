@@ -23,10 +23,12 @@
 
 
 #include "table.hh"
+#include <iostream>
 
 
 
 void Table::print(std::ostream &s) const {
+  std::cout << "\n called print of class table \n";
   s << '(';
   switch (dim) {
     case NONE : s << "none"; break;
@@ -52,6 +54,7 @@ void Table::print(std::ostream &s) const {
 }
 
 void Table::print_short(std::ostream &s, const std::string &name) const {
+  std::cout << "\n called print_short of class table \n";
   switch (type()) {
     case Table::CONSTANT : s << '%' << name << '%'; break;
     case Table::LINEAR : s << '%' << name ; break;
@@ -63,15 +66,18 @@ void Table::print_short(std::ostream &s, const std::string &name) const {
 }
 
 bool Table::delete_left_index() const {
+  std::cout << "\n called delete_left_index of class table \n";
   return (dim == CONSTANT || (dim == LINEAR && sticky_ == LEFT)) &&
     left_rest_.high() == 0;
 }
 bool Table::delete_right_index() const {
+  std::cout << "\n called delete_right_index of class table \n";
   return (dim == CONSTANT || (dim == LINEAR && sticky_ == RIGHT)) &&
     right_rest_.high() == 0;
 }
 
 void Table::set_sticky(Sticky s) {
+  std::cout << "\n called set_sticky of class table \n";
   if (sticky_ != NO_INDEX && sticky_ != s) {
     dim = QUADRATIC;
     sticky_ = NO_INDEX;
