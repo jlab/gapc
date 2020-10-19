@@ -27,7 +27,7 @@
 // FIXME instead of object pool interface use singleton pool interface
 // like in list?
 Pool<String::Block> String::pool;
-
+// is compiling correctly?
 void *String::Block::operator new(size_t t) noexcept(false) {
   assert(t == sizeof(Block));
   Block *r = pool.malloc();
