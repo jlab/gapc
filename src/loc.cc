@@ -61,7 +61,7 @@ std::string Loc::line() const {
 }
 
 void Loc::set_file(std::FILE* f) {
-  std::cout << "\n called set_file(std::FILE* f) of class loc \n";
+  //std::cout << "\n called set_file(std::FILE* f) of class loc \n";
   //  assert(f);
   file = f;
 }

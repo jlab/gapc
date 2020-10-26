@@ -104,7 +104,7 @@ void Expr::Plus::put(std::ostream &s) const {
 }
 
 void Expr::Minus::put(std::ostream &s) const {
-  std::cout << "\n called constructor of class expr \n";
+  std::cout << "\n called put of class expr \n";
   s << '(' << *left_ << " - " << *right_ << ')';
 }
 

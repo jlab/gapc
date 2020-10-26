@@ -22,6 +22,7 @@
 }}} */
 
 #include <iostream>
+#include <set>
 #include "yieldsize.hh"
 
 #include "filter.hh"

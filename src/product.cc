@@ -119,13 +119,13 @@ void Product::Two::eliminate_lists() {
 }
 
 bool Product::Single::init() {
-  std::cout << "\n called init() of class product \n";
+  std::cout << "\n called Single::init() of class product \n";
   return true;
 }
 
 // l, r are subproducts, so init them as well and then join the grammar
 bool Product::Two::init() {
-  std::cout << "\n called init() of class product \n";
+  std::cout << "\n called Two::init() of class product \n";
   bool x = true;
   bool b = l->init();
   x = x && b;
@@ -139,7 +139,7 @@ bool Product::Two::init() {
 }
 
 bool Product::Times::init() {
-  std::cout << "\n called init() of class product \n";
+  std::cout << "\n called Times::init() of class product \n";
   bool x = Two::init();
 
   // FIXME
@@ -239,7 +239,7 @@ bool Product::Times::init() {
 }
 
 bool Product::Klass::init() {
-  std::cout << "\n called init() of class product \n";
+  std::cout << "\n called Klass::init() of class product \n";
   bool x = Two::init();
 
   // iterate over left algebra choice functions
@@ -279,7 +279,7 @@ bool Product::Klass::init() {
 }
 
 bool Product::Cartesian::init() {
-  std::cout << "\n called init() of class product \n";
+  std::cout << "\n called Cartesian::init() of class product \n";
   bool x = Two::init();
 
   // iterate over left algebra choice functions
@@ -324,7 +324,7 @@ bool Product::Cartesian::init() {
 }
 
 bool Product::Pareto::init() {
-  std::cout << "\n called init() of class product \n";
+  std::cout << "\n called Pareto::init() of class product \n";
   bool x = Two::init();
 
 

@@ -441,7 +441,7 @@ void Symbol::Base::put_table_conf(std::ostream &s) {
   assert(false);
 }
 
-void Symbol::NT::put_table_conf(std::ostream &s) {+
+void Symbol::NT::put_table_conf(std::ostream &s) {
   std::cout << "\n called put_table_conf of class symbol \n";
   assert(tabulated);
   if (tracks_ == 1) {
