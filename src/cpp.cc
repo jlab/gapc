@@ -1397,8 +1397,8 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
 
   assert(inps.size() == ast.seq_decls.size());
 
-  stream << "if(inp.size() != " << ast.seq_decls.size() << ")\n"
-    << "  throw gapc::OptException(\"Number of input sequences does not match.\");\n\n";
+  stream << indent() << "if (inp.size() != " << ast.seq_decls.size() << ")\n"
+    << indent() << indent() << "throw gapc::OptException(\"Number of input sequences does not match.\");\n\n";
 
   size_t track = 0;
   for (std::vector<Statement::Var_Decl*>::const_iterator
@@ -1414,10 +1414,10 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
       case Input::RAW:
         break;
       case Input::RNA:
-        stream << "char_to_rna(" << *(*i)->name << ");\n";
+        stream << indent() << "char_to_rna(" << *(*i)->name << ");\n";
         break;
       case Input::UPPER:
-        stream << "char_to_upper(" << *(*i)->name << ");\n";
+        stream << indent() << "char_to_upper(" << *(*i)->name << ");\n";
         break;
       default:
         assert(false);
@@ -1476,7 +1476,7 @@ void Printer::Cpp::print_zero_init(const Grammar &grammar) {
       continue;
     }
     seen.insert(n);
-    stream << "empty(" << *(*i)->zero_decl->name << ");\n";
+    stream << indent() << "empty(" << *(*i)->zero_decl->name << ");\n";
   }
   stream << endl;
 }
@@ -1519,11 +1519,11 @@ void Printer::Cpp::print_most_init(const AST &ast) {
   size_t t = 0;
   for (std::vector<Statement::Var_Decl*>::iterator j = ns.begin();
        j != ns.end(); ++j, ++t) {
-    stream << "t_" << t << "_left_most = 0;\n";
-    stream << "t_" << t << "_right_most = " << "t_" << t << "_seq.size();\n";
+    stream << indent() << "t_" << t << "_left_most = 0;\n";
+    stream << indent() << "t_" << t << "_right_most = " << "t_" << t << "_seq.size();\n";
   }
   if (ast.window_mode) {
-    stream << "t_0_right_most = opts.window_size;\n";
+    stream << indent() << "t_0_right_most = opts.window_size;\n";
   }
 }
 
@@ -1531,11 +1531,11 @@ void Printer::Cpp::print_most_init(const AST &ast) {
 void Printer::Cpp::print_init_fn(const AST &ast) {
   stream << "void init(";
 
-  stream << "const gapc::Opts &opts)" << endl << '{' << endl;
-
-  stream << "const std::vector<std::pair<const char *, unsigned> > &inp = opts.inputs;\n";
+  stream << "const gapc::Opts &opts)" << " {" << endl;
 
   inc_indent();
+  stream << indent() << "const std::vector<std::pair<const char *, unsigned> > &inp = opts.inputs;\n";
+
   print_buddy_init(ast);
   print_seq_init(ast);
   print_filter_init(ast);
