@@ -24,6 +24,7 @@
 #include "tracks_visitor.hh"
 
 #include <sstream>
+#include <iostream>
 
 #include "log.hh"
 #include "symbol.hh"
@@ -38,6 +39,7 @@ Tracks_Visitor::Tracks_Visitor(Grammar &g)
 }
 
 void Tracks_Visitor::visit(Symbol::NT &n) {
+  std::cout << "\n called visit(Symbol::NT &n) of class tracks_visitor \n";
   local_tracks = n.tracks();
   current_single_track = n.track_pos();
   if (!local_tracks) {
@@ -49,14 +51,17 @@ void Tracks_Visitor::visit(Symbol::NT &n) {
 }
 
 void Tracks_Visitor::visit(Fn_Arg::Base &a) {
+  std::cout << "\n called visit(Fn_Arg::Base &a) of class tracks_visitor \n";
   a.set_tracks(local_tracks);
 }
 
 void Tracks_Visitor::visit(Alt::Base &a) {
+  std::cout << "\n called visit(Alt::Base &a) of class tracks_visitor \n";
   a.set_tracks(local_tracks, current_single_track);
 }
 
 void Tracks_Visitor::visit_begin(Alt::Simple &a) {
+  std::cout << "\n called visit_begin of class tracks_visitor \n";
   a.set_tracks(local_tracks, current_single_track);
 
   if (a.has_index_overlay()) {
@@ -65,6 +70,7 @@ void Tracks_Visitor::visit_begin(Alt::Simple &a) {
 }
 
 Symbol::NT *Tracks_Visitor::different_track(Symbol::NT *nt, size_t track_pos) {
+  std::cout << "\n called different_track of class tracks_visitor \n";
   key_t key(*nt->orig_name, track_pos);
   hashtable<key_t, Symbol::NT*>::iterator i = duplicates.find(key);
   if (i != duplicates.end()) {
@@ -78,6 +84,7 @@ Symbol::NT *Tracks_Visitor::different_track(Symbol::NT *nt, size_t track_pos) {
 }
 
 void Tracks_Visitor::visit(Alt::Link &a) {
+  std::cout << "\n called visit(Alt::Link &a) of class tracks_visitor \n";
   if (skip)
     return;
   size_t x = a.nt->tracks();
@@ -111,6 +118,7 @@ void Tracks_Visitor::visit(Alt::Link &a) {
 }
 
 void Tracks_Visitor::visit(Alt::Multi &a) {
+  std::cout << "\n called visit(Alt::Multi &a) of class tracks_visitor \n";
   if (skip)
     return;
   if (local_tracks != a.tracks() || a.tracks() == 1) {
@@ -127,12 +135,14 @@ void Tracks_Visitor::visit(Alt::Multi &a) {
 }
 
 void Tracks_Visitor::visit_itr(Alt::Multi &a) {
+  std::cout << "\n called visit_itr of class tracks_visitor \n";
   if (skip)
     return;
   current_single_track++;
 }
 
 void Tracks_Visitor::visit_end(Alt::Multi &a) {
+  std::cout << "\n called visit_end of class tracks_visitor \n";
   if (skip)
     return;
   local_tracks = old_tracks;

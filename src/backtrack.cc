@@ -42,12 +42,16 @@
 
 #include "printer.hh"
 
+#include <iostream>
+
 
 void Backtrack::gen_instance(Algebra *score) {
+     std::cout << "\n called gen_instance of class backtrack \n";
      gen_instance(score, Product::NONE);
 }
 
 void Backtrack::gen_instance(Algebra *score, Product::Sort_Type sort) {
+  std::cout << "\n called gen_instance of class backtrack \n";
   Instance *i = new Instance(score, algebra);
   if (sort != Product::NONE) {
     i->product->set_sorted_choice(sort);
@@ -62,18 +66,21 @@ void Backtrack::gen_instance(Algebra *score, Product::Sort_Type sort) {
 
 void Backtrack::gen_instance(
   Algebra *score, Product::Base *base, Product::Sort_Type sort) {
+  std::cout << "\n called gen_instance of class backtrack \n";
   gen_instance(score,  sort);
 
   instance->product->set_sort_product((new Instance(base, algebra))->product);
 }
 
 void Backtrack::apply_filter(Filter *f) {
+  std::cout << "\n called apply_filter of class backtrack \n";
   assert(instance);
   instance->product->set_filter(f);
 }
 
 
 void Backtrack::gen_backtrack(AST &ast) {
+  std::cout << "\n called gen_backtrack of class backtrack \n";
   bool r = ast.check_instances(instance);
   assert(r);
   r = ast.insert_instance(instance);
@@ -120,6 +127,7 @@ void Backtrack::gen_backtrack(AST &ast) {
 
 
 void Backtrack::gen_instance_code(AST &ast) {
+  std::cout << "\n called gen_instance_code of class backtrack \n";
   instance->product->right_most()->codegen();
 
   instance->product->algebra()
@@ -133,6 +141,7 @@ void Backtrack::gen_instance_code(AST &ast) {
 
 
 void Backtrack::gen_nt_proxy_fn(Fn_Def *fn) {
+  std::cout << "\n called gen_nt_proxy_fn of class backtrack \n";
   Type::Base *t = fn->return_type->deref();
   bool is_list = t->is(Type::LIST);
 
@@ -202,6 +211,7 @@ void Backtrack::gen_nt_proxy_fn(Fn_Def *fn) {
 
 
 void Backtrack::print_header(Printer::Base &pp, AST &ast) {
+  std::cout << "\n called print_header of class backtrack \n";
   for (std::list<Statement::Backtrace_Decl*>::iterator i =
        bt_decls.begin();
        i != bt_decls.end(); ++i) {
@@ -223,6 +233,7 @@ void Backtrack::print_header(Printer::Base &pp, AST &ast) {
 }
 
 void Backtrack::print_body(Printer::Base &pp, AST &ast) {
+  std::cout << "\n called print_body of class backtrack \n";
   for (std::list<Fn_Def*>::iterator i = proxy_fns.begin();
        i != proxy_fns.end(); ++i)
     pp << **i;

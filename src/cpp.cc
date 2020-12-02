@@ -49,8 +49,11 @@
 
 #include "options.hh"
 
+#include <iostream>
+
 
 static std::string make_comments(const std::string &s, const std::string &c) {
+  std::cout << "\n called make_comments of class cpp \n";
   std::ostringstream o;
   boost::char_separator<char> nl("\n", "", boost::keep_empty_tokens);
   boost::tokenizer<boost::char_separator<char> > lines(s, nl);
@@ -62,6 +65,7 @@ static std::string make_comments(const std::string &s, const std::string &c) {
 
 
 void Printer::Cpp::print(const std::list<Statement::Base*> &stmts) {
+  std::cout << "\n called print of class cpp \n";
   stream << indent() << '{' << endl;
   inc_indent();
   for (std::list<Statement::Base*>::const_iterator i = stmts.begin();
@@ -72,6 +76,7 @@ void Printer::Cpp::print(const std::list<Statement::Base*> &stmts) {
 }
 
 void Printer::Cpp::print(const Statement::For &stmt) {
+  std::cout << "\n called print of class cpp \n";
   stream << indent() << "for(";
   stream << *stmt.var_decl;
   stream << ' '
@@ -89,11 +94,13 @@ void Printer::Cpp::print(const Statement::For &stmt) {
 }
 
 void Printer::Cpp::print(const Statement::While &stmt) {
+  std::cout << "\n called print of class cpp \n";
   stream << indent() << "while(" << stmt.expr() << ")\n";
   stream << stmt.statements;
 }
 
 void Printer::Cpp::print(const Statement::Var_Decl &stmt) {
+  std::cout << "\n called print of class cpp \n";
   assert(stmt.type);
   assert(stmt.name);
 
@@ -127,6 +134,7 @@ void Printer::Cpp::print(const Statement::Var_Decl &stmt) {
 }
 
 void Printer::Cpp::print(const Statement::If &stmt) {
+  std::cout << "\n called print of class cpp \n";
   stream << indent() << "if (" << *stmt.cond << ")" << endl;
   if (stmt.then.size() == 1)
     inc_indent();
@@ -144,6 +152,7 @@ void Printer::Cpp::print(const Statement::If &stmt) {
 }
 
 void Printer::Cpp::print(const Statement::Switch &stmt) {
+  std::cout << "\n called print of class cpp \n";
   stream << indent() << "switch (" << *stmt.cond << ") {" << endl;
   inc_indent();
   for (std::list<std::pair<std::string,
@@ -169,6 +178,7 @@ void Printer::Cpp::print(const Statement::Switch &stmt) {
 
 
 void Printer::Cpp::print(const Statement::Return &stmt) {
+  std::cout << "\n called print of class cpp \n";
   if (stmt.expr)
     stream << indent() << "return " << *stmt.expr << ';';
   else
@@ -176,22 +186,27 @@ void Printer::Cpp::print(const Statement::Return &stmt) {
 }
 
 void Printer::Cpp::print(const Statement::Break &stmt) {
+  std::cout << "\n called print of class cpp \n";
   stream << indent() << "break;";
 }
 
 void Printer::Cpp::print(const Statement::Continue &stmt) {
+  std::cout << "\n called print of class cpp \n";
   stream << indent() << "continue;";
 }
 
 void Printer::Cpp::print(const Statement::Decrease &stmt) {
+  std::cout << "\n called print of class cpp \n";
   stream << indent() << *stmt.name << "--;";
 }
 
 void Printer::Cpp::print(const Statement::Increase &stmt) {
+  std::cout << "\n called make_comments of class cpp \n";
   stream << indent() << *stmt.name << "++;";
 }
 
 void Printer::Cpp::print(const Statement::Sorter &stmt) {
+  std::cout << "\n called print of class cpp \n";
     stream << indent() << "sort_list(";
     if (stmt.list->type->simple()->is(Type::RANGE)) {
         stream << *stmt.list->name << ".first, ";
@@ -206,6 +221,7 @@ void Printer::Cpp::print(const Statement::Sorter &stmt) {
 }
 
 void Printer::Cpp::print(const Statement::Foreach &stmt) {
+  std::cout << "\n called print of class cpp \n";
   std::string itr(*stmt.elem->name + "_itr");
 
   bool started_loop = true;
@@ -328,6 +344,7 @@ void Printer::Cpp::print(const Statement::Foreach &stmt) {
 }
 
 void Printer::Cpp::print(const Statement::Var_Assign &stmt) {
+  std::cout << "\n called print of class cpp \n";
   stream << indent();
   stream << *stmt.acc;
   stream << ' ' << stmt.op_str() << ' ' << *stmt.rhs;
@@ -338,6 +355,7 @@ void Printer::Cpp::print(const Statement::Var_Assign &stmt) {
 
 // FIXME unify with Expr::Fn_Call::put_arg
 void Printer::Cpp::print_arg(Expr::Base *e) {
+  std::cout << "\n called print_arg of class cpp \n";
   assert(e);
 
   if (e->is(Expr::VACC)) {
@@ -382,6 +400,7 @@ void Printer::Cpp::print_arg(Expr::Base *e) {
 // NOTE: the implementation is incomplete: it does not handle
 // escaped character numbers like \x6D
 unsigned int literal_size_of_string(Loc& location, std::string* str) {
+  std::cout << "\n called literal_size_of_string of class cpp \n";
   unsigned int length = 0;
   for (unsigned int i = 0; i < str->size(); i++) {
     if (str->at(i) == '\\') {
@@ -456,6 +475,7 @@ unsigned int literal_size_of_string(Loc& location, std::string* str) {
 
 
 void Printer::Cpp::print(const Statement::Fn_Call &stmt) {
+  std::cout << "\n called print of class cpp \n";
   std::list<Expr::Base*>::const_iterator i = stmt.args.begin();
   if (stmt.is_obj == false) {
     if (stmt.builtin == Statement::Fn_Call::PUSH_BACK ||
@@ -533,6 +553,7 @@ void Printer::Cpp::print(const Statement::Fn_Call &stmt) {
 
 
 void Printer::Cpp::print(const Statement::Block &stmt) {
+  std::cout << "\n called print of class cpp \n";
   stream << indent() << "{" << endl;
   inc_indent();
   for (std::list<Statement::Base*>::const_iterator i = stmt.statements.begin();
@@ -546,6 +567,7 @@ void Printer::Cpp::print(const Statement::Block &stmt) {
 
 void Printer::Cpp::print(const std::list<Type::Base*> &types,
                          const std::list<std::string*> &names) {
+  std::cout << "\n called print of class cpp \n";
   stream << '(';
   std::list<std::string*>::const_iterator j = names.begin();
   std::list<Type::Base*>::const_iterator i = types.begin();
@@ -564,6 +586,7 @@ void Printer::Cpp::print(const std::list<Type::Base*> &types,
 
 
 void Printer::Cpp::print(Para_Decl::Base *p) {
+  std::cout << "\n called print of class cpp \n";
   assert(p);
   Para_Decl::Simple *s = dynamic_cast<Para_Decl::Simple*>(p);
   if (s) {
@@ -584,6 +607,7 @@ void Printer::Cpp::print(Para_Decl::Base *p) {
 
 
 void Printer::Cpp::print(const std::list<Para_Decl::Base*> &paras) {
+  std::cout << "\n called print of class cpp \n";
   // stream << '(';
 
   if (!paras.empty()) {
@@ -600,6 +624,7 @@ void Printer::Cpp::print(const std::list<Para_Decl::Base*> &paras) {
 
 
 void Printer::Cpp::print(const Fn_Def &fn_def) {
+  std::cout << "\n called print of class cpp \n";
   if (fn_def.disabled())
     return;
 
@@ -680,6 +705,7 @@ void Printer::Cpp::print(const Fn_Def &fn_def) {
 
 
 void Printer::Cpp::print(const Operator &op) {
+  std::cout << "\n called print of class cpp \n";
     if (!fwd_decls) {
         return;
     }
@@ -710,6 +736,7 @@ void Printer::Cpp::print(const Operator &op) {
 
 
 void Printer::Cpp::lines_start_mark(const std::list<Statement::Base*> &stmts) {
+  std::cout << "\n called lines_start_mark of class cpp \n";
   if (stmts.empty()) {
     return;
   }
@@ -723,6 +750,7 @@ void Printer::Cpp::lines_start_mark(const std::list<Statement::Base*> &stmts) {
 
 
 void Printer::Cpp::lines_end_mark(const std::list<Statement::Base*> &stmts) {
+  std::cout << "\n called lines_end_mark of class cpp \n";
   if (stmts.empty()) {
     return;
   }
@@ -735,6 +763,7 @@ void Printer::Cpp::lines_end_mark(const std::list<Statement::Base*> &stmts) {
 
 
 void Printer::Cpp::print(const Expr::Base &expr) {
+  std::cout << "\n called print of class cpp \n";
   // FIXME
   if (expr.is(Expr::NEW)) {
     print(*dynamic_cast<const Expr::New*>(&expr));
@@ -748,6 +777,7 @@ void Printer::Cpp::print(const Expr::Base &expr) {
 
 
 void Printer::Cpp::print(const Expr::New &expr) {
+  std::cout << "\n called print of class cpp \n";
   pointer_as_itr = true;
   stream << "new " << *expr.obj() << '(';
   std::list<Expr::Base*>::const_iterator i = expr.args().begin();
@@ -764,6 +794,7 @@ void Printer::Cpp::print(const Expr::New &expr) {
 
 
 void Printer::Cpp::print(const Var_Acc::Base &b) {
+  std::cout << "\n called print of class cpp \n";
   // Default pretty print
   external_out() << b;
   // if needed use dispatch code like for statement
@@ -772,6 +803,7 @@ void Printer::Cpp::print(const Var_Acc::Base &b) {
 
 
 void Printer::Cpp::print(const Type::List &t) {
+  std::cout << "\n called print of class cpp \n";
   if (t.push_type() > Type::List::NORMAL &&
       t.push_type() < Type::List::MIN_OTHER) {
     stream << *t.of;
@@ -796,6 +828,7 @@ void Printer::Cpp::print(const Type::List &t) {
 
 
 void Printer::Cpp::print(const Type::Tuple &t) {
+  std::cout << "\n called print of class cpp \n";
   assert(t.list.size() == 2);
   bool flag = in_fn_head;
   if (in_fn_head) {
@@ -819,16 +852,19 @@ void Printer::Cpp::print(const Type::Tuple &t) {
 
 
 void Printer::Cpp::print(const Type::TupleDef &t) {
+  std::cout << "\n called print of class cpp \n";
   stream << t.name;
 }
 
 
 void Printer::Cpp::print(const Type::Signature &t) {
+  std::cout << "\n called print of class cpp \n";
   external_out() << t;
 }
 
 
 void Printer::Cpp::print(const Type::Alphabet &t) {
+  std::cout << "\n called print of class cpp \n";
   if (t.temp) {
     stream << *t.temp;
     return;
@@ -838,52 +874,62 @@ void Printer::Cpp::print(const Type::Alphabet &t) {
 
 
 void Printer::Cpp::print(const Type::Def &t) {
+  std::cout << "\n called print of class cpp \n";
   stream << *t.name;
 }
 
 
 void Printer::Cpp::print(const Type::Choice &t) {
+  std::cout << "\n called print of class cpp \n";
   external_out() << t;
 }
 
 
 void Printer::Cpp::print(const Type::Void &t) {
+  std::cout << "\n called print of class cpp \n";
   stream << "bool";
 }
 
 
 void Printer::Cpp::print(const Type::RealVoid &t) {
+  std::cout << "\n called print of class cpp \n";
   stream << "void";
 }
 
 
 void Printer::Cpp::print(const Type::Int &t) {
+  std::cout << "\n called make_comments of class cpp \n";
   external_out() << t;
 }
 
 
 void Printer::Cpp::print(const Type::Integer &t) {
+  std::cout << "\n called print of class cpp \n";
   stream << "uint64_t";
 }
 
 
 void Printer::Cpp::print(const Type::Size &t) {
+  std::cout << "\n called print of class cpp \n";
   // FIXME
   stream << "unsigned int";
 }
 
 
 void Printer::Cpp::print(const Type::Float &t) {
+  std::cout << "\n called print of class cpp \n";
   stream << "double";
 }
 
 
 void Printer::Cpp::print(const Type::Single &t) {
+  std::cout << "\n called print of class cpp \n";
   stream << "float";
 }
 
 
 void Printer::Cpp::print(const Type::String &t) {
+  std::cout << "\n called print of class cpp \n";
   if (in_fn_head) {
     stream << "const String &";
   } else {
@@ -893,21 +939,25 @@ void Printer::Cpp::print(const Type::String &t) {
 
 
 void Printer::Cpp::print(const Type::Char &t) {
+  std::cout << "\n called print of class cpp \n";
   external_out() << t;
 }
 
 
 void Printer::Cpp::print(const Type::Bool &t) {
+  std::cout << "\n called print of class cpp \n";
   external_out() << t;
 }
 
 
 void Printer::Cpp::print(const Type::Usage &t) {
+  std::cout << "\n called print of class cpp \n";
   stream << *t.base;
 }
 
 
 void Printer::Cpp::print(const Type::Range &t) {
+  std::cout << "\n called print of class cpp \n";
   if (t.original_tuple) {
     assert(t.component != Type::Range::NONE);
     std::string x;
@@ -930,6 +980,7 @@ void Printer::Cpp::print(const Type::Range &t) {
 
 
 void Printer::Cpp::print(const Type::Seq &t) {
+  std::cout << "\n called print of class cpp \n";
   if (t.element_type) {
     stream << "Basic_Sequence<" << *t.element_type << '>';
   } else {
@@ -939,6 +990,7 @@ void Printer::Cpp::print(const Type::Seq &t) {
 
 
 void Printer::Cpp::print(const Type::Table &t) {
+  std::cout << "\n called print of class cpp \n";
   assert(t.table->type() != Table::NONE);
   // FIXME extra case for bounded() && QUADRATIC -> 'DIAG_LINEAR' ...
   // see also table.hh | elmamun times/plus are example nt for this ...
@@ -974,6 +1026,7 @@ void Printer::Cpp::print(const Type::Table &t) {
 
 
 void Printer::Cpp::print(const std::list<Statement::Var_Decl*> &l) {
+  std::cout << "\n called print of class cpp \n";
   for (std::list<Statement::Var_Decl*>::const_iterator i = l.begin();
        i != l.end(); ++i) {
     stream << **i << "\n";
@@ -983,6 +1036,7 @@ void Printer::Cpp::print(const std::list<Statement::Var_Decl*> &l) {
 
 void Printer::Cpp::print_paras(
   const std::list<Statement::Var_Decl*> &l, char c) {
+  std::cout << "\n called print_paras of class cpp \n";
   std::list<Statement::Var_Decl*>::const_iterator i = l.begin();
   stream << *(*i)->type << ' ' << *(*i)->name  << c;
   ++i;
@@ -994,6 +1048,7 @@ void Printer::Cpp::print_paras(
 
 void Printer::Cpp::print_names(
   const std::list<Statement::Var_Decl*> &l, char c) {
+  std::cout << "\n called print_names of class cpp \n";
   std::list<Statement::Var_Decl*>::const_iterator i = l.begin();
   stream << *(*i)->name << c;
   ++i;
@@ -1004,6 +1059,7 @@ void Printer::Cpp::print_names(
 
 
 void Printer::Cpp::print_eqs(const std::list<Statement::Var_Decl*> &l, char c) {
+  std::cout << "\n called print_eqs of class cpp \n";
   for (std::list<Statement::Var_Decl*>::const_iterator i = l.begin();
        i != l.end(); ++i) {
     stream << *(*i)->name << " = " << *(*i)->name << c << ";\n";
@@ -1012,6 +1068,7 @@ void Printer::Cpp::print_eqs(const std::list<Statement::Var_Decl*> &l, char c) {
 
 
 void Printer::Cpp::print_most_decl(const Symbol::NT &nt) {
+  std::cout << "\n called print_most_decl of class cpp \n";
   ::Type::Base *type = new Type::Size();
   for (size_t t = nt.track_pos(); t < nt.track_pos() + nt.tracks(); ++t) {
     stream << *type << " t_" << t << "_left_most;\n";
@@ -1021,6 +1078,7 @@ void Printer::Cpp::print_most_decl(const Symbol::NT &nt) {
 
 
 void Printer::Cpp::print_window_inc(const Symbol::NT &nt) {
+  std::cout << "\n called print_window_inc of class cpp \n";
   static const char w[] =
     "void window_increment()\n{\n"
     "unsigned inc = winc;\n"
@@ -1054,6 +1112,7 @@ void Printer::Cpp::print_window_inc(const Symbol::NT &nt) {
 
 
 void Printer::Cpp::print(const Statement::Table_Decl &t) {
+  std::cout << "\n called print of class cpp \n";
   in_class = true;
   bool wmode = ast && ast->window_mode;
 
@@ -1135,6 +1194,7 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
 
 
 void Printer::Cpp::print(const Type::Subseq &t) {
+  std::cout << "\n called print of class cpp \n";
   if (in_fn_head) {
     stream << "const TUSubsequence &";
   } else {
@@ -1144,6 +1204,7 @@ void Printer::Cpp::print(const Type::Subseq &t) {
 
 
 void Printer::Cpp::print(const Type::Shape &t) {
+  std::cout << "\n called print of class cpp \n";
   if (in_fn_head) {
     stream << "const Shape &";
   } else {
@@ -1153,11 +1214,13 @@ void Printer::Cpp::print(const Type::Shape &t) {
 
 
 void Printer::Cpp::print(const Type::Referencable &t) {
+  std::cout << "\n called print of class cpp \n";
   stream << *t.base << " & ";
 }
 
 
 void Printer::Cpp::print(const Type::Rational &t) {
+  std::cout << "\n called print of class cpp \n";
   if (in_fn_head) {
     stream << "const Rational &";
   } else {
@@ -1167,6 +1230,7 @@ void Printer::Cpp::print(const Type::Rational &t) {
 
 
 void Printer::Cpp::print(const Type::BigInt &t) {
+  std::cout << "\n called print of class cpp \n";
   if (in_fn_head) {
     stream << "const BigInt &";
   } else {
@@ -1176,6 +1240,7 @@ void Printer::Cpp::print(const Type::BigInt &t) {
 
 
 void Printer::Cpp::print(const Type::External &t) {
+  std::cout << "\n called print of class cpp \n";
   if (in_fn_head) {
     stream << "const " << *t.name << " &";
   } else {
@@ -1185,6 +1250,7 @@ void Printer::Cpp::print(const Type::External &t) {
 
 
 void Printer::Cpp::print(const Type::Eval_List &t) {
+  std::cout << "\n called print of class cpp \n";
   /*
   stream << "Eval_List<Value>";
   if (!pointer_as_itr)
@@ -1199,6 +1265,7 @@ void Printer::Cpp::print(const Type::Eval_List &t) {
 
 
 void Printer::Cpp::print(const Type::Backtrace &t) {
+  std::cout << "\n called print of class cpp \n";
   bool old_in_fn_head = in_fn_head;
   in_fn_head = false;
   switch (t.subclass()) {
@@ -1250,6 +1317,7 @@ void Printer::Cpp::print(const Type::Backtrace &t) {
 
 
 void Printer::Cpp::print(const Type::Backtrace_List &t) {
+  std::cout << "\n called print of class cpp \n";
   stream << "Backtrace_List<Value, pos_int> ";
   if (!pointer_as_itr) {
     stream << " *";
@@ -1258,11 +1326,13 @@ void Printer::Cpp::print(const Type::Backtrace_List &t) {
 
 
 void Printer::Cpp::print(const Type::Multi &t) {
+  std::cout << "\n called print of class cpp \n";
   external_out() << t;
 }
 
 
 void Printer::Cpp::print_type_defs(const AST &ast) {
+  std::cout << "\n called print_type_defs of class cpp \n";
   for (std::list<Type::Base*>::const_iterator i = ast.type_def_list.begin();
        i != ast.type_def_list.end(); ++i) {
     Type::Base *t = *i;
@@ -1365,6 +1435,7 @@ void Printer::Cpp::print_type_defs(const AST &ast) {
 
 
 void Printer::Cpp::print_zero_decls(const Grammar &grammar) {
+  std::cout << "\n called print_zero_decls of class cpp \n";
   bool old = in_class;
   in_class = true;
 
@@ -1384,6 +1455,7 @@ void Printer::Cpp::print_zero_decls(const Grammar &grammar) {
 
 
 void Printer::Cpp::print_table_decls(const Grammar &grammar) {
+  std::cout << "\n called print_table_decls of class cpp \n";
   for (hashtable<std::string, Symbol::NT*>::const_iterator i = grammar.tabulated.begin();
        i != grammar.tabulated.end(); ++i)
     stream << *i->second->table_decl << endl;
@@ -1392,6 +1464,7 @@ void Printer::Cpp::print_table_decls(const Grammar &grammar) {
 
 
 void Printer::Cpp::print_seq_init(const AST &ast) {
+  std::cout << "\n called print_seq_init of class cpp \n";
   assert(inps.size() == ast.input.modes().size());
   std::vector<Input::Mode>::const_iterator l = ast.input.modes().begin();
 
@@ -1427,6 +1500,7 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
 
 
 void Printer::Cpp::print_filter_decls(const AST &ast) {
+  std::cout << "\n called print_filter_decls of class cpp \n";
   for (std::list<std::pair<Filter*, Expr::Fn_Call*> >::const_iterator i =
        ast.sf_filter_code.begin(); i != ast.sf_filter_code.end(); ++i) {
     Filter *f = (*i).first;
@@ -1436,6 +1510,7 @@ void Printer::Cpp::print_filter_decls(const AST &ast) {
 
 
 void Printer::Cpp::print_filter_init(const AST &ast) {
+  std::cout << "\n called print_filter_init of class cpp \n";
   for (std::list<std::pair<Filter*, Expr::Fn_Call*> >::const_iterator i =
        ast.sf_filter_code.begin(); i != ast.sf_filter_code.end(); ++i) {
     Filter *f = (*i).first;
@@ -1446,6 +1521,7 @@ void Printer::Cpp::print_filter_init(const AST &ast) {
 
 
 void Printer::Cpp::print_table_init(const AST &ast) {
+  std::cout << "\n called print_table_init of class cpp \n";
   for (hashtable<std::string, Symbol::NT*>::const_iterator i =
        ast.grammar()->tabulated.begin(); i != ast.grammar()->tabulated.end();
        ++i) {
@@ -1468,6 +1544,7 @@ void Printer::Cpp::print_table_init(const AST &ast) {
 
 
 void Printer::Cpp::print_zero_init(const Grammar &grammar) {
+  std::cout << "\n called print_zero_init of class cpp \n";
   std::set<std::string> seen;
   for (std::list<Symbol::NT*>::const_iterator i = grammar.nts().begin();
        i != grammar.nts().end(); ++i) {
@@ -1483,6 +1560,7 @@ void Printer::Cpp::print_zero_init(const Grammar &grammar) {
 
 
 void Printer::Cpp::print_buddy_init(const AST &ast) {
+  std::cout << "\n called print_buddy_init of class cpp \n";
   if (!ast.code_mode().subopt_buddy()) {
     return;
   }
@@ -1501,6 +1579,7 @@ void Printer::Cpp::print_buddy_init(const AST &ast) {
 
 
 void Printer::Cpp::set_tracks(const AST &ast) {
+  std::cout << "\n called set_tracks of class cpp \n";
   ns.clear();
   inps.clear();
   for (size_t i = 0; i < ast.grammar()->axiom->tracks(); ++i) {
@@ -1516,6 +1595,7 @@ void Printer::Cpp::set_tracks(const AST &ast) {
 
 
 void Printer::Cpp::print_most_init(const AST &ast) {
+  std::cout << "\n called print_most_init of class cpp \n";
   size_t t = 0;
   for (std::vector<Statement::Var_Decl*>::iterator j = ns.begin();
        j != ns.end(); ++j, ++t) {
@@ -1529,6 +1609,7 @@ void Printer::Cpp::print_most_init(const AST &ast) {
 
 
 void Printer::Cpp::print_init_fn(const AST &ast) {
+  std::cout << "\n called print_init_fn of class cpp \n";
   stream << "void init(";
 
   stream << "const gapc::Opts &opts)" << endl << '{' << endl;
@@ -1557,6 +1638,7 @@ void Printer::Cpp::print_init_fn(const AST &ast) {
 }
 
 void Printer::Cpp::print_window_inc_fn(const AST &ast) {
+  std::cout << "\n called print_window_inc_fn of class cpp \n";
   if (!ast.window_mode) {
     return;
   }
@@ -1582,11 +1664,13 @@ void Printer::Cpp::print_window_inc_fn(const AST &ast) {
 
 
 void Printer::Cpp::includes() {
+  std::cout << "\n called includes of class cpp \n";
   stream << "#include \"rtlib/adp.hh\"" << endl << endl;
 }
 
 
 void Printer::Cpp::print_hash_decls(const AST &ast) {
+  std::cout << "\n called print_hash_decls of class cpp \n";
   const std::list<Statement::Hash_Decl*> &h = ast.hash_decls();
   for (std::list<Statement::Hash_Decl*>::const_iterator i = h.begin();
        i != h.end(); ++i) {
@@ -1596,6 +1680,7 @@ void Printer::Cpp::print_hash_decls(const AST &ast) {
 
 
 void Printer::Cpp::print_buddy_decls(const AST &ast) {
+  std::cout << "\n called print_buddy_decls of class cpp \n";
   if (!ast.code_mode().subopt_buddy()) {
     return;
   }
@@ -1615,6 +1700,7 @@ void Printer::Cpp::print_buddy_decls(const AST &ast) {
 
 
 void Printer::Cpp::print_subseq_typedef(const AST &ast) {
+  std::cout << "\n called print_subseq_typedef of class cpp \n";
   hashtable<std::string, Type::Base*>::const_iterator i = ast.types.find(
     "alphabet");
   assert(i != ast.types.end());
@@ -1627,6 +1713,7 @@ void Printer::Cpp::print_subseq_typedef(const AST &ast) {
 
 
 void Printer::Cpp::header(const AST &ast) {
+  std::cout << "\n called header of class cpp \n";
   if (!ast.code_mode().subopt_buddy()) {
     stream << endl << make_comments(id_string, "//") << endl << endl;
     stream << "#ifndef " << class_name << "_hh" << endl
@@ -1677,6 +1764,7 @@ void Printer::Cpp::header(const AST &ast) {
 
 // FIXME adjust for multi-track (> 1 track)
 void Printer::Cpp::print_openmp_cyk(const AST &ast) {
+  std::cout << "\n called print_openmp_cyk of class cpp \n";
   // FIXME abstract from unsigned int, int -> perhaps wait for OpenMP 3
   // since OpenMP < 3 doesn't allow unsigned int in workshared fors
 
@@ -1760,6 +1848,7 @@ void Printer::Cpp::print_openmp_cyk(const AST &ast) {
 
 std::string Printer::Cpp::multi_index_str(
   const std::vector<Table> &tables, const Yield::Multi &mys) {
+  std::cout << "\n called multi_index_str of class cpp \n";
   assert(tables.size() == mys.tracks());
   std::ostringstream o;
   size_t track = 0;
@@ -1786,6 +1875,7 @@ void Printer::Cpp::multi_print_inner_cyk(
   const std::list<Symbol::NT*> &l,
   const std::list<Symbol::NT*> &tord,
   size_t track, size_t tracks, size_t track_pos, Type::Base *t) {
+  std::cout << "\n called multi_print_inner_cyk of class cpp \n";
   assert(track < tracks);
   if (track+1 != tracks) {
     multi_print_cyk(tord, track+1, tracks, track_pos, t);
@@ -1804,6 +1894,7 @@ void Printer::Cpp::multi_partition_nts(
   std::list<Symbol::NT*> &inner, std::list<Symbol::NT*> &left,
   std::list<Symbol::NT*> &right,
   size_t track, size_t tracks, size_t track_pos) {
+  std::cout << "\n called multi_partition_nts of class cpp \n";
   for (std::list<Symbol::NT*>::const_iterator i = tord.begin();
        i != tord.end(); ++i) {
     if (!(*i)->is_tabulated()) {
@@ -1835,6 +1926,7 @@ void Printer::Cpp::multi_partition_nts(
 void Printer::Cpp::multi_print_cyk(
   const std::list<Symbol::NT*> &tord, size_t track, size_t tracks,
   size_t track_pos, Type::Base *t) {
+  std::cout << "\n called multi_print_cyk of class cpp \n";
   std::list<Symbol::NT*> all, inner, left, right;
   multi_partition_nts(tord, all, inner, left, right, track, tracks, track_pos);
 
@@ -1887,6 +1979,7 @@ void Printer::Cpp::multi_print_cyk(
 
 
 void Printer::Cpp::print_cyk_fn(const AST &ast) {
+  std::cout << "\n called print_cyk_fn of class cpp \n";
   if (fwd_decls) {
     stream << "   void cyk();" << endl << endl;
     return;
@@ -1942,6 +2035,7 @@ void Printer::Cpp::print_cyk_fn(const AST &ast) {
 
 
 void Printer::Cpp::print_run_fn(const AST &ast) {
+  std::cout << "\n called print_run_fn of class cpp \n";
   stream << "   " << *ast.grammar()->axiom->code()->return_type << " run()";
   stream << endl << '{' << endl
     << "  return nt_" << *ast.grammar()->axiom_name << '(';
@@ -1974,6 +2068,7 @@ void Printer::Cpp::print_run_fn(const AST &ast) {
 
 
 void Printer::Cpp::print_stats_fn(const AST &ast) {
+  std::cout << "\n called print_stats_fn of class cpp \n";
   stream << "void print_stats(std::ostream &o)" << endl << '{' << endl;
 
   stream << "#ifdef STATS\n";
@@ -1997,6 +2092,7 @@ void Printer::Cpp::print_stats_fn(const AST &ast) {
 
 
 void Printer::Cpp::header_footer(const AST &ast) {
+  std::cout << "\n called header_footer of class cpp \n";
   stream << " public:" << endl;
   print_run_fn(ast);
   print_stats_fn(ast);
@@ -2007,6 +2103,7 @@ void Printer::Cpp::header_footer(const AST &ast) {
 
 
 void Printer::Cpp::print_id() {
+  std::cout << "\n called print_id of class cpp \n";
   if (fwd_decls) {
     return;
   }
@@ -2019,6 +2116,7 @@ void Printer::Cpp::print_id() {
 
 
 void Printer::Cpp::footer(const AST &ast) {
+  std::cout << "\n called footer of class cpp \n";
   if (fwd_decls) {
     stream << endl << " public:" << endl;
   }
@@ -2032,6 +2130,7 @@ void Printer::Cpp::footer(const AST &ast) {
 
 
 void Printer::Cpp::print_backtrack_fn(const AST &ast) {
+  std::cout << "\n called print_backtrack_fn of class cpp \n";
   if (ast.code_mode() != Code::Mode::BACKTRACK) {
     return;
   }
@@ -2073,6 +2172,7 @@ void Printer::Cpp::print_backtrack_fn(const AST &ast) {
 
 
 bool Printer::Cpp::print_axiom_args(const AST &ast) {
+  std::cout << "\n called print_axiom_args of class cpp \n";
   bool first = true;
   size_t t = 0;
   for (std::vector<Table>::const_iterator i =
@@ -2098,6 +2198,7 @@ bool Printer::Cpp::print_axiom_args(const AST &ast) {
 
 
 void Printer::Cpp::print_kbacktrack_pp(const AST &ast) {
+  std::cout << "\n called print_kbacktrack_pp of class cpp \n";
   Type::Backtrace *bt_type = dynamic_cast<Type::Backtrace*>(
     ast.grammar()->axiom->code()->return_type);
   const Type::Base *bt_value = bt_type->value_type();
@@ -2123,6 +2224,7 @@ void Printer::Cpp::print_kbacktrack_pp(const AST &ast) {
 
 
 void Printer::Cpp::print_backtrack_pp(const AST &ast) {
+  std::cout << "\n called print_backtrack_pp of class cpp \n";
   stream << "template <typename Value>";
   stream << "   void  print_backtrack(std::ostream &out, "
     << "Value&" << " value)" << endl;
@@ -2169,6 +2271,7 @@ void Printer::Cpp::print_backtrack_pp(const AST &ast) {
 
 
 void Printer::Cpp::print_marker_init(const AST &ast) {
+  std::cout << "\n called print_marker_init of class cpp \n";
   if (!ast.code_mode().marker()) {
     return;
   }
@@ -2186,6 +2289,7 @@ void Printer::Cpp::print_marker_init(const AST &ast) {
 
 
 void Printer::Cpp::print_marker_clear(const AST &ast) {
+  std::cout << "\n called print_marker_clear of class cpp \n";
   if (!ast.code_mode().marker()) {
     return;
   }
@@ -2199,6 +2303,7 @@ void Printer::Cpp::print_marker_clear(const AST &ast) {
 
 
 void Printer::Cpp::print_subopt_fn(const AST &ast) {
+  std::cout << "\n called print_subopt_fn of class cpp \n";
   if (ast.code_mode() != Code::Mode::SUBOPT) {
     stream << "   void  print_subopt(std::ostream &out, "
     << "int " << " delta = 0) {}" << endl;
@@ -2257,6 +2362,7 @@ void Printer::Cpp::print_subopt_fn(const AST &ast) {
 
 
 void Printer::Cpp::backtrack_footer(const AST &ast) {
+  std::cout << "\n called backtrack_footer of class cpp \n";
   print_value_pp(ast);
   print_backtrack_fn(ast);
   print_backtrack_pp(ast);
@@ -2265,6 +2371,7 @@ void Printer::Cpp::backtrack_footer(const AST &ast) {
 
 
 void Printer::Cpp::print_value_pp(const AST &ast) {
+  std::cout << "\n called print_value_pp of class cpp \n";
   stream << "template <typename Value>";
   stream << "   void  print_result(std::ostream &out, "
     << "Value&" << " res)" << endl;
@@ -2286,11 +2393,13 @@ void Printer::Cpp::print_value_pp(const AST &ast) {
 
 
 void Printer::Cpp::close_class() {
+  std::cout << "\n called close_class of class cpp \n";
   stream << endl << "};" << endl << endl;
 }
 
 
 void Printer::Cpp::typedefs(Code::Gen &code) {
+  std::cout << "\n called typedefs of class cpp \n";
   stream << "#ifndef NO_GAPC_TYPEDEFS" << endl;
   stream << "namespace gapc {" << endl
     << "  typedef " << class_name << " class_name;" << endl
@@ -2306,6 +2415,7 @@ void Printer::Cpp::typedefs(Code::Gen &code) {
 }
 
 void Printer::Cpp::prelude(const Options &opts, const AST &ast) {
+  std::cout << "\n called prelude of class cpp \n";
   if (ast.code_mode().subopt_buddy()) {
     return;
   }
@@ -2342,6 +2452,7 @@ static const char deps[] =
 
 
 void Printer::Cpp::makefile(const Options &opts) {
+  std::cout << "\n called makefile of class cpp \n";
   stream << endl << make_comments(id_string, "#") << endl << endl;
 
   // stream << "SED = sed\n";
@@ -2398,6 +2509,7 @@ void Printer::Cpp::makefile(const Options &opts) {
 
 
 void Printer::Cpp::imports(const AST &ast) {
+  std::cout << "\n called imports of class cpp \n";
   if (fwd_decls) {
     return;
   }
@@ -2458,6 +2570,7 @@ void Printer::Cpp::imports(const AST &ast) {
 
 
 void Printer::Cpp::global_constants(const AST &ast) {
+  std::cout << "\n called global_constants of class cpp \n";
   if (ast.get_pareto_cutoff() != -1) {
     stream << "const int yukish_cutoff = " << ast.get_pareto_cutoff()
       << ";\n\n";
@@ -2471,6 +2584,7 @@ void Printer::Cpp::global_constants(const AST &ast) {
 }
 
 void Printer::Cpp::print(const Statement::Backtrace_Decl &d) {
+  std::cout << "\n called print of class cpp \n";
   in_class = true;
 
   stream << "template <typename Value, typename pos_int>" << endl
@@ -2556,6 +2670,7 @@ void Printer::Cpp::print(const Statement::Backtrace_Decl &d) {
 
 
 void Printer::Cpp::print(const Statement::Backtrace_NT_Decl &d) {
+  std::cout << "\n called print of class cpp \n";
   const std::list<std::string> &l = d.track_args();
   const std::list<Para_Decl::Base*> &p = d.ntparas();
   if (d.score_type()) {
@@ -2756,6 +2871,7 @@ void Printer::Cpp::print(const Statement::Backtrace_NT_Decl &d) {
 
 
 void Printer::Cpp::print(const Statement::Hash_Decl &d) {
+  std::cout << "\n called print of class cpp \n";
   stream << "class " << d.ext_name() << " {" << endl
     << "public:" << endl
     << "typedef " << d.answer_type() << " type;" << endl
@@ -2842,5 +2958,6 @@ void Printer::Cpp::print(const Statement::Hash_Decl &d) {
 
 
 void Printer::Cpp::print(const Statement::Marker_Decl &d) {
+  std::cout << "\n called print of class cpp \n";
   stream << "Marker<unsigned int> " << d.name() << ';' << endl;
 }

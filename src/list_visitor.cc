@@ -30,64 +30,79 @@
 
 
 void List_Visitor::visit(Symbol::Terminal &s) {
+  std::cout << "\n called visit(Symbol::Terminal &s) of class list_visitor \n";
   std::cerr << "#" << *s.name << " [" << s.list_size() << "]"
     << std::endl << std::endl;
 }
 
 void List_Visitor::visit(Symbol::NT &n) {
+  std::cout << "\n called visit(Symbol::NT &n) of class list_visitor \n";
   std::cerr << std::endl << std::endl;
   std::cerr << *n.name << " [" << n.list_size() << "] = ";
 }
 
 void List_Visitor::visit_itr(Symbol::NT &n) {
+  std::cout << "\n called visit_itr(Symbol::NT &n of class list_visitor \n";
   std::cerr << " | ";
 }
 
 void List_Visitor::visit_begin(Alt::Simple &a) {
+  std::cout << "\n called visit_begin(Alt::Simple &a) of class list_visitor \n";
   std::cerr << "[" << a.list_size() << "]" << *a.name << "(";
 }
 
 void List_Visitor::visit_end(Alt::Simple &a) {
+  std::cout << "\n called visit_end(Alt::Simple &a) of class list_visitor \n";
   std::cerr << ")";
 }
 
 void List_Visitor::visit_itr(Alt::Simple &a) {
+  std::cout << "\n called visit_itr(Alt::Simple &a) of class list_visitor \n";
   std::cerr << ", ";
 }
 
 void List_Visitor::visit(Alt::Link &a) {
+  std::cout << "\n called visit(Alt::Link &a) of class list_visitor \n";
   std::cerr << "<" << a.list_size() << " " << *a.nt->name << ">";
 }
 
 void List_Visitor::visit_begin(Alt::Block &a) {
+  std::cout << "\n called visit_begin(Alt::Block &a) of class list_visitor \n";
   std::cerr << "[" << a.list_size() << "] { ";
 }
 
 void List_Visitor::visit_itr(Alt::Block &a) {
+  std::cout << "\n called visit_itr(Alt::Block &a) of class list_visitor \n";
   std::cerr << " | ";
 }
 
 void List_Visitor::visit_end(Alt::Block &a) {
+  std::cout << "\n called visit_end(Alt::Block &a) of class list_visitor \n";
   std::cerr << " }";
 }
 
 void List_Visitor::visit(Fn_Arg::Const &f) {
+  std::cout << "\n called visit(Fn_Arg::Const &f) of class list_warn \n";
   std::cerr << "|" << f.list_size() << "|";
 }
 
 void List_Visitor::visit(Fn_Arg::Alt &f) {
+  std::cout << "\n called visit(Fn_Arg::Alt &f) of class list_warn \n";
   std::cerr << "|" << f.list_size() << "|";
 }
 
 
 void List_Visitor::visit(Alt::Multi &a) {
+  std::cout << "\n called visit(Alt::Multi &a) of class list_warn \n";
   std::cerr << "[" << a.list_size() << "] < ";
 }
 
 void List_Visitor::visit_itr(Alt::Multi &a) {
+  std::cout << "\n called visit_itr(Alt::Multi &a) of class list_warn \n";
   std::cerr << " , ";
 }
 
 void List_Visitor::visit_end(Alt::Multi &a) {
+  std::cout << "\n called visit_end(Alt::Multi &a) of class list_warn \n";
   std::cerr << " >";
 }

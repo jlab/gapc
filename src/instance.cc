@@ -21,6 +21,7 @@
 
 }}} */
 
+#include <iostream>
 #include <list>
 #include "instance.hh"
 #include "product.hh"
@@ -58,6 +59,7 @@ Instance::Instance(Product::Base *a, Algebra *b) {
 }
 
 bool Instance::init(Instance *instance) {
+  std::cout << "\n called init(Instance *instance) of class instance \n";
   if (instance && instance != this) {
     return true;
   }
@@ -78,6 +80,7 @@ bool Instance::init(Instance *instance) {
 
 
 std::ostream &Instance::put(std::ostream &s) const {
+  std::cout << "\n called put(std::ostream &s) of class instance \n";
   s << "Instance: " << *name_ << std::endl;
   s << *product->algebra();
   return s;
@@ -85,10 +88,12 @@ std::ostream &Instance::put(std::ostream &s) const {
 
 
 void Instance::eliminate_lists() {
+  std::cout << "\n called eliminate_lists() of class instance \n";
   product->eliminate_lists();
 }
 
 void Instance::codegen() {
+  std::cout << "\n called codegen() of class instance \n";
   product = product->optimize_shuffle_products();
   product->init_fn_suffix("");
   product->codegen();
@@ -96,11 +101,13 @@ void Instance::codegen() {
 
 
 void Instance::print_code(Printer::Base &s) {
+  std::cout << "\n called print_code(Printer::Base &s) of class instance \n";
   product->print_code(s);
 }
 
 
 std::string *Instance::lookup(const std::string &n) {
+  std::cout << "\n called lookup(const std::string &n) of class instance \n";
   hashtable<std::string, Fn_Def*> fns;
   hashtable<std::string, Fn_Def*>::iterator i = product->algebra()->fns.find(n);
   if (i == product->algebra()->fns.end()) {
@@ -120,6 +127,7 @@ std::string *Instance::lookup(const std::string &n) {
 
 Statement::Hash_Decl *Instance::generate_hash_decl(
   const Fn_Def &fn, bool kbest) {
+  std::cout << "\n called generate_hash_decl of class instance \n";
   Statement::Hash_Decl *ret = new Statement::Hash_Decl();
   ret->set_suffix(*fn.name);
   ret->set_answer_type(fn.return_type->component());
@@ -155,6 +163,7 @@ Statement::Hash_Decl *Instance::generate_hash_decl(
 
 
 bool Instance::replace_classified_product() {
+  std::cout << "\n called replace_classified_product() of class instance \n";
   bool r = false;
   product = product->replace_classified(r);
   return r;
@@ -162,6 +171,7 @@ bool Instance::replace_classified_product() {
 
 
 void Instance::check_alphabets() {
+  std::cout << "\n called check_alphabets() of class instance \n";
   std::list<Type::Base*> list;
   for (Product::iterator i = Product::begin(product);
        i != Product::end(); ++i) {

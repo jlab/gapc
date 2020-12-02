@@ -23,6 +23,7 @@
 
 #include <string>
 #include <list>
+#include <iostream>
 
 #include "subopt.hh"
 
@@ -47,10 +48,12 @@
 #include "printer.hh"
 
 void Subopt::gen_instance(Algebra *score) {
-    gen_instance(score, Product::NONE);
+  std::cout << "\n called gen_instance(Algebra *score) of class subopt \n";
+  gen_instance(score, Product::NONE);
 }
 
 void Subopt::gen_instance(Algebra *score, Product::Sort_Type sort) {
+  std::cout << "\n called gen_instance(Algebra *score) of class subopt \n";
   score_algebra = score;
   Instance *i = new Instance(score, algebra);
   if (sort != Product::NONE) {
@@ -65,12 +68,14 @@ void Subopt::gen_instance(Algebra *score, Product::Sort_Type sort) {
 
 void Subopt::gen_instance(Algebra *score, Product::Base *base,
                           Product::Sort_Type sort) {
+  std::cout << "\n called gen_instance of class subopt \n";
   gen_instance(score,  sort);
 
   instance->product->set_sort_product((new Instance(base, algebra))->product);
 }
 
 void Subopt::adjust_list_types(Fn_Def *fn, Fn_Def *fn_type) {
+  std::cout << "\n called adjust_list_types(Fn_Def *fn, Fn_Def *fn_type) of class subopt \n";
   ::Type::List::Push_Type push_type = ::Type::List::NORMAL;
   switch (fn_type->choice_fn_type()) {
     case Expr::Fn_Call::MINIMUM :
@@ -106,6 +111,7 @@ void Subopt::adjust_list_types(Fn_Def *fn, Fn_Def *fn_type) {
 }
 
 void Subopt::add_subopt_fn_args(Fn_Def *fn) {
+  std::cout << "\n called add_subopt_fn_args(Fn_Def *fn) of class subopt \n";
   for (Statement::iterator i = Statement::begin(fn->stmts);
        i != Statement::end(); ++i) {
     Statement::Base *s = *i;
@@ -130,6 +136,7 @@ void Subopt::add_subopt_fn_args(Fn_Def *fn) {
 }
 
 void Subopt::gen_backtrack(AST &ast) {
+  std::cout << "\n called gen_backtrack(AST &ast) of class subopt \n";
   bool r = ast.check_instances(instance);
   assert(r);
   r = ast.insert_instance(instance);
@@ -167,6 +174,7 @@ void Subopt::gen_backtrack(AST &ast) {
 }
 
 void Subopt::gen_instance_code(AST &ast) {
+  std::cout << "\n called gen_instance_code(AST &ast) of class subopt \n";
   instance->product->right_most()->codegen();
   // ast.optimize_choice(*instance);
 
@@ -185,6 +193,7 @@ void Subopt::gen_instance_code(AST &ast) {
 
 
 void Subopt::print_header(Printer::Base &pp, AST &ast) {
+  std::cout << "\n called print_header(Printer::Base &pp, AST &ast) of class subopt \n";
   pp.print_zero_decls(*ast.grammar());
 
   for (std::list<Symbol::NT*>::const_iterator i = ast.grammar()->nts().begin();
@@ -207,6 +216,7 @@ void Subopt::print_header(Printer::Base &pp, AST &ast) {
 }
 
 void Subopt::print_body(Printer::Base &pp, AST &ast) {
+  std::cout << "\n called print_body(Printer::Base &pp, AST &ast) of class subopt \n";
   ast.print_code(pp);
 
   instance->product->right_most()->print_code(pp);

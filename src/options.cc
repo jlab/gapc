@@ -23,8 +23,11 @@
 
 #include "options.hh"
 
+#include <iostream>
+
 
 std::string basename(const std::string &f) {
+  std::cout << "\n called basename(const std::string &f) of class options \n";
   size_t r = f.find_last_of('.');
   if (r != std::string::npos) {
     return f.substr(0, r);
@@ -35,6 +38,7 @@ std::string basename(const std::string &f) {
 
 
 std::string classname(const std::string &f) {
+  std::cout << "\n called classname(const std::string &f) of class options \n";
   size_t a = f.find_first_of('/');
   if (a == std::string::npos) {
     a = 0;
@@ -50,6 +54,7 @@ std::string classname(const std::string &f) {
 
 
 std::string remove_dir(const std::string &f) {
+  std::cout << "\n called remove_dir(const std::string &f) of class options \n";
   size_t a = f.find_last_of('/');
   if (a == std::string::npos) {
     a = 0;
@@ -65,6 +70,7 @@ std::string remove_dir(const std::string &f) {
 
 
 bool Options::check() {
+  std::cout << "\n called check() of class options \n";
   if (sample && subopt)
     Log::instance()->error("Can't combine --sample and --subopt");
   if (backtrack && subopt)

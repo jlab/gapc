@@ -23,6 +23,7 @@
 
 #include <sstream>
 #include <algorithm>
+#include <iostream>
 
 #include "tablegen.hh"
 #include "expr.hh"
@@ -31,6 +32,7 @@
 #include "statement.hh"
 #include "type.hh"
 #include "statement/fn_call.hh"
+
 
 typedef std::vector<Table>::const_iterator itr;
 
@@ -59,6 +61,7 @@ Tablegen::Tablegen()
 
 void Tablegen::head(Expr::Base *&i, Expr::Base *&j, Expr::Base *&n,
     const Table &table, size_t track) {
+  std::cout << "\n called head of class tablegen \n";
   std::ostringstream si, sj, sn, slm, srm;
   si << "t_" << track << "_i";
   sj << "t_" << track << "_j";
@@ -119,6 +122,7 @@ void Tablegen::head(Expr::Base *&i, Expr::Base *&j, Expr::Base *&n,
 
 void Tablegen::offset_const(titr track, itr first, const itr &end,
     Expr::Base *dim, Expr::Base *access) {
+  std::cout << "\n called offset_const of class tablegen \n";
   const Table &table = *first;
   const Yield::Size &left = table.left_rest();
   const Yield::Size &right = table.right_rest();
@@ -173,6 +177,7 @@ void Tablegen::offset_const(titr track, itr first, const itr &end,
 
 void Tablegen::offset_left_lin(titr track, itr first, const itr &end,
     Expr::Base *dim, Expr::Base *access ) {
+  std::cout << "\n called offset_left_lin of class tablegen \n";
   const Table &table = *first;
   const Yield::Size &left = table.left_rest();
 
@@ -196,6 +201,7 @@ void Tablegen::offset_left_lin(titr track, itr first, const itr &end,
 
 void Tablegen::offset_right_lin(titr track, itr first, const itr &end,
     Expr::Base *dim, Expr::Base *access) {
+  std::cout << "\n called offset_right_lin of class tablegen \n";
   const Table &table = *first;
   const Yield::Size &right = table.right_rest();
 
@@ -241,6 +247,7 @@ void Tablegen::offset_right_lin(titr track, itr first, const itr &end,
 
 void Tablegen::offset_quad(titr track, itr first, const itr &end,
     Expr::Base *dim, Expr::Base *access) {
+  std::cout << "\n called offset_quad of class tablegen \n";
   const Table &table = *first;
 
   Expr::Base *i, *j, *n;
@@ -272,6 +279,7 @@ void Tablegen::offset_quad(titr track, itr first, const itr &end,
 
 void Tablegen::offset(titr track, itr first, const itr &end,
     Expr::Base *dim, Expr::Base *access) {
+  std::cout << "\n called offset of class tablegen \n";
   if (first == end) {
     size = dim;
     off = access;
@@ -311,6 +319,7 @@ struct ParaCmp {
 };
 
 void Tablegen::offset(size_t track_pos, itr f, const itr &e) {
+  std::cout << "\n called offset of class tablegen \n";
   window_code.clear();
   code.clear();
   paras.clear();
@@ -349,6 +358,7 @@ void Tablegen::offset(size_t track_pos, itr f, const itr &e) {
 
 Statement::Table_Decl *Tablegen::create(Symbol::NT &nt,
     std::string *name, bool cyk) {
+  std::cout << "\n called create of class tablegen \n";
   cyk_ = cyk;
   std::list<Expr::Base*> ors;
   nt.gen_ys_guards(ors);
@@ -386,6 +396,7 @@ Statement::Table_Decl *Tablegen::create(Symbol::NT &nt,
 #include "var_acc.hh"
 
 Fn_Def *Tablegen::gen_is_tab() {
+  std::cout << "\n called gen_is_tab of class tablegen \n";
   Fn_Def *f = new Fn_Def(new Type::Bool(), new std::string("is_tabulated"));
   f->add_paras(paras);
 
@@ -411,6 +422,7 @@ Fn_Def *Tablegen::gen_is_tab() {
 }
 
 Fn_Def *Tablegen::gen_untab() {
+  std::cout << "\n called gen_untab of class tablegen \n";
   Fn_Def *f = new Fn_Def(new Type::RealVoid(), new std::string("un_tabulate"));
   f->add_paras(paras);
 
@@ -429,6 +441,7 @@ Fn_Def *Tablegen::gen_untab() {
 }
 
 Fn_Def *Tablegen::gen_tab() {
+  std::cout << "\n called gen_tab of class tablegen \n";
   Fn_Def *f = new Fn_Def(new Type::RealVoid(), new std::string("set"));
   f->add_paras(paras);
   // FIXME const & in dtype -> see cpp.cc in_fn_head
@@ -482,6 +495,7 @@ Fn_Def *Tablegen::gen_tab() {
 }
 
 Fn_Def *Tablegen::gen_get_tab() {
+  std::cout << "\n called gen_get_tab of class tablegen \n";
   Fn_Def *f = new Fn_Def(new Type::Referencable(dtype), new std::string("get"));
   f->add_paras(paras);
 
@@ -515,6 +529,7 @@ Fn_Def *Tablegen::gen_get_tab() {
 }
 
 Fn_Def *Tablegen::gen_size() {
+  std::cout << "\n called gen_size of class tablegen \n";
   Fn_Def *f = new Fn_Def(type, new std::string("size"));
 
   std::list<Statement::Base*> c;

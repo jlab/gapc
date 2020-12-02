@@ -22,6 +22,7 @@
 }}} */
 
 #include <string>
+#include <iostream>
 
 #include "kbacktrack.hh"
 
@@ -45,10 +46,12 @@
 
 
 void KBacktrack::gen_instance(Algebra *score) {
+  std::cout << "\n called gen_instance(Algebra *score) of class kbacktrack \n";
   gen_instance(score, Product::NONE);
 }
 
 void KBacktrack::gen_instance(Algebra *score, Product::Sort_Type sort) {
+  std::cout << "\n called gen_instance(Algebra *score, Product::Sort_Type sort) of class kbacktrack \n";
   Instance *i = new Instance(score, algebra);
   if (sort != Product::NONE) {
     i->product->set_sorted_choice(sort);
@@ -63,18 +66,21 @@ void KBacktrack::gen_instance(Algebra *score, Product::Sort_Type sort) {
 
 void KBacktrack::gen_instance(Algebra *score, Product::Base *base,
   Product::Sort_Type sort) {
+  std::cout << "\n called gen_instance(Algebra *score, Product::Base *base, Product::Sort_Type sort) of class kbacktrack \n";
   gen_instance(score,  sort);
 
   instance->product->set_sort_product((new Instance(base, algebra))->product);
 }
 
 void KBacktrack::apply_filter(Filter *f) {
+  std::cout << "\n called apply_filter(Filter *f) of class kbacktrack \n";
   assert(instance);
   instance->product->set_filter(f);
 }
 
 
 void KBacktrack::gen_backtrack(AST &ast) {
+  std::cout << "\n called gen_backtrack(AST &ast) of class kbacktrack \n";
   hashtable<std::string, Type::Base*> score_return_types;
   const std::list<Symbol::NT*> &nts = ast.grammar()->nts();
   for (std::list<Symbol::NT*>::const_iterator i = nts.begin();
@@ -136,6 +142,7 @@ void KBacktrack::gen_backtrack(AST &ast) {
 }
 
 void KBacktrack::gen_instance_code(AST &ast) {
+  std::cout << "\n called visit_end(Symbol::NT &n) of class kbacktrack \n";
   instance->product->right_most()->codegen();
 
   instance->product->algebra()
@@ -149,6 +156,7 @@ void KBacktrack::gen_instance_code(AST &ast) {
 
 
 void KBacktrack::gen_nt_proxy_fn(Fn_Def *fn, Type::Base *score_return_type) {
+  std::cout << "\n called gen_nt_proxy_fn(Fn_Def *fn, Type::Base *score_return_type) of class kbacktrack \n";
   Type::Base *t = fn->return_type->deref();
   Type::Base *u = score_return_type->deref();
   bool is_list = t->is(Type::LIST);
@@ -265,6 +273,7 @@ void KBacktrack::gen_nt_proxy_fn(Fn_Def *fn, Type::Base *score_return_type) {
 
 
 void KBacktrack::print_header(Printer::Base &pp, AST &ast) {
+  std::cout << "\n called print_header(Printer::Base &pp, AST &ast) of class kbacktrack \n";
   for (std::list<Statement::Backtrace_Decl*>::iterator i = bt_decls.begin();
        i != bt_decls.end(); ++i)
     pp << **i;
@@ -284,6 +293,7 @@ void KBacktrack::print_header(Printer::Base &pp, AST &ast) {
 }
 
 void KBacktrack::print_body(Printer::Base &pp, AST &ast) {
+  std::cout << "\n called print_body(Printer::Base &pp, AST &ast) of class kbacktrack \n";
   for (std::list<Fn_Def*>::iterator i = proxy_fns.begin();
        i != proxy_fns.end(); ++i)
     pp << **i;
@@ -294,6 +304,7 @@ void KBacktrack::print_body(Printer::Base &pp, AST &ast) {
 }
 
 void KBacktrack::gen_nt_decls(const std::list<Symbol::NT*> &nts) {
+  std::cout << "\n called gen_nt_decls(const std::list<Symbol::NT*> &nts) of class kbacktrack \n";
   for (std::list<Symbol::NT*>::const_iterator i = nts.begin();
        i != nts.end(); ++i) {
     Type::Base *t = (*i)->data_type();

@@ -59,6 +59,12 @@ algebra seller extends buyer {
   }
 }
 
+algebra calc extends buyer {
+	choice [int] h([int] i) {
+		return i;
+	}
+}
+
 algebra time implements Bill(alphabet = char, answer = int) {
 
   int f(int i) { return 0; }
@@ -179,11 +185,15 @@ instance sellercnt = bill ( seller * count ) ;
 
 instance time = bill ( time ) ;
 
+instance calc = bill ( calc ) ;
+
 instance timecnt = bill ( time * count ) ;
 
 instance timesellerpp = bill ( time * seller * pretty ) ;
 
 instance timebuyerpp = bill ( time * buyer * pretty ) ;
+
+instance timecalcppenum = bill ( time * calc * pretty * enum ) ;
 
 instance enum = bill ( enum ) ;
 

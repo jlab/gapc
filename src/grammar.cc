@@ -52,6 +52,7 @@
 
 
 void Grammar::add_nt(Symbol::NT *nt) {
+  std::cout << "\n called add_nt of class grammar \n";
   assert(nt->name);
   if (NTs.find(*nt->name) != NTs.end()) {
     Log::instance()->error(
@@ -66,6 +67,7 @@ void Grammar::add_nt(Symbol::NT *nt) {
 
 
 void Grammar::add_nt_later(Symbol::NT *nt) {
+  std::cout << "\n called add_nt_later of class grammar \n";
   assert(nt->name);
   if (NTs.find(*nt->name) != NTs.end()) {
     Log::instance()->error(
@@ -79,6 +81,7 @@ void Grammar::add_nt_later(Symbol::NT *nt) {
 
 
 void Grammar::move_new_nts() {
+  std::cout << "\n called move_new_nts of class grammar \n";
   for (std::list<Symbol::NT*>::iterator i = new_nts.begin();
        i != new_nts.end(); ++i) {
     Symbol::NT *nt = *i;
@@ -105,6 +108,7 @@ void Grammar::move_new_nts() {
  * structures this method iterates through.
  */
 bool Grammar::init_tabulated() {
+  std::cout << "\n called init_tabulated of class grammar \n";
   bool r = true;
   for (hashtable<std::string, Arg*>::iterator i = tab_names.begin();
        i != tab_names.end(); ++i) {
@@ -134,6 +138,7 @@ bool Grammar::init_tabulated() {
  * axiom of the grammar to the field Grammar.axiom
  */
 bool Grammar::init_axiom() {
+  std::cout << "\n called init_axiom of class grammar \n";
   if (NTs.find(*axiom_name) == NTs.end()) {
     Log::instance()->error(
       axiom_loc,
@@ -157,11 +162,13 @@ bool Grammar::init_axiom() {
  * while it is traversed.
  */
 bool Grammar::init_nt_links() {
+  std::cout << "\n called init_nt_links of class grammar \n";
   return axiom->init_links(*this);
 }
 
 
 void Grammar::renumber_nts() {
+  std::cout << "\n called renumber_nts of class grammar \n";
   size_t j = 0;
   for (std::list<Symbol::NT*>::iterator i = nt_list.begin();
        i != nt_list.end(); ++i, ++j) {
@@ -171,6 +178,7 @@ void Grammar::renumber_nts() {
 
 
 bool Grammar::remove_unreachable() {
+  std::cout << "\n called remove_unreachable of class grammar \n";
   bool r = false;
   for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin();
        i != NTs.end();  ) {
@@ -204,6 +212,7 @@ bool Grammar::remove_unreachable() {
 
 
 void Grammar::print_nts() {
+  std::cout << "\n called print_nts of class grammar \n";
   std::cerr << "Nonterminals:" << std::endl;
   for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin();
        i != NTs.end(); ++i) {
@@ -215,6 +224,7 @@ void Grammar::print_nts() {
 
 
 void Grammar::print_links() {
+  std::cout << "\n called print_links of class grammar \n";
   for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin();
        i != NTs.end(); ++i) {
     Symbol::Base *nt = i->second;
@@ -223,6 +233,7 @@ void Grammar::print_links() {
 }
 
 bool Grammar::has_nonproductive_NTs() {
+  std::cout << "\n called has_nonproductive_NTs of class gapc \n";
   bool r = true;
   while (r) {
     r = false;
@@ -248,6 +259,7 @@ bool Grammar::has_nonproductive_NTs() {
 
 
 void Grammar::print_multi_ys() const {
+  std::cout << "\n called print_multi_ys of class grammar \n";
   for (std::list<Symbol::NT*>::const_iterator i = nt_list.begin();
        i != nt_list.end(); ++i) {
     std::cerr << *(*i)->name << ' ' << (*i)->multi_ys() << '\n';
@@ -257,6 +269,7 @@ void Grammar::print_multi_ys() const {
 
 
 void Grammar::init_multi_yield_sizes() {
+  std::cout << "\n called init_multi_yield_sizes of class grammar \n";
   // First we create a list of yield-sizes which are used
   // as starting point. For each entry in the list of
   // non-terminals there is an entry in the list of yield-sizes.
@@ -313,6 +326,7 @@ void Grammar::init_multi_yield_sizes() {
 
 
 bool Grammar::multi_detect_loops() {
+  std::cout << "\n called multi_detect_loops of class grammar \n";
   if (Log::instance()->is_debug()) {
     std::cerr << ">>> Multi Detect Loops\n";
   }
@@ -327,6 +341,7 @@ bool Grammar::multi_detect_loops() {
 
 
 void Grammar::multi_propagate_max_filter() {
+  std::cout << "\n called multi_propagate_max_filter of class grammar \n";
   std::vector<Yield::Multi> v(nt_list.size());
   std::list<Symbol::NT*>::iterator t = nt_list.begin();
   for (std::vector<Yield::Multi>::iterator i = v.begin();
@@ -355,6 +370,7 @@ void Grammar::multi_propagate_max_filter() {
 
 
 void Grammar::init_table_dims() {
+  std::cout << "\n called init_table_dims of class grammar \n";
 #ifndef NDEBUG
   for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin();
        i != NTs.end(); ++i) {
@@ -390,6 +406,7 @@ void Grammar::init_table_dims() {
 
 
 void Grammar::window_table_dims() {
+  std::cout << "\n called window_table_dims of class grammar \n";
   for (std::list<Symbol::NT*>::iterator i = nt_list.begin();
        i != nt_list.end(); ++i) {
     (*i)->window_table_dim();
@@ -398,6 +415,7 @@ void Grammar::window_table_dims() {
 
 
 void Grammar::init_calls() {
+  std::cout << "\n called init_calls of class grammar \n";
   for (std::list<Symbol::NT*>::iterator i = nt_list.begin();
        i != nt_list.end(); ++i) {
     (*i)->multi_init_calls();
@@ -410,6 +428,7 @@ void Grammar::init_calls() {
 
 
 bool Grammar::init_tracks() {
+  std::cout << "\n called init_tracks of class grammar \n";
   size_t tracks = ast.input.tracks();
   assert(tracks);
   axiom->set_tracks(tracks, 0);
@@ -442,6 +461,7 @@ bool Grammar::init_tracks() {
  * 3)
  */
 bool Grammar::check_semantic() {
+  std::cout << "\n called check_semantic of class grammar \n";
   bool b, r = true;
   b = init_tabulated();
   r = r && b;
@@ -497,6 +517,7 @@ bool Grammar::check_semantic() {
 
 
 const Runtime::Asm::Poly & Grammar::runtime_by_width() {
+  std::cout << "\n called runtime_by_width of class grammar \n";
   if (asm_rt != 0) {
     return asm_rt;
   }
@@ -517,6 +538,7 @@ const Runtime::Asm::Poly & Grammar::runtime_by_width() {
 
 
 Runtime::Poly Grammar::runtime() {
+  std::cout << "\n called runtime of class grammar \n";
   std::list<Symbol::NT*> active_list;
   Runtime::Poly one(1);
   Runtime::Poly rt;
@@ -534,6 +556,7 @@ Runtime::Poly Grammar::runtime() {
 
 
 bool Grammar::set_tabulated(std::vector<std::string> &v) {
+  std::cout << "\n called set_tabulated of class grammar \n";
   bool r = true;
   for (std::vector<std::string>::iterator i = v.begin(); i != v.end(); ++i) {
     hashtable<std::string, Symbol::Base*>::iterator a = NTs.find(*i);
@@ -553,6 +576,7 @@ bool Grammar::set_tabulated(std::vector<std::string> &v) {
 
 
 void Grammar::clear_runtime() {
+  std::cout << "\n called clear_runtime of class grammar \n";
   for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin();
        i != NTs.end(); ++i) {
     i->second->clear_runtime();
@@ -561,6 +585,7 @@ void Grammar::clear_runtime() {
 
 
 void Grammar::set_tabulated(hashtable<std::string, Symbol::NT*> &temp) {
+  std::cout << "\n called set_tabulated of class grammar \n";
   clear_runtime();
   clear_tabulated();
   for (hashtable<std::string, Symbol::NT*>::iterator i = temp.begin();
@@ -574,6 +599,7 @@ void Grammar::set_tabulated(hashtable<std::string, Symbol::NT*> &temp) {
 
 
 void Grammar::set_tabulated(Symbol::Base *nt) {
+  std::cout << "\n called set_tabulated of class grammar \n";
   clear_runtime();
   nt->set_tabulated();
   assert(nt->is(Symbol::NONTERMINAL));
@@ -584,6 +610,7 @@ void Grammar::set_tabulated(Symbol::Base *nt) {
 
 
 void Grammar::clear_tabulated() {
+  std::cout << "\n called clear_tabulated of class grammar \n";
   clear_runtime();
   for (hashtable<std::string, Symbol::NT*>::iterator i = tabulated.begin();
        i != tabulated.end(); ++i) {
@@ -594,6 +621,7 @@ void Grammar::clear_tabulated() {
 
 
 void Grammar::set_all_tabulated() {
+  std::cout << "\n called set_all_tabulated of class grammar \n";
   clear_runtime();
   for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin();
        i != NTs.end(); ++i) {
@@ -605,6 +633,7 @@ void Grammar::set_all_tabulated() {
 
 
 void Grammar::init_in_out() {
+  std::cout << "\n called init_in_out of class grammar \n";
   for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin();
        i != NTs.end(); ++i) {
     i->second->reset_in_out();
@@ -618,6 +647,7 @@ void Grammar::init_in_out() {
 
 
 Runtime::Poly Grammar::asm_opt_runtime() {
+  std::cout << "\n called asm_opt_runtime of class grammar \n";
   hashtable<std::string, Symbol::NT*> temp = tabulated;
   set_all_tabulated();
   Runtime::Poly r = runtime();
@@ -630,6 +660,7 @@ Runtime::Poly Grammar::asm_opt_runtime() {
 
 
 size_t Grammar::nt_number() {
+  std::cout << "\n called nt_number of class grammar \n";
   size_t r = 0;
   for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin();
        i != NTs.end(); ++i) {
@@ -642,6 +673,7 @@ size_t Grammar::nt_number() {
 
 
 void Grammar::put_table_conf(std::ostream &s) {
+  std::cout << "\n called put_table_conf of class grammar \n";
   s << '{';
   for (hashtable<std::string, Symbol::NT*>::iterator i = tabulated.begin();
        i != tabulated.end(); ++i) {
@@ -666,6 +698,7 @@ void Grammar::put_table_conf(std::ostream &s) {
 
 
 void Grammar::approx_table_conf(bool opt_const, unsigned int const_div) {
+  std::cout << "\n called approx_table_conf of class grammar \n";
   clear_tabulated();
   init_in_out();
   Runtime::Asm::Poly opt;
@@ -697,6 +730,7 @@ void Grammar::approx_table_conf(bool opt_const, unsigned int const_div) {
 
 
 void Grammar::init_self_rec() {
+  std::cout << "\n called init_self_rec of class grammar \n";
   for (std::list<Symbol::NT*>::iterator i = nt_list.begin();
        i != nt_list.end(); ++i) {
     (*i)->init_self_rec();
@@ -709,6 +743,7 @@ void Grammar::init_self_rec() {
 
 
 bool Grammar::check_signature(Signature_Base &s) {
+  std::cout << "\n called check_signature of class grammar \n";
   bool r = true;
   for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin();
        i != NTs.end(); ++i) {
@@ -744,6 +779,7 @@ bool Grammar::check_signature(Signature_Base &s) {
 
 
 void Grammar::print_type(std::ostream &s) {
+  std::cout << "\n called print_type of class grammar \n";
   s << "Grammar " << *name << " types:" << std::endl;
   for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin();
        i != NTs.end(); ++i) {
@@ -755,6 +791,7 @@ void Grammar::print_type(std::ostream &s) {
 
 
 void Grammar::eliminate_lists() {
+  std::cout << "\n called eliminate_lists of class grammar \n";
   unsigned int z = 0;
   bool r = false;
   do {
@@ -792,12 +829,14 @@ struct Reset_Types : public Visitor {
 
 
 void Grammar::reset_types() {
+  std::cout << "\n called reset_types of class grammar \n";
   Reset_Types v;
   traverse(v);
 }
 
 
 void Grammar::init_list_sizes() {
+  std::cout << "\n called init_list_sizes of class grammar \n";
   List_Visitor list_visitor;
   unsigned int z = 0;
   bool r = false;
@@ -834,6 +873,7 @@ void Grammar::init_list_sizes() {
 
 
 void Grammar::traverse(Visitor &v) {
+  std::cout << "\n called traverse of class grammar \n";
   for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin();
        i != NTs.end(); ++i) {
     i->second->traverse(v);
@@ -842,6 +882,7 @@ void Grammar::traverse(Visitor &v) {
 
 
 void Grammar::inline_nts() {
+  std::cout << "\n called inline_nts of class grammar \n";
   Inline_Nts inliner(this);
   traverse(inliner);
   if (Log::instance()->is_debug()) {
@@ -860,6 +901,7 @@ struct Clear_Loops : public Visitor {
 
 
 void Grammar::init_indices() {
+  std::cout << "\n called init_indices of class grammar \n";
   Clear_Loops cl;
   traverse(cl);
   for (size_t track = 0; track < axiom->tracks(); ++track) {
@@ -897,12 +939,14 @@ void Grammar::init_indices() {
 
 
 void Grammar::print_indices() {
+  std::cout << "\n called print_indices of class grammar \n";
   Index_Visitor iv;
   traverse(iv);
 }
 
 
 void Grammar::init_guards() {
+  std::cout << "\n called init_guards of class grammar \n";
   Code::Mode mode;
   for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin();
        i != NTs.end(); ++i) {
@@ -915,6 +959,7 @@ void Grammar::init_guards() {
 
 
 void Grammar::print_guards() {
+  std::cout << "\n called print_guards of class grammar \n";
   for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin();
        i != NTs.end(); ++i) {
     Symbol::NT *nt = dynamic_cast<Symbol::NT*>(i->second);
@@ -926,18 +971,21 @@ void Grammar::print_guards() {
 
 
 void Grammar::init_decls() {
+  std::cout << "\n called init_decls of class grammar \n";
   Init_Decls id;
   traverse(id);
 }
 
 
 void Grammar::init_decls(const std::string &prefix) {
+  std::cout << "\n called init_decls of class grammar \n";
   Init_Decls id(prefix);
   traverse(id);
 }
 
 
 void Grammar::codegen(AST &ast) {
+  std::cout << "\n called codegen of class grammar \n";
   for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin();
        i != NTs.end(); ++i) {
     Symbol::NT *nt = dynamic_cast<Symbol::NT*>(i->second);
@@ -949,6 +997,7 @@ void Grammar::codegen(AST &ast) {
 
 
 void Grammar::print_code(Printer::Base &out) {
+  std::cout << "\n called print_code of class grammar \n";
   for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin();
        i != NTs.end(); ++i) {
     Symbol::NT *nt = dynamic_cast<Symbol::NT*>(i->second);
@@ -963,6 +1012,7 @@ void Grammar::print_code(Printer::Base &out) {
 
 
 void Grammar::print_dot(std::ostream &out) {
+  std::cout << "\n called print_dot of class grammar \n";
   out << "digraph G {\n";
   for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin();
        i != NTs.end(); ++i) {
@@ -977,6 +1027,7 @@ void Grammar::print_dot(std::ostream &out) {
 
 
 void Grammar::dep_analysis() {
+  std::cout << "\n called dep_analysis of class grammar \n";
   Dep_Analysis d(NTs);
   d.sort();
   if (Log::instance()->is_debug()) {
@@ -993,6 +1044,7 @@ void Grammar::dep_analysis() {
 
 
 void Grammar::remove(Symbol::NT *x) {
+  std::cout << "\n called remove of class grammar \n";
   size_t t = nt_list.size();
   nt_list.remove(x);
   assert(t-1 == nt_list.size());

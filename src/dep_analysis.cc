@@ -31,6 +31,8 @@
 #include "dep_analysis.hh"
 #include "symbol.hh"
 
+#include <iostream>
+
 
 Dep_Analysis::Dep_Analysis(const hashtable<std::string, Symbol::Base*> &s) :
   symbols(s) {
@@ -57,6 +59,7 @@ typedef std::pair<size_t, size_t> Edge;
 typedef std::list<Vertex> TOrdering;
 
 void Dep_Analysis::sort() {
+  std::cout << "\n called sort of class dept_analysis \n";
   std::vector<std::string> debug_out;
 
   std::vector<Edge> edges;

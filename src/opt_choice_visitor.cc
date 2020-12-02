@@ -26,7 +26,10 @@
 
 #include "fn_def.hh"
 
+#include <iostream>
+
 void Opt_Choice_Visitor::visit(Alt::Base &b) {
+  std::cout << "\n called visit(Alt::Base &b) of class opt_choice_visitor \n";
   //  return;
   if (in_choice_fn) {
     if (hash_decl) {
@@ -38,6 +41,7 @@ void Opt_Choice_Visitor::visit(Alt::Base &b) {
 }
 
 void Opt_Choice_Visitor::visit(Symbol::NT &n) {
+  std::cout << "\n called visit(Symbol::NT &n) of class opt_choice_visitor \n";
   if (n.eval_fn && *n.eval_fn == *choice_fn->name) {
     // Product::optimize_shuffle_products
     // is able to invalidate this assertion
@@ -55,5 +59,6 @@ void Opt_Choice_Visitor::visit(Symbol::NT &n) {
 }
 
 void Opt_Choice_Visitor::visit_end(Symbol::NT &n) {
+  std::cout << "\n called visit_end(Symbol::NT &n) of class opt_choice_visitor \n";
   in_choice_fn = false;
 }
