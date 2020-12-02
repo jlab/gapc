@@ -48,6 +48,8 @@
 
 #include "statement/fn_call.hh"
 
+#include <iostream>
+
 
 Alt::Base::Base(Type t, const Loc &l) :
   type(t), adp_specialization(ADP_Mode::STANDARD),
@@ -78,6 +80,7 @@ Alt::Simple::Simple(std::string *n, const Loc &l)
 
 
 Alt::Base *Alt::Simple::clone() {
+  std::cout << "\n called clone of class alt \n";
   Alt::Simple *a = new Alt::Simple(*this);
   a->args.clear();
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
@@ -89,6 +92,7 @@ Alt::Base *Alt::Simple::clone() {
 
 
 Alt::Base *Alt::Block::clone() {
+  std::cout << "\n called clone of class alt \n";
   Alt::Block *a = new Alt::Block(*this);
   a->alts.clear();
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
@@ -99,12 +103,14 @@ Alt::Base *Alt::Block::clone() {
 
 
 Alt::Base *Alt::Link::clone() {
+  std::cout << "\n called clone of class alt \n";
   Alt::Link *a = new Alt::Link(*this);
   return a;
 }
 
 
 Alt::Base *Alt::Multi::clone() {
+  std::cout << "\n called clone of class alt \n";
   Alt::Multi *a = new Alt::Multi(*this);
   a->list.clear();
   for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i) {
@@ -115,6 +121,7 @@ Alt::Base *Alt::Multi::clone() {
 
 
 void Alt::Base::add_specialised_arguments(Statement::Fn_Call *fn) {
+    std::cout << "\n called add_specialised_arguments of class alt \n";
     switch (adp_join) {
         case ADP_Mode::COMPERATOR:
             fn->add_arg(specialised_comparator_fn);
@@ -137,11 +144,13 @@ void Alt::Base::add_specialised_arguments(Statement::Fn_Call *fn) {
 
 
 bool Alt::Base::init_links(Grammar &g) {
+  std::cout << "\n called init links of class alt (which does nothing) \n";
   return true;
 }
 
 
 bool Alt::Simple::init_links(Grammar &g) {
+  std::cout << "\n called init_links of class alt \n";
   if (has_index_overlay()) {
     index_overlay.front()->init_links(g);
   }
@@ -157,6 +166,7 @@ bool Alt::Simple::init_links(Grammar &g) {
 
 
 bool Alt::Link::init_links(Grammar &grammar) {
+  std::cout << "\n called init_links of class alt \n";
   if (grammar.NTs.find(*name) == grammar.NTs.end()) {
     Log::instance()->error(
       location, "Nonterminal " + *name + " is not defined in grammar " +
@@ -176,6 +186,7 @@ bool Alt::Link::init_links(Grammar &grammar) {
 
 
 bool Alt::Block::init_links(Grammar &grammar) {
+  std::cout << "\n called init_links of class alt \n";
   bool r = true;
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     bool a = (*i)->init_links(grammar);
@@ -186,6 +197,7 @@ bool Alt::Block::init_links(Grammar &grammar) {
 
 
 bool Alt::Multi::init_links(Grammar &grammar) {
+  std::cout << "\n called init_links of class alt \n";
   bool r = true;
   for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i) {
     if ((*i)->is(BLOCK)) {
@@ -207,6 +219,7 @@ bool Alt::Multi::init_links(Grammar &grammar) {
 
 
 bool Alt::Simple::init_productive() {
+  std::cout << "\n called init_productive of class alt \n";
   bool r = false;
   bool s = true;
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
@@ -225,6 +238,7 @@ bool Alt::Simple::init_productive() {
 
 
 bool Alt::Link::init_productive() {
+  std::cout << "\n called init_productive of class alt \n";
   if (!nt) {
     return false;
   }
@@ -237,6 +251,7 @@ bool Alt::Link::init_productive() {
 
 
 bool Alt::Block::init_productive() {
+  std::cout << "\n called init_productive of class alt \n";
   bool r = false;
   bool s = false;
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
@@ -253,6 +268,7 @@ bool Alt::Block::init_productive() {
 }
 
 bool Alt::Multi::init_productive() {
+  std::cout << "\n called init_productive of class alt \n";
   bool r = false;
   bool s = true;
   for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i) {
@@ -271,6 +287,7 @@ bool Alt::Multi::init_productive() {
 
 void Alt::Simple::collect_lr_deps(
   std::list<Symbol::NT*> &list, const Yield::Multi &l, const Yield::Multi &r) {
+  std::cout << "\n called collect_lr_deps of class alt \n";
   Yield::Multi left(l);
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
        i != args.end(); ++i) {
@@ -289,6 +306,7 @@ void Alt::Simple::collect_lr_deps(
 void Alt::Link::collect_lr_deps(
   std::list<Symbol::NT*> &list, const Yield::Multi &left,
   const Yield::Multi &right) {
+  std::cout << "\n called collect_lr_deps of class alt \n";
   if (!(left.is_low_zero() && right.is_low_zero())) {
     return;
   }
@@ -305,6 +323,7 @@ void Alt::Link::collect_lr_deps(
 void Alt::Block::collect_lr_deps(
   std::list<Symbol::NT*> &list, const Yield::Multi &left,
   const Yield::Multi &right) {
+  std::cout << "\n called collect_lr_deps of class alt \n";
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     (*i)->collect_lr_deps(list, left, right);
   }
@@ -314,6 +333,7 @@ void Alt::Block::collect_lr_deps(
 void Alt::Multi::collect_lr_deps(
   std::list<Symbol::NT*> &nts, const Yield::Multi &left,
   const Yield::Multi &right) {
+  std::cout << "\n called collect_lr_deps of class alt \n";
   assert(left.tracks() == tracks_);
   assert(right.tracks() == tracks_);
   assert(tracks_ == list.size());
@@ -331,6 +351,7 @@ void Alt::Multi::collect_lr_deps(
 
 
 size_t Alt::Simple::width() {
+  std::cout << "\n called width of class alt \n";
   size_t r = 0;
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
        i != args.end(); ++i) {
@@ -349,6 +370,7 @@ size_t Alt::Simple::width() {
 
 
 size_t Alt::Link::width() {
+  std::cout << "\n called width of class alt \n";
   size_t r = 0;
 
   for (Yield::Multi::iterator i = m_ys.begin(); i != m_ys.end(); ++i) {
@@ -361,6 +383,7 @@ size_t Alt::Link::width() {
 
 
 size_t Alt::Block::width() {
+  std::cout << "\n called width of class alt \n";
   size_t r = 0;
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     size_t t = (*i)->width();
@@ -373,6 +396,7 @@ size_t Alt::Block::width() {
 
 
 size_t Alt::Multi::width() {
+  std::cout << "\n called width of class alt \n";
   size_t r = 0;
   for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i) {
     r += (*i)->width();
@@ -385,6 +409,7 @@ void Alt::Simple::init_table_dim(
   const Yield::Size &a, const Yield::Size &b,
   std::vector<Yield::Size> &temp_ls, std::vector<Yield::Size> &temp_rs,
   size_t track) {
+  std::cout << "\n called init_table_dim of class alt \n";
   if (is_terminal()) {
     return;
   }
@@ -412,6 +437,7 @@ void Alt::Link::init_table_dim(
   const Yield::Size &a, const Yield::Size &b,
   std::vector<Yield::Size> &temp_ls, std::vector<Yield::Size> &temp_rs,
   size_t track) {
+  std::cout << "\n called init_table_dim of class alt \n";
   nt->init_table_dim(a, b, temp_ls, temp_rs, track);
 }
 
@@ -420,6 +446,7 @@ void Alt::Block::init_table_dim(
   const Yield::Size &a, const Yield::Size &b,
   std::vector<Yield::Size> &temp_ls, std::vector<Yield::Size> &temp_rs,
   size_t track) {
+  std::cout << "\n called init_table_dim of class alt \n";
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     (*i)->init_table_dim(a, b, temp_ls, temp_rs, track);
   }
@@ -430,6 +457,7 @@ void Alt::Multi::init_table_dim(
   const Yield::Size &a, const Yield::Size &b,
   std::vector<Yield::Size> &temp_ls, std::vector<Yield::Size> &temp_rs,
   size_t track) {
+  std::cout << "\n called init_table_dim of class alt \n";
   size_t j = 0;
   assert(track < list.size());
   std::list<Base*>::iterator i = list.begin();
@@ -440,6 +468,7 @@ void Alt::Multi::init_table_dim(
 
 
 void Alt::Simple::print_link(std::ostream &s) {
+  std::cout << "\n called print_link of class alt \n";
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end();
        ++i) {
     (*i)->print_link(s);
@@ -448,11 +477,13 @@ void Alt::Simple::print_link(std::ostream &s) {
 
 
 void Alt::Link::print_link(std::ostream &s) {
+  std::cout << "\n called print_link of class alt \n";
   s << " -> " << *nt->name << " (" << calls << ')';
 }
 
 
 void Alt::Block::print_link(std::ostream &s) {
+  std::cout << "\n called print_link of class alt \n";
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end();
        ++i) {
     (*i)->print_link(s);
@@ -461,6 +492,7 @@ void Alt::Block::print_link(std::ostream &s) {
 
 
 void Alt::Multi::print_link(std::ostream &s) {
+  std::cout << "\n called print_link of class alt \n";
   s << " < ";
   for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i) {
     (*i)->print_link(s); s << ", ";
@@ -471,6 +503,7 @@ void Alt::Multi::print_link(std::ostream &s) {
 
 Runtime::Poly Alt::Simple::runtime(
   std::list<Symbol::NT*> &active_list, const Runtime::Poly &accum_rt) {
+  std::cout << "\n called runtime of class alt \n";
   Runtime::Poly rt(1);  // FIXME use higher constant for more realistic fn call
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end();
        ++i) {
@@ -482,6 +515,7 @@ Runtime::Poly Alt::Simple::runtime(
 
 Runtime::Poly Alt::Link::runtime(
   std::list<Symbol::NT*> &active_list, const Runtime::Poly &accum_rt) {
+  std::cout << "\n called runtime of class alt \n";
   Runtime::Poly rt = calls;
   Runtime::Poly a(accum_rt);
   a *= calls;
@@ -494,6 +528,7 @@ Runtime::Poly Alt::Link::runtime(
 
 Runtime::Poly Alt::Block::runtime(
   std::list<Symbol::NT*> &active_list, const Runtime::Poly &accum_rt) {
+  std::cout << "\n called runtime of class alt \n";
   Runtime::Poly rt;
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     rt += (*i)->runtime(active_list, accum_rt);
@@ -504,6 +539,7 @@ Runtime::Poly Alt::Block::runtime(
 
 Runtime::Poly Alt::Multi::runtime(
   std::list<Symbol::NT*> &active_list, const Runtime::Poly &accum_rt) {
+  std::cout << "\n called runtime of class alt \n";
   Runtime::Poly rt;
   for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i) {
     rt += (*i)->runtime(active_list, accum_rt);
@@ -513,6 +549,7 @@ Runtime::Poly Alt::Multi::runtime(
 
 
 Runtime::Poly Alt::Simple::init_in_out() {
+  std::cout << "\n called init_in_out of class alt \n";
   Runtime::Poly p;
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end();
        ++i) {
@@ -523,12 +560,14 @@ Runtime::Poly Alt::Simple::init_in_out() {
 
 
 Runtime::Poly Alt::Link::init_in_out() {
+  std::cout << "\n called init_in_out of class alt \n";
   nt->init_in_out(calls);
   return calls;
 }
 
 
 Runtime::Poly Alt::Block::init_in_out() {
+  std::cout << "\n called init_in_out of class alt \n";
   Runtime::Poly p;
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     p += (*i)->init_in_out();
@@ -538,6 +577,7 @@ Runtime::Poly Alt::Block::init_in_out() {
 
 
 Runtime::Poly Alt::Multi::init_in_out() {
+  std::cout << "\n called init_in_out of class alt \n";
   Runtime::Poly p;
   for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i) {
     p += (*i)->init_in_out();
@@ -547,6 +587,7 @@ Runtime::Poly Alt::Multi::init_in_out() {
 
 
 void Alt::Simple::init_self_rec() {
+  std::cout << "\n called init_self_rec of class alt \n";
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end();
        ++i) {
     if ((*i)->is(Fn_Arg::ALT)) {
@@ -557,16 +598,19 @@ void Alt::Simple::init_self_rec() {
 
 
 void Alt::Link::init_self_rec() {
+  std::cout << "\n called init_self_rec of class alt \n";
   nt->init_self_rec();
 }
 
 
 void Alt::Block::init_self_rec() {
+  std::cout << "\n called init_self_rec of class alt \n";
   for_each(alts.begin(), alts.end(), std::mem_fun(&Base::init_self_rec));
 }
 
 
 void Alt::Multi::init_self_rec() {
+  std::cout << "\n called init_self_rec of class alt \n";
   for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i) {
     (*i)->init_self_rec();
   }
@@ -574,6 +618,7 @@ void Alt::Multi::init_self_rec() {
 
 
 bool Alt::Base::set_data_type(::Type::Base *t, const Loc &l) {
+  std::cout << "\n called set_data_type of class alt \n";
   if (!t) {
     return true;
   }
@@ -583,6 +628,7 @@ bool Alt::Base::set_data_type(::Type::Base *t, const Loc &l) {
 
 
 bool Alt::Simple::insert_types(Signature_Base &s) {
+  std::cout << "\n called insert_types of class alt \n";
   Fn_Decl *fn_decl = s.decl(*name);
   if (!fn_decl) {
     hashtable<std::string, Fn_Decl*>::iterator j =
@@ -634,11 +680,13 @@ bool Alt::Simple::insert_types(Signature_Base &s) {
 
 
 bool Alt::Link::insert_types(Signature_Base &s) {
+  std::cout << "\n called insert_types of class alt \n";
   return true;
 }
 
 
 bool Alt::Block::insert_types(Signature_Base &s) {
+  std::cout << "\n called insert_types of class alt \n";
   bool r = true;
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     bool b = (*i)->insert_types(s);
@@ -649,11 +697,13 @@ bool Alt::Block::insert_types(Signature_Base &s) {
 
 
 bool Alt::Multi::insert_types(Signature_Base &s) {
+  std::cout << "\n called insert_types of class alt \n";
   return true;
 }
 
 
 Type::Status Alt::Simple::infer_missing_types() {
+  std::cout << "\n called infer_missing_types of class alt \n";
   ::Type::Status r = ::Type::READY;
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
        i != args.end(); ++i) {
@@ -665,6 +715,7 @@ Type::Status Alt::Simple::infer_missing_types() {
 
 
 Type::Status Alt::Link::infer_missing_types() {
+  std::cout << "\n called infer_missing_types of class alt \n";
   ::Type::Status r = ::Type::READY;
   if (!terminal_type && nt->terminal_type) {
     terminal_type = true;
@@ -697,6 +748,7 @@ Type::Status Alt::Link::infer_missing_types() {
 
 
 Type::Status Alt::Block::infer_missing_types() {
+  std::cout << "\n called infer_missing_types of class alt \n";
   ::Type::Status r = ::Type::READY;
   bool terminal_types = true;
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
@@ -727,6 +779,7 @@ Type::Status Alt::Block::infer_missing_types() {
 
 
 Type::Status Alt::Multi::infer_missing_types() {
+  std::cout << "\n called infer_missing_types of class alt \n";
   ::Type::Status r = ::Type::READY;
   std::list< ::Type::Base*> types;
   bool saw_list = false;
@@ -758,6 +811,7 @@ Type::Status Alt::Multi::infer_missing_types() {
 
 
 void Alt::Simple::print_type(std::ostream &s) {
+  std::cout << "\n called print_type of class alt \n";
   if (datatype) {
     s << *datatype;
   } else {
@@ -774,6 +828,7 @@ void Alt::Simple::print_type(std::ostream &s) {
 
 
 void Alt::Link::print_type(std::ostream &s) {
+  std::cout << "\n called print_type of class alt \n";
   if (datatype) {
     s << *datatype;
   } else {
@@ -783,6 +838,7 @@ void Alt::Link::print_type(std::ostream &s) {
 
 
 void Alt::Block::print_type(std::ostream &s) {
+  std::cout << "\n called print_type of class alt \n";
   if (datatype) {
     s << *datatype;
   }
@@ -796,6 +852,7 @@ void Alt::Block::print_type(std::ostream &s) {
 
 
 void Alt::Multi::print_type(std::ostream &s) {
+  std::cout << "\n called print_type of class alt \n";
   if (datatype) {
     s << *datatype;
   } else {
@@ -805,6 +862,7 @@ void Alt::Multi::print_type(std::ostream &s) {
 
 
 bool Alt::Simple::has_moving_k() {
+  std::cout << "\n called has_moving_k of class alt \n";
   unsigned x = 0;
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
        i != args.end(); ++i) {
@@ -823,6 +881,7 @@ bool Alt::Simple::has_moving_k() {
  sorting, pareto or others for specialised ADP version, such as Pareto Eager
  or Sorted ADP*/
 bool Alt::Simple::is_nullary() {
+  std::cout << "\n called is_nullary of class alt \n";
   unsigned x = 0;
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end();
        ++i) {
@@ -834,6 +893,7 @@ bool Alt::Simple::is_nullary() {
 }
 
 bool Alt::Simple::eliminate_lists() {
+  std::cout << "\n called eliminate_lists of class alt \n";
   bool r = false;
   bool x = true;
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
@@ -856,6 +916,7 @@ bool Alt::Simple::eliminate_lists() {
 
 
 bool Alt::Link::eliminate_lists() {
+  std::cout << "\n called eliminate_lists of class alt \n";
   if (!eliminated && nt->is_eliminated()) {
     eliminated = true;
 
@@ -874,6 +935,7 @@ bool Alt::Link::eliminate_lists() {
 
 
 bool Alt::Block::eliminate_lists() {
+  std::cout << "\n called eliminate_lists of class alt \n";
   bool r = false;
   bool x = true;
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
@@ -893,6 +955,7 @@ bool Alt::Block::eliminate_lists() {
 
 
 bool Alt::Multi::eliminate_lists() {
+  std::cout << "\n called eliminate_lists of class alt \n";
   bool r = false;
   bool x = true;
   for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i) {
@@ -911,6 +974,7 @@ bool Alt::Multi::eliminate_lists() {
 
 
 bool Alt::Simple::init_list_sizes() {
+  std::cout << "\n called init_list_sizes of class alt \n";
   bool r = false;
   if (has_moving_k() && list_size_ != Yield::UP) {
     list_size_ = Yield::UP;
@@ -942,6 +1006,7 @@ bool Alt::Simple::init_list_sizes() {
 
 
 bool Alt::Link::init_list_sizes() {
+  std::cout << "\n called init_list_sizes of class alt \n";
   if (nt->list_size() != 0) {
     if (list_size_ == 0) {
       list_size_ = nt->list_size();
@@ -953,6 +1018,7 @@ bool Alt::Link::init_list_sizes() {
 }
 
 bool Alt::Block::init_list_sizes() {
+  std::cout << "\n called init_list_sizes of class alt \n";
   Yield::Poly t;
   bool uninit = false;
   bool r = false;
@@ -977,6 +1043,7 @@ bool Alt::Block::init_list_sizes() {
 
 
 bool Alt::Multi::init_list_sizes() {
+  std::cout << "\n called init_list_sizes of class alt \n";
   Yield::Poly t;
   bool uninit = false;
   bool r = false;
@@ -1001,12 +1068,14 @@ bool Alt::Multi::init_list_sizes() {
 
 
 void Alt::Base::reset_types() {
+  std::cout << "\n called reset_types of class alt \n";
   datatype = NULL;
   eliminated = false;
 }
 
 
 void Alt::Simple::traverse(Visitor &v) {
+  std::cout << "\n called traverse of class alt \n";
   v.visit(*dynamic_cast<Base*>(this));
   v.visit_begin(*this);
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end();
@@ -1019,12 +1088,14 @@ void Alt::Simple::traverse(Visitor &v) {
 
 
 void Alt::Link::traverse(Visitor &v) {
+  std::cout << "\n called traverse of class alt \n";
   v.visit(*dynamic_cast<Base*>(this));
   v.visit(*this);
 }
 
 
 void Alt::Block::traverse(Visitor &v) {
+  std::cout << "\n called traverse of class alt \n";
   v.visit(*dynamic_cast<Base*>(this));
   v.visit_begin(*this);
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
@@ -1036,6 +1107,7 @@ void Alt::Block::traverse(Visitor &v) {
 
 
 void Alt::Multi::traverse(Visitor &v) {
+  std::cout << "\n called traverse of class alt \n";
   v.visit(*dynamic_cast<Base*>(this));
   v.visit(*this);
   for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i) {
@@ -1048,6 +1120,7 @@ void Alt::Multi::traverse(Visitor &v) {
 
 void Alt::Base::init_indices(Expr::Base *left, Expr::Base *right,
     unsigned int &k, size_t track) {
+  std::cout << "\n called init_indices of class alt \n";
   assert(track < left_indices.size());
   assert(left);
   assert(right);
@@ -1058,6 +1131,7 @@ void Alt::Base::init_indices(Expr::Base *left, Expr::Base *right,
 
 
 void Alt::Simple::reset() {
+  std::cout << "\n called reset of class alt \n";
   loops.clear();
   if (has_index_overlay()) {
     index_overlay.front()->reset();
@@ -1072,6 +1146,7 @@ void Alt::Simple::reset() {
 Expr::Base *Alt::Simple::next_index_var(unsigned &k, size_t track,
   Expr::Base *next_var, Expr::Base *last_var, Expr::Base *right,
   const Yield::Size &ys, const Yield::Size &lhs, const Yield::Size &rhs) {
+  std::cout << "\n called next_index_var of class alt \n";
   if (ys.low() != ys.high()) {
     if (rhs.low() == rhs.high()) {
       return right;
@@ -1120,6 +1195,7 @@ Expr::Base *Alt::Simple::next_index_var(unsigned &k, size_t track,
 
 void Alt::Simple::init_indices(
   Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track) {
+  std::cout << "\n called init_indices of class alt \n";
   if (has_index_overlay()) {
     unsigned t = k;
     index_overlay.front()->init_indices(left, right, t, track);
@@ -1173,12 +1249,14 @@ void Alt::Simple::init_indices(
 
 void Alt::Link::init_indices(
   Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track) {
+  std::cout << "\n called init_indices of class alt \n";
   Base::init_indices(left, right, k, track);
 }
 
 
 void Alt::Block::init_indices(
   Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track) {
+  std::cout << "\n called init_indices of class alt \n";
   Base::init_indices(left, right, k, track);
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     (*i)->init_indices(left, right, k, track);
@@ -1188,6 +1266,7 @@ void Alt::Block::init_indices(
 
 void Alt::Multi::init_indices(
   Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track) {
+  std::cout << "\n called init_indices of class alt \n";
   Base::init_indices(left, right, k, track);
   size_t j = 0;
   assert(track < list.size());
@@ -1199,6 +1278,7 @@ void Alt::Multi::init_indices(
 }
 
 void Alt::Simple::put_indices(std::ostream &s) {
+  std::cout << "\n called put_indices of class alt \n";
   print(s);
   s << std::endl;
   s << *name << "( ";
@@ -1231,6 +1311,7 @@ void Alt::Simple::put_indices(std::ostream &s) {
 
 
 void Alt::Simple::print(std::ostream &s) {
+  std::cout << "\n called print of class alt \n";
   s << *name << "( ";
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
        i != args.end(); ++i) {
@@ -1242,6 +1323,7 @@ void Alt::Simple::print(std::ostream &s) {
 
 
 void Alt::Block::print(std::ostream &s) {
+  std::cout << "\n called print of class alt \n";
   s << "{ ";
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     (*i)->print(s);
@@ -1252,11 +1334,13 @@ void Alt::Block::print(std::ostream &s) {
 
 
 void Alt::Link::print(std::ostream &s) {
+  std::cout << "\n called print of class alt \n";
   s << *name;
 }
 
 
 void Alt::Multi::print(std::ostream &s) {
+  std::cout << "\n called print of class alt \n";
   assert(!list.empty());
   s << " < ";
   std::list<Base*>::iterator i = list.begin();
@@ -1271,6 +1355,7 @@ void Alt::Multi::print(std::ostream &s) {
 
 
 void Alt::Base::init_ret_decl(unsigned int i, const std::string &prefix) {
+  std::cout << "\n called init_ret_decl of class alt \n";
   std::ostringstream o;
   o << prefix << "ret_" << i;
   ret_decl = new Statement::Var_Decl(datatype, new std::string(o.str()));
@@ -1278,6 +1363,7 @@ void Alt::Base::init_ret_decl(unsigned int i, const std::string &prefix) {
 
 
 void Alt::Multi::init_ret_decl(unsigned int i, const std::string &prefix) {
+  std::cout << "\n called init_ret_decl of class alt \n";
   Base::init_ret_decl(i, prefix);
   ret_decls_.clear();
 
@@ -1305,6 +1391,7 @@ void Alt::Link::init_ret_decl(unsigned int i) {
 
 
 void Alt::Simple::init_foreach() {
+  std::cout << "\n called init_foreach of class alt \n";
   foreach_loops.clear();
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end();
        ++i) {
@@ -1323,6 +1410,7 @@ void Alt::Simple::init_foreach() {
 
 
 void Alt::Simple::ret_decl_empty_block(Statement::If *stmt) {
+  std::cout << "\n called ret_decl_empty_block of class alt \n";
   if (!datatype->simple()->is(::Type::LIST)) {
     Statement::Fn_Call *e = new Statement::Fn_Call(Statement::Fn_Call::EMPTY);
     e->add_arg(*ret_decl);
@@ -1337,6 +1425,7 @@ void Alt::Simple::ret_decl_empty_block(Statement::If *stmt) {
 void Alt::Simple::deep_erase_if_backtrace(
   Statement::If *stmt, std::vector<Fn_Arg::Base*>::iterator start,
   std::vector<Fn_Arg::Base*>::iterator end) {
+  std::cout << "\n called deep_erase_if_backtrace of class alt \n";
   // FIXME perhaps use alternative deep_erase() rtlib fn
   // which matches an List_Ref<std::pair<*, Backtrace<*>*>>
   // instead of this Foreach construct
@@ -1377,6 +1466,7 @@ void Alt::Simple::deep_erase_if_backtrace(
 
 
 bool Alt::Simple::has_arg_list() {
+  std::cout << "\n called has_arg_list of class alt \n";
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
        i != args.end(); ++i) {
     for (std::vector<Statement::Var_Decl*>::const_iterator j =
@@ -1391,6 +1481,7 @@ bool Alt::Simple::has_arg_list() {
 
 
 Expr::Base *Alt::Base::suchthat_code(Statement::Var_Decl &decl) const {
+  std::cout << "\n called suchthat_code of class alt \n";
   Expr::Vacc *acc = new Expr::Vacc(decl);
   std::list<Expr::Fn_Call*> exprs;
   for (std::list<Filter*>::const_iterator i = filters.begin();
@@ -1413,6 +1504,7 @@ Expr::Base *Alt::Base::suchthat_code(Statement::Var_Decl &decl) const {
 
 
 void Alt::Base::add_seqs(Expr::Fn_Call *fn_call, const AST &ast) const {
+  std::cout << "\n called add_seqs of class alt \n";
   if (tracks_ > 1) {
     fn_call->add(ast.seq_decls);
   } else {
@@ -1423,6 +1515,7 @@ void Alt::Base::add_seqs(Expr::Fn_Call *fn_call, const AST &ast) const {
 
 
 void Alt::Simple::init_body(AST &ast) {
+  std::cout << "\n called init_body of class alt \n";
   body_stmts.clear();
 
   std::list<Statement::Base*> *stmts = &body_stmts;
@@ -1507,6 +1600,7 @@ void Alt::Simple::init_body(AST &ast) {
 
 
 void Alt::Simple::init_guards() {
+  std::cout << "\n called init_guards of class alt \n";
   std::list<Expr::Base*> l;
   assert(m_ys.tracks() == left_indices.size());
   Yield::Multi::iterator k = m_ys.begin();
@@ -1529,6 +1623,7 @@ void Alt::Simple::init_guards() {
 
 
 void Alt::Base::push_back_ret_decl() {
+  std::cout << "\n called push_back_ret_decl of class alt \n";
   statements.push_back(ret_decl);
 }
 
@@ -1563,6 +1658,7 @@ struct Fn_Arg_Cmp {
 
 Statement::If *Alt::Simple::add_empty_check(
   std::list<Statement::Base*> &stmts, const Fn_Arg::Base &b) {
+  std::cout << "\n called add_empty_check of class alt \n";
   std::list<Expr::Base*> exprs;
   for (std::vector<Statement::Var_Decl*>::const_iterator i =
        b.ret_decls().begin(); i != b.ret_decls().end(); ++i) {
@@ -1581,6 +1677,7 @@ Statement::If *Alt::Simple::add_empty_check(
 
 void Alt::Simple::add_clear_code(
   std::list<Statement::Base*> &stmts, const Fn_Arg::Base &b) {
+  std::cout << "\n called add_clear_code of class alt \n";
   for (std::vector<Statement::Var_Decl*>::const_iterator i =
        b.ret_decls().begin(); i != b.ret_decls().end(); ++i) {
     Statement::Fn_Call *e = new Statement::Fn_Call(Statement::Fn_Call::ERASE);
@@ -1592,6 +1689,7 @@ void Alt::Simple::add_clear_code(
 
 std::list<Statement::Base*> *Alt::Simple::reorder_args_cg(
   AST &ast, std::list<Statement::Base*> &x) {
+  std::cout << "\n called reorder_args_cg of class alt \n";
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
        i != args.end(); ++i) {
     (*i)->codegen(ast);
@@ -1602,6 +1700,7 @@ std::list<Statement::Base*> *Alt::Simple::reorder_args_cg(
 
 std::list<Statement::Base*> *Alt::Simple::add_arg_code(
   AST &ast, std::list<Statement::Base*> &x) {
+  std::cout << "\n called add_arg_code of class alt \n";
   std::list<Statement::Base*> *stmts = &x;
 
   std::vector<Fn_Arg::Base*> l(args.size());
@@ -1658,6 +1757,7 @@ std::list<Statement::Base*> *Alt::Simple::add_arg_code(
 void Alt::Simple::add_overlay_code(
   std::list<Statement::Base*> *& stmts,
   AST &ast, std::list<Expr::Fn_Call*> &exprs, Filter::Type t) const {
+  std::cout << "\n called add_overlay_code of class alt \n";
   std::list<Filter*> l;
   for (std::list<Filter*>::const_iterator i = filters.begin();
        i != filters.end(); ++i) {
@@ -1686,6 +1786,7 @@ void Alt::Simple::add_overlay_code(
 
 void Alt::Simple::add_with_overlay_code(
   std::list<Statement::Base*> *&stmts, AST &ast) const {
+  std::cout << "\n called add_with_overlay_code of class alt \n";
   std::list<Expr::Fn_Call*> exprs;
   add_overlay_code(stmts, ast, exprs, Filter::WITH_OVERLAY);
   for (std::list<Expr::Fn_Call*>::iterator i = exprs.begin();
@@ -1702,6 +1803,7 @@ void Alt::Simple::add_with_overlay_code(
 
 void Alt::Simple::add_suchthat_overlay_code(
   std::list<Statement::Base*> *&stmts, AST &ast) const {
+  std::cout << "\n called add_suchthat_overlay_code of class alt \n";
   std::list<Expr::Fn_Call*> exprs;
   add_overlay_code(stmts, ast, exprs, Filter::SUCHTHAT_OVERLAY);
   for (std::list<Expr::Fn_Call*>::iterator i = exprs.begin();
@@ -1726,6 +1828,7 @@ void Alt::Simple::add_suchthat_overlay_code(
 
 void Alt::Simple::add_subopt_guards(
   std::list<Statement::Base*> *&stmts, AST &ast) {
+  std::cout << "\n called add_subopt_guards of class alt \n";
   if (ast.code_mode() != Code::Mode::SUBOPT) {
     return;
   }
@@ -1825,6 +1928,7 @@ std::list<Statement::Base*> *Alt::Simple::insert_index_stmts(
 
 
 void Alt::Simple::codegen(AST &ast) {
+  std::cout << "\n called codegen of class alt \n";
   // std::cout << "-----------Simple IN" << std::endl;
 
   bool nullary = false;
@@ -1977,6 +2081,7 @@ void Alt::Simple::codegen(AST &ast) {
 
 
 void Alt::Link::add_args(Expr::Fn_Call *fn) {
+  std::cout << "\n called add_args of class alt \n";
   if (is_explicit()) {
     fn->add(indices);
     fn->add(ntparas);
@@ -2014,6 +2119,7 @@ void Alt::Link::add_args(Expr::Fn_Call *fn) {
 
 
 void Alt::Link::codegen(AST &ast) {
+  std::cout << "\n called codegen of class alt \n";
   // std::cout << "link " << *name << std::endl;
 
   statements.clear();
@@ -2070,6 +2176,7 @@ void Alt::Link::codegen(AST &ast) {
 
 
 void Alt::Block::codegen(AST &ast) {
+  std::cout << "\n called codegen of class alt \n";
   // std::cout << "-----------------Block " << std::endl;
   statements.clear();
   push_back_ret_decl();
@@ -2188,6 +2295,7 @@ void Alt::Block::codegen(AST &ast) {
 
 
 void Alt::Base::init_filter_guards(AST &ast) {
+  std::cout << "\n called init_filter_guards of class alt \n";
   if (filters.empty() && multi_filter.empty()) {
     return;
   }
@@ -2251,6 +2359,7 @@ void Alt::Base::init_filter_guards(AST &ast) {
 
 
 void Alt::Simple::print_dot_edge(std::ostream &out, Symbol::NT &nt) {
+  std::cout << "\n called print_dot_edge of class alt \n";
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
        i != args.end(); ++i) {
     (*i)->print_dot_edge(out, nt);
@@ -2259,6 +2368,7 @@ void Alt::Simple::print_dot_edge(std::ostream &out, Symbol::NT &nt) {
 
 
 void Alt::Block::print_dot_edge(std::ostream &out, Symbol::NT &nt) {
+  std::cout << "\n called print_dot_edge of class alt \n";
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     (*i)->print_dot_edge(out, nt);
   }
@@ -2266,6 +2376,7 @@ void Alt::Block::print_dot_edge(std::ostream &out, Symbol::NT &nt) {
 
 
 void Alt::Link::print_dot_edge(std::ostream &out, Symbol::NT &n) {
+  std::cout << "\n called print_dot_edge of class alt \n";
   bool t = false;
   if (nt->is_tabulated()) {
     out << *n.name << " -> " << *nt->name;
@@ -2288,6 +2399,7 @@ void Alt::Link::print_dot_edge(std::ostream &out, Symbol::NT &n) {
 
 
 void Alt::Multi::print_dot_edge(std::ostream &out, Symbol::NT &nt) {
+  std::cout << "\n called print_dot_edge of class alt \n";
   for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i) {
     (*i)->print_dot_edge(out, nt);
   }
@@ -2295,6 +2407,7 @@ void Alt::Multi::print_dot_edge(std::ostream &out, Symbol::NT &nt) {
 
 
 void Alt::Base::optimize_choice(::Type::List::Push_Type push) {
+  std::cout << "\n called optimize_choice of class alt \n";
   if (!ret_decl->type->is(::Type::LIST)) {
     return;
   }
@@ -2306,6 +2419,7 @@ void Alt::Base::optimize_choice(::Type::List::Push_Type push) {
 
 void Alt::Base::optimize_choice(
   ::Type::List::Push_Type push, Statement::Hash_Decl *h) {
+  std::cout << "\n called optimize_choice of class alt \n";
   if (!ret_decl->type->is(::Type::LIST)) {
     return;
   }
@@ -2317,6 +2431,7 @@ void Alt::Base::optimize_choice(
 
 
 void Alt::Link::optimize_choice() {
+  std::cout << "\n called optimize_choice of class alt \n";
   if (!ret_decl->type->is(::Type::LIST)) {
     return;
   }
@@ -2354,11 +2469,13 @@ void Alt::Link::optimize_choice() {
 
 
 bool Alt::Link::calls_terminal_parser() const {
+  std::cout << "\n called calls_terminal_parser of class alt \n";
   return nt->is(Symbol::TERMINAL);
 }
 
 
 bool Alt::Simple::calls_terminal_parser() const {
+  std::cout << "\n called calls_terminal_parser of class alt \n";
   return args.size() == 1 && args.front()->is(Fn_Arg::CONST);
 }
 
@@ -2371,6 +2488,7 @@ Multi::Multi(const std::list<Alt::Base*> &t, const Loc &l) :
 
 
 void Multi::codegen(AST &ast) {
+  std::cout << "\n called codegen of class alt \n";
   statements.clear();
   assert(ret_decls_.size() == list.size());
 
@@ -2413,6 +2531,7 @@ void Multi::codegen(AST &ast) {
 
 
 void Alt::Base::init_multi_ys() {
+  std::cout << "\n called init_multi_ys of class alt \n";
   assert(tracks_ == m_ys.tracks());
   // FIXME remove filters and just use multi_filter
   if (0 && tracks_ > 1 && !filters.empty()) {
@@ -2434,6 +2553,7 @@ void Alt::Base::init_multi_ys() {
 
 
 void Alt::Simple::init_multi_ys() {
+  std::cout << "\n called init_multi_ys of class alt \n";
   m_ys = Yield::Multi(tracks_);
 
   if (is_terminal()) {
@@ -2459,12 +2579,14 @@ void Alt::Simple::init_multi_ys() {
 
 
 void Alt::Link::init_multi_ys() {
+  std::cout << "\n called init_multi_ys of class alt \n";
   m_ys = nt->multi_ys();
   Base::init_multi_ys();
 }
 
 
 void Alt::Block::init_multi_ys() {
+  std::cout << "\n called init_multi_ys of class alt \n";
   std::list<Base*>::iterator i = alts.begin();
   assert(i != alts.end());
   (*i)->init_multi_ys();
@@ -2479,6 +2601,7 @@ void Alt::Block::init_multi_ys() {
 
 
 void Alt::Multi::init_multi_ys() {
+  std::cout << "\n called init_multi_ys of class alt \n";
   m_ys.set_tracks(list.size());
   Yield::Multi::iterator j = m_ys.begin();
   for (std::list<Base*>::iterator i = list.begin();
@@ -2493,6 +2616,7 @@ void Alt::Multi::init_multi_ys() {
 
 void Alt::Base::add_multitrack_filter(
   const std::list<Filter*> &l, Filter::Type t, const Loc &loc) {
+  std::cout << "\n called add_multitrack_filter of class alt \n";
   if (multi_filter.empty()) {
     multi_filter.resize(l.size());
   }
@@ -2515,6 +2639,7 @@ void Alt::Base::add_multitrack_filter(
 void Alt::Simple::sum_rhs(
   Yield::Multi &y, std::list<Fn_Arg::Base*>::const_iterator i,
   const std::list<Fn_Arg::Base*>::const_iterator &end) const {
+  std::cout << "\n called sum_rhs of class alt \n";
   ++i;
   for (; i != end; ++i) {
     y +=  (*i)->multi_ys();
@@ -2525,6 +2650,7 @@ void Alt::Simple::sum_rhs(
 void Alt::Simple::sum_rhs(
   Yield::Size &y, std::list<Fn_Arg::Base*>::const_iterator i,
   const std::list<Fn_Arg::Base*>::const_iterator &end, size_t track) const {
+  std::cout << "\n called sum_rhs of class alt \n";
   ++i;
   for (; i != end; ++i) {
     y +=  (*i)->multi_ys()(track);
@@ -2534,6 +2660,7 @@ void Alt::Simple::sum_rhs(
 
 bool Alt::Simple::multi_detect_loop(const Yield::Multi &left,
     const Yield::Multi &right, Symbol::NT *nt) const {
+  std::cout << "\n called multi_detect_loop of class alt \n";
   if (is_terminal()) {
     return false;
   }
@@ -2558,6 +2685,7 @@ bool Alt::Simple::multi_detect_loop(const Yield::Multi &left,
 
 bool Alt::Link::multi_detect_loop(
   const Yield::Multi &left, const Yield::Multi &right, Symbol::NT *n) const {
+  std::cout << "\n called multi_detect_loop of class alt \n";
   if (nt == n) {
     return true;
   }
@@ -2567,6 +2695,7 @@ bool Alt::Link::multi_detect_loop(
 
 bool Alt::Block::multi_detect_loop(
   const Yield::Multi &left, const Yield::Multi &right, Symbol::NT *nt) const {
+  std::cout << "\n called multi_detect_loop of class alt \n";
   bool r = false;
   for (std::list<Base*>::const_iterator i = alts.begin();
        i != alts.end(); ++i) {
@@ -2579,6 +2708,7 @@ bool Alt::Block::multi_detect_loop(
 
 bool Alt::Multi::multi_detect_loop(
   const Yield::Multi &left, const Yield::Multi &right, Symbol::NT *nt) const {
+  std::cout << "\n called multi_detect_loop of class alt \n";
   bool ret = false;
   assert(left.tracks() == tracks_);
   assert(right.tracks() == tracks_);
@@ -2598,6 +2728,7 @@ bool Alt::Multi::multi_detect_loop(
 // call from every derived class's method
 void Alt::Base::multi_propagate_max_filter(
   std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size) {
+  std::cout << "\n called multi_propagate_max_filter of class alt \n";
   Yield::Multi m(max_size);
   m.min_high(m_ys);
 
@@ -2610,6 +2741,7 @@ void Alt::Base::multi_propagate_max_filter(
 
 // call from visitor
 void Alt::Base::multi_set_max_size() {
+  std::cout << "\n called multi_set_max_size of class alt \n";
   if (!multi_ys_max_temp.tracks()) {
     return;
   }
@@ -2620,6 +2752,7 @@ void Alt::Base::multi_set_max_size() {
 
 void Alt::Simple::multi_propagate_max_filter(
   std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size) {
+  std::cout << "\n called multi_propagate_max_filter of class alt \n";
   if (is_terminal()) {
     return;
   }
@@ -2651,6 +2784,7 @@ void Alt::Simple::multi_propagate_max_filter(
 
 void Alt::Block::multi_propagate_max_filter(
   std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size) {
+  std::cout << "\n called multi_propagate_max_filter of class alt \n";
   Base::multi_propagate_max_filter(nt_sizes, max_size);
 
   Yield::Multi m(max_size);
@@ -2664,6 +2798,7 @@ void Alt::Block::multi_propagate_max_filter(
 
 void Alt::Link::multi_propagate_max_filter(
   std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size) {
+  std::cout << "\n called multi_propagate_max_filter of class alt \n";
   Base::multi_propagate_max_filter(nt_sizes, max_size);
 
   Yield::Multi m(max_size);
@@ -2677,6 +2812,7 @@ void Alt::Link::multi_propagate_max_filter(
 
 void Alt::Multi::multi_propagate_max_filter(
   std::vector<Yield::Multi> &nt_sizes, const Yield::Multi &max_size) {
+  std::cout << "\n called multi_propagate_max_filter of class alt \n";
   Base::multi_propagate_max_filter(nt_sizes, max_size);
 
   Yield::Multi m(max_size);
@@ -2694,6 +2830,7 @@ void Alt::Multi::multi_propagate_max_filter(
 
 void Alt::Simple::multi_init_calls(
   const Runtime::Poly &rest, size_t base_tracks) {
+  std::cout << "\n called multi_init_calls of class alt \n";
   if (is_terminal_) {
     return;
   }
@@ -2720,6 +2857,7 @@ void Alt::Simple::multi_init_calls(
 
 void Alt::Block::multi_init_calls(
   const Runtime::Poly &rest, size_t base_tracks) {
+  std::cout << "\n called multi_init_calls of class alt \n";
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     (*i)->multi_init_calls(rest, base_tracks);
   }
@@ -2728,6 +2866,7 @@ void Alt::Block::multi_init_calls(
 
 void Alt::Link::multi_init_calls(
   const Runtime::Poly &rest, size_t base_tracks) {
+  std::cout << "\n called multi_init_calls of class alt \n";
   if (top_level) {
     calls = 1;
     return;
@@ -2743,6 +2882,7 @@ void Alt::Link::multi_init_calls(
 
 void Alt::Multi::multi_init_calls(
   const Runtime::Poly &rest, size_t base_tracks) {
+  std::cout << "\n called multi_init_calls of class alt \n";
   Runtime::Poly up(rest);
   for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i) {
     Runtime::Poly down(up);
@@ -2760,6 +2900,7 @@ void Alt::Multi::multi_init_calls(
 
 
 void Alt::Simple::multi_collect_factors(Runtime::Poly &p) {
+  std::cout << "\n called multi_collect_factors of class alt \n";
   if (is_terminal_) {
     p *= Runtime::Poly(m_ys);
     return;
@@ -2775,6 +2916,7 @@ void Alt::Simple::multi_collect_factors(Runtime::Poly &p) {
 
 
 void Alt::Block::multi_collect_factors(Runtime::Poly &p) {
+  std::cout << "\n called multi_collect_factors of class alt \n";
   Runtime::Poly r;
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     Runtime::Poly x(1);
@@ -2786,17 +2928,20 @@ void Alt::Block::multi_collect_factors(Runtime::Poly &p) {
 
 
 void Alt::Link::multi_collect_factors(Runtime::Poly &p) {
+  std::cout << "\n called multi_collect_factors of class alt \n";
   p *= Runtime::Poly(m_ys);
 }
 
 
 void Alt::Multi::multi_collect_factors(Runtime::Poly &p) {
+  std::cout << "\n called multi_collect_factors of class alt \n";
   Runtime::Poly a(m_ys);
   p *= a;
 }
 
 
 void Alt::Base::set_tracks(size_t t, size_t p) {
+  std::cout << "\n called set_tracks of class alt \n";
   tracks_ = t;
   track_pos_ = p;
 
@@ -2806,6 +2951,7 @@ void Alt::Base::set_tracks(size_t t, size_t p) {
 
 
 void Alt::Base::set_index_stmts(const std::list<Statement::Base*> &l) {
+  std::cout << "\n called set_index_stmts of class alt \n";
   Log::instance()->error(
     location,
     "Index statements are only allowed before a simple function alternative.");
@@ -2813,17 +2959,20 @@ void Alt::Base::set_index_stmts(const std::list<Statement::Base*> &l) {
 
 
 void Alt::Simple::set_index_stmts(const std::list<Statement::Base*> &l) {
+  std::cout << "\n called set_index_stmts of class alt \n";
   index_stmts = l;
 }
 
 
 void Alt::Base::set_index_overlay(Alt::Base *alt) {
+  std::cout << "\n called set_index_overlay of class alt \n";
   Log::instance()->error(
     location, "Alternative is only allowed after a simple function.");
 }
 
 
 void Alt::Simple::set_index_overlay(Alt::Base *alt) {
+  std::cout << "\n called set_index_overlay of class alt \n";
   Simple *f = dynamic_cast<Simple*>(alt);
   if (!alt) {
     Log::instance()->error(
@@ -2836,12 +2985,14 @@ void Alt::Simple::set_index_overlay(Alt::Base *alt) {
 
 
 void Alt::Base::set_ntparas(const Loc &loc, std::list<Expr::Base*> *l) {
+  std::cout << "\n called set_ntparas of class alt \n";
   Log::instance()->error(
     loc, "Non-terminal parameters need a non-terminal on the lhs!");
 }
 
 
 void Alt::Link::set_ntparas(const Loc &loc, std::list<Expr::Base*> *l) {
+  std::cout << "\n called set_ntparas of class alt \n";
   if (!l || l->empty()) {
     Log::instance()->error(loc, "No non-terminal parser parameters given.");
     return;
@@ -2851,6 +3002,7 @@ void Alt::Link::set_ntparas(const Loc &loc, std::list<Expr::Base*> *l) {
 
 
 void Alt::Simple::set_ntparas(std::list<Expr::Base*> *l) {
+  std::cout << "\n called set_ntparas of class alt \n";
   if (!l) {
     return;
   }
@@ -2859,6 +3011,7 @@ void Alt::Simple::set_ntparas(std::list<Expr::Base*> *l) {
 
 
 bool Alt::Link::check_ntparas() {
+  std::cout << "\n called set_ntparas of class alt \n";
   assert(nt);
   Symbol::NT *x = dynamic_cast<Symbol::NT*>(nt);
   if (!x) {
@@ -2879,6 +3032,7 @@ bool Alt::Link::check_ntparas() {
 
 
 void Alt::Multi::types(std::list< ::Type::Base*> &r) const {
+  std::cout << "\n called types of class alt \n";
   // FIXME use this
   // ::Type::Multi *m = dynamic_cast< ::Type::Multi*>(datatype());
   // assert(m);
@@ -2891,11 +3045,13 @@ void Alt::Multi::types(std::list< ::Type::Base*> &r) const {
 
 
 const std::list<Statement::Var_Decl*> &Alt::Multi::ret_decls() const {
+  std::cout << "\n called ret_decls of class alt \n";
   assert(!ret_decls_.empty());
   return ret_decls_;
 }
 
 
 bool Alt::Base::choice_set() {
+    std::cout << "\n called choice_set of class alt \n";
     return datatype->simple()->is(::Type::LIST) && eval_nullary_fn;
 }

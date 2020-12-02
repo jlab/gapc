@@ -23,6 +23,7 @@
 
 #include <list>
 #include <utility>
+#include <iostream>
 #include "var_acc.hh"
 
 #include "statement.hh"
@@ -40,6 +41,7 @@ void Var_Acc::Base::put(std::ostream &s) const {
 }
 
 void Var_Acc::Plain::put(std::ostream &s) const {
+  std::cout << "\n called put of class var_acc \n";
   if (itr_access)
     s << "(*";
   if (name)
@@ -51,6 +53,7 @@ void Var_Acc::Plain::put(std::ostream &s) const {
 }
 
 void Var_Acc::Comp::put(std::ostream &s) const {
+  std::cout << "\n called put of class var_acc \n";
   if (itr_access)
     s << "(*" << *lhs << ")." << *rhs;
   else
@@ -58,10 +61,12 @@ void Var_Acc::Comp::put(std::ostream &s) const {
 }
 
 void Var_Acc::Array::put(std::ostream &s) const {
+  std::cout << "\n called put of class var_acc \n";
   s << *lhs << '[' << *expr << ']';
 }
 
 Var_Acc::Comp::Comp(const Statement::Var_Decl &vdecl, int n) : Base(COMP) {
+  std::cout << "\n called Comp of class var_acc \n";
   Plain *p = new Var_Acc::Plain(vdecl.name);
   assert(vdecl.type->is(::Type::TUPLE));
   ::Type::Tuple *t = dynamic_cast< ::Type::Tuple*>(vdecl.type);

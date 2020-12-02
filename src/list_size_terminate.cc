@@ -28,9 +28,12 @@
 #include "symbol.hh"
 #include "alt.hh"
 
+#include <iostream>
+
 // example, where this is needed: affinelocsim.gap
 
 void List_Size_Terminate::visit(Symbol::NT &n) {
+  std::cout << "\n called visit(Symbol::NT &n) of class list_size_terminate \n";
   if (n.list_size() == 0) {
     Yield::Poly p(Yield::UP);
     n.set_list_size(p);
@@ -39,6 +42,7 @@ void List_Size_Terminate::visit(Symbol::NT &n) {
 
 
 void List_Size_Terminate::visit(Alt::Base &a) {
+  std::cout << "\n called visit(Alt::Base &a) of class list_size_terminate \n";
   if (a.list_size() == 0) {
     Yield::Poly p(Yield::UP);
     a.set_list_size(p);

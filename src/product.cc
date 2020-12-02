@@ -31,6 +31,8 @@
 #include "var_acc.hh"
 #include "statement.hh"
 
+#include <iostream>
+
 Product::Base::Base(Type t, const Loc &l)
   : type_(t), adp_specialization(ADP_Mode::STANDARD),
     location(l), algebra_(NULL),
@@ -53,14 +55,17 @@ Product::Single::Single(Algebra *a) : Base(SINGLE) {
 }
 
 void Product::Base::set_sorted_choice(Product::Sort_Type st) {
+  std::cout << "\n called set_sorted_choice(Product::Sort_Type st) of class product \n";
   sorted_choice = st;
 }
 
 Product::Sort_Type Product::Base::get_sorted_choice() {
+  std::cout << "\n called get_sorted_choice() of class product \n";
   return sorted_choice;
 }
 
 bool Product::Base::is_sorted_choice() {
+  std::cout << "\n called is_sorted_choice() of class product \n";
   switch (sorted_choice) {
     case Product::STANDARD:
     case Product::MULTI:
@@ -77,6 +82,7 @@ bool Product::Base::is_sorted_choice() {
 // if the choice function return type is a LIST, but in fact only 1 element
 // is returned the LIST will be reduced to BASE
 void Product::Base::reduce_return_type() {
+  std::cout << "\n called reduce_return_type() of class product \n";
   for (hashtable<std::string, Fn_Def*>::iterator i =
        algebra_->choice_fns.begin(); i != algebra_->choice_fns.end(); ++i) {
     Fn_Def *fn = i->second;
@@ -89,6 +95,7 @@ void Product::Base::reduce_return_type() {
 // looks for all choice function that don't need LIST as return type,
 // because only 1 Element is returned
 void Product::Single::eliminate_lists() {
+  std::cout << "\n called eliminate_lists() of class product \n";
   if (eliminate_lists_computed)
     return;
 
@@ -100,6 +107,7 @@ void Product::Single::eliminate_lists() {
 // looks for all choice function that don't need LIST as return type,
 // because only 1 Element is returned
 void Product::Two::eliminate_lists() {
+  std::cout << "\n called eliminate_lists() of class product \n";
   if (eliminate_lists_computed)
     return;
 
@@ -111,11 +119,13 @@ void Product::Two::eliminate_lists() {
 }
 
 bool Product::Single::init() {
+  std::cout << "\n called init() of class product \n";
   return true;
 }
 
 // l, r are subproducts, so init them as well and then join the grammar
 bool Product::Two::init() {
+  std::cout << "\n called init() of class product \n";
   bool x = true;
   bool b = l->init();
   x = x && b;
@@ -129,6 +139,7 @@ bool Product::Two::init() {
 }
 
 bool Product::Times::init() {
+  std::cout << "\n called init() of class product \n";
   bool x = Two::init();
 
   // FIXME
@@ -228,6 +239,7 @@ bool Product::Times::init() {
 }
 
 bool Product::Klass::init() {
+  std::cout << "\n called init() of class product \n";
   bool x = Two::init();
 
   // iterate over left algebra choice functions
@@ -267,6 +279,7 @@ bool Product::Klass::init() {
 }
 
 bool Product::Cartesian::init() {
+  std::cout << "\n called init() of class product \n";
   bool x = Two::init();
 
   // iterate over left algebra choice functions
@@ -311,6 +324,7 @@ bool Product::Cartesian::init() {
 }
 
 bool Product::Pareto::init() {
+  std::cout << "\n called init() of class product \n";
   bool x = Two::init();
 
 
@@ -371,6 +385,7 @@ bool Product::Pareto::init() {
 }
 
 void Product::Pareto::set_pareto_type(int i) {
+  std::cout << "\n called set_pareto_type(int i) of class product \n";
   switch (i) {
     case 1:
         pareto_type = Product::Pareto::Sort;
@@ -394,6 +409,7 @@ void Product::Pareto::set_pareto_type(int i) {
 // set the target_name of all contained functions by adding p as suffix to
 // the function name
 void Product::Single::init_fn_suffix(const std::string &p) {
+  std::cout << "\n called init_fn_suffix(const std::string &p) of class product \n";
   algebra_->init_fn_suffix(p);
   fn_suffix = p;
 }
@@ -401,6 +417,7 @@ void Product::Single::init_fn_suffix(const std::string &p) {
 // set the target_name of all contained functions by adding p as suffix to the
 // function name
 void Product::Two::init_fn_suffix(const std::string &p) {
+  std::cout << "\n called init_fn_suffix(const std::string &p) of class product \n";
   algebra_->init_fn_suffix(p);
   fn_suffix = p;
   l->init_fn_suffix(p + "_l");
@@ -408,17 +425,20 @@ void Product::Two::init_fn_suffix(const std::string &p) {
 }
 
 void Product::Base::install_choice_filter() {
+  std::cout << "\n called install_choice_filter() of class product \n";
   if (!filter_)
     return;
   algebra_->install_choice_filter(*filter_);
 }
 
 void Product::Single::codegen() {
+  std::cout << "\n called codegen() of class product \n";
   algebra_->codegen();
   install_choice_filter();
 }
 
 void Product::Two::codegen() {
+  std::cout << "\n called codegen() of class product \n";
   l->codegen();
   r->codegen();
   algebra_->codegen(*this);
@@ -426,24 +446,29 @@ void Product::Two::codegen() {
 }
 
 void Product::Single::print_code(Printer::Base &s) {
+  std::cout << "\n called print_code(Printer::Base &s) of class product \n";
   algebra_->print_code(s);
 }
 
 void Product::Two::print_code(Printer::Base &s) {
+  std::cout << "\n called print_code(Printer::Base &s) of class product \n";
   algebra_->print_code(s);
   l->print_code(s);
   r->print_code(s);
 }
 
 unsigned int Product::Single::width() {
+  std::cout << "\n called width() of class product \n";
   return 1;
 }
 
 unsigned int Product::Two::width() {
+  std::cout << "\n called width() of class product \n";
   return l->width() + r->width();
 }
 
 Algebra *Product::Single::nth_algebra(unsigned int &n) {
+  std::cout << "\n called nth_algebra(unsigned int &n) of class product \n";
   if (n) {
     n--;
     return NULL;
@@ -452,6 +477,7 @@ Algebra *Product::Single::nth_algebra(unsigned int &n) {
 }
 
 Algebra *Product::Two::nth_algebra(unsigned int &n) {
+  std::cout << "\n called nth_algebra(unsigned int &n) of class product \n";
   Algebra *a = l->nth_algebra(n);
   Algebra *b = r->nth_algebra(n);
   if (a)
@@ -463,52 +489,64 @@ Algebra *Product::Two::nth_algebra(unsigned int &n) {
 
 
 bool Product::Base::contains_only_times() {
+  std::cout << "\n called contains_only_times() of class product \n";
   return false;
 }
 
 bool Product::Single::contains_only_times() {
+  std::cout << "\n called contains_only_times() of class product \n";
   return true;
 }
 
 bool Product::Times::contains_only_times() {
+  std::cout << "\n called contains_only_times() of class product \n";
   return l->contains_only_times() && r->contains_only_times();
 }
 
 bool Product::Nop::contains_only_times() {
+  std::cout << "\n called contains_only_times() of class product \n";
   return l->contains_only_times() && r->contains_only_times();
 }
 
 Product::Base *Product::Base::left_most() {
+  std::cout << "\n called left_most() of class product \n";
   std::abort();
   return 0;
 }
 
 Product::Base *Product::Base::right_most() {
+  std::cout << "\n called right_most() of class product \n";
   std::abort();
   return 0;
 }
 
 Product::Base *Product::Single::left_most() {
+  std::cout << "\n called left_most() of class product \n";
   return this;
 }
 
 Product::Base *Product::Single::right_most() {
+  std::cout << "\n called right_most() of class product \n";
   return this;
 }
 
 Product::Base *Product::Two::left_most() {
+  std::cout << "\n called left_most() of class product \n";
   return l->left_most();
 }
 
 Product::Base *Product::Two::right_most() {
+  std::cout << "\n called right_most() of class product \n";
   return r->right_most();
 }
 
 Product::Base *Product::Base::optimize_shuffle_products() {
+  std::cout << "\n called optimize_shuffle_products() of class product \n";
   return this;
 }
 
 Product::Base *Product::Two::optimize_shuffle_products() {
+  std::cout << "\n called optimize_shuffle_products() of class product \n";
   l = l->optimize_shuffle_products();
   r = r->optimize_shuffle_products();
   return this;
@@ -517,6 +555,7 @@ Product::Base *Product::Two::optimize_shuffle_products() {
 
 // make impossible product combinations a NOP and remove this original product
 Product::Base *Product::Times::optimize_shuffle_products() {
+  std::cout << "\n called optimize_shuffle_products() of class product \n";
   l = l->optimize_shuffle_products();
   r = r->optimize_shuffle_products();
 
@@ -574,6 +613,7 @@ Product::Base *Product::Times::optimize_shuffle_products() {
 }
 
 Mode & Product::Two::left_mode(const std::string &s) {
+  std::cout << "\n called left_mode(const std::string &s) of class product \n";
   hashtable<std::string, Fn_Def*>::iterator i =
     l->algebra()->choice_fns.find(s);
   assert(i != l->algebra()->choice_fns.end());
@@ -582,6 +622,7 @@ Mode & Product::Two::left_mode(const std::string &s) {
 
 Expr::Fn_Call::Builtin Product::Two::left_choice_fn_type(
   const std::string &s) const {
+  std::cout << "\n called left_choice_fn_type of class product \n";
   hashtable<std::string, Fn_Def*>::iterator i =
     l->algebra()->choice_fns.find(s);
   assert(i != l->algebra()->choice_fns.end());
@@ -589,6 +630,7 @@ Expr::Fn_Call::Builtin Product::Two::left_choice_fn_type(
 }
 
 Fn_Def* Product::Two::left_choice_function(const std::string &s) {
+  std::cout << "\n called left_choice_function(const std::string &s) of class product \n";
   hashtable<std::string, Fn_Def*>::iterator i =
     l->algebra()->choice_fns.find(s);
   assert(i != l->algebra()->choice_fns.end());
@@ -596,6 +638,7 @@ Fn_Def* Product::Two::left_choice_function(const std::string &s) {
 }
 
 Mode & Product::Two::right_mode(const std::string &s) {
+  std::cout << "\n called right_mode(const std::string &s) of class product \n";
   hashtable<std::string, Fn_Def*>::iterator i =
     r->algebra()->choice_fns.find(s);
   assert(i != r->algebra()->choice_fns.end());
@@ -604,6 +647,7 @@ Mode & Product::Two::right_mode(const std::string &s) {
 
 Expr::Fn_Call::Builtin Product::Two::right_choice_fn_type(
   const std::string &s) const {
+  std::cout << "\n called right_choice_fn_type(const std::string &s) of class product \n";
   hashtable<std::string, Fn_Def*>::iterator i =
     r->algebra()->choice_fns.find(s);
   assert(i != r->algebra()->choice_fns.end());
@@ -611,6 +655,7 @@ Expr::Fn_Call::Builtin Product::Two::right_choice_fn_type(
 }
 
 Fn_Def* Product::Two::right_choice_function(const std::string &s) {
+  std::cout << "\n called right_choice_function(const std::string &s) of class product \n";
   hashtable<std::string, Fn_Def*>::iterator i =
     l->algebra()->choice_fns.find(s);
   assert(i != r->algebra()->choice_fns.end());
@@ -618,6 +663,7 @@ Fn_Def* Product::Two::right_choice_function(const std::string &s) {
 }
 
 Product::Nop::Nop(Times &times) : Two(NOP, times.left(), times.right()) {
+  std::cout << "\n called Nop of class product \n";
   set_filter(times.filter());
 
   // loop over joined algebra and set mode and yield for all
@@ -634,6 +680,7 @@ Product::Nop::Nop(Times &times) : Two(NOP, times.left(), times.right()) {
 // add function found in algebra by name to list l
 void Product::Base::collect_fns(
   std::list<Fn_Def*> &l, const std::string &name) {
+  std::cout << "\n called collect_fns of class product \n";
   assert(algebra_);
   Fn_Def *fn = algebra_->fn_def(name);
   l.push_back(fn);
@@ -642,6 +689,7 @@ void Product::Base::collect_fns(
 // add function found in left and right algebra by name to list list
 void Product::Two::collect_fns(
   std::list<Fn_Def*> &list, const std::string &name) {
+  std::cout << "\n called collect_fns of class product \n";
   Base::collect_fns(list, name);
   l->collect_fns(list, name);
   r->collect_fns(list, name);
@@ -649,6 +697,7 @@ void Product::Two::collect_fns(
 
 
 bool Product::Overlay::contains_only_times() {
+  std::cout << "\n called contains_only_times() of class product \n";
   return l->contains_only_times() && r->contains_only_times();
 }
 
@@ -656,6 +705,7 @@ bool Product::Overlay::contains_only_times() {
 // overlay product uses different algebras for forward (algebra_)
 // and backtracing (bt_score_algebra_))
 bool Product::Overlay::init() {
+  std::cout << "\n called init() of class product \n";
   bool x = true;
   bool b = l->init();
   x = x && b;
@@ -670,6 +720,7 @@ bool Product::Overlay::init() {
 // for overlay product this is different
 // for all other it's the same
 Algebra *Product::Base::bt_score_algebra() {
+  std::cout << "\n called bt_score_algebra() of class product \n";
   if (bt_score_algebra_) {
     return bt_score_algebra_;
   } else {
@@ -679,58 +730,69 @@ Algebra *Product::Base::bt_score_algebra() {
 
 // for all types except Overlay backtrace is calculated using the normal product
 Product::Base *Product::Base::bt_score_product() {
+  std::cout << "\n called bt_score_product() of class product \n";
   return this;
 }
 
 // for Overlay the backtrace is calculated using the right product
 Product::Base *Product::Overlay::bt_score_product() {
+  std::cout << "\n called bt_score_product() of class product \n";
   return r;
 }
 
 // looks for all choice function that don't need LIST as return type,
 // because only 1 Element is returned
 void Product::Overlay::eliminate_lists() {
+  std::cout << "\n called eliminate_lists() of class product \n";
   l->eliminate_lists();
   r->eliminate_lists();
 }
 
 void Product::Overlay::codegen() {
+  std::cout << "\n called codegen() of class product \n";
   l->codegen();
   r->codegen();
 }
 
 void Product::Overlay::print_code(Printer::Base &s) {
+  std::cout << "\n called print_code(Printer::Base &s) of class product \n";
   algebra_->print_code(s);
 }
 
 // set the target_name of all contained functions by adding p as suffix
 // to the function name
 void Product::Overlay::init_fn_suffix(const std::string &p) {
+  std::cout << "\n called init_fn_suffix(const std::string &p) of class product \n";
   algebra_->init_fn_suffix(p);
   fn_suffix = p;
 }
 
 bool Product::Base::contains(Type t) {
+  std::cout << "\n called contains(Type t) of class product \n";
   return false;
 }
 
 bool Product::Two::contains(Type t) {
+  std::cout << "\n called reduce_return_type() of class product \n";
   return is(t) || l->contains(t) || r->contains(t);
 }
 
 void Product::Base::set_in_use(const Fn_Decl &f) {
+  std::cout << "\n called set_in_use(const Fn_Decl &f) of class product \n";
   hashtable<std::string, Fn_Def*>::iterator i = algebra_->fns.find(*f.name);
   assert(i != algebra_->fns.end());
   i->second->set_in_use(f.in_use());
 }
 
 void Product::Two::set_in_use(const Fn_Decl &f) {
+  std::cout << "\n called set_in_use(const Fn_Decl &f) of class product \n";
   Base::set_in_use(f);
   l->set_in_use(f);
   r->set_in_use(f);
 }
 
 bool Product::Takeone::init() {
+  std::cout << "\n called init() of class product \n";
   bool x = Two::init();
   // loop over left algebra choice functions
   for (hashtable<std::string, Fn_Def*>::iterator i =
@@ -779,17 +841,20 @@ Product::Base *Product::Base::right() { assert(0); return 0; }
 
 // vaccs print a string representation to an output stream
 void Product::Base::init_vacc(Var_Acc::Base *src, Var_Acc::Base *dst) {
+  std::cout << "\n called init_vacc(Var_Acc::Base *src, Var_Acc::Base *dst) of class product \n";
   assert(0); std::abort();
 }
 
 // vaccs print a string representation to an output stream
 void Product::Single::init_vacc(Var_Acc::Base *src, Var_Acc::Base *dst) {
+  std::cout << "\n called init_vacc(Var_Acc::Base *src, Var_Acc::Base *dst) of class product \n";
   src_vacc = src;
   dst_vacc = dst;
 }
 
 // vaccs print a string representation to an output stream
 void Product::Two::init_vacc(Var_Acc::Base *src, Var_Acc::Base *dst) {
+  std::cout << "\n called init_vacc(Var_Acc::Base *src, Var_Acc::Base *dst) of class product \n";
   src_vacc = src;
   dst_vacc = dst;
   l->init_vacc(new Var_Acc::Comp(src, new std::string("first")),
@@ -804,6 +869,7 @@ void Product::Two::init_vacc(Var_Acc::Base *src, Var_Acc::Base *dst) {
 void Product::Base::generate_filter_decl(
     std::list<Statement::Base*> &hash_code,
     std::list<Statement::Var_Decl*> &filters) const {
+  std::cout << "\n called generate_filter_decl of class product \n";
   if (filter_) {
     Statement::Var_Decl *filter_decl = new Statement::Var_Decl(
         new ::Type::External(filter_->name),
@@ -825,6 +891,7 @@ void Product::Base::generate_hash_decl(const Fn_Def &fn,
     std::list<Statement::Base*> &init_code,
     std::list<Statement::Base*> &equal_score_code,
     std::list<Statement::Base*> &compare_code) const {
+  std::cout << "\n called generate_hash_decl of class product \n";
   assert(0);
   std::abort();
 }
@@ -836,6 +903,7 @@ void Product::Single::generate_hash_decl(const Fn_Def &fn_def,
     std::list<Statement::Base*> &init_code,
     std::list<Statement::Base*> &equal_score_code,
     std::list<Statement::Base*> &compare_code) const {
+  std::cout << "\n called reduce_return_type() of class product \n";
   Fn_Def *fn = algebra_->fn_def(*fn_def.name);
   if (fn->choice_mode() == Mode::CLASSIFY)
     return;
@@ -952,6 +1020,7 @@ void Product::Times::generate_hash_decl(const Fn_Def &fn,
     std::list<Statement::Base*> &init_code,
     std::list<Statement::Base*> &equal_score_code,
     std::list<Statement::Base*> &compare_code) const {
+  std::cout << "\n called generate_hash_decl of class product \n";
   std::list<Statement::Base*> a, b;
   l->generate_hash_decl(fn, a, filters, finalize_code, init_code,
                         equal_score_code, compare_code);
@@ -978,6 +1047,7 @@ void Product::Cartesian::generate_hash_decl(const Fn_Def &fn,
     std::list<Statement::Base*> &init_code,
     std::list<Statement::Base*> &equal_score_code,
     std::list<Statement::Base*> &compare_code) const {
+  std::cout << "\n called generate_hash_decl of class product \n";
   std::list<Statement::Base*> a, b;
   l->generate_hash_decl(fn, a, filters, finalize_code, init_code,
                         equal_score_code, compare_code);
@@ -998,6 +1068,7 @@ void Product::Pareto::generate_hash_decl(const Fn_Def &fn,
     std::list<Statement::Base*> &init_code,
     std::list<Statement::Base*> &equal_score_code,
     std::list<Statement::Base*> &compare_code) const {
+  std::cout << "\n called generate_hash_decl of class product \n";
   std::list<Statement::Base*> a, b;
   l->generate_hash_decl(fn, a, filters, finalize_code, init_code,
                         equal_score_code, compare_code);
@@ -1011,6 +1082,7 @@ void Product::Pareto::generate_hash_decl(const Fn_Def &fn,
 }
 
 bool Product::Base::left_is_classify() {
+  std::cout << "\n called left_is_classify() of class product \n";
   unsigned int t = 0;
   Algebra *l = nth_algebra(t);
   for (hashtable<std::string, Fn_Def*>::const_iterator i =
@@ -1023,6 +1095,7 @@ bool Product::Base::left_is_classify() {
 }
 
 bool Product::Base::one_per_class() {
+  std::cout << "\n called one_per_class() of class product \n";
   Product::iterator i = Product::begin(this);
   for ( ; i != Product::end(); ++i)
     if ((*i)->is(Product::SINGLE)) {
@@ -1049,16 +1122,19 @@ Bool Product::Base::no_coopt_class_;
 
 
 Product::Base *Product::Single::replace_classified(bool &x) {
+  std::cout << "\n called replace_classified(bool &x) of class product \n";
   return this;
 }
 
 Product::Base *Product::Two::replace_classified(bool &x) {
+  std::cout << "\n called replace_classified(bool &x) of class product \n";
   l = l->replace_classified(x);
   r = r->replace_classified(x);
   return this;
 }
 
 Product::Base *Product::Klass::replace_classified(bool &x) {
+  std::cout << "\n called replace_classified(bool &x) of class product \n";
   x = true;
   // new Product::Times(*dynamic_cast<Two*>(this));
   Times *t = new Product::Times(*this);

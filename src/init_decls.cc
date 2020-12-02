@@ -37,6 +37,7 @@
 
 
 void Init_Decls::visit(Symbol::NT &s) {
+  std::cout << "\n called visit(Symbol::NT &s) of class init_decls \n";
   ret = 0;
   arg = 0;
   if (Log::instance()->is_debug())
@@ -44,6 +45,7 @@ void Init_Decls::visit(Symbol::NT &s) {
 }
 
 void Init_Decls::visit(Alt::Base &a) {
+  std::cout << "\n called visit(Alt::Base &a) of class init_decls \n";
   a.init_ret_decl(ret, prefix);
   if (a.ret_decl) {
     if (Log::instance()->is_debug())
@@ -53,6 +55,7 @@ void Init_Decls::visit(Alt::Base &a) {
 }
 
 void Init_Decls::visit(Fn_Arg::Base &f) {
+  std::cout << "\n called visit(Fn_Arg::Base &f) of class init_decls \n";
   f.init_ret_decl(arg, prefix);
   if (Log::instance()->is_debug()) {
     for (std::vector<Statement::Var_Decl*>::const_iterator

@@ -37,6 +37,7 @@ Loc::Loc(const yy::location &l) : yy::location(l), off(0), file(0) {
 }
 
 std::string Loc::line() const {
+  std::cout << "\n called line() of class loc \n";
   assert(file);
   int r;
   char *buffer = new char[LINE_SIZE];
@@ -60,6 +61,7 @@ std::string Loc::line() const {
 }
 
 void Loc::set_file(std::FILE* f) {
+  std::cout << "\n called set_file(std::FILE* f) of class loc \n";
   //  assert(f);
   file = f;
 }

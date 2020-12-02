@@ -25,6 +25,7 @@
 #include "input.hh"
 
 #include "log.hh"
+#include <iostream>
 
 
 const char Input::map[][6] = {
@@ -35,12 +36,14 @@ const char Input::map[][6] = {
 
 
 void Input::set(const std::string &s, const Loc &l) {
+  std::cout << "\n called visit(Symbol::NT &s) of class input \n";
   assert(modes_.empty());
   modes_.push_back(str_to_mode(s, l));
 }
 
 
 Input::Mode Input::str_to_mode(const std::string &s, const Loc &l) {
+  std::cout << "\n called visit(Symbol::NT &s) of class input \n";
   for (size_t i = 0; i <= MODE_END; ++i) {
     if (map[i] == s) {
       return Mode (i);
@@ -55,6 +58,7 @@ Input::Mode Input::str_to_mode(const std::string &s, const Loc &l) {
 
 
 void Input::set(const std::list<std::string*> &s, const Loc &l) {
+  std::cout << "\n called set(const std::list<std::string*> &s, const Loc &l) of class input \n";
   for (std::list<std::string*>::const_iterator i = s.begin();
        i != s.end(); ++i) {
     modes_.push_back(str_to_mode(**i, l));
@@ -63,6 +67,7 @@ void Input::set(const std::list<std::string*> &s, const Loc &l) {
 
 
 void Input::set_tracks(size_t t) {
+  std::cout << "\n called set_tracks(size_t t) of class input \n";
   if (!modes_.empty()) {
     return;
   }
@@ -71,6 +76,7 @@ void Input::set_tracks(size_t t) {
 
 
 std::string* Input::toString(Mode m) {
+  std::cout << "\n called toString(Mode m) of class input \n";
   if (m < MODE_END && m >= 0) {
     return new std::string(map[m]);
   }

@@ -22,6 +22,7 @@
 }}} */
 
 #include <string>
+#include <iostream>
 #include "list_warn.hh"
 
 #include "symbol.hh"
@@ -36,6 +37,7 @@
 #include "fn_def.hh"
 
 void List_Warn::visit(Symbol::NT &n) {
+  std::cout << "\n called visit(Symbol::NT &n) of class list_warn \n";
   if (skip)
     return;
   if (instance) {
@@ -58,6 +60,7 @@ void List_Warn::visit(Symbol::NT &n) {
 }
 
 void List_Warn::visit_begin(Alt::Block &a) {
+  std::cout << "\n called visit_begin(Alt::Block &a) of class list_warn \n";
   if (skip)
     return;
   if (a.alts.size() > 1 && a.list_size() == Yield::UP) {

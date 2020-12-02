@@ -34,11 +34,14 @@
 #include "expr/new.hh"
 #include "type/backtrace.hh"
 
+#include <iostream>
+
 
 Signature_Base::~Signature_Base() {}
 
 
 Fn_Decl* Signature::decl(const std::string &s) {
+  std::cout << "\n called decl(const std::string &s) of class signature \n";
   hashtable<std::string, Fn_Decl*>::iterator i = decls.find(s);
   if (i == decls.end()) {
     return NULL;
@@ -47,6 +50,7 @@ Fn_Decl* Signature::decl(const std::string &s) {
 }
 
 void Signature::setDecls(hashtable <std::string, Fn_Decl*> &d) {
+  std::cout << "\n called setDecls(hashtable <std::string, Fn_Decl*> &d) of class signature \n";
   for (hashtable<std::string, Fn_Decl*>::iterator i = d.begin();
        i != d.end(); ++i) {
     Fn_Decl *f  = i->second;
@@ -59,6 +63,7 @@ void Signature::setDecls(hashtable <std::string, Fn_Decl*> &d) {
 
 
 void Signature::replace(Type::Base *a, Type::Base *b) {
+  std::cout << "\n called replace(Type::Base *a, Type::Base *b) of class signature \n";
   for (hashtable <std::string, Fn_Decl*>::iterator i = decls.begin();
        i != decls.end(); ++i) {
     i->second->replace(a, b);
@@ -67,6 +72,7 @@ void Signature::replace(Type::Base *a, Type::Base *b) {
 
 
 std::ostream &operator<< (std::ostream &s, const Signature &sig) {
+  std::cout << "\n called std::ostream &operator<< (std::ostream &s, const Signature &sig)  of class signature \n";
   s << "Signature:" << std::endl;
   for (hashtable <std::string, Fn_Decl*>::const_iterator i = sig.decls.begin();
        i != sig.decls.end(); ++i) {
@@ -77,11 +83,13 @@ std::ostream &operator<< (std::ostream &s, const Signature &sig) {
 
 
 void Signature::print() {
+  std::cout << "\n called print() of class signature \n";
   std::cerr << *this;
 }
 
 
 bool Signature::check() {
+  std::cout << "\n called check() of class signature \n";
   if (choice_fns.empty()) {
     Log::instance()->error(
       location,
@@ -118,11 +126,13 @@ bool Signature::check() {
 
 
 void Signature::set_args(hashtable<std::string, Arg*> &h) {
+  std::cout << "\n called set_args(hashtable<std::string, Arg*> &h) of class signature \n";
   args = h;
 }
 
 
 Type::Base *Signature::var_lookup(const Type::Signature *t) {
+  std::cout << "\n called var_lookup(const Type::Signature *t) of class signature \n";
   if (!algebra)
     return NULL;
   hashtable<std::string, Type::Base*>::iterator i = algebra->params.find(
@@ -134,6 +144,7 @@ Type::Base *Signature::var_lookup(const Type::Signature *t) {
 
 
 Type::Base *Signature::var_lookup(const Type::Alphabet *t) {
+  std::cout << "\n called var_lookup(const Type::Alphabet *t) of class signature \n";
   if (!algebra)
     return NULL;
   hashtable<std::string, Type::Base*>::iterator i = algebra->params.find(
@@ -145,6 +156,7 @@ Type::Base *Signature::var_lookup(const Type::Alphabet *t) {
 
 
 Algebra *Signature::generate(std::string *n, std::string *mode) {
+  std::cout << "\n called generate(std::string *n, std::string *mode) of class signature \n";
   if (*mode == "count")
     return generate_count(n);
   if (*mode == "enum")
@@ -162,6 +174,7 @@ struct Generate_Stmts {
 Algebra *Signature::generate_algebra(
   std::string *n, Mode::Type mode_type, Type::Base *answer_type,
   const Generate_Stmts &generate_stmts) {
+  std::cout << "\n called generate_algebra of class signature \n";
   // FIXME make count/enum alphabet agnostic
   Type::Base *alph = new Type::Char();
   return generate_algebra(n, mode_type, answer_type, alph, generate_stmts);
@@ -171,6 +184,7 @@ Algebra *Signature::generate_algebra(
 Algebra *Signature::generate_algebra(
   std::string *n, Mode::Type mode_type, Type::Base *answer_type,
   Type::Base *alpha, const Generate_Stmts &generate_stmts) {
+  std::cout << "\n called generate_algebra of class signature \n";
   Algebra *a = new Algebra(n);
   a->signature = this;
   hashtable<std::string, Type::Base*> eqs;
@@ -220,6 +234,7 @@ Algebra *Signature::generate_algebra(
 
 struct Generate_Count_Stmts : public Generate_Stmts {
   void apply(Fn_Def &fn) const {
+    std::cout << "\n called apply(Fn_Def &fn) of class signature \n";
     if (fn.is_Choice_Fn()) {
       Expr::Fn_Call *expr = new Expr::Fn_Call(Expr::Fn_Call::LIST);
       Expr::Fn_Call *sum = new Expr::Fn_Call(Expr::Fn_Call::SUM);
@@ -265,6 +280,7 @@ struct Generate_Count_Stmts : public Generate_Stmts {
 
 
 Algebra *Signature::generate_count(std::string *n) {
+  std::cout << "\n called generate_count(std::string *n) of class signature \n";
   return generate_algebra(n, Mode::SYNOPTIC, new Type::BigInt(),
                           Generate_Count_Stmts());
 }
@@ -277,6 +293,7 @@ struct Generate_Enum_Stmts : public Generate_Stmts {
  private:
   void apply(std::list<Statement::Base*> &l, Para_Decl::Simple *s,
              Statement::Var_Decl *&cur) const {
+    std::cout << "\n called apply of class signature \n";
     Statement::Fn_Call *f = new Statement::Fn_Call(
       Statement::Fn_Call::STR_APPEND);
     f->add_arg(*cur);
@@ -287,6 +304,7 @@ struct Generate_Enum_Stmts : public Generate_Stmts {
 
   void apply(std::list<Statement::Base*> &l, Para_Decl::Multi *m,
              Statement::Var_Decl *&cur) const {
+    std::cout << "\n called apply of class signature \n";
     Statement::Fn_Call * f = new Statement::Fn_Call(
       Statement::Fn_Call::STR_APPEND);
     f->add_arg(*cur);
@@ -320,6 +338,7 @@ struct Generate_Enum_Stmts : public Generate_Stmts {
   void apply(std::list<Statement::Base*> &l,
              const std::list<Para_Decl::Base*> &paras,
              Statement::Var_Decl *&cur) const {
+    std::cout << "\n called apply of class signature \n";
     std::list<Statement::Base*> apps;
     unsigned int a = 0;
     for (std::list<Para_Decl::Base*>::const_iterator i = paras.begin();
@@ -360,6 +379,7 @@ struct Generate_Enum_Stmts : public Generate_Stmts {
 
  public:
   void apply(Fn_Def &fn) const {
+    std::cout << "\n called void apply(Fn_Def &fn) of class signature \n";
     if (fn.is_Choice_Fn()) {
       Statement::Return *ret = new Statement::Return(fn.names.front());
       fn.stmts.push_back(ret);
@@ -397,6 +417,7 @@ struct Generate_Enum_Stmts : public Generate_Stmts {
 
 
 Algebra *Signature::generate_enum(std::string *n) {
+  std::cout << "\n called generate_enum(std::string *n) of class signature \n";
   return generate_algebra(n, Mode::PRETTY, new Type::External("Rope"),
                           Generate_Enum_Stmts());
 }
@@ -407,6 +428,7 @@ struct Generate_Backtrace_Stmts : public Generate_Stmts {
   Type::Base *value_type;
   Type::Base *pos_type;
   void apply(Fn_Def &fn) const {
+    std::cout << "\n called apply(Fn_Def &fn) of class signature \n";
     if (fn.is_Choice_Fn()) {
       Statement::Return *ret = new Statement::Return(fn.names.front());
       fn.stmts.push_back(ret);
@@ -427,6 +449,7 @@ struct Generate_Backtrace_Stmts : public Generate_Stmts {
 Algebra *Signature::generate_backtrace(
   std::string *n, Type::Base *value_type, Type::Base *pos_type,
   Type::Base *alph) {
+  std::cout << "\n called generate_backtrace of class signature \n";
   Generate_Backtrace_Stmts gen;
   gen.value_type = value_type;
   gen.pos_type = pos_type;

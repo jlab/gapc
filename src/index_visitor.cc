@@ -37,6 +37,7 @@ void Index_Visitor::visit(Symbol::Terminal &s) {
 }
 
 void Index_Visitor::visit(Symbol::NT &n) {
+  std::cout << "\n called visit of class index_visitor \n";
   std::cerr << std::endl << std::endl;
 
   std::cerr << *n.name << " [ < ";
@@ -61,37 +62,46 @@ void Index_Visitor::visit(Symbol::NT &n) {
 }
 
 void Index_Visitor::visit_end(Symbol::NT &n) {
+  std::cout << "\n called visit_end of class index_visitor \n";
   std::cerr << std::endl;
 }
 
 void Index_Visitor::visit_itr(Symbol::NT &n) {
+  std::cout << "\n called visit_itr of class index_visitor \n";
   std::cerr << " | \n\t";
 }
 
 void Index_Visitor::visit_begin(Alt::Simple &a) {
+  std::cout << "\n called visit_begin of class index_visitor \n";
   a.put_indices(std::cerr);
 }
 
 void Index_Visitor::visit(Alt::Link &a) {
+  std::cout << "\n called visit of class grammar \n";
   // std::cerr << "<" << a.list_size() << " " << *a.nt->name << ">";
 }
 
 void Index_Visitor::visit_begin(Alt::Block &a) {
+  std::cout << "\n called visit_begin of class index_visitor \n";
   std::cerr << " { ";
 }
 
 void Index_Visitor::visit_itr(Alt::Block &a) {
+  std::cout << "\n called visit_itr of class index_visitor \n";
   std::cerr << " | \n\t";
 }
 
 void Index_Visitor::visit_end(Alt::Block &a) {
+  std::cout << "\n called visit_end of class index_visitor \n";
   std::cerr << " }";
 }
 
 void Index_Visitor::visit(Fn_Arg::Const &f) {
+  std::cout << "\n called visit of class index_visitor \n";
   // std::cerr << "|" << f.list_size() << "|";
 }
 
 void Index_Visitor::visit(Fn_Arg::Alt &f) {
+  std::cout << "\n called visit of class index_visitor \n";
   // std::cerr << "|" << f.list_size() << "|";
 }

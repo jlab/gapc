@@ -28,8 +28,11 @@
 #include "const.hh"
 #include "type.hh"
 
+#include <iostream>
+
 
 void Char_Visitor::visit_begin(Alt::Simple &a) {
+  std::cout << "\n called visit_begin of class char_visitor \n";
   if (a.is_terminal()) {
     if (a.args.size() == 1 && *a.name == "CHAR")
       active = true;
@@ -37,10 +40,12 @@ void Char_Visitor::visit_begin(Alt::Simple &a) {
 }
 
 void Char_Visitor::visit_end(Alt::Simple &a) {
+  std::cout << "\n called visit_end of class char_visitor \n";
   active = false;
 }
 
 void Char_Visitor::visit(Fn_Arg::Const &f) {
+  std::cout << "\n called visit of class char_visitor \n";
   if (!active)
     return;
   Type::Base *type = f.expr().data_type();

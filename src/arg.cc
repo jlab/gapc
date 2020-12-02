@@ -27,7 +27,10 @@
 #include "log.hh"
 #include "loc.hh"
 
+#include <iostream>
+
 void Arg::add_arg(hashtable<std::string, Arg*> &h, Arg* a) {
+  std::cout << "\n called add_arg of class arg \n";
   if (h.find(*a->name) != h.end()) {
     Log::instance()->error(a->location,
         "Argument " + *a->name + " already defined");

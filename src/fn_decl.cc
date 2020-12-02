@@ -28,22 +28,27 @@
 
 #include "yieldsize.hh"
 
+#include <iostream>
+
 
 Fn_Decl::~Fn_Decl() {}
 
 
 Fn_Decl::Fn_Decl(Type::Base *r, std::string *n, const Loc &l)
   : in_use_(false), choice_fn(false), return_type(0), name(n), location(l) {
+  std::cout << "\n called Fn_Decl of class fn_dcl \n";
   init(r);
 }
 
 Fn_Decl::Fn_Decl(Type::Base *r, std::string *n)
   : in_use_(false), choice_fn(false), return_type(0), name(n) {
+  std::cout << "\n called Fn_Decl of class fn_dcl \n";
   init(r);
 }
 
 
 void Fn_Decl::init(Type::Base *r) {
+  std::cout << "\n called init of class fn_dcl \n";
   if (r->is(Type::CHOICE)) {
     return_type = dynamic_cast<Type::Choice*>(r)->rest;
     choice_fn = true;
@@ -59,6 +64,7 @@ hashtable<std::string, Fn_Decl*> Fn_Decl::builtins;
 
 
 void Fn_Decl::init_table() {
+  std::cout << "\n called init_table of class fn_dcl \n";
   Type::Base *r = new Type::Char();
   std::string *s = new std::string("CHAR");
   Loc l;
@@ -124,6 +130,7 @@ void Fn_Decl::init_table() {
 
 // FIXME no deep replacement - e.g. alphabet in list of list ...
 void Fn_Decl::replace(Type::Base *a, Type::Base *b) {
+  std::cout << "\n called replace of class fn_dcl \n";
   if (return_type->is_eq(*a)) {
     return_type = b;
   }
@@ -143,6 +150,7 @@ void Fn_Decl::replace(Type::Base *a, Type::Base *b) {
 void Fn_Decl::replace_types(
   std::pair<std::string*, Type::Base*> &alph,
   std::pair<std::string*, Type::Base*> &answer) {
+  std::cout << "\n called replace_types of class fn_dcl \n";
   // FIXME for multiple answer types ...
   if (choice_fn) {
     assert(types.size() == 1);
@@ -193,11 +201,13 @@ std::ostream &operator<<(std::ostream &s, const Fn_Decl &f) {
 
 
 void Fn_Decl::set_types(std::list<Type::Base*> *l) {
+  std::cout << "\n called set_types of class fn_dcl \n";
   types = *l;
 }
 
 
 void Fn_Decl::add_fn_decl(hashtable<std::string, Fn_Decl *> &h, Fn_Decl *f) {
+  std::cout << "\n called add_fn_decl of class fn_dcl \n";
   if (h.find(*f->name) != h.end()) {
     Log::instance()->error(
       f->location, "Operator name " + *f->name + " redefined");
@@ -208,6 +218,7 @@ void Fn_Decl::add_fn_decl(hashtable<std::string, Fn_Decl *> &h, Fn_Decl *f) {
 }
 
 bool Fn_Decl::operator==(const Fn_Decl &d) const {
+  std::cout << "\n called Fn_Decl of class fn_dcl \n";
   bool r = true;
   if (choice_fn != d.choice_fn) {
     Log::instance()->error(location, "Choice modifier does not match");
@@ -246,11 +257,13 @@ bool Fn_Decl::operator==(const Fn_Decl &d) const {
 
 
 bool Fn_Decl::types_equal(Fn_Decl &d) {
+  std::cout << "\n called types_equal of class fn_dcl \n";
   return types.size() == d.types.size();
 }
 
 
 void Fn_Decl::set_nttypes(std::list<Type::Base*> *l) {
+  std::cout << "\n called set_nttypes of class fn_dcl \n";
   if (!l) {
     return;
   }

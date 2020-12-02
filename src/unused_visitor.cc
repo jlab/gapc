@@ -22,6 +22,7 @@
 }}} */
 
 #include <cassert>
+#include <iostream>
 
 #include "unused_visitor.hh"
 
@@ -32,11 +33,13 @@
 
 
 void Unused_Visitor::visit_begin(Alt::Simple &a) {
+  std::cout << "\n called visit_begin of class unused_visitor \n";
   assert(a.decl);
   a.decl->set_in_use();
 }
 
 void Unused_Visitor::visit(Symbol::NT &n) {
+  std::cout << "\n called visit of class unused_visitor \n";
   if (n.eval_decl)
     n.eval_decl->set_in_use();
 }

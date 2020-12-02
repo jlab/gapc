@@ -25,6 +25,8 @@
 #include "const.hh"
 #include "log.hh"
 
+#include <iostream>
+
 Const::Char::Char(const std::string &n, const Loc &l)
   : Base(CHAR, l) {
   assert(n.size() > 0);
@@ -55,6 +57,7 @@ Const::Char::Char(const std::string &n, const Loc &l)
 Const::Base::~Base() {}
 
 void Const::Base::print_type(std::ostream &s) {
+  std::cout << "\n called print_type of class const \n";
   if (datatype)
     s << *datatype;
   else
@@ -63,21 +66,26 @@ void Const::Base::print_type(std::ostream &s) {
 
 
 void Const::Base::put(std::ostream &s) {
+  std::cout << "\n called put of class const \n";
 }
 
 void Const::Int::put(std::ostream &s) {
+  std::cout << "\n called put of class const \n";
   s << i;
 }
 
 void Const::Size::put(std::ostream &s) {
+  std::cout << "\n called put of class const \n";
   s << u;
 }
 
 void Const::Float::put(std::ostream &s) {
+  std::cout << "\n called put of class const \n";
   s << std::scientific << f;
 }
 
 void Const::Char::put(std::ostream &s) {
+  std::cout << "\n called put of class const \n";
   if (c < 32) {
     // s << "\'\\x" << std::hex << int(c) << std::dec << '\'';
     s << int(c);
@@ -87,19 +95,23 @@ void Const::Char::put(std::ostream &s) {
 }
 
 void Const::String::put(std::ostream &o) {
+  std::cout << "\n called print_type of class const \n";
   o << '"' << *s << '"';
 }
 
 void Const::Rational::put(std::ostream &o) {
+  std::cout << "\n called print_type of class const \n";
   o << "Rational(\"" << *a << "/" << *b << "\")";
 }
 
 void Const::Bool::put(std::ostream &o) {
+  std::cout << "\n called put of class const \n";
   o << (b ? "true" : "false");
 }
 
 
 void Const::Number::setNegative() {
+  std::cout << "\n called setNegative of class const \n";
   Yield::Poly r(ys.high());
   r += 1;
   ys.set(ys.low(), r);

@@ -28,15 +28,18 @@
 #include "alt.hh"
 #include "symbol.hh"
 #include "grammar.hh"
+#include <iostream>
 
 Inline_Nts::Inline_Nts(Grammar *g) : grammar(g) {
 }
 
 void Inline_Nts::visit_end(Symbol::NT &n) {
+  std::cout << "\n called visit_end(Symbol::NT &n) of class inline_nts \n";
   n.inline_nts(grammar);
 }
 
 void Inline_Nts::visit(Fn_Arg::Alt &f) {
+  std::cout << "\n called visit(Fn_Arg::Alt &f) of class inline_nts \n";
   if (!f.is(Alt::LINK))
     return;
   Alt::Link *l = dynamic_cast<Alt::Link*>(f.alt);
