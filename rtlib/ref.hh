@@ -30,45 +30,50 @@
 namespace Ref {
 template<class T> class Lazy {
  public:
-    boost::shared_ptr<T> l;
+  boost::shared_ptr<T> l;
 
  protected:
-      void lazy() {
-        if (!l.use_count()) l.reset(new T());
-      }
+  void lazy() {
+    if (!l.use_count()) l.reset(new T());
+  }
 
-      void copy(const Lazy &r) {
-        l = r.l;
-      }
+  void copy(const Lazy &r) {
+    l = r.l;
+  }
 
  public:
-      typedef T Type;
+  typedef T Type;
+  typedef typename T::iterator iterator;
 
-      typedef typename T::iterator iterator;
+  Lazy() {
+  }
 
-      Lazy() {
-      }
+  Lazy(const Lazy &r) {
+    copy(r);
+  }
 
-      Lazy(const Lazy &r) {
-        copy(r);
-      }
+  ~Lazy() {
+  }
 
-      ~Lazy() {
-      }
+  Lazy &operator=(const Lazy &r) {
+    copy(r);
+    return *this;
+  }
 
-      Lazy &operator=(const Lazy &r) {
-        copy(r);
-        return *this;
-      }
+  T *operator->() {
+    lazy();
+    return l.get();
+  }
 
-      T *operator->() { lazy(); return l.get(); }
+  T &ref() {
+    lazy();
+    return *l.get();
+  }
 
-      T &ref() { lazy(); return *l.get(); }
-
-
-      const T &const_ref() const {
-        assert(l.use_count());  return *l.get();
-      }
+  const T &const_ref() const {
+    assert(l.use_count());
+    return *l.get();
+  }
 };
 }  // namespace Ref
 
