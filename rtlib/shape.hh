@@ -70,7 +70,7 @@ class Fiber {
 
     Size length() const {
       Size l = 1;
-      for (T *a = array; *a & T(-1)  >> bits-char_width; ++a)
+      for (T *a = array; *a & T(-1)  >> (bits-char_width); ++a)
         ++l;
       return l;
     }
@@ -173,7 +173,7 @@ class Fiber {
       T *t = array;
       Size l = 0;
       for (;;) {
-        if (*t & T(-1) >> bits-char_width) {
+        if (*t & T(-1) >> (bits-char_width)) {
           ++t;
           l+=chars;
         } else {
@@ -187,7 +187,7 @@ class Fiber {
 
 
     T *last(T *a) const {
-      for (; *a & T(-1) >> bits-char_width; ++a) {}
+      for (; *a & T(-1) >> (bits-char_width); ++a) {}
       return a;
     }
 
@@ -220,7 +220,7 @@ class Fiber {
     void append(char x) {
       lazy();
       T *t = last(array);
-      if (*t & T(-1) >> bits-2*char_width) {
+      if (*t & T(-1) >> (bits-2*char_width)) {
         Size l = t-array;
         T *x = alloc(l + 1 + 1);
         copy(x, array, l + 1);
@@ -266,7 +266,7 @@ class Fiber {
           if (i && (c = alph.to_char(*a, i-char_width)))
             return *this;
 
-          if (*a & T(-1) >> bits-char_width) {
+          if (*a & T(-1) >> (bits-char_width)) {
             i = bits;
             ++a;
             c = alph.to_char(*a, i-char_width);
@@ -385,13 +385,13 @@ class Fiber {
       Size y = first_pos(*src);
       if ((x+1)/char_width < chars-(y+1)/char_width) {
       // if (x < y) {
-        *dst |= *src >> bits-1-x;
+        *dst |= *src >> (bits-1-x);
         ++dst;
-        *dst |= *src << 1+x;
+        *dst |= *src << (1+x);
       } else {
-        *dst |= *src >> bits-1-x;
+        *dst |= *src >> (bits-1-x);
       }
-      if (*dst & T(-1)  >> bits-char_width)
+      if (*dst & T(-1)  >> (bits-char_width))
         ++dst;
     }
 
@@ -416,10 +416,10 @@ class Fiber {
         array = t;
       }
       T *a = array;
-      for (; *a & T(-1)  >> bits-char_width; ++a) {}
+      for (; *a & T(-1)  >> (bits-char_width); ++a) {}
       for (T *t = other.array;;) {
         app(a, t);
-        if (*t & T(-1)  >> bits-char_width)
+        if (*t & T(-1)  >> (bits-char_width))
           ++t;
         else
           break;
@@ -469,7 +469,7 @@ class Fiber {
           else
             break;
         }
-        if (*t & T(-1)  >> bits-char_width)
+        if (*t & T(-1)  >> (bits-char_width))
           ++t;
         else
           break;
@@ -501,7 +501,7 @@ class Fiber {
       uint32_t hash = hash_fn.initial();
       for (;;) {
         hash_fn.next(hash, *t);
-        if (*t & T(-1)  >> bits-char_width)
+        if (*t & T(-1)  >> (bits-char_width))
           ++t;
         else
           break;
