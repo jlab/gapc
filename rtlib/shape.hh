@@ -335,7 +335,7 @@ class Fiber {
           // std::cout << "\tXX i: " << size_t(i) << std::endl;
           T mask = 0;
           if (i != 4)
-            mask = T(-1) >> bits-(i-char_width);
+            mask = T(-1) >> (bits-(i-char_width));
           if (i != bits)
             mask |= T(-1) << i;
 
@@ -438,7 +438,7 @@ class Fiber {
             std::cerr << 0;
           }
         }
-        if (*t & T(-1)  >> bits-char_width) {
+        if (*t & T(-1) >> (bits-char_width)) {
           ++t;
           std::cerr << std::endl;
         } else {
