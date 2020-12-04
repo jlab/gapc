@@ -36,220 +36,278 @@ using std::swap;
 template <typename T, typename U = size_t>
 class Stapel {
  private:
-    T *array;
-    U top_, size_;
+  T *array;
+  U top_, size_;
 
-    Stapel(const Stapel &);
-    Stapel &operator=(const Stapel &);
+  Stapel(const Stapel &);
+  Stapel &operator=(const Stapel &);
 
  public:
-    Stapel()
-      : array(0), top_(0), size_(0) {
+  Stapel() : array(0), top_(0), size_(0) {
+  }
+
+  Stapel(U i) : array(0), top_(0), size_(0) {
+    resize(i);
+  }
+
+  ~Stapel() {
+    std::free(array);
+  }
+
+  void swapper(Stapel<T, U> &o) {
+    swap(array, o.array);
+    swap(top_, o.top_);
+    swap(size_, o.size_);
+  }
+
+  void resize(U i) {
+    if (i <= size_) {
+      return;
     }
-    Stapel(U i)
-      : array(0), top_(0), size_(0) {
-      resize(i);
-    }
-    ~Stapel() {
-      std::free(array);
-    }
-    void swapper(Stapel<T, U> &o) {
-      swap(array, o.array);
-      swap(top_, o.top_);
-      swap(size_, o.size_);
-    }
-    void resize(U i) {
-      if (i <= size_)
-        return;
-      if (!array) {
-        array = static_cast<T*>(std::malloc(sizeof(T) * i));
-        size_ = i;
-      } else {
-        T *t = static_cast<T*>(std::realloc(array, sizeof(T) * i));
-        assert(t);
-        if (!t)
-          std::abort();
-        array = t;
-        size_ = i;
+    if (!array) {
+      array = static_cast<T*>(std::malloc(sizeof(T) * i));
+      size_ = i;
+    } else {
+      T *t = static_cast<T*>(std::realloc(array, sizeof(T) * i));
+      assert(t);
+      if (!t) {
+        std::abort();
       }
+      array = t;
+      size_ = i;
     }
-    void push(const T &t) {
-      assert(top_ < size_);
-      array[top_++] = t;
-    }
-    T &pop() {
-      assert(top_);
-      return array[top_--];
-    }
-    T &top() {
-      assert(top_);
-      return array[top_-1];
-    }
+  }
 
-    typedef T* iterator;
+  void push(const T &t) {
+    assert(top_ < size_);
+    array[top_++] = t;
+  }
 
+  T &pop() {
+    assert(top_);
+    return array[top_--];
+  }
 
-    iterator begin() { return array; }
-    iterator end() { return array + top_; }
+  T &top() {
+    assert(top_);
+    return array[top_-1];
+  }
 
-    typedef std::reverse_iterator<iterator> reverse_iterator;
+  typedef T* iterator;
 
-    reverse_iterator rbegin() {
-      return reverse_iterator(end());
-    }
-    reverse_iterator rend() {
+  iterator begin() {
+    return array;
+  }
+
+  iterator end() {
+    return array + top_;
+  }
+
+  typedef std::reverse_iterator<iterator> reverse_iterator;
+
+  reverse_iterator rbegin() {
+    return reverse_iterator(end());
+  }
+
+  reverse_iterator rend() {
       return reverse_iterator(begin());
-    }
+  }
 };
 
-template <typename T, typename U>
-  inline
-  void swap(Stapel<T, U> &a, Stapel<T, U> &b) {
-    a.swapper(b);
-  }
+template <typename T, typename U> inline void
+swap(Stapel<T, U> &a, Stapel<T, U> &b) {
+  a.swapper(b);
+}
 
-
-
-template <typename T, typename U = size_t>
-class Vector_Sparse {
+template <typename T, typename U = size_t> class Vector_Sparse {
  private:
-    T *array;
-    U size_;
-    Stapel<U> stack;
+  T *array;
+  U size_;
+  Stapel<U> stack;
 #ifndef NDEBUG
-    std::vector<bool> init_;
+  std::vector<bool> init_;
 #endif
-    Vector_Sparse(const Vector_Sparse &);
-    Vector_Sparse &operator=(const Vector_Sparse &);
+  Vector_Sparse(const Vector_Sparse &);
+  Vector_Sparse &operator=(const Vector_Sparse &);
 
  public:
-    Vector_Sparse()
-      : array(0), size_(0) {}
-    Vector_Sparse(U i)
-      : array(0), size_(0) {
-      resize(i);
-    }
-    ~Vector_Sparse() {
-      for (typename Stapel<U>::iterator i = stack.begin();
-           i != stack.end(); ++i)
-        array[*i].~T();
-      std::free(array);
-    }
+  Vector_Sparse() : array(0), size_(0) {
+  }
 
-    void swapper(Vector_Sparse<T, U> &o) {
-      swap(array, o.array);
-      swap(size_, o.size_);
-      swap(stack, o.stack);
+  Vector_Sparse(U i) : array(0), size_(0) {
+    resize(i);
+  }
+
+  ~Vector_Sparse() {
+    for (typename Stapel<U>::iterator i = stack.begin();
+         i != stack.end(); ++i) {
+      array[*i].~T();
+    }
+    std::free(array);
+  }
+
+  void swapper(Vector_Sparse<T, U> &o) {
+    swap(array, o.array);
+    swap(size_, o.size_);
+    swap(stack, o.stack);
 #ifndef NDEBUG
-      swap(init_, o.init_);
+    swap(init_, o.init_);
 #endif
-    }
+  }
 
-    T &operator()(U i) {
-      assert(i < size_);
-      assert(init_[i]);
-      return array[i];
-    }
-    const T &operator()(U i) const {
-      assert(i < size_);
-      assert(init_[i]);
-      return array[i];
-    }
+  T &operator()(U i) {
+    assert(i < size_);
+    assert(init_[i]);
+    return array[i];
+  }
 
-    void init(U i, const T &t) {
-      assert(i < size_);
-      assert(!init_[i]);
+  const T &operator()(U i) const {
+    assert(i < size_);
+    assert(init_[i]);
+    return array[i];
+  }
+
+  void init(U i, const T &t) {
+    assert(i < size_);
+    assert(!init_[i]);
 #ifndef NDEBUG
-      init_[i] = true;
+    init_[i] = true;
 #endif
-      new (array+i) T(t);
-      stack.push(i);
-    }
+    new (array+i) T(t);
+    stack.push(i);
+  }
 
-    void operator()(U i, const T &t) {
-      assert(i < size_);
-      assert(init_[i]);
-      array[i] = t;
-    }
+  void operator()(U i, const T &t) {
+    assert(i < size_);
+    assert(init_[i]);
+    array[i] = t;
+  }
 
-    void resize(U i) {
-      stack.resize(i);
+  void resize(U i) {
+    stack.resize(i);
 #ifndef NDEBUG
-      init_.resize(i);
+    init_.resize(i);
 #endif
-      if (i <= size_)
-        return;
-      if (!array) {
-        array = static_cast<T*>(std::malloc(sizeof(T) * i));
-        size_ = i;
-      } else {
-        T *t = static_cast<T*>(std::realloc(array, sizeof(T) * i));
-        assert(t);
-        if (!t)
-          std::abort();
-        array = t;
-        size_ = i;
+    if (i <= size_) {
+      return;
+    }
+    if (!array) {
+      array = static_cast<T*>(std::malloc(sizeof(T) * i));
+      size_ = i;
+    } else {
+      T *t = static_cast<T*>(std::realloc(array, sizeof(T) * i));
+      assert(t);
+      if (!t) {
+        std::abort();
       }
+      array = t;
+      size_ = i;
+    }
+  }
+
+  U size() const {
+    return size_;
+  }
+
+  class Iterator {
+   private:
+    friend class Vector_Sparse;
+    typedef typename Stapel<U>::iterator itr;
+    itr i;
+    Vector_Sparse<T, U> &v;
+
+   protected:
+    Iterator(Vector_Sparse<T, U> &a, itr x) : v(a) {
+      i = x;
     }
 
-    U size() const { return size_; }
+   public:
+    typedef T value_type;
+    typedef std::random_access_iterator_tag iterator_category;
+    typedef U difference_type;
+    typedef T* pointer;
+    typedef T& reference;
 
-    class Iterator {
-     private:
-        friend class Vector_Sparse;
-        typedef typename Stapel<U>::iterator itr;
-        itr i;
-        Vector_Sparse<T, U> &v;
-
-     protected:
-        Iterator(Vector_Sparse<T, U> &a, itr x)
-          : v(a) {
-          i = x;
-        }
-
-     public:
-        typedef T value_type;
-        typedef std::random_access_iterator_tag iterator_category;
-        typedef U difference_type;
-        typedef T* pointer;
-        typedef T& reference;
-
-        difference_type operator-(const Iterator &other) const {
-          assert(i > other.i); return i-other.i;
-        }
-        Iterator operator+(U a) const { return Iterator(v, i+a); }
-        Iterator operator-(U a) const { return Iterator(v, i-a); }
-        Iterator &operator=(const Iterator &other) {
-          assert(&v == &other.v); i = other.i; return *this;
-        }
-        Iterator &operator--() { --i; return *this;}
-        Iterator operator--(int) { Iterator r(*this); --i; return r;}
-        bool operator<(const Iterator &other) const { return i < other.i; }
-
-        bool operator==(const Iterator &o) const {
-          assert(&v == &o.v); return i == o.i;
-        }
-        bool operator!=(const Iterator &o) const { return !(*this == o); }
-        T &operator*() { return v(*i); }
-        Iterator &operator++() { ++i; return *this; }
-    };
-
-    typedef Iterator iterator;
-
-
-    iterator begin() {
-      return iterator(*this, stack.begin());
+    difference_type operator-(const Iterator &other) const {
+      assert(i > other.i);
+      return i-other.i;
     }
-    iterator end() {
-      return iterator(*this, stack.end());
+
+    Iterator operator+(U a) const {
+      return Iterator(v, i+a);
     }
+
+    Iterator operator-(U a) const {
+      return Iterator(v, i-a);
+    }
+
+    Iterator &operator=(const Iterator &other) {
+      assert(&v == &other.v);
+      i = other.i;
+      return *this;
+    }
+
+    Iterator &operator--() {
+      --i;
+      return *this;
+    }
+
+    Iterator operator--(int) {
+      Iterator r(*this);
+      --i;
+      return r;
+    }
+
+    bool operator<(const Iterator &other) const {
+      return i < other.i;
+    }
+
+    bool operator==(const Iterator &o) const {
+      assert(&v == &o.v);
+      return i == o.i;
+    }
+
+    bool operator!=(const Iterator &o) const {
+      return !(*this == o);
+    }
+
+    T &operator*() {
+      return v(*i);
+    }
+
+    Iterator &operator++() {
+      ++i;
+      return *this;
+    }
+
+    Iterator operator+=(const difference_type &other) {
+      return Iterator(v, i + other);
+    }
+
+    bool operator>(const Iterator &other) const {
+      return i > other.i;
+    }
+
+    bool operator>=(const Iterator &other) const {
+      return i >= other.i;
+    }
+  };
+
+  typedef Iterator iterator;
+
+  iterator begin() {
+    return iterator(*this, stack.begin());
+  }
+
+  iterator end() {
+    return iterator(*this, stack.end());
+  }
 };
 
-template <typename T, typename U>
-  inline
-  void swap(Vector_Sparse<T, U> &a, Vector_Sparse<T, U> &b) {
-    a.swapper(b);
-  }
+template <typename T, typename U> inline void
+swap(Vector_Sparse<T, U> &a, Vector_Sparse<T, U> &b) {
+  a.swapper(b);
+}
 
 
 /*
