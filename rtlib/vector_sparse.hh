@@ -233,7 +233,8 @@ class Vector_Sparse {
         T &operator*() { return v(*i); }
         Iterator &operator++() { ++i; return *this; }
         Iterator operator+=(const difference_type &other) {
-          return Iterator(v, i + other);
+          i += other;
+          return Iterator(v, i);
         }
         bool operator>(const Iterator &other) const {
           return i > other.i;
