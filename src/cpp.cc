@@ -147,7 +147,7 @@ void Printer::Cpp::print(const Statement::Switch &stmt) {
   stream << indent() << "switch (" << *stmt.cond << ") {" << endl;
   inc_indent();
   for (std::list<std::pair<std::string,
-                           std::list<Statement::Base*>>>::const_iterator i =
+                           std::list<Statement::Base*> > >::const_iterator i =
       stmt.cases.begin(); i!= stmt.cases.end(); ++i) {
       stream << indent() << "case " << i->first << " :" << endl;
       inc_indent();
