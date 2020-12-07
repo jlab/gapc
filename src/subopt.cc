@@ -172,6 +172,21 @@ void Subopt::gen_instance_code(AST &ast) {
 
   instance->product->algebra()
     ->codegen(*dynamic_cast<Product::Two*>(instance->product));
+#if __cplusplus >= 201103L
+  // since we modify the container (remove elements) we need to take care to correctly increase the Iterator
+  // https://stackoverflow.com/questions/8234779/how-to-remove-from-a-map-while-iterating-it/8234813
+  for (hashtable<std::string, Fn_Def*>::iterator i = instance->product->algebra()->fns.begin(); i != instance->product->algebra()->fns.end(); ) {
+    if (i->second->choice_mode() != Mode::NONE) {
+      i = instance->product->algebra()->fns.erase(i);
+    } else {
+      i++;
+    }
+  }
+  // since all functions in choice_fns are to be deleted, iteration is easier than above
+  for (hashtable<std::string, Fn_Def*>::iterator i = instance->product->algebra()->choice_fns.begin(); i != instance->product->algebra()->choice_fns.end(); ) {
+    i = instance->product->algebra()->choice_fns.erase(i);
+  }
+#else
   for (hashtable<std::string, Fn_Def*>::iterator i =
        instance->product->algebra()->choice_fns.begin();
        i != instance->product->algebra()->choice_fns.end();
@@ -179,6 +194,7 @@ void Subopt::gen_instance_code(AST &ast) {
     instance->product->algebra()->fns.erase(i->first);
     instance->product->algebra()->choice_fns.erase(i);
   }
+#endif
 }
 
 
