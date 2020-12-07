@@ -147,7 +147,7 @@ include makefiles/lexyaccxx.mf
 clean:
 	rm -f $(TEMP)
 	$(MAKE) -C testdata/config-tests/ -f config.mf clean
-	rm -f testdata/unittest/expr_parser.{d,o,hh,output} testdata/unittest/expr_lexer.{l,d}
+	rm -f testdata/unittest/expr_parser.{d,o,hh,output} testdata/unittest/expr_lexer.d
 
 # test target: only triggers dependency tracking
 .PHONY: depend
