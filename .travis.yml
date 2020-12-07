@@ -11,6 +11,8 @@ jobs:
     - os: linux
       dist: xenial # 16.04
     # earlier distributions are lacking libgsl-dev AND are no longer supported by Ubuntu
+    - os: osx
+      osx_image: xcode11
 
 addons:
   apt:
@@ -23,18 +25,31 @@ addons:
       - ghc
       - python3
       - python3-pip
+  homebrew:
+    packages:
+      - bison@2.7
+      - cmake
+      - boost
+      - gsl
+      - gnu-sed
+      - libomp
+      - gmp
 
 install:
   - ./configure
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then gsed -E "s|^YACC = .+$|YACC = /usr/local/opt/bison@2.7/bin/bison|" -i config.mf; gsed -E "s|^SED = .+$|SED = /usr/local/opt/gnu-sed/libexec/gnubin/sed|" -i config.mf; gsed -E "s/ -D_XOPEN_SOURCE=500 / /" -i config.mf; gsed -E "s/ -std=c\+\+17 / -std=c\+\+11 /" -i config.mf; fi
+  - cat config.mf
   - make
   - sudo make install
 before_script:
   # install missing ghc/haskell modules
-  - sudo apt-get install cabal-install -y
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install cabal-install; fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install cabal-install -y; fi
   - cabal update
-  - cabal install random
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then cabal install --lib random; fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then cabal install random; fi
   # obtain truth data from secondary github repository
-  - git clone https://github.com/jlab/gapc-test-suite.git /home/travis/gapc-test-suite
+  - git clone https://github.com/jlab/gapc-test-suite.git $HOME/gapc-test-suite
   # install c++ linter
   - pip3 install cpplint
 script:
@@ -47,6 +62,7 @@ script:
   # run compiler test suite
   - make test-unit
   - make test-paral
-  - make test-mod TRUTH_DIR=/home/travis/gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu
-  - make test-regress TRUTH_DIR=/home/travis/gapc-test-suite/Truth
-  - make test-ambiguity TRUTH_DIR=/home/travis/gapc-test-suite/Truth
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then make test-mod TRUTH_DIR=$HOME/gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then make test-mod TRUTH_DIR=$HOME/gapc-test-suite/Truth TRUTH_SUFFIX=_osx; fi
+  - make test-regress TRUTH_DIR=$HOME/gapc-test-suite/Truth
+  - make test-ambiguity TRUTH_DIR=$HOME/gapc-test-suite/Truth
