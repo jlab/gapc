@@ -19,7 +19,8 @@
 > import Data.Array
 > import Data.List(nub,sort)
 > import System.IO.Unsafe
-> import Data.Map(Map,toList,fromListWith,empty,insertWith',insertWith,member,insert)
+> import Data.Map(Map,toList,fromListWith,empty,insertWith,member,insert)
+> import Data.Map.Strict(insertWith)
 
 import Data.HashTable as HT
 
@@ -726,14 +727,14 @@ use a Map and update (add) the value for each key with each new value
 > --buildMap:: (Num b, Ord a) => [(a,b)] -> Map a b
 > buildMap:: (Ord a) => [(a, Double)] ->Map a Double
 > buildMap []         = Data.Map.empty
-> buildMap ((x,y):xs) = Data.Map.insertWith' (+) x y $! buildMap xs
+> buildMap ((x,y):xs) = Data.Map.Strict.insertWith (+) x y $! buildMap xs
 
 
 Das hier scheint teuer zu sein!!
 
 > buildMap':: (Num b, Ord a) => Map a b -> [(a,b)] -> Map a b
 > buildMap' m []         = m
-> buildMap' m ((x,y):xs) = buildMap' (Data.Map.insertWith' (+) x y m) xs
+> buildMap' m ((x,y):xs) = buildMap' (Data.Map.Strict.insertWith (+) x y m) xs
 
 
 
@@ -816,8 +817,8 @@ for each key store a list
 > buildListMap:: (Ord a) => Map a [b] -> [(a,b)] -> Map a [b]
 > buildListMap m []         = m
 > buildListMap m ((x,y):xs)
->           | member x m   = buildListMap (Data.Map.insertWith' (++) x [y] m) xs
->           | otherwise    = buildListMap (Data.Map.insert           x [y] m) xs
+>           | member x m   = buildListMap (Data.Map.Strict.insertWith (++) x [y] m) xs
+>           | otherwise    = buildListMap (Data.Map.insert                 x [y] m) xs
  
 
 
