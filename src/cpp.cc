@@ -147,7 +147,7 @@ void Printer::Cpp::print(const Statement::Switch &stmt) {
   stream << indent() << "switch (" << *stmt.cond << ") {" << endl;
   inc_indent();
   for (std::list<std::pair<std::string,
-                           std::list<Statement::Base*>>>::const_iterator i =
+                           std::list<Statement::Base*> > >::const_iterator i =
       stmt.cases.begin(); i!= stmt.cases.end(); ++i) {
       stream << indent() << "case " << i->first << " :" << endl;
       inc_indent();
@@ -1397,8 +1397,8 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
 
   assert(inps.size() == ast.seq_decls.size());
 
-  stream << "if(inp.size() != " << ast.seq_decls.size() << ")\n"
-    << "  throw gapc::OptException(\"Number of input sequences does not match.\");\n\n";
+  stream << indent() << "if (inp.size() != " << ast.seq_decls.size() << ")\n"
+    << indent() << indent() << "throw gapc::OptException(\"Number of input sequences does not match.\");\n\n";
 
   size_t track = 0;
   for (std::vector<Statement::Var_Decl*>::const_iterator
@@ -1414,10 +1414,10 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
       case Input::RAW:
         break;
       case Input::RNA:
-        stream << "char_to_rna(" << *(*i)->name << ");\n";
+        stream << indent() << "char_to_rna(" << *(*i)->name << ");\n";
         break;
       case Input::UPPER:
-        stream << "char_to_upper(" << *(*i)->name << ");\n";
+        stream << indent() << "char_to_upper(" << *(*i)->name << ");\n";
         break;
       default:
         assert(false);
@@ -1476,7 +1476,7 @@ void Printer::Cpp::print_zero_init(const Grammar &grammar) {
       continue;
     }
     seen.insert(n);
-    stream << "empty(" << *(*i)->zero_decl->name << ");\n";
+    stream << indent() << "empty(" << *(*i)->zero_decl->name << ");\n";
   }
   stream << endl;
 }
@@ -1519,11 +1519,11 @@ void Printer::Cpp::print_most_init(const AST &ast) {
   size_t t = 0;
   for (std::vector<Statement::Var_Decl*>::iterator j = ns.begin();
        j != ns.end(); ++j, ++t) {
-    stream << "t_" << t << "_left_most = 0;\n";
-    stream << "t_" << t << "_right_most = " << "t_" << t << "_seq.size();\n";
+    stream << indent() << "t_" << t << "_left_most = 0;\n";
+    stream << indent() << "t_" << t << "_right_most = " << "t_" << t << "_seq.size();\n";
   }
   if (ast.window_mode) {
-    stream << "t_0_right_most = opts.window_size;\n";
+    stream << indent() << "t_0_right_most = opts.window_size;\n";
   }
 }
 
@@ -1531,11 +1531,11 @@ void Printer::Cpp::print_most_init(const AST &ast) {
 void Printer::Cpp::print_init_fn(const AST &ast) {
   stream << "void init(";
 
-  stream << "const gapc::Opts &opts)" << endl << '{' << endl;
-
-  stream << "const std::vector<std::pair<const char *, unsigned> > &inp = opts.inputs;\n";
+  stream << "const gapc::Opts &opts)" << " {" << endl;
 
   inc_indent();
+  stream << indent() << "const std::vector<std::pair<const char *, unsigned> > &inp = opts.inputs;\n";
+
   print_buddy_init(ast);
   print_seq_init(ast);
   print_filter_init(ast);
@@ -2756,51 +2756,60 @@ void Printer::Cpp::print(const Statement::Backtrace_NT_Decl &d) {
 
 
 void Printer::Cpp::print(const Statement::Hash_Decl &d) {
-  stream << "class " << d.ext_name() << " {" << endl
-    << "public:" << endl
-    << "typedef " << d.answer_type() << " type;" << endl
-    << "private:" << endl;
+  stream << "class " << d.ext_name() << " {" << endl;
+  stream << " public:" << endl;
+  inc_indent();
+  stream << indent() << "typedef " << d.answer_type() << " type;" << endl;
+  stream << " private:" << endl;
   const std::list<Statement::Var_Decl*> &f = d.filters();
   for (std::list<Statement::Var_Decl*>::const_iterator i = f.begin();
        i != f.end(); ++i) {
-    stream << *(*i)->type << "<type> " << *(*i)->name << ";" << endl;
+    stream << indent() << *(*i)->type << "<type> " << *(*i)->name << ";" << endl;
   }
 
   if (d.kbest()) {
-    stream << "static uint32_t k_;\n";
+    stream << indent() << "static uint32_t k_;\n";
   }
 
-  stream << "public:" << endl;
-  stream << "uint32_t hash(const type &x) const" << endl
-    << "{" << endl
-    << "return hashable_value(left_most(x));" << endl
-    << "}" << endl;
+  stream << " public:" << endl;
+  stream << indent() << "uint32_t hash(const type &x) const {" << endl;
+  inc_indent();
+  stream << indent() << "return hashable_value(left_most(x));" << endl;
+  dec_indent();
+  stream << indent() << "}" << endl << endl;
 
-  stream << "type init(const type &src) const" << endl
-    << "{" << endl
-    << "type dst(src);" << endl
-    << d.init_code()
-    << "}" << endl;
-  stream << "void update(type &dst, const type &src) " << endl
-    << d.code();
+  stream << indent() << "type init(const type &src) const {" << endl;
+  inc_indent();
+  stream << indent() << "type dst(src);" << endl;
+  stream << d.init_code();
+  dec_indent();
+  stream << indent() << "}" << endl << endl;
 
-  stream << "bool equal(const type &a, const type &b) const" << endl
-    << "{" << endl
-    << "return left_most(a) == left_most(b);" << endl
-    << "}" << endl;
+  stream << indent() << "void update(type &dst, const type &src) " << endl
+    << d.code() << endl;
 
-  stream << "bool filter() const { ";
+  stream << indent() << "bool equal(const type &a, const type &b) const {" << endl;
+  inc_indent();
+  stream << indent() << "return left_most(a) == left_most(b);" << endl;
+  dec_indent();
+  stream << indent() << "}" << endl << endl;
+
+  stream << indent() << "bool filter() const {" << endl;
+  inc_indent();
   if (f.empty()) {
-    stream << "return false; ";
+    stream << indent() << "return false;" << endl;
   } else {
-    stream << "return true; ";
+    stream << indent() << "return true;" << endl;
   }
-  stream << "}" << endl;
-  stream << "bool filter(const type &x) const" << endl << "{" << endl;
+  dec_indent();
+  stream << indent() << "}" << endl << endl;
+
+  stream << indent() << "bool filter(const type &x) const {" << endl;
+  inc_indent();
   int a = 0;
   for (std::list<Statement::Var_Decl*>::const_iterator i = f.begin();
        i != f.end(); ++i, ++a) {
-    stream << "bool b" << a << " = !" << *(*i)->name << ".ok(x);";
+    stream << indent() << "bool b" << a << " = !" << *(*i)->name << ".ok(x);" << endl;
   }
   a = 0;
   std::list<Statement::Var_Decl*>::const_iterator i = f.begin();
@@ -2813,29 +2822,38 @@ void Printer::Cpp::print(const Statement::Hash_Decl &d) {
     stream << " && b" << a;
   }
   if (f.empty()) {
-    stream << "assert(0); return false";
+    stream << indent() << "assert(0);" << endl;
+    stream << indent() << "return false";
   }
   stream << ";" << endl;
-  stream << "}" << endl;
+  dec_indent();
+  stream << indent() << "}" << endl << endl;
 
-  stream << "void finalize(type &src) const" << endl << d.finalize_code();
+  stream << indent() << "void finalize(type &src) const" << endl << d.finalize_code() << endl;
 
   if (d.kbest()) {
-    stream << "static void set_k(uint32_t a) { k_ = a; }\n";
+    stream << indent() << "static void set_k(uint32_t a) {" << endl;
+    inc_indent();
+    stream << indent() << "k_ = a;" << endl;
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
   } else {
-    stream << "static void set_k(uint32_t a) { }\n";
+    stream << indent() << "static void set_k(uint32_t a) {" << endl << indent() << "}" << endl << endl;
   }
-  stream << "uint32_t k() const\n" << d.k_code();
-  stream << "bool cutoff() const\n" << d.cutoff_code();
-  stream << "bool equal_score(const type &src, const type &dst) const\n"
-    << d.equal_score_code();
-  stream << "struct compare {\n"
-    "bool operator()(const type &src, const type &dst) const\n"
-    << d.compare_code()
-    << "};\n";
+  stream << indent() << "uint32_t k() const" << endl << d.k_code() << endl;
+  stream << indent() << "bool cutoff() const" << endl << d.cutoff_code() << endl;
+  stream << indent() << "bool equal_score(const type &src, const type &dst) const" << endl
+    << d.equal_score_code() << endl;
+  stream << indent() << "struct compare {" << endl;
+  inc_indent();
+  stream << indent() << "bool operator()(const type &src, const type &dst) const" << endl
+    << d.compare_code();
+  dec_indent();
+  stream << indent() << "};" << endl;
+  dec_indent();
+  stream << indent() << "};" << endl << endl;
 
-  stream << "};" << endl << endl;
-  stream << "typedef Hash::Ref<" << d.answer_type() << ", " << d.ext_name()
+  stream << indent() << "typedef Hash::Ref<" << d.answer_type() << ", " << d.ext_name()
     << " > " << d.name() << ";"
     << endl;
 }

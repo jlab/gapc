@@ -412,3 +412,8 @@ GRAMMAR=../../grammar
 GAPC="../../../gapc"
 check_new_old_eq macrostate.gap unused shape1count acuguagucugagucacguuaucuggucguaucgaucgaucgaucacuguaguc shape_t
 check_new_old_eq macrostate.gap unused shape1ropecount acuguagucugagucacguuaucuggucguaucgaucgaucgaucacuguaguc rope
+
+# we are here testing of seg fault due to wrongly increased Iterator in hashmap (subopt.cc) passes
+# See issue #38 @ github.com/jlab/gapc
+GAPC="../../../gapc --subopt"
+check_new_old_eq rnashapesmfe.gap unused mfeppshape "A" foo

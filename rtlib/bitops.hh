@@ -119,8 +119,8 @@ inline
 T
 size_to_next_power(T t) {
   assert(t);
-  assert(t <= (T(1) << sizeof(T)*8-1));
-  T ret = T(1) << (sizeof(T)*8-1)-count_leading_zeroes(t);
+  assert(t <= (T(1) << ((sizeof(T)*8)-1)));
+  T ret = T(1) << (((sizeof(T)*8)-1)-count_leading_zeroes(t));
   if (ret < t)
     return 2*ret;
   else
@@ -173,7 +173,7 @@ struct djb_chars {
       }
       break;
       //
-      if (*x & uint64_t(-1)  >> 64-2)
+      if (*x & uint64_t(-1)  >> (64-2))
         ++x;
       else
         break;

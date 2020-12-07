@@ -1,38 +1,27 @@
-
 # disable _this_ implicit rule
 %.c: %.y
-
-%.cc: %.y
-	mkdir -p bisontmp ; \
-	  rm -f bisontmp/* ; \
-	  cd bisontmp ; \
-	  x=`$(YACC) $(YFLAGS) -o $(notdir $@) ../$< 2>&1` ; \
-	  if [[ "$<" == "src/parser.y" ]]; then \
-	    # patch parser.y file, if older version of bison is used. Since 3.3.2, synatx changed. \
-	    if [[ "$$x" =~ "error: %define variable 'api.parser.class' is not used" ]]; then \
-	      # push and pop is necessary, as GNU patch does not accept ../ as file paths \
-	      pushd . && cd ../ && patch $< < src/parser.y_apiparserclass.patch && popd; \
-	      x=`$(YACC) $(YFLAGS) -o $(notdir $@) ../$< 2>&1` ; \
-	    fi; \
-	  fi; \
-	  r=$$? ; \
-	  printf "$$x\n" ; \
-	  if [ "$$r" != 0 ]; then \
-            echo Bison exit status: $$r ; \
-	    cd ..; \
-	    rm -rf bisontmp; \
-            exit 1;\
-          fi ; \
-	  y=`echo $$x | grep -v conflict` ; \
-	  r=$$? ; \
-	  if [ "$$r" != 0 ]; then \
-		cd ..; rm -rf bisontmp;  exit 2; fi ; \
-	  for i in *; do cmp $$i ../$(dir $@)/$$i; if [ "$$?" != 0 ]; then echo copying $$i; cp $$i ../$(dir $@)$$i; fi; done ; \
-	  touch ../$@; \
-	  cd ..; \
-	  rm -rf bisontmp;
 
 %.c: %.l
 
 %.cc: %.l
 	$(LEX) -o $@ $(LFAGS) $<
+
+%.cc: %.y
+	$(call bold,>>> Creating parser via bison ...)
+	# create a new temporary directory
+	$(eval tmpdir := $(shell mktemp -d 2>/dev/null || mktemp -d -t 'gapc_XXXXXXXX'))
+	# copy input file into temporary directory
+	cp $< $(tmpdir)/
+	# use bison to generate parser source files
+	#   we have a breaking change since Bison 3.3.2, which only effects src/parser.y
+	#   if first bison attempt fails, we will try to apply a patch to the input in the tmpdir and rerun the code generation
+	cd $(tmpdir); $(YACC) $(YFLAGS) -o $(notdir $@) $(notdir $<) 2>&1 \
+	|| (echo "failed to generate parser, trying to patch input .y file..." && (patch $(notdir $<) < $(abspath $<_apiparserclass.patch) && $(YACC) $(YFLAGS) -o $(notdir $@) $(notdir $<) 2>&1)) \
+	|| (echo "failed to generate parser, trying another patch on input .y file..." && cp $(abspath $<) . && (patch $(notdir $<) < $(abspath $<_osx.patch) && $(YACC) $(YFLAGS) -o $(notdir $@) $(notdir $<) 2>&1))
+	# remove source file from temporary directiry
+	rm $(tmpdir)/$(notdir $<)
+	# copy all generated files into working directory
+	cp $(tmpdir)/* $(dir $@)
+	# clean up temporary directory
+	rm $(tmpdir)/*
+	rmdir $(tmpdir)
