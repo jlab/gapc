@@ -281,7 +281,8 @@ template <typename T, typename U = size_t> class Vector_Sparse {
     }
 
     Iterator operator+=(const difference_type &other) {
-      return Iterator(v, i + other);
+      i += other;
+      return Iterator(v, i);
     }
 
     bool operator>(const Iterator &other) const {
