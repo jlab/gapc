@@ -2,17 +2,17 @@ include ../../../config.mf
 
 .PHONY: all
 	
-all: shapemfepfx nowindow 
+all: shapemfepfx nowindow
 
 shapemfepfx: ../../grammar/adpf_nonamb.gap ../../../gapc ../../gapc_filter/nonamb_answer.hh
 	../../../gapc -I../../gapc_filter -i $@ --tab-all --window-mode $< --kbacktrack -o $@.cc --no-coopt-class
-	sed -i 's|cat $$(RTLIB)/generic_main.cc|cat main.cc|' $@.mf
+	$(SED) -i 's|cat $$(RTLIB)/generic_main.cc|cat main.cc|' $@.mf
 	make -f $@.mf CXXFLAGS_EXTRA=" -I../../gapc_filter -ffast-math"
 	mv $@ main
 	
 nowindow: ../../grammar/adpf_nonamb.gap ../../../gapc ../../gapc_filter/nonamb_answer.hh
 	../../../gapc -i shapemfepfx --tab-all $< --kbacktrack -o shapemfepfx.cc --no-coopt-class
-	sed -i 's|cat $$(RTLIB)/generic_main.cc|cat main.cc|' shapemfepfx.mf
+	$(SED) -i 's|cat $$(RTLIB)/generic_main.cc|cat main.cc|' shapemfepfx.mf
 	make -f shapemfepfx.mf CXXFLAGS_EXTRA=" -I../../gapc_filter -ffast-math"
 	mv shapemfepfx nowindow
 

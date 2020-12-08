@@ -7,6 +7,11 @@
 
 #include "../../rtlib/vector_sparse.hh"
 
+struct cmp_stefan {
+  bool operator()(const std::pair<char, int> &src, const std::pair<char, int> &dst) const     {
+    return (src.second < dst.second);
+  }
+};
 
 BOOST_AUTO_TEST_CASE( stapel )
 {
@@ -101,3 +106,56 @@ BOOST_AUTO_TEST_CASE( vector_itr )
     CHECK_EQ(a[i], t[i]);
 }
 
+BOOST_AUTO_TEST_CASE( sort ) {
+  // https://github.com/jlab/gapc/issues/40
+  // SMJ: I found that sorting vector_sparce did yield wrong results if
+  //      executed on OSX
+  // fix: added missing iterator operators
+
+  Vector_Sparse<std::pair<char, int>, unsigned int> array(19);
+
+  std::pair<char, int> ret_0;
+  ret_0.first = '[';
+  ret_0.second = -650;
+  array.init(0, ret_0);
+
+  std::pair<char, int> ret_1;
+  ret_1.first = '[';
+  ret_1.second = -740;
+  array.init(1, ret_1);
+
+  std::pair<char, int> ret_2;
+  ret_2.first = '[';
+  ret_2.second = -370;
+  array.init(2, ret_2);
+
+  std::pair<char, int> ret_4;
+  ret_4.first = '[';
+  ret_4.second = -470;
+  array.init(3, ret_4);
+
+  std::pair<char, int> ret_5;
+  ret_5.first = '[';
+  ret_5.second = 200;
+  array.init(4, ret_5);
+
+  std::pair<char, int> ret_6;
+  ret_6.first = '[';
+  ret_6.second = 410;
+  array.init(5, ret_6);
+
+  std::pair<char, int> ret_7;
+  ret_7.first = '[';
+  ret_7.second = 80;
+  array.init(6, ret_7);
+
+  std::sort(array.begin(), array.end(), cmp_stefan());
+
+  CHECK_EQ(array(0).second, -740);
+  CHECK_EQ(array(1).second, -650);
+  CHECK_EQ(array(2).second, -470);
+  CHECK_EQ(array(3).second, -370);
+  CHECK_EQ(array(4).second, 80);
+  CHECK_EQ(array(5).second, 200);
+  CHECK_EQ(array(6).second, 410);
+}
