@@ -74,10 +74,8 @@ void Backtrack::apply_filter(Filter *f) {
 
 
 void Backtrack::gen_backtrack(AST &ast) {
-  bool r = ast.check_instances(instance);
-  assert(r);
-  r = ast.insert_instance(instance);
-  assert(r);
+  assert(ast.check_instances(instance));
+  assert(ast.insert_instance(instance));
   remove_unused();
 
   // ast.instance_grammar_eliminate_lists(instance);

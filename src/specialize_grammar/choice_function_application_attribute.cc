@@ -34,7 +34,7 @@ SpecializeGrammar::ChoiceFunctionApplicationAttribute::
 
 SpecializeGrammar::ChoiceFunctionApplicationAttribute::
   ChoiceFunctionApplicationAttribute(ChoiceFunctionApplicationAttribute& a)
-  : Util::Attribute(a), choiceFunctionName(choiceFunctionName) {
+  : Util::Attribute(a), choiceFunctionName() {
 }
 
 
