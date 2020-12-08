@@ -823,7 +823,6 @@ bool Alt::Simple::has_moving_k() {
  sorting, pareto or others for specialised ADP version, such as Pareto Eager
  or Sorted ADP*/
 bool Alt::Simple::is_nullary() {
-  unsigned x = 0;
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end();
        ++i) {
     if (!(*i)->terminal_type && (*i)->choice_set()) {
