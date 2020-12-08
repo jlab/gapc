@@ -145,7 +145,7 @@ algebra pretty2 implements Bill(alphabet = char, answer = Rope)
 
 algebra calc extends buyer {
   choice [int] h([int] i) {
-    return i;
+    return unique(i);
   }
 }
 
