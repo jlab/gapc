@@ -204,3 +204,6 @@ instance ex = bill ( pretty ) ;
 instance enumenum = bill ( enum * enum ) ;
 
 instance prettycalc = bill ( pretty * calc ) ;
+instance timecount = bill ( time * count) ;
+instance timecalc = bill ( time * calc) ;
+instance timecalcpretty = bill ( time * calc * pretty) ;
