@@ -203,3 +203,4 @@ instance ex = bill ( pretty ) ;
 
 instance enumenum = bill ( enum * enum ) ;
 
+instance prettycalc = bill ( pretty * calc ) ;
