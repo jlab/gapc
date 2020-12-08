@@ -194,4 +194,6 @@ check_eq elm.gap ElMamunMain.lhs prettycalc     '1+2*3*4+5' foo
 check_eq elm.gap ElMamunMain.lhs timecount      '1+2*3*4+5' foo
 check_eq elm.gap ElMamunMain.lhs timecalc       '1+2*3*4+5' foo
 # this test addresses issue #34
+# it is NOT a bug, but wrong assumptions about algebra products in gapc. 
+# Adding unique() to the calc choice function restores expected behaviour
 check_eq elm.gap ElMamunMain.lhs timecalcpretty '1+2*3*4+5' foo
