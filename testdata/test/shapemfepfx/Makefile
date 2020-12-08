@@ -1,7 +1,6 @@
 include ../../../config.mf
 
 .PHONY: all
-
 all: shapemfepfx nowindow
 
 shapemfepfx: ../../grammar/adpf_nonamb.gap ../../../gapc ../../gapc_filter/nonamb_answer.hh
