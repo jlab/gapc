@@ -188,3 +188,5 @@ rm -f temp/string.o
 SED=""
 CPP_FILTER=""
 RUN_CPP_FLAGS=""
+
+check_eq elm.gap ElMamunMain.lhs timebuyerpp '1+2*3*4+5' foo
