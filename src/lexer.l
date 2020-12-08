@@ -206,7 +206,9 @@ break { return token::BREAK; }
 
   scanner::states.push(scanner::state);
   scanner::state = scanner::state_t();
-  scanner::state.filename = yylloc->begin.filename = yylloc->end.filename = new std::string(t);
+  scanner::state.filename = new std::string(t);
+  yylloc->begin.filename = new std::string(t);
+  yylloc->end.filename = new std::string(t);
 
   scanner::driver->push_buffer(t);
 
