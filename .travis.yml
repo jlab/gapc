@@ -6,11 +6,11 @@ compiler:
 
 jobs:
   include:
-    #- os: linux
-    #  dist: bionic # 18.04
-    #- os: linux
-    #  dist: xenial # 16.04
-    # earlier distributions are lacking libgsl-dev AND are no longer supported by Ubuntu
+    - os: linux
+      dist: bionic # 18.04
+    - os: linux
+      dist: xenial # 16.04
+    # earlier distributions are lacking libgsl-dev (i.e. use libgsl0-dev) AND are no longer supported by Ubuntu
     - os: osx
       osx_image: xcode11
 
