@@ -42,6 +42,8 @@ Always get the latest sources from github:
 
 ## INSTALLATION
 
+### from source
+
 To install Bellman's GAP from source call:
 
 1. `./configure --prefix=<install-path>`
@@ -60,7 +62,15 @@ BISON=<bison path>
 --with-boost=<path to booth installation>
 --with-boost-program-options=<path to boost library program options> and --with-boost-unit-test-framework=<path to boost library unit test>
 ```
-## Ubuntu
+
+### conda
+
+You can find [conda](https://bioconda.github.io/user/install.html) packages for linux-64 and osx-64 in the [bioconda channel: https://anaconda.org/bioconda/bellmans-gapc](https://anaconda.org/bioconda/bellmans-gapc) for easy installation into your conda environment:
+```
+conda install -c bioconda bellmans-gapc
+```
+
+### Ubuntu
 
 Bellman's GAP is available as a pre-compiled Debian package via Ubuntus launchpad system, a Ubuntu Personal Package Archive (PPA).
 Packages for Ubuntu versions 16.04 (Xenial) and newer can be obtained from janssenlab/software.
@@ -77,8 +87,8 @@ sudo apt-get update
 sudo apt-get install bellmansgapc
 ```
 
-## MacPorts
+### MacPorts
 
-Under Mac OS X you may want to use MacPorts to install the compiler. There is a ports description on the BiBiServ MacPorts repository. You can install GAP-C via:
+Under Mac OS X you may want to use MacPorts to install the compiler. There is a (most likely outdated) ports description on the BiBiServ MacPorts repository. You can install GAP-C via:
 
 `$ sudo port install http://bibiserv.techfak.uni-bielefeld.de/resources/macports/ports/lang/gapc.tgz`
