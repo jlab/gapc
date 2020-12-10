@@ -66,6 +66,16 @@ The buyer's algebra:
 >   h []          = []
 >   h l           = [minimum l]
 
+The calc algebra
+
+> calc :: Bill_Algebra Char Int
+> calc = (val, ext, add, mult, h) where
+>   val c         = decode c
+>   ext n c       = 10*n + decode c
+>   add  x t y    = x + y
+>   mult x t y    = x * y
+>   h             = id
+
 The seller's algebra:
 
 > seller :: Bill_Algebra Char Int

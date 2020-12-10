@@ -22,3 +22,5 @@
 >          (putStrLn $ unlines $ map show $ bill (seller *** count) b)
 >        when (a == "timebuyerpp")
 >          (putStrLn $ unlines $ map show $ bill ((time *** buyer) *** prettyprint) b)
+>        when (a == "timecalcppenum")
+>          (putStrLn $ unlines $ map show $ bill (((time *** calc) *** prettyprint) *** enum) b)
