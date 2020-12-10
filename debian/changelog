@@ -1,3 +1,71 @@
+bellmansgapc (2020.12.08-0ubuntu0ppa1~hirsute1) hirsute; urgency=medium
+
+  * using a more elgant method to checkfor correct Bison version
+  * adapting code to more recent standards (e.g. libc) to avoid compile errors or segmentation faults
+    * correct iteration through container when deleting elements
+    * operator+= for vector iterators
+  * using $(SED) variable instead of plain sed in build process
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Tue, 8 Dec 2020 17:12:00 +0200
+
+bellmansgapc (2020.12.08-0ubuntu0ppa1~groovy1) groovy; urgency=medium
+
+  * using a more elgant method to checkfor correct Bison version
+  * adapting code to more recent standards (e.g. libc) to avoid compile errors or segmentation faults
+    * correct iteration through container when deleting elements
+    * operator+= for vector iterators
+  * using $(SED) variable instead of plain sed in build process
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Tue, 8 Dec 2020 17:12:00 +0200
+
+bellmansgapc (2020.12.08-0ubuntu0ppa1~focal1) focal; urgency=medium
+
+  * using a more elgant method to checkfor correct Bison version
+  * adapting code to more recent standards (e.g. libc) to avoid compile errors or segmentation faults
+    * correct iteration through container when deleting elements
+    * operator+= for vector iterators
+  * using $(SED) variable instead of plain sed in build process
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Tue, 8 Dec 2020 17:12:00 +0200
+
+bellmansgapc (2020.12.08-0ubuntu0ppa1~bionic1) bionic; urgency=medium
+
+  * using a more elgant method to checkfor correct Bison version
+  * adapting code to more recent standards (e.g. libc) to avoid compile errors or segmentation faults
+    * correct iteration through container when deleting elements
+    * operator+= for vector iterators
+  * using $(SED) variable instead of plain sed in build process
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Tue, 8 Dec 2020 17:12:00 +0200
+
+bellmansgapc (2020.12.08-0ubuntu0ppa1~xenial1) xenial; urgency=medium
+
+  * using a more elgant method to checkfor correct Bison version
+  * adapting code to more recent standards (e.g. libc) to avoid compile errors or segmentation faults
+    * correct iteration through container when deleting elements
+    * operator+= for vector iterators
+  * using $(SED) variable instead of plain sed in build process
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Tue, 8 Dec 2020 17:12:00 +0200
+
+bellmansgapc (2020.08.24-0ubuntu0ppa1~focal1) focal; urgency=medium
+
+  * switching from mercurial to git for version number generation
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Mon, 24 Aug 2020 17:00:00 +0200
+
+bellmansgapc (2020.08.24-0ubuntu0ppa1~bionic1) bionic; urgency=medium
+
+  * switching from mercurial to git for version number generation
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Mon, 24 Aug 2020 17:00:00 +0200
+
+bellmansgapc (2020.08.24-0ubuntu0ppa1~xenial1) xenial; urgency=medium
+
+  * switching from mercurial to git for version number generation
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Mon, 24 Aug 2020 17:00:00 +0200
+
 bellmansgapc (2020.01.08-0ubuntu0ppa1~focal1) bionic; urgency=medium
 
   * fixing deprecated syntax in parser.y file
