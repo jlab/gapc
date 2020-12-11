@@ -9,6 +9,8 @@
 %.cc: %.y
 	$(call bold,>>> Creating parser via bison ...)
 	$(olddir := pwd)
+	# make a copy of the original file
+	cp $< $(<).orig
 	# create a new temporary directory
 	$(eval tmpdir := $(shell mktemp -d 2>/dev/null || mktemp -d -t 'gapc_XXXXXXXX'))
 	# copy input file into temporary directory
@@ -27,5 +29,4 @@
 	rm $(tmpdir)/*
 	rmdir $(tmpdir)
 	# revert patch
-	cd $(olddir)
-	git checkout $<
+	mv $(olddir)$(<).orig $<

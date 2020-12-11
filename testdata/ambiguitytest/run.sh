@@ -185,7 +185,12 @@ cmp_ambigutiyErrors() {
 }
 
 cmp_specialization() {
-	log diff -u -w -B $1.gap $2/$1.gap
+	# generated code line positions are not stable, thus sort them first before comparison ... and clean up later
+	sort $1.gap > $1.sorted.gap.$$
+	sort $2/$1.gap > $2/$1.sorted.gap.$$
+	log diff -u -w -B $1.sorted.gap.$$ $2/$1.sorted.gap.$$
+	rm -f $1.sorted.gap.$$
+	rm -f $2/$1.sorted.gap.$$
 }
 
 
