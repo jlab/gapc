@@ -36,7 +36,7 @@ AmbiguityCFG::GrammarVMCommand::~GrammarVMCommand() {
 
 bool AmbiguityCFG::GrammarVMCommand::is(
   AmbiguityCFG::GrammarVMCommandType type) {
-  return this->type = type;
+  return (this->type = type);
 }
 
 

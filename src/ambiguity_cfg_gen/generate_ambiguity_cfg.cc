@@ -133,7 +133,6 @@ void AmbiguityCFG::GenerateAmbiguityCFG::checkChoiceFuntion(Algebra* alg) {
 
 
 void AmbiguityCFG::GenerateAmbiguityCFG::checkReturnType(Algebra* alg) {
-  Type::Base* stringType = new Type::Usage(new Type::List(new Type::String()));
   bool allChoiceFunctionsAreOfTypeString = true;
   for (hashtable<std::string, Fn_Def*>::iterator i = alg->choice_fns.begin();
        i != alg->choice_fns.end(); ++i) {

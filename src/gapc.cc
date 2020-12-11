@@ -590,15 +590,15 @@ class Main {
     Code::Gen code(driver.ast);
     code_ = code;
 
-    std::auto_ptr<Backtrack_Base> bt;
+    std::unique_ptr<Backtrack_Base> bt;
     if (opts.backtrack) {
-      bt = std::auto_ptr<Backtrack_Base>(new Backtrack());
+      bt = std::unique_ptr<Backtrack_Base>(new Backtrack());
     } else if (opts.subopt) {
-      bt = std::auto_ptr<Backtrack_Base>(new Subopt());
+      bt = std::unique_ptr<Backtrack_Base>(new Subopt());
     } else if (opts.kbacktrack) {
-      bt = std::auto_ptr<Backtrack_Base>(new KBacktrack());
+      bt = std::unique_ptr<Backtrack_Base>(new KBacktrack());
     } else if (opts.classified) {
-      bt = std::auto_ptr<Backtrack_Base>(new Subopt_Marker());
+      bt = std::unique_ptr<Backtrack_Base>(new Subopt_Marker());
     }
 
     if (bt.get()) {

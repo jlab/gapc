@@ -91,8 +91,6 @@ void SpecializeGrammar::RemoveCFGCycles::reserveFixedNonTerminalNames(
 void SpecializeGrammar::RemoveCFGCycles::transformProduction(
   CFG::NonTerminal* productionNT,
   Util::CallTrace callTrace, Util::NamingDomain* namingDomain) {
-  CFG::GrammarProduction* production = this->oldGrammar->getProduction(
-    productionNT);
   // std::set<Util::CycleSet*> cycleSets = getCycleSets (production);
   // Instead of the call above, we now want the cycle information
   // for a non-terminal directly. By this we know exactly if the non-terminal
@@ -614,7 +612,6 @@ CFG::Base* SpecializeGrammar::RemoveCFGCycles::translateNaming(
 
 void SpecializeGrammar::RemoveCFGCycles::extractMetaCycleInfoFromTrace(
   std::string startNT, Util::NamingDomain* namingDomain) {
-  unsigned int numberOfElements = this->currentProductionFragmentTrace.size();
   unsigned int startNTPos = 0;
   // Find the start point of the cycle in the path of
   // CFG node elements.
