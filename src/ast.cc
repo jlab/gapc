@@ -126,7 +126,7 @@ bool AST::check_algebras() {
   bool r = true;
   for (hashtable<std::string, Algebra*>::iterator i = algebras.begin();
        i != algebras.end(); ++i) {
-    bool b = i->second->check_signature(*signature);
+    bool b = i->second->check_signature(signature);
     r = r && b;
   }
   return r;

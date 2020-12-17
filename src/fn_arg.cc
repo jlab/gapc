@@ -61,9 +61,9 @@ Fn_Arg::Base *Fn_Arg::Const::clone() {
   return f;
 }
 
-bool Fn_Arg::Base::init_links(Grammar &grammar) { return true; }
+bool Fn_Arg::Base::init_links(const Grammar &grammar) { return true; }
 
-bool Fn_Arg::Alt::init_links(Grammar &g) {
+bool Fn_Arg::Alt::init_links(const Grammar &g) {
   bool b = alt->init_links(g);
   return b;
 }

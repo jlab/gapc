@@ -136,18 +136,19 @@ void Alt::Base::add_specialised_arguments(Statement::Fn_Call *fn) {
 }
 
 
-bool Alt::Base::init_links(Grammar &g) {
+bool Alt::Base::init_links(const Grammar &g) {
   return true;
 }
 
 
-bool Alt::Simple::init_links(Grammar &g) {
+bool Alt::Simple::init_links(const Grammar &g) {
   if (has_index_overlay()) {
     index_overlay.front()->init_links(g);
   }
 
   bool r = true;
-  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end();
+  for (std::list<Fn_Arg::Base*>::const_iterator i = args.begin();
+  i != args.end();
        ++i) {
     bool a = (*i)->init_links(g);
     r = r && a;
@@ -156,14 +157,14 @@ bool Alt::Simple::init_links(Grammar &g) {
 }
 
 
-bool Alt::Link::init_links(Grammar &grammar) {
+bool Alt::Link::init_links(const Grammar &grammar) {
   if (grammar.NTs.find(*name) == grammar.NTs.end()) {
     Log::instance()->error(
       location, "Nonterminal " + *name + " is not defined in grammar " +
       *(grammar.name) + ".");
     return false;
   }
-  Symbol::Base *n = grammar.NTs[*name];
+  Symbol::Base *n = grammar.NTs.find(*name)->second;
   nt = n;
 
   bool r = check_ntparas();
@@ -175,9 +176,10 @@ bool Alt::Link::init_links(Grammar &grammar) {
 }
 
 
-bool Alt::Block::init_links(Grammar &grammar) {
+bool Alt::Block::init_links(const Grammar &grammar) {
   bool r = true;
-  for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
+  for (std::list<Base*>::const_iterator i = alts.begin();
+  i != alts.end(); ++i) {
     bool a = (*i)->init_links(grammar);
     r = r && a;
   }
@@ -185,9 +187,10 @@ bool Alt::Block::init_links(Grammar &grammar) {
 }
 
 
-bool Alt::Multi::init_links(Grammar &grammar) {
+bool Alt::Multi::init_links(const Grammar &grammar) {
   bool r = true;
-  for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i) {
+  for (std::list<Base*>::const_iterator i = list.begin();
+  i != list.end(); ++i) {
     if ((*i)->is(BLOCK)) {
       Log::instance()->error(
         location, "Alternative is not allowed in Multi-Track link.");
@@ -270,7 +273,7 @@ bool Alt::Multi::init_productive() {
 
 
 void Alt::Simple::collect_lr_deps(
-  std::list<Symbol::NT*> &list, const Yield::Multi &l, const Yield::Multi &r) {
+  std::list<Symbol::NT*> *list, const Yield::Multi &l, const Yield::Multi &r) {
   Yield::Multi left(l);
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
        i != args.end(); ++i) {
@@ -287,7 +290,7 @@ void Alt::Simple::collect_lr_deps(
 
 
 void Alt::Link::collect_lr_deps(
-  std::list<Symbol::NT*> &list, const Yield::Multi &left,
+  std::list<Symbol::NT*> *list, const Yield::Multi &left,
   const Yield::Multi &right) {
   if (!(left.is_low_zero() && right.is_low_zero())) {
     return;
@@ -297,13 +300,13 @@ void Alt::Link::collect_lr_deps(
     if (Log::instance()->is_debug()) {
       Log::o() << " collect: " << *nt->name;
     }
-    list.push_back(dynamic_cast<Symbol::NT*>(nt));
+    list->push_back(dynamic_cast<Symbol::NT*>(nt));
   }
 }
 
 
 void Alt::Block::collect_lr_deps(
-  std::list<Symbol::NT*> &list, const Yield::Multi &left,
+  std::list<Symbol::NT*> *list, const Yield::Multi &left,
   const Yield::Multi &right) {
   for (std::list<Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     (*i)->collect_lr_deps(list, left, right);
@@ -312,7 +315,7 @@ void Alt::Block::collect_lr_deps(
 
 
 void Alt::Multi::collect_lr_deps(
-  std::list<Symbol::NT*> &nts, const Yield::Multi &left,
+  std::list<Symbol::NT*> *nts, const Yield::Multi &left,
   const Yield::Multi &right) {
   assert(left.tracks() == tracks_);
   assert(right.tracks() == tracks_);

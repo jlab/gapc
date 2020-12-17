@@ -90,7 +90,7 @@ Symbol::NT::NT(std::string *n, const Loc &l)
  * information please see the comment for the method
  * Symbol::NT::init_links (Grammar &grammar).
  */
-bool Symbol::Terminal::init_links(Grammar &grammar) {
+bool Symbol::Terminal::init_links(const Grammar &grammar) {
   reachable = true;
   return true;
 }
@@ -104,7 +104,7 @@ bool Symbol::Terminal::init_links(Grammar &grammar) {
  * of type std::list<Alt::Base*>, and calls thier init_links()
  * methods one by one.
  */
-bool Symbol::NT::init_links(Grammar &grammar) {
+bool Symbol::NT::init_links(const Grammar &grammar) {
   bool r = true;
   reachable = true;
   for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
@@ -136,7 +136,7 @@ bool Symbol::NT::init_productive() {
   return r;
 }
 
-void Symbol::NT::collect_lr_deps(std::list<NT*> &list) {
+void Symbol::NT::collect_lr_deps(std::list<NT*> *list) {
   if (Log::instance()->is_debug()) {
     Log::o() << "\n Start collecting from: " << *name;
   }

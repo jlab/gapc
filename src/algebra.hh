@@ -51,8 +51,6 @@ class Filter;
 
 
 class Algebra : public Signature_Base {
- public:
-
  private:
   std::string *default_choice_fn_mode;
   void init_choice_fns();
@@ -71,7 +69,7 @@ class Algebra : public Signature_Base {
       signature(NULL), signature_name(s) {
   }
 
-  Algebra(Algebra &a, Algebra &b);
+  Algebra(const Algebra &a, const Algebra &b);
 
 
   Algebra(std::string *n, Loc l)
@@ -79,7 +77,7 @@ class Algebra : public Signature_Base {
       signature(NULL), signature_name(NULL) {
   }
 
-  Algebra(std::string *n)
+  explicit Algebra(std::string *n)
     :  Signature_Base(n), default_choice_fn_mode(0),
       signature(NULL), signature_name(NULL) {
   }
@@ -110,17 +108,17 @@ class Algebra : public Signature_Base {
     hashtable<std::string, Type::Base*> &h,
     std::pair<std::string*, Type::Base*> &p, const Loc &l);
 
-  bool check_signature(Signature &s);
+  bool check_signature(Signature *s);
 
   void set_fns(const hashtable<std::string, Fn_Def*> &h);
 
   Fn_Def *fn_def(const std::string &name);
 
-  bool check_params(Signature &s);
+  bool check_params(const Signature &s);
 
   std::ostream &put(std::ostream &s) const;
 
-  void annotate_terminal_arguments(Signature &s);
+  void annotate_terminal_arguments(const Signature &s);
 
   void codegen(Product::Two &product);
   void codegen();
@@ -136,7 +134,7 @@ class Algebra : public Signature_Base {
 
   bool is_compatible(Mode::Type t);
 
-  void install_choice_filter(Filter &filter);
+  void install_choice_filter(Filter *filter);
 
   void add_choice_specialisations(Product::Two &product);
 

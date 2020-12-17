@@ -46,7 +46,7 @@ class Base {
 
 
  protected:
-  Base(Type t) : type(t) {}
+  explicit Base(Type t) : type(t) {}
   Base(const Loc &l, Type t) : loc(l), type(t) {}
   virtual ~Base();
 

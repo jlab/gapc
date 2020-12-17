@@ -46,28 +46,29 @@
 
 
 // create a joined algebra
-Algebra::Algebra(Algebra &a, Algebra &b) :
+Algebra::Algebra(const Algebra &a, const Algebra &b) :
   Signature_Base(), default_choice_fn_mode(0), signature(NULL),
   signature_name(NULL) {
   // join all params of both algebras
   // alphabet only needs to be added once,
   // all others are tupled for same string name
-  for (hashtable<std::string, Type::Base*>::iterator i = a.params.begin();
+  for (hashtable<std::string, Type::Base*>::const_iterator i = a.params.begin();
        i != a.params.end(); ++i) {
     if (i->first == "alphabet") {
       params[i->first] = i->second;
       continue;
     }
-    hashtable<std::string, Type::Base*>::iterator j = b.params.find(i->first);
+    hashtable<std::string, Type::Base*>::const_iterator j =
+    b.params.find(i->first);
     assert(j != b.params.end());
     params[i->first] = new Type::Tuple(i->second, j->second);
   }
 
 
   // join all functions as tuples on same string name
-  for (hashtable<std::string, Fn_Def*>::iterator i = a.fns.begin();
+  for (hashtable<std::string, Fn_Def*>::const_iterator i = a.fns.begin();
        i != a.fns.end(); ++i) {
-    hashtable<std::string, Fn_Def*>::iterator j = b.fns.find(i->first);
+    hashtable<std::string, Fn_Def*>::const_iterator j = b.fns.find(i->first);
     if (j == b.fns.end()) {
       continue;
     }
@@ -112,14 +113,14 @@ void Algebra::add_sig_var(hashtable<std::string, Type::Base*> &h,
 }
 
 
-bool Algebra::check_signature(Signature &s) {
-  signature = &s;
-  s.set_algebra(this);
+bool Algebra::check_signature(Signature *s) {
+  signature = s;
+  s->set_algebra(this);
   bool r = true;
 
   // loop over all declarations
-  for (hashtable<std::string, Fn_Decl*>::iterator i = s.decls.begin();
-       i != s.decls.end(); ++i) {
+  for (hashtable<std::string, Fn_Decl*>::iterator i = s->decls.begin();
+       i != s->decls.end(); ++i) {
     // get corresponding function by name
     hashtable<std::string, Fn_Def*>::iterator j = fns.find(i->first);
     if (j == fns.end()) {  // does such a function even exist?
@@ -136,7 +137,7 @@ bool Algebra::check_signature(Signature &s) {
     b = j->second->check_ntparas(*i->second);
     r = r && b;
   }
-  s.reset_algebra();
+  s->reset_algebra();
   return r;
 }
 
@@ -170,10 +171,10 @@ void Algebra::set_fns(const hashtable<std::string, Fn_Def*> &h) {
 }
 
 // test if all arguments are set through the given parameters
-bool Algebra::check_params(Signature &s) {
+bool Algebra::check_params(const Signature &s) {
   bool r = true;
   // loop over all arguments
-  for (hashtable<std::string, Arg*>::iterator i = s.args.begin();
+  for (hashtable<std::string, Arg*>::const_iterator i = s.args.begin();
        i != s.args.end(); ++i) {
     // if no parameter exists for this needed argument, return false
     hashtable<std::string, Type::Base*>::iterator j = params.find(i->first);
@@ -205,8 +206,8 @@ std::ostream &Algebra::put(std::ostream &s) const {
 }
 
 // loop through all functions in the declaration and call annotate on them
-void Algebra::annotate_terminal_arguments(Signature &s) {
-  for (hashtable<std::string, Fn_Decl*>::iterator i = s.decls.begin();
+void Algebra::annotate_terminal_arguments(const Signature &s) {
+  for (hashtable<std::string, Fn_Decl*>::const_iterator i = s.decls.begin();
        i != s.decls.end(); ++i) {
     hashtable<std::string, Fn_Def*>::iterator j = fns.find(i->first);
     assert(j != fns.end());
@@ -240,10 +241,10 @@ void Algebra::codegen() {
 }
 
 // call install choice on all functions
-void Algebra::install_choice_filter(Filter &filter) {
+void Algebra::install_choice_filter(Filter *filter) {
   for (hashtable<std::string, Fn_Def*>::iterator i = choice_fns.begin();
        i != choice_fns.end(); ++i) {
-    i->second->install_choice_filter(filter);
+    i->second->install_choice_filter(*filter);
   }
 }
 

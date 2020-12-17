@@ -162,7 +162,7 @@ class Base {
 
   std::list<Filter*> filters;
 
-  virtual bool init_links(Grammar &grammar);
+  virtual bool init_links(const Grammar &grammar);
 
   virtual bool init_productive() = 0;
   bool is_productive() {
@@ -170,7 +170,7 @@ class Base {
   }
 
   virtual void collect_lr_deps(
-    std::list<Symbol::NT*> &list, const Yield::Multi &left,
+    std::list<Symbol::NT*> *list, const Yield::Multi &left,
     const Yield::Multi &right) = 0;
 
   virtual size_t width() = 0;
@@ -343,11 +343,11 @@ class Simple : public Base {
     return is_terminal_;
   }
 
-  bool init_links(Grammar &grammar);
+  bool init_links(const Grammar &grammar);
   bool init_productive();
 
   void collect_lr_deps(
-    std::list<Symbol::NT*> &list, const Yield::Multi &left,
+    std::list<Symbol::NT*> *list, const Yield::Multi &left,
     const Yield::Multi &right);
 
   size_t width();
@@ -520,14 +520,14 @@ class Link : public Base {
 
   // Inits the graph link structure of the grammar for this
   // instance.
-  bool init_links(Grammar &grammar);
+  bool init_links(const Grammar &grammar);
   // Inits the protected field Alt::Base.productive according to
   // whether this non-terminal can produce any parse results
   // at all.
   bool init_productive();
 
   void collect_lr_deps(
-    std::list<Symbol::NT*> &list, const Yield::Multi &left,
+    std::list<Symbol::NT*> *list, const Yield::Multi &left,
     const Yield::Multi &right);
 
   size_t width();
@@ -619,11 +619,11 @@ class Block : public Base {
 
   Base *clone();
 
-  bool init_links(Grammar &grammar);
+  bool init_links(const Grammar &grammar);
   bool init_productive();
 
   void collect_lr_deps(
-    std::list<Symbol::NT*> &list, const Yield::Multi &left,
+    std::list<Symbol::NT*> *list, const Yield::Multi &left,
     const Yield::Multi &right);
 
   size_t width();
@@ -685,11 +685,11 @@ class Multi : public Base {
   }
 
 
-  bool init_links(Grammar &grammar);
+  bool init_links(const Grammar &grammar);
 
   bool init_productive();
   void collect_lr_deps(
-    std::list<Symbol::NT*> &list,
+    std::list<Symbol::NT*> *list,
     const Yield::Multi &left, const Yield::Multi &right);
 
   size_t width();

@@ -95,7 +95,7 @@ class Base {
     bool is(Type t) const { return type == t; }
     Type getType() { return this->type; }
 
-    virtual bool init_links(Grammar &grammar);
+    virtual bool init_links(const Grammar &grammar);
     virtual bool init_productive() = 0;
     bool is_productive() { return productive; }
 
@@ -154,7 +154,7 @@ class Alt : public Base {
 
     Base *clone();
 
-    bool init_links(Grammar &grammar);
+    bool init_links(const Grammar &grammar);
     bool init_productive();
 
     size_t width();

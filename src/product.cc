@@ -410,7 +410,7 @@ void Product::Two::init_fn_suffix(const std::string &p) {
 void Product::Base::install_choice_filter() {
   if (!filter_)
     return;
-  algebra_->install_choice_filter(*filter_);
+  algebra_->install_choice_filter(filter_);
 }
 
 void Product::Single::codegen() {
