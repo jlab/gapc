@@ -1022,6 +1022,18 @@ bool Product::Base::left_is_classify() {
   return true;
 }
 
+bool Product::Base::right_is_classify() {
+  unsigned int t = 0;
+  Algebra *r = nth_algebra(t);
+  for (hashtable<std::string, Fn_Def*>::const_iterator i =
+         r->choice_fns.begin(); i != r->choice_fns.end(); ++i) {
+    Fn_Def *f = i->second;
+    if (f->choice_mode() != Mode::CLASSIFY)
+      return false;
+  }
+  return true;
+}
+
 bool Product::Base::one_per_class() {
   Product::iterator i = Product::begin(this);
   for ( ; i != Product::end(); ++i)

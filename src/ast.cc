@@ -25,6 +25,7 @@
 #include <sstream>
 #include <map>
 #include <algorithm>
+#include <iostream>
 
 #include "ast.hh"
 #include "log.hh"
@@ -392,6 +393,10 @@ void AST::optimize_choice(Instance &inst) {
 void AST::optimize_classify(Instance &inst) {
   assert(inst.product);
   if (!inst.product->left_is_classify() || !inst.product->one_per_class()) {
+	if(!inst.product->right_is_classify()){
+	   std::cout << "\n The left algebra is classifying but the right one is not, this may lead to redundant results\n";
+	   throw LogError("Left algebra is classifying while the right one is not. May cause redundant results");	
+	}
     if (kbest) {
       throw LogError(
         "You specified --kbest but the product is not classifying");
@@ -746,6 +751,12 @@ std::pair<Instance*, Instance*> AST::split_classified(const std::string &n) {
   check_instances(i);
   if (!i->product->left_is_classify()) {
     throw LogError("Left algebra is not classifying.");
+  }else{
+    std::cout << "\n this should be printed or im dead wrong \n";
+    if (!i->product->right_is_classify()) {
+    std::cout << "\n the right algebra is not classifying\n";
+    throw LogError("Left algebra is classifying but right is not.");
+  }
   }
   Instance *score = 0;
   for (Product::iterator j = Product::begin(i->product);

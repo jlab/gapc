@@ -166,6 +166,7 @@ class Base {
     std::list<Statement::Base*> &compare_code) const;
 
   bool left_is_classify();
+  bool right_is_classify();
   bool one_per_class();
 
   static void set_no_coopt() {
