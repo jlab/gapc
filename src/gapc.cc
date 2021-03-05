@@ -159,7 +159,7 @@ static void parse_options(int argc, char **argv, Options &rec) {
     rec.out_file = vm["output"].as<std::string>();
   else
     //    rec.out_file = basename(rec.in_file) + ".cc";
-    rec.out_file = "out.cc";
+    rec.out_file = "out.py";
   rec.header_file = basename(rec.out_file) + ".hh";
   rec.make_file = basename(rec.out_file) + ".mf";
 
@@ -563,57 +563,70 @@ class Main {
     // as a destination for the next lines. This is not the only
     // place where the stream is written. The method Main.finish()
     // also writes some lines to the header file.
-    Printer::Cpp hh(driver.ast, opts.h_stream());
-    hh.set_argv(argv, argc);
-    hh.class_name = opts.class_name;
-    hh.header(driver.ast);
-    hh.begin_fwd_decls();
-    driver.ast.print_code(hh);
-    instance->print_code(hh);
-    hh.footer(driver.ast);
-    hh.end_fwd_decls();
-    hh.header_footer(driver.ast);
-
-    // Write out the C++ implementation file of the
-    // compile-result.
     Printer::Cpp cc(driver.ast, opts.stream());
     cc.set_argv(argv, argc);
     cc.class_name = opts.class_name;
     cc.set_files(opts.in_file, opts.out_file);
     cc.prelude(opts, driver.ast);
-    cc.imports(driver.ast);
-                      cc.global_constants(driver.ast);
+    cc.header(driver.ast);
     driver.ast.print_code(cc);
     instance->print_code(cc);
-    cc.footer(driver.ast);
-
     Code::Gen code(driver.ast);
     code_ = code;
 
-    std::auto_ptr<Backtrack_Base> bt;
-    if (opts.backtrack) {
-      bt = std::auto_ptr<Backtrack_Base>(new Backtrack());
-    } else if (opts.subopt) {
-      bt = std::auto_ptr<Backtrack_Base>(new Subopt());
-    } else if (opts.kbacktrack) {
-      bt = std::auto_ptr<Backtrack_Base>(new KBacktrack());
-    } else if (opts.classified) {
-      bt = std::auto_ptr<Backtrack_Base>(new Subopt_Marker());
-    }
+	if (false) {
+		Printer::Cpp hh(driver.ast, opts.h_stream());
+		hh.set_argv(argv, argc);
+		hh.class_name = opts.class_name;
+		hh.header(driver.ast);
+		hh.begin_fwd_decls();
+		driver.ast.print_code(hh);
+		instance->print_code(hh);
+		hh.footer(driver.ast);
+		hh.end_fwd_decls();
+		hh.header_footer(driver.ast);
 
-    if (bt.get()) {
-      if (opts.specialization > 0) {
-           driver.ast.code_mode().set_keep_cooptimal(!opts.no_coopt_class);
-      }
+		// Write out the C++ implementation file of the
+		// compile-result.
+		Printer::Cpp cc(driver.ast, opts.stream());
+		cc.set_argv(argv, argc);
+		cc.class_name = opts.class_name;
+		cc.set_files(opts.in_file, opts.out_file);
+		cc.prelude(opts, driver.ast);
+		cc.imports(driver.ast);
+						  cc.global_constants(driver.ast);
+		driver.ast.print_code(cc);
+		instance->print_code(cc);
+		cc.footer(driver.ast);
 
-      driver.ast.backtrack_gen(*bt);
-      bt->print_header(hh, driver.ast);
-      bt->print_body(cc, driver.ast);
-    }
+		Code::Gen code(driver.ast);
+		code_ = code;
 
-    hh.backtrack_footer(driver.ast);
 
-    hh.close_class();
+		std::auto_ptr<Backtrack_Base> bt;
+		if (opts.backtrack) {
+		  bt = std::auto_ptr<Backtrack_Base>(new Backtrack());
+		} else if (opts.subopt) {
+		  bt = std::auto_ptr<Backtrack_Base>(new Subopt());
+		} else if (opts.kbacktrack) {
+		  bt = std::auto_ptr<Backtrack_Base>(new KBacktrack());
+		} else if (opts.classified) {
+		  bt = std::auto_ptr<Backtrack_Base>(new Subopt_Marker());
+		}
+
+		if (bt.get()) {
+		  if (opts.specialization > 0) {
+			   driver.ast.code_mode().set_keep_cooptimal(!opts.no_coopt_class);
+		  }
+
+		  driver.ast.backtrack_gen(*bt);
+		  bt->print_header(hh, driver.ast);
+		  bt->print_body(cc, driver.ast);
+		}
+
+		hh.backtrack_footer(driver.ast);
+		hh.close_class();
+	}
   }
 
 
