@@ -648,9 +648,9 @@ class Main {
    * Precondition: the AST must have been created and configured.
    */
   void makefile() {
-    Printer::Cpp mm(driver.ast, opts.m_stream());
-    mm.set_argv(argv, argc);
-    mm.makefile(opts);
+//    Printer::Cpp mm(driver.ast, opts.m_stream());
+//    mm.set_argv(argv, argc);
+//    mm.makefile(opts);
   }
 
  public:
