@@ -274,7 +274,9 @@ void Tablegen::offset(titr track, itr first, const itr &end,
     Expr::Base *dim, Expr::Base *access) {
   if (first == end) {
     size = dim;
-    off = access;
+    off = new std::list<Expr::Base*>();
+    off->push_back(access);
+    //off = access;
     return;
   }
 
@@ -461,7 +463,7 @@ Fn_Def *Tablegen::gen_tab() {
 
 
   Statement::Fn_Call *a = new Statement::Fn_Call(Statement::Fn_Call::ASSERT);
-  a->add_arg(new Expr::Less(off, new Expr::Fn_Call(new std::string("size"))));
+  a->add_arg(new Expr::Less(off->front(), new Expr::Fn_Call(new std::string("size"))));
   c.push_back(a);
 
   Statement::Var_Assign *x = new Statement::Var_Assign(
@@ -503,7 +505,7 @@ Fn_Def *Tablegen::gen_get_tab() {
   }
 
   Statement::Fn_Call *a = new Statement::Fn_Call(Statement::Fn_Call::ASSERT);
-  a->add_arg(new Expr::Less(off, new Expr::Fn_Call(new std::string("size"))));
+  a->add_arg(new Expr::Less(off->front(), new Expr::Fn_Call(new std::string("size"))));
   c.push_back(a);
 
   Statement::Return *ret = new Statement::Return(new Expr::Vacc(

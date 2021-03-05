@@ -101,11 +101,14 @@ class Comp : public Base {
 class Array : public Base {
  public:
     Base *lhs;
-    Expr::Base *expr;
+    std::list<Expr::Base*> *expr;
 
-    Array(Base *lh, Expr::Base *e, const Loc &l) : Base(ARRAY, l), lhs(lh),
-          expr(e) {}
-    Array(Base *lh, Expr::Base *e) : Base(ARRAY), lhs(lh), expr(e) {}
+    Array(Base *lh, std::list<Expr::Base*> *e, const Loc &l) : Base(ARRAY, l), lhs(lh), expr(e) {}
+    Array(Base *lh, Expr::Base *e, const Loc &l) : Base(ARRAY, l), lhs(lh) {
+    	expr = new std::list<Expr::Base*>();
+    	expr->push_back(e);
+    }
+    Array(Base *lh, std::list<Expr::Base*> *e) : Base(ARRAY), lhs(lh), expr(e) {}
 
     void put(std::ostream &s) const;
 };

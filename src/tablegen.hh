@@ -58,7 +58,7 @@ class Tablegen {
  public:
     Expr::Base *size;
     Expr::Base *window_size;
-    Expr::Base *off;
+    std::list<Expr::Base*> *off;
 
  private:
     Statement::Base *ret_zero;
