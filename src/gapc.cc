@@ -636,9 +636,9 @@ class Main {
    * taken place.
    */
   void finish() {
-    Printer::Cpp hh(driver.ast, opts.h_stream());
-    hh.class_name = opts.class_name;
-    hh.typedefs(code_);
+//    Printer::Cpp hh(driver.ast, opts.h_stream());
+//    hh.class_name = opts.class_name;
+//    hh.typedefs(code_);
   }
 
 
