@@ -486,6 +486,21 @@ class BigInt : public Generic {
     void print(Printer::Base &s) const;
 };
 
+class NoneType : public Generic {
+ public:
+    MAKE_CLONE(NoneType);
+    NoneType() : Generic(NONETYPE) { name = "nonetype"; }
+    NoneType(const Loc &l) : Generic(NONETYPE, l) { name = "nonetype"; }
+    void print(Printer::Base &s) const;
+};
+
+class Tensor : public Generic {
+ public:
+    MAKE_CLONE(Tensor);
+    Tensor() : Generic(TENSOR) { name = "tensor"; }
+    Tensor(const Loc &l) : Generic(TENSOR, l) { name = "tensor"; }
+    void print(Printer::Base &s) const;
+};
 
 class External : public Base {
  private:

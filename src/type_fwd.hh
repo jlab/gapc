@@ -53,6 +53,8 @@ class Shape;
 class Referencable;
 class Rational;
 class BigInt;
+class NoneType;
+class Tensor;
 class External;
 
 class Eval_List;

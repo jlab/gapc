@@ -152,6 +152,8 @@ class Base {
   virtual void print(const Type::Shape &expr);
   virtual void print(const Type::Referencable &expr);
   virtual void print(const Type::BigInt &expr);
+  virtual void print(const Type::NoneType &expr);
+  virtual void print(const Type::Tensor &expr);
   virtual void print(const Type::Rational &expr);
   virtual void print(const Type::External &expr);
 

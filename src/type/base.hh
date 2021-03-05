@@ -56,7 +56,9 @@ enum Type { NONE, LIST, TUPLE, TUPLEDEF, SIGNATURE, ALPHABET, DEF,
       SINGLE,
 
       MULTI,
-      MULTI_DECL
+      MULTI_DECL,
+	  NONETYPE,  // a type not to be specified via code generation
+	  TENSOR  // return type for PyTorch
       };
 
 

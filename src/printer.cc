@@ -101,6 +101,8 @@ void Printer::Base::print(const Type::Shape &t) {}
 void Printer::Base::print(const Type::Referencable &t) {}
 void Printer::Base::print(const Type::Rational &t) {}
 void Printer::Base::print(const Type::BigInt &t) {}
+void Printer::Base::print(const Type::NoneType &t) {}
+void Printer::Base::print(const Type::Tensor &t) {}
 void Printer::Base::print(const Type::External &t) {}
 
 

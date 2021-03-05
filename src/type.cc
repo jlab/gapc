@@ -150,6 +150,14 @@ void Type::add_predefined(hashtable<std::string, Base*> &table) {
   t = new ::Type::BigInt();
   s = "bigint";
   table[s] = t;
+
+  t = new ::Type::NoneType();
+  s = "nonetype";
+  table[s] = t;
+
+  t = new ::Type::Tensor();
+  s = "tensor";
+  table[s] = t;
 }
 
 
@@ -708,6 +716,16 @@ void Type::Rational::print(Printer::Base &s) const {
 
 
 void Type::BigInt::print(Printer::Base &s) const {
+  s.print(*this);
+}
+
+
+void Type::NoneType::print(Printer::Base &s) const {
+  s.print(*this);
+}
+
+
+void Type::Tensor::print(Printer::Base &s) const {
   s.print(*this);
 }
 
