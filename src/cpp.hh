@@ -187,6 +187,7 @@ class Cpp : public Base {
     void print(const Type::Referencable &expr);
     void print(const Type::Rational &expr);
     void print(const Type::BigInt &expr);
+    void print(const Type::Tensor &expr);
     void print(const Type::External &expr);
     void print(const Type::Eval_List &expr);
     void print(const Type::Backtrace &expr);

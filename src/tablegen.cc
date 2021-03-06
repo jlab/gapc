@@ -161,8 +161,8 @@ void Tablegen::offset_const(titr track, itr first, const itr &end,
   code.push_back(real_iv);
   Expr::Vacc *real_i = new Expr::Vacc(*real_iv);
 
-  access = new Expr::Plus(access, new Expr::Times(dim, new Expr::Plus(real_i,
-      new Expr::Times(real_j, new Expr::Const(left)))));
+//  access = new Expr::Plus(access, new Expr::Times(dim, new Expr::Plus(real_i,
+//      new Expr::Times(real_j, new Expr::Const(left)))));
 
   Expr::Base *d = new Expr::Times(new Expr::Const(left),
       new Expr::Const(right));
@@ -184,8 +184,8 @@ void Tablegen::offset_left_lin(titr track, itr first, const itr &end,
       ret_zero);
   code.push_back(guard);
 
-  access = new Expr::Plus(access, new Expr::Times(dim,
-        new Expr::Plus(i, new Expr::Times(j, new Expr::Const(left)))));
+//  access = new Expr::Plus(access, new Expr::Times(dim,
+//        new Expr::Plus(i, new Expr::Times(j, new Expr::Const(left)))));
 
   Expr::Base *d = new Expr::Times(new Expr::Const(left),
       new Expr::Plus(n, new Expr::Const(1)));
@@ -228,9 +228,9 @@ void Tablegen::offset_right_lin(titr track, itr first, const itr &end,
   code.push_back(real_jv);
   Expr::Vacc *real_j = new Expr::Vacc(*real_jv);
 
-  access = new Expr::Plus(access, new Expr::Times(dim,
-        new Expr::Plus(i,
-          new Expr::Times(real_j, new Expr::Plus(n, new Expr::Const(1))))));
+//  access = new Expr::Plus(access, new Expr::Times(dim,
+//        new Expr::Plus(i,
+//          new Expr::Times(real_j, new Expr::Plus(n, new Expr::Const(1))))));
 
   Expr::Base *d = new Expr::Times(new Expr::Plus(n, new Expr::Const(1)),
       new Expr::Const(right));
@@ -246,10 +246,10 @@ void Tablegen::offset_quad(titr track, itr first, const itr &end,
   Expr::Base *i, *j, *n;
   head(i, j, n, table, *track);
 
-  access = new Expr::Plus(access, new Expr::Times(dim,
-    new Expr::Plus(
-      new Expr::Div(new Expr::Times(
-        j, new Expr::Plus(j, new Expr::Const(1))), new Expr::Const(2)), i)));
+//  access = new Expr::Plus(access, new Expr::Times(dim,
+//    new Expr::Plus(
+//      new Expr::Div(new Expr::Times(
+//        j, new Expr::Plus(j, new Expr::Const(1))), new Expr::Const(2)), i)));
 
   Expr::Base *d = new Expr::Plus(new Expr::Plus(new Expr::Div(
       new Expr::Times(n, new Expr::Plus(n, new Expr::Const(1))),
@@ -339,6 +339,17 @@ void Tablegen::offset(size_t track_pos, itr f, const itr &e) {
   std::sort(p.begin(), p.end(), ParaCmp());
   paras.clear();
   paras.insert(paras.end(), p.begin(), p.end());
+
+  //  Statement::Return *ret = new Statement::Return(new Expr::Vacc(
+  //        new Var_Acc::Array(new Var_Acc::Plain(new std::string("array")), off)));
+  //  c.push_back(ret);
+
+  std::list<Expr::Base*> *indexer = new std::list<Expr::Base*>();
+  for (std::list<Statement::Var_Decl*>::iterator it = paras.begin(); it != paras.end(); ++it) {
+	  indexer->push_back(new Expr::Vacc((*it)->name));
+    //std::cerr << (*(*it)->name) << "\n";
+  }
+  *off = *indexer;
 
   std::reverse(ns.begin(), ns.end());
 }
@@ -431,86 +442,87 @@ Fn_Def *Tablegen::gen_untab() {
 }
 
 Fn_Def *Tablegen::gen_tab() {
-  Fn_Def *f = new Fn_Def(new Type::RealVoid(), new std::string("set"));
+  Fn_Def *f = new Fn_Def(new Type::NoneType(), new std::string("set"));
+  paras.push_front(new Statement::Var_Decl(new Type::NoneType(), new std::string("self")));
   f->add_paras(paras);
   // FIXME const & in dtype -> see cpp.cc in_fn_head
   f->add_para(dtype, new std::string("e"));
 
   std::list<Statement::Base*> c;
-
-  c.insert(c.end(), code.begin(), code.end());
-
-  Statement::Fn_Call *ass = new Statement::Fn_Call(Statement::Fn_Call::ASSERT);
-  ass->add_arg(new Expr::Const(0));
-
-  if (cond) {
-    Statement::If *i = new Statement::If(cond, ass);
-    c.push_back(i);
-  }
-
-  if (!cyk_) {
-    Statement::Fn_Call *a = new Statement::Fn_Call(Statement::Fn_Call::ASSERT);
-    Expr::Fn_Call *e = new Expr::Fn_Call(Expr::Fn_Call::IS_TABULATED);
-    for (std::list<Statement::Var_Decl*>::iterator i = paras.begin();
-         i != paras.end(); ++i) {
-      e->add_arg(**i);
-    }
-    a->add_arg(new Expr::Not(e));
-    c.push_back(a);
-  }
-
-  c.insert(c.end(), window_code.begin(), window_code.end());
-
-
-  Statement::Fn_Call *a = new Statement::Fn_Call(Statement::Fn_Call::ASSERT);
-  a->add_arg(new Expr::Less(off->front(), new Expr::Fn_Call(new std::string("size"))));
-  c.push_back(a);
+//
+//  c.insert(c.end(), code.begin(), code.end());
+//
+//  Statement::Fn_Call *ass = new Statement::Fn_Call(Statement::Fn_Call::ASSERT);
+//  ass->add_arg(new Expr::Const(0));
+//
+//  if (cond) {
+//    Statement::If *i = new Statement::If(cond, ass);
+//    c.push_back(i);
+//  }
+//
+//  if (!cyk_) {
+//    Statement::Fn_Call *a = new Statement::Fn_Call(Statement::Fn_Call::ASSERT);
+//    Expr::Fn_Call *e = new Expr::Fn_Call(Expr::Fn_Call::IS_TABULATED);
+//    for (std::list<Statement::Var_Decl*>::iterator i = paras.begin();
+//         i != paras.end(); ++i) {
+//      e->add_arg(**i);
+//    }
+//    a->add_arg(new Expr::Not(e));
+//    c.push_back(a);
+//  }
+//
+//  c.insert(c.end(), window_code.begin(), window_code.end());
+//
+//
+//  Statement::Fn_Call *a = new Statement::Fn_Call(Statement::Fn_Call::ASSERT);
+//  a->add_arg(new Expr::Less(off->front(), new Expr::Fn_Call(new std::string("size"))));
+//  c.push_back(a);
 
   Statement::Var_Assign *x = new Statement::Var_Assign(
-      new Var_Acc::Array(new Var_Acc::Plain(new std::string("array")), off),
+      new Var_Acc::Array(new Var_Acc::Plain(new std::string("self.array")), off),
       new Expr::Vacc(new std::string("e")));
   c.push_back(x);
 
-  if (!cyk_) {
-    Statement::Var_Assign *y = new Statement::Var_Assign(
-        new Var_Acc::Array(
-          new Var_Acc::Plain(new std::string("tabulated")), off),
-        new Expr::Const(new Const::Bool(true)));
-    c.push_back(y);
-  }
+//  if (!cyk_) {
+//    Statement::Var_Assign *y = new Statement::Var_Assign(
+//        new Var_Acc::Array(
+//          new Var_Acc::Plain(new std::string("tabulated")), off),
+//        new Expr::Const(new Const::Bool(true)));
+//    c.push_back(y);
+//  }
 
   f->set_statements(c);
   return f;
 }
 
 Fn_Def *Tablegen::gen_get_tab() {
-  Fn_Def *f = new Fn_Def(new Type::Referencable(dtype), new std::string("get"));
+  Fn_Def *f = new Fn_Def(new Type::Tensor, new std::string("get"));
+  paras.push_front(new Statement::Var_Decl(new Type::NoneType(), new std::string("self")));
   f->add_paras(paras);
 
   std::list<Statement::Base*> c;
 
-  if (cond) {
-    Statement::If *i = new Statement::If(cond, ret_zero);
-    code.push_back(i);
-  }
+//  if (cond) {
+//    Statement::If *i = new Statement::If(cond, ret_zero);
+//    code.push_back(i);
+//  }
+//
+//  c.insert(c.end(), code.begin(), code.end());
+//  c.insert(c.end(), window_code.begin(), window_code.end());
+//
+//  if (!cyk_) {
+//    Statement::Fn_Call *a = new Statement::Fn_Call(Statement::Fn_Call::ASSERT);
+//    a->add_arg(new Var_Acc::Array(
+//      new Var_Acc::Plain(new std::string("tabulated")), off));
+//    c.push_back(a);
+//  }
+//
+//  Statement::Fn_Call *a = new Statement::Fn_Call(Statement::Fn_Call::ASSERT);
+//  a->add_arg(new Expr::Less(off->front(), new Expr::Fn_Call(new std::string("size"))));
+//  c.push_back(a);
 
-  c.insert(c.end(), code.begin(), code.end());
-  c.insert(c.end(), window_code.begin(), window_code.end());
-
-  if (!cyk_) {
-    Statement::Fn_Call *a = new Statement::Fn_Call(Statement::Fn_Call::ASSERT);
-    a->add_arg(new Var_Acc::Array(
-      new Var_Acc::Plain(new std::string("tabulated")), off));
-    c.push_back(a);
-  }
-
-  Statement::Fn_Call *a = new Statement::Fn_Call(Statement::Fn_Call::ASSERT);
-  a->add_arg(new Expr::Less(off->front(), new Expr::Fn_Call(new std::string("size"))));
-  c.push_back(a);
-
-  Statement::Return *ret = new Statement::Return(new Expr::Vacc(
-        new Var_Acc::Array(new Var_Acc::Plain(new std::string("array")), off)));
-  c.push_back(ret);
+  Statement::Return *ret = new Statement::Return(new Expr::Vacc(new Var_Acc::Array(new Var_Acc::Plain(new std::string("self.array")), off)));
+    c.push_back(ret);
 
   f->set_statements(c);
   return f;

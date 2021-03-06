@@ -111,7 +111,7 @@ void Printer::Cpp::print(const Statement::Var_Decl &stmt) {
       stream << indent() << **i << ' ' << *stmt.name << "_" << j;
       if (stmt.rhs)
         stream << " = " << *stmt.rhs << "_" << j;
-      stream << ";\n";
+      stream << "\n";
     }
     return;
   }
@@ -119,10 +119,9 @@ void Printer::Cpp::print(const Statement::Var_Decl &stmt) {
   stream << indent() << *stmt.type << ' ' << *stmt.name;
   if (stmt.rhs)
     stream << " = " << *stmt.rhs;
-  stream << ';';
 
   if (!in_class && stmt.type->is(Type::LIST) && !stmt.rhs) {
-    stream << endl << indent() << "empty(" << *stmt.name << ");";
+    stream << endl << indent() << "empty(" << *stmt.name << ")";
   }
 }
 
@@ -152,14 +151,14 @@ void Printer::Cpp::print(const Statement::Switch &stmt) {
       stream << indent() << "case " << i->first << " :" << endl;
       inc_indent();
             stream << i->second;
-            stream << indent() << "break;" << endl;
+            stream << indent() << "break" << endl;
       dec_indent();
   }
   if (!stmt.defaul.empty()) {
       stream << indent() << "default :" << endl;
       inc_indent();
             stream << stmt.defaul;
-            stream << indent() << "break;" << endl;
+            stream << indent() << "break" << endl;
       dec_indent();
   }
 
@@ -170,25 +169,25 @@ void Printer::Cpp::print(const Statement::Switch &stmt) {
 
 void Printer::Cpp::print(const Statement::Return &stmt) {
   if (stmt.expr)
-    stream << indent() << "return " << *stmt.expr << ';';
+    stream << indent() << "return " << *stmt.expr;
   else
-    stream << indent() << "return;";
+    stream << indent() << "return";
 }
 
 void Printer::Cpp::print(const Statement::Break &stmt) {
-  stream << indent() << "break;";
+  stream << indent() << "break";
 }
 
 void Printer::Cpp::print(const Statement::Continue &stmt) {
-  stream << indent() << "continue;";
+  stream << indent() << "continue";
 }
 
 void Printer::Cpp::print(const Statement::Decrease &stmt) {
-  stream << indent() << *stmt.name << "--;";
+  stream << indent() << *stmt.name << "--";
 }
 
 void Printer::Cpp::print(const Statement::Increase &stmt) {
-  stream << indent() << *stmt.name << "++;";
+  stream << indent() << *stmt.name << "++";
 }
 
 void Printer::Cpp::print(const Statement::Sorter &stmt) {
@@ -202,7 +201,7 @@ void Printer::Cpp::print(const Statement::Sorter &stmt) {
     } else {
         // TODO(who?): Implement if needed
     }
-    stream << ", " << *stmt.op << ");" << endl;
+    stream << ", " << *stmt.op << ")" << endl;
 }
 
 void Printer::Cpp::print(const Statement::Foreach &stmt) {
@@ -259,7 +258,7 @@ void Printer::Cpp::print(const Statement::Foreach &stmt) {
     stream << indent()
       << "intrusive_ptr<Backtrace_List<Value, pos_int> > " << t
       << " = boost::dynamic_pointer_cast<Backtrace_List<Value, pos_int> >("
-      << *stmt.container->name << ");" << endl
+      << *stmt.container->name << ")" << endl
       << indent() << "if (!" << t << ") {" << endl;
     inc_indent();
     stream << indent() << *stmt.elem->type << ' ' << *stmt.elem->name << " = "
@@ -331,8 +330,6 @@ void Printer::Cpp::print(const Statement::Var_Assign &stmt) {
   stream << indent();
   stream << *stmt.acc;
   stream << ' ' << stmt.op_str() << ' ' << *stmt.rhs;
-  if (!in_fn_head)
-     stream << ";";
 }
 
 
@@ -528,7 +525,7 @@ void Printer::Cpp::print(const Statement::Fn_Call &stmt) {
       print_arg(*i);
     }
   }
-  stream << ");";
+  stream << ")";
 }
 
 
@@ -567,7 +564,10 @@ void Printer::Cpp::print(Para_Decl::Base *p) {
   assert(p);
   Para_Decl::Simple *s = dynamic_cast<Para_Decl::Simple*>(p);
   if (s) {
-    stream << *s->type() << ' ' << *s->name();
+	stream << *s->name();
+	if (!(*s->type()).is(Type::NONETYPE)) {
+	  stream << ':' << *s->type();
+	}
     return;
   }
 
@@ -635,7 +635,7 @@ void Printer::Cpp::print(const Fn_Def &fn_def) {
     }
   stream << ')' << endl;
   } else {
-    stream << indent() << *fn_def.return_type << ' ';
+    stream << indent(); // << *fn_def.return_type << ' ';
     if (!fwd_decls && !in_class) {
       stream << class_name << "::";
     }
@@ -655,17 +655,17 @@ void Printer::Cpp::print(const Fn_Def &fn_def) {
     }
     print(fn_def.ntparas());
     stream << ')';
+    if (!(fn_def.return_type->is(Type::NONETYPE))) {
+    	stream << " -> " << *fn_def.return_type;
+    }
     if (!fn_def.choice_fn) {
       in_fn_head = false;
     }
   }
   if (fwd_decls) {
-    stream << ';' << endl;
     return;
-  } else {
-    stream << endl;
   }
-  stream << indent() << '{' << endl;
+  stream << ':' << endl;
   inc_indent();
   lines_start_mark(fn_def.stmts);
   for (std::list<Statement::Base*>::const_iterator s = fn_def.stmts.begin();
@@ -674,7 +674,7 @@ void Printer::Cpp::print(const Fn_Def &fn_def) {
   }
   lines_end_mark(fn_def.stmts);
   dec_indent();
-  stream << indent() << '}' << endl << endl;
+  stream << endl;
   choice_range = NULL;
 }
 
@@ -704,7 +704,7 @@ void Printer::Cpp::print(const Operator &op) {
     }
 
     stream << indent() << "   }" << endl;
-    stream << indent() << "} " <<  *op.object << " ;" << endl;
+    stream << indent() << "} " <<  *op.object << " " << endl;
 }
 
 
@@ -1174,6 +1174,10 @@ void Printer::Cpp::print(const Type::BigInt &t) {
   }
 }
 
+void Printer::Cpp::print(const Type::Tensor &t) {
+  stream << "torch.Tensor";
+}
+
 
 void Printer::Cpp::print(const Type::External &t) {
   if (in_fn_head) {
@@ -1279,7 +1283,7 @@ void Printer::Cpp::print_type_defs(const AST &ast) {
           stream << indent() << *(*i)->first->lhs << ' ' << *(*i)->second <<
             ';' << endl;
         }
-        stream << indent() << "bool empty_;" << endl << indent() << *def->name
+        stream << indent() << "bool empty_" << endl << indent() << *def->name
           << "() : empty_(false) {}" << endl;
         dec_indent();
 
@@ -1312,27 +1316,27 @@ void Printer::Cpp::print_type_defs(const AST &ast) {
             << "(i), empty_(false) {}" << endl;
           stream << *def->name << " operator+(const " << *def->name
             << " &other) const" << endl << '{' << endl
-            << "assert(!empty_); assert(!other.empty_);" << endl
+            << "assert(!empty_); assert(!other.empty_)" << endl
             << "return " << *def->name << '(' << *tuple->list.front()->second
-            << " + other." << *tuple->list.front()->second << ");" << endl
+            << " + other." << *tuple->list.front()->second << ")" << endl
             << '}' << endl;
           stream << *def->name << " operator-(const " << *def->name
             << " &other) const" << endl << '{' << endl
-            << "assert(!empty_);" << endl
+            << "assert(!empty_)" << endl
             << "if (other.empty_) return " << *def->name << '('
-            << *tuple->list.front()->second << ");" << endl
+            << *tuple->list.front()->second << ")" << endl
             << "return " << *def->name << '(' << *tuple->list.front()->second
-            << " - other." << *tuple->list.front()->second << ");" << endl
+            << " - other." << *tuple->list.front()->second << ")" << endl
             << '}' << endl;
           stream << "bool operator<=(const " << *def->name << "& other) const {"
             << endl
-            << "assert(!empty_); assert(!other.empty_);" << endl
+            << "assert(!empty_); assert(!other.empty_)" << endl
             << "return " << *tuple->list.front()->second << " <= "
-            << "other." << *tuple->list.front()->second << ";"
+            << "other." << *tuple->list.front()->second << ""
             << endl << "}" << endl;
         }
 
-        stream << endl << indent() << "};" << endl << endl;
+        stream << endl << indent() << "}" << endl << endl;
 
         stream << indent()
           << "inline std::ostream &operator<<(std::ostream &o, const "
@@ -1347,17 +1351,17 @@ void Printer::Cpp::print_type_defs(const AST &ast) {
         for ( ; j != tuple->list.end(); ++j) {
           stream << indent() << " << \", \" << tuple." << *(*j)->second << endl;
         }
-        stream << indent() << " << ')' ;" << endl;
+        stream << indent() << " << ')' " << endl;
         stream << indent() << "return o;" << endl;
         dec_indent();
         stream << indent() << '}' << endl << endl;
         stream << "inline void empty(" << *def->name << " &e) {"
           << "e.empty_ = true; }" << endl;
         stream << "inline bool isEmpty(const " << *def->name << " &e) {"
-          << " return e.empty_; }" << endl;
+          << " return e.empty_ }" << endl;
       } else {
         stream << indent() << "typedef " << *def->rhs << ' '
-          << *def->name << ';' << endl;
+          << *def->name << endl;
       }
     }
   }
@@ -1462,7 +1466,7 @@ void Printer::Cpp::print_table_init(const AST &ast) {
     if (ast.window_mode) {
       stream << " opts.window_size, opts.window_increment, ";
     }
-    stream << "\""<< i->second->table_decl->name() << "\");" << endl;
+    stream << "\""<< i->second->table_decl->name() << "\")" << endl;
   }
 }
 
@@ -1487,14 +1491,14 @@ void Printer::Cpp::print_buddy_init(const AST &ast) {
     return;
   }
 
-  stream << "buddy = new " << class_name << "_buddy();" << endl
-    << "buddy->init(opts);" << endl
+  stream << "buddy = new " << class_name << "_buddy()" << endl
+    << "buddy->init(opts)" << endl
     << "buddy->cyk();" << endl
     << "buddy->print_subopt(std::cout, opts.delta);" << endl << endl;
   for (std::list<Symbol::NT*>::const_iterator i = ast.grammar()->nts().begin();
        i != ast.grammar()->nts().end(); ++i) {
     stream << "marker_nt_" << *(*i)->name << " = &buddy->marker_nt_"
-      << *(*i)->name << ';' << endl;
+      << *(*i)->name << endl;
   }
   stream << endl << endl;
 }
@@ -1568,7 +1572,7 @@ void Printer::Cpp::print_window_inc_fn(const AST &ast) {
        ast.grammar()->tabulated.begin();
        i != ast.grammar()->tabulated.end(); ++i) {
     stream << indent() << i->second->table_decl->name()
-      << ".window_increment();" << endl;
+      << ".window_increment()" << endl;
   }
 
   stream << "t_0_left_most += winc;\n" <<
@@ -1600,15 +1604,15 @@ void Printer::Cpp::print_buddy_decls(const AST &ast) {
     return;
   }
 
-  stream << class_name << "_buddy *buddy;" << endl;
+  stream << class_name << "_buddy *buddy" << endl;
   stream << '~' << class_name << "()" << endl
     << '{' << endl
-    << "  delete buddy;" << endl
+    << "  delete buddy" << endl
     << '}' << endl << endl;
 
   for (std::list<Symbol::NT*>::const_iterator i = ast.grammar()->nts().begin();
        i != ast.grammar()->nts().end(); ++i) {
-    stream << "Marker<unsigned int> *marker_nt_" << *(*i)->name << ';' << endl;
+    stream << "Marker<unsigned int> *marker_nt_" << *(*i)->name << endl;
   }
   stream << endl;
 }
@@ -1888,7 +1892,7 @@ void Printer::Cpp::multi_print_cyk(
 
 void Printer::Cpp::print_cyk_fn(const AST &ast) {
   if (fwd_decls) {
-    stream << "   void cyk();" << endl << endl;
+    stream << "   void cyk()" << endl << endl;
     return;
   }
 
@@ -1968,7 +1972,7 @@ void Printer::Cpp::print_run_fn(const AST &ast) {
     }
   }
 
-  stream << ");" << endl
+  stream << ")" << endl
   << '}' << endl;
 }
 
@@ -1979,13 +1983,13 @@ void Printer::Cpp::print_stats_fn(const AST &ast) {
   stream << "#ifdef STATS\n";
 
   inc_indent();
-  stream << indent() << "o << \"\\n\\nN = \" << seq.size() << '\\n'" << ';'
+  stream << indent() << "o << \"\\n\\nN = \" << seq.size() << '\\n'"
   << endl;
   for (hashtable<std::string, Symbol::NT*>::const_iterator i =
        ast.grammar()->tabulated.begin();
        i != ast.grammar()->tabulated.end(); ++i) {
     stream << indent() << i->second->table_decl->name()
-      << ".print_stats(o, \"" << i->second->table_decl->name() << "\");"
+      << ".print_stats(o, \"" << i->second->table_decl->name() << "\")"
       << endl;
   }
   dec_indent();
@@ -2062,10 +2066,10 @@ void Printer::Cpp::print_backtrack_fn(const AST &ast) {
   for (; i != ast.grammar()->axiom->code()->names.end(); ++i) {
     stream << ", " << **i;
   }
-  stream << ");" << endl;
+  stream << ")" << endl;
 
   if (axiom_use_btproxy) {
-    stream << "return execute_backtrack_k(bt);" << endl;
+    stream << "return execute_backtrack_k(bt)" << endl;
   }
 
   stream << '}' << endl;
@@ -2106,18 +2110,18 @@ void Printer::Cpp::print_kbacktrack_pp(const AST &ast) {
 
   print_axiom_args(ast);
 
-  stream << ");" << endl
+  stream << ")" << endl
     << "intrusive_ptr<Backtrace_List<" << *bt_value << ", unsigned int> > l ="
     << endl
     << "  boost::dynamic_pointer_cast<Backtrace_List<" << *bt_value
-    << ", unsigned int> > (bt);" << endl
-    << "assert(!bt || (bt && l));" << endl
+    << ", unsigned int> > (bt)" << endl
+    << "assert(!bt || (bt && l))" << endl
     << "if (l) {\n"
     << "for (Backtrace_List<" << *bt_value
-    << ", unsigned int>::iterator i = l->begin();"
+    << ", unsigned int>::iterator i = l->begin()"
     << endl
     << "     i != l->end(); ++i)" << endl
-    << "  (*i)->print(out);" << endl
+    << "  (*i)->print(out)" << endl
     << "}\n";
 }
 
@@ -2143,7 +2147,7 @@ void Printer::Cpp::print_backtrack_pp(const AST &ast) {
 
   print_axiom_args(ast);
 
-  stream << ");" << endl;
+  stream << ")" << endl;
 
   Type::Backtrace *bt_type = dynamic_cast<Type::Backtrace*>(
     ast.grammar()->axiom->code()->return_type);
@@ -2156,11 +2160,11 @@ void Printer::Cpp::print_backtrack_pp(const AST &ast) {
     stream << "if (!bt)\nreturn;\n";
 
     stream << "intrusive_ptr<Eval_List<" << *bt_type->value_type()
-      << "> > elist = bt->eval();"
+      << "> > elist = bt->eval()"
       << endl
-      << "elist->print(out, value);" << endl
-      << "erase(elist);" << endl
-      << "erase(bt);" << endl;
+      << "elist->print(out, value)" << endl
+      << "erase(elist)" << endl
+      << "erase(bt)" << endl;
   }
 
   stream << endl
@@ -2179,7 +2183,7 @@ void Printer::Cpp::print_marker_init(const AST &ast) {
   stream << endl;
   for (std::list<Symbol::NT*>::const_iterator i =
        ast.grammar()->nts().begin(); i != ast.grammar()->nts().end(); ++i) {
-    stream << "marker_nt_" << *(*i)->name << ".init(t_0_seq.size());" << endl;
+    stream << "marker_nt_" << *(*i)->name << ".init(t_0_seq.size())" << endl;
   }
   stream << endl << endl;
 }
@@ -2193,7 +2197,7 @@ void Printer::Cpp::print_marker_clear(const AST &ast) {
   for (hashtable<std::string, Symbol::NT*>::const_iterator i =
        ast.grammar()->tabulated.begin();
        i != ast.grammar()->tabulated.end(); ++i) {
-    stream << indent() << i->second->table_decl->name() << ".clear();" << endl;
+    stream << indent() << i->second->table_decl->name() << ".clear()" << endl;
   }
 }
 
@@ -2222,7 +2226,7 @@ void Printer::Cpp::print_subopt_fn(const AST &ast) {
 
   print_axiom_args(ast);
 
-  stream << ");" << endl;
+  stream << ")" << endl;
 
   if (!ast.code_mode().marker()) {
     stream << "  " << *f->return_type << " l = ";
@@ -2236,17 +2240,17 @@ void Printer::Cpp::print_subopt_fn(const AST &ast) {
     stream << ", ";
   }
 
-  stream << "global_score, delta);" << endl;
+  stream << "global_score, delta)" << endl;
 
   if (!ast.code_mode().marker()) {
     stream << "  for (" << *f->return_type->deref()
       << "::iterator i " << endl
       << "       = l.ref().begin(); i != l.ref().end(); ++i) {" << endl;
-    stream << "    " << *bt_type << " bt = (*i).second;" << endl
-      << "    " << *score_type << " v = (*i).first;" << endl;
+    stream << "    " << *bt_type << " bt = (*i).second" << endl
+      << "    " << *score_type << " v = (*i).first" << endl;
     stream << "    intrusive_ptr<Eval_List<" << *pp_type
-      << "> > elist = bt->eval();" << endl
-      << "    elist->print(out, v);" << endl;
+      << "> > elist = bt->eval()" << endl
+      << "    elist->print(out, v)" << endl;
     stream << "  }" << endl;
   }
 
@@ -2276,9 +2280,9 @@ void Printer::Cpp::print_value_pp(const AST &ast) {
   }
 
   stream << "if (isEmpty(res))" << endl
-    << "  out << \"[]\\n\";" << endl
+    << "  out << \"[]\\n\"" << endl
     << "else" << endl
-    << "  out << res << '\\n';" << endl;
+    << "  out << res << '\\n'" << endl;
 
   stream << endl
     << '}' << endl;
@@ -2286,16 +2290,16 @@ void Printer::Cpp::print_value_pp(const AST &ast) {
 
 
 void Printer::Cpp::close_class() {
-  stream << endl << "};" << endl << endl;
+  stream << endl << "}" << endl << endl;
 }
 
 
 void Printer::Cpp::typedefs(Code::Gen &code) {
   stream << "#ifndef NO_GAPC_TYPEDEFS" << endl;
   stream << "namespace gapc {" << endl
-    << "  typedef " << class_name << " class_name;" << endl
+    << "  typedef " << class_name << " class_name" << endl
     << "  typedef " << *code.return_type()
-    << " return_type;" << endl
+    << " return_type" << endl
     << '}' << endl;
   stream << "#endif";
   stream  << endl;
@@ -2534,7 +2538,7 @@ void Printer::Cpp::print(const Statement::Backtrace_Decl &d) {
        i != paras.end(); ++i) {
     Statement::Var_Decl *v = *i;
     if (v->type->is(Type::BACKTRACE)) {
-      stream << "erase(" << *v->name << ");" << endl;
+      stream << "erase(" << *v->name << ")" << endl;
     }
   }
   stream << '}' << endl << endl;
@@ -2550,7 +2554,7 @@ void Printer::Cpp::print(const Statement::Backtrace_Decl &d) {
   stream << d.algebra_code() << endl;
   stream << d.eval_code() << endl;
   dec_indent();
-  stream << "};" << endl;
+  stream << "}" << endl;
   in_class = false;
 }
 
@@ -2614,7 +2618,7 @@ void Printer::Cpp::print(const Statement::Backtrace_NT_Decl &d) {
     stream << " {}" << endl
       << "void backtrack()" << endl
       << "{" << endl
-      << "assert(this->scores == 0);" << endl
+      << "assert(this->scores == 0)" << endl
       << "this->scores = boost::dynamic_pointer_cast<"
     "Backtrace_List<Value, pos_int> >"
       << endl
@@ -2635,11 +2639,11 @@ void Printer::Cpp::print(const Statement::Backtrace_NT_Decl &d) {
       stream << ", " << *s->name();
     }
 
-    stream << "));" << endl
-      << "assert(this->scores != 0);" << endl
+    stream << "))" << endl
+      << "assert(this->scores != 0)" << endl
       << "}" << endl
       << endl
-      << "};" << endl << endl;
+      << "}" << endl << endl;
 
     std::string back_name(name);
     name = "Backtrace_nt_" + d.name() + "_Front";
@@ -2648,7 +2652,7 @@ void Printer::Cpp::print(const Statement::Backtrace_NT_Decl &d) {
       << " , Value, pos_int> " << endl
       << "{" << endl
       << "  intrusive_ptr<" << back_name << "<" << class_name
-      << ", Value, pos_int> > back;" << endl << endl
+      << ", Value, pos_int> > back" << endl << endl
 
       << name << "(intrusive_ptr<" << back_name << "<" << class_name
       << ", Value, pos_int> > b) : back(b) {}" << endl
@@ -2656,18 +2660,18 @@ void Printer::Cpp::print(const Statement::Backtrace_NT_Decl &d) {
       << "intrusive_ptr<Backtrace<Value, pos_int> > backtrack()" << endl
       << "{" << endl
       << "  intrusive_ptr<Backtrace_NT_Back_Base<" << *single << ", "
-      << class_name << ", Value, pos_int> > t = back;" <<endl
-      << "  return t->backtrack(this->score());" << endl
+      << class_name << ", Value, pos_int> > t = back" <<endl
+      << "  return t->backtrack(this->score())" << endl
       << "}" << endl << endl
 
       << "intrusive_ptr<Eval_List<Value> > eval()" << endl << "{" << endl
-      << "  intrusive_ptr<Backtrace<Value, pos_int> > t;" << endl
-      << "  t = backtrack();" << endl
-      << "  return t->eval();" << endl
+      << "  intrusive_ptr<Backtrace<Value, pos_int> > t" << endl
+      << "  t = backtrack()" << endl
+      << "  return t->eval()" << endl
       << "}" << endl
 
 
-      << "};" << endl << endl;
+      << "}" << endl << endl;
 
     return;
   }
@@ -2678,21 +2682,21 @@ void Printer::Cpp::print(const Statement::Backtrace_NT_Decl &d) {
     << endl
     << "struct " << name << " : public Backtrace<Value, pos_int> {" << endl;
   inc_indent();
-  stream << indent() << "Klass *klass;" << endl;
+  stream << indent() << "Klass *klass" << endl;
 
   for (std::list<std::string>::const_iterator i = l.begin();
        i != l.end(); ++i) {
-    stream << indent() << "pos_int " << *i << ";" << endl;
+    stream << indent() << "pos_int " << *i << endl;
   }
   for (std::list<Para_Decl::Base*>::const_iterator i = p.begin();
        i != p.end(); ++i) {
     Para_Decl::Simple *s = dynamic_cast<Para_Decl::Simple*>(*i);
     assert(s);
-    stream << *s->type() << ' ' << *s->name() << ";\n";
+    stream << *s->type() << ' ' << *s->name() << "\n";
   }
   stream << endl;
 
-  stream << "intrusive_ptr<Backtrace<Value, pos_int> > proxy;" << endl << endl;
+  stream << "intrusive_ptr<Backtrace<Value, pos_int> > proxy" << endl << endl;
   stream << indent() << name << "(Klass *klass_";
 
   for (std::list<std::string>::const_iterator i = l.begin();
@@ -2742,16 +2746,16 @@ void Printer::Cpp::print(const Statement::Backtrace_NT_Decl &d) {
     stream << ", " << *s->name();
   }
 
-  stream << ");" << endl;
+  stream << ")" << endl;
   dec_indent();
   stream << indent() << '}' << endl << endl;
   // stream << "Eval_List<Value>* eval() { assert(false); }" << endl;
   stream << "intrusive_ptr<Eval_List<Value> > eval() { "
-    << "proxy = backtrack(); return proxy->eval();"
+    << "proxy = backtrack(); return proxy->eval()"
     << " }";
   // stream << "bool is_proxy() const { return true; }" << endl;
   dec_indent();
-  stream << "};" << endl << endl;
+  stream << "}" << endl << endl;
 }
 
 
@@ -2759,28 +2763,28 @@ void Printer::Cpp::print(const Statement::Hash_Decl &d) {
   stream << "class " << d.ext_name() << " {" << endl;
   stream << " public:" << endl;
   inc_indent();
-  stream << indent() << "typedef " << d.answer_type() << " type;" << endl;
+  stream << indent() << "typedef " << d.answer_type() << " type" << endl;
   stream << " private:" << endl;
   const std::list<Statement::Var_Decl*> &f = d.filters();
   for (std::list<Statement::Var_Decl*>::const_iterator i = f.begin();
        i != f.end(); ++i) {
-    stream << indent() << *(*i)->type << "<type> " << *(*i)->name << ";" << endl;
+    stream << indent() << *(*i)->type << "<type> " << *(*i)->name << endl;
   }
 
   if (d.kbest()) {
-    stream << indent() << "static uint32_t k_;\n";
+    stream << indent() << "static uint32_t k_\n";
   }
 
   stream << " public:" << endl;
   stream << indent() << "uint32_t hash(const type &x) const {" << endl;
   inc_indent();
-  stream << indent() << "return hashable_value(left_most(x));" << endl;
+  stream << indent() << "return hashable_value(left_most(x))" << endl;
   dec_indent();
   stream << indent() << "}" << endl << endl;
 
   stream << indent() << "type init(const type &src) const {" << endl;
   inc_indent();
-  stream << indent() << "type dst(src);" << endl;
+  stream << indent() << "type dst(src)" << endl;
   stream << d.init_code();
   dec_indent();
   stream << indent() << "}" << endl << endl;
@@ -2790,16 +2794,16 @@ void Printer::Cpp::print(const Statement::Hash_Decl &d) {
 
   stream << indent() << "bool equal(const type &a, const type &b) const {" << endl;
   inc_indent();
-  stream << indent() << "return left_most(a) == left_most(b);" << endl;
+  stream << indent() << "return left_most(a) == left_most(b)" << endl;
   dec_indent();
   stream << indent() << "}" << endl << endl;
 
   stream << indent() << "bool filter() const {" << endl;
   inc_indent();
   if (f.empty()) {
-    stream << indent() << "return false;" << endl;
+    stream << indent() << "return false" << endl;
   } else {
-    stream << indent() << "return true;" << endl;
+    stream << indent() << "return true" << endl;
   }
   dec_indent();
   stream << indent() << "}" << endl << endl;
@@ -2809,7 +2813,7 @@ void Printer::Cpp::print(const Statement::Hash_Decl &d) {
   int a = 0;
   for (std::list<Statement::Var_Decl*>::const_iterator i = f.begin();
        i != f.end(); ++i, ++a) {
-    stream << indent() << "bool b" << a << " = !" << *(*i)->name << ".ok(x);" << endl;
+    stream << indent() << "bool b" << a << " = !" << *(*i)->name << ".ok(x)" << endl;
   }
   a = 0;
   std::list<Statement::Var_Decl*>::const_iterator i = f.begin();
@@ -2822,10 +2826,10 @@ void Printer::Cpp::print(const Statement::Hash_Decl &d) {
     stream << " && b" << a;
   }
   if (f.empty()) {
-    stream << indent() << "assert(0);" << endl;
+    stream << indent() << "assert(0)" << endl;
     stream << indent() << "return false";
   }
-  stream << ";" << endl;
+  stream << endl;
   dec_indent();
   stream << indent() << "}" << endl << endl;
 
@@ -2849,16 +2853,16 @@ void Printer::Cpp::print(const Statement::Hash_Decl &d) {
   stream << indent() << "bool operator()(const type &src, const type &dst) const" << endl
     << d.compare_code();
   dec_indent();
-  stream << indent() << "};" << endl;
+  stream << indent() << "}" << endl;
   dec_indent();
-  stream << indent() << "};" << endl << endl;
+  stream << indent() << "}" << endl << endl;
 
   stream << indent() << "typedef Hash::Ref<" << d.answer_type() << ", " << d.ext_name()
-    << " > " << d.name() << ";"
+    << " > " << d.name()
     << endl;
 }
 
 
 void Printer::Cpp::print(const Statement::Marker_Decl &d) {
-  stream << "Marker<unsigned int> " << d.name() << ';' << endl;
+  stream << "Marker<unsigned int> " << d.name() << endl;
 }
