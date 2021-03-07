@@ -116,9 +116,10 @@ void Printer::Cpp::print(const Statement::Var_Decl &stmt) {
     return;
   }
 
-  stream << indent() << *stmt.type << ' ' << *stmt.name;
+  //stream << indent() << *stmt.type << ' ' << *stmt.name;
+  stream << indent() << *stmt.name << " = " << *stmt.type;
   if (stmt.rhs)
-    stream << " = " << *stmt.rhs;
+    stream << '(' << *stmt.rhs << ')';
 
   if (!in_class && stmt.type->is(Type::LIST) && !stmt.rhs) {
     stream << endl << indent() << "empty(" << *stmt.name << ")";
@@ -636,6 +637,7 @@ void Printer::Cpp::print(const Fn_Def &fn_def) {
   stream << ')' << endl;
   } else {
     stream << indent(); // << *fn_def.return_type << ' ';
+    stream << "def ";
     if (!fwd_decls && !in_class) {
       stream << class_name << "::";
     }
@@ -869,7 +871,7 @@ void Printer::Cpp::print(const Type::Integer &t) {
 
 void Printer::Cpp::print(const Type::Size &t) {
   // FIXME
-  stream << "unsigned int";
+  stream << "int";
 }
 
 
