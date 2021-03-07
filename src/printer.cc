@@ -420,7 +420,7 @@ std::string &Printer::Base::indent() {
 
 
 void Printer::Base::set_indent_string() {
-  indent_string = std::string(ind_count*2, ' ');
+  indent_string = std::string(ind_count*4, ' ');
 }
 
 
