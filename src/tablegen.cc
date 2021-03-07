@@ -399,25 +399,26 @@ Statement::Table_Decl *Tablegen::create(Symbol::NT &nt,
 #include "var_acc.hh"
 
 Fn_Def *Tablegen::gen_is_tab() {
-  Fn_Def *f = new Fn_Def(new Type::Bool(), new std::string("is_tabulated"));
-  f->add_paras(paras);
-
-
   std::list<Statement::Base*> c;
 
-  Expr::Base *x = cond;
-  if (x)
-    c.push_back(
-      new Statement::If(x, new Statement::Return(new Expr::Const(
-          new Const::Bool(true)))) );
+  // construct test for np.isnan
+  Expr::Fn_Call *indexer = new Expr::Fn_Call(new std::string("self.get"));
+  for (std::list<Statement::Var_Decl*>::iterator it = paras.begin(); it != paras.end(); ++it) {
+    indexer->add_arg((*it)->name);
+  }
+  Statement::Var_Decl *cell_value = new Statement::Var_Decl(new Type::Tensor, new std::string("cell_value"), indexer);
+  c.push_back(cell_value);
 
-  c.insert(c.end(), code.begin(), code.end());
-  c.insert(c.end(), window_code.begin(), window_code.end());
+  Expr::Fn_Call *isnan = new Expr::Fn_Call(new std::string("np.isnan"));
+  isnan->add_arg(new Expr::Fn_Call(new std::string("cell_value.numpy")));
 
-  Statement::Return *r = new Statement::Return(new Expr::Vacc(
-        new Var_Acc::Array(new Var_Acc::Plain(new std::string("tabulated")),
-          off) ) );
+  Statement::Return *r = new Statement::Return(isnan);
   c.push_back(r);
+
+  // function signature
+  Fn_Def *f = new Fn_Def(new Type::Bool(), new std::string("is_tabulated"));
+  paras.push_front(new Statement::Var_Decl(new Type::NoneType(), new std::string("self")));
+  f->add_paras(paras);
 
   f->set_statements(c);
   return f;
