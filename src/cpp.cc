@@ -62,13 +62,13 @@ static std::string make_comments(const std::string &s, const std::string &c) {
 
 
 void Printer::Cpp::print(const std::list<Statement::Base*> &stmts) {
-  stream << indent() << '{' << endl;
+  stream << ':' << endl;
   inc_indent();
   for (std::list<Statement::Base*>::const_iterator i = stmts.begin();
        i != stmts.end(); ++i)
     stream << **i << endl;
   dec_indent();
-  stream << indent() << '}' << endl;
+  stream << endl;
 }
 
 void Printer::Cpp::print(const Statement::For &stmt) {
@@ -128,26 +128,26 @@ void Printer::Cpp::print(const Statement::Var_Decl &stmt) {
 	}
   }
 
-  if (!in_class && stmt.type->is(Type::LIST) && !stmt.rhs) {
-    stream << endl << indent() << "empty(" << *stmt.name << ")";
-  }
+//  if (!in_class && stmt.type->is(Type::LIST) && !stmt.rhs) {
+//    stream << endl << indent() << "empty(" << *stmt.name << ")";
+//  }
 }
 
 void Printer::Cpp::print(const Statement::If &stmt) {
-  stream << indent() << "if (" << *stmt.cond << ")" << endl;
-  if (stmt.then.size() == 1)
-    inc_indent();
+  stream << indent() << "if (" << *stmt.cond << ")";
+//  if (stmt.then.size() == 1)
+//    inc_indent();
   stream << stmt.then;
-  if (stmt.then.size() == 1)
-    dec_indent();
+//  if (stmt.then.size() == 1)
+//    dec_indent();
   if (stmt.els.empty())
     return;
-  stream << endl << indent() << "else" << std::endl;
-  if (stmt.els.size() == 1)
-    inc_indent();
+  stream << endl << indent() << "else";
+//  if (stmt.els.size() == 1)
+//    inc_indent();
   stream << stmt.els;
-  if (stmt.els.size() == 1)
-    dec_indent();
+//  if (stmt.els.size() == 1)
+//    dec_indent();
 }
 
 void Printer::Cpp::print(const Statement::Switch &stmt) {
