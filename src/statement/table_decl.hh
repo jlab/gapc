@@ -49,6 +49,7 @@ class Table_Decl : public Base {
   Fn_Def *fn_tab_;
   Fn_Def *fn_get_tab_;
   Fn_Def *fn_size_;
+  Fn_Def *fn_init_;
 
   std::list<Statement::Var_Decl*> ns_;
 
@@ -61,6 +62,7 @@ class Table_Decl : public Base {
       Fn_Def *fn_tab,
       Fn_Def *fn_get_tab,
       Fn_Def *fn_size,
+	  Fn_Def *fn_init,
       const std::list<Statement::Var_Decl*> &ns
       );
 
@@ -78,6 +80,7 @@ class Table_Decl : public Base {
   const Fn_Def &fn_tab() const { return *fn_tab_; }
   const Fn_Def &fn_get_tab() const { return *fn_get_tab_; }
   const Fn_Def &fn_size() const { return *fn_size_; }
+  const Fn_Def &fn_init(const Symbol::NT &nt) const { return *fn_init_; }
 
   const Symbol::NT &nt() const { return nt_; }
 
