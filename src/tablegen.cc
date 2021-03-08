@@ -387,9 +387,10 @@ Statement::Table_Decl *Tablegen::create(Symbol::NT &nt,
   Fn_Def *fn_get_tab = gen_get_tab();
 
   Fn_Def *fn_size = gen_size();
+  Fn_Def *fn_init = gen_init(nt);
 
   Statement::Table_Decl *td = new Statement::Table_Decl(nt, dtype, name, cyk,
-      fn_is_tab, fn_tab, fn_get_tab, fn_size,
+      fn_is_tab, fn_tab, fn_get_tab, fn_size, fn_init,
       ns);
   td->set_fn_untab(fn_untab);
   return td;
@@ -417,7 +418,8 @@ Fn_Def *Tablegen::gen_is_tab() {
 
   // function signature
   Fn_Def *f = new Fn_Def(new Type::Bool(), new std::string("is_tabulated"));
-  paras.push_front(new Statement::Var_Decl(new Type::NoneType(), new std::string("self")));
+  //paras.push_front(new Statement::Var_Decl(new Type::NoneType(), new std::string("self")));
+  f->add_para(new Type::NoneType(), new std::string("self"));
   f->add_paras(paras);
 
   f->set_statements(c);
@@ -444,7 +446,8 @@ Fn_Def *Tablegen::gen_untab() {
 
 Fn_Def *Tablegen::gen_tab() {
   Fn_Def *f = new Fn_Def(new Type::NoneType(), new std::string("set"));
-  paras.push_front(new Statement::Var_Decl(new Type::NoneType(), new std::string("self")));
+  //paras.push_front(new Statement::Var_Decl(new Type::NoneType(), new std::string("self")));
+  f->add_para(new Type::NoneType(), new std::string("self"));
   f->add_paras(paras);
   // FIXME const & in dtype -> see cpp.cc in_fn_head
   f->add_para(dtype, new std::string("e"));
@@ -498,7 +501,8 @@ Fn_Def *Tablegen::gen_tab() {
 
 Fn_Def *Tablegen::gen_get_tab() {
   Fn_Def *f = new Fn_Def(new Type::Tensor, new std::string("get"));
-  paras.push_front(new Statement::Var_Decl(new Type::NoneType(), new std::string("self")));
+  //paras.push_front(new Statement::Var_Decl(new Type::NoneType(), new std::string("self")));
+  f->add_para(new Type::NoneType(), new std::string("self"));
   f->add_paras(paras);
 
   std::list<Statement::Base*> c;
@@ -540,4 +544,40 @@ Fn_Def *Tablegen::gen_size() {
 
   f->set_statements(c);
   return f;
+}
+
+//py: def __init__(self, t_0_n_:int, t_1_n_:int):
+//py:     self.array = torch.full(size=[t_0_n_, t_1_n_], fill_value=np.nan)
+Fn_Def *Tablegen::gen_init(const Symbol::NT &nt) {
+	Fn_Def *f = new Fn_Def(type, new std::string("__init__"));
+	f->add_para(new Type::NoneType(), new std::string("self"));
+	f->add_paras(paras);
+
+	std::list<Statement::Base*> c;
+
+	// initiate Tensor with np.nan values
+	Expr::Fn_Call *rhs = new Expr::Fn_Call(new std::string("torch.full"));
+	rhs->add_namedarg(new std::string("size"), new Var_Acc::Array(new Var_Acc::Plain(new std::string("")), off));
+	rhs->add_namedarg(new std::string("fill_value"), new std::string("np.nan"));
+	Statement::Var_Decl *tf = new Statement::Var_Decl(new Type::NoneType(), new std::string("self.array"), rhs);
+	c.push_back(tf);
+
+	std::list<Statement::Var_Decl*>::const_iterator pit = paras.begin();
+	for (size_t track = nt.track_pos(); (track < nt.track_pos() + nt.tracks()) && (pit != paras.end()); ++track, ++pit) {
+		std::string varname;
+		varname.append(std::string("self.t_"));
+		varname.append(std::to_string(track));
+		varname.append(std::string("_left_most"));
+		c.push_back(new Statement::Var_Decl(new Type::Size(), varname, new Expr::Const(0)));
+
+		std::string varname2;
+		varname2.append(std::string("self.t_"));
+		varname2.append(std::to_string(track));
+		varname2.append(std::string("_right_most"));
+		c.push_back(new Statement::Var_Decl(new Type::Size(), varname2, new Expr::Vacc((*pit)->name)));
+	}
+
+
+	f->set_statements(c);
+	return f;
 }

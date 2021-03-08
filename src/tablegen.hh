@@ -86,6 +86,7 @@ class Tablegen {
     Fn_Def *gen_tab();
     Fn_Def *gen_get_tab();
     Fn_Def *gen_size();
+    Fn_Def *gen_init(const Symbol::NT &nt);
 
  public:
     Tablegen();
