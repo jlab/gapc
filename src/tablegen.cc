@@ -402,19 +402,22 @@ Statement::Table_Decl *Tablegen::create(Symbol::NT &nt,
 Fn_Def *Tablegen::gen_is_tab() {
   std::list<Statement::Base*> c;
 
-  // construct test for np.isnan
-  Expr::Fn_Call *indexer = new Expr::Fn_Call(new std::string("self.get"));
-  for (std::list<Statement::Var_Decl*>::iterator it = paras.begin(); it != paras.end(); ++it) {
-    indexer->add_arg((*it)->name);
-  }
-  Statement::Var_Decl *cell_value = new Statement::Var_Decl(new Type::Tensor, new std::string("cell_value"), indexer);
-  c.push_back(cell_value);
+//  // construct test for np.isnan
+//  Expr::Fn_Call *indexer = new Expr::Fn_Call(new std::string("self.get"));
+//  for (std::list<Statement::Var_Decl*>::iterator it = paras.begin(); it != paras.end(); ++it) {
+//    indexer->add_arg((*it)->name);
+//  }
+//  Statement::Var_Decl *cell_value = new Statement::Var_Decl(new Type::NoneType, new std::string("cell_value"), indexer);
+//  c.push_back(cell_value);
+//
+//  Expr::Fn_Call *isnan = new Expr::Fn_Call(new std::string("~np.isnan"));
+//  isnan->add_arg(new Expr::Fn_Call(new std::string("cell_value.numpy")));
+//
+//  Statement::Return *r = new Statement::Return(isnan);
+//  c.push_back(r);
 
-  Expr::Fn_Call *isnan = new Expr::Fn_Call(new std::string("np.isnan"));
-  isnan->add_arg(new Expr::Fn_Call(new std::string("cell_value.numpy")));
-
-  Statement::Return *r = new Statement::Return(isnan);
-  c.push_back(r);
+  Statement::Return *ret = new Statement::Return(new Expr::Vacc(new Var_Acc::Array(new Var_Acc::Plain(new std::string("self.tabulated")), off)));
+  c.push_back(ret);
 
   // function signature
   Fn_Def *f = new Fn_Def(new Type::Bool(), new std::string("is_tabulated"));
@@ -561,6 +564,12 @@ Fn_Def *Tablegen::gen_init(const Symbol::NT &nt) {
 	rhs->add_namedarg(new std::string("fill_value"), new std::string("np.nan"));
 	Statement::Var_Decl *tf = new Statement::Var_Decl(new Type::NoneType(), new std::string("self.array"), rhs);
 	c.push_back(tf);
+
+	Expr::Fn_Call *rhsTab = new Expr::Fn_Call(new std::string("torch.full"));
+	rhsTab->add_namedarg(new std::string("size"), new Var_Acc::Array(new Var_Acc::Plain(new std::string("")), off));
+	rhsTab->add_namedarg(new std::string("fill_value"), new std::string("False"));
+	Statement::Var_Decl *tfTab = new Statement::Var_Decl(new Type::NoneType(), new std::string("self.tabulated"), rhsTab);
+	c.push_back(tfTab);
 
 	std::list<Statement::Var_Decl*>::const_iterator pit = paras.begin();
 	for (size_t track = nt.track_pos(); (track < nt.track_pos() + nt.tracks()) && (pit != paras.end()); ++track, ++pit) {
