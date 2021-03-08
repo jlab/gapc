@@ -851,14 +851,12 @@ void Symbol::NT::add_specialised_arguments(Statement::Fn_Call *fn,
 }
 
 void Symbol::NT::set_ret_decl_rhs(Code::Mode mode) {
-  ret_decl = new Statement::Var_Decl(data_type_before_eval(),
-      new std::string("answers"));
+  ret_decl = new Statement::Var_Decl(data_type_before_eval(), new std::string("answers"));
   post_alt_stmts.clear();
 
   if (!eval_decl && !datatype->simple()->is(::Type::LIST)) {
     assert(alts.size() == 1);
-    Statement::Var_Assign *s = new Statement::Var_Assign(*ret_decl,
-       *alts.front()->ret_decl);
+    Statement::Var_Assign *s = new Statement::Var_Assign(*ret_decl, *alts.front()->ret_decl);
     post_alt_stmts.push_back(s);
     return;
   }
@@ -869,8 +867,7 @@ void Symbol::NT::set_ret_decl_rhs(Code::Mode mode) {
       e->add_arg(*(*i)->ret_decl);
       Statement::If *cond = new Statement::If(e);
 
-      if ((mode != Code::Mode::BACKTRACK || !tabulated) &&
-        adp_specialization != ADP_Mode::STANDARD ) {
+      if ((mode != Code::Mode::BACKTRACK || !tabulated) && adp_specialization != ADP_Mode::STANDARD ) {
         // directly join the elements in append function
         if (ADP_Mode::is_step(adp_specialization)) {
           Statement::Fn_Call *fn = new Statement::Fn_Call(
@@ -1231,8 +1228,8 @@ void Symbol::NT::codegen(AST &ast) {
   }
 
   stmts.push_back(ret_decl);
-  stmts.push_back(new Statement::Fn_Call(
-    Statement::Fn_Call::EMPTY, *ret_decl));
+//  stmts.push_back(new Statement::Fn_Call(
+//    Statement::Fn_Call::EMPTY, *ret_decl));
   std::list<Statement::Base*>::iterator j = post_alt_stmts.begin();
        // std::cout << "ALT START  ================ "
        // << alts.size() << std::endl;
