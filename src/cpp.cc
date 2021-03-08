@@ -118,8 +118,15 @@ void Printer::Cpp::print(const Statement::Var_Decl &stmt) {
 
   //stream << indent() << *stmt.type << ' ' << *stmt.name;
   stream << indent() << *stmt.name << " = " << *stmt.type;
-  if (stmt.rhs)
-    stream << '(' << *stmt.rhs << ')';
+  if (stmt.rhs) {
+    if (!(stmt.type->is(Type::NONETYPE))) {
+		stream << '(';
+    }
+	stream << *stmt.rhs;
+	if (!(stmt.type->is(Type::NONETYPE))) {
+		stream << ')';
+	}
+  }
 
   if (!in_class && stmt.type->is(Type::LIST) && !stmt.rhs) {
     stream << endl << indent() << "empty(" << *stmt.name << ")";
@@ -876,7 +883,7 @@ void Printer::Cpp::print(const Type::Size &t) {
 
 
 void Printer::Cpp::print(const Type::Float &t) {
-  stream << "double";
+  stream << "float";
 }
 
 
@@ -1065,55 +1072,58 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   bool cyk = t.cyk();
   const std::list<Statement::Var_Decl*> &ns = t.ns();
 
-  stream << "class " << tname << " {\n\n";
-  stream << "private:\n\n";
+  stream << "class " << tname << ":\n";
+  inc_indent();
+//  stream << "private:\n\n";
 
-  if (wmode) {
-    stream << "unsigned wsize;\nunsigned winc;\n";
-  }
+//  if (wmode) {
+//    stream << "unsigned wsize;\nunsigned winc;\n";
+//  }
 
-  print_most_decl(t.nt());
+//  print_most_decl(t.nt());
 
-  stream << "std::vector<" << dtype << " > array;\n";
-  if  (!cyk) {
-    stream << "std::vector<bool> tabulated;\n";
-  }
-  print(ns);
-  stream << dtype << " zero;\n";
+//  stream << "std::vector<" << dtype << " > array;\n";
+//  if  (!cyk) {
+//    stream << "std::vector<bool> tabulated;\n";
+//  }
+//  print(ns);
+//  stream << dtype << " zero;\n";
 
-  stream << t.fn_size() << '\n';
+//  stream << t.fn_size();
 
-  stream << "public:\n\n";
+//  stream << "public:\n\n";
+//
+//  stream << tname << "()\n{\n  empty(zero);\n}\n\n";
 
-  stream << tname << "()\n{\n  empty(zero);\n}\n\n";
+  stream << t.fn_init(t.nt());
 
-  stream << "void init(";
-  print_paras(ns, '_');
-
-  if (wmode) {
-    stream << ", unsigned wsize_, unsigned winc_";
-  }
-
-  stream << ", const std::string &tname";
-  stream << ")\n";
-  stream << "{\n";
-  print_eqs(ns, '_');
-
-  for (size_t track = t.nt().track_pos();
-       track < t.nt().track_pos() + t.nt().tracks(); ++track) {
-    stream << "t_" << track << "_left_most = 0;\n" << "t_" << track << "_right_most = t_" << track << "_n;\n";
-  }
-
-  if (wmode) {
-    stream << "wsize = wsize_;\nwinc = winc_;\nt_0_right_most = wsize;\n";
-  }
-
-  stream << ptype << " newsize = size(";
-  stream << ");\narray.resize(newsize);\n";
-  if (!cyk) {
-    stream << "tabulated.clear();\ntabulated.resize(newsize);\n";
-  }
-  stream << "}\n";
+//  stream << "void init(";
+//  print_paras(ns, '_');
+//
+//  if (wmode) {
+//    stream << ", unsigned wsize_, unsigned winc_";
+//  }
+//
+//  stream << ", const std::string &tname";
+//  stream << ")\n";
+//  stream << "{\n";
+//  print_eqs(ns, '_');
+//
+//  for (size_t track = t.nt().track_pos();
+//       track < t.nt().track_pos() + t.nt().tracks(); ++track) {
+//    stream << "t_" << track << "_left_most = 0;\n" << "t_" << track << "_right_most = t_" << track << "_n;\n";
+//  }
+//
+//  if (wmode) {
+//    stream << "wsize = wsize_;\nwinc = winc_;\nt_0_right_most = wsize;\n";
+//  }
+//
+//  stream << ptype << " newsize = size(";
+//  stream << ");\narray.resize(newsize);\n";
+//  if (!cyk) {
+//    stream << "tabulated.clear();\ntabulated.resize(newsize);\n";
+//  }
+//  stream << "}\n";
 
   if (wmode) {
     stream << t.fn_untab();
@@ -1121,16 +1131,17 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   }
 
   if (!cyk) {
-    stream << t.fn_is_tab() << '\n';
+    stream << t.fn_is_tab();
     // needed by subopt classify
-    stream << "void clear() { tabulated.clear(); }\n";
+    //stream << "void clear() { tabulated.clear(); }\n";
   }
 
-  stream << t.fn_get_tab() << '\n';
+  stream << t.fn_get_tab();
 
-  stream << t.fn_tab() << '\n';
+  stream << t.fn_tab();
 
-  stream << "};\n" << tname << ' ' << t.name() << ";\n\n";
+  //stream << "};\n" << tname << ' ' << t.name() << ";\n\n";
+  dec_indent();
 
   in_class = false;
 }
