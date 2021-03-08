@@ -567,10 +567,10 @@ class Main {
     cc.set_argv(argv, argc);
     cc.class_name = opts.class_name;
     cc.set_files(opts.in_file, opts.out_file);
-    cc.prelude(opts, driver.ast);
+    //cc.prelude(opts, driver.ast);
     cc.header(driver.ast);
     driver.ast.print_code(cc);
-    instance->print_code(cc);
+    //instance->print_code(cc);
     Code::Gen code(driver.ast);
     code_ = code;
 
