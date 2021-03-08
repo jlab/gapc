@@ -58,10 +58,14 @@ void Var_Acc::Comp::put(std::ostream &s) const {
 }
 
 void Var_Acc::Array::put(std::ostream &s) const {
-	s << *lhs;
+	s << *lhs << '[';
 	for (std::list<Expr::Base*>::iterator i = expr->begin(); i != expr->end(); ++i) {
-		s << '[' << *(*i) << ']';
+		s << *(*i);
+		if ((i != expr->end()) && (i != --expr->end())) {
+			s << ", ";
+		}
 	}
+	s  << ']';
 }
 
 Var_Acc::Comp::Comp(const Statement::Var_Decl &vdecl, int n) : Base(COMP) {
