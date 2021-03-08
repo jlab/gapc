@@ -44,6 +44,7 @@ Expr::Fn_Call::Fn_Call(const Fn_Def &f)
        i != f.names.end(); ++i) {
     Expr::Vacc *e = new Expr::Vacc(*i);
     exprs.push_back(e);
+    argnames.push_back(new std::string(""));
   }
 }
 
@@ -103,10 +104,13 @@ void Expr::Fn_Call::put_arg(std::ostream &s, Expr::Base *e) const {
 
 void Expr::Fn_Call::put(std::ostream &s) const {
   std::list<Base*>::const_iterator i = exprs.begin();
+  std::list<std::string*>::const_iterator iname = argnames.begin();
   if (is_obj) {
     assert(i != exprs.end());
+    assert(iname != argnames.end());
     s << **i << '.';
     ++i;
+    ++iname;
   }
 
   if (name)
@@ -117,12 +121,21 @@ void Expr::Fn_Call::put(std::ostream &s) const {
     s << '<' << *type_param << '>';
 
   s << '(';
+  if (iname != argnames.end()) {
+	  if (!(*iname)->empty()) {
+		  s << **iname << '=';
+	  }
+	  ++iname;
+  }
   if (i != exprs.end()) {
     put_arg(s, *i);
     ++i;
   }
-  for (; i != exprs.end(); ++i) {
-    s << ", ";
+  for (; (i != exprs.end()) && (iname != argnames.end()); ++i, ++iname) {
+	s << ", ";
+	if (!(*iname)->empty()) {
+	  s << **iname << '=';
+	}
     put_arg(s, *i);
   }
   s << ')';
@@ -180,6 +193,7 @@ void Expr::Fn_Call::init_builtins() {
 void Expr::Fn_Call::add_arg(Statement::Var_Decl &v) {
   Expr::Vacc *e = new Expr::Vacc(v);
   exprs.push_back(e);
+  argnames.push_back(new std::string(""));
 }
 
 void Expr::Fn_Call::add(const std::vector<Statement::Var_Decl*> &l) {
@@ -193,6 +207,7 @@ void Expr::Fn_Call::add(const std::vector<Statement::Var_Decl*> &l) {
 void Expr::Fn_Call::add_arg(const Statement::Table_Decl &v) {
   Expr::Vacc *e = new Expr::Vacc(new std::string(v.name()));
   exprs.push_back(e);
+  argnames.push_back(new std::string(""));
 }
 
 #include "../symbol.hh"
@@ -234,22 +249,47 @@ void Expr::Fn_Call::add(const std::vector<Expr::Base*> &l,
 void Expr::Fn_Call::add_arg(std::string *n) {
   Expr::Vacc *e = new Expr::Vacc(n);
   exprs.push_back(e);
+  argnames.push_back(new std::string(""));
 }
+
+void Expr::Fn_Call::add_namedarg(std::string *argname, std::string *n) {
+  Expr::Vacc *e = new Expr::Vacc(n);
+  exprs.push_back(e);
+  argnames.push_back(argname);
+}
+
 
 void Expr::Fn_Call::add_arg(Expr::Base *e) {
   assert(e);
   exprs.push_back(e);
+  argnames.push_back(new std::string(""));
 }
+
+void Expr::Fn_Call::add_namedarg(std::string *argname, Expr::Base *e) {
+  assert(e);
+  exprs.push_back(e);
+  argnames.push_back(argname);
+}
+
 
 void Expr::Fn_Call::add_arg(Var_Acc::Base *e) {
   exprs.push_back(new Expr::Vacc(e));
+  argnames.push_back(new std::string(""));
 }
+
+void Expr::Fn_Call::add_namedarg(std::string *argname, Var_Acc::Base *e) {
+  exprs.push_back(new Expr::Vacc(e));
+  argnames.push_back(argname);
+}
+
 
 Expr::Fn_Call::Fn_Call(std::string *n, std::list<Statement::Var_Decl*> &l)
   : Base(FN_CALL), name(n), builtin(NONE), type_param(0) {
   for (std::list<Statement::Var_Decl*>::iterator i = l.begin(); i != l.end();
-       ++i)
+       ++i) {
     exprs.push_back(new Expr::Vacc(**i));
+    argnames.push_back(new std::string(""));
+  }
 }
 
 void Expr::Fn_Call::replace(Statement::Var_Decl &decl, Expr::Base *expr) {
@@ -280,8 +320,14 @@ void Expr::Fn_Call::add(const std::list<Para_Decl::Base*> &l) {
 Expr::Base *Expr::Fn_Call::copy() const {
   Fn_Call *o = new Fn_Call(*this);
   o->exprs.clear();
+  o->argnames.clear();
   for (std::list<Base*>::const_iterator i = exprs.begin();
-       i != exprs.end(); ++i)
+       i != exprs.end(); ++i) {
     o->exprs.push_back((*i)->copy());
+  }
+  for (std::list<std::string*>::const_iterator i = argnames.begin();
+         i != argnames.end(); ++i) {
+      o->argnames.push_back((*i));
+  }
   return o;
 }

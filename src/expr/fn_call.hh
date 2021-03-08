@@ -107,6 +107,8 @@ class Fn_Call : public Base {
 
     // The list of arguments passed in this function call.
     std::list<Base*> exprs;
+    // names for names parameters in python style function calls
+    std::list<std::string*> argnames;
     // like for template fns T empty<T>()
     ::Type::Base *type_param;
 
@@ -115,8 +117,11 @@ class Fn_Call : public Base {
     void add_arg(const Statement::Table_Decl &v);
     void add(const Statement::Table_Decl &v);
     void add_arg(std::string *n);
+    void add_namedarg(std::string *name, std::string *n);
     void add_arg(Expr::Base *e);
+    void add_namedarg(std::string *name, Expr::Base *e);
     void add_arg(Var_Acc::Base *e);
+    void add_namedarg(std::string *name, Var_Acc::Base *e);
 
     void add(
       const std::vector<Expr::Base*> &l, const std::vector<Expr::Base*> &r);
