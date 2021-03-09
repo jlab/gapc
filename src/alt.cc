@@ -1450,7 +1450,7 @@ void Alt::Simple::init_body(AST &ast) {
       Fn_Arg::Const *c = dynamic_cast<Fn_Arg::Const*>(*i);
       assert(c);
       assert(!c->ret_decls().empty());
-      fn_call->exprs.push_back(c->ret_decls().front()->rhs);
+      fn_call->exprs.push_back(std::make_pair(c->ret_decls().front()->rhs, new std::string("")));
       continue;
     }
     std::vector<Statement::Var_Decl*>::const_iterator k =
@@ -1463,7 +1463,7 @@ void Alt::Simple::init_body(AST &ast) {
       } else {
         arg = new Expr::Vacc(**k);
       }
-      fn_call->exprs.push_back(arg);
+      fn_call->exprs.push_back(std::make_pair(arg, new std::string("")));
     }
   }
 
@@ -2039,8 +2039,8 @@ void Alt::Link::codegen(AST &ast) {
   add_args(fn);
 
   if (nt->is(Symbol::NONTERMINAL) && ast.code_mode() == Code::Mode::SUBOPT) {
-    fn->exprs.push_back(new Expr::Vacc(new std::string("global_score")));
-    fn->exprs.push_back(new Expr::Vacc(new std::string("delta")));
+    fn->exprs.push_back(std::make_pair(new Expr::Vacc(new std::string("global_score")), new std::string("")));
+    fn->exprs.push_back(std::make_pair(new Expr::Vacc(new std::string("delta")), new std::string("")));
   }
 
   init_filter_guards(ast);
@@ -2200,7 +2200,9 @@ void Alt::Base::init_filter_guards(AST &ast) {
     if ((*i)->is_stateful()) {
       Expr::Fn_Call *fn = new Expr::Fn_Call(new std::string("init"));
       add_seqs(fn, ast);
-      fn->exprs.insert(fn->exprs.end(), (*i)->args.begin(), (*i)->args.end());
+      for (std::list<Expr::Base*>::const_iterator it = (*i)->args.begin(); it != (*i)->args.end(); ++it) {
+    	  fn->exprs.insert(fn->exprs.end(), std::make_pair(*it, new std::string("")));
+      }
       ast.sf_filter_code.push_back(std::make_pair(*i, fn));
       Expr::Fn_Call *f = new Expr::Fn_Call(
         new std::string((*i)->id() + ".query"));
@@ -2210,7 +2212,9 @@ void Alt::Base::init_filter_guards(AST &ast) {
       Expr::Fn_Call *fn = new Expr::Fn_Call((*i)->name);
       add_seqs(fn, ast);
       fn->add(left_indices, right_indices);
-      fn->exprs.insert(fn->exprs.end(), (*i)->args.begin(), (*i)->args.end());
+      for (std::list<Expr::Base*>::const_iterator it = (*i)->args.begin(); it != (*i)->args.end(); ++it) {
+    	  fn->exprs.insert(fn->exprs.end(), std::make_pair(*it, new std::string("")));
+      }
       exprs.push_back(fn);
     }
   }
@@ -2232,7 +2236,9 @@ void Alt::Base::init_filter_guards(AST &ast) {
         fn->add_arg(**k);
         fn->add_arg(*l);
         fn->add_arg(*m);
-        fn->exprs.insert(fn->exprs.end(), (*j)->args.begin(), (*j)->args.end());
+        for (std::list<Expr::Base*>::const_iterator it = (*j)->args.begin(); it != (*j)->args.end(); ++it) {
+        	fn->exprs.insert(fn->exprs.end(), std::make_pair(*it, new std::string("")));
+        }
         exprs.push_back(fn);
       }
     }

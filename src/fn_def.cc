@@ -2930,7 +2930,7 @@ void Fn_Def::remove_return_list() {
           "Return does not call the list function - cannot eliminate list.");
       return;
   }
-  ret->expr = list->exprs.front();
+  ret->expr = list->exprs.front().first;
   delete list;
 }
 
@@ -2960,9 +2960,9 @@ Mode Fn_Def::derive_role() const {
   }
   if (fn->builtin != Expr::Fn_Call::LIST)
     return r;
-  if (!fn->exprs.front()->is(Expr::FN_CALL))
+  if (!fn->exprs.front().first->is(Expr::FN_CALL))
     return r;
-  fn = dynamic_cast<Expr::Fn_Call*>(fn->exprs.front());
+  fn = dynamic_cast<Expr::Fn_Call*>(fn->exprs.front().first);
   assert(fn);
   switch (fn->builtin) {
     case Expr::Fn_Call::SUM :
@@ -3011,9 +3011,9 @@ Expr::Fn_Call::Builtin Fn_Def::choice_fn_type() const {
   }
   if (fn->builtin != Expr::Fn_Call::LIST)
     return fn->builtin;
-  if (!fn->exprs.front()->is(Expr::FN_CALL))
+  if (!fn->exprs.front().first->is(Expr::FN_CALL))
     return Expr::Fn_Call::NONE;
-  fn = dynamic_cast<Expr::Fn_Call*>(fn->exprs.front());
+  fn = dynamic_cast<Expr::Fn_Call*>(fn->exprs.front().first);
   assert(fn);
   return fn->builtin;
 }

@@ -99,16 +99,15 @@ class Fn_Call : public Base {
       : Base(FN_CALL), name(NULL), builtin(b), type_param(NULL) {
     }
 
-
     Fn_Call(const Fn_Decl &f);
     Fn_Call(const Fn_Def &f);
     Fn_Call(std::string *n, std::list<Statement::Var_Decl*> &l);
     Fn_Call(const Filter &f);
 
     // The list of arguments passed in this function call.
-    std::list<Base*> exprs;
+    std::list<std::pair<Base*, std::string*> > exprs;
     // names for names parameters in python style function calls
-    std::list<std::string*> argnames;
+    //std::list<std::string*> argnames;
     // like for template fns T empty<T>()
     ::Type::Base *type_param;
 
@@ -117,18 +116,22 @@ class Fn_Call : public Base {
     void add_arg(const Statement::Table_Decl &v);
     void add(const Statement::Table_Decl &v);
     void add_arg(std::string *n);
-    void add_namedarg(std::string *name, std::string *n);
+    void add_arg(std::string *n, std::string *argname);
+    //void add_namedarg(std::string *name, std::string *n);
     void add_arg(Expr::Base *e);
-    void add_namedarg(std::string *name, Expr::Base *e);
+    //void add_namedarg(std::string *name, Expr::Base *e);
     void add_arg(Var_Acc::Base *e);
-    void add_namedarg(std::string *name, Var_Acc::Base *e);
+    void add_arg(Var_Acc::Base *e, std::string *argname);
 
     void add(
       const std::vector<Expr::Base*> &l, const std::vector<Expr::Base*> &r);
 
 
     void add(const std::list<Base*> &l) {
-      exprs.insert(exprs.end(), l.begin(), l.end());
+      //exprs.insert(exprs.end(), l.begin(), l.end());
+      for (std::list<Base*>::const_iterator it = l.begin(); it != l.end(); ++it) {
+    	  exprs.insert(exprs.end(), std::make_pair(*it, new std::string("")));
+      }
     }
 
 

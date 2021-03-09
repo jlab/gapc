@@ -1181,7 +1181,9 @@ expr: expr '<' expr { $$ = new Expr::Less($1, $3, @2); } |
       STRING '(' exprs_empty ')' { Expr::Fn_Call *f = new Expr::Fn_Call($1, @$);
                              if (!f->name)
                                delete $1;
-                             f->exprs = *$3;
+                             for (std::list<Expr::Base*>::iterator i = $3->begin(); i != $3->end(); ++i) {
+                            	 f->exprs.push_back(std::make_pair(*i, new std::string("")));
+                             }
                              delete $3;
                              $$ = f; } |
       var_access { $$ = new Expr::Vacc($1, @1); } |
