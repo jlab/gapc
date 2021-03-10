@@ -199,9 +199,9 @@ class Not_Eq : public Two {
 class And : public Two {
  public:
     And(Base *l, Base *r)
-      : Two(AND, l, r) {}
+      : Two(AND, l, r) { set_pretty_op("and"); }
     And(Base *l, Base *r, const Loc &loc)
-      : Two(AND, l, r, loc) {}
+      : Two(AND, l, r, loc) { set_pretty_op("and"); }
     void put(std::ostream &s) const;
 
     Base *copy() const;
@@ -210,9 +210,9 @@ class And : public Two {
 class Or : public Two {
  public:
     Or(Base *l, Base *r)
-      : Two(OR, l, r) { set_pretty_op("||"); }
+      : Two(OR, l, r) { set_pretty_op("or"); }
     Or(Base *l, Base *r, const Loc &loc)
-      : Two(OR, l, r, loc) { set_pretty_op("||"); }
+      : Two(OR, l, r, loc) { set_pretty_op("or"); }
 
     Base *copy() const;
 };

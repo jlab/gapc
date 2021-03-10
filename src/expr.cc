@@ -112,7 +112,7 @@ void Expr::Greater::put(std::ostream &s) const {
 }
 
 void Expr::And::put(std::ostream &s) const {
-  s << '(' << *left_ << " && " << *right_ << ')';
+  s << '(' << *left_ << " " << get_pretty_op() << " " << *right_ << ')';
 }
 
 void Expr::Max::put(std::ostream &s) const {

@@ -93,6 +93,7 @@ class Two : public Base {
 
     Base *left() { return left_; }
     Base *right() { return right_; }
+    std::string get_pretty_op() const { return op; }
 
     void copy(Two &o) const;
 };
