@@ -627,7 +627,10 @@ void AmbiguityCFG::GrammarVMFunctionCompiler::processExpr(Expr::Base* expr) {
     }
 
     // ...and the list of arguments used for the actual function call
-    std::list<Expr::Base*> args = fnCall->exprs;
+    std::list<Expr::Base*> args; // = fnCall->exprs;
+    for (std::list<std::pair<Expr::Base*, std::string*> >::const_iterator i = fnCall->exprs.begin(); i != fnCall->exprs.end(); ++i) {
+    	args.push_back(i->first);
+    }
     // There are two iterators: one for the parameter names,
     // the other for the list of argument expressions. We
     // iterate through both in parallel.

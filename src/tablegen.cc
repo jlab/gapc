@@ -552,7 +552,7 @@ Fn_Def *Tablegen::gen_size() {
 //py: def __init__(self, t_0_n_:int, t_1_n_:int):
 //py:     self.array = torch.full(size=[t_0_n_, t_1_n_], fill_value=np.nan)
 Fn_Def *Tablegen::gen_init(const Symbol::NT &nt) {
-	Fn_Def *f = new Fn_Def(type, new std::string("__init__"));
+	Fn_Def *f = new Fn_Def(new Type::NoneType(), new std::string("__init__"));
 	f->add_para(new Type::NoneType(), new std::string("self"));
 	f->add_paras(paras);
 
