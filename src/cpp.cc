@@ -1149,7 +1149,7 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
 
 void Printer::Cpp::print(const Type::Subseq &t) {
   if (in_fn_head) {
-    stream << "const TUSubsequence &";
+    stream << "Basic_Subsequence";
   } else {
     stream << "TUSubsequence";
   }
