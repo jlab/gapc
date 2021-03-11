@@ -871,8 +871,8 @@ void Grammar::init_indices() {
     rm << "t_" << track << "_right_most";
     Expr::Vacc *left = new Expr::Vacc(new std::string(i.str()));
     Expr::Vacc *right = new Expr::Vacc(new std::string(j.str()));
-    Expr::Vacc *left_most = new Expr::Vacc(new std::string(lm.str()));
-    Expr::Vacc *right_most = new Expr::Vacc(new std::string(rm.str()));
+    //Expr::Vacc *left_most = new Expr::Vacc(new std::string(lm.str()));
+    //Expr::Vacc *right_most = new Expr::Vacc(new std::string(rm.str()));
 
 
     for (std::list<Symbol::NT*>::iterator i = nt_list.begin();
@@ -880,8 +880,8 @@ void Grammar::init_indices() {
       // remove moving boundaries whenever possible
       size_t idx = (*i)->tracks() == 1 ? 0 : track;
       const Table &table = (*i)->tables()[idx];
-      Expr::Vacc *l = table.delete_left_index() ? left_most : left;
-      Expr::Vacc *r = table.delete_right_index() ? right_most : right;
+      Expr::Vacc *l = table.delete_left_index() ? new Expr::Vacc(new std::string(*((*i)->name) + "_table." + lm.str())) : left;
+      Expr::Vacc *r = table.delete_right_index() ? new Expr::Vacc(new std::string(*((*i)->name) + "_table." + rm.str())) : right;
 
       if ((*i)->tracks() == 1 && (*i)->track_pos() != track) {
         continue;
