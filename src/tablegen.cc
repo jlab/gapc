@@ -485,6 +485,11 @@ Fn_Def *Tablegen::gen_tab() {
 //  a->add_arg(new Expr::Less(off->front(), new Expr::Fn_Call(new std::string("size"))));
 //  c.push_back(a);
 
+  Statement::Var_Assign *xt = new Statement::Var_Assign(
+      new Var_Acc::Array(new Var_Acc::Plain(new std::string("self.tabulated")), off),
+      new Expr::Vacc(new std::string("True")));
+  c.push_back(xt);
+
   Statement::Var_Assign *x = new Statement::Var_Assign(
       new Var_Acc::Array(new Var_Acc::Plain(new std::string("self.array")), off),
       new Expr::Vacc(new std::string("e")));
@@ -560,13 +565,18 @@ Fn_Def *Tablegen::gen_init(const Symbol::NT &nt) {
 
 	// initiate Tensor with np.nan values
 	Expr::Fn_Call *rhs = new Expr::Fn_Call(new std::string("torch.full"));
-	rhs->add_arg(new Var_Acc::Array(new Var_Acc::Plain(new std::string("")), off), new std::string("size"));
+
+	std::list<Expr::Base*> *offsize = new std::list<Expr::Base*>();
+	for (std::list<Expr::Base*>::iterator it = off->begin(); it != off->end(); ++it) {
+		offsize->push_back(new Expr::Plus(*it, new Expr::Const(1)));
+	}
+	rhs->add_arg(new Var_Acc::Array(new Var_Acc::Plain(new std::string("")), offsize), new std::string("size"));
 	rhs->add_arg(new std::string("np.nan"), new std::string("fill_value"));
 	Statement::Var_Decl *tf = new Statement::Var_Decl(new Type::NoneType(), new std::string("self.array"), rhs);
 	c.push_back(tf);
 
 	Expr::Fn_Call *rhsTab = new Expr::Fn_Call(new std::string("torch.full"));
-	rhsTab->add_arg(new Var_Acc::Array(new Var_Acc::Plain(new std::string("")), off), new std::string("size"));
+	rhsTab->add_arg(new Var_Acc::Array(new Var_Acc::Plain(new std::string("")), offsize), new std::string("size"));
 	rhsTab->add_arg(new std::string("False"), new std::string("fill_value"));
 	Statement::Var_Decl *tfTab = new Statement::Var_Decl(new Type::NoneType(), new std::string("self.tabulated"), rhsTab);
 	c.push_back(tfTab);
