@@ -1273,7 +1273,7 @@ void Alt::Multi::print(std::ostream &s) {
 void Alt::Base::init_ret_decl(unsigned int i, const std::string &prefix) {
   std::ostringstream o;
   o << prefix << "ret_" << i;
-  ret_decl = new Statement::Var_Decl(datatype, new std::string(o.str()));
+  ret_decl = new Statement::Var_Decl(datatype, new std::string(o.str()), new Expr::Vacc(new std::string("np.nan")));
 }
 
 
@@ -1323,11 +1323,11 @@ void Alt::Simple::init_foreach() {
 
 
 void Alt::Simple::ret_decl_empty_block(Statement::If *stmt) {
-  if (!datatype->simple()->is(::Type::LIST)) {
-    Statement::Fn_Call *e = new Statement::Fn_Call(Statement::Fn_Call::EMPTY);
-    e->add_arg(*ret_decl);
-    stmt->els.push_back(e);
-  }
+//  if (!datatype->simple()->is(::Type::LIST)) {
+//    Statement::Fn_Call *e = new Statement::Fn_Call(Statement::Fn_Call::EMPTY);
+//    e->add_arg(*ret_decl);
+//    stmt->els.push_back(e);
+//  }
 }
 
 
@@ -1631,7 +1631,7 @@ std::list<Statement::Base*> *Alt::Simple::add_arg_code(
     Statement::If *c = add_empty_check(*stmts, *last);
     deep_erase_if_backtrace(c, l.begin(), i);
 
-    add_clear_code(*stmts, *last);
+    //add_clear_code(*stmts, *last);
 
     stmts = &c->then;
 
@@ -1650,7 +1650,7 @@ std::list<Statement::Base*> *Alt::Simple::add_arg_code(
   Statement::If *c = add_empty_check(*stmts, *last);
   // deep_erase_if_backtrace(c, l.begin(), ++(l.begin()));
 
-  add_clear_code(*stmts, *last);
+  //add_clear_code(*stmts, *last);
 
   return &c->then;
 }
