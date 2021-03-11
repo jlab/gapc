@@ -976,7 +976,7 @@ para_decls: {
             } ;
 
 para_decl: datatype ident
-           { $$ = new Para_Decl::Simple($1, $2, @$); }
+           { $$ = new Para_Decl::Simple($1, $2, @$); /* this would be the right place to prefix function argument names */ }
            |
            '<' para_decls '>'
            {
