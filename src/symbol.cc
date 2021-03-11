@@ -851,7 +851,7 @@ void Symbol::NT::add_specialised_arguments(Statement::Fn_Call *fn,
 }
 
 void Symbol::NT::set_ret_decl_rhs(Code::Mode mode) {
-  ret_decl = new Statement::Var_Decl(data_type_before_eval(), new std::string("answers"));
+  ret_decl = new Statement::Var_Decl(data_type_before_eval(), new std::string("answers"), new Expr::Vacc(new std::string("np.nan")));
   post_alt_stmts.clear();
 
   if (!eval_decl && !datatype->simple()->is(::Type::LIST)) {
@@ -1319,6 +1319,12 @@ void Symbol::NT::eliminate_list_ass() {
             }
           }
         }
+        // for python: we cannot declare a variable with a type but no value, thus the "answers" variable need to be np.nan
+        // and therefore we add an exception to the statement removal here
+		if ((*decl->rhs->vacc()->name()).compare("np.nan") == 0) {
+			++i;
+			continue;
+		}
 
         replace(*decl, i, Statement::end());
         // i.erase();
