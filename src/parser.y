@@ -636,7 +636,7 @@ sig_decls: decl ';'
            ;
 
 decl: qual_datatype ident '(' multi_datatypes  signtparas ')'
-    { Fn_Decl *f = new Fn_Decl($1, $2, @2);
+    { Fn_Decl *f = new Fn_Decl($1, new std::string("algfn_" + *$2), @2);
       f->set_types($4);
       delete $4;
       f->set_nttypes($5);
@@ -940,7 +940,7 @@ fn_defs: /* empty */
 
 fn_def:
      mode_opt qual_datatype ident '(' para_decls fnntparas ')' '{' statements '}'
-     { Fn_Def *f = new Fn_Def($2, $3, @3);
+     { Fn_Def *f = new Fn_Def($2, new std::string("algfn_" + *$3), @3);
        f->set_paras(*$5);
        delete $5;
        f->set_ntparas($6);
@@ -1374,7 +1374,7 @@ an optional application of an objective function which was declared
 in the signature.
 **/
 
-choice_fn_ident: STRING { $$ = $1; } ;
+choice_fn_ident: STRING { $$ = new std::string("algfn_" + *$1); } ;
 
 /**{
 \label{gr:filter}
@@ -1587,7 +1587,7 @@ See Section \ref{sec:indexhack} for more details on index hacking in the use cas
 
 **/
 
-sig_fn_or_term_ident: STRING { $$ = $1; } ;
+sig_fn_or_term_ident: STRING { $$ = new std::string("algfn_" + *$1); } ;
 
 symbol_ident: STRING { $$ = $1; } ;
 

@@ -651,7 +651,7 @@ void Printer::Cpp::print(const Fn_Def &fn_def) {
     if (fn_def.target_name().empty()) {
       stream << *fn_def.name;
     } else {
-      stream << "algfn_" << fn_def.target_name();
+      stream << fn_def.target_name();
     }
     if (!fn_def.choice_fn) {
       in_fn_head = true;

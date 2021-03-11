@@ -1435,7 +1435,6 @@ void Alt::Simple::init_body(AST &ast) {
     if (!n) {
       n = name;
     }
-    n->insert(0, "algfn_");
   } else {
     n = name;
   }
