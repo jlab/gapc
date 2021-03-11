@@ -1,13 +1,21 @@
+import numpy as np
+
 class Basic_Subsequence:
+    seq = None
+
     def __init__(self, sequence:str, i:int, j:int):
         assert i >= 0, "left border i=%i cannot be negative" % i
         assert j >= 0, "right border j=%i cannot be negative" % j
         assert i <= j, "left border i=%i cannot be larger than right border j=%i" % (i,j)
-        assert i <= len(sequence), "left border i=%i cannot be larger then length of sequence \"%s\"" % (j, sequence)
-        assert j <= len(sequence), "right border j=%i cannot be larger then length of sequence \"%s\"" % (j, sequence)
+        if sequence is not None:
+            assert i <= len(sequence), "left border i=%i cannot be larger then length of sequence \"%s\"" % (j, sequence)
+            assert j <= len(sequence), "right border j=%i cannot be larger then length of sequence \"%s\"" % (j, sequence)
         self.seq = sequence
         self.i = i
         self.j = j
+
+    def isEmpty(self):
+        return self.seq == None
 
 class BASE(Basic_Subsequence):
     def __init__(self, sequence:str, i:int, j:int):
@@ -18,3 +26,17 @@ class LOC(Basic_Subsequence):
     def __init__(self, sequence:str, i:int, j:int):
         assert i == j, "For LOC, left border i=%s must be equal to right border j=%i" % (i,j)
         super().__init__(sequence, i, j)
+
+
+def is_not_empty(x):
+    if (type(x) == float) or (type(x) == np.float64) or (type(x) == int):
+        return ~np.isnan(x)
+    elif (type(x) == LOC) or (type(x) == BASE):
+        return (not x.isEmpty())
+    raise ValueError("is_not_empty not implemented for type %s" % type(x))
+
+def push_back_sum(current_sum:float, value:float) -> float:
+    if np.isnan(current_sum):
+        return value
+    else:
+        return current_sum + value
