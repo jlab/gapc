@@ -17,6 +17,11 @@ class Basic_Subsequence:
     def isEmpty(self):
         return self.seq == None
 
+class REGION(Basic_Subsequence):
+    def __init__(self, sequence:str, i:int, j:int):
+        assert i < j, "For REGION, left border i=%s must be smaller than right border j=%i" % (i,j)
+        super().__init__(sequence, i, j)
+
 class BASE(Basic_Subsequence):
     def __init__(self, sequence:str, i:int, j:int):
         assert i < j, "For BASE, left border i=%s must be smaller than right border j=%i" % (i,j)
@@ -31,7 +36,7 @@ class LOC(Basic_Subsequence):
 def is_not_empty(x):
     if (type(x) == float) or (type(x) == np.float64) or (type(x) == int):
         return ~np.isnan(x)
-    elif (type(x) == LOC) or (type(x) == BASE):
+    elif (type(x) == LOC) or (type(x) == BASE) or (type(x) == REGION):
         return (not x.isEmpty())
     raise ValueError("is_not_empty not implemented for type %s" % type(x))
 
@@ -40,3 +45,9 @@ def push_back_sum(current_sum:float, value:float) -> float:
         return value
     else:
         return current_sum + value
+
+def TUSubsequence(value):
+    # an empty function to simply pass through the value.
+    # necessary for more advanced ADP stuff, which is not needed
+    # in this early stage prototype
+    return value
