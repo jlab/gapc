@@ -900,7 +900,7 @@ void Symbol::NT::set_ret_decl_rhs(Code::Mode mode) {
              Statement::Fn_Call::PUSH_BACK);
            fn->add_arg(*ret_decl);
            fn->add_arg(*(*i)->ret_decl);
-
+           fn->lhs = &(*ret_decl->name);
            cond->then.push_back(fn);
       }
 
@@ -978,10 +978,10 @@ void Symbol::NT::init_ret_stmts(Code::Mode mode) {
 
     v->rhs = choice;
     ret_stmts.push_back(v);
-    Statement::Fn_Call *erase =
-      new Statement::Fn_Call(Statement::Fn_Call::ERASE);
-    erase->add_arg(*ret_decl);
-    ret_stmts.push_back(erase);
+//    Statement::Fn_Call *erase =
+//      new Statement::Fn_Call(Statement::Fn_Call::ERASE);
+//    erase->add_arg(*ret_decl);
+//    ret_stmts.push_back(erase);
     ret = new Expr::Vacc(*v);
   } else {
     ret = new Expr::Vacc(*ret_decl);
