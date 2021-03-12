@@ -528,7 +528,10 @@ void Printer::Cpp::print(const Statement::Fn_Call &stmt) {
       }
     }
   } else {
-    stream << **i << '.' << stmt.name() << "( ";
+    if (!(stmt.lhs)->empty()) {
+	  stream << *(stmt.lhs) << " = ";
+	}
+    stream << indent() << **i << '.' << stmt.name() << "( ";
     ++i;
   }
   if (i != stmt.args.end()) {
