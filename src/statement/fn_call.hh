@@ -70,6 +70,8 @@ class Fn_Call : public Base {
     // The list of arguments passed to the function.
     std::list<Expr::Base*> args;
 
+    // Variable the result of the call shall be assigned to
+    std::string *lhs = new std::string("");
 
     Fn_Call(std::string *n, std::list<Expr::Base*> *l, const Loc &loc);
 

@@ -463,6 +463,11 @@ unsigned int literal_size_of_string(Loc& location, std::string* str) {
 void Printer::Cpp::print(const Statement::Fn_Call &stmt) {
   std::list<Expr::Base*>::const_iterator i = stmt.args.begin();
   if (stmt.is_obj == false) {
+	stream << indent();
+	// if result of function call shall be found to a left hand side, print this assignment here
+	if (!(stmt.lhs)->empty()) {
+		stream << *(stmt.lhs) << " = ";
+	}
     if (stmt.builtin == Statement::Fn_Call::PUSH_BACK ||
         stmt.builtin == Statement::Fn_Call::APPEND) {
       // assert(stmt.args.size() == 2);
@@ -470,7 +475,7 @@ void Printer::Cpp::print(const Statement::Fn_Call &stmt) {
       if (v && v->type->is(::Type::LIST)) {
         Type::List *l = dynamic_cast<Type::List*> (v->type);
         assert(l);
-        stream << indent() << stmt.name();
+        stream << stmt.name();
         if (l->push_type() != Type::List::NORMAL &&
             l->push_type() != Type::List::HASH) {
           stream << "_";
@@ -478,10 +483,10 @@ void Printer::Cpp::print(const Statement::Fn_Call &stmt) {
         }
         stream << "( ";
       } else {
-        stream << indent() << stmt.name() << "( ";
+        stream << stmt.name() << "( ";
       }
     } else {
-      stream << indent() << stmt.name() << "( ";
+      stream << stmt.name() << "( ";
 
       // If this is a function call inside of a used defined
       // algebra function, its builtin-type is not set properly
@@ -523,7 +528,7 @@ void Printer::Cpp::print(const Statement::Fn_Call &stmt) {
       }
     }
   } else {
-    stream << indent() << **i << '.' << stmt.name() << "( ";
+    stream << **i << '.' << stmt.name() << "( ";
     ++i;
   }
   if (i != stmt.args.end()) {
