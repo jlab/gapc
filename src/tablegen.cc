@@ -161,8 +161,8 @@ void Tablegen::offset_const(titr track, itr first, const itr &end,
   code.push_back(real_iv);
   Expr::Vacc *real_i = new Expr::Vacc(*real_iv);
 
-//  access = new Expr::Plus(access, new Expr::Times(dim, new Expr::Plus(real_i,
-//      new Expr::Times(real_j, new Expr::Const(left)))));
+  access = new Expr::Plus(access, new Expr::Times(dim, new Expr::Plus(real_i,
+      new Expr::Times(real_j, new Expr::Const(left)))));
 
   Expr::Base *d = new Expr::Times(new Expr::Const(left),
       new Expr::Const(right));
@@ -184,8 +184,8 @@ void Tablegen::offset_left_lin(titr track, itr first, const itr &end,
       ret_zero);
   code.push_back(guard);
 
-//  access = new Expr::Plus(access, new Expr::Times(dim,
-//        new Expr::Plus(i, new Expr::Times(j, new Expr::Const(left)))));
+  access = new Expr::Plus(access, new Expr::Times(dim,
+        new Expr::Plus(i, new Expr::Times(j, new Expr::Const(left)))));
 
   Expr::Base *d = new Expr::Times(new Expr::Const(left),
       new Expr::Plus(n, new Expr::Const(1)));
@@ -228,9 +228,9 @@ void Tablegen::offset_right_lin(titr track, itr first, const itr &end,
   code.push_back(real_jv);
   Expr::Vacc *real_j = new Expr::Vacc(*real_jv);
 
-//  access = new Expr::Plus(access, new Expr::Times(dim,
-//        new Expr::Plus(i,
-//          new Expr::Times(real_j, new Expr::Plus(n, new Expr::Const(1))))));
+  access = new Expr::Plus(access, new Expr::Times(dim,
+        new Expr::Plus(i,
+          new Expr::Times(real_j, new Expr::Plus(n, new Expr::Const(1))))));
 
   Expr::Base *d = new Expr::Times(new Expr::Plus(n, new Expr::Const(1)),
       new Expr::Const(right));
@@ -246,10 +246,10 @@ void Tablegen::offset_quad(titr track, itr first, const itr &end,
   Expr::Base *i, *j, *n;
   head(i, j, n, table, *track);
 
-//  access = new Expr::Plus(access, new Expr::Times(dim,
-//    new Expr::Plus(
-//      new Expr::Div(new Expr::Times(
-//        j, new Expr::Plus(j, new Expr::Const(1))), new Expr::Const(2)), i)));
+  access = new Expr::Plus(access, new Expr::Times(dim,
+    new Expr::Plus(
+      new Expr::Div(new Expr::Times(
+        j, new Expr::Plus(j, new Expr::Const(1))), new Expr::Const(2)), i)));
 
   Expr::Base *d = new Expr::Plus(new Expr::Plus(new Expr::Div(
       new Expr::Times(n, new Expr::Plus(n, new Expr::Const(1))),
@@ -274,9 +274,9 @@ void Tablegen::offset(titr track, itr first, const itr &end,
     Expr::Base *dim, Expr::Base *access) {
   if (first == end) {
     size = dim;
+    //off = access;
     off = new std::list<Expr::Base*>();
     off->push_back(access);
-    //off = access;
     return;
   }
 
@@ -344,12 +344,12 @@ void Tablegen::offset(size_t track_pos, itr f, const itr &e) {
   //        new Var_Acc::Array(new Var_Acc::Plain(new std::string("array")), off)));
   //  c.push_back(ret);
 
-  std::list<Expr::Base*> *indexer = new std::list<Expr::Base*>();
-  for (std::list<Statement::Var_Decl*>::iterator it = paras.begin(); it != paras.end(); ++it) {
-	  indexer->push_back(new Expr::Vacc((*it)->name));
-    //std::cerr << (*(*it)->name) << "\n";
-  }
-  *off = *indexer;
+//  std::list<Expr::Base*> *indexer = new std::list<Expr::Base*>();
+//  for (std::list<Statement::Var_Decl*>::iterator it = paras.begin(); it != paras.end(); ++it) {
+//	  indexer->push_back(new Expr::Vacc((*it)->name));
+//    //std::cerr << (*(*it)->name) << "\n";
+//  }
+//  *off = *indexer;
 
   std::reverse(ns.begin(), ns.end());
 }
@@ -415,8 +415,20 @@ Fn_Def *Tablegen::gen_is_tab() {
 //
 //  Statement::Return *r = new Statement::Return(isnan);
 //  c.push_back(r);
+//  std::cerr << "init\n";
+//  for (std::list<Statement::Var_Decl*>::iterator i = paras.begin(); i != paras.end(); ++i) {
+//     std::cerr << *(*i) << ", ";
+//  }
+  std::list<Expr::Base*> *access = new std::list<Expr::Base*>();
+  for (std::list<Statement::Var_Decl*>::iterator it = paras.begin(); it != paras.end(); ++it) {
+  	access->push_back(new Expr::Vacc((*it)->name));
+  }
+  if ((*access).empty()) {
+	access->push_back(new Expr::Const(0));
+  }
 
-  Statement::Return *ret = new Statement::Return(new Expr::Vacc(new Var_Acc::Array(new Var_Acc::Plain(new std::string("self.tabulated")), off)));
+  std::cerr << "\n";
+  Statement::Return *ret = new Statement::Return(new Expr::Vacc(new Var_Acc::Array(new Var_Acc::Plain(new std::string("self.tabulated")), access)));
   c.push_back(ret);
 
   // function signature
@@ -484,14 +496,21 @@ Fn_Def *Tablegen::gen_tab() {
 //  Statement::Fn_Call *a = new Statement::Fn_Call(Statement::Fn_Call::ASSERT);
 //  a->add_arg(new Expr::Less(off->front(), new Expr::Fn_Call(new std::string("size"))));
 //  c.push_back(a);
+  std::list<Expr::Base*> *access = new std::list<Expr::Base*>();
+  for (std::list<Statement::Var_Decl*>::iterator it = paras.begin(); it != paras.end(); ++it) {
+  	access->push_back(new Expr::Vacc((*it)->name));
+  }
+  if ((*access).empty()) {
+	access->push_back(new Expr::Const(0));
+  }
 
   Statement::Var_Assign *xt = new Statement::Var_Assign(
-      new Var_Acc::Array(new Var_Acc::Plain(new std::string("self.tabulated")), off),
+      new Var_Acc::Array(new Var_Acc::Plain(new std::string("self.tabulated")), access),
       new Expr::Vacc(new std::string("True")));
   c.push_back(xt);
 
   Statement::Var_Assign *x = new Statement::Var_Assign(
-      new Var_Acc::Array(new Var_Acc::Plain(new std::string("self.array")), off),
+      new Var_Acc::Array(new Var_Acc::Plain(new std::string("self.array")), access),
       new Expr::Vacc(new std::string("e")));
   c.push_back(x);
 
@@ -533,8 +552,15 @@ Fn_Def *Tablegen::gen_get_tab() {
 //  Statement::Fn_Call *a = new Statement::Fn_Call(Statement::Fn_Call::ASSERT);
 //  a->add_arg(new Expr::Less(off->front(), new Expr::Fn_Call(new std::string("size"))));
 //  c.push_back(a);
+  std::list<Expr::Base*> *access = new std::list<Expr::Base*>();
+  for (std::list<Statement::Var_Decl*>::iterator it = paras.begin(); it != paras.end(); ++it) {
+  	access->push_back(new Expr::Vacc((*it)->name));
+  }
+  if ((*access).empty()) {
+	access->push_back(new Expr::Const(0));
+  }
 
-  Statement::Return *ret = new Statement::Return(new Expr::Vacc(new Var_Acc::Array(new Var_Acc::Plain(new std::string("self.array")), off)));
+  Statement::Return *ret = new Statement::Return(new Expr::Vacc(new Var_Acc::Array(new Var_Acc::Plain(new std::string("self.array")), access)));
     c.push_back(ret);
 
   f->set_statements(c);
@@ -559,17 +585,23 @@ Fn_Def *Tablegen::gen_size() {
 Fn_Def *Tablegen::gen_init(const Symbol::NT &nt) {
 	Fn_Def *f = new Fn_Def(new Type::NoneType(), new std::string("__init__"));
 	f->add_para(new Type::NoneType(), new std::string("self"));
-	f->add_paras(paras);
+	f->add_paras(ns);
 
 	std::list<Statement::Base*> c;
 
 	// initiate Tensor with np.nan values
 	Expr::Fn_Call *rhs = new Expr::Fn_Call(new std::string("torch.full"));
 
+	// construct tensor access sizes
 	std::list<Expr::Base*> *offsize = new std::list<Expr::Base*>();
-	for (std::list<Expr::Base*>::iterator it = off->begin(); it != off->end(); ++it) {
-		offsize->push_back(new Expr::Plus(*it, new Expr::Const(1)));
+	std::list<Statement::Var_Decl*>::const_iterator pit = paras.begin();
+	for (std::list<Statement::Var_Decl*>::iterator it = ns.begin(); (it != ns.end()) && (pit != paras.end()); ++it, ++pit) {
+		offsize->push_back(new Expr::Plus(new Expr::Vacc((*it)->name), new Expr::Const(1)));
 	}
+	if ((*offsize).empty()) {
+		offsize->push_back(new Expr::Const(1));
+	}
+
 	rhs->add_arg(new Var_Acc::Array(new Var_Acc::Plain(new std::string("")), offsize), new std::string("size"));
 	rhs->add_arg(new std::string("np.nan"), new std::string("fill_value"));
 	Statement::Var_Decl *tf = new Statement::Var_Decl(new Type::NoneType(), new std::string("self.array"), rhs);
@@ -581,19 +613,21 @@ Fn_Def *Tablegen::gen_init(const Symbol::NT &nt) {
 	Statement::Var_Decl *tfTab = new Statement::Var_Decl(new Type::NoneType(), new std::string("self.tabulated"), rhsTab);
 	c.push_back(tfTab);
 
-	std::list<Statement::Var_Decl*>::const_iterator pit = paras.begin();
-	for (size_t track = nt.track_pos(); (track < nt.track_pos() + nt.tracks()) && (pit != paras.end()); ++track, ++pit) {
+	pit = paras.begin();
+	unsigned int track = 0;
+	for (std::list<Statement::Var_Decl*>::iterator it = ns.begin(); it != ns.end(); ++it) {
 		std::string varname;
 		varname.append(std::string("self.t_"));
 		varname.append(std::to_string(track));
 		varname.append(std::string("_left_most"));
-		c.push_back(new Statement::Var_Decl(new Type::Size(), varname, new Expr::Const(0)));
+		c.push_back(new Statement::Var_Decl((*it)->type, varname, new Expr::Const(0)));
 
 		std::string varname2;
 		varname2.append(std::string("self.t_"));
 		varname2.append(std::to_string(track));
 		varname2.append(std::string("_right_most"));
-		c.push_back(new Statement::Var_Decl(new Type::Size(), varname2, new Expr::Vacc((*pit)->name)));
+		c.push_back(new Statement::Var_Decl((*it)->type, varname2, new Expr::Vacc((*it)->name)));
+		track++;
 	}
 
 
