@@ -117,8 +117,10 @@ void Expr::Fn_Call::put(std::ostream &s) const {
     s << '<' << *type_param << '>';
 
   s << '(';
-  if (!(*i).second->empty()) {
-	  s << *(*i).second << '=';
+  if ((*i).second) {
+	  if (!(*i).second->empty()) {
+		  s << *(*i).second << '=';
+	  }
   }
   if (i != exprs.end()) {
     put_arg(s, (*i).first);
@@ -126,9 +128,11 @@ void Expr::Fn_Call::put(std::ostream &s) const {
   }
   for (; i != exprs.end(); ++i) {
     s << ", ";
-	if (!(*i).second->empty()) {
-	  s << *(*i).second << '=';
-	}
+    if ((*i).second) {
+	  if (!(*i).second->empty()) {
+		s << *(*i).second << '=';
+	  }
+    }
     put_arg(s, (*i).first);
   }
   s << ')';
