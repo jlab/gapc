@@ -427,7 +427,6 @@ Fn_Def *Tablegen::gen_is_tab() {
 	access->push_back(new Expr::Const(0));
   }
 
-  std::cerr << "\n";
   Statement::Return *ret = new Statement::Return(new Expr::Vacc(new Var_Acc::Array(new Var_Acc::Plain(new std::string("self.tabulated")), access)));
   c.push_back(ret);
 
