@@ -570,8 +570,10 @@ class Main {
     //cc.prelude(opts, driver.ast);
     cc.header(driver.ast);
     driver.ast.print_code(cc);
-    //instance->print_code(cc);
+    instance->print_code(cc);
     Code::Gen code(driver.ast);
+    cc.header_footer(driver.ast);
+
     code_ = code;
 
 	if (false) {
