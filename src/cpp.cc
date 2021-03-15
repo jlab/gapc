@@ -1474,7 +1474,7 @@ void Printer::Cpp::print_table_init(const AST &ast) {
   for (hashtable<std::string, Symbol::NT*>::const_iterator i =
        ast.grammar()->tabulated.begin(); i != ast.grammar()->tabulated.end();
        ++i) {
-    stream << indent() << i->second->table_decl->name() << ".init( ";
+    stream << indent() << i->second->table_decl->name() << "_t(";
     size_t a = 0;
     for (std::vector<Statement::Var_Decl*>::const_iterator j =
          ast.seq_decls.begin(); j != ast.seq_decls.end(); ++j, ++a) {
@@ -1482,12 +1482,16 @@ void Printer::Cpp::print_table_init(const AST &ast) {
           a >= i->second->track_pos() + i->second->tracks()) {
         continue;
       }
-      stream << *(*j)->name << ".size(), ";
+      stream << "len(" << *(*j)->name << ")";
+      if ((j+1) != ast.seq_decls.end()) {
+    	  stream << ", ";
+      }
     }
     if (ast.window_mode) {
       stream << " opts.window_size, opts.window_increment, ";
     }
-    stream << "\""<< i->second->table_decl->name() << "\")" << endl;
+    //stream << "\""<< i->second->table_decl->name() << "\")" << endl;
+    stream << ")" << endl;
   }
 }
 
@@ -1554,31 +1558,32 @@ void Printer::Cpp::print_most_init(const AST &ast) {
 
 
 void Printer::Cpp::print_init_fn(const AST &ast) {
-  stream << "void init(";
+//  stream << "void init(";
 
-  stream << "const gapc::Opts &opts)" << " {" << endl;
+//  stream << "const gapc::Opts &opts)" << " {" << endl;
 
-  inc_indent();
-  stream << indent() << "const std::vector<std::pair<const char *, unsigned> > &inp = opts.inputs;\n";
+//  inc_indent();
+//  stream << indent() << "const std::vector<std::pair<const char *, unsigned> > &inp = opts.inputs;\n";
 
-  print_buddy_init(ast);
-  print_seq_init(ast);
-  print_filter_init(ast);
+//  print_buddy_init(ast);
+//  print_seq_init(ast);
+//  print_filter_init(ast);
   print_table_init(ast);
-  print_zero_init(*ast.grammar());
-  print_most_init(ast);
-  if (ast.window_mode)
-  stream << "wsize = opts.window_size;\nwinc = opts.window_increment;\n";
+//  print_zero_init(*ast.grammar());
+//  print_most_init(ast);
+//  if (ast.window_mode)
+//  stream << "wsize = opts.window_size;\nwinc = opts.window_increment;\n";
 
-  if (ast.kbest) {
-    for (std::list<Statement::Hash_Decl*>::const_iterator i =
-         ast.hash_decls().begin(); i != ast.hash_decls().end(); ++i) {
-      stream << (*i)->ext_name() << "::set_k(opts.k);\n";
-    }
-  }
+//  if (ast.kbest) {
+//    for (std::list<Statement::Hash_Decl*>::const_iterator i =
+//         ast.hash_decls().begin(); i != ast.hash_decls().end(); ++i) {
+//      stream << (*i)->ext_name() << "::set_k(opts.k);\n";
+//    }
+//  }
 
   dec_indent();
-  stream << '}' << endl << endl;
+  stream << endl;
+//  stream << '}' << endl << endl;
 }
 
 void Printer::Cpp::print_window_inc_fn(const AST &ast) {
@@ -1607,7 +1612,7 @@ void Printer::Cpp::print_window_inc_fn(const AST &ast) {
 
 
 void Printer::Cpp::includes() {
-  stream << "#include \"rtlib/adp.hh\"" << endl << endl;
+//  stream << "#include \"rtlib/adp.hh\"" << endl << endl;
 }
 
 
@@ -1646,16 +1651,16 @@ void Printer::Cpp::print_subseq_typedef(const AST &ast) {
   Type::Base *t = dynamic_cast<Type::Alphabet*>(i->second)->temp;
   assert(t);
 
-  stream << "typedef Basic_Subsequence<" << *t
-    << ", unsigned> TUSubsequence;\n\n";
+//  stream << "typedef Basic_Subsequence<" << *t
+//    << ", unsigned> TUSubsequence;\n\n";
 }
 
 
 void Printer::Cpp::header(const AST &ast) {
   if (!ast.code_mode().subopt_buddy()) {
-    stream << endl << make_comments(id_string, "//") << endl << endl;
-    stream << "#ifndef " << class_name << "_hh" << endl
-      << "#define " << class_name << "_hh" << endl << endl;
+    stream << endl << make_comments(id_string, "# ") << endl << endl;
+//    stream << "#ifndef " << class_name << "_hh" << endl
+//      << "#define " << class_name << "_hh" << endl << endl;
     if (ast.window_mode) {
       stream << "#define WINDOW_MODE\n";
     }
@@ -1671,32 +1676,36 @@ void Printer::Cpp::header(const AST &ast) {
   }
   imports(ast);
   print_hash_decls(ast);
-  stream << "class " << class_name << " {" << endl << endl
-    << "  public:" << endl;
-
-  for (std::vector<Statement::Var_Decl*>::const_iterator i =
-       ast.seq_decls.begin(); i != ast.seq_decls.end(); ++i) {
-    stream << **i << endl;
-  }
-
-  print_most_decl(*ast.grammar()->axiom);
-
-  if (ast.window_mode) {
-    stream << "unsigned wsize;\nunsigned winc;\n";
-  }
-
-  stream << endl;
-
-  print_zero_decls(*ast.grammar());
   print_table_decls(*ast.grammar());
-  print_filter_decls(ast);
-  print_buddy_decls(ast);
+
+  stream << "class " << class_name << "Function(torch.autograd.Function):" << endl;
+  inc_indent();
+  stream << indent() << "def __init__(self";
+
+  for (std::vector<Statement::Var_Decl*>::const_iterator i = ast.seq_decls.begin(); i != ast.seq_decls.end(); ++i) {
+    stream << ", " << *((**i).name) << ":str";
+  }
+  stream << "):" << endl;
+  inc_indent();
+
+//  print_most_decl(*ast.grammar()->axiom);
+
+//  if (ast.window_mode) {
+//    stream << "unsigned wsize;\nunsigned winc;\n";
+//  }
+//
+//  stream << endl;
+
+//  print_zero_decls(*ast.grammar());
+//  print_filter_decls(ast);
+//  print_buddy_decls(ast);
   set_tracks(ast);
   print_init_fn(ast);
-  print_window_inc_fn(ast);
-  stream << "  private:" << endl;
-  inc_indent();
-  inc_indent();
+//  print_window_inc_fn(ast);
+//  stream << "  private:" << endl;
+//  inc_indent();
+//  inc_indent();
+  //stream << "END header ================" << endl;
 }
 
 
@@ -1967,9 +1976,10 @@ void Printer::Cpp::print_cyk_fn(const AST &ast) {
 
 
 void Printer::Cpp::print_run_fn(const AST &ast) {
-  stream << "   " << *ast.grammar()->axiom->code()->return_type << " run()";
-  stream << endl << '{' << endl
-    << "  return nt_" << *ast.grammar()->axiom_name << '(';
+  stream << indent() << "result = ";
+  //stream << "   " << *ast.grammar()->axiom->code()->return_type << " run()";
+  //stream << endl << '{' << endl
+    stream << "nt_" << *ast.grammar()->axiom_name << '(';
 
   bool first = true;
   size_t track = 0;
@@ -1993,8 +2003,8 @@ void Printer::Cpp::print_run_fn(const AST &ast) {
     }
   }
 
-  stream << ")" << endl
-  << '}' << endl;
+  stream << ")" << endl;
+  //<< '}' << endl;
 }
 
 
@@ -2022,9 +2032,25 @@ void Printer::Cpp::print_stats_fn(const AST &ast) {
 
 
 void Printer::Cpp::header_footer(const AST &ast) {
-  stream << " public:" << endl;
-  print_run_fn(ast);
-  print_stats_fn(ast);
+	stream << indent() << "@staticmethod" << endl;
+	stream << indent() << "def forward(ctx):" << endl;
+	inc_indent();
+	print_run_fn(ast);
+	//stream << indent() << "result = " << ast.grammar()->axiom << endl;
+	stream << indent() << "ctx.save_for_backward(";
+	for (hashtable<std::string, Symbol::NT*>::iterator i = ast.grammar()->tabulated.begin(); i != ast.grammar()->tabulated.end(); ++i) {
+		stream << i->second->table_decl->name() << ".array";
+		if (next(i) != ast.grammar()->tabulated.end()) {
+			stream << ", ";
+		}
+	}
+	stream << ")" << endl;
+	stream << indent() << "return result" << endl;
+	dec_indent();
+
+//  stream << " public:" << endl;
+//  print_run_fn(ast);
+//  print_stats_fn(ast);
 }
 
 
@@ -2427,9 +2453,18 @@ void Printer::Cpp::imports(const AST &ast) {
     return;
   }
 
-  if (ast.code_mode() != Code::Mode::SUBOPT) {
-    stream << "#include <rtlib/subopt.hh>" << endl;
-  }
+//  if (ast.code_mode() != Code::Mode::SUBOPT) {
+//    stream << "#include <rtlib/subopt.hh>" << endl;
+//  }
+
+  stream << "import torch" << endl;
+//import pandas as pd
+  stream << "import numpy as np" << endl;
+  stream << "from numpy import exp" << endl;
+  stream << "import sys" << endl;
+  stream << "import os" << endl;
+  stream << "sys.path.append(os.path.abspath(\"/Daten/Git/jlab/gapc/\"))" << endl;
+  stream << "from pylib.gapc import *" << endl;
 
   switch (ast.get_rtlib_header()) {
     case ADP_Mode::PARETO_NOSORT_BLOCK:
@@ -2476,9 +2511,9 @@ void Printer::Cpp::imports(const AST &ast) {
     }
   }
   stream << endl;
-  stream << "#include <rtlib/generic_opts.hh>\n";
-        stream << "#include \"rtlib/pareto_dom_sort.hh\"\n";
-        stream << "#include \"rtlib/pareto_yukish_ref.hh\"\n\n";
+//  stream << "#include <rtlib/generic_opts.hh>\n";
+//        stream << "#include \"rtlib/pareto_dom_sort.hh\"\n";
+//        stream << "#include \"rtlib/pareto_yukish_ref.hh\"\n\n";
 }
 
 
