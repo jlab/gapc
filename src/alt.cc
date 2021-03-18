@@ -1417,7 +1417,10 @@ void Alt::Base::add_seqs(Expr::Fn_Call *fn_call, const AST &ast) const {
     fn_call->add(ast.seq_decls);
   } else {
     assert(track_pos_ < ast.seq_decls.size());
-    fn_call->add_arg(*ast.seq_decls[track_pos_]);
+    // instead of t_0_seq insert the argument as self.t_0_seq for python
+    Statement::Var_Decl *x = new Statement::Var_Decl(&(*ast.seq_decls[track_pos_]->type), new std::string("self." + *ast.seq_decls[track_pos_]->name));
+    fn_call->add_arg(*x);
+    //fn_call->add_arg(*ast.seq_decls[track_pos_]);
   }
 }
 
@@ -2024,11 +2027,11 @@ void Alt::Link::codegen(AST &ast) {
     s = name;
   } else {
     if (ast.backtrace()) {
-      s = new std::string("bt_proxy_nt_" + *name);
+      s = new std::string("self.bt_proxy_nt_" + *name);
     } else if (ast.code_mode() == Code::Mode::SUBOPT) {
-      s = new std::string("bt_nt_" + *name);
+      s = new std::string("self.bt_nt_" + *name);
     } else {
-      s = new std::string("nt_" + *name);
+      s = new std::string("self.nt_" + *name);
     }
   }
   Expr::Fn_Call *fn = new Expr::Fn_Call(s);
