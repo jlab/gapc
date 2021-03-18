@@ -569,7 +569,9 @@ class Main {
     cc.set_files(opts.in_file, opts.out_file);
     //cc.prelude(opts, driver.ast);
     cc.header(driver.ast);
+    cc.increment_indent();
     driver.ast.print_code(cc);
+    cc.decrement_indent();
     instance->print_code(cc);
     Code::Gen code(driver.ast);
     cc.header_footer(driver.ast);
