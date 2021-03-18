@@ -880,8 +880,9 @@ void Grammar::init_indices() {
       // remove moving boundaries whenever possible
       size_t idx = (*i)->tracks() == 1 ? 0 : track;
       const Table &table = (*i)->tables()[idx];
-      Expr::Vacc *l = table.delete_left_index() ? new Expr::Vacc(new std::string(*((*i)->name) + "_table." + lm.str())) : left;
-      Expr::Vacc *r = table.delete_right_index() ? new Expr::Vacc(new std::string(*((*i)->name) + "_table." + rm.str())) : right;
+      // inject self. for table definition
+      Expr::Vacc *l = table.delete_left_index() ? new Expr::Vacc(new std::string("self." + *((*i)->name) + "_table." + lm.str())) : left;
+      Expr::Vacc *r = table.delete_right_index() ? new Expr::Vacc(new std::string("self." + *((*i)->name) + "_table." + rm.str())) : right;
 
       if ((*i)->tracks() == 1 && (*i)->track_pos() != track) {
         continue;
