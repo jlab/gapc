@@ -35,7 +35,7 @@ class LOC(Basic_Subsequence):
 
 def is_not_empty(x):
     if (type(x) == float) or (type(x) == np.float64) or (type(x) == int):
-        return ~np.isnan(x)
+        return (not np.isnan(x))
     elif (type(x) == LOC) or (type(x) == BASE) or (type(x) == REGION):
         return (not x.isEmpty())
     raise ValueError("is_not_empty not implemented for type %s" % type(x))
