@@ -1044,7 +1044,7 @@ void Symbol::NT::init_ret_stmts(Code::Mode mode) {
 #include "tablegen.hh"
 
 void Symbol::NT::init_table_decl(const AST &ast) {
-  std::string n(*name + "_table");
+  std::string n("self." + *name + "_table");
   if (ast.code_mode() == Code::Mode::SUBOPT) {
     n = "bt_" + n;
   }
@@ -1205,6 +1205,7 @@ void Symbol::NT::codegen(AST &ast) {
   } else {
     f = new Fn_Def(dt, new std::string("nt_" + *name));
   }
+  f->add_para(new ::Type::NoneType(), new std::string("self"));
   f->add_para(*this);
 
   std::list<Statement::Base*> stmts;
