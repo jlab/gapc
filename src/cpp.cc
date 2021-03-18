@@ -1080,7 +1080,9 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   bool cyk = t.cyk();
   const std::list<Statement::Var_Decl*> &ns = t.ns();
 
-  stream << "class " << tname << ":\n";
+  // use substr here to chop of "self." in class name
+  stream << "class " << tname.substr(5, std::string::npos) << ":\n";
+  //stream << "class " << tname << ":\n";
   inc_indent();
 //  stream << "private:\n\n";
 
@@ -1474,7 +1476,8 @@ void Printer::Cpp::print_table_init(const AST &ast) {
   for (hashtable<std::string, Symbol::NT*>::const_iterator i =
        ast.grammar()->tabulated.begin(); i != ast.grammar()->tabulated.end();
        ++i) {
-    stream << indent() << i->second->table_decl->name() << "_t(";
+	// chomp of "self." from table class name
+    stream << indent() << i->second->table_decl->name() << " = " << i->second->table_decl->name().substr(5, std::string::npos) << "_t(";
     size_t a = 0;
     for (std::vector<Statement::Var_Decl*>::const_iterator j =
          ast.seq_decls.begin(); j != ast.seq_decls.end(); ++j, ++a) {
@@ -1581,8 +1584,8 @@ void Printer::Cpp::print_init_fn(const AST &ast) {
 //    }
 //  }
 
-  dec_indent();
-  stream << endl;
+//  dec_indent();
+//  stream << endl;
 //  stream << '}' << endl << endl;
 }
 
@@ -1678,7 +1681,7 @@ void Printer::Cpp::header(const AST &ast) {
   print_hash_decls(ast);
   print_table_decls(*ast.grammar());
 
-  stream << "class " << class_name << "Function(torch.autograd.Function):" << endl;
+  stream << "class " << class_name << ":" << endl;
   inc_indent();
   stream << indent() << "def __init__(self";
 
@@ -1701,10 +1704,15 @@ void Printer::Cpp::header(const AST &ast) {
 //  print_buddy_decls(ast);
   set_tracks(ast);
   print_init_fn(ast);
+  for (std::vector<Statement::Var_Decl*>::const_iterator i = ast.seq_decls.begin(); i != ast.seq_decls.end(); ++i) {
+	  stream << indent() << "self." << *((**i).name) << " = " << *((**i).name) << endl;
+  }
 //  print_window_inc_fn(ast);
 //  stream << "  private:" << endl;
 //  inc_indent();
-//  inc_indent();
+  stream << endl;
+  dec_indent();
+  dec_indent();
   //stream << "END header ================" << endl;
 }
 
@@ -1976,10 +1984,10 @@ void Printer::Cpp::print_cyk_fn(const AST &ast) {
 
 
 void Printer::Cpp::print_run_fn(const AST &ast) {
-  stream << indent() << "result = ";
+  stream << indent() << "forward_result = ";
   //stream << "   " << *ast.grammar()->axiom->code()->return_type << " run()";
   //stream << endl << '{' << endl
-    stream << "nt_" << *ast.grammar()->axiom_name << '(';
+    stream << "algorithm.nt_" << *ast.grammar()->axiom_name << '(';
 
   bool first = true;
   size_t track = 0;
@@ -1992,14 +2000,14 @@ void Printer::Cpp::print_run_fn(const AST &ast) {
         stream << ", ";
       }
       first = false;
-      stream << "t_" << track << "_left_most";
+      stream << "inputsequence_" << track;
     }
     if (!t.delete_right_index()) {
       if (!first) {
         stream << ", ";
       }
       first = false;
-      stream << "t_" << track << "_right_most";
+      stream << "inputsequence_" << track;
     }
   }
 
@@ -2032,20 +2040,37 @@ void Printer::Cpp::print_stats_fn(const AST &ast) {
 
 
 void Printer::Cpp::header_footer(const AST &ast) {
-	stream << indent() << "@staticmethod" << endl;
-	stream << indent() << "def forward(ctx):" << endl;
+	stream << indent() << "class " << class_name << "Function(torch.autograd.Function):" << endl;
 	inc_indent();
-	print_run_fn(ast);
-	//stream << indent() << "result = " << ast.grammar()->axiom << endl;
-	stream << indent() << "ctx.save_for_backward(";
-	for (hashtable<std::string, Symbol::NT*>::iterator i = ast.grammar()->tabulated.begin(); i != ast.grammar()->tabulated.end(); ++i) {
-		stream << i->second->table_decl->name() << ".array";
-		if (next(i) != ast.grammar()->tabulated.end()) {
+	stream << indent() << "@staticmethod" << endl;
+	stream << indent() << "def forward(ctx";
+	size_t track = 0;
+	for (std::vector<Statement::Var_Decl*>::const_iterator i = ast.seq_decls.begin(); i != ast.seq_decls.end(); ++i, ++track) {
+		stream << ", inputsequence_" << track << ":str";
+	}
+	stream << "):" << endl;
+
+	inc_indent();
+	stream << indent() << "algorithm = " << class_name << "(";
+	track = 0;
+	for (std::vector<Statement::Var_Decl*>::const_iterator i = ast.seq_decls.begin(); i != ast.seq_decls.end(); ++i, ++track) {
+		stream << "inputsequence_" << track;
+		if (next(i) != ast.seq_decls.end()) {
 			stream << ", ";
 		}
 	}
 	stream << ")" << endl;
-	stream << indent() << "return result" << endl;
+	print_run_fn(ast);
+	//stream << indent() << "result = " << ast.grammar()->axiom << endl;
+	stream << indent() << "ctx.save_for_backward(";
+//	for (hashtable<std::string, Symbol::NT*>::iterator i = ast.grammar()->tabulated.begin(); i != ast.grammar()->tabulated.end(); ++i) {
+//		stream << i->second->table_decl->name() << ".array";
+//		if (next(i) != ast.grammar()->tabulated.end()) {
+//			stream << ", ";
+//		}
+//	}
+	stream << ")" << endl;
+	stream << indent() << "return forward_result" << endl;
 	dec_indent();
 
 //  stream << " public:" << endl;
@@ -2376,6 +2401,13 @@ void Printer::Cpp::prelude(const Options &opts, const AST &ast) {
   }
 }
 
+void Printer::Cpp::increment_indent() {
+	inc_indent();
+}
+void Printer::Cpp::decrement_indent() {
+	dec_indent();
+}
+
 
 static const char deps[] =
 "basenameCXX=$(shell basename $(CXX))\n"
@@ -2504,11 +2536,11 @@ void Printer::Cpp::imports(const AST &ast) {
        i != ast.imports.end(); ++i) {
     // if this import-declaration is verbatim, do not append
     // a ".hh" suffix.
-    if ((*i)->verbatimDeclaration) {
-      stream << "#include \"" << *(*i)->name << "\"" << endl;
-    } else {
-      stream << "#include \"" << *(*i)->name << ".hh\"" << endl;
-    }
+    //if ((*i)->verbatimDeclaration) {
+    stream << "from " << *(*i)->name << " import *" << endl;
+//    } else {
+//      stream << "import " << *(*i)->name << ".hh" << endl;
+//    }
   }
   stream << endl;
 //  stream << "#include <rtlib/generic_opts.hh>\n";

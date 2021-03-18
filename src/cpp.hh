@@ -202,6 +202,8 @@ class Cpp : public Base {
     void typedefs(Code::Gen &code);
 
     void prelude(const Options &opts, const AST &ast);
+    void increment_indent();
+    void decrement_indent();
     void imports(const AST &ast);
 
     void global_constants(const AST &ast);
