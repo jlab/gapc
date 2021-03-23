@@ -89,6 +89,7 @@ static void parse_options(int argc, char **argv, Options &rec) {
     ("tab-all", "tabulate everything")
     ("cyk", "bottom up evalulation codgen (default: top down unger style)")
     ("backtrace", "use backtracing for the pretty print RHS of the product")
+	("backpropagate", "generate backpropagation code for e.g. TensorFlow")
     ("kbacktrace", "backtracing for k-scoring lhs")
     ("subopt-classify", "classified dp")
     ("subopt", "generate suboptimal backtracing code (needs foo * pretty)")
@@ -192,6 +193,11 @@ static void parse_options(int argc, char **argv, Options &rec) {
     rec.subopt = true;
   if (vm.count("kbacktrack") || vm.count("kbacktrace"))
     rec.kbacktrack = true;
+  // for now, ensure each non terminal gets tabulated when backpropagation is requested
+  if (vm.count("backpropagate")) {
+	rec.tab_everything = true;
+    rec.backpropagate = true;
+  }
   if (vm.count("no-coopt"))
     rec.no_coopt = true;
   if (vm.count("no-coopt-class"))
@@ -377,6 +383,8 @@ class Main {
     }
     // apply this to identify standard functions like Min, Max, Exp etc.
     driver.ast.derive_roles();
+
+    driver.ast.backpropagate = opts.backpropagate;
   }
 
 
@@ -570,9 +578,12 @@ class Main {
     //cc.prelude(opts, driver.ast);
     cc.header(driver.ast);
     cc.increment_indent();
-    driver.ast.print_code(cc);
+    driver.ast.print_code(cc);  // forward recursion
     cc.decrement_indent();
-    instance->print_code(cc);
+    if (driver.ast.backpropagate) {
+    	cc.header_backpropagate(driver.ast);
+    }
+    instance->print_code(cc);  // algebra (product)
     Code::Gen code(driver.ast);
     cc.header_footer(driver.ast);
 
