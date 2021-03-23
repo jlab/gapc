@@ -68,11 +68,11 @@ class Cpp : public Base {
 
     void print_table_decls(const Grammar &grammar);
     void print_seq_init(const AST &ast);
-    void print_table_init(const AST &ast);
+    void print_table_init(const AST &ast, bool isBackpropagate);
     void print_zero_init(const Grammar &grammar);
     void print_most_decl(const Symbol::NT &nt);
     void print_most_init(const AST &ast);
-    void print_init_fn(const AST &ast);
+    void print_init_fn(const AST &ast, bool isBackpropagate);
 
     void print_window_inc_fn(const AST &ast);
 
@@ -95,7 +95,7 @@ class Cpp : public Base {
     void print_cyk_fn(const AST &ast);
 
  private:
-    void print_run_fn(const AST &ast);
+    void print_run_fn(const AST &ast, bool isBackpropagate);
     void print_stats_fn(const AST &ast);
 
     void print_value_pp(const AST &ast);
@@ -196,6 +196,7 @@ class Cpp : public Base {
     void print(const Type::Multi &expr);
 
     void header(const AST &ast);
+    void header_backpropagate(const AST &ast);
     void header_footer(const AST &ast);
     void footer(const AST &ast);
     void close_class();
