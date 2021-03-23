@@ -1150,6 +1150,11 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
 
   stream << t.fn_tab();
 
+//  if (backpropagate) {
+	  stream << t.fn_set_trace();
+	  stream << t.fn_normalize_trace();
+//  }
+
   //stream << "};\n" << tname << ' ' << t.name() << ";\n\n";
   dec_indent();
 
@@ -1472,12 +1477,15 @@ void Printer::Cpp::print_filter_init(const AST &ast) {
 }
 
 
-void Printer::Cpp::print_table_init(const AST &ast) {
+void Printer::Cpp::print_table_init(const AST &ast, bool isBackpropagate) {
   for (hashtable<std::string, Symbol::NT*>::const_iterator i =
        ast.grammar()->tabulated.begin(); i != ast.grammar()->tabulated.end();
        ++i) {
 	// chomp of "self." from table class name
     stream << indent() << i->second->table_decl->name() << " = " << i->second->table_decl->name().substr(5, std::string::npos) << "_t(";
+    for (std::list<std::string*>::const_iterator it = ast.input_tensors.begin(); it != ast.input_tensors.end(); ++it) {
+    	stream << **it << ", ";
+    }
     size_t a = 0;
     for (std::vector<Statement::Var_Decl*>::const_iterator j =
          ast.seq_decls.begin(); j != ast.seq_decls.end(); ++j, ++a) {
@@ -1485,7 +1493,15 @@ void Printer::Cpp::print_table_init(const AST &ast) {
           a >= i->second->track_pos() + i->second->tracks()) {
         continue;
       }
-      stream << "len(" << *(*j)->name << ")";
+      if (not isBackpropagate) {
+    	  stream << "len(";
+      }
+      stream << *(*j)->name;
+      if (not isBackpropagate) {
+          stream << ")";
+      } else {
+    	  stream << "len";
+      }
       if ((j+1) != ast.seq_decls.end()) {
     	  stream << ", ";
       }
@@ -1560,7 +1576,7 @@ void Printer::Cpp::print_most_init(const AST &ast) {
 }
 
 
-void Printer::Cpp::print_init_fn(const AST &ast) {
+void Printer::Cpp::print_init_fn(const AST &ast, bool isBackpropagate) {
 //  stream << "void init(";
 
 //  stream << "const gapc::Opts &opts)" << " {" << endl;
@@ -1571,7 +1587,7 @@ void Printer::Cpp::print_init_fn(const AST &ast) {
 //  print_buddy_init(ast);
 //  print_seq_init(ast);
 //  print_filter_init(ast);
-  print_table_init(ast);
+  print_table_init(ast, isBackpropagate);
 //  print_zero_init(*ast.grammar());
 //  print_most_init(ast);
 //  if (ast.window_mode)
@@ -1684,7 +1700,9 @@ void Printer::Cpp::header(const AST &ast) {
   stream << "class " << class_name << ":" << endl;
   inc_indent();
   stream << indent() << "def __init__(self";
-
+  for (std::list<std::string*>::const_iterator it = ast.input_tensors.begin(); it != ast.input_tensors.end(); ++it) {
+	stream << ", " << **it << ":torch.Tensor";
+  }
   for (std::vector<Statement::Var_Decl*>::const_iterator i = ast.seq_decls.begin(); i != ast.seq_decls.end(); ++i) {
     stream << ", " << *((**i).name) << ":str";
   }
@@ -1703,7 +1721,7 @@ void Printer::Cpp::header(const AST &ast) {
 //  print_filter_decls(ast);
 //  print_buddy_decls(ast);
   set_tracks(ast);
-  print_init_fn(ast);
+  print_init_fn(ast, false);
   for (std::vector<Statement::Var_Decl*>::const_iterator i = ast.seq_decls.begin(); i != ast.seq_decls.end(); ++i) {
 	  stream << indent() << "self." << *((**i).name) << " = " << *((**i).name) << endl;
   }
@@ -1716,6 +1734,23 @@ void Printer::Cpp::header(const AST &ast) {
   //stream << "END header ================" << endl;
 }
 
+void Printer::Cpp::header_backpropagate(const AST &ast) {
+	stream << "class " << class_name << "Backpropagate:" << endl;
+	  inc_indent();
+	  stream << indent() << "def __init__(self";
+	  for (std::list<std::string*>::const_iterator it = ast.input_tensors.begin(); it != ast.input_tensors.end(); ++it) {
+		stream << ", " << **it << ":torch.Tensor";
+	  }
+	  for (std::vector<Statement::Var_Decl*>::const_iterator i = ast.seq_decls.begin(); i != ast.seq_decls.end(); ++i) {
+	    stream << ", " << *((**i).name) << "len:int";
+	  }
+	  stream << "):" << endl;
+	  inc_indent();
+	  print_init_fn(ast, true);
+
+	  dec_indent();
+	  dec_indent();
+}
 
 // FIXME adjust for multi-track (> 1 track)
 void Printer::Cpp::print_openmp_cyk(const AST &ast) {
@@ -1983,11 +2018,18 @@ void Printer::Cpp::print_cyk_fn(const AST &ast) {
 }
 
 
-void Printer::Cpp::print_run_fn(const AST &ast) {
-  stream << indent() << "forward_result = ";
+void Printer::Cpp::print_run_fn(const AST &ast, bool isBackpropagate) {
+  stream << indent();
+  if (not isBackpropagate) {
+	  stream << "forward_result = ";
+  }
   //stream << "   " << *ast.grammar()->axiom->code()->return_type << " run()";
   //stream << endl << '{' << endl
-    stream << "algorithm.nt_" << *ast.grammar()->axiom_name << '(';
+  stream << "algorithm.";
+  if (isBackpropagate) {
+	  stream << "bp_";
+  }
+  stream << "nt_" << *ast.grammar()->axiom_name << '(';
 
   bool first = true;
   size_t track = 0;
@@ -2000,14 +2042,14 @@ void Printer::Cpp::print_run_fn(const AST &ast) {
         stream << ", ";
       }
       first = false;
-      stream << "inputsequence_" << track;
+      stream << "0";
     }
     if (!t.delete_right_index()) {
       if (!first) {
         stream << ", ";
       }
       first = false;
-      stream << "inputsequence_" << track;
+      stream << "len(inputsequence_" << track << ")";
     }
   }
 
@@ -2044,6 +2086,9 @@ void Printer::Cpp::header_footer(const AST &ast) {
 	inc_indent();
 	stream << indent() << "@staticmethod" << endl;
 	stream << indent() << "def forward(ctx";
+	for (std::list<std::string*>::const_iterator it = ast.input_tensors.begin(); it != ast.input_tensors.end(); ++it) {
+		stream << ", " << **it;
+	}
 	size_t track = 0;
 	for (std::vector<Statement::Var_Decl*>::const_iterator i = ast.seq_decls.begin(); i != ast.seq_decls.end(); ++i, ++track) {
 		stream << ", inputsequence_" << track << ":str";
@@ -2053,6 +2098,9 @@ void Printer::Cpp::header_footer(const AST &ast) {
 	inc_indent();
 	stream << indent() << "algorithm = " << class_name << "(";
 	track = 0;
+	for (std::list<std::string*>::const_iterator it = ast.input_tensors.begin(); it != ast.input_tensors.end(); ++it) {
+		stream << **it << ", ";
+	}
 	for (std::vector<Statement::Var_Decl*>::const_iterator i = ast.seq_decls.begin(); i != ast.seq_decls.end(); ++i, ++track) {
 		stream << "inputsequence_" << track;
 		if (next(i) != ast.seq_decls.end()) {
@@ -2060,19 +2108,85 @@ void Printer::Cpp::header_footer(const AST &ast) {
 		}
 	}
 	stream << ")" << endl;
-	print_run_fn(ast);
+	print_run_fn(ast, false);
 	//stream << indent() << "result = " << ast.grammar()->axiom << endl;
 	stream << indent() << "ctx.save_for_backward(";
-//	for (hashtable<std::string, Symbol::NT*>::iterator i = ast.grammar()->tabulated.begin(); i != ast.grammar()->tabulated.end(); ++i) {
-//		stream << i->second->table_decl->name() << ".array";
-//		if (next(i) != ast.grammar()->tabulated.end()) {
-//			stream << ", ";
-//		}
-//	}
+	for (std::list<std::string*>::const_iterator it = ast.input_tensors.begin(); it != ast.input_tensors.end(); ++it) {
+		stream << **it << ", ";
+	}
+	if (ast.backpropagate) {
+		for (hashtable<std::string, Symbol::NT*>::iterator i = ast.grammar()->tabulated.begin(); i != ast.grammar()->tabulated.end(); ++i) {
+			stream << "algorithm." << i->second->table_decl->name().substr(5, std::string::npos) << ".backtrace";
+			if (next(i) != ast.grammar()->tabulated.end()) {
+				stream << ", ";
+			}
+		}
+	}
 	stream << ")" << endl;
 	stream << indent() << "return forward_result" << endl;
 	dec_indent();
 
+	if (ast.backpropagate) {
+		stream << endl;
+		stream << indent() << "@staticmethod" << endl;
+		stream << indent() << "def backward(ctx, forward_result):" << endl;
+		inc_indent();
+
+		// T, A, ali_table_backtrace = ctx.saved_tensors
+		stream << indent();
+		for (std::list<std::string*>::const_iterator it = ast.input_tensors.begin(); it != ast.input_tensors.end(); ++it) {
+			stream << **it << ", ";
+		}
+		for (hashtable<std::string, Symbol::NT*>::iterator i = ast.grammar()->tabulated.begin(); i != ast.grammar()->tabulated.end(); ++i) {
+			stream << i->second->table_decl->name().substr(5, std::string::npos) << "_backtrace";
+			if (next(i) != ast.grammar()->tabulated.end()) {
+				stream << ", ";
+			}
+		}
+		stream << " = ctx.saved_tensors" << endl;
+
+		// algorithm = outBackpropagate(T, A, backtrace_ali_table.shape[0]-1, backtrace_ali_table.shape[1]-1)
+		stream << indent() << "# initialize backpropagate object" << endl;
+		stream << indent() << "algorithm = " << class_name << "Backpropagate(";
+		for (std::list<std::string*>::const_iterator it = ast.input_tensors.begin(); it != ast.input_tensors.end(); ++it) {
+			stream << **it << ", ";
+		}
+		size_t track = 0;
+		for (std::vector<Table>::const_iterator i = ast.grammar()->axiom->tables().begin(); i != ast.grammar()->axiom->tables().end(); ++i, ++track) {
+			stream << *ast.grammar()->axiom_name << "_table_backtrace.shape[" << track << "] - 1";
+			if (next(i) != ast.grammar()->axiom->tables().end()) {
+				stream << ", ";
+			}
+		}
+		stream << ")" << endl << endl;
+
+		// algorithm.ali_table.backtrace = backtrace_ali_table
+		stream << indent() << "# fill non-terminal backtrace tables with values stored in ctx tensors" << endl;
+		for (hashtable<std::string, Symbol::NT*>::iterator i = ast.grammar()->tabulated.begin(); i != ast.grammar()->tabulated.end(); ++i) {
+			stream << indent() << "algorithm." << i->second->table_decl->name().substr(5, std::string::npos) << ".backtrace = " << i->second->table_decl->name().substr(5, std::string::npos) << "_backtrace" << endl;
+		}
+		stream << endl;
+
+		stream << indent() << "# execute DP computation" << endl;
+		print_run_fn(ast, true);
+
+		stream << endl;
+		stream << indent() << "return ";
+		for (std::list<std::string*>::const_iterator it = ast.input_tensors.begin(); it != ast.input_tensors.end(); ++it) {
+			stream << "None, ";
+		}
+		track = 0;
+		for (std::vector<Statement::Var_Decl*>::const_iterator i = ast.seq_decls.begin(); i != ast.seq_decls.end(); ++i, ++track) {
+			stream << "None";
+			if (next(i) != ast.seq_decls.end()) {
+				stream << ", ";
+			}
+		}
+		stream << endl;
+
+
+		dec_indent();
+	}
 //  stream << " public:" << endl;
 //  print_run_fn(ast);
 //  print_stats_fn(ast);
@@ -2288,7 +2402,7 @@ void Printer::Cpp::print_subopt_fn(const AST &ast) {
   stream << "void print_subopt(std::ostream &out, " << *score_type
   << " delta = 0)"
   << endl << '{' << endl;
-  print_table_init(ast);
+  print_table_init(ast, false);
   print_zero_init(*ast.grammar());
   stream << endl << endl;
 
