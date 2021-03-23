@@ -65,6 +65,8 @@ AST::AST()
     original_product(0),
     char_type(0) {
   Type::add_predefined(types);
+  input_tensors.push_back(new std::string("T"));
+  input_tensors.push_back(new std::string("A"));
 }
 
 
@@ -619,6 +621,7 @@ void AST::duplicate_choice_functions(
     }
     a->set_fns(new_fncts);
 }
+
 
 void AST::backtrack_gen(Backtrack_Base &bt) {
   assert(instance_);
