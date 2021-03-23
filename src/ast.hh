@@ -294,6 +294,9 @@ class AST {
   Product::Base * get_backtrack_product() {
       return backtrack_product;
   }
+
+  Bool backpropagate = false;
+  std::list<std::string*> input_tensors;
 };
 
 #endif  // SRC_AST_HH_
