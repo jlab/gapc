@@ -39,6 +39,8 @@ Table_Decl::Table_Decl(
         Fn_Def *fn_get_tab,
         Fn_Def *fn_size,
 		Fn_Def *fn_init,
+		Fn_Def *fn_set_trace,
+		Fn_Def *fn_normalize_trace,
         const std::list<Statement::Var_Decl*> &ns
         )
   : Base(TABLE_DECL),
@@ -52,6 +54,8 @@ Table_Decl::Table_Decl(
   fn_get_tab_(fn_get_tab),
   fn_size_(fn_size),
   fn_init_(fn_init),
+  fn_set_trace_(fn_set_trace),
+  fn_normalize_trace_(fn_normalize_trace),
   ns_(ns) {
   // FIXME?
   pos_type_ = new ::Type::Size();
