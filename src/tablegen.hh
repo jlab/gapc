@@ -87,6 +87,8 @@ class Tablegen {
     Fn_Def *gen_get_tab();
     Fn_Def *gen_size();
     Fn_Def *gen_init(const Symbol::NT &nt);
+    Fn_Def *gen_set_trace();
+    Fn_Def *gen_normalize_trace();
 
  public:
     Tablegen();
@@ -96,7 +98,12 @@ class Tablegen {
     void offset(size_t track_pos, itr first, const itr &end);
 
     Statement::Table_Decl *create(Symbol::NT &nt,
-      std::string *name, bool cyk);
+      std::string *name, bool cyk, bool backprop, const std::list<std::string*> &input_tensors);
+
+ private:
+    bool backpropagate = false;
+ public:
+    std::list<std::string*> input_tensors;
 };
 
 

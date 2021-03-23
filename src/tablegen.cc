@@ -49,7 +49,7 @@ Tablegen::Tablegen()
   cond(0),
   dtype(0),
   cyk_(false),
-  window_mode_(false) {
+  window_mode_(false), backpropagate(false) {
   // FIXME?
   type = new ::Type::Size();
 
@@ -361,7 +361,9 @@ void Tablegen::offset(size_t track_pos, itr f, const itr &e) {
 #include "symbol.hh"
 
 Statement::Table_Decl *Tablegen::create(Symbol::NT &nt,
-    std::string *name, bool cyk) {
+    std::string *name, bool cyk, bool backprop, const std::list<std::string*> &input_tensors) {
+	this->input_tensors = input_tensors;
+	backpropagate = backprop;
   cyk_ = cyk;
   std::list<Expr::Base*> ors;
   nt.gen_ys_guards(ors);
@@ -388,9 +390,11 @@ Statement::Table_Decl *Tablegen::create(Symbol::NT &nt,
 
   Fn_Def *fn_size = gen_size();
   Fn_Def *fn_init = gen_init(nt);
+  Fn_Def *fn_set_trace = gen_set_trace();
+  Fn_Def *fn_normalize_trace = gen_normalize_trace();
 
   Statement::Table_Decl *td = new Statement::Table_Decl(nt, dtype, name, cyk,
-      fn_is_tab, fn_tab, fn_get_tab, fn_size, fn_init,
+      fn_is_tab, fn_tab, fn_get_tab, fn_size, fn_init, fn_set_trace, fn_normalize_trace,
       ns);
   td->set_fn_untab(fn_untab);
   return td;
@@ -584,33 +588,60 @@ Fn_Def *Tablegen::gen_size() {
 Fn_Def *Tablegen::gen_init(const Symbol::NT &nt) {
 	Fn_Def *f = new Fn_Def(new Type::NoneType(), new std::string("__init__"));
 	f->add_para(new Type::NoneType(), new std::string("self"));
+	for (std::list<std::string*>::iterator it = input_tensors.begin(); it != input_tensors.end(); ++it) {
+		f->add_para(new Type::Tensor(), *it);
+	}
 	f->add_paras(ns);
 
 	std::list<Statement::Base*> c;
 
-	// initiate Tensor with np.nan values
-	Expr::Fn_Call *rhs = new Expr::Fn_Call(new std::string("torch.full"));
 
 	// construct tensor access sizes
 	std::list<Expr::Base*> *offsize = new std::list<Expr::Base*>();
 	std::list<Statement::Var_Decl*>::const_iterator pit = paras.begin();
 	for (std::list<Statement::Var_Decl*>::iterator it = ns.begin(); (it != ns.end()) && (pit != paras.end()); ++it, ++pit) {
 		offsize->push_back(new Expr::Plus(new Expr::Vacc((*it)->name), new Expr::Const(1)));
+		//rhs->add_arg(new Expr::Plus(new Expr::Vacc((*it)->name), new Expr::Const(1)));
 	}
 	if ((*offsize).empty()) {
 		offsize->push_back(new Expr::Const(1));
 	}
 
-	rhs->add_arg(new Var_Acc::Array(new Var_Acc::Plain(new std::string("")), offsize), new std::string("size"));
-	rhs->add_arg(new std::string("np.nan"), new std::string("fill_value"));
+	// initiate Tensor with np.nan values
+	Expr::Fn_Call *rhs = new Expr::Fn_Call(new std::string(*(*input_tensors.begin()) + ".new"));
+	Expr::Fn_Call *rhsTab = new Expr::Fn_Call(new std::string(*(*input_tensors.begin()) + ".new"));
+	Expr::Fn_Call *rhs_backprop = new Expr::Fn_Call(new std::string(*(*input_tensors.begin()) + ".new"));
+	for (std::list<Expr::Base*>::iterator it = offsize->begin(); it != offsize->end(); ++it) {
+		rhs->add_arg(*it);
+		rhsTab->add_arg(*it);
+		rhs_backprop->add_arg(*it);
+	}
+//	rhs->add_arg(new Var_Acc::Array(new Var_Acc::Plain(new std::string("")), offsize), new std::string("size"));
+//	rhs->add_arg(new std::string("np.nan"), new std::string("fill_value"));
 	Statement::Var_Decl *tf = new Statement::Var_Decl(new Type::NoneType(), new std::string("self.array"), rhs);
 	c.push_back(tf);
+	Statement::Fn_Call *tf_init = new Statement::Fn_Call("self.array.fill_");
+	tf_init->add_arg(new std::string("np.nan"));
+	c.push_back(tf_init);
 
-	Expr::Fn_Call *rhsTab = new Expr::Fn_Call(new std::string("torch.full"));
-	rhsTab->add_arg(new Var_Acc::Array(new Var_Acc::Plain(new std::string("")), offsize), new std::string("size"));
-	rhsTab->add_arg(new std::string("False"), new std::string("fill_value"));
+//	rhsTab->add_arg(new Var_Acc::Array(new Var_Acc::Plain(new std::string("")), offsize), new std::string("size"));
+//	rhsTab->add_arg(new std::string("False"), new std::string("fill_value"));
 	Statement::Var_Decl *tfTab = new Statement::Var_Decl(new Type::NoneType(), new std::string("self.tabulated"), rhsTab);
 	c.push_back(tfTab);
+	Statement::Fn_Call *tfTab_init = new Statement::Fn_Call("self.tabulated.fill_");
+	tfTab_init->add_arg(new std::string("False"));
+	c.push_back(tfTab_init);
+
+	rhs_backprop->add_arg(new Expr::Const(int(nt.alts.size())));
+	Statement::Var_Decl *tf_backprop = new Statement::Var_Decl(new Type::NoneType(), new std::string("self.backtrace"), rhs_backprop);
+	Statement::Fn_Call *tf_backprop_init = new Statement::Fn_Call("self.backtrace.fill_");
+	tf_backprop_init->add_arg(new std::string("np.nan"));
+
+	if (backpropagate) {
+		// add initialization of a backtrace tensor that has same dimensions as normal table, but one more with as many slots as alternatives in NT rule
+		c.push_back(tf_backprop);
+		c.push_back(tf_backprop_init);
+	}
 
 	pit = paras.begin();
 	unsigned int track = 0;
@@ -633,3 +664,109 @@ Fn_Def *Tablegen::gen_init(const Symbol::NT &nt) {
 	f->set_statements(c);
 	return f;
 }
+
+Fn_Def *Tablegen::gen_set_trace() {
+  Fn_Def *f = new Fn_Def(new Type::NoneType(), new std::string("trace"));
+  //paras.push_front(new Statement::Var_Decl(new Type::NoneType(), new std::string("self")));
+  f->add_para(new Type::NoneType(), new std::string("self"));
+  f->add_paras(paras);
+  // FIXME const & in dtype -> see cpp.cc in_fn_head
+  f->add_para(new Type::Size(), new std::string("alternative"));
+  f->add_para(dtype, new std::string("e"));
+
+
+  std::list<Statement::Base*> c;
+//
+//  c.insert(c.end(), code.begin(), code.end());
+//
+//  Statement::Fn_Call *ass = new Statement::Fn_Call(Statement::Fn_Call::ASSERT);
+//  ass->add_arg(new Expr::Const(0));
+//
+//  if (cond) {
+//    Statement::If *i = new Statement::If(cond, ass);
+//    c.push_back(i);
+//  }
+//
+//  if (!cyk_) {
+//    Statement::Fn_Call *a = new Statement::Fn_Call(Statement::Fn_Call::ASSERT);
+//    Expr::Fn_Call *e = new Expr::Fn_Call(Expr::Fn_Call::IS_TABULATED);
+//    for (std::list<Statement::Var_Decl*>::iterator i = paras.begin();
+//         i != paras.end(); ++i) {
+//      e->add_arg(**i);
+//    }
+//    a->add_arg(new Expr::Not(e));
+//    c.push_back(a);
+//  }
+//
+//  c.insert(c.end(), window_code.begin(), window_code.end());
+//
+//
+//  Statement::Fn_Call *a = new Statement::Fn_Call(Statement::Fn_Call::ASSERT);
+//  a->add_arg(new Expr::Less(off->front(), new Expr::Fn_Call(new std::string("size"))));
+//  c.push_back(a);
+  std::list<Expr::Base*> *access = new std::list<Expr::Base*>();
+  for (std::list<Statement::Var_Decl*>::iterator it = paras.begin(); it != paras.end(); ++it) {
+  	access->push_back(new Expr::Vacc((*it)->name));
+  }
+  if ((*access).empty()) {
+	access->push_back(new Expr::Const(0));
+  }
+  access->push_back(new Expr::Vacc(new std::string("alternative")));
+
+  Statement::Var_Assign *x = new Statement::Var_Assign(
+      new Var_Acc::Array(new Var_Acc::Plain(new std::string("self.backtrace")), access),
+      new Expr::Vacc(new std::string("e")));
+  c.push_back(x);
+
+//  if (!cyk_) {
+//    Statement::Var_Assign *y = new Statement::Var_Assign(
+//        new Var_Acc::Array(
+//          new Var_Acc::Plain(new std::string("tabulated")), off),
+//        new Expr::Const(new Const::Bool(true)));
+//    c.push_back(y);
+//  }
+
+  f->set_statements(c);
+  return f;
+}
+
+Fn_Def *Tablegen::gen_normalize_trace() {
+  Fn_Def *f = new Fn_Def(new Type::NoneType(), new std::string("normalize_trace"));
+  //paras.push_front(new Statement::Var_Decl(new Type::NoneType(), new std::string("self")));
+  f->add_para(new Type::NoneType(), new std::string("self"));
+  f->add_paras(paras);
+  f->add_para(dtype, new std::string("denominator"));
+
+
+  std::list<Statement::Base*> c;
+
+  // get all alternatives for sub-problem decomposition:
+  // alternatives = self.backtrace[t_0_i, t_1_i]
+  std::list<Expr::Base*> *access = new std::list<Expr::Base*>();
+  for (std::list<Statement::Var_Decl*>::iterator it = paras.begin(); it != paras.end(); ++it) {
+  	access->push_back(new Expr::Vacc((*it)->name));
+  }
+  if ((*access).empty()) {
+	access->push_back(new Expr::Const(0));
+  }
+  Statement::Var_Decl *alternatives = new Statement::Var_Decl(new Type::NoneType(), new std::string("alternatives"), new Expr::Vacc(new Var_Acc::Array(new Var_Acc::Plain(new std::string("self.backtrace")), access)));
+  c.push_back(alternatives);
+
+  // convert np.nan into 0:
+  // alternatives[alternatives != alternatives] = 0
+  std::list<Expr::Base*> *notme = new std::list<Expr::Base*>();
+  notme->push_back(new Expr::Not_Eq(new Expr::Vacc(alternatives->name), new Expr::Vacc(alternatives->name)));
+  Statement::Var_Assign *x = new Statement::Var_Assign(new Var_Acc::Array(new Var_Acc::Plain(alternatives->name), notme), new Expr::Vacc(new std::string("0")));
+  c.push_back(x);
+
+  // do the actual normalization into probabilities:
+  // self.backtrace[t_0_i, t_1_i] = alternatives / denominator
+  Statement::Var_Assign *x2 = new Statement::Var_Assign(
+      new Var_Acc::Array(new Var_Acc::Plain(new std::string("self.backtrace")), access),
+      new Expr::Div(new Expr::Vacc(alternatives->name), new Expr::Vacc(new std::string("denominator"))));
+  c.push_back(x2);
+
+  f->set_statements(c);
+  return f;
+}
+
