@@ -850,7 +850,7 @@ void Symbol::NT::add_specialised_arguments(Statement::Fn_Call *fn,
     }
 }
 
-void Symbol::NT::set_ret_decl_rhs(Code::Mode mode) {
+void Symbol::NT::set_ret_decl_rhs(Code::Mode mode, bool backpropagate) {
   ret_decl = new Statement::Var_Decl(data_type_before_eval(), new std::string("answers"), new Expr::Vacc(new std::string("np.nan")));
   post_alt_stmts.clear();
 
@@ -861,7 +861,8 @@ void Symbol::NT::set_ret_decl_rhs(Code::Mode mode) {
     return;
   }
 
-  for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
+  unsigned int altpos = 0;
+  for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i, ++altpos) {
     if (!(*i)->data_type()->simple()->is(::Type::LIST)) {
       Expr::Fn_Call *e = new Expr::Fn_Call(Expr::Fn_Call::NOT_EMPTY);
       e->add_arg(*(*i)->ret_decl);
@@ -904,6 +905,22 @@ void Symbol::NT::set_ret_decl_rhs(Code::Mode mode) {
            cond->then.push_back(fn);
       }
 
+      if (backpropagate) {
+    	  Statement::Fn_Call *fn_trace = new Statement::Fn_Call("self." + *name + "_table.trace");
+          std::vector<Expr::Base*>::iterator j = this->left_indices.begin();
+    	  std::vector<Expr::Base*>::iterator k = this->right_indices.begin();
+    	  for (std::vector<Table>::const_iterator i = this->tables().begin(); i != this->tables().end(); ++i, ++j, ++k) {
+			if (!(*i).delete_left_index()) {
+				fn_trace->add_arg((*j)->vacc());
+			}
+			if (!(*i).delete_right_index()) {
+				fn_trace->add_arg((*k)->vacc());
+			}
+    	  }
+    	  fn_trace->add_arg(new Expr::Const(int(altpos)));
+    	  fn_trace->add_arg(*(*i)->ret_decl);
+    	  post_alt_stmts.push_back(fn_trace);
+      }
       post_alt_stmts.push_back(cond);
     } else {
       assert(ret_decl->type->simple()->is(::Type::LIST));
@@ -983,6 +1000,15 @@ void Symbol::NT::init_ret_stmts(Code::Mode mode) {
 //    erase->add_arg(*ret_decl);
 //    ret_stmts.push_back(erase);
     ret = new Expr::Vacc(*v);
+
+    // execute normalization for backtracing table when doing backpropagation
+    if (true) {
+  	  //std::string *myname = new std::string("self." + *(this->Base::name) + "_table.normalize");
+  	  Statement::Fn_Call *fn_normalize = new Statement::Fn_Call("normalize");
+  	  fn_normalize->add(*table_decl);
+  	  fn_normalize->add_arg(*v);
+    	  ret_stmts.push_back(fn_normalize);
+    }
   } else {
     ret = new Expr::Vacc(*ret_decl);
   }
@@ -999,6 +1025,7 @@ void Symbol::NT::init_ret_stmts(Code::Mode mode) {
 
     r = new Statement::Return(get_tab);
   }
+
   if (mode == Code::Mode::CYK && tabulated)
     r = new Statement::Return();
   if (mode == Code::Mode::BACKTRACK) {
@@ -1052,7 +1079,7 @@ void Symbol::NT::init_table_decl(const AST &ast) {
 
   Tablegen tg;
   tg.set_window_mode(ast.window_mode);
-  table_decl = tg.create(*this, t, ast.code_mode() == Code::Mode::CYK);
+  table_decl = tg.create(*this, t, ast.code_mode() == Code::Mode::CYK, ast.backpropagate, ast.input_tensors);
 }
 
 #include <boost/algorithm/string/replace.hpp>
@@ -1190,7 +1217,7 @@ void Symbol::NT::codegen(AST &ast) {
     score_code = code_.back();
   }
   code_.clear();
-  set_ret_decl_rhs(ast.code_mode());
+  set_ret_decl_rhs(ast.code_mode(), ast.backpropagate);
   init_table_decl(ast);
   init_zero_decl();
   ::Type::Base *dt = datatype;
@@ -1255,6 +1282,10 @@ void Symbol::NT::codegen(AST &ast) {
           mark->add_arg(*marker);
 
           stmts.push_back(mark);
+      }
+      if (ast.backpropagate) {
+    	  ++j;
+    	  stmts.push_back(*j);
       }
     }
   }
@@ -1322,7 +1353,7 @@ void Symbol::NT::eliminate_list_ass() {
         }
         // for python: we cannot declare a variable with a type but no value, thus the "answers" variable need to be np.nan
         // and therefore we add an exception to the statement removal here
-		if ((*decl->rhs->vacc()->name()).compare("np.nan") == 0) {
+        if (((*decl->name).compare("answers") == 0) && (*decl->rhs->vacc()->name()).compare("np.nan") == 0) {
 			++i;
 			continue;
 		}
