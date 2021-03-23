@@ -45,6 +45,7 @@ struct Options {
       approx_table_design(false), tab_everything(false),
       cyk(false), backtrack(false), sample(false), subopt(false),
       kbacktrack(false),
+	  backpropagate(false),
       no_coopt(false),
       no_coopt_class(false),
       classified(false),
@@ -90,6 +91,8 @@ struct Options {
   bool sample;
   bool subopt;
   bool kbacktrack;
+  // Flag to indicate of backpropagation code ala Tensorflow shall be generated. Default is false.
+  bool backpropagate;
   std::vector<std::string> tab_list;
   bool no_coopt;
   bool no_coopt_class;
