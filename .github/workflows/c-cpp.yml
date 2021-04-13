@@ -23,6 +23,8 @@ jobs:
       run: cabal update
     - name: add random Haskell lib
       run: cabal install --lib random
+    
+    - uses: actions/checkout@v2
     - name: debugging
       run: cd testdata/paraltest && mkdir temp && cd temp && ghc --make ../AdpfMain.lhs -i.. -hidir ./GHC -odir ./GHC -o AdpfMain
     #- name: Checkout truth
