@@ -15,17 +15,17 @@ jobs:
       run: sudo apt-get install flex bison make libboost-all-dev libgsl-dev ghc python3 python3-pip
     - uses: actions/checkout@v2
     - name: configure
-      run: ./configure --prefix /gapc
+      run: ./configure --prefix ./
     - name: make
       run: make -j 100
-    - name: make install
-      run: sudo make install
-    - name: upload installation
+    #- name: make install
+    #  run: sudo make install
+    - name: upload compile result
       uses: actions/upload-artifact@v2
       with:
-          name: prefix
+          name: gapc
           path: |
-            /gapc
+            ./
 
   unit-tests:
     needs: compile
@@ -33,10 +33,10 @@ jobs:
     
     steps:
     - uses: actions/checkout@v2
-    - name: download installation
+    - name: download compile result
       uses: actions/download-artifact@v2
       with:
-          name: prefix
+          name: gapc
     - name: execute test
       run: make test-unit
      
