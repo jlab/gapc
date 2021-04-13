@@ -29,18 +29,17 @@ jobs:
     - name: configure
       run: ./configure --prefix $GITHUB_WORKSPACE
     - name: make
-      run: make -j 100
+      run: make
     - name: make install
       run: sudo make install
       
     - name: test-mod
-      run: make test-mod TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu
+      run: /usr/bin/time -v make test-mod TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu && df / -h
     - name: test-regress
-      run: make test-regress TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth
+      run: /usr/bin/time -v make test-regress TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth && df / -h
     - name: test-ambiguity
-      run: make test-ambiguity TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth    
+      run: /usr/bin/time -v make test-ambiguity TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth && df / -h
     - name: test-unit
-      run: make test-unit
+      run: /usr/bin/time -v make test-unit && df / -h
     - name: test-paral
-      run: make test-paral
-    
+      run: /usr/bin/time -v make test-paral && df / -h
