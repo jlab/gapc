@@ -55,6 +55,8 @@ jobs:
       run: sudo apt-get install make libboost-all-dev libgsl-dev ghc
     - name: Install ghc and cabal
       run: sudo apt-get install cabal-install
+    - name: update cabal
+      run: cabal update
     - name: add random Haskell lib
       run: cabal install random
     #- name: Checkout truth
