@@ -53,8 +53,10 @@ jobs:
     steps:
     - name: Install dependencies
       run: sudo apt-get install make libboost-all-dev libgsl-dev ghc
-    - name: Install ghc
-      run: sudo apt-get install cabal-install random
+    - name: Install ghc and cabal
+      run: sudo apt-get install cabal-install
+    - name: add random Haskell lib
+      run: cabal install random
     #- name: Checkout truth
     #  run: git clone https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE
     - name: download compile result
