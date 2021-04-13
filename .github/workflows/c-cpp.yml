@@ -68,4 +68,69 @@ jobs:
     - name: execute test
       run: make test-paral
      
+  mod-tests:
+    needs: compile
+    runs-on: ubuntu-latest
     
+    steps:
+    - name: Install dependencies
+      run: sudo apt-get install make libboost-all-dev libgsl-dev ghc
+    - name: Install ghc and cabal
+      run: sudo apt-get install cabal-install
+    - name: update cabal
+      run: cabal update
+    - name: add random Haskell lib
+      run: cabal install random
+    - name: Checkout truth
+      run: git clone https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE
+    - name: download compile result
+      uses: actions/download-artifact@v2
+      with:
+          name: gapc
+    - name: execute test
+      run: make test-mod TRUTH_DIR=$GITHUB_WORKSPACE/gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu
+ 
+  regress-test:
+    needs: compile
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Install dependencies
+      run: sudo apt-get install make libboost-all-dev libgsl-dev ghc
+    - name: Install ghc and cabal
+      run: sudo apt-get install cabal-install
+    - name: update cabal
+      run: cabal update
+    - name: add random Haskell lib
+      run: cabal install random
+    - name: Checkout truth
+      run: git clone https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE
+    - name: download compile result
+      uses: actions/download-artifact@v2
+      with:
+          name: gapc
+    - name: execute test
+      run: make test-regress TRUTH_DIR=$GITHUB_WORKSPACE/gapc-test-suite/Truth
+      
+  ambiguity-test:
+    needs: compile
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Install dependencies
+      run: sudo apt-get install make libboost-all-dev libgsl-dev ghc
+    - name: Install ghc and cabal
+      run: sudo apt-get install cabal-install
+    - name: update cabal
+      run: cabal update
+    - name: add random Haskell lib
+      run: cabal install random
+    - name: Checkout truth
+      run: git clone https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE
+    - name: download compile result
+      uses: actions/download-artifact@v2
+      with:
+          name: gapc
+    - name: execute test
+      run: make test-ambiguity TRUTH_DIR=$GITHUB_WORKSPACE/gapc-test-suite/Truth    
+ 
