@@ -26,6 +26,11 @@ jobs:
           name: gapc
           path: |
             ./
+            !.git/**
+            !.github/**
+            !debian/**
+            !docker/**
+            !documentation/**
 
   unit-tests:
     needs: compile
