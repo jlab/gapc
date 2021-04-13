@@ -15,7 +15,7 @@ jobs:
     - name: update cabal
       run: cabal update
     - name: add random Haskell lib
-      run: cabal install random
+      run: cabal install --lib random
     - name: Checkout truth
       run: git clone https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE
       
