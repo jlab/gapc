@@ -7,130 +7,34 @@ on:
     branches: [ master ]
 
 jobs:
-  compile:
+  compile_and_test:
     runs-on: ubuntu-latest
-
     steps:
     - name: Install dependencies
-      run: sudo apt-get install flex bison make libboost-all-dev libgsl-dev ghc python3 python3-pip
+      run: sudo apt-get install flex bison make libboost-all-dev libgsl-dev ghc python3 python3-pip cabal-install
+    - name: update cabal
+      run: cabal update
+    - name: add random Haskell lib
+      run: cabal install random
+    - name: Checkout truth
+      run: git clone https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE
+      
     - uses: actions/checkout@v2
     - name: configure
       run: ./configure --prefix $GITHUB_WORKSPACE
     - name: make
       run: make -j 100
-    #- name: make install
-    #  run: sudo make install
-    - name: upload compile result
-      uses: actions/upload-artifact@v2
-      with:
-          name: gapc
-          path: |
-            ./
-            !.git/**
-            !.github/**
-            !debian/**
-            !docker/**
-            !documentation/**
-
-  unit-tests:
-    needs: compile
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Install dependencies
-      run: sudo apt-get install make libboost-all-dev libgsl-dev
-    - name: download compile result
-      uses: actions/download-artifact@v2
-      with:
-          name: gapc
-    - name: execute test
-      run: make test-unit
-     
-  paral-tests:
-    needs: compile
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Install dependencies
-      run: sudo apt-get install make libboost-all-dev libgsl-dev ghc
-    - name: Install ghc and cabal
-      run: sudo apt-get install cabal-install
-    - name: update cabal
-      run: cabal update
-    - name: add random Haskell lib
-      run: cabal install random
-    #- name: Checkout truth
-    #  run: git clone https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE
-    - name: download compile result
-      uses: actions/download-artifact@v2
-      with:
-          name: gapc
-    - name: execute test
-      run: make test-paral
-     
-  mod-tests:
-    needs: compile
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Install dependencies
-      run: sudo apt-get install make libboost-all-dev libgsl-dev ghc
-    - name: Install ghc and cabal
-      run: sudo apt-get install cabal-install
-    - name: update cabal
-      run: cabal update
-    - name: add random Haskell lib
-      run: cabal install random
-    - name: Checkout truth
-      run: git clone https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE
-    - name: download compile result
-      uses: actions/download-artifact@v2
-      with:
-          name: gapc
-    - name: execute test
-      run: make test-mod TRUTH_DIR=$GITHUB_WORKSPACE/gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu
- 
-  regress-test:
-    needs: compile
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Install dependencies
-      run: sudo apt-get install make libboost-all-dev libgsl-dev ghc
-    - name: Install ghc and cabal
-      run: sudo apt-get install cabal-install
-    - name: update cabal
-      run: cabal update
-    - name: add random Haskell lib
-      run: cabal install random
-    - name: Checkout truth
-      run: git clone https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE
-    - name: download compile result
-      uses: actions/download-artifact@v2
-      with:
-          name: gapc
-    - name: execute test
-      run: make test-regress TRUTH_DIR=$GITHUB_WORKSPACE/gapc-test-suite/Truth
+    - name: make install
+      run: sudo make install
       
-  ambiguity-test:
-    needs: compile
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Install dependencies
-      run: sudo apt-get install make libboost-all-dev libgsl-dev ghc
-    - name: Install ghc and cabal
-      run: sudo apt-get install cabal-install
-    - name: update cabal
-      run: cabal update
-    - name: add random Haskell lib
-      run: cabal install random
-    - name: Checkout truth
-      run: git clone https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE
-    - name: download compile result
-      uses: actions/download-artifact@v2
-      with:
-          name: gapc
-    - name: execute test
+    - name: test-unit
+      run: make test-unit
+    - name: test-paral
+      run: make test-paral
+    - name: test-mod
+      run: make test-mod TRUTH_DIR=$GITHUB_WORKSPACE/gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu
+    - name: test-regress
+      run: make test-regress TRUTH_DIR=$GITHUB_WORKSPACE/gapc-test-suite/Truth
+    - name: test-ambiguity
       run: make test-ambiguity TRUTH_DIR=$GITHUB_WORKSPACE/gapc-test-suite/Truth    
  
