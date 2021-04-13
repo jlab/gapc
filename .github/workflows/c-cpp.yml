@@ -38,7 +38,7 @@ jobs:
     
     steps:
     - name: Install dependencies
-      run: sudo apt-get install make libboost-all-dev libgsl-dev ghc python3 python3-pip
+      run: sudo apt-get install make libboost-all-dev libgsl-dev
     - name: download compile result
       uses: actions/download-artifact@v2
       with:
@@ -52,7 +52,7 @@ jobs:
     
     steps:
     - name: Install dependencies
-      run: sudo apt-get install make libboost-all-dev libgsl-dev ghc python3 python3-pip
+      run: sudo apt-get install make libboost-all-dev libgsl-dev ghc
     - name: Install ghc
       run: sudo apt-get install cabal-install random
     #- name: Checkout truth
