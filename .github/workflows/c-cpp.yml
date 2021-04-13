@@ -11,8 +11,8 @@ jobs:
     strategy:
       matrix:
         # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
-        #os: [ubuntu-20.04, ubuntu-18.04, ubuntu-16.04]
-        os: [ubuntu-16.04]
+        os: [ubuntu-20.04, ubuntu-18.04, ubuntu-16.04]
+        #os: [ubuntu-16.04]
     runs-on: ${{ matrix.os }}
     steps:
     #- name: debug env
@@ -24,28 +24,27 @@ jobs:
     #  run: cabal update
     #- name: add random Haskell lib
     #  run: cabal install --lib random
-    
-    - uses: actions/checkout@v2
-    - name: debugging
-      run: cd testdata/paraltest && mkdir temp && cd temp && ghc --make ../AdpfMain.lhs -i.. -hidir ./GHC -odir ./GHC -o AdpfMain
-    #- name: Checkout truth
-    #  run: git clone https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE/../gapc-test-suite
-    #  
     #- uses: actions/checkout@v2
-    #- name: configure
-    #  run: ./configure --prefix $GITHUB_WORKSPACE
-    #- name: make
-    #  run: make
-    #- name: make install
-    #  run: sudo make install
-    #  
-    #- name: test-mod
-    #  run: /usr/bin/time -v make test-mod TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu && df / -h
-    #- name: test-regress
-    #  run: /usr/bin/time -v make test-regress TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth && df / -h
-    #- name: test-ambiguity
-    #  run: /usr/bin/time -v make test-ambiguity TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth && df / -h
-    #- name: test-unit
-    #  run: /usr/bin/time -v make test-unit && df / -h
-    #- name: test-paral
-    #  run: /usr/bin/time -v make test-paral && df / -h
+    #- name: debugging
+    #  run: cd testdata/paraltest && mkdir temp && cd temp && ghc --make ../AdpfMain.lhs -i.. -hidir ./GHC -odir ./GHC -o AdpfMain
+    - name: Checkout truth
+      run: git clone https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE/../gapc-test-suite
+      
+    - uses: actions/checkout@v2
+    - name: configure
+      run: ./configure --prefix $GITHUB_WORKSPACE
+    - name: make
+      run: make
+    - name: make install
+      run: sudo make install
+      
+    - name: test-mod
+      run: /usr/bin/time -v make test-mod TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu && df / -h
+    - name: test-regress
+      run: /usr/bin/time -v make test-regress TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth && df / -h
+    - name: test-ambiguity
+      run: /usr/bin/time -v make test-ambiguity TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth && df / -h
+    - name: test-unit
+      run: /usr/bin/time -v make test-unit && df / -h
+    - name: test-paral
+      run: /usr/bin/time -v make test-paral && df / -h
