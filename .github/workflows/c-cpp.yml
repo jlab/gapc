@@ -116,6 +116,7 @@ jobs:
         ls -laR $GITHUB_WORKSPACE/share/
         echo ">$GITHUB_WORKSPACE<"
         pwd
+        ls -laR $GITHUB_WORKSPACE/../fold-grammars
     - name: execute tests
       run: |
         cd $GITHUB_WORKSPACE/../fold-grammars
