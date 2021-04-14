@@ -105,12 +105,15 @@ jobs:
     - name: clone fold-grammars
       run: git clone https://github.com/jlab/fold-grammars.git $GITHUB_WORKSPACE/../fold-grammars
     - name: configure fold-grammars
-      run: cd $GITHUB_WORKSPACE/../fold-grammars && sed -i "s#bgapDir = '/vol/gapc/'#bgapDir = '\$GITHUB_WORKSPACE'#" Misc/Applications/lib/foldGrammars/Settings.pm && sed -i "s#rootDir = '/vol/fold-grammars/src/'#rootDir = '`pwd`/'#" Misc/Applications/lib/foldGrammars/Settings.pm
+      run: |
+        cd $GITHUB_WORKSPACE/../fold-grammars
+        sed -i "s#bgapDir = '/vol/gapc/'#bgapDir = '$GITHUB_WORKSPACE'#" Misc/Applications/lib/foldGrammars/Settings.pm
+        sed -i "s#rootDir = '/vol/fold-grammars/src/'#rootDir = '`pwd`/'#" Misc/Applications/lib/foldGrammars/Settings.pm
     - name: debug
       run: |
         cat $GITHUB_WORKSPACE/../fold-grammars/Misc/Applications/lib/foldGrammars/Settings.pm
-        ls -la $GITHUB_WORKSPACE/bin/
-        ls -la $GITHUB_WORKSPACE/share/
+        ls -lar $GITHUB_WORKSPACE/bin/
+        ls -lar $GITHUB_WORKSPACE/share/
     - name: execute tests
       run: |
         cd $GITHUB_WORKSPACE/../fold-grammars
