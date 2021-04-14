@@ -85,7 +85,7 @@ jobs:
 #    - name: test-paral
 #      run: make test-paral
   
-  fold-grammars
+  fold-grammars:
     strategy:
       matrix:
         task: [default, shapes, pkiss]
