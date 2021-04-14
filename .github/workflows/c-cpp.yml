@@ -113,8 +113,6 @@ jobs:
       run: |
         echo $PATH
         cat $GITHUB_WORKSPACE/../fold-grammars/Misc/Applications/lib/foldGrammars/Settings.pm
-        ls -laR $GITHUB_WORKSPACE/bin/
-        ls -laR $GITHUB_WORKSPACE/share/
         echo ">$GITHUB_WORKSPACE<"
         pwd
         ls -laR $GITHUB_WORKSPACE/../fold-grammars
