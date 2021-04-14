@@ -88,7 +88,8 @@ jobs:
   fold-grammars:
     strategy:
       matrix:
-        task: [default, shapes, pkiss]
+        #task: [default, shapes, pkiss]
+        task: [default]
     runs-on: ubuntu-latest
     steps:
     # install gapcs
@@ -118,11 +119,17 @@ jobs:
         ls -laR $GITHUB_WORKSPACE/../fold-grammars
         which -a gapc
     - name: execute tests
+      #run: |
+      #  cd $GITHUB_WORKSPACE/../fold-grammars
+      #  if [[ "${{ matrix.task }}" == "default" ]]; then pushd .; cd Misc/Test-Suite/GeorgStyle/; bash run.sh ../Truth; cd ../StefanStyle/; python test_cofold.py; popd; fi
+      #  pushd .
+      #  cd Misc/Test-Suite/StefanStyle/
+      #  perl runTests.pl 2 ${{ matrix.task }}
+      #  popd
       run: |
         cd $GITHUB_WORKSPACE/../fold-grammars
-        if [[ "${{ matrix.task }}" == "default" ]]; then pushd .; cd Misc/Test-Suite/GeorgStyle/; bash run.sh ../Truth; cd ../StefanStyle/; python test_cofold.py; popd; fi
         pushd .
-        cd Misc/Test-Suite/StefanStyle/
-        perl runTests.pl 2 ${{ matrix.task }}
-        popd
+        cd Misc/Test-Suite/GeorgStyle/
+        cd ../StefanStyle/
+        python test_cofold.py
 
