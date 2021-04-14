@@ -118,6 +118,7 @@ jobs:
         echo ">$GITHUB_WORKSPACE<"
         pwd
         ls -laR $GITHUB_WORKSPACE/../fold-grammars
+        which -a gapc
     - name: execute tests
       run: |
         cd $GITHUB_WORKSPACE/../fold-grammars
