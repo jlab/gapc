@@ -107,13 +107,14 @@ jobs:
     - name: configure fold-grammars
       run: |
         cd $GITHUB_WORKSPACE/../fold-grammars
-        sed -i "s#bgapDir = '/vol/gapc/'#bgapDir = '$GITHUB_WORKSPACE'#" Misc/Applications/lib/foldGrammars/Settings.pm
+        sed -i "s#bgapDir = '/vol/gapc/'#bgapDir = '$GITHUB_WORKSPACE../'#" Misc/Applications/lib/foldGrammars/Settings.pm
         sed -i "s#rootDir = '/vol/fold-grammars/src/'#rootDir = '`pwd`/'#" Misc/Applications/lib/foldGrammars/Settings.pm
     - name: debug
       run: |
+        which -a gapc
         cat $GITHUB_WORKSPACE/../fold-grammars/Misc/Applications/lib/foldGrammars/Settings.pm
-        ls -lar $GITHUB_WORKSPACE/bin/
-        ls -lar $GITHUB_WORKSPACE/share/
+        ls -laR $GITHUB_WORKSPACE/bin/
+        ls -laR $GITHUB_WORKSPACE/share/
     - name: execute tests
       run: |
         cd $GITHUB_WORKSPACE/../fold-grammars
