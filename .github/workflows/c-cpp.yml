@@ -111,6 +111,7 @@ jobs:
         sed -i "s#rootDir = '/vol/fold-grammars/src/'#rootDir = '`pwd`/'#" Misc/Applications/lib/foldGrammars/Settings.pm
     - name: debug
       run: |
+        echo $PATH
         cat $GITHUB_WORKSPACE/../fold-grammars/Misc/Applications/lib/foldGrammars/Settings.pm
         ls -laR $GITHUB_WORKSPACE/bin/
         ls -laR $GITHUB_WORKSPACE/share/
