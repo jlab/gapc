@@ -87,7 +87,7 @@ EXEC_OBJ = $(filter testdata/modtest/%.o testdata/test/%.o ,$(OFILES)) src/gapc.
 	   $(UNITTEST_CXX:.cc=.o)
 MAIN_OBJ = $(filter-out $(EXEC_OBJ),$(OFILES))
 
-LIBRNA_SRC = librna/rnalib.c librna/vienna/energy_par.c librna/vienna/fold_vars.c librna/vienna/read_epars.c librna/vienna/read_epars.c librna/vienna/params.c librna/vienna/utils.c
+LIBRNA_SRC = librna/rnalib.c librna/ViennaRNA/params/default.c librna/ViennaRNA/params/io.c librna/ViennaRNA/model.c librna/ViennaRNA/utils/utils.c librna/ViennaRNA/io/io_utils.c librna/ViennaRNA/params/params.c librna/ViennaRNA/alphabet.c librna/ViennaRNA/utils/string_utils.c
 LIBRNA_OBJ = $(LIBRNA_SRC:.c=.o)
 LIBRNA_PIO = $(LIBRNA_SRC:.c=.pio)
 
@@ -160,10 +160,10 @@ depend:
 ###############################################################################
 
 %.pio: %.c
-	$(CC) -c -o $@ $(PIC_FLAGS) $(CPPFLAGS) $(CFLAGS) $<
+	$(CC) -c -o $@ $(PIC_FLAGS) $(CPPFLAGS) $(CFLAGS) -I librna $<
 
 %.fpio: %.c
-	$(CC) -c -o $@ $(PIC_FLAGS) $(CPPFLAGS) $(CFLAGS) $(FAST_MATH) $<
+	$(CC) -c -o $@ $(PIC_FLAGS) $(CPPFLAGS) $(CFLAGS) $(FAST_MATH) -I librna $<
 
 
 librna/librna$(SO_SUFFIX): LDLIBS = -lm
