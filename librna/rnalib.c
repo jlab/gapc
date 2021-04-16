@@ -17,18 +17,18 @@
 
 #include "rnalib.h"
 
-#include "vienna/data_structures.h"
+#include "ViennaRNA/datastructures/basic.h"
 static paramT  *P = 0;
 // if nonzero use logarithmic ML energy in energy_of_struct
 // used in vienna/fold_vars.c, set_model_details()
-int logML     = 0;
+//int logML     = 0;
 
-#include "vienna/energy_par.h"
-#include "vienna/energy_const.h"
+#include "ViennaRNA/params/default.h"
+#include "ViennaRNA/params/constants.h"
 
-#include "vienna/params.h"
-#include "vienna/read_epars.h"
-#include "vienna/fold_vars.h"
+#include "ViennaRNA/params/basic.h"
+#include "ViennaRNA/params/io.h"
+#include "ViennaRNA/fold_vars.h"
 
 //#define PUBLIC const
 //#include "energy_par.c"
