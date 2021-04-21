@@ -55,6 +55,37 @@ void librna_read_param_file(const char *filename)
   P = get_scaled_parameters(temperature, md);
 }
 
+// test if dangling an unpaired base from 5' onto a stack AND another from 3' onto the stack results in the same energy as
+// forming an exterior mismatch. This was the case for Turner1999, but not for Turner2004.
+// Unfortunately, macrostate depends on this assumption
+// minimal counter example is "CCcCCaaaGGCCaaaGGuuGG" with structure "((.((...))((...))..))"
+bool test_macrostate_mme_assumption() {
+	// enum bp_t { N_BP, CG_BP, GC_BP, GU_BP, UG_BP, AU_BP, UA_BP, NO_BP };
+	for (int closingBP = CG_BP; closingBP != UA_BP; closingBP++ ) {
+		// enum base_t {N_BASE, A_BASE, C_BASE, G_BASE, U_BASE, GAP_BASE, SEPARATOR_BASE }
+		for (int lbase = A_BASE; lbase != U_BASE; lbase++) {
+			for (int rbase = A_BASE; rbase != U_BASE; rbase++) {
+				if (abs(P->mismatchExt[closingBP][lbase][rbase] - (P->dangle5[closingBP][lbase] + P->dangle3[closingBP][rbase])) > 2) {
+					fprintf(stderr, "WARNING\n"
+						"The macrostate grammar has two aims:\n"
+						"1) enumerating all dot bracket candidates (but no more) and\n"
+						"2) compute proper energy contributions for dangling ends.\n"
+						"The design was based on the assumption that dangling an unpaired base directly\n"
+						"left of a stem onto this stem (dl_energy) and - at the same time - dangling\n"
+						"another unpaired base directly right of the stem onto the very same stem\n"
+						"(dr_energy) results in the same energy contribution as forming an external\n"
+						"mismatch of both unpaired bases onto the stem (ext_mismatch_energy).\n"
+						"This was true for the Turner1999 energy parameters, but is violated by the\n"
+						"ones provided here!\n"
+						"Expect Macrostate mfe/pfunc values to be slightly off.\n");
+					return false;
+				}
+			}
+		}
+	}
+	return true;
+}
+
 /*
    encodes a basepair to an int. This is necessary to address the correct cells in the energy tables
    Codes are the following (see /usr/include/librna/rnalib.h bp_t):

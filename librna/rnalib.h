@@ -28,6 +28,7 @@ typedef unsigned int rsize;
 extern double temperature;
 
 void librna_read_param_file(const char *filename);
+bool test_macrostate_mme_assumption();
 
 int termau_energy(const char *s, rsize i, rsize j);
 int duplex_energy(void);
