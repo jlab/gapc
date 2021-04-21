@@ -71,6 +71,15 @@ int main(int argc, char **argv) {
   unsigned n = obj.t_0_seq.size();
   for (unsigned int i = 0; ; i+=opts.window_increment) {
     unsigned int right = std::min(n, i+opts.window_size);
+    // Window mode currently only works for single track grammars
+    // Thus, we here ensure that the input track knows of the
+    // left and right borders, implied by the selected window.
+    // This is e.g. necessary to check of there is an unpaired
+    // base right of a stem that can be dangled. But it must be
+    // within this window.
+    obj.t_0_seq.window_left_border = int(i);
+    obj.t_0_seq.window_right_border = right;
+
     gapc::return_type res = obj.run();
     std::cout << "Answer ("
       << i << ", " << right << ") :\n";
