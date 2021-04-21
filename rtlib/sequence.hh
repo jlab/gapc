@@ -276,13 +276,13 @@ class Basic_Sequence {
       : seq(0), n(0), window_left_border(0), window_right_border(0) {}
     Basic_Sequence(const Basic_Sequence &o)
       : seq(0) {
-      copy(o.seq, o.n, o.window_left_border, o.window_right_border);
+      copy(o.seq, o.n);
     }
     ~Basic_Sequence() {
       delete[] seq;
     }
     Basic_Sequence &operator=(const Basic_Sequence &o) {
-      copy(o.seq, o.n, o.window_left_border, o.window_right_border);
+      copy(o.seq, o.n);
       return *this;
     }
 
