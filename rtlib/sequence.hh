@@ -244,6 +244,10 @@ class Basic_Sequence {
  public:
     alphabet *seq;
     pos_type n;
+    // If in window mode, algebra functions might need to know the exact borders of the current sub-word of the window, not only the length of the whole word
+    // This is e.g. the case in RNA folding for unpaired dangling bases: if a stem is next to the sub-word border, the dl_energy, dr_energy or ext_mismatch_energy functions look left/right of the given bases.
+    pos_type window_left_border;
+    pos_type window_right_border;
 
     void copy(const char *s, pos_type l) {
       delete[] seq;
@@ -251,6 +255,8 @@ class Basic_Sequence {
       std::pair<alphabet*, size_t> p = copier.copy(s, l);
       seq = p.first;
       n = p.second;
+      window_left_border = 0;
+      window_right_border = p.second;
     }
 
  public:
@@ -258,23 +264,25 @@ class Basic_Sequence {
     typedef char alphabet2;
     Basic_Sequence(alphabet *s, pos_type l)
       : seq(0) {
-      copy(s, l);
+      copy(s, l, 0, l);
     }
     Basic_Sequence(alphabet *s) : seq(0) {
       n = std::strlen(s);
+      window_left_border = 0;
+      window_right_border = n;
       copy(s, n);
     }
     Basic_Sequence()
-      : seq(0), n(0) {}
+      : seq(0), n(0), window_left_border(0), window_right_border(0) {}
     Basic_Sequence(const Basic_Sequence &o)
       : seq(0) {
-      copy(o.seq, o.n);
+      copy(o.seq, o.n, o.window_left_border, o.window_right_border);
     }
     ~Basic_Sequence() {
       delete[] seq;
     }
     Basic_Sequence &operator=(const Basic_Sequence &o) {
-      copy(o.seq, o.n);
+      copy(o.seq, o.n, o.window_left_border, o.window_right_border);
       return *this;
     }
 

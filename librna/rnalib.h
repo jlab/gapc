@@ -39,11 +39,11 @@ int bl_energy(const char *s, rsize bl, rsize i, rsize j, rsize br, rsize Xright)
 int br_energy(const char *s, rsize bl, rsize i, rsize j, rsize br, rsize Xleft);
 int sr_energy(const char *s, rsize i, rsize j);
 int sr_pk_energy(char a, char b, char c, char d);
-int dl_energy(const char *s, rsize i, rsize j);
-int dr_energy(const char *s, rsize i, rsize j, rsize n);
+int dl_energy(const char *s, rsize i, rsize j, rsize left_border);
+int dr_energy(const char *s, rsize i, rsize j, rsize right_border);
 int dli_energy(const char *s, rsize i, rsize j);
 int dri_energy(const char *s, rsize i, rsize j);
-int ext_mismatch_energy(const char *s, rsize i, rsize j, rsize n);
+int ext_mismatch_energy(const char *s, rsize i, rsize j, rsize left_border, rsize right_border);
 int ml_mismatch_energy(const char *s, rsize i, rsize j);
 int ml_energy(void);
 int ul_energy(void);

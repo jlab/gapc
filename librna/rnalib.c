@@ -822,11 +822,11 @@ int sr_pk_energy(char a, char b, char c, char d)
      1. index = closingBP = code for closing basepair i-j
      2. index = dbase = code for dangling base
 */
-int dl_energy(const char *s, rsize i, rsize j)
+int dl_energy(const char *s, rsize i, rsize j, rsize left_border)
 {
-  if (i == 0) return 0;
+  if (i == left_border) return 0;
   int closingBP = bp_index(s[i], s[j]);
-  char dbase = s[getPrev(s,i,1,0)];
+  char dbase = s[getPrev(s,i,1,left_border)];
   if (dbase == GAP_BASE) dbase = N_BASE; //RNAfold treats a gap like a N-base that is dangling on the pair. Strange but true.
   int dd = P->dangle5[closingBP][dbase];
   return (dd>0) ? 0 : dd;  /* must be <= 0 */
@@ -840,13 +840,13 @@ int dl_energy(const char *s, rsize i, rsize j)
      |    j+1     (3' dangling base)
      5'  3'
    Input is
-     in addition: n = length of the input RNA sequence (necessary for OverDangle, should there be no more base on the right side of a stem)
+     in addition: right_border = length of the input RNA sequence (necessary for OverDangle, should there be no more base on the right side of a stem)
 */
-int dr_energy(const char *s, rsize i, rsize j, rsize n)
+int dr_energy(const char *s, rsize i, rsize j, rsize right_border)
 {
-  if ((j+1) >= n) return 0;
+  if ((j+1) >= right_border) return 0;
   int closingBP = bp_index(s[i], s[j]);
-  char dbase = s[getNext(s,j,1,n-1)];
+  char dbase = s[getNext(s,j,1,right_border-1)];
   if (dbase == GAP_BASE) dbase = N_BASE; //RNAfold treats a gap like a N-base that is dangling on the pair. Strange but true.
   int dd = P->dangle3[closingBP][dbase];
   return (dd>0) ? 0 : dd;  /* must be <= 0 */
@@ -895,19 +895,20 @@ int dri_energy(const char *s, rsize i, rsize j)
      s = the input RNA sequence in bit encoding, i.e. N=0, A=1, C=2, G=3, U=4, GAP=5 (see /usr/include/librna/rnalib.h base_t)
      i = the index (first base of s is 0, second 1, ...) of the 5' partner of the closing basepair
      j = the index (first base of s is 0, second 1, ...) of the 3' partner of the closing basepair
-     n = length of the input RNA sequence (necessary for OverDangle, should there be no more base on the right side of a stem)
+     left_border = left border of current sub-word, see next line
+     right_border = right border of the current sub-word (which can be different in window mode from input string) (necessary for OverDangle, should there be no more base on the right side of a stem)
    mismatchExt37 data-arrangement:
      1. index = closingBP = code for closing basepair i-j
      2. index = lbase = code for dangling 5' base
      3. index = rbase = code for dangling 3' base
 */
-int ext_mismatch_energy(const char *s, rsize i, rsize j, rsize n)
+int ext_mismatch_energy(const char *s, rsize i, rsize j, rsize left_border, rsize right_border)
 {
-  int rbasePos = getNext(s,j,1,n-1);
-  if ((i > 0) && ((j+1) < n) &&                            //we try to dangle left and right neighboring base if available. They are not if we already are at first or last base ...
+  int rbasePos = getNext(s,j,1,right_border-1);
+  if ((i > left_border) && ((j+1) < right_border) &&                            //we try to dangle left and right neighboring base if available. They are not if we already are at first or last base ...
 	  (s[i-1] != SEPARATOR_BASE) && ((j+1) <= rbasePos)) { //or in outside mode, if left / right neighbor is the separator base
     int closingBP = bp_index(s[i],s[j]);
-    int lbase = s[getPrev(s,i,1,0)];
+    int lbase = s[getPrev(s,i,1,left_border)];
     int rbase = s[rbasePos];
 	if (lbase == GAP_BASE) lbase = N_BASE;
 	if (rbase == GAP_BASE) rbase = N_BASE;
@@ -915,20 +916,20 @@ int ext_mismatch_energy(const char *s, rsize i, rsize j, rsize n)
 		return P->mismatchExt[closingBP][lbase][rbase]; //left and right dangling positions are real bases
 	}
 	if ((lbase <  5) && (rbase >= 5)) {
-		return dl_energy(s,i,j); //if right position is a gap and left position is a real base, we resort to a left dangle
+		return dl_energy(s,i,j, left_border); //if right position is a gap and left position is a real base, we resort to a left dangle
 	}
 	if ((lbase >= 5) && (rbase <  5)) {
-		return dr_energy(s,i,j,n); //if left position is a gap and right position is a real base, we resort to a right dangle
+		return dr_energy(s,i,j,right_border); //if left position is a gap and right position is a real base, we resort to a right dangle
 	}
 	if ((lbase >= 5) && (rbase >= 5)) {
 		return 0; //if left and right positions are gaps, we just return 0;
 	}
   } else {
-    if ((i > 0) && (s[i-1] != SEPARATOR_BASE)) {
-		return dl_energy(s,i,j);
+    if ((i > left_border) && (s[i-1] != SEPARATOR_BASE)) {
+		return dl_energy(s,i,j, left_border);
     }
-    if (((j+1) < n) && ((j+1) <= rbasePos)) {
-		return dr_energy(s,i,j,n);
+    if (((j+1) < right_border) && ((j+1) <= rbasePos)) {
+		return dr_energy(s,i,j,right_border);
     }
 	return 0;
   }
