@@ -271,16 +271,18 @@ static int hl_ent(rsize l)
      s = the input RNA sequence in bit encoding, i.e. N=0, A=1, C=2, G=3, U=4, GAP=5 (see /usr/include/librna/rnalib.h base_t)
      i = the index (first base of s is 0, second 1, ...) of the 5' partner of the hairpin closing basepair
      j = the index (first base of s is 0, second 1, ...) of the 3' partner of the hairpin closing basepair
+     left_border = left border of current RNA input, which might be != 0 if in window mode
+     right_border = as above, but right border
    mismatchH37 data-arrangement:
      1. index = bp = code for closing basepair i-j
      2. index = lbase = code for 5' base i+1 stacking on closing basepair i-j
      3. index = rbase = code for 3' base j-1 stacking on closing basepair i-j
 */
-static int hl_stack(const char *s, rsize i, rsize j)
+static int hl_stack(const char *s, rsize i, rsize j, rsize left_border, rsize right_border)
 {
   int bp = bp_index(s[i], s[j]);
-  char lbase = s[getNext(s,i,1,j-1)];
-  char rbase = s[getPrev(s,j,1,i+1)];
+  char lbase = s[getNext(s,i,1,right_border-1)];
+  char rbase = s[getPrev(s,j,1,left_border+1)];
   return P->mismatchH[bp][lbase][rbase];
 }
 
@@ -334,13 +336,15 @@ int duplex_energy(void)
      s = the input RNA sequence in bit encoding, i.e. N=0, A=1, C=2, G=3, U=4, GAP=5 (see /usr/include/librna/rnalib.h base_t)
      i = the index (first base of s is 0, second 1, ...) of the 5' partner of the hairpin closing basepair
      j = the index (first base of s is 0, second 1, ...) of the 3' partner of the hairpin closing basepair
+     left_border = left border of current RNA input, which might be != 0 if in window mode
+     right_border = as above, but right border
 */
-int hl_energy(const char *s, rsize i, rsize j)
+int hl_energy(const char *s, rsize i, rsize j, rsize left_border, rsize right_border)
 {
   assert(j-i>1);
 
   // if we are in an alignment, it might be true, that 5' partner of closing basepair is a gap from the start up to this position --> end gap
-  char lbase = s[getPrev(s,i+1,1,0)];
+  char lbase = s[getPrev(s,i+1,1,left_border)];
   if ((lbase == GAP_BASE) || (lbase == SEPARATOR_BASE)) {
 	  return 0;
   }
@@ -351,7 +355,7 @@ int hl_energy(const char *s, rsize i, rsize j)
   int entropy = hl_ent(size);
 
   // stabilizing energy for stacking bases
-  int stack_mismatch = hl_stack(s, i, j);
+  int stack_mismatch = hl_stack(s, i, j, left_border, right_border);
 
   // handling for hairpin loops in alignments, where the sequence is completely missing
   if (size < 3) {
@@ -407,12 +411,12 @@ int hl_energy(const char *s, rsize i, rsize j)
 }
 
 /* like hl_energy, just no penalty for size > 4 structures */
-int hl_energy_stem(const char *s, rsize i, rsize j)
+int hl_energy_stem(const char *s, rsize i, rsize j, rsize left_border, rsize right_border)
 {
-  int r = hl_energy(s, i, j);
+  int r = hl_energy(s, i, j, left_border, right_border);
   rsize size = j-i-1 - noGaps(s,i+1,j-1);
   if (size >= 4) {
-    int stack_mismatch = hl_stack(s, i, j);
+    int stack_mismatch = hl_stack(s, i, j, left_border, right_border);
     return r - stack_mismatch;
   }
   return r;
@@ -564,19 +568,21 @@ static int il_ent(rsize l)
      k = the index (first base of s is 0, second 1, ...) of the 5' partner of the internal loop embedded basepair.
      l = the index (first base of s is 0, second 1, ...) of the 3' partner of the internal loop embedded basepair.
      j = the index (first base of s is 0, second 1, ...) of the 3' partner of the internal loop closing basepair
+     left_border = left border of current RNA input, which might be != 0 if in window mode
+     right_border = as above, but right border
    mismatchI37 data-arrangement:
      1. index = out_closingBP = in_closingBP = code for closing basepair i-j
      2. index = out_lbase = in_lbase = code for first (= closer to the closing basepair) 5' unpaired base of the internal loop, i+1
      3. index = out_rbase = in_rbase = code for second (= closer to the closing basepair) 3' unpaired base of the internal loop, j-1
 */
-static int il_stack(const char *s, rsize i, rsize k, rsize l, rsize j)
+static int il_stack(const char *s, rsize i, rsize k, rsize l, rsize j, rsize left_border, rsize right_border)
 {
   int out_closingBP = bp_index(s[i], s[j]);
-  char out_lbase = s[getNext(s,i,1,j-1)];
-  char out_rbase = s[getPrev(s,j,1,i+1)];
+  char out_lbase = s[getNext(s,i,1,right_border-1)];
+  char out_rbase = s[getPrev(s,j,1,left_border+1)];
   int in_closingBP = bp_index(s[l], s[k]); // Note, basepair and stacking bases are reversed to preserver 5'-3' order
-  char in_lbase = s[getNext(s,l,1,j-1)];
-  char in_rbase = s[getPrev(s,k,1,i+1)];
+  char in_lbase = s[getNext(s,l,1,right_border-1)];
+  char in_rbase = s[getPrev(s,k,1,left_border+1)];
   return P->mismatchI[out_closingBP][out_lbase][out_rbase] + P->mismatchI[in_closingBP][in_lbase][in_rbase];
 }
 
@@ -627,18 +633,20 @@ static int il_asym(rsize sl, rsize sr)
      k = the index (first base of s is 0, second 1, ...) of the 5' partner of the internal loop embedded basepair.
      l = the index (first base of s is 0, second 1, ...) of the 3' partner of the internal loop embedded basepair.
      j = the index (first base of s is 0, second 1, ...) of the 3' partner of the internal loop closing basepair
+     left_border = left border of current RNA input, which might be != 0 if in window mode
+     right_border = as above, but right border
 */
-int il_energy(const char *s, rsize i, rsize k, rsize l, rsize j)
+int il_energy(const char *s, rsize i, rsize k, rsize l, rsize j, rsize left_border, rsize right_border)
 {
   rsize sl = k-i-1 - noGaps(s, i+1, k-1);
   rsize sr = j-l-1 - noGaps(s, l+1, j-1);
 
   int out_closingBP = bp_index(s[i], s[j]);
-  int out_lbase = s[getNext(s,i,1,j-1)];
-  int out_rbase = s[getPrev(s,j,1,i+1)];
+  int out_lbase = s[getNext(s,i,1,right_border-1)];
+  int out_rbase = s[getPrev(s,j,1,left_border+1)];
   int in_closingBP = bp_index(s[l], s[k]); // Note, basepair and stacking bases are reversed to preserver 5'-3' order
-  int in_lbase = s[getNext(s,l,1,j-1)];
-  int in_rbase = s[getPrev(s,k,1,i+1)];
+  int in_lbase = s[getNext(s,l,1,right_border-1)];
+  int in_rbase = s[getPrev(s,k,1,left_border+1)];
 
   if (sl == 0) return br_energy(s, i, l+1, j-1, j, k); //internal loop really is an right bulge, because left unpaired region is just a gap
   if (sr == 0) return bl_energy(s, i, i+1, k-1, j, l); //internal loop really is an left bulge, because right unpaired region is just a gap
@@ -668,7 +676,7 @@ int il_energy(const char *s, rsize i, rsize k, rsize l, rsize j)
 	}
   }
 
-  return il_ent(sl+sr) + il_stack(s, i, k, l, j) + il_asym(sl, sr);
+  return il_ent(sl+sr) + il_stack(s, i, k, l, j, left_border, right_border) + il_asym(sl, sr);
 }
 
 /*
@@ -714,7 +722,7 @@ static int bl_ent(rsize l)
 */
 int bl_energy(const char *s, rsize i, rsize k, rsize l, rsize j, rsize Xright)
 {
-  assert(j >= 2); // this is of no biological relevance, just to avoid an underflow
+  assert(Xright >= 2); // this is of no biological relevance, just to avoid an underflow
 
   rsize size = l-k+1 - noGaps(s, k, l);
 
@@ -785,14 +793,16 @@ int br_energy(const char *s, rsize i, rsize k, rsize l, rsize j, rsize Xleft)
      s = the input RNA sequence in bit encoding, i.e. N=0, A=1, C=2, G=3, U=4, GAP=5 (see /usr/include/librna/rnalib.h base_t)
      i = the index (first base of s is 0, second 1, ...) of the 5' partner of the closing basepair
      j = the index (first base of s is 0, second 1, ...) of the 3' partner of the closing basepair
+     left_border = left border of current RNA input, which might be != 0 if in window mode
+     right_border = as above, but right border
    stack37 data-arrangement:
      1. index = closingBP = code for closing basepair i-j
      2. index = enclosedBP = code for enclosed basepair i+1 and j-1. Note, basepair is reversed to preserver 5'-3' order
 */
-int sr_energy(const char *s, rsize i, rsize j)
+int sr_energy(const char *s, rsize i, rsize j, rsize left_border, rsize right_border)
 {
   int closingBP = bp_index(s[i], s[j]);
-  int enclosedBP = bp_index(s[j-1],s[i+1]); // Note, basepair is reversed to preserver 5'-3' order
+  int enclosedBP = bp_index(s[getPrev(s,j,1,right_border-1)],s[getNext(s,i,1,left_border+1)]); // Note, basepair is reversed to preserver 5'-3' order
   return P->stack[closingBP][enclosedBP];
 }
 
@@ -818,6 +828,7 @@ int sr_pk_energy(char a, char b, char c, char d)
      s = the input RNA sequence in bit encoding, i.e. N=0, A=1, C=2, G=3, U=4, GAP=5 (see /usr/include/librna/rnalib.h base_t)
      i = the index (first base of s is 0, second 1, ...) of the 5' partner of the closing basepair
      j = the index (first base of s is 0, second 1, ...) of the 3' partner of the closing basepair
+     left_border = left border of current RNA input, which might be != 0 if in window mode
    dangle5_37 data-arrangement:
      1. index = closingBP = code for closing basepair i-j
      2. index = dbase = code for dangling base
@@ -860,10 +871,10 @@ int dr_energy(const char *s, rsize i, rsize j, rsize right_border)
      |   |
      5'  3'
 */
-int dli_energy(const char *s, rsize i, rsize j)
+int dli_energy(const char *s, rsize i, rsize j, rsize right_border)
 {
   int closingBP = bp_index(s[j], s[i]); // Note, basepair is reversed to preserver 5'-3' order
-  char dbase = s[getNext(s,i,1,j-1)];
+  char dbase = s[getNext(s,i,1,right_border-1)];
   int dd = P->dangle3[closingBP][dbase];
   return (dd>0) ? 0 : dd;  /* must be <= 0 */
 }
@@ -876,10 +887,10 @@ int dli_energy(const char *s, rsize i, rsize j)
      |   |
      5'  3'
 */
-int dri_energy(const char *s, rsize i, rsize j)
+int dri_energy(const char *s, rsize i, rsize j, rsize left_border)
 {
   int closingBP = bp_index(s[j], s[i]); // Note, basepair is reversed to preserver 5'-3' order
-  char dbase = s[getPrev(s,j,1,i+1)];
+  char dbase = s[getPrev(s,j,1,left_border+1)];
   int dd = P->dangle5[closingBP][dbase];
   return (dd>0) ? 0 : dd;  /* must be <= 0 */
 }
@@ -907,7 +918,8 @@ int ext_mismatch_energy(const char *s, rsize i, rsize j, rsize left_border, rsiz
   int rbasePos = getNext(s,j,1,right_border-1);
   if ((i > left_border) && ((j+1) < right_border) &&                            //we try to dangle left and right neighboring base if available. They are not if we already are at first or last base ...
 	  (s[i-1] != SEPARATOR_BASE) && ((j+1) <= rbasePos)) { //or in outside mode, if left / right neighbor is the separator base
-    int closingBP = bp_index(s[i],s[j]);
+
+	int closingBP = bp_index(s[i],s[j]);
     int lbase = s[getPrev(s,i,1,left_border)];
     int rbase = s[rbasePos];
 	if (lbase == GAP_BASE) lbase = N_BASE;
@@ -916,7 +928,7 @@ int ext_mismatch_energy(const char *s, rsize i, rsize j, rsize left_border, rsiz
 		return P->mismatchExt[closingBP][lbase][rbase]; //left and right dangling positions are real bases
 	}
 	if ((lbase <  5) && (rbase >= 5)) {
-		return dl_energy(s,i,j, left_border); //if right position is a gap and left position is a real base, we resort to a left dangle
+		return dl_energy(s,i,j,left_border); //if right position is a gap and left position is a real base, we resort to a left dangle
 	}
 	if ((lbase >= 5) && (rbase <  5)) {
 		return dr_energy(s,i,j,right_border); //if left position is a gap and right position is a real base, we resort to a right dangle
@@ -926,7 +938,7 @@ int ext_mismatch_energy(const char *s, rsize i, rsize j, rsize left_border, rsiz
 	}
   } else {
     if ((i > left_border) && (s[i-1] != SEPARATOR_BASE)) {
-		return dl_energy(s,i,j, left_border);
+		return dl_energy(s,i,j,left_border);
     }
     if (((j+1) < right_border) && ((j+1) <= rbasePos)) {
 		return dr_energy(s,i,j,right_border);
@@ -943,19 +955,19 @@ int ext_mismatch_energy(const char *s, rsize i, rsize j, rsize left_border, rsiz
      |   |
      5'  3'
 */
-int ml_mismatch_energy(const char *s, rsize i, rsize j)
+int ml_mismatch_energy(const char *s, rsize i, rsize j, rsize left_border, rsize right_border)
 {
   int closingBP = bp_index(s[j],s[i]); // Note, basepairs and stacking bases are reversed to preserver 5'-3' order
-  int lbase = s[getPrev(s,j,1,i+1)];
-  int rbase = s[getNext(s,i,1,j-1)];
+  int lbase = s[getPrev(s,j,1,left_border+1)];
+  int rbase = s[getNext(s,i,1,right_border-1)];
   if ((lbase <  5) && (rbase <  5)) {
   	return P->mismatchM[closingBP][lbase][rbase]; //left and right dangling positions are real bases
   }
   if ((lbase <  5) && (rbase >= 5)) {
-	return dli_energy(s,i,j); //if right position is a gap and left position is a real base, we resort to a left dangle
+	return dli_energy(s,i,j,right_border); //if right position is a gap and left position is a real base, we resort to a left dangle
   }
   if ((lbase >= 5) && (rbase <  5)) {
-  	return dri_energy(s,i,j); //if left position is a gap and right position is a real base, we resort to a right dangle
+  	return dri_energy(s,i,j,left_border); //if left position is a gap and right position is a real base, we resort to a right dangle
   }
   if ((lbase >= 5) && (rbase >= 5)) {
   	return 0; //if left and right positions are gaps, we just return 0;
