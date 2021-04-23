@@ -264,7 +264,7 @@ class Basic_Sequence {
     typedef char alphabet2;
     Basic_Sequence(alphabet *s, pos_type l)
       : seq(0) {
-      copy(s, l, 0, l);
+      copy(s, l);
     }
     Basic_Sequence(alphabet *s) : seq(0) {
       n = std::strlen(s);
