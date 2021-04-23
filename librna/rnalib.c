@@ -802,7 +802,7 @@ int br_energy(const char *s, rsize i, rsize k, rsize l, rsize j, rsize Xleft)
 int sr_energy(const char *s, rsize i, rsize j, rsize left_border, rsize right_border)
 {
   int closingBP = bp_index(s[i], s[j]);
-  int enclosedBP = bp_index(s[getPrev(s,j,1,right_border-1)],s[getNext(s,i,1,left_border+1)]); // Note, basepair is reversed to preserver 5'-3' order
+  int enclosedBP = bp_index(s[getPrev(s,j,1,left_border)],s[getNext(s,i,1,right_border)]); // Note, basepair is reversed to preserver 5'-3' order
   return P->stack[closingBP][enclosedBP];
 }
 
