@@ -911,7 +911,7 @@ int ext_mismatch_energy(const char *s, rsize i, rsize j, rsize left_border, rsiz
   if ((i > left_border) && ((j+1) < right_border) &&                            //we try to dangle left and right neighboring base if available. They are not if we already are at first or last base ...
 	  (s[i-1] != SEPARATOR_BASE) && ((j+1) <= rbasePos)) { //or in outside mode, if left / right neighbor is the separator base
 
-	int closingBP = bp_index(s[i],s[j]);
+    int closingBP = bp_index(s[i],s[j]);
     int lbase = s[getPrev(s,i,1,left_border)];
     int rbase = s[rbasePos];
 	if (lbase == GAP_BASE) lbase = N_BASE;
