@@ -476,7 +476,7 @@ inline int ext_mismatch_energy(const Basic_Subsequence<alphabet, pos_type> &a,
   assert(a.seq->rows() == b.seq->rows());
 
   for (unsigned k = 0; k < a.seq->rows(); k++)
-    energy += ext_mismatch_energy(a.seq->row(k), a.i, b.j-1);
+    energy += ext_mismatch_energy(a.seq->row(k), a.i, b.j-1, a.seq->window_left_border, b.seq->window_right_border);
 
   return energy;
 }
