@@ -233,7 +233,7 @@ inline int hl_energy(const Basic_Subsequence<alphabet, pos_type> &a) {
   int energy = 0;
 
   for (unsigned k = 0; k < a.seq->rows(); k++)
-    energy += hl_energy(a.seq->row(k), a.i-1, a.j);
+    energy += hl_energy(a.seq->row(k), a.i-1, a.j, a.seq->window_left_border);
 
   return energy;
 }
@@ -248,7 +248,7 @@ inline int hl_energy_stem(const Basic_Subsequence<alphabet, pos_type> &a) {
   int energy = 0;
 
   for (unsigned k = 0; k < a.seq->rows(); k++)
-    energy += hl_energy_stem(a.seq->row(k), a.i-1, a.j);
+    energy += hl_energy_stem(a.seq->row(k), a.i-1, a.j, a.seq->window_left_border);
 
   return energy;
 }

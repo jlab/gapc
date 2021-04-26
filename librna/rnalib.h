@@ -32,8 +32,8 @@ bool test_macrostate_mme_assumption();
 
 int termau_energy(const char *s, rsize i, rsize j);
 int duplex_energy(void);
-int hl_energy(const char *s, rsize i, rsize j);
-int hl_energy_stem(const char *s, rsize i, rsize j);
+int hl_energy(const char *s, rsize i, rsize j, rsize left_border);
+int hl_energy_stem(const char *s, rsize i, rsize j, rsize left_border);
 int il_energy(const char *s, rsize i, rsize j, rsize k, rsize l);
 int bl_energy(const char *s, rsize bl, rsize i, rsize j, rsize br, rsize Xright);
 int br_energy(const char *s, rsize bl, rsize i, rsize j, rsize br, rsize Xleft);
