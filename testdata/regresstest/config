@@ -228,7 +228,7 @@ GAPC="../../../gapc -t --backtrack --window-mode"
 check_new_old_eq adpf.gap unused mfepp ../../input/rna80 windowbacktrack
 
 RUN_CPP_FLAGS="-w 20 -i 1 -P ../../../librna/vienna/rna_turner1999.par -f"
-GAPC="../../../gapc -t --kbacktrack --no-coopt --window-mode"
+GAPC="../../../gapc --kbacktrack --no-coopt --window-mode --tab closed --tab  leftB --tab  ml_comps --tab  ml_comps1 --tab  struct"
 check_new_old_eq adpf.gap unused mfepp ../../input/rna80 windowkbacktrack
 
 RUN_CPP_FLAGS=""
