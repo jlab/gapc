@@ -340,7 +340,7 @@ int hl_energy(const char *s, rsize i, rsize j)
   assert(j-i>1);
 
   // if we are in an alignment, it might be true, that 5' partner of closing basepair is a gap from the start up to this position --> end gap
-  char lbase = s[getPrev(s,i+1,1,0)];
+  char lbase = s[i-1];
   if ((lbase == GAP_BASE) || (lbase == SEPARATOR_BASE)) {
 	  return 0;
   }
