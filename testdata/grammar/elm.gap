@@ -143,6 +143,12 @@ algebra pretty2 implements Bill(alphabet = char, answer = Rope)
   }
 }
 
+algebra calc extends buyer {
+  choice [int] h([int] i) {
+    return unique(i);
+  }
+}
+
 algebra acount auto count ;
 algebra enum auto enum ;
 
@@ -197,3 +203,7 @@ instance ex = bill ( pretty ) ;
 
 instance enumenum = bill ( enum * enum ) ;
 
+instance prettycalc = bill ( pretty * calc ) ;
+instance timecount = bill ( time * count) ;
+instance timecalc = bill ( time * calc) ;
+instance timecalcpretty = bill ( time * calc * pretty) ;
