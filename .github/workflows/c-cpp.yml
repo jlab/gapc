@@ -88,7 +88,7 @@ jobs:
   fold-grammars:
     strategy:
       matrix:
-        task: [default, shapes, pkiss]
+        task: [default, shapes, pkiss, alishapes, palikiss, knotinframe]
     runs-on: ubuntu-latest
     steps:
     # install gapcs
