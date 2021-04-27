@@ -103,7 +103,7 @@ static void parse_options(int argc, char **argv, Options &rec) {
       "uses the selected instance and creates a GAP program which creates specialized GAP programs that recognize a subset of candidates of the original grammar.")
     ("verbose", "show suppressed warnings and messages")
     ("log-level,l", po::value<int>(),
-      "the log level, valid values are 0 (VERBOSE), 1 (INFO),  2 (NORMAL), 3 (WARNING), 4 (ERROR). Default is 2 (NORMAL).")
+      "the log level, valid values are 0 (VERBOSE), 1 (INFO),  2 (NORMAL), 3 (WARNING), 4 (ERROR). Default is 2 (NORMAL). INFO will e.g. report tabulated non-terminals and estimated run-time.")
     ("include,I", po::value< std::vector<std::string> >(), "include path")
     ("version,v", "version string")
     ("pareto-version,P", po::value<int>(),
@@ -359,6 +359,15 @@ class Main {
     if (opts.approx_table_design) {
       grammar->approx_table_conf();
     }
+    // TODO: better write message to Log instance, instead of std::cout directly!
+    if (Log::instance()->is_verbose()) {
+      std::cout << "The following non-terminals will be tabulated (%name indicates linear table, %name% indicates constant tables):\n  ";
+      grammar->put_table_conf(std::cout);
+      std::cout << "\n\n";
+      std::cout << "resulting in an estimated runtime of:\n  ";
+      std::cout << grammar->runtime() << '\n';
+    }
+
     // After the table configuration is generated, check for
     // suboptimal designs and present a message to the user.
     driver.ast.warn_user_table_conf_suboptimal();

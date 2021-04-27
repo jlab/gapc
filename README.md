@@ -1,4 +1,5 @@
-[![Build Status](https://travis-ci.org/jlab/gapc.svg?branch=master)](https://travis-ci.org/jlab/gapc) [![Anaconda-Server Badge](https://anaconda.org/bioconda/bellmans-gapc/badges/installer/conda.svg)](https://anaconda.org/bioconda/bellmans-gapc)
+![example branch parameter](https://github.com/jlab/gapc/actions/workflows/c-cpp.yml/badge.svg)
+[![Anaconda-Server Badge](https://anaconda.org/bioconda/bellmans-gapc/badges/installer/conda.svg)](https://anaconda.org/bioconda/bellmans-gapc)
 ```
   ____       _ _                       _        _____          _____  
  |  _ \     | | |                     ( )      / ____|   /\   |  __ \ 
