@@ -88,7 +88,7 @@ jobs:
   fold-grammars:
     strategy:
       matrix:
-        task: [default, shapes, pkiss]
+        task: [default, shapes, pkiss, alishapes, palikiss, knotinframe]
     runs-on: ubuntu-latest
     steps:
     # install gapcs
@@ -103,7 +103,7 @@ jobs:
       run: sudo make install
     
     - name: clone fold-grammars
-      run: git clone --branch  fix_vienna_energy https://github.com/jlab/fold-grammars.git $GITHUB_WORKSPACE/../fold-grammars
+      run: git clone --branch  master https://github.com/jlab/fold-grammars.git $GITHUB_WORKSPACE/../fold-grammars
     - name: configure fold-grammars
       run: |
         cd $GITHUB_WORKSPACE/../fold-grammars
