@@ -361,7 +361,7 @@ class Main {
     }
     // TODO: better write message to Log instance, instead of std::cout directly!
     if (Log::instance()->is_verbose()) {
-      std::cout << "The following non-terminals will be tabulated (% indicates the axiom):\n  ";
+      std::cout << "The following non-terminals will be tabulated (%name indicates linear table, %name% indicates constant tables):\n  ";
       grammar->put_table_conf(std::cout);
       std::cout << "\n\n";
       std::cout << "resulting in an estimated runtime of:\n  ";
