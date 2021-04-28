@@ -27,7 +27,7 @@ jobs:
     ##  run: cd testdata/paraltest && mkdir temp && cd temp && ghc --make ../AdpfMain.lhs -i.. -hidir ./GHC -odir ./GHC -o AdpfMain
     
     - name: Checkout truth
-      run: git clone --branch revert_truth_window2 https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE/../gapc-test-suite
+      run: git clone --branch master https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE/../gapc-test-suite
       
     - uses: actions/checkout@v2
     - name: configure
@@ -62,7 +62,7 @@ jobs:
     - name: add random Haskell lib
       run: cabal install --lib random
     - name: Checkout truth
-      run: git clone --branch revert_truth_window2 https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE/../gapc-test-suite
+      run: git clone --branch master https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE/../gapc-test-suite
       
     - uses: actions/checkout@v2
     - name: configure
