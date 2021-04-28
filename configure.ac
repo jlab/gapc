@@ -26,6 +26,9 @@ CFLAGS+=" -O3 "
 CXXFLAGS+=" -O3 "
 ])
 
+## adding librna path for includes due to re-structuring ViennaRNA code
+CFLAGS+="-I librna/"
+
 ## get compiler
 AC_PROG_CXX
 AC_PROG_CC
