@@ -77,6 +77,7 @@ bool test_macrostate_mme_assumption() {
 						"mismatch of both unpaired bases onto the stem (ext_mismatch_energy).\n"
 						"This was true for the Turner1999 energy parameters, but is violated by the\n"
 						"ones provided here!\n"
+						"See https://github.com/jlab/fold-grammars/issues/26 for more details.\n"
 						"Expect Macrostate mfe/pfunc values to be slightly off.\n");
 					return false;
 				}
