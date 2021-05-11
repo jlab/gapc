@@ -1,7 +1,43 @@
+bellmansgapc (2021.05.11-0ubuntu0ppa1~impish1) impish; urgency=medium
+
+   * added FLOAT terminal parser
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Tue, 11 May 2021 13:28:00 +0200
+
+bellmansgapc (2021.05.11-0ubuntu0ppa1~hirsute1) hirsute; urgency=medium
+
+   * added FLOAT terminal parser
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Tue, 11 May 2021 13:28:00 +0200
+
+bellmansgapc (2021.05.11-0ubuntu0ppa1~groovy1) groovy; urgency=medium
+
+   * added FLOAT terminal parser
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Tue, 11 May 2021 13:28:00 +0200
+
+bellmansgapc (2021.05.11-0ubuntu0ppa1~focal1) focal; urgency=medium
+
+   * added FLOAT terminal parser
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Tue, 11 May 2021 13:28:00 +0200
+
+bellmansgapc (2021.05.11-0ubuntu0ppa1~bionic1) bionic; urgency=medium
+
+   * added FLOAT terminal parser
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Tue, 11 May 2021 13:28:00 +0200
+
+bellmansgapc (2021.05.11-0ubuntu0ppa1~xenial1) xenial; urgency=medium
+
+   * added FLOAT terminal parser
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Tue, 11 May 2021 13:28:00 +0200
+
 bellmansgapc (2021.04.28-0ubuntu0ppa1~impish1) impish; urgency=medium
 
   * added test_macrostate_mme_assumption to librna to warn about macrostate energy inaccuracies
-  * applied old fix to energy parameters from ViennaRNA, see https://github.com/jlab/fold-grammars/issues/20. 
+  * applied old fix to energy parameters from ViennaRNA, see https://github.com/jlab/fold-grammars/issues/20.
     * Thanks for raising awareness go to Vincent von Schelm and for pointing out the difference to Ronny Lorenz!
   * gapc with -l 1 will now report table design and estimated runtime
 
@@ -10,7 +46,7 @@ bellmansgapc (2021.04.28-0ubuntu0ppa1~impish1) impish; urgency=medium
 bellmansgapc (2021.04.28-0ubuntu0ppa1~hirsute1) hirsute; urgency=low
 
   * added test_macrostate_mme_assumption to librna to warn about macrostate energy inaccuracies
-  * applied old fix to energy parameters from ViennaRNA, see https://github.com/jlab/fold-grammars/issues/20. 
+  * applied old fix to energy parameters from ViennaRNA, see https://github.com/jlab/fold-grammars/issues/20.
     * Thanks for raising awareness go to Vincent von Schelm and for pointing out the difference to Ronny Lorenz!
   * gapc with -l 1 will now report table design and estimated runtime
 
@@ -19,7 +55,7 @@ bellmansgapc (2021.04.28-0ubuntu0ppa1~hirsute1) hirsute; urgency=low
 bellmansgapc (2021.04.28-0ubuntu0ppa1~groovy1) groovy; urgency=medium
 
   * added test_macrostate_mme_assumption to librna to warn about macrostate energy inaccuracies
-  * applied old fix to energy parameters from ViennaRNA, see https://github.com/jlab/fold-grammars/issues/20. 
+  * applied old fix to energy parameters from ViennaRNA, see https://github.com/jlab/fold-grammars/issues/20.
     * Thanks for raising awareness go to Vincent von Schelm and for pointing out the difference to Ronny Lorenz!
   * gapc with -l 1 will now report table design and estimated runtime
 
@@ -28,7 +64,7 @@ bellmansgapc (2021.04.28-0ubuntu0ppa1~groovy1) groovy; urgency=medium
 bellmansgapc (2021.04.28-0ubuntu0ppa1~focal1) focal; urgency=medium
 
   * added test_macrostate_mme_assumption to librna to warn about macrostate energy inaccuracies
-  * applied old fix to energy parameters from ViennaRNA, see https://github.com/jlab/fold-grammars/issues/20. 
+  * applied old fix to energy parameters from ViennaRNA, see https://github.com/jlab/fold-grammars/issues/20.
     * Thanks for raising awareness go to Vincent von Schelm and for pointing out the difference to Ronny Lorenz!
   * gapc with -l 1 will now report table design and estimated runtime
 
@@ -37,7 +73,7 @@ bellmansgapc (2021.04.28-0ubuntu0ppa1~focal1) focal; urgency=medium
 bellmansgapc (2021.04.28-0ubuntu0ppa1~bionic1) bionic; urgency=medium
 
   * added test_macrostate_mme_assumption to librna to warn about macrostate energy inaccuracies
-  * applied old fix to energy parameters from ViennaRNA, see https://github.com/jlab/fold-grammars/issues/20. 
+  * applied old fix to energy parameters from ViennaRNA, see https://github.com/jlab/fold-grammars/issues/20.
     * Thanks for raising awareness go to Vincent von Schelm and for pointing out the difference to Ronny Lorenz!
   * gapc with -l 1 will now report table design and estimated runtime
 
@@ -46,7 +82,7 @@ bellmansgapc (2021.04.28-0ubuntu0ppa1~bionic1) bionic; urgency=medium
 bellmansgapc (2021.04.28-0ubuntu0ppa1~xenial1) xenial; urgency=medium
 
   * added test_macrostate_mme_assumption to librna to warn about macrostate energy inaccuracies
-  * applied old fix to energy parameters from ViennaRNA, see https://github.com/jlab/fold-grammars/issues/20. 
+  * applied old fix to energy parameters from ViennaRNA, see https://github.com/jlab/fold-grammars/issues/20.
     * Thanks for raising awareness go to Vincent von Schelm and for pointing out the difference to Ronny Lorenz!
   * gapc with -l 1 will now report table design and estimated runtime
 
