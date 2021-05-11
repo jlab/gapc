@@ -417,3 +417,13 @@ check_new_old_eq macrostate.gap unused shape1ropecount acuguagucugagucacguuaucug
 # See issue #38 @ github.com/jlab/gapc
 GAPC="../../../gapc --subopt"
 check_new_old_eq rnashapesmfe.gap unused mfeppshape "A" foo
+
+#test new FLOAT terminal parser
+GAPC="../../../gapc"
+RUN_CPP_FLAGS=""
+check_new_old_eq testfloat.gap unused enum "23" floatint
+check_new_old_eq testfloat.gap unused enum "23.4" justfloat
+check_new_old_eq testfloat.gap unused enum "23.45" largerfloat
+check_new_old_eq testfloat.gap unused enum "23.45678" largerfloat2
+check_new_old_eq testfloat.gap unused enum "23.00000009" smallpostradix
+check_new_old_eq testfloat.gap unused enum "2.345e+06" failscientific

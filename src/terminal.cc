@@ -53,6 +53,13 @@ void Terminal::add_predefined(Grammar &grammar) {
   t->setPredefinedTerminalParser(true);
   grammar.NTs[*(t->name)] = t;
 
+  s = new std::string("FLOAT");
+  t = new Symbol::Terminal(s, l);
+  t->writeable_ys().set(1, Yield::UP);
+  t->set_data_type(new Type::Float());
+  t->setPredefinedTerminalParser(true);
+  grammar.NTs[*(t->name)] = t;
+
   s = new std::string("STRING");
   t = new Symbol::Terminal(s, l);
   t->writeable_ys().set(0, Yield::UP);
