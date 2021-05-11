@@ -28,6 +28,7 @@
 #include <cassert>
 #include <cstring>
 #include <limits>
+#include <cmath>
 
 #include "empty.hh"
 #include "string.hh"
@@ -74,6 +75,38 @@ inline int INT(Sequence &seq, pos_type i, pos_type j) {
     }
     result = result * 10 + (seq[a] - '0');
   }
+  return result;
+}
+
+template<typename pos_type>
+inline float FLOAT(Sequence &seq, pos_type i, pos_type j) {
+  assert(i < j);
+  float result = 0;
+  bool saw_exponent = false;
+  int exponent = 0;
+
+  // iterate through characters and return empty if char is neither . nor digit
+  // if char is '.': start incrementing the exponent, i.e. count the number
+  // of digits right of '.' and skip increasing result for now
+  for (pos_type a = i; a < j; a++) {
+    if (seq[a] == '.') {
+      saw_exponent = true;
+    } else {
+      if (seq[a] < '0' || seq[a] > '9') {
+        float r;
+        empty(r);
+        return r;
+      }
+      if (saw_exponent) {
+        ++exponent;
+      }
+      result = result * 10 + (seq[a] - '0');
+    }
+  }
+  
+  // after all digits have been parsed and combined in one large int value
+  // devide result by 10^exponent to get real float
+  result = result / pow(10, exponent);
   return result;
 }
 
