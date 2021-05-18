@@ -201,14 +201,10 @@ inline Rope ROPE(Basic_Sequence<alphabet, pos_type> &seq, T i, T j) {
 
 template<typename alphabet, typename pos_type, typename T, typename X>
 inline Rope ROPE(Basic_Sequence<alphabet, pos_type> &seq, T i, T j, X pattern) {
-  // std::cerr << "länge pattern: " << strlen(pattern) << "\n";
-  assert(i+strlen(pattern) == j);  // ToDo: double check against yield size
+  assert(i+strlen(pattern) == j);
   Rope res;
   pos_type pos_pattern = 0;
-  // std::cerr << "test rope(i=" << i << ", j=" << j << "):\n";
   for (pos_type a = i; a < j; a++, pos_pattern++) {
-	  // std::cerr << "seq[" << a << "] = " << seq[a] << " == pattern[" << pos_pattern << "] = " << pattern[pos_pattern] << " results in " << (seq[a] == pattern[pos_pattern]) << "\n";
-
 	  if (seq[a] != pattern[pos_pattern]) {
 		  Rope r;
 		  empty(r);
@@ -216,7 +212,6 @@ inline Rope ROPE(Basic_Sequence<alphabet, pos_type> &seq, T i, T j, X pattern) {
 	  }
 	  append(res, seq[a]);
   }
-  // std::cerr << "\n";
   return res;
 }
 
