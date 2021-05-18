@@ -2440,7 +2440,7 @@ void Alt::Simple::init_multi_ys() {
 	assert(tracks_ == 1);
 
 	// a terminal like CHAR or ROPE can have one argument, that is an implicit filter like
-	// CHAR('a') or ROPE("kurt"), which shall only accept sub-words that are 'a' or 'kurt', respectively
+	// CHAR('a') or ROPE("stefan"), which shall only accept sub-words that are 'a' or 'stefan', respectively
 	// if this argument is of a certain length, it should determine the yield size of the terminal
 	// parser. Therefore we here iterate through all arguments (currently just one 2021-05-17) and
 	// look for the longest. If the result is > 0, we set the terminal_ys to this value.
