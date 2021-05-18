@@ -1,3 +1,39 @@
+bellmansgapc (2021.05.18-0ubuntu0ppa1~impish1) impish; urgency=medium
+
+   * enabled ROPE terminal parser argument, like ROPE("stefan")
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Tue, 18 May 2021 20:25:00 +0200
+
+bellmansgapc (2021.05.18-0ubuntu0ppa1~hirsute1) hirsute; urgency=medium
+
+   * enabled ROPE terminal parser argument, like ROPE("stefan")
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Tue, 18 May 2021 20:25:00 +0200
+
+bellmansgapc (2021.05.18-0ubuntu0ppa1~groovy1) groovy; urgency=medium
+
+   * enabled ROPE terminal parser argument, like ROPE("stefan")
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Tue, 18 May 2021 20:25:00 +0200
+
+bellmansgapc (2021.05.18-0ubuntu0ppa1~focal1) focal; urgency=medium
+
+   * enabled ROPE terminal parser argument, like ROPE("stefan")
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Tue, 18 May 2021 20:25:00 +0200
+
+bellmansgapc (2021.05.18-0ubuntu0ppa1~bionic1) bionic; urgency=medium
+
+   * enabled ROPE terminal parser argument, like ROPE("stefan")
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Tue, 18 May 2021 20:25:00 +0200
+
+bellmansgapc (2021.05.18-0ubuntu0ppa1~xenial1) xenial; urgency=medium
+
+   * enabled ROPE terminal parser argument, like ROPE("stefan")
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Tue, 18 May 2021 20:25:00 +0200
+
 bellmansgapc (2021.05.11-0ubuntu0ppa1~impish1) impish; urgency=medium
 
    * added FLOAT terminal parser
