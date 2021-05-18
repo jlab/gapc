@@ -427,3 +427,6 @@ check_new_old_eq testfloat.gap unused enum "23.45" largerfloat
 check_new_old_eq testfloat.gap unused enum "23.45678" largerfloat2
 check_new_old_eq testfloat.gap unused enum "23.00000009" smallpostradix
 check_new_old_eq testfloat.gap unused enum "2.345e+06" failscientific
+
+# test yield size analysis of const (i.e. string) terminal arguments, like ROPE("stefan")
+check_compiler_output ../../grammar2 testtermarg.gap testme termarg grep "6), \"stefan" testtermarg.cc

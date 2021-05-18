@@ -29,6 +29,10 @@ Type::Base::~Base() {}
 
 
 bool Type::Base::is(Type t) const {
+  // extra rule to match Rope (which is external) with String in terminal arguments like ROPE("stefan")
+  if ((t == Type::STRING) and (type == Type::EXTERNAL)) {
+	  return true;
+  }
   return type == t;
 }
 
