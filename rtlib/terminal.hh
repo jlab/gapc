@@ -199,6 +199,8 @@ inline Rope ROPE(Basic_Sequence<alphabet, pos_type> &seq, T i, T j) {
   return r;
 }
 
+// a ROPE terminal parser that accepts an argument that restricts parse to this pattern
+// for example ROPE("stefan") would only yield if sub-word contains "stefan"
 template<typename alphabet, typename pos_type, typename T, typename X>
 inline Rope ROPE(Basic_Sequence<alphabet, pos_type> &seq, T i, T j, X pattern) {
   assert(i+strlen(pattern) == j);
