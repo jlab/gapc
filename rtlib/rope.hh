@@ -682,6 +682,14 @@ inline void append(rope::Ref<X> &str, double i) {
   str.append(o.str().c_str(), o.str().size());
 }
 
+template<typename X>
+inline Rope operator+=(rope::Ref<X> &str, const Rope &i) {
+  Rope res;
+  append(res, str);
+  append(res, i);
+  return res;
+}
+
 
 // Stefan Janssen: returns the first character of the rope, if not empty. For
 // the empty case it returns the fallback character 0.
