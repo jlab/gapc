@@ -119,6 +119,14 @@ void Fn_Decl::init_table() {
   ys = Yield::Size(0, 0);
   f->set_yield_size(ys);
   builtins[*s] = f;
+
+  r = new Type::External("Rope");
+  s = new std::string("ROPE");
+  f = new Fn_Decl(r, s, l);
+  f->types.push_back(r);
+  ys = Yield::Size(1, 1);  // yield size will be later determined according to constant terminal arguments like ROPE("stefan")
+  f->set_yield_size(ys);
+  builtins[*s] = f;
 }
 
 
