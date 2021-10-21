@@ -197,3 +197,4 @@ instance ex = bill ( pretty ) ;
 
 instance enumenum = bill ( enum * enum ) ;
 
+instance pareto = bill ( (buyer ^ seller) * pretty) ;
