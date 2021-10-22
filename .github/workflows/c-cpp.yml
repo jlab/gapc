@@ -35,6 +35,12 @@ jobs:
     ##- uses: actions/checkout@v2
     ##- name: debugging
     ##  run: cd testdata/paraltest && mkdir temp && cd temp && ghc --make ../AdpfMain.lhs -i.. -hidir ./GHC -odir ./GHC -o AdpfMain
+    ## we might have to change that in the (near?) future, but it should work for now:
+    ## https://cabal.readthedocs.io/en/latest/nix-local-build-overview.html
+    - name: install Haskell random lib
+      run: |
+        cabal v1-update
+        cabal v1-install random
     
     - name: Checkout truth
       run: git clone --branch master https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE/../gapc-test-suite
