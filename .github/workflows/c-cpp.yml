@@ -40,8 +40,8 @@ jobs:
     ## https://cabal.readthedocs.io/en/latest/nix-local-build-overview.html
     - name: install Haskell random lib
       run: |
-        cabal v1-update
-        cabal v1-install random
+        cabal update
+        cabal install random
     
     - name: Checkout truth
       run: git clone --branch master https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE/../gapc-test-suite
