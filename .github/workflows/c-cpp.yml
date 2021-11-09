@@ -41,8 +41,9 @@ jobs:
     - name: install Haskell random lib
       run: |
         which -a cabal
+        cabal --version
         /usr/bin/cabal update
-        cabal install --lib $HOME random
+        
 
     - name: Checkout truth
       run: git clone --branch master https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE/../gapc-test-suite
