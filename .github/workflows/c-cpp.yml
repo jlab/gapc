@@ -38,12 +38,15 @@ jobs:
     ##  run: cd testdata/paraltest && mkdir temp && cd temp && ghc --make ../AdpfMain.lhs -i.. -hidir ./GHC -odir ./GHC -o AdpfMain
     ## we might have to change that in the (near?) future, but it should work for now:
     ## https://cabal.readthedocs.io/en/latest/nix-local-build-overview.html
-    - name: install Haskell random lib
+    - name: cabal update
+      run: |
+        cabal update
+    - name: cabal install
       run: |
         which -a cabal
         cabal --version
-        /usr/bin/cabal update
-        
+        echo "HOME=$HOME, USER=$USER"
+        cabal install --lib $HOME random
 
     - name: Checkout truth
       run: git clone --branch master https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE/../gapc-test-suite
