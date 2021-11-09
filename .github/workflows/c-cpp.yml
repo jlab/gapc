@@ -63,5 +63,6 @@ jobs:
 
     - name: test-paral
       run: |
-        cd testdata/paraltest
+        find / -name "*Random*"
+        cd /home/runner/work/gapc/gapc/testdata/paraltest
         ghc -v --make ../AdpfMain.lhs -i.. -hidir ./GHC -odir ./GHC -o AdpfMain
