@@ -60,16 +60,16 @@ jobs:
       run: cabal v2-update
     - name: cabal install
       run: cabal v2-install --lib random
-    #- name: configure
-    #  run: ./configure --prefix $GITHUB_WORKSPACE
-    #- name: make
-    #  run: make -j 2
-    #- name: make install
-    #  run: sudo make install
+    - name: configure
+      run: ./configure --prefix $GITHUB_WORKSPACE
+    - name: make
+      run: make -j 2
+    - name: make install
+      run: sudo make install
 
     - name: tp
       run: make test-paral
-      
+
     - name: test-paral
       run: |
         cd /home/runner/work/gapc/gapc/testdata/paraltest
