@@ -67,6 +67,9 @@ jobs:
     #- name: make install
     #  run: sudo make install
 
+    - name: tp
+      run: make test-paral
+      
     - name: test-paral
       run: |
         cd /home/runner/work/gapc/gapc/testdata/paraltest
