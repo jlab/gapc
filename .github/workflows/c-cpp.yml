@@ -58,7 +58,7 @@ jobs:
 
     - name: cabal update
       run: cabal v2-update
-
+      run: cabal v2-install --lib Random
     #- name: configure
     #  run: ./configure --prefix $GITHUB_WORKSPACE
     #- name: make
