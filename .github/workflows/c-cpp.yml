@@ -40,6 +40,7 @@ jobs:
     ## https://cabal.readthedocs.io/en/latest/nix-local-build-overview.html
     - name: install Haskell random lib
       run: |
+        which -a cabal
         cabal update
         cabal install --lib $HOME random
 
