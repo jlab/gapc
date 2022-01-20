@@ -1819,7 +1819,7 @@ The cartesian product.
 **/
          product '^' product { $$ = new Product::Pareto($1, $3, @2); } |
 /**}
-The cartesian product.
+The pareto product.
 **/
 /**{
 **/
