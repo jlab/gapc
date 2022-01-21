@@ -32,12 +32,12 @@ jobs:
       run: git clone --branch master https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE/../gapc-test-suite
 
     - uses: actions/checkout@v2
-    - name: configure
-      run: ./configure --prefix $GITHUB_WORKSPACE
-    - name: make
-      run: make -j 2
-    - name: make install
-      run: sudo make install
+    #- name: configure
+    #  run: ./configure --prefix $GITHUB_WORKSPACE
+    #- name: make
+    #  run: make -j 2
+    #- name: make install
+    #  run: sudo make install
 
     #- name: test-mod
     #  run: make test-mod TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu
@@ -53,6 +53,9 @@ jobs:
       run: |
         cabal v2-update
         cabal v2-install --lib random
-
-    - name: test-paral
-      run: make test-paral
+    - name: test Haskell
+      run: |
+        cd testdata/paraltest/
+        ghc --make AdpfMain.lhs
+    #- name: test-paral
+    #  run: make test-paral
