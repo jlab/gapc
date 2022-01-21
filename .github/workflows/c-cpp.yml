@@ -52,18 +52,13 @@ jobs:
       id: hstef
     - name: cabal
       run: |
-        cabal v2-update
-        cabal v2-install --lib random
+        ${{ steps.hstef.outputs.cabal-exe }} v2-update
+        ${{ steps.hstef.outputs.cabal-exe }} v2-install --lib random
     #- name: search random
     #  run: find / -iname "*random*"
     - name: test Haskell
       run: |
         cd testdata/paraltest/
-        echo ${{ steps }}
-        echo ${{ steps.hstef }}
-        echo ${{ steps.hstef.outputs }}
-        echo ${{ steps.hstef.outputs.ghc-exe }}
-        find . -iname "*ghc*"
-        ghc --make -v AdpfMain.lhs
+        ${{ steps.hstef.outputs.ghc-exe }} --make -v AdpfMain.lhs
     #- name: test-paral
     #  run: make test-paral
