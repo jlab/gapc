@@ -88,10 +88,12 @@ void KBacktrack::gen_backtrack(AST &ast) {
   Code::Mode m = ast.code_mode();
   m.set_kscoring(true);
   ast.set_code_mode(m);
+  #ifndef NDEBUG
   bool r = ast.check_instances(instance);
   assert(r);
   r = ast.insert_instance(instance);
   assert(r);
+  #endif
   remove_unused();
 
   // ast.instance_grammar_eliminate_lists(instance);

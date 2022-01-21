@@ -149,10 +149,12 @@ void Subopt_Marker::add_subopt_fn_args(Fn_Def *fn, const Symbol::NT &nt) {
 }
 
 void Subopt_Marker::gen_backtrack(AST &ast) {
+  #ifndef NDEBUG
   bool r = ast.check_instances(instance);
   assert(r);
   r = ast.insert_instance(instance);
   assert(r);
+  #endif
   remove_unused();
 
   // ast.instance_grammar_eliminate_lists(instance);

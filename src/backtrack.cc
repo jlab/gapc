@@ -74,9 +74,11 @@ void Backtrack::apply_filter(Filter *f) {
 
 
 void Backtrack::gen_backtrack(AST &ast) {
+  #ifndef NDEBUG
   bool r = ast.check_instances(instance);
   assert(r);
   r = ast.insert_instance(instance);
+  #endif
   assert(r);
   remove_unused();
 
