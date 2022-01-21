@@ -53,6 +53,8 @@ jobs:
       run: |
         cabal v2-update
         cabal v2-install --lib random
+    - name: search random
+      run: find / -iname "*random*"
     - name: test Haskell
       run: |
         cd testdata/paraltest/
