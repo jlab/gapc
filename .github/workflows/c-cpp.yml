@@ -55,17 +55,19 @@ jobs:
         ${{ steps.hstef.outputs.cabal-exe }} v2-update
         ${{ steps.hstef.outputs.cabal-exe }} v2-install --lib random
         cat $HOME/.cabal/config | grep pack
-    - name: test Haskell
-      run: |
-        cat $HOME/.cabal/config | grep pack
-        package_path=$HOME/.cabal/store/ghc-`${{ steps.hstef.outputs.ghc-exe }} --version | rev | cut -d " " -f 1 | rev`/package.db
-        echo "package_path >$package_path<"
-        cd testdata/paraltest/
-        echo "GHC_PACKAGE_PATH >$GHC_PACKAGE_PATH<"
-        export GHC_PACKAGE_PATH=$GHC_PACKAGE_PATH:$package_path
-        ${{ steps.hstef.outputs.ghc-exe }} --make AdpfMain.lhs
+    #~ - name: test Haskell
+      #~ run: |
+        #~ cat $HOME/.cabal/config | grep pack
+        #~ package_path=$HOME/.cabal/store/ghc-`${{ steps.hstef.outputs.ghc-exe }} --version | rev | cut -d " " -f 1 | rev`/package.db
+        #~ echo "package_path >$package_path<"
+        #~ cd testdata/paraltest/
+        #~ echo "GHC_PACKAGE_PATH >$GHC_PACKAGE_PATH<"
+        #~ export GHC_PACKAGE_PATH=$GHC_PACKAGE_PATH:$package_path
+        #~ ${{ steps.hstef.outputs.ghc-exe }} --make AdpfMain.lhs
         
         
     #${{ steps.hstef.outputs.ghc-exe }} -package-db $HOME/.cabal/store/ghc-9.2.1/package.db --make -v AdpfMain.lhs
-    #- name: test-paral
-    #  run: make test-paral
+    - name: test-paral
+      run: |
+        package_path=$HOME/.cabal/store/ghc-`${{ steps.hstef.outputs.ghc-exe }} --version | rev | cut -d " " -f 1 | rev`/package.db
+        GHC="ghc -package-db $package_path" make test-paral
