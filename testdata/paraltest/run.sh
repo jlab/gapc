@@ -1,5 +1,10 @@
 #!/bin/ksh
 
+if [ -z "$GHC" ]; then
+	echo "oh"
+	GHC=ghc
+fi
+
 set -u
 
 #NO_CONFIG_MF="foo"
@@ -7,7 +12,6 @@ set -u
 
 DIR_BASE=../../..
 GAPC=$DIR_BASE/gapc
-GHC=ghc
 MAKE=make
 MAKEFLAGS="-I$DIR_BASE/testdata/gapc_filter"
 

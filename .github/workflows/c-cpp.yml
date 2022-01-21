@@ -48,14 +48,17 @@ jobs:
     - name: test-unit
       run: make test-unit
     # we need to install Haskell (especially the System.Random lib) for paralell tests, since we compare Haskell ADP with gapc
-    - uses: haskell/actions/setup@v1.2
+    - uses: haskell/actions/setup@v1
+      id: haskell
     - name: cabal
       run: |
-        cabal v2-update
-        cabal v2-install --lib random
+        ${{ steps.haskell.outputs.cabal-exe }} v2-update
+        ${{ steps.haskell.outputs.cabal-exe }} v2-install --lib random
 
     - name: test-paral
-      run: make test-paral
+      run: |
+        package_path=$HOME/.cabal/store/ghc-`${{ steps.haskell.outputs.ghc-exe }} --version | rev | cut -d " " -f 1 | rev`/package.db
+        GHC="ghc -package-db $package_path" make test-paral
 
   gapc_osx:
     strategy:
