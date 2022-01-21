@@ -56,6 +56,6 @@ jobs:
     - name: test Haskell
       run: |
         cd testdata/paraltest/
-        ghc --make AdpfMain.lhs
+        ghc --make -v AdpfMain.lhs
     #- name: test-paral
     #  run: make test-paral
