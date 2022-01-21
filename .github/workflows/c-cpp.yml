@@ -61,7 +61,8 @@ jobs:
         package_path=$HOME/.cabal/store/ghc-`${{ steps.hstef.outputs.ghc-exe }} --version | rev | cut -d " " -f 1 | rev`/package.db
         echo "package_path >$package_path<"
         cd testdata/paraltest/
-        export GHC_PACKAGE_PATH=$package_path
+        echo "GHC_PACKAGE_PATH >$GHC_PACKAGE_PATH<"
+        export GHC_PACKAGE_PATH=$GHC_PACKAGE_PATH:$package_path
         ${{ steps.hstef.outputs.ghc-exe }} --make AdpfMain.lhs
         
         
