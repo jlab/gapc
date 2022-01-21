@@ -54,11 +54,12 @@ jobs:
       run: |
         ${{ steps.hstef.outputs.cabal-exe }} v2-update
         ${{ steps.hstef.outputs.cabal-exe }} v2-install --lib random -v
+        env
     #- name: search random
     #  run: find / -iname "*random*"
-    - name: test Haskell
-      run: |
-        cd testdata/paraltest/
-        ${{ steps.hstef.outputs.ghc-exe }} -package-db /home/runner/.cabal/store/ghc-9.2.1/package.db --make -v AdpfMain.lhs
+    #- name: test Haskell
+    #  run: |
+    #    cd testdata/paraltest/
+    #    ${{ steps.hstef.outputs.ghc-exe }} -package-db /home/runner/.cabal/store/ghc-9.2.1/package.db --make -v AdpfMain.lhs
     #- name: test-paral
     #  run: make test-paral
