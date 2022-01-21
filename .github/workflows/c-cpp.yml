@@ -52,7 +52,7 @@ jobs:
       id: hstef
     - name: cabal
       run: |
-        ${{ steps.hstef.outputs.cabal-exe }} v2-update
+        ${{ steps.hstef.outputs.cabal-exe }} v2-update -v
         ${{ steps.hstef.outputs.cabal-exe }} v2-install --lib random
     #- name: search random
     #  run: find / -iname "*random*"
