@@ -130,7 +130,7 @@ void Subopt::add_subopt_fn_args(Fn_Def *fn) {
 }
 
 void Subopt::gen_backtrack(AST &ast) {
-  bool r = ast.check_instances(instance);
+  [[maybe_unused]] bool r = ast.check_instances(instance);
   assert(r);
   r = ast.insert_instance(instance);
   assert(r);
