@@ -2996,7 +2996,7 @@ Expr::Fn_Call::Builtin Fn_Def::choice_fn_type() const {
   assert(ret);
   if (!ret->expr->is(Expr::FN_CALL)) {
     if (ret->expr->is(Expr::VACC)) {
-      Expr::Vacc *vacc = dynamic_cast<Expr::Vacc*>(ret->expr);
+      [[maybe_unused]] Expr::Vacc *vacc = dynamic_cast<Expr::Vacc*>(ret->expr);
       assert(vacc);
       // FIXME
       // if (*vacc->name() == *names.front())
@@ -3021,7 +3021,7 @@ Expr::Fn_Call::Builtin Fn_Def::choice_fn_type() const {
 void Fn_Def::set_mode(std::string *s) {
   if (!s)
     return;
-  bool b = mode_.set(*s);
+  [[maybe_unused]] bool b = mode_.set(*s);
   assert(b);
 }
 

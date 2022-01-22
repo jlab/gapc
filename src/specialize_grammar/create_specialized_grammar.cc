@@ -1411,8 +1411,6 @@ std::list<Statement::Base*>* SpecializeGrammar::CreateSpecializedGrammar::
   assert(this->algebraFunctionInfoAttribute != NULL);
   std::string* originalAlgebraFunctionName =
     this->algebraFunctionInfoAttribute->getAlgebraFunctionName();
-  std::string* originalGrammarRuleName =
-    this->algebraFunctionInfoAttribute->getGrammarRuleName();
   std::list<Fn_Arg::Base*> originalArguments =
     this->algebraFunctionInfoAttribute->getAlgebraFunctionArguments();
   assert(originalAlgebraFunctionName != NULL);
@@ -1702,8 +1700,6 @@ std::list<Statement::Base*>* SpecializeGrammar::CreateSpecializedGrammar::
   assert(algebraFunctionInfoAttribute != NULL);
   std::string* originalAlgebraFunctionName =
     algebraFunctionInfoAttribute->getAlgebraFunctionName();
-  std::string* originalGrammarRuleName =
-    algebraFunctionInfoAttribute->getGrammarRuleName();
   std::list<Fn_Arg::Base*> originalArguments =
     algebraFunctionInfoAttribute->getAlgebraFunctionArguments();
   assert(originalAlgebraFunctionName != NULL);

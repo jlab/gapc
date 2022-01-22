@@ -44,7 +44,7 @@ Instance::Instance(Algebra *a, Algebra *b) {
   Product::Single *y = new Product::Single(b);
   Product::Times *times = new Product::Times(x, y);
   product = times;
-  bool r = product->init();
+  [[maybe_unused]] bool r = product->init();
   assert(r);
 }
 
@@ -53,7 +53,7 @@ Instance::Instance(Product::Base *a, Algebra *b) {
   Product::Single *y = new Product::Single(b);
   Product::Times *times = new Product::Times(x, y);
   product = times;
-  bool r = product->init();
+  [[maybe_unused]] bool r = product->init();
   assert(r);
 }
 

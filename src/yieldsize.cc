@@ -62,7 +62,7 @@ namespace Yield {
   void Multi::with(const std::vector<std::list<Filter*> > &l) {
     if (l.empty())
       return;
-    size_t a = array.size(), b = l.size();
+    [[maybe_unused]] size_t a = array.size(), b = l.size();
     assert(a == b);
     std::vector<std::list<Filter*> >::const_iterator j = l.begin();
     for (std::vector<Size>::iterator i = array.begin(); i != array.end();
@@ -80,7 +80,7 @@ namespace Yield {
   }
 
   void Multi::min_high(const Multi &o) {
-    size_t a = array.size(), b = o.array.size();
+    [[maybe_unused]] size_t a = array.size(), b = o.array.size();
     assert(a == b);
     std::vector<Size>::const_iterator j = o.array.begin();
     for (std::vector<Size>::iterator i = array.begin(); i != array.end();
@@ -89,7 +89,7 @@ namespace Yield {
         (*i).set_high((*j).high());
   }
   void Multi::max_high(const Multi &o) {
-    size_t a = array.size(), b = o.array.size();
+    [[maybe_unused]] size_t a = array.size(), b = o.array.size();
     assert(a == b);
     std::vector<Size>::const_iterator j = o.array.begin();
     for (std::vector<Size>::iterator i = array.begin(); i != array.end();
@@ -98,7 +98,7 @@ namespace Yield {
         (*i).set_high((*j).high());
   }
   void Multi::sub_high_low(const Multi &o) {
-    size_t a = array.size(), b = o.array.size();
+    [[maybe_unused]] size_t a = array.size(), b = o.array.size();
     assert(a == b);
     std::vector<Size>::const_iterator j = o.array.begin();
     for (std::vector<Size>::iterator i = array.begin(); i != array.end();
@@ -109,7 +109,7 @@ namespace Yield {
 
   bool Multi::leq_high(const Multi &o) const {
     bool r = false;
-    size_t a = array.size(), b = o.array.size();
+    [[maybe_unused]] size_t a = array.size(), b = o.array.size();
     assert(a == b);
     std::vector<Size>::const_iterator j = o.array.begin();
     for (std::vector<Size>::const_iterator i = array.begin(); i != array.end();

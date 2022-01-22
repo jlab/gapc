@@ -572,7 +572,6 @@ void AmbiguityCFG::GrammarVMFunctionCompiler::processExpr(Expr::Base* expr) {
   // given as parameter, we process this instance.
   if (expr->is(Expr::VACC)) {
     Expr::Vacc *parameterAccess = dynamic_cast<Expr::Vacc*> (expr);
-    VarDeclInfo *varDeclInfo = processVarAccess(parameterAccess);
     // //grammarVM
     std::string* accessedVarName = processVarAccess_(parameterAccess);
     this->grammarVMCode->appendCommand(new LoadVarCommand(
