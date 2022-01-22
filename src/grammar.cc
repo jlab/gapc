@@ -286,9 +286,7 @@ void Grammar::init_multi_yield_sizes() {
   // (four times - why is that?)
   bool cont = false;
   // size_t a = 0, m = 4*nt_list.size();
-  size_t number_of_nl_elements = nt_list.size();
-  size_t a = 0, m = std::max(4*number_of_nl_elements,
-                             number_of_nl_elements*number_of_nl_elements);
+  size_t a = 0;
   do {
     cont = false;
     std::vector<Yield::Multi>::iterator j = old.begin();
@@ -417,7 +415,7 @@ bool Grammar::init_tracks() {
     std::cerr << "Tracks axiom: " << tracks << '\n';
   }
   Tracks_Visitor v(*this);
-  size_t m = 2 * NTs.size(), i = 0;
+  size_t i = 0;
   do {
     v.again = false;
     traverse(v);
@@ -993,7 +991,7 @@ void Grammar::dep_analysis() {
 
 
 void Grammar::remove(Symbol::NT *x) {
-  size_t t = nt_list.size();
+  [[maybe_unused]] size_t t = nt_list.size();
   nt_list.remove(x);
   assert(t-1 == nt_list.size());
   std::string nt(*x->name);
