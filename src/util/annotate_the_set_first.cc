@@ -480,7 +480,8 @@ Util::FirstSetAttribute::FirstSetAttribute(Util::FirstSet firstSet)
 
 
 Util::FirstSetAttribute::FirstSetAttribute(FirstSetAttribute& a)
-  : Attribute(a), firstSet(firstSet) {
+  : Attribute(a) {
+  this->firstSet = firstSet;
 }
 
 
