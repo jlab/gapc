@@ -2436,26 +2436,31 @@ void Alt::Simple::init_multi_ys() {
   m_ys = Yield::Multi(tracks_);
 
   if (is_terminal()) {
-	assert(tracks_ == 1);
+    assert(tracks_ == 1);
 
-	// a terminal like CHAR or ROPE can have one argument, that is an implicit filter like
-	// CHAR('a') or ROPE("stefan"), which shall only accept sub-words that are 'a' or 'stefan', respectively
-	// if this argument is of a certain length, it should determine the yield size of the terminal
-	// parser. Therefore we here iterate through all arguments (currently just one 2021-05-17) and
-	// look for the longest. If the result is > 0, we set the terminal_ys to this value.
-	// However, this mechanism is only valid for terminal parsers that consume input, i.e. NOT for CONST_xxx
-	// terminal parser, that inject values for later use in algebras.
+    /* a terminal like CHAR or ROPE can have one argument, that is an implicit
+       filter like CHAR('a') or ROPE("stefan"), which shall only accept sub-
+       words that are 'a' or 'stefan', respectively if this argument is of a
+       certain length, it should determine the yield size of the terminal
+       parser. Therefore we here iterate through all arguments (currently just
+       one 2021-05-17) and look for the longest. If the result is > 0, we set
+       the terminal_ys to this value.
+       However, this mechanism is only valid for terminal parsers that consume
+       input, i.e. NOT for CONST_xxx terminal parser, that inject values for
+       later use in algebras.
+    */
     if (name->rfind("CONST_", 0) != 0) {
         Yield::Poly max_terminal_arg_yield = Yield::Poly(0);
-        for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
-			Fn_Arg::Const *fn = dynamic_cast<Fn_Arg::Const*>(*i);
-			if (fn) {
-				max_terminal_arg_yield *= fn->expr().yield_size().high();
-			}
-		}
-		if (max_terminal_arg_yield > 0) {
-			terminal_ys.set(max_terminal_arg_yield, max_terminal_arg_yield);
-		}
+        for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
+             i != args.end(); ++i) {
+            Fn_Arg::Const *fn = dynamic_cast<Fn_Arg::Const*>(*i);
+            if (fn) {
+                max_terminal_arg_yield *= fn->expr().yield_size().high();
+            }
+        }
+        if (max_terminal_arg_yield > 0) {
+            terminal_ys.set(max_terminal_arg_yield, max_terminal_arg_yield);
+        }
     }
 
     m_ys(0) = terminal_ys;

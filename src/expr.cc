@@ -217,7 +217,8 @@ Expr::Base *Expr::Not::copy() const {
 }
 
 
-#define EXPRTWOCP(A) Expr::Base *Expr::A::copy() const { A *o = new A(*this); Two::copy(*o); return o; }
+#define EXPRTWOCP(A) Expr::Base *Expr::A::copy() const { \
+  A *o = new A(*this); Two::copy(*o); return o; }
 
 EXPRTWOCP(Plus)
 EXPRTWOCP(Minus)

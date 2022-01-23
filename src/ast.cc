@@ -551,9 +551,10 @@ void AST::set_adp_version(Instance &inst, int i, int step, int pareto) {
 
     if (spec != ADP_Mode::STANDARD) {
         Algebra *a = instance_->product->algebra();
-  if (a->choice_fns.size() > 1) {
+        if (a->choice_fns.size() > 1) {
             Log::instance()->error(
-              "ADP specialization set but 2 choice functions defined. Mixing choice functions may cause undefined behaviour.");
+              "ADP specialization set but 2 choice functions defined. Mixing"
+              " choice functions may cause undefined behaviour.");
         }
     }
 
