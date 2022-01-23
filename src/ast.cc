@@ -507,9 +507,9 @@ struct SetADPVersion : public Visitor {
   }
 };
 
-const std::string AST::duplicate_suffix = "_nullary";
-const std::string AST::comperator_suffix = "_spec_comperator";
-const std::string AST::sorter_suffix = "_spec_sorter";
+const char AST::duplicate_suffix[] = "_nullary";
+const char AST::comperator_suffix[] = "_spec_comperator";
+const char AST::sorter_suffix[] = "_spec_sorter";
 
 void AST::set_adp_version(Instance &inst, int i, int step, int pareto) {
     // what to set?
