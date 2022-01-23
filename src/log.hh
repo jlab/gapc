@@ -143,7 +143,7 @@ class Log {
   void set_debug(bool b = true);
 
   bool is_verbose() {
-	  return logLevel <= VERBOSE;
+    return logLevel <= VERBOSE;
   }
   void set_product(const std::string &p) {
     product_ = p;

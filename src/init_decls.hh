@@ -25,9 +25,8 @@
 #ifndef SRC_INIT_DECLS_HH_
 #define SRC_INIT_DECLS_HH_
 
-#include "visitor.hh"
-
 #include <string>
+#include "visitor.hh"
 
 class Init_Decls : public Visitor {
  private:
@@ -44,4 +43,4 @@ class Init_Decls : public Visitor {
   void visit(Fn_Arg::Base &f);
 };
 
-#endif  // INIT_DECLS_HH
+#endif  // SRC_INIT_DECLS_HH_

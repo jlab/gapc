@@ -751,7 +751,7 @@ void Fn_Def::get_pareto_dimensions(
               Expr::Fn_Call::ROUND_TO_DIGIT);
 
             std::ostringstream offset;
-            offset << (int)std::pow(10, float_acc);
+            offset << static_cast<int>(std::pow(10, float_acc));
 
             round->add_arg( new std::string(offset.str()) );
             round->add_arg( new Expr::Vacc(last_decl->left()));
@@ -791,7 +791,7 @@ void Fn_Def::get_pareto_dimensions(
               Expr::Fn_Call::ROUND_TO_DIGIT);
 
             std::ostringstream offset;
-            offset << (int)std::pow(10, float_acc);
+            offset << static_cast<int>(std::pow(10, float_acc));
 
             round->add_arg( new std::string(offset.str()) );
             round->add_arg( new Expr::Vacc(last_decl->right()));
@@ -1183,7 +1183,7 @@ void Fn_Def::codegen_pareto_nosort(
       product.get_float_accuracy() != 0) {
       Expr::Fn_Call *round = new Expr::Fn_Call(Expr::Fn_Call::ROUND_TO_DIGIT);
       std::ostringstream offset;
-      offset << (int)std::pow(10, product.get_float_accuracy());
+      offset << static_cast<int>(std::pow(10, product.get_float_accuracy()));
 
       round->add_arg(new std::string(offset.str()));
       round->add_arg(new Expr::Vacc(tupel->left()));
@@ -1197,7 +1197,7 @@ void Fn_Def::codegen_pareto_nosort(
       product.get_float_accuracy() != 0) {
       Expr::Fn_Call *round = new Expr::Fn_Call(Expr::Fn_Call::ROUND_TO_DIGIT);
       std::ostringstream offset;
-      offset  << (int)std::pow(10, product.get_float_accuracy());
+      offset  << static_cast<int>(std::pow(10, product.get_float_accuracy()));
 
       round->add_arg( new std::string(offset.str()) );
       round->add_arg( new Expr::Vacc(tupel->right()) );
@@ -1234,7 +1234,7 @@ void Fn_Def::codegen_pareto_nosort(
       product.get_float_accuracy() != 0) {
       Expr::Fn_Call *round = new Expr::Fn_Call(Expr::Fn_Call::ROUND_TO_DIGIT);
       std::ostringstream offset;
-      offset  << (int)std::pow(10, product.get_float_accuracy());
+      offset  << static_cast<int>(std::pow(10, product.get_float_accuracy()));
 
       round->add_arg( new std::string(offset.str()) );
       round->add_arg( new Expr::Vacc(tmp->left()) );
@@ -1248,7 +1248,7 @@ void Fn_Def::codegen_pareto_nosort(
       product.get_float_accuracy() != 0) {
       Expr::Fn_Call *round = new Expr::Fn_Call(Expr::Fn_Call::ROUND_TO_DIGIT);
       std::ostringstream offset;
-      offset  << (int)std::pow(10, product.get_float_accuracy());
+      offset  << static_cast<int>(std::pow(10, product.get_float_accuracy()));
 
       round->add_arg( new std::string(offset.str()) );
       round->add_arg( new Expr::Vacc(tmp->right()) );
@@ -1797,7 +1797,7 @@ void Fn_Def::codegen_pareto_isort(Fn_Def &a, Fn_Def &b, Product::Two &product) {
         product.get_float_accuracy() != 0) {
         Expr::Fn_Call *round = new Expr::Fn_Call(Expr::Fn_Call::ROUND_TO_DIGIT);
         std::ostringstream offset;
-        offset  << (int)std::pow(10, product.get_float_accuracy());
+        offset  << static_cast<int>(std::pow(10, product.get_float_accuracy()));
 
         round->add_arg(new std::string(offset.str()) );
         round->add_arg(new Expr::Vacc(tupel->left()) );
@@ -1811,7 +1811,7 @@ void Fn_Def::codegen_pareto_isort(Fn_Def &a, Fn_Def &b, Product::Two &product) {
         product.get_float_accuracy() != 0) {
         Expr::Fn_Call *round = new Expr::Fn_Call(Expr::Fn_Call::ROUND_TO_DIGIT);
         std::ostringstream offset;
-        offset  << (int) std::pow(10, product.get_float_accuracy());
+        offset  << static_cast<int>(std::pow(10, product.get_float_accuracy()));
 
         round->add_arg( new std::string(offset.str()) );
         round->add_arg( new Expr::Vacc(tupel->right()) );
@@ -1852,7 +1852,7 @@ void Fn_Def::codegen_pareto_isort(Fn_Def &a, Fn_Def &b, Product::Two &product) {
       product.get_float_accuracy() != 0) {
       Expr::Fn_Call *round = new Expr::Fn_Call(Expr::Fn_Call::ROUND_TO_DIGIT);
       std::ostringstream offset;
-      offset  << (int)std::pow(10, product.get_float_accuracy());
+      offset  << static_cast<int>(std::pow(10, product.get_float_accuracy()));
 
       round->add_arg( new std::string(offset.str()) );
       round->add_arg( new Expr::Vacc(tmp->left()) );
@@ -1866,7 +1866,7 @@ void Fn_Def::codegen_pareto_isort(Fn_Def &a, Fn_Def &b, Product::Two &product) {
       product.get_float_accuracy() != 0) {
       Expr::Fn_Call *round = new Expr::Fn_Call(Expr::Fn_Call::ROUND_TO_DIGIT);
       std::ostringstream offset;
-      offset  << (int)std::pow(10, product.get_float_accuracy());
+      offset  << static_cast<int>(std::pow(10, product.get_float_accuracy()));
 
       round->add_arg( new std::string(offset.str()) );
       round->add_arg( new Expr::Vacc(tmp->right()) );
@@ -2727,7 +2727,7 @@ void Fn_Def::codegen_pareto_lex(Fn_Def &a, Fn_Def &b, Product::Two &product) {
       product.get_float_accuracy() != 0) {
       Expr::Fn_Call *round = new Expr::Fn_Call(Expr::Fn_Call::ROUND_TO_DIGIT);
       std::ostringstream offset;
-      offset  << (int)std::pow(10, product.get_float_accuracy());
+      offset  << static_cast<int>(std::pow(10, product.get_float_accuracy()));
 
       round->add_arg( new std::string(offset.str()) );
       round->add_arg( new Expr::Vacc(tupel->right()) );
@@ -2750,7 +2750,7 @@ void Fn_Def::codegen_pareto_lex(Fn_Def &a, Fn_Def &b, Product::Two &product) {
       product.get_float_accuracy() != 0) {
         Expr::Fn_Call *round = new Expr::Fn_Call(Expr::Fn_Call::ROUND_TO_DIGIT);
         std::ostringstream offset;
-        offset  << (int)std::pow(10, product.get_float_accuracy());
+        offset  << static_cast<int>(std::pow(10, product.get_float_accuracy()));
 
         round->add_arg( new std::string(offset.str()) );
         round->add_arg( new Expr::Vacc(tmp->right()) );

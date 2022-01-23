@@ -31,11 +31,13 @@
 #include "location.hh"
 
 #define LINE_SIZE 160
-#define CHECK_EXIT(A) if ((A) < 0) {std::fprintf(stderr, "%s:%d", __FILE__, __LINE__); std::perror(""); std::abort();}
+#define CHECK_EXIT(A) if ((A) < 0) {\
+  std::fprintf(stderr, "%s:%d", __FILE__, __LINE__);\
+  std::perror(""); std::abort();}
 
 class Loc : public yy::location {
  private:
-  long off;
+  int64_t off;
   std::FILE *file;
 
  public:
@@ -43,8 +45,8 @@ class Loc : public yy::location {
   Loc();
   Loc(const yy::location &l);
 
-  long offset() const { return off; }
-  void setOffset(long o) { off = o; }
+  int64_t offset() const { return off; }
+  void setOffset(int64_t o) { off = o; }
   void set_file(std::FILE* f);
   std::FILE *file_ptr() const { return file; }
 

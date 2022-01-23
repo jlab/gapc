@@ -40,7 +40,7 @@ std::string Loc::line() const {
   assert(file);
   int r;
   char *buffer = new char[LINE_SIZE];
-  long fpos = std::ftell(file); CHECK_EXIT(fpos);
+  int64_t fpos = std::ftell(file); CHECK_EXIT(fpos);
   r = std::fseek(file, off, SEEK_SET); CHECK_EXIT(r);
   char *t = std::fgets(buffer, LINE_SIZE, file);
   if (!t) {

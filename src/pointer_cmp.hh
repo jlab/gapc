@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef SRC_POINTER_CMP_
-#define SRC_POINTER_CMP_
+#ifndef SRC_POINTER_CMP_HH_
+#define SRC_POINTER_CMP_HH_
 
 template<typename T>
 struct Pointer_Cmp {
@@ -32,4 +32,4 @@ struct Pointer_Cmp {
   }
 };
 
-#endif  // SRC_POINTER_CMP_
+#endif  // SRC_POINTER_CMP_HH_

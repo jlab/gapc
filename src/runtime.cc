@@ -128,7 +128,7 @@ void Runtime::Poly::divide_by_n() {
     return;
   if (!n) {
     assert(coefficients[0]);
-    double r = std::sqrt(double(coefficients[0]));
+    double r = std::sqrt(static_cast<double>(coefficients[0]));
     coefficients[0] = r;
   }
   if (n > 0) {

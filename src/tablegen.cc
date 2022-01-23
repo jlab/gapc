@@ -329,7 +329,7 @@ void Tablegen::offset(size_t track_pos, itr f, const itr &e) {
   itr end(rev.end());
 
   Expr::Base *dim = new Expr::Const(1);
-  Expr::Base *access = new Expr::Const(int(0));
+  Expr::Base *access = new Expr::Const(static_cast<int>(0));
   offset(tracks.begin(), first, end, dim, access);
 
   std::vector<Statement::Var_Decl*> p;
