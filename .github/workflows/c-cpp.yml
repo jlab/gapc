@@ -138,7 +138,7 @@ jobs:
     - uses: actions/checkout@v1
     - uses: actions/setup-python@v1
     - run: pip install cpplint
-    - run: cpplint --recursive --counting 'detailed' --filter="-runtime/references,-runtime/explicit" --extensions=cc,hh src/ rtlib/
+    - run: cpplint --recursive --counting 'detailed' --filter="-runtime/references,-runtime/explicit,-build/include_order" --extensions=cc,hh src/ rtlib/
     - uses: vishnudxb/cancel-workflow@v1.2
       if: failure()
       with:
