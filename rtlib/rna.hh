@@ -34,7 +34,6 @@ extern "C" {
 #include <rnalib.h>
 }
 
-
 #include "sequence.hh"
 #include "subsequence.hh"
 
