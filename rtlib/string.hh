@@ -336,7 +336,7 @@ class String {
               } else {
                 return;
               }
-            } else
+            } else {
               if (in_rep) {
                 if (!rep) {
                   i++;
@@ -346,32 +346,32 @@ class String {
                   rep--;
                   return;
                 }
-              }
-            else {
-              switch (block->array[i]) {
-                case Block::SEQ:
-                  ++i;
-                  in_seq = true;
-                  break;
-                case Block::LINK: {
-                  ++i;
-                  Block *t = block->get_link(i);
-                  i += sizeof(Block*);
-                  stack.push(std::pair<Block*, unsigned char>(block, i));
-                  block = t;
-                  i = 0;
-                                  }
-                  break;
-                case Block::REP:
-                  ++i;
-                  ((unsigned char*) &rep)[0] = block->array[i+1];
-                  ((unsigned char*) &rep)[1] = block->array[i+2];
-                  ((unsigned char*) &rep)[2] = block->array[i+3];
-                  ((unsigned char*) &rep)[3] = block->array[i+4];
-                  in_rep = true;
-                  break;
-                default:
-                  assert(false);
+              } else {
+                switch (block->array[i]) {
+                  case Block::SEQ:
+                    ++i;
+                    in_seq = true;
+                    break;
+                  case Block::LINK: {
+                    ++i;
+                    Block *t = block->get_link(i);
+                    i += sizeof(Block*);
+                    stack.push(std::pair<Block*, unsigned char>(block, i));
+                    block = t;
+                    i = 0;
+                                    }
+                    break;
+                  case Block::REP:
+                    ++i;
+                    ((unsigned char*) &rep)[0] = block->array[i+1];
+                    ((unsigned char*) &rep)[1] = block->array[i+2];
+                    ((unsigned char*) &rep)[2] = block->array[i+3];
+                    ((unsigned char*) &rep)[3] = block->array[i+4];
+                    in_rep = true;
+                    break;
+                  default:
+                    assert(false);
+                }
               }
             }
           }
