@@ -21,7 +21,9 @@
 
 }}} */
 
+#ifndef RTLIB_HASH_HH_
+#define RTLIB_HASH_HH_
 
 #include "hashtng.hh"
 
-
+#endif  // RTLIB_HASH_HH_

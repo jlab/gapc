@@ -326,7 +326,8 @@ void AmbiguityCFG::MultiVariableContext::setVarInfoItem(
       for (int pos = 0; pos < multiInfoItem->getDimension(); pos++) {
         if (i == this->contexts.end()) {
           throw LogError(
-            "gap-00223: Dimension-mismatch of info item to be stored and sub-contexts");
+            "gap-00223: Dimension-mismatch of info item to be stored and "
+            "sub-contexts");
         }
         (*i)->setVarInfoItem(name, multiInfoItem->getVarInfoItemAt(pos));
         ++i;
@@ -420,7 +421,8 @@ AmbiguityCFG::VarInfoItem* AmbiguityCFG::MultiVariableContext::getVarInfoItem(
   // we raise an exception
   if (containedVarDecls && containedRecordDecls) {
     throw LogError(
-      "gap-00221: sub-contexts contained different types of variable info items.");
+      "gap-00221: sub-contexts contained different types of variable info"
+      " items.");
   }
 
   if (containedVarDecls) {
@@ -431,7 +433,8 @@ AmbiguityCFG::VarInfoItem* AmbiguityCFG::MultiVariableContext::getVarInfoItem(
 
   // this line must not be reached!
   throw LogError(
-    "gap-00222: no variable declaration nor any record declarations were found.");
+    "gap-00222: no variable declaration nor any record declarations were "
+    "found.");
 }
 
 

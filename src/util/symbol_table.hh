@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef _SYMBOL_TABLE_CC_
-#define _SYMBOL_TABLE_CC_
+#ifndef SRC_UTIL_SYMBOL_TABLE_HH_
+#define SRC_UTIL_SYMBOL_TABLE_HH_
 
 
 #include <cstddef>
@@ -174,4 +174,4 @@ template<class TKey, class TValue> class SymbolTable {
 };  // namespace Util
 
 
-#endif  // _SYMBOL_TABLE_CC_
+#endif  // SRC_UTIL_SYMBOL_TABLE_HH_

@@ -117,7 +117,7 @@ jobs:
       run: sudo make install
 
     - name: clone fold-grammars
-      run: git clone --branch  master https://github.com/jlab/fold-grammars.git $GITHUB_WORKSPACE/../fold-grammars
+      run: git clone --branch  adt_include_guard https://github.com/jlab/fold-grammars.git $GITHUB_WORKSPACE/../fold-grammars
     - name: configure fold-grammars
       run: |
         cd $GITHUB_WORKSPACE/../fold-grammars
@@ -131,3 +131,17 @@ jobs:
         cd Misc/Test-Suite/StefanStyle/
         perl runTests.pl 2 ${{ matrix.task }}
         popd
+
+  cpplint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-python@v1
+    - run: pip install cpplint
+    - run: cpplint --recursive --counting 'detailed' --filter="-runtime/references,-runtime/explicit,-readability/braces,-whitespace/newline,-runtime/printf,-build/include_order" --extensions=cc,hh src/ rtlib/
+    - uses: vishnudxb/cancel-workflow@v1.2
+      if: failure()
+      with:
+        repo: jlab/gapc
+        workflow_id: ${{ github.run_id }}
+        access_token: ${{ github.token }}

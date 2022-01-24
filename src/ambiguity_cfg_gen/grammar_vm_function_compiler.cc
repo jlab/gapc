@@ -163,7 +163,9 @@ void AmbiguityCFG::GrammarVMFunctionCompiler::processStatement(
   } else {
     throw LogError(
       stmt->location,
-      "gap-00111: Unhandled statment type. Most probably this kind of statement\nis not allowed in a canonical pretty print grammar used to generate\nan ambiguity CFG.");
+      "gap-00111: Unhandled statment type. Most probably this kind of "
+      "statement\nis not allowed in a canonical pretty print grammar used to "
+      "generate\nan ambiguity CFG.");
   }
 }
 
@@ -217,7 +219,8 @@ void AmbiguityCFG::GrammarVMFunctionCompiler::processStatement(
         // at the moment no other function call than 'append'
         // is allowed in a algebra function body definition.
         throw LogError(stmt->location,
-          "gap-00107: Function call not supported.\nFound application of function '"
+          "gap-00107: Function call not supported.\nFound application "
+          "of function '"
           + *stmt->name_ + "' (Builtin="
           + str(boost::format("%1%") % stmt->builtin) + ").");
       }
@@ -282,21 +285,24 @@ void AmbiguityCFG::GrammarVMFunctionCompiler::processStatement(
   VarInfoItem* infoItem = processVarAccess(stmt->acc);
   VarInfoItem* infoItem_ = processVarAccess_(stmt->acc);
   std::string* addignedVariableName = NULL;
-  // Cast the pointer to our desired type. The previous method
-  // call must not yield an instance of type RecordDeclInfo (RECORD_DECL_INFO).
+  /* Cast the pointer to our desired type. The previous method
+     call must not yield an instance of type RecordDeclInfo
+     (RECORD_DECL_INFO).*/
   if (infoItem->is(VAR_DECL_INFO)) {
-    assignedVariable =(VarDeclInfo*)infoItem;
+    assignedVariable = reinterpret_cast<VarDeclInfo*>(infoItem);
     addignedVariableName = assignedVariable->variableName;
   } else {
     throw LogError(
-      stmt->acc->location, "gap-00129: Variable access yielded a record type.");
+      stmt->acc->location,
+      "gap-00129: Variable access yielded a record type.");
   }
   if (infoItem_->is(VAR_DECL_INFO)) {
-    VarDeclInfo* assignedVariable = (VarDeclInfo*)infoItem_;
+    VarDeclInfo* assignedVariable = reinterpret_cast<VarDeclInfo*>(infoItem_);
     addignedVariableName = assignedVariable->variableName;
   } else {
     throw LogError(
-      stmt->acc->location, "gap-00129: Variable access yielded a record type.");
+      stmt->acc->location,
+      "gap-00129: Variable access yielded a record type.");
   }
 
 
@@ -563,7 +569,8 @@ void AmbiguityCFG::GrammarVMFunctionCompiler::processLoopStatement(
   // been completed
   throw LogError(
     bb->location,
-    "gap-00000: Not implemented exception: AmbiguityCFG::FnDefProcessor::processStatement (Statement::While* stmt)");
+    "gap-00000: Not implemented exception: AmbiguityCFG::FnDefProcessor::"
+    "processStatement (Statement::While* stmt)");
 }
 
 
@@ -602,7 +609,8 @@ void AmbiguityCFG::GrammarVMFunctionCompiler::processExpr(Expr::Base* expr) {
     } else {
       throw LogError(
         constant->location,
-        "gap-00105: Unsupported constant value type in parameter list of append-function call.");
+        "gap-00105: Unsupported constant value type in parameter list of "
+        "append-function call.");
     }
   } else if (expr->is(Expr::FN_CALL)) {
     Expr::Fn_Call *fnCall = dynamic_cast<Expr::Fn_Call*> (expr);
@@ -692,7 +700,7 @@ AmbiguityCFG::VarDeclInfo* AmbiguityCFG::GrammarVMFunctionCompiler::
   processVarAccess(Expr::Vacc* varAccess) {
   VarInfoItem* infoItem = processVarAccess(varAccess->var_acc);
   if (infoItem->is(VAR_DECL_INFO)) {
-    return (VarDeclInfo*)infoItem;
+    return reinterpret_cast<VarDeclInfo*>(infoItem);
   } else {
     throw LogError(varAccess->location,
       "gap-00127: Variable access yielded a record type.");
@@ -750,7 +758,8 @@ AmbiguityCFG::VarInfoItem* AmbiguityCFG::GrammarVMFunctionCompiler::
 AmbiguityCFG::VarInfoItem* AmbiguityCFG::GrammarVMFunctionCompiler::
   processVarAccess(Var_Acc::Array *acc) {
   throw LogError(acc->location,
-    "gap-00000: AmbiguityCFG::FnDefProcessor::processVarAccess (Var_Acc::Array *acc)");
+    "gap-00000: AmbiguityCFG::FnDefProcessor::processVarAccess "
+    "(Var_Acc::Array *acc)");
 }
 
 
@@ -770,7 +779,7 @@ std::string* AmbiguityCFG::GrammarVMFunctionCompiler::processVarAccess_(
   Expr::Vacc* varAccess) {
   VarInfoItem* infoItem = processVarAccess_(varAccess->var_acc);
   if (infoItem->is(VAR_DECL_INFO)) {
-    return ((VarDeclInfo*)infoItem)->variableName;
+    return (reinterpret_cast<VarDeclInfo*>(infoItem))->variableName;
   } else {
     throw LogError(varAccess->location,
       "gap-00127: Variable access yielded a record type.");
@@ -841,7 +850,8 @@ AmbiguityCFG::VarInfoItem* AmbiguityCFG::GrammarVMFunctionCompiler::
   processVarAccess_(Var_Acc::Array *acc) {
   throw LogError(
     acc->location,
-    "gap-00000: AmbiguityCFG::FnDefProcessor::processVarAccess (Var_Acc::Array *acc)");
+    "gap-00000: AmbiguityCFG::FnDefProcessor::processVarAccess "
+    "(Var_Acc::Array *acc)");
 }
 
 

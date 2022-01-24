@@ -24,9 +24,10 @@
 #ifndef SRC_STATEMENT_TABLE_DECL_HH_
 #define SRC_STATEMENT_TABLE_DECL_HH_
 
-#include "base.hh"
-
 #include <list>
+#include <string>
+
+#include "base.hh"
 
 #include "../type_fwd.hh"
 #include "../symbol_fwd.hh"
@@ -54,15 +55,14 @@ class Table_Decl : public Base {
 
  public:
   Table_Decl(
-      Symbol::NT &nt,
-      ::Type::Base *t, std::string *n,
-      bool c,
-      Fn_Def *fn_is_tab,
-      Fn_Def *fn_tab,
-      Fn_Def *fn_get_tab,
-      Fn_Def *fn_size,
-      const std::list<Statement::Var_Decl*> &ns
-      );
+    Symbol::NT &nt,
+    ::Type::Base *t, std::string *n,
+    bool c,
+    Fn_Def *fn_is_tab,
+    Fn_Def *fn_tab,
+    Fn_Def *fn_get_tab,
+    Fn_Def *fn_size,
+    const std::list<Statement::Var_Decl*> &ns);
 
   void print(Printer::Base &p) const;
 
@@ -74,13 +74,12 @@ class Table_Decl : public Base {
 
   const Fn_Def &fn_is_tab() const { return *fn_is_tab_; }
   const Fn_Def &fn_untab() const { assert(fn_untab_); return *fn_untab_; }
-  void set_fn_untab(Fn_Def *d) { fn_untab_=d; }
+  void set_fn_untab(Fn_Def *d) { fn_untab_ = d; }
   const Fn_Def &fn_tab() const { return *fn_tab_; }
   const Fn_Def &fn_get_tab() const { return *fn_get_tab_; }
   const Fn_Def &fn_size() const { return *fn_size_; }
 
   const Symbol::NT &nt() const { return nt_; }
-
 };
 
 }  // namespace Statement

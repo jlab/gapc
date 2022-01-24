@@ -21,6 +21,9 @@
 
 }}} */
 
+#ifndef SRC_STATEMENT_MARKER_DECL_HH_
+#define SRC_STATEMENT_MARKER_DECL_HH_
+
 #include <string>
 #include "base.hh"
 
@@ -40,7 +43,7 @@ class Marker_Decl : public Base {
     }
 
     void print(Printer::Base &p) const;
-
 };
-
 }  // namespace Statement
+
+#endif  // SRC_STATEMENT_MARKER_DECL_HH_

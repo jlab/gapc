@@ -117,20 +117,20 @@ class CreateSpecializedGrammar {
 
     // The file name of the include file of the runtime
     // methods each algebra function needs.
-    static const std::string theAlgebraRuntimeIncludeFileName;
-    static const std::string theAlgebraAnswerTypeDefName;
-    static const std::string theAlgebraStringTypeDefName;
-    static const std::string theAlphabetStringTypeDefName;
-    static const std::string theAlgebraResultVariableName;
-    static const std::string theSignatureName;
-    static const std::string theAlgebraName;
-    static const std::string theGrammarName;
-    static const std::string theAxiomName;
-    static const std::string theChoiceFunctionName;
-    static const std::string theMergeRulesFunctionName;
-    static const std::string theResultShapeFieldName;
-    static const std::string theGetRuleNameFunctionName;
-    static const std::string theRopeStringMatchingFilterName;
+    static const char theAlgebraRuntimeIncludeFileName[];
+    static const char theAlgebraAnswerTypeDefName[];
+    static const char theAlgebraStringTypeDefName[];
+    static const char theAlphabetStringTypeDefName[];
+    static const char theAlgebraResultVariableName[];
+    static const char theSignatureName[];
+    static const char theAlgebraName[];
+    static const char theGrammarName[];
+    static const char theAxiomName[];
+    static const char theChoiceFunctionName[];
+    static const char theMergeRulesFunctionName[];
+    static const char theResultShapeFieldName[];
+    static const char theGetRuleNameFunctionName[];
+    static const char theRopeStringMatchingFilterName[];
 
 
     // An enumeration of all types that are important for the

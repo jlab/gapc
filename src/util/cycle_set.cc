@@ -56,7 +56,6 @@ void Util::CycleSet::setMainEntryPoint(CFG::NonTerminal* mainEntryPoint) {
   for (std::list<std::string>::iterator i = fetchList.begin();
        i != fetchList.end(); i++) {
     newOrder.push_back(*i);
-
   }
   this->orderedElements = newOrder;
 }

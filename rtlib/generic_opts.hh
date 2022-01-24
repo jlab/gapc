@@ -21,8 +21,8 @@
 
 }}} */
 
-#ifndef GENERIC_OPTS_HH
-#define GENERIC_OPTS_HH
+#ifndef RTLIB_GENERIC_OPTS_HH_
+#define RTLIB_GENERIC_OPTS_HH_
 
 
 #include <unistd.h>
@@ -196,7 +196,7 @@ class Opts {
           throw OptException("Missing input sequence or no -f.");
         for (; optind < argc; ++optind) {
           input = new char[std::strlen(argv[optind])+1];
-          std::strcpy(input, argv[optind]);
+          snprintf(input, std::strlen(argv[optind])+1, "%s", argv[optind]);
           unsigned n = std::strlen(input);
           inputs.push_back(std::make_pair(input, n));
         }
@@ -217,4 +217,4 @@ class Opts {
 
 }  // namespace gapc
 
-#endif
+#endif  // RTLIB_GENERIC_OPTS_HH_

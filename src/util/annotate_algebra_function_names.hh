@@ -46,23 +46,16 @@ class AlgebraFunctionNameAttribute;
 // itself, but only sequences or basic grammar parts (e.g.
 // non-terminals, terminals or epsilons).
 class AlgebraFunctionNameAnnotator {
-
-  public:
-
+ public:
     AlgebraFunctionNameAnnotator();
     ~AlgebraFunctionNameAnnotator();
+    void annotateGrammar(CFG::CFG* grammar);
 
-    void annotateGrammar (CFG::CFG* grammar);
-
-
-  private:
-
-    void annotateProduction (CFG::Base* production);
+ private:
+    void annotateProduction(CFG::Base* production);
     AlgebraFunctionNameAttribute* createNextAttribute();
-
-
 };
-}
+}  // namespace Util
 
 
 #endif  // SRC_UTIL_ANNOTATE_ALGEBRA_FUNCTION_NAMES_HH_

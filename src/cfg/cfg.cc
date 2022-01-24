@@ -265,7 +265,8 @@ CFG::Base* CFG::SimpleElement::combine(::CFG::Base* b) {
     }
     default:
       throw LogError(
-        "gap-00102: Unhandled CFG fragment type in function implementation\nCFG::SimpleElement::combine (Base* b).");
+        "gap-00102: Unhandled CFG fragment type in function implementation\n"
+        "CFG::SimpleElement::combine (Base* b).");
   }
 }
 
@@ -644,14 +645,16 @@ void CFG::ProductionSequence::append(::CFG::Base* fragment) {
       break;
     }
     case ::CFG::PRODUCTION_SEQUENCE: {
-      ProductionSequence *prod = (ProductionSequence*)fragment;
+      ProductionSequence *prod = reinterpret_cast<ProductionSequence*>(
+        fragment);
       sequence.insert(
         sequence.end(), prod->sequence.begin(), prod->sequence.end());
       break;
     }
     default: {
       throw LogError(
-        "gap-00174: Unhandled CFG fragment type in function implementation\nCFG::ProductionSequence::append (Base *fragment).");
+        "gap-00174: Unhandled CFG fragment type in function implementation\n"
+        "CFG::ProductionSequence::append (Base *fragment).");
     }
   }
 }
@@ -699,7 +702,8 @@ CFG::Base* CFG::ProductionSequence::combine(::CFG::Base *prod) {
     }
     default: {
       throw LogError(
-        "gap-00177: Unhandled CFG fragment type in function implementation\nCFG::ProductionSequence::combine (CFG::Base *prod).");
+        "gap-00177: Unhandled CFG fragment type in function implementation\n"
+        "CFG::ProductionSequence::combine (CFG::Base *prod).");
     }
   }
 }
@@ -836,7 +840,8 @@ CFG::Base* CFG::ProductionAlternative::combine(::CFG::Base* prod) {
     }
     default:
       throw LogError(
-        "gap-00178: Unhandled CFG fragment type in function implementation\nCFG::ProductionAlternative::combine (CFG::Base* prod).");
+        "gap-00178: Unhandled CFG fragment type in function implementation\n"
+        "CFG::ProductionAlternative::combine (CFG::Base* prod).");
   }
 }
 

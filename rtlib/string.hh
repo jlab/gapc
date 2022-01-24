@@ -40,11 +40,7 @@
 
 #include "subsequence.hh"
 
-#include "cstr.h"
-
-
-
-
+#include "../rtlib/cstr.h"
 
 class String {
  private:
@@ -502,9 +498,9 @@ inline void append(
   String &str, const Basic_Subsequence<alphabet, pos_type> &sub) {
   String t;
   t.append('<');
-  t.append(int(sub.i));
+  t.append(static_cast<int>(sub.i));
   t.append(',');
-  t.append(int(sub.j));
+  t.append(static_cast<int>(sub.j));
   t.append('>');
   str.append(t);
 }

@@ -42,7 +42,7 @@ Const::Char::Char(const std::string &n, const Loc &l)
     } else {
       std::string suff(n.substr(1));
       Int i(suff, l);
-      c = char(i.i);
+      c = static_cast<char>(i.i);
     }
   } else {
     c = n[0];

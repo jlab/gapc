@@ -42,7 +42,7 @@ int
 inline
 find_first_set(uint64_t t) {
 #ifdef __GNUC__
-  assert(sizeof(unsigned long long) == 8);
+  assert(sizeof(uint64_t) == 8);
   return __builtin_ffsll(t);
 #else
   return slow_ffs(t);
@@ -85,7 +85,7 @@ inline
 count_leading_zeroes(uint64_t t) {
   assert(t);
 #ifdef __GNUC__
-  assert(sizeof(unsigned long long) == 8);
+  assert(sizeof(uint64_t) == 8);
   return __builtin_clzll(t);
 #else
   return slow_clz(t);

@@ -326,7 +326,8 @@ void AmbiguityCFG::GrammarVMFunctionExecEnvironment::executeLoadVar(
       if (!namedAccess->getNamedAccessElement()->containsVarInfoItem(
         loadVarCmd->getVariableName())) {
         throw LogError(
-          "gap-00203: named access to an element that is not stored in that instance (accessed name: "
+          "gap-00203: named access to an element that is not stored in that"
+          " instance (accessed name: "
           + *loadVarCmd->getVariableName() + ")");
       }
       VarInfoItem* infoItem = namedAccess->getNamedAccessElement()
@@ -381,7 +382,8 @@ void AmbiguityCFG::GrammarVMFunctionExecEnvironment::executeLoadVar(
         }
         default: {
           throw LogError(
-            "gap-00202: unexpected VarDeclInfoItem as result from a load variable operation (type=)");
+            "gap-00202: unexpected VarDeclInfoItem as result from a load "
+            "variable operation (type=)");
         }
       }
       break;
@@ -399,7 +401,8 @@ void AmbiguityCFG::GrammarVMFunctionExecEnvironment::executeLoadVar(
     */
     default: {
       throw LogError(
-        "gap-00201: LOAD_VAR needs on top of the stack either a named-access element or var-decl-info element.");
+        "gap-00201: LOAD_VAR needs on top of the stack either a named-access"
+        " element or var-decl-info element.");
     }
   }
 
@@ -425,7 +428,8 @@ void AmbiguityCFG::GrammarVMFunctionExecEnvironment::executeStoreVar(
   // the destination also is of the same type.
   if (!sndElement->is(NAMED_ACCESS_ELEMENT)) {
     throw LogError(
-      "gap-00204: destination of STORE_VAR is not of the required named-access type.");
+      "gap-00204: destination of STORE_VAR is not of the required "
+      "named-access type.");
   }
   NamedAccessGrammarVMStackElement* destination =
     dynamic_cast<NamedAccessGrammarVMStackElement*> (sndElement);
@@ -691,7 +695,8 @@ CFG::Base* AmbiguityCFG::GrammarVMFunctionExecEnvironment::
   extractProductionFragmentFromVarInfoItem(VarInfoItem* infoItem) {
   if (!infoItem->is(VAR_DECL_INFO)) {
     throw LogError(
-      "gap-00212: Can not extract production fragment form variable information item. Found incompatible subtype ");
+      "gap-00212: Can not extract production fragment form variable "
+      "information item. Found incompatible subtype ");
   }
   VarDeclInfo* varDeclInfo = dynamic_cast<VarDeclInfo*> (infoItem);
   return varDeclInfo->productionFragment;

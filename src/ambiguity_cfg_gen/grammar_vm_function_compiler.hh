@@ -45,7 +45,6 @@
 #include "grammar_vm.hh"
 #include "grammar_vm_code.hh"
 #include "var_info_item.hh"
-#include "../util/symbol_table.cc"
 
 
 namespace AmbiguityCFG {

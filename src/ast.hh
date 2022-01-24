@@ -109,9 +109,9 @@ class AST {
 
   Product::Sort_Type back_track_paretosort;
 
-  static const std::string duplicate_suffix;
-  static const std::string comperator_suffix;
-  static const std::string sorter_suffix;
+  static const char duplicate_suffix[];
+  static const char comperator_suffix[];
+  static const char sorter_suffix[];
 
   ADP_Mode::Adp_Specialization adp_specialization;
   ADP_Mode::Adp_Join adp_join;
