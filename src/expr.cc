@@ -22,6 +22,7 @@
 }}} */
 
 
+#include <algorithm>
 #include "expr.hh"
 #include "yieldsize.hh"
 #include "const.hh"

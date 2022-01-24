@@ -35,7 +35,7 @@ class NamingPath {
  private:
     // The character that is used as a separator when
     // the pretty print is created.
-    static std::string separatorChar;
+    static const char separatorChar[];
 
     // The prefix of this naming-path, or NULL if this
     // is the root of the path.

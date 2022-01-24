@@ -139,12 +139,15 @@ CFG::Base* AmbiguityCFG::GAPToCFGTransformer::generateFragment(
     return generateFragment(terminal);
   } else {
     throw LogError(b->location,
-      "gap-00117: Internal: Unhandled subclass type of base class Symbol::Base: AmbiguityCFG::GAPToCFGTransformer::generateFragment (Symbol::Base *b)");
+      "gap-00117: Internal: Unhandled subclass type of base class "
+      "Symbol::Base: AmbiguityCFG::GAPToCFGTransformer::generateFragment"
+      " (Symbol::Base *b)");
   }
 }
 
 
-CFG::Base* AmbiguityCFG::GAPToCFGTransformer::generateFragment(Symbol::NT *nt) {
+CFG::Base* AmbiguityCFG::GAPToCFGTransformer::generateFragment(
+  Symbol::NT *nt) {
   // The non-terminal we compute in terms of our own data structures:
   CFG::NonTerminal *nonTerminal = new CFG::NonTerminal(nt->name);
 
@@ -184,7 +187,8 @@ CFG::Base* AmbiguityCFG::GAPToCFGTransformer::generateFragment(
   }
 
   throw LogError(terminal->location,
-    "gap-00118: Internal: Not-implemented exception: AmbiguityCFG::GAPToCFGTransformer::generateFragment (Symbol::Terminal *terminal)");
+    "gap-00118: Internal: Not-implemented exception: AmbiguityCFG::"
+    "GAPToCFGTransformer::generateFragment (Symbol::Terminal *terminal)");
 }
 
 
@@ -195,7 +199,8 @@ CFG::Base* AmbiguityCFG::GAPToCFGTransformer::generateFragment(
 // This method is used as a proxy to route the generate fragment
 // call to the appropriate implementation which handles each
 // Alt-subtype accordingly.
-CFG::Base* AmbiguityCFG::GAPToCFGTransformer::generateFragment(Alt::Base* alt) {
+CFG::Base* AmbiguityCFG::GAPToCFGTransformer::generateFragment(
+  Alt::Base* alt) {
   if (alt->is(Alt::SIMPLE)) {
     Alt::Simple *simple = dynamic_cast<Alt::Simple*>(alt);
     return generateFragment(simple);
@@ -210,7 +215,8 @@ CFG::Base* AmbiguityCFG::GAPToCFGTransformer::generateFragment(Alt::Base* alt) {
     return generateFragment(multi);
   } else {
     throw LogError(alt->location,
-      "gap-00119: Internal: Unhandled subclass type of base class Alt::Base: AmbiguityCFG::GAPToCFGTransformer::generateFragment (Alt::Base *alt)");
+      "gap-00119: Internal: Unhandled subclass type of base class Alt::Base:"
+      " AmbiguityCFG::GAPToCFGTransformer::generateFragment (Alt::Base *alt)");
   }
 }
 
@@ -252,7 +258,8 @@ CFG::Base* AmbiguityCFG::GAPToCFGTransformer::generateFragment(
 }
 
 
-CFG::Base* AmbiguityCFG::GAPToCFGTransformer::generateFragment(Alt::Link *alt) {
+CFG::Base* AmbiguityCFG::GAPToCFGTransformer::generateFragment(
+  Alt::Link *alt) {
   // Handle the Alt::Link by processing the Symbol::Base reference
   // with the appropriate function via generateFragment (Symbol::Base *b)
 
@@ -281,11 +288,13 @@ CFG::Base* AmbiguityCFG::GAPToCFGTransformer::generateFragment(Alt::Link *alt) {
           bounds->setLowerBound(constInt->i);
         } else {
           throw LogError(
-            "gap-00121: Unsupported argument type to min- or maxsize filter application");
+            "gap-00121: Unsupported argument type to min- or maxsize filter"
+            " application");
         }
       } else {
         throw LogError(
-          "gap-00122: Unsupported expression in min- or maxsize filter application.");
+          "gap-00122: Unsupported expression in min- or maxsize filter "
+          "application.");
       }
 
     } else if (filter->is(Filter::MAX_SIZE)) {
@@ -304,11 +313,13 @@ CFG::Base* AmbiguityCFG::GAPToCFGTransformer::generateFragment(Alt::Link *alt) {
           bounds->setUpperBound(constInt->i);
         } else {
           throw LogError(
-            "gap-00121: Unsupported argument type to min- or maxsize filter application");
+            "gap-00121: Unsupported argument type to min- or maxsize filter "
+            "application");
         }
       } else {
         throw LogError(
-          "gap-00122: Unsupported expression in min- or maxsize filter application.");
+          "gap-00122: Unsupported expression in min- or maxsize filter "
+          "application.");
       }
 
     } else {
@@ -345,7 +356,8 @@ CFG::Base* AmbiguityCFG::GAPToCFGTransformer::generateFragment(
   Alt::Multi *alt) {
   // std::cout << "Alt::Multi" << std::endl;
   throw LogError(alt->location,
-    "gap-00115: Internal: Not-implemented exception: AmbiguityCFG::GAPToCFGTransformer::generateFragment (Alt::Multi *alt)");
+    "gap-00115: Internal: Not-implemented exception: AmbiguityCFG::"
+    "GAPToCFGTransformer::generateFragment (Alt::Multi *alt)");
 }
 
 
@@ -398,7 +410,8 @@ CFG::Base* AmbiguityCFG::GAPToCFGTransformer::generateFragment(
       boost::format("%1%") % constInt->i)));
   } else {
     throw LogError(constant->location,
-      "gap-00116: Unsupported constant value type in parameter list of append-function call.");
+      "gap-00116: Unsupported constant value type in parameter list of "
+      "append-function call.");
   }
 }
 

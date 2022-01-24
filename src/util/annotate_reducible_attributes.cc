@@ -188,7 +188,8 @@ bool Util::ReducibleAttributeAnnotator::annotateElement(CFG::Base* b) {
     }
     default: {
       throw LogError(
-        "gap-00611: Unhandled CFG node type when annotating reducible attribute to grammar elements.");
+        "gap-00611: Unhandled CFG node type when annotating reducible "
+        "attribute to grammar elements.");
     }
   }
 

@@ -26,7 +26,7 @@
 
 // The separator character for the string representation
 // of a naming path.
-std::string Util::NamingPath::separatorChar = "/";
+const char Util::NamingPath::separatorChar[] = "/";
 
 
 Util::NamingPath::NamingPath()
