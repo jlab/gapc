@@ -357,7 +357,7 @@ class Bounds {
 
  public:
     // Defines the value for "bound not defined."
-    const static int UNDEFINED = -1;
+    static const int UNDEFINED = -1;
 
     // Inits a new instance.
     Bounds();
