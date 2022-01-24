@@ -54,7 +54,7 @@ void String::Block::put(std::ostream &s) const {
       case SEQ :
         ++i;
         for (; array[i] != SEQ_END; ++i)
-          s << ((char) array[i]);
+          s << (static_cast<char>(array[i]));
         ++i;
         break;
       case REP :
@@ -65,7 +65,7 @@ void String::Block::put(std::ostream &s) const {
         ( (unsigned char*) &a)[2] = array[i+3];
         ( (unsigned char*) &a)[3] = array[i+4];
         for (uint32_t b = 0; b < a; b++)
-          s << (char) array[i];
+          s << static_cast<char>(array[i]);
         i++;
         i += sizeof(uint32_t);
         break;

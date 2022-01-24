@@ -40,11 +40,7 @@
 
 #include "subsequence.hh"
 
-#include "cstr.h"
-
-
-
-
+#include "rtlib/cstr.h"
 
 class String {
  private:
@@ -340,7 +336,7 @@ class String {
               } else {
                 return;
               }
-            } else
+            } else {
               if (in_rep) {
                 if (!rep) {
                   i++;
@@ -351,7 +347,7 @@ class String {
                   return;
                 }
               }
-            else {
+            } else {
               switch (block->array[i]) {
                 case Block::SEQ:
                   ++i;
@@ -502,9 +498,9 @@ inline void append(
   String &str, const Basic_Subsequence<alphabet, pos_type> &sub) {
   String t;
   t.append('<');
-  t.append(int(sub.i));
+  t.append(static_cast<int>(sub.i));
   t.append(',');
-  t.append(int(sub.j));
+  t.append(static_cast<int>(sub.j));
   t.append('>');
   str.append(t);
 }
