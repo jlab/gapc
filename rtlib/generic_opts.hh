@@ -196,7 +196,7 @@ class Opts {
           throw OptException("Missing input sequence or no -f.");
         for (; optind < argc; ++optind) {
           input = new char[std::strlen(argv[optind])+1];
-          snprintf(input, argv[optind]);
+          std::strcpy(input, argv[optind]);
           unsigned n = std::strlen(input);
           inputs.push_back(std::make_pair(input, n));
         }
