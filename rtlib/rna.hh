@@ -114,11 +114,11 @@ class BaseException : public std::exception {
     ~BaseException() throw() { delete[] msg; }
     const char* what() const throw() {
       if (!*msg) {
-        std::strcpy(msg, "Unknown base '");
+        snprintf(msg, std::strlen("Unknown base '")+1, "Unknown base '");
         unsigned l = std::strlen(msg);
         msg[l] = z;
         msg[l+1] = 0;
-        std::strcat(msg, "' in input.");
+        snprintf(msg, std::strlen("' in input.")+1, "' in input.");
       }
       return msg;
     }
