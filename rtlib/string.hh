@@ -336,7 +336,7 @@ class String {
               } else {
                 return;
               }
-            } else {
+            } else
               if (in_rep) {
                 if (!rep) {
                   i++;
@@ -347,7 +347,7 @@ class String {
                   return;
                 }
               }
-            } else {
+            else {
               switch (block->array[i]) {
                 case Block::SEQ:
                   ++i;
