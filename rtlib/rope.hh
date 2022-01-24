@@ -32,7 +32,7 @@
 
 #include <boost/cstdint.hpp>
 
-#include "rtlib/cstr.h"
+#include "../rtlib/cstr.h"
 #include "bitops.hh"
 
 #include "pool.hh"

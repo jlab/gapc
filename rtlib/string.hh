@@ -40,7 +40,7 @@
 
 #include "subsequence.hh"
 
-#include "rtlib/cstr.h"
+#include "../rtlib/cstr.h"
 
 class String {
  private:
