@@ -140,8 +140,8 @@ jobs:
     - run: pip install cpplint
     - run: cpplint --recursive --counting 'detailed' --filter="-runtime/references,-runtime/explicit" src/*.cc
     - uses: vishnudxb/cancel-workflow@v1.2
-          if: failure()
-          with:
-            repo: jlab/gapc
-            workflow_id: ${{ github.run_id }}
-            access_token: ${{ github.token }}
+      if: failure()
+      with:
+        repo: jlab/gapc
+        workflow_id: ${{ github.run_id }}
+        access_token: ${{ github.token }}
