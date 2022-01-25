@@ -64,4 +64,13 @@ double scale(int x);
 bool iupac_match(char base, char iupac_base);
 int bp_index(char x, char y);
 
+// for RNAhybrid
+int bl_ent(rsize l);
+int il11_energy(const char *s, rsize i, rsize k, rsize l, rsize j);
+int il12_energy(const char *s, rsize i, rsize k, rsize l, rsize j);
+int il21_energy(const char *s, rsize i, rsize k, rsize l, rsize j);
+int il22_energy(const char *s, rsize i, rsize k, rsize l, rsize j);
+int il_ent(rsize l);
+int il_stack(const char *s, rsize i, rsize k, rsize l, rsize j);
+int il_asym(rsize sl, rsize sr);
 #endif

@@ -440,7 +440,7 @@ int hl_energy_stem(const char *s, rsize i, rsize j)
      3. index = lbase = code for 5' unpaired base of the internal loop
      4. index = rbase = code for 3' unpaired base of the internal loop
 */
-static int il11_energy(const char *s, rsize i, rsize k, rsize l, rsize j)
+int il11_energy(const char *s, rsize i, rsize k, rsize l, rsize j)
 {
   int closingBP = bp_index(s[i],   s[j]  );
   int enclosedBP = bp_index(s[getPrev(s,j,2,l)], s[getNext(s,i,2,k)]); //we know that the enclosed base pair is at exactly this position, since both unpaired regions have size 1.  Note, basepair is reversed to preserver 5'-3' order.
@@ -472,7 +472,7 @@ static int il11_energy(const char *s, rsize i, rsize k, rsize l, rsize j)
      4. index = rbase = code for first (= close to the embedded substructure) 3' unpaired base of the internal loop, j-2
      5. index = rrbase = code for second (= close to the i-j basepair) 3' unpaired base of the internal loop, j-1
 */
-static int il12_energy(const char *s, rsize i, rsize k, rsize l, rsize j)
+int il12_energy(const char *s, rsize i, rsize k, rsize l, rsize j)
 {
   int closingBP = bp_index(s[i],   s[j]  );
   int enclosedBP = bp_index(s[getPrev(s,j,3,l)], s[getNext(s,i,2,k)]); // Note, basepair is reversed to preserver 5'-3' order
@@ -485,7 +485,7 @@ static int il12_energy(const char *s, rsize i, rsize k, rsize l, rsize j)
 /*
    symmetric case to il12_energy
 */
-static int il21_energy(const char *s, rsize i, rsize k, rsize l, rsize j)
+int il21_energy(const char *s, rsize i, rsize k, rsize l, rsize j)
 {
   int closingBP = bp_index(s[getPrev(s,j,2,l)], s[getNext(s,i,3,k)]); // Note, basepair is reversed to preserver 5'-3' order
   int enclosedBP = bp_index(s[i],   s[j]  );
@@ -520,7 +520,7 @@ static int il21_energy(const char *s, rsize i, rsize k, rsize l, rsize j)
      6. index = rbase = code for first (= closer to the embedded substructure) 3' unpaired base of the internal loop, j-2
      7. index = rrbase = code for second (= closer to the closing basepair) 3' unpaired base of the internal loop, j-1
 */
-static int il22_energy(const char *s, rsize i, rsize k, rsize l, rsize j)
+int il22_energy(const char *s, rsize i, rsize k, rsize l, rsize j)
 {
   int closingBP = bp_index(s[i],   s[j]  );
   int enclosedBP = bp_index(s[getPrev(s,j,3,l)], s[getNext(s,i,3,k)]); // Note, basepair is reversed to preserver 5'-3' order
@@ -537,7 +537,7 @@ static int il22_energy(const char *s, rsize i, rsize k, rsize l, rsize j)
    currently (11.09.2011) MAXLOOP is 30
    Input is just the size, i.e. number of bases, of the unpaired loop region: l
 */
-static int il_ent(rsize l)
+int il_ent(rsize l)
 {
   assert(l>1);
   if (l > MAXLOOP) {
@@ -570,7 +570,7 @@ static int il_ent(rsize l)
      2. index = out_lbase = in_lbase = code for first (= closer to the closing basepair) 5' unpaired base of the internal loop, i+1
      3. index = out_rbase = in_rbase = code for second (= closer to the closing basepair) 3' unpaired base of the internal loop, j-1
 */
-static int il_stack(const char *s, rsize i, rsize k, rsize l, rsize j)
+int il_stack(const char *s, rsize i, rsize k, rsize l, rsize j)
 {
   int out_closingBP = bp_index(s[i], s[j]);
   char out_lbase = s[getNext(s,i,1,j-1)];
@@ -589,7 +589,7 @@ static int il_stack(const char *s, rsize i, rsize k, rsize l, rsize j)
      sl = size of the 5' unpaired loop region
      sr = size of the 3' unpaired loop region
 */
-static int il_asym(rsize sl, rsize sr)
+int il_asym(rsize sl, rsize sr)
 {
   int r = abs(sl-sr) * P->ninio[2];
   if (r < MAX_NINIO) {
@@ -679,7 +679,7 @@ int il_energy(const char *s, rsize i, rsize k, rsize l, rsize j)
    Input is
      just the size, i.e. number of bases, of the unpaired loop region: l
 */
-static int bl_ent(rsize l)
+int bl_ent(rsize l)
 {
   assert(l>0);
   if (l > MAXLOOP) {
