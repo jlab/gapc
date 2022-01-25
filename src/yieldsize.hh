@@ -356,7 +356,7 @@ class Multi {
 
 
     Multi &operator+=(const Multi &o) {
-      size_t a = array.size(), b = o.array.size();
+      [[maybe_unused]] size_t a = array.size(), b = o.array.size();
       assert(a);
       assert(a == b);
       std::vector<Size>::const_iterator j = o.array.begin();

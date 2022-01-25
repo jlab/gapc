@@ -437,10 +437,13 @@ unsigned int literal_size_of_string(Loc& location, std::string* str) {
             // at least one digit.
             if (numberOfDigitsFound > maxDigitsAllowed) {
               Log::instance()->error(location,
-                "An excape sequence is unknown, or can not be parsed correctly in the literal string.");
+                "An excape sequence is unknown, or can not be parsed correctly"
+                " in the literal string.");
             } else if (numberOfDigitsFound < 1) {
               Log::instance()->error(location,
-                "Unknown escape sequence in string literal. No auto length detection possible. Try to provide explicitely the length of the literal as a third parameter.");
+                "Unknown escape sequence in string literal. No auto length"
+                " detection possible. Try to provide explicitely the length"
+                " of the literal as a third parameter.");
             }
             // We went one character too far.
             i = nextPos - 1;
@@ -912,9 +915,11 @@ void Printer::Cpp::print(const Type::Range &t) {
     assert(t.component != Type::Range::NONE);
     std::string x;
     if (t.component == Type::Range::LEFT) {
-      x = "Proxy::Iterator<Iterator, select1st<typename Iterator::value_type> > ";
+      x = "Proxy::Iterator<Iterator, select1st<typename Iterator::"
+          "value_type> > ";
     } else {
-      x = "Proxy::Iterator<Iterator, select2nd<typename Iterator::value_type> > ";
+      x = "Proxy::Iterator<Iterator, select2nd<typename Iterator::"
+          "value_type> > ";
     }
     stream << "std::pair<" << x << " ," << x << "> ";
     return;
@@ -925,7 +930,8 @@ void Printer::Cpp::print(const Type::Range &t) {
       return;
     }
   }
-  stream << "std::pair<" << "List<" << *t.element_type << ">::iterator" << ", " << "List<" << *t.element_type << ">::iterator" << ">";
+  stream << "std::pair<" << "List<" << *t.element_type << ">::iterator";
+  stream << ", " << "List<" << *t.element_type << ">::iterator" << ">";
 }
 
 
@@ -1099,7 +1105,8 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
 
   for (size_t track = t.nt().track_pos();
        track < t.nt().track_pos() + t.nt().tracks(); ++track) {
-    stream << "t_" << track << "_left_most = 0;\n" << "t_" << track << "_right_most = t_" << track << "_n;\n";
+    stream << "t_" << track << "_left_most = 0;\n" << "t_" << track;
+    stream << "_right_most = t_" << track << "_n;\n";
   }
 
   if (wmode) {
@@ -1213,13 +1220,16 @@ void Printer::Cpp::print(const Type::Backtrace &t) {
       stream << "Backtrace_" << *t.name() << "<Value, pos_int> ";
       break;
     case Type::Backtrace::FN_USE :
-      stream << "Backtrace_" << *t.name() << "<" << *t.value_type() << ", " << *t.pos_type() << "> ";
+      stream << "Backtrace_" << *t.name() << "<" << *t.value_type() << ", ";
+      stream << *t.pos_type() << "> ";
       break;
     case Type::Backtrace::FN_SPEC :
       if (pointer_as_itr) {
-        stream << "Backtrace" << "<" << *t.value_type() << ", " << *t.pos_type() << "> ";
+        stream << "Backtrace" << "<" << *t.value_type() << ", ";
+        stream << *t.pos_type() << "> ";
       } else {
-        stream << "intrusive_ptr<Backtrace" << "<" << *t.value_type() << ", " << *t.pos_type() << "> > ";
+        stream << "intrusive_ptr<Backtrace" << "<" << *t.value_type() << ", ";
+        stream << *t.pos_type() << "> > ";
       }
       break;
     case Type::Backtrace::NT_BACKEND :
@@ -1233,10 +1243,12 @@ void Printer::Cpp::print(const Type::Backtrace &t) {
       }
       break;
     case Type::Backtrace::NT_FRONTEND :
-      stream << "Backtrace_" << *t.name() << "_Front<" << *t.value_type() << ", " << *t.pos_type() << "> ";
+      stream << "Backtrace_" << *t.name() << "_Front<" << *t.value_type();
+      stream << ", " << *t.pos_type() << "> ";
       break;
     case Type::Backtrace::NT :
-      stream << "Backtrace_" << *t.name() << "<" << class_name << ", " << *t.value_type() << ", " << *t.pos_type() << "> ";
+      stream << "Backtrace_" << *t.name() << "<" << class_name << ", ";
+      stream << *t.value_type() << ", " << *t.pos_type() << "> ";
       break;
     default:
       assert(false);
@@ -1293,16 +1305,20 @@ void Printer::Cpp::print_type_defs(const AST &ast) {
           stream << "bool operator<(const " << *def->name << "& other) const {"
             << " return " << *tuple->list.front()->second << " < "
             << "other." << *tuple->list.front()->second << "; }" << endl;
-          stream << "bool operator==(const " << *def->name << "& other) const {"
+          stream << "bool operator==(const " << *def->name
+            << "& other) const {"
             << " return " << *tuple->list.front()->second << " == "
             << "other." << *tuple->list.front()->second << "; }" << endl;
-          stream << "template <typename T> bool operator>(const T &other) const {"
+          stream << "template <typename T> bool operator>(const T &other) "
+            << "const {"
             << "return " << *tuple->list.front()->second << " > other; }"
             << endl;
-          stream << "template <typename T> bool operator<(const T &other) const {"
+          stream << "template <typename T> bool operator<(const T &other) "
+            << "const {"
             << "return " << *tuple->list.front()->second << " < other; }"
             << endl;
-          stream << "template <typename T> bool operator==(const T &other) const {"
+          stream << "template <typename T> bool operator==(const T &other) "
+            << "const {"
             << "return " << *tuple->list.front()->second << " == other; }"
             << endl;
 
@@ -1324,7 +1340,8 @@ void Printer::Cpp::print_type_defs(const AST &ast) {
             << "return " << *def->name << '(' << *tuple->list.front()->second
             << " - other." << *tuple->list.front()->second << ");" << endl
             << '}' << endl;
-          stream << "bool operator<=(const " << *def->name << "& other) const {"
+          stream << "bool operator<=(const " << *def->name
+            << "& other) const {"
             << endl
             << "assert(!empty_); assert(!other.empty_);" << endl
             << "return " << *tuple->list.front()->second << " <= "
@@ -1345,7 +1362,8 @@ void Printer::Cpp::print_type_defs(const AST &ast) {
         stream << indent() << " << tuple." << *(*j)->second;
         ++j;
         for ( ; j != tuple->list.end(); ++j) {
-          stream << indent() << " << \", \" << tuple." << *(*j)->second << endl;
+          stream << indent() << " << \", \" << tuple." << *(*j)->second
+            << endl;
         }
         stream << indent() << " << ')' ;" << endl;
         stream << indent() << "return o;" << endl;
@@ -1369,7 +1387,8 @@ void Printer::Cpp::print_zero_decls(const Grammar &grammar) {
   in_class = true;
 
   std::set<std::string> seen;
-  for (std::list<Symbol::NT*>::const_iterator i = grammar.nts().begin(); i != grammar.nts().end(); ++i) {
+  for (std::list<Symbol::NT*>::const_iterator i = grammar.nts().begin();
+       i != grammar.nts().end(); ++i) {
     std::string n(*(*i)->zero_decl->name);
     if (seen.find(n) != seen.end()) {
       continue;
@@ -1384,7 +1403,8 @@ void Printer::Cpp::print_zero_decls(const Grammar &grammar) {
 
 
 void Printer::Cpp::print_table_decls(const Grammar &grammar) {
-  for (hashtable<std::string, Symbol::NT*>::const_iterator i = grammar.tabulated.begin();
+  for (hashtable<std::string, Symbol::NT*>::const_iterator i =
+       grammar.tabulated.begin();
        i != grammar.tabulated.end(); ++i)
     stream << *i->second->table_decl << endl;
   stream << endl;
@@ -1398,7 +1418,8 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
   assert(inps.size() == ast.seq_decls.size());
 
   stream << indent() << "if (inp.size() != " << ast.seq_decls.size() << ")\n"
-    << indent() << indent() << "throw gapc::OptException(\"Number of input sequences does not match.\");\n\n";
+    << indent() << indent() << "throw gapc::OptException(\"Number of input "
+    << "sequences does not match.\");\n\n";
 
   size_t track = 0;
   for (std::vector<Statement::Var_Decl*>::const_iterator
@@ -1520,7 +1541,8 @@ void Printer::Cpp::print_most_init(const AST &ast) {
   for (std::vector<Statement::Var_Decl*>::iterator j = ns.begin();
        j != ns.end(); ++j, ++t) {
     stream << indent() << "t_" << t << "_left_most = 0;\n";
-    stream << indent() << "t_" << t << "_right_most = " << "t_" << t << "_seq.size();\n";
+    stream << indent() << "t_" << t << "_right_most = " << "t_" << t
+      << "_seq.size();\n";
   }
   if (ast.window_mode) {
     stream << indent() << "t_0_right_most = opts.window_size;\n";
@@ -1534,7 +1556,8 @@ void Printer::Cpp::print_init_fn(const AST &ast) {
   stream << "const gapc::Opts &opts)" << " {" << endl;
 
   inc_indent();
-  stream << indent() << "const std::vector<std::pair<const char *, unsigned> > &inp = opts.inputs;\n";
+  stream << indent() << "const std::vector<std::pair<const char *, unsigned> >"
+    << " &inp = opts.inputs;\n";
 
   print_buddy_init(ast);
   print_seq_init(ast);
@@ -1710,7 +1733,8 @@ void Printer::Cpp::print_openmp_cyk(const AST &ast) {
     "    for (int y = z; y < max_tiles_n; y+=tile_size) {\n"
     "      unsigned int x = y - z + tile_size;\n"
     "      for (unsigned int t_0_j = y; t_0_j < y + tile_size; ++t_0_j)\n"
-    "        for (unsigned int t_0_i = x - 1 + 1; t_0_i > x - tile_size; --t_0_i) {\n";
+    "        for (unsigned int t_0_i = x - 1 + 1; t_0_i > x - tile_size; "
+    "--t_0_i) {\n";
 
   const char *paral_end =
     "        }\n"
@@ -2333,7 +2357,8 @@ static const char deps[] =
 "\n"
 "%.o : %.cc\n"
 "\t$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< -c -o $@ \n"
-// "         && $(SED) -e 's/[^ ]\\+boost[^ \\n]\\+//' $*.d > _t && mv _t $*.d\n"
+// "         && $(SED) -e 's/[^ ]\\+boost[^ \\n]\\+//' $*.d "
+// "> _t && mv _t $*.d\n"
 ""
 "endif\n";
 
@@ -2764,7 +2789,8 @@ void Printer::Cpp::print(const Statement::Hash_Decl &d) {
   const std::list<Statement::Var_Decl*> &f = d.filters();
   for (std::list<Statement::Var_Decl*>::const_iterator i = f.begin();
        i != f.end(); ++i) {
-    stream << indent() << *(*i)->type << "<type> " << *(*i)->name << ";" << endl;
+    stream << indent() << *(*i)->type << "<type> " << *(*i)->name << ";"
+      << endl;
   }
 
   if (d.kbest()) {
@@ -2788,7 +2814,8 @@ void Printer::Cpp::print(const Statement::Hash_Decl &d) {
   stream << indent() << "void update(type &dst, const type &src) " << endl
     << d.code() << endl;
 
-  stream << indent() << "bool equal(const type &a, const type &b) const {" << endl;
+  stream << indent() << "bool equal(const type &a, const type &b) const {"
+    << endl;
   inc_indent();
   stream << indent() << "return left_most(a) == left_most(b);" << endl;
   dec_indent();
@@ -2809,7 +2836,8 @@ void Printer::Cpp::print(const Statement::Hash_Decl &d) {
   int a = 0;
   for (std::list<Statement::Var_Decl*>::const_iterator i = f.begin();
        i != f.end(); ++i, ++a) {
-    stream << indent() << "bool b" << a << " = !" << *(*i)->name << ".ok(x);" << endl;
+    stream << indent() << "bool b" << a << " = !" << *(*i)->name << ".ok(x);"
+      << endl;
   }
   a = 0;
   std::list<Statement::Var_Decl*>::const_iterator i = f.begin();
@@ -2829,7 +2857,8 @@ void Printer::Cpp::print(const Statement::Hash_Decl &d) {
   dec_indent();
   stream << indent() << "}" << endl << endl;
 
-  stream << indent() << "void finalize(type &src) const" << endl << d.finalize_code() << endl;
+  stream << indent() << "void finalize(type &src) const" << endl
+    << d.finalize_code() << endl;
 
   if (d.kbest()) {
     stream << indent() << "static void set_k(uint32_t a) {" << endl;
@@ -2838,22 +2867,27 @@ void Printer::Cpp::print(const Statement::Hash_Decl &d) {
     dec_indent();
     stream << indent() << "}" << endl << endl;
   } else {
-    stream << indent() << "static void set_k(uint32_t a) {" << endl << indent() << "}" << endl << endl;
+    stream << indent() << "static void set_k(uint32_t a) {" << endl
+      << indent() << "}" << endl << endl;
   }
   stream << indent() << "uint32_t k() const" << endl << d.k_code() << endl;
-  stream << indent() << "bool cutoff() const" << endl << d.cutoff_code() << endl;
-  stream << indent() << "bool equal_score(const type &src, const type &dst) const" << endl
+  stream << indent() << "bool cutoff() const" << endl << d.cutoff_code()
+    << endl;
+  stream << indent()
+    << "bool equal_score(const type &src, const type &dst) const" << endl
     << d.equal_score_code() << endl;
   stream << indent() << "struct compare {" << endl;
   inc_indent();
-  stream << indent() << "bool operator()(const type &src, const type &dst) const" << endl
+  stream << indent()
+    << "bool operator()(const type &src, const type &dst) const" << endl
     << d.compare_code();
   dec_indent();
   stream << indent() << "};" << endl;
   dec_indent();
   stream << indent() << "};" << endl << endl;
 
-  stream << indent() << "typedef Hash::Ref<" << d.answer_type() << ", " << d.ext_name()
+  stream << indent() << "typedef Hash::Ref<" << d.answer_type() << ", "
+    << d.ext_name()
     << " > " << d.name() << ";"
     << endl;
 }

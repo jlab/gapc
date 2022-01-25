@@ -149,7 +149,7 @@ void Subopt_Marker::add_subopt_fn_args(Fn_Def *fn, const Symbol::NT &nt) {
 }
 
 void Subopt_Marker::gen_backtrack(AST &ast) {
-  bool r = ast.check_instances(instance);
+  [[maybe_unused]] bool r = ast.check_instances(instance);
   assert(r);
   r = ast.insert_instance(instance);
   assert(r);
@@ -196,17 +196,24 @@ void Subopt_Marker::gen_instance_code(AST &ast) {
   instance->product->algebra()
     ->codegen(*dynamic_cast<Product::Two*>(instance->product));
 #if __cplusplus >= 201103L
-  // since we modify the container (remove elements) we need to take care to correctly increase the Iterator
-  // https://stackoverflow.com/questions/8234779/how-to-remove-from-a-map-while-iterating-it/8234813
-  for (hashtable<std::string, Fn_Def*>::iterator i = instance->product->algebra()->fns.begin(); i != instance->product->algebra()->fns.end(); ) {
+  // since we modify the container (remove elements) we need to take care to
+  // correctly increase the Iterator
+  // https://stackoverflow.com/questions/8234779/how-to-remove-from-a-map-
+  // while-iterating-it/8234813
+  for (hashtable<std::string, Fn_Def*>::iterator i =
+       instance->product->algebra()->fns.begin();
+       i != instance->product->algebra()->fns.end(); ) {
     if (i->second->choice_mode() != Mode::NONE) {
       i = instance->product->algebra()->fns.erase(i);
     } else {
       i++;
     }
   }
-  // since all functions in choice_fns are to be deleted, iteration is easier than above
-  for (hashtable<std::string, Fn_Def*>::iterator i = instance->product->algebra()->choice_fns.begin(); i != instance->product->algebra()->choice_fns.end(); ) {
+  // since all functions in choice_fns are to be deleted, iteration is easier
+  // than above
+  for (hashtable<std::string, Fn_Def*>::iterator i =
+       instance->product->algebra()->choice_fns.begin();
+       i != instance->product->algebra()->choice_fns.end(); ) {
     i = instance->product->algebra()->choice_fns.erase(i);
   }
 #else

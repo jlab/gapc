@@ -22,8 +22,8 @@
 }}} */
 
 
-#ifndef RTLIB_PARETO_YUKISH_HH_
-#define RTLIB_PARETO_YUKISH_HH_
+#ifndef RTLIB_PARETO_YUKISH_REF_HH_
+#define RTLIB_PARETO_YUKISH_REF_HH_
 
 
 #if __cplusplus >= 201103L
@@ -337,7 +337,6 @@ void y_marry2d(
            s_x++;
         }
     }
-
 }
 
 template<class T, typename Compare>
@@ -607,4 +606,4 @@ void pareto_yukish(
     }
 }
 
-#endif  // RTLIB_PARETO_YUKISH_HH_
+#endif  // RTLIB_PARETO_YUKISH_REF_HH_

@@ -56,34 +56,34 @@
 #include "../printer/cfg_pretty_print_cout.hh"
 
 
-const std::string SpecializeGrammar::CreateSpecializedGrammar::
-  theAlgebraRuntimeIncludeFileName = "rtlib/rules.hh";
-const std::string SpecializeGrammar::CreateSpecializedGrammar::
-  theAlgebraAnswerTypeDefName = "answer_type";
-const std::string SpecializeGrammar::CreateSpecializedGrammar::
-  theAlgebraStringTypeDefName = "string_type";
-const std::string SpecializeGrammar::CreateSpecializedGrammar::
-  theAlphabetStringTypeDefName = "Rope";
-const std::string SpecializeGrammar::CreateSpecializedGrammar::
-  theAlgebraResultVariableName = "result";
-const std::string SpecializeGrammar::CreateSpecializedGrammar::
-  theSignatureName = "sig";
-const std::string SpecializeGrammar::CreateSpecializedGrammar::
-  theAlgebraName = "alg";
-const std::string SpecializeGrammar::CreateSpecializedGrammar::
-  theGrammarName = "grmmr";
-const std::string SpecializeGrammar::CreateSpecializedGrammar::
-  theAxiomName = "axiom";
-const std::string SpecializeGrammar::CreateSpecializedGrammar::
-  theChoiceFunctionName = "h";
-const std::string SpecializeGrammar::CreateSpecializedGrammar::
-  theMergeRulesFunctionName = "merge";
-const std::string SpecializeGrammar::CreateSpecializedGrammar::
-  theResultShapeFieldName = "shape";
-const std::string SpecializeGrammar::CreateSpecializedGrammar::
-  theGetRuleNameFunctionName = "getRuleName";
-const std::string SpecializeGrammar::CreateSpecializedGrammar::
-  theRopeStringMatchingFilterName = "matchString";
+const char SpecializeGrammar::CreateSpecializedGrammar::
+  theAlgebraRuntimeIncludeFileName[] = "rtlib/rules.hh";
+const char SpecializeGrammar::CreateSpecializedGrammar::
+  theAlgebraAnswerTypeDefName[] = "answer_type";
+const char SpecializeGrammar::CreateSpecializedGrammar::
+  theAlgebraStringTypeDefName[] = "string_type";
+const char SpecializeGrammar::CreateSpecializedGrammar::
+  theAlphabetStringTypeDefName[] = "Rope";
+const char SpecializeGrammar::CreateSpecializedGrammar::
+  theAlgebraResultVariableName[] = "result";
+const char SpecializeGrammar::CreateSpecializedGrammar::
+  theSignatureName[] = "sig";
+const char SpecializeGrammar::CreateSpecializedGrammar::
+  theAlgebraName[] = "alg";
+const char SpecializeGrammar::CreateSpecializedGrammar::
+  theGrammarName[] = "grmmr";
+const char SpecializeGrammar::CreateSpecializedGrammar::
+  theAxiomName[] = "axiom";
+const char SpecializeGrammar::CreateSpecializedGrammar::
+  theChoiceFunctionName[] = "h";
+const char SpecializeGrammar::CreateSpecializedGrammar::
+  theMergeRulesFunctionName[] = "merge";
+const char SpecializeGrammar::CreateSpecializedGrammar::
+  theResultShapeFieldName[] = "shape";
+const char SpecializeGrammar::CreateSpecializedGrammar::
+  theGetRuleNameFunctionName[] = "getRuleName";
+const char SpecializeGrammar::CreateSpecializedGrammar::
+  theRopeStringMatchingFilterName[] = "matchString";
 
 
 SpecializeGrammar::CreateSpecializedGrammar::CreateSpecializedGrammar()
@@ -121,7 +121,8 @@ AST* SpecializeGrammar::CreateSpecializedGrammar::createGrammar(
   if (!product->is(Product::SINGLE)) {
     throw LogError(
       instance->loc(),
-      "For ambiguity checking it is required to use an instance that uses not a product of algebras, but simply a single algebra.");
+      "For ambiguity checking it is required to use an instance that uses not"
+      " a product of algebras, but simply a single algebra.");
   }
 
   Algebra* canonical_algebra = product->algebra();
@@ -610,7 +611,8 @@ std::pair<Alt::Base*, SpecializeGrammar::CreateSpecializedGrammar::
         // This may not happen, because in GAP all sequences
         // are applied to an algebra function.
         throw LogError(
-          "gap-00603: a sequence of CFG nodes has no algebra function name associated with it.");
+          "gap-00603: a sequence of CFG nodes has no algebra function name "
+          "associated with it.");
       }
 
       break;
@@ -1411,8 +1413,6 @@ std::list<Statement::Base*>* SpecializeGrammar::CreateSpecializedGrammar::
   assert(this->algebraFunctionInfoAttribute != NULL);
   std::string* originalAlgebraFunctionName =
     this->algebraFunctionInfoAttribute->getAlgebraFunctionName();
-  std::string* originalGrammarRuleName =
-    this->algebraFunctionInfoAttribute->getGrammarRuleName();
   std::list<Fn_Arg::Base*> originalArguments =
     this->algebraFunctionInfoAttribute->getAlgebraFunctionArguments();
   assert(originalAlgebraFunctionName != NULL);
@@ -1702,8 +1702,6 @@ std::list<Statement::Base*>* SpecializeGrammar::CreateSpecializedGrammar::
   assert(algebraFunctionInfoAttribute != NULL);
   std::string* originalAlgebraFunctionName =
     algebraFunctionInfoAttribute->getAlgebraFunctionName();
-  std::string* originalGrammarRuleName =
-    algebraFunctionInfoAttribute->getGrammarRuleName();
   std::list<Fn_Arg::Base*> originalArguments =
     algebraFunctionInfoAttribute->getAlgebraFunctionArguments();
   assert(originalAlgebraFunctionName != NULL);

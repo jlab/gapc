@@ -178,7 +178,8 @@ class Set {
         add(*i, false);
     }
     bool loaded() const {
-      unsigned int load = double(used_)/double(array.size()) * 100.0;
+      unsigned int load = static_cast<double>(used_) /
+        static_cast<double>(array.size()) * 100.0;
       return load >= load_factor;
     }
     void expand() {

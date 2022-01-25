@@ -151,7 +151,8 @@ bool Util::AnnotateDeadEnds::annotateBase(
 
 bool Util::AnnotateDeadEnds::elementIsNullable(CFG::Base* b) {
   Attribute* attribute = b->getAttribute("Util::FirstSetAttribute");
-  FirstSetAttribute* firstSetAttribute = (FirstSetAttribute*)attribute;
+  FirstSetAttribute* firstSetAttribute =
+    reinterpret_cast<FirstSetAttribute*>(attribute);
 
   if (firstSetAttribute != NULL) {
     FirstSet firstSet = firstSetAttribute->getFirstSet();

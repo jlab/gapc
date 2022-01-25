@@ -40,11 +40,7 @@
 
 #include "subsequence.hh"
 
-#include "cstr.h"
-
-
-
-
+#include "../rtlib/cstr.h"
 
 class String {
  private:
@@ -340,7 +336,7 @@ class String {
               } else {
                 return;
               }
-            } else
+            } else {
               if (in_rep) {
                 if (!rep) {
                   i++;
@@ -350,32 +346,32 @@ class String {
                   rep--;
                   return;
                 }
-              }
-            else {
-              switch (block->array[i]) {
-                case Block::SEQ:
-                  ++i;
-                  in_seq = true;
-                  break;
-                case Block::LINK: {
-                  ++i;
-                  Block *t = block->get_link(i);
-                  i += sizeof(Block*);
-                  stack.push(std::pair<Block*, unsigned char>(block, i));
-                  block = t;
-                  i = 0;
-                                  }
-                  break;
-                case Block::REP:
-                  ++i;
-                  ((unsigned char*) &rep)[0] = block->array[i+1];
-                  ((unsigned char*) &rep)[1] = block->array[i+2];
-                  ((unsigned char*) &rep)[2] = block->array[i+3];
-                  ((unsigned char*) &rep)[3] = block->array[i+4];
-                  in_rep = true;
-                  break;
-                default:
-                  assert(false);
+              } else {
+                switch (block->array[i]) {
+                  case Block::SEQ:
+                    ++i;
+                    in_seq = true;
+                    break;
+                  case Block::LINK: {
+                    ++i;
+                    Block *t = block->get_link(i);
+                    i += sizeof(Block*);
+                    stack.push(std::pair<Block*, unsigned char>(block, i));
+                    block = t;
+                    i = 0;
+                                    }
+                    break;
+                  case Block::REP:
+                    ++i;
+                    ((unsigned char*) &rep)[0] = block->array[i+1];
+                    ((unsigned char*) &rep)[1] = block->array[i+2];
+                    ((unsigned char*) &rep)[2] = block->array[i+3];
+                    ((unsigned char*) &rep)[3] = block->array[i+4];
+                    in_rep = true;
+                    break;
+                  default:
+                    assert(false);
+                }
               }
             }
           }
@@ -502,9 +498,9 @@ inline void append(
   String &str, const Basic_Subsequence<alphabet, pos_type> &sub) {
   String t;
   t.append('<');
-  t.append(int(sub.i));
+  t.append(static_cast<int>(sub.i));
   t.append(',');
-  t.append(int(sub.j));
+  t.append(static_cast<int>(sub.j));
   t.append('>');
   str.append(t);
 }

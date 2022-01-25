@@ -43,7 +43,8 @@ class CycleSetUtils {
     // such an attribute!
     static bool elementIsNullable(CFG::Base* b) {
       Attribute* attribute = b->getAttribute("Util::FirstSetAttribute");
-      FirstSetAttribute* firstSetAttribute = (FirstSetAttribute*)attribute;
+      FirstSetAttribute* firstSetAttribute =
+        reinterpret_cast<FirstSetAttribute*>(attribute);
 
       if (firstSetAttribute == NULL) {
         return false;
@@ -62,7 +63,8 @@ class CycleSetUtils {
     // such an attribute!
     static bool elementIsNullableOnly(CFG::Base* b) {
       Attribute* attribute = b->getAttribute("Util::FirstSetAttribute");
-      FirstSetAttribute* firstSetAttribute = (FirstSetAttribute*)attribute;
+      FirstSetAttribute* firstSetAttribute =
+        reinterpret_cast<FirstSetAttribute*>(attribute);
 
       if (firstSetAttribute == NULL) {
         return false;
@@ -82,7 +84,8 @@ class CycleSetUtils {
     // such an attribute!
     static bool elementIsProductive(CFG::Base* b) {
       Attribute* attribute = b->getAttribute("Util::FirstSetAttribute");
-      FirstSetAttribute* firstSetAttribute = (FirstSetAttribute*)attribute;
+      FirstSetAttribute* firstSetAttribute =
+        reinterpret_cast<FirstSetAttribute*>(attribute);
 
       if (firstSetAttribute == NULL) {
         return false;
@@ -106,7 +109,8 @@ class CycleSetUtils {
       }
 
       Attribute* attribute = b->getAttribute("Util::CycleMarkAttribute");
-      CycleMarkAttribute* cycleMarkAttribute = (CycleMarkAttribute*)attribute;
+      CycleMarkAttribute* cycleMarkAttribute =
+        reinterpret_cast<CycleMarkAttribute*>(attribute);
 
       if (cycleMarkAttribute == NULL) {
         return false;

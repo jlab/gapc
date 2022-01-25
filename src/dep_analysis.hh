@@ -21,6 +21,9 @@
 
 }}} */
 
+#ifndef SRC_DEP_ANALYSIS_HH_
+#define  SRC_DEP_ANALYSIS_HH_
+
 #include <list>
 #include <vector>
 #include <string>
@@ -53,3 +56,5 @@ class Dep_Analysis {
       return ordering;
     }
 };
+
+#endif  // SRC_DEP_ANALYSIS_HH_

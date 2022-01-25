@@ -91,7 +91,8 @@ class Stats {
   }
   void reset() {
     assert(size_per_round);
-    coll_acc(double(coll_per_round)/double(size_per_round)*100);
+    coll_acc(static_cast<double>(coll_per_round) /
+      static_cast<double>(size_per_round)*100);
     coll_per_round = 0;
   }
   void size(size_t s) {
@@ -99,7 +100,7 @@ class Stats {
   }
   void put(std::ostream &o) const {
   o << "\nCollisions: " << collisions_
-    << " \%Collisions per round: " << ba::mean(coll_acc) << " (mean) "
+    << " %Collisions per round: " << ba::mean(coll_acc) << " (mean) "
     << ba::max(coll_acc) << " (max) "
     << ba::variance(coll_acc) << " (var)\n"
     << "Probe length: " << ba::mean(probe_acc) << " (mean) "

@@ -193,7 +193,8 @@ class Constant {
     }
 
     double ratio() {
-      return (double) (100 * count) / ((double) ((n*(n+1))/2));
+      return static_cast<double>(100 * count) /
+        (static_cast<double>((n*(n+1))/2));
     }
 
     void print_stats(std::ostream &o, std::string name) {
@@ -337,7 +338,8 @@ class Linear {
     }
 
     double ratio() {
-      return (double) (100 * count) / ((double) (elements.size()));
+      return static_cast<double>(100 * count) /
+        (static_cast<double>(elements.size()));
     }
 
     void print_stats(std::ostream &o, std::string name) {
@@ -587,7 +589,8 @@ class Quadratic {
 
 #ifdef STATS
       double ratio() {
-        return (double) (100 * count) / ((double) index(n) );
+        return static_cast<double>(100 * count) /
+          (static_cast<double>index(n) );
       }
 
       void print_stats(std::ostream &o, std::string name) {

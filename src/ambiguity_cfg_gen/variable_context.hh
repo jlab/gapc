@@ -30,7 +30,7 @@
 
 #include "../hashtable.hh"
 
-#include "../util/symbol_table.cc"
+#include "../util/symbol_table.hh"
 #include "var_info_item.hh"
 
 

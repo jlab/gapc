@@ -373,7 +373,7 @@ struct Generate_Enum_Stmts : public Generate_Stmts {
     f->add_arg(*ret);
     std::string t = *fn.name + "(";
     f->add_arg(new Expr::Const(t));
-    f->add_arg(new Expr::Const(int(t.size())));
+    f->add_arg(new Expr::Const(static_cast<int>(t.size())));
     fn.stmts.push_back(f);
 
     Statement::Var_Decl *cur = ret;

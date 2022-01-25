@@ -32,7 +32,7 @@
 
 #include <boost/cstdint.hpp>
 
-#include "cstr.h"
+#include "../rtlib/cstr.h"
 #include "bitops.hh"
 
 #include "pool.hh"
@@ -190,7 +190,7 @@ class Readonly<Ref_Count> {
       pos = p;
       return *this;
     }
-    bool operator==(bool b) const { return b == bool(pos); }
+    bool operator==(bool b) const { return b == static_cast<bool>(pos); }
     unsigned char operator()() const { return pos; }
 };
 
@@ -601,14 +601,14 @@ class Ref {
             assert(z == Block<Refcount>::block_size);
           }
           for (unsigned char j = 0; j < z; ++j)
-            hash_fn.next(hash, char(i->array[j]));
+            hash_fn.next(hash, static_cast<char>(i->array[j]));
           i = i->next;
         }
       } else {
         Block<Refcount>* i = first;
         while (i) {
           for (unsigned char j = 0; j < i->size(); ++j)
-            hash_fn.next(hash, char(i->array[j]));
+            hash_fn.next(hash, static_cast<char>(i->array[j]));
           i = i->next;
         }
       }
@@ -642,8 +642,6 @@ void *rope::Block<X>::operator new(size_t t) noexcept(false) {
 
 template<typename X>
 void rope::Block<X>::operator delete(void *b) noexcept(false) {
-
-
   if (!b)
     return;
   rope::Ref<X>::pool.free(static_cast<Block<X>*>(b));
@@ -672,7 +670,7 @@ inline void append(rope::Ref<X> &str, const char *c) {
 
 template<typename X>
 inline void append(rope::Ref<X> &str, unsigned int i) {
-  str.append(int(i));
+  str.append(static_cast<int>(i));
 }
 
 template<typename X>
@@ -680,6 +678,14 @@ inline void append(rope::Ref<X> &str, double i) {
   std::ostringstream o;
   o << i;
   str.append(o.str().c_str(), o.str().size());
+}
+
+template<typename X>
+inline Rope operator+=(rope::Ref<X> &str, const Rope &i) {
+  Rope res;
+  append(res, str);
+  append(res, i);
+  return res;
 }
 
 
@@ -729,7 +735,7 @@ inline Rope tail(const rope::Ref<X> &str) {
   } else {
     ++it;
     for (unsigned int i = 1; i < str.size(); ++i) {
-      append(res, (char) *it);
+      append(res, static_cast<char>(*it));
       ++it;
     }
   }

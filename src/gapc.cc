@@ -85,7 +85,8 @@ static void parse_options(int argc, char **argv, Options &rec) {
     ("tab", po::value< std::vector<std::string> >(),
       "overwrite table conf with this list")
     ("table-design,t",
-      "automatically compute optimal table configuration (ignore conf from source file)")
+      "automatically compute optimal table configuration (ignore conf from "
+      "source file)")
     ("tab-all", "tabulate everything")
     ("cyk", "bottom up evalulation codgen (default: top down unger style)")
     ("backtrace", "use backtracing for the pretty print RHS of the product")
@@ -100,24 +101,32 @@ static void parse_options(int argc, char **argv, Options &rec) {
     ("ambiguity",
       "converts the selected instance into a context free string grammar")
     ("specialize_grammar",
-      "uses the selected instance and creates a GAP program which creates specialized GAP programs that recognize a subset of candidates of the original grammar.")
+      "uses the selected instance and creates a GAP program which creates "
+      "specialized GAP programs that recognize a subset of candidates of the "
+      "original grammar.")
     ("verbose", "show suppressed warnings and messages")
     ("log-level,l", po::value<int>(),
-      "the log level, valid values are 0 (VERBOSE), 1 (INFO),  2 (NORMAL), 3 (WARNING), 4 (ERROR). Default is 2 (NORMAL). INFO will e.g. report tabulated non-terminals and estimated run-time.")
+      "the log level, valid values are 0 (VERBOSE), 1 (INFO),  2 (NORMAL), 3 "
+      "(WARNING), 4 (ERROR). Default is 2 (NORMAL). INFO will e.g. report "
+      "tabulated non-terminals and estimated run-time.")
     ("include,I", po::value< std::vector<std::string> >(), "include path")
     ("version,v", "version string")
     ("pareto-version,P", po::value<int>(),
-      "Implementation of Pareto Product to use 0 (NoSort), 1 (Sort), 2 (ISort), 3 (MultiDimOptimized), 4 (NoSort, domination ordered) ")
+      "Implementation of Pareto Product to use 0 (NoSort), 1 (Sort), 2 (ISort)"
+      ", 3 (MultiDimOptimized), 4 (NoSort, domination ordered) ")
     ("multi-dim-pareto",
       "Use multi-dimensional Pareto. Works with -P 0, -P 1 and -P 3.")
     ("cut-off,c", po::value<int>(),
       "The cut-off value for -P 3 option (65 default).")
     ("float-accuracy,f", po::value<int>(),
-      "The number of decimal places regarded for pareto and sorting procedures. If this is not set the full floating point is compared.")
+      "The number of decimal places regarded for pareto and sorting procedures."
+      " If this is not set the full floating point is compared.")
     ("specialized-adp,S", po::value<int>(),
-      "Set to generate specialized implementations of the ADP framework: 0 (Standard), 1 (Sorted ADP), 2 (Pareto Eager ADP)")
+      "Set to generate specialized implementations of the ADP framework: 0 "
+      "(Standard), 1 (Sorted ADP), 2 (Pareto Eager ADP)")
     ("step-mode", po::value<int>(),
-      "Mode of specialization: 0 force block mode, 1 force stepwise mode. This is automatically set to best option if not specified.");
+      "Mode of specialization: 0 force block mode, 1 force stepwise mode. This"
+      " is automatically set to best option if not specified.");
   po::options_description hidden("");
   hidden.add_options()
     ("backtrack", "deprecated for --backtrace")
@@ -359,9 +368,11 @@ class Main {
     if (opts.approx_table_design) {
       grammar->approx_table_conf();
     }
-    // TODO: better write message to Log instance, instead of std::cout directly!
+    // TODO(sjanssen): better write message to Log instance, instead of
+    // std::cout directly!
     if (Log::instance()->is_verbose()) {
-      std::cout << "The following non-terminals will be tabulated (%name indicates linear table, %name% indicates constant tables):\n  ";
+      std::cout << "The following non-terminals will be tabulated (%name "
+        << "indicates linear table, %name% indicates constant tables):\n  ";
       grammar->put_table_conf(std::cout);
       std::cout << "\n\n";
       std::cout << "resulting in an estimated runtime of:\n  ";
@@ -502,7 +513,8 @@ class Main {
              driver.ast.set_pareto_dim(*instance, true);
          } else {
             throw LogError(
-              "Multi-Dimensional Pareto is only available for Pareto type 0, 1 and 3.");
+              "Multi-Dimensional Pareto is only available for Pareto type 0, 1"
+              " and 3.");
          }
     }
 
@@ -559,7 +571,8 @@ class Main {
         driver.ast.optimize_classify(*instance);
     } else {
         Log::instance()->warning(
-          "Choice function and classification optimization are disabled for specialized ADP.");
+          "Choice function and classification optimization are disabled for "
+          "specialized ADP.");
     }
 
     driver.ast.set_class_name(opts.class_name);
@@ -599,15 +612,15 @@ class Main {
     Code::Gen code(driver.ast);
     code_ = code;
 
-    std::auto_ptr<Backtrack_Base> bt;
+    std::unique_ptr<Backtrack_Base> bt;
     if (opts.backtrack) {
-      bt = std::auto_ptr<Backtrack_Base>(new Backtrack());
+      bt = std::unique_ptr<Backtrack_Base>(new Backtrack());
     } else if (opts.subopt) {
-      bt = std::auto_ptr<Backtrack_Base>(new Subopt());
+      bt = std::unique_ptr<Backtrack_Base>(new Subopt());
     } else if (opts.kbacktrack) {
-      bt = std::auto_ptr<Backtrack_Base>(new KBacktrack());
+      bt = std::unique_ptr<Backtrack_Base>(new KBacktrack());
     } else if (opts.classified) {
-      bt = std::auto_ptr<Backtrack_Base>(new Subopt_Marker());
+      bt = std::unique_ptr<Backtrack_Base>(new Subopt_Marker());
     }
 
     if (bt.get()) {
@@ -718,7 +731,8 @@ class Main {
     // kind of product
     if (!product->is(Product::SINGLE)) {
       throw LogError(instance->loc(),
-        "For ambiguity checking it is required to use an instance that uses not a product of algebras, but simply a single algebra.");
+        "For ambiguity checking it is required to use an instance that "
+        "uses not a product of algebras, but simply a single algebra.");
     }
 
     Algebra* canonical_algebra = product->algebra();

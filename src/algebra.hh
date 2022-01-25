@@ -51,8 +51,6 @@ class Filter;
 
 
 class Algebra : public Signature_Base {
- public:
-
  private:
   std::string *default_choice_fn_mode;
   void init_choice_fns();

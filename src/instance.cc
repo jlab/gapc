@@ -44,7 +44,7 @@ Instance::Instance(Algebra *a, Algebra *b) {
   Product::Single *y = new Product::Single(b);
   Product::Times *times = new Product::Times(x, y);
   product = times;
-  bool r = product->init();
+  [[maybe_unused]] bool r = product->init();
   assert(r);
 }
 
@@ -53,7 +53,7 @@ Instance::Instance(Product::Base *a, Algebra *b) {
   Product::Single *y = new Product::Single(b);
   Product::Times *times = new Product::Times(x, y);
   product = times;
-  bool r = product->init();
+  [[maybe_unused]] bool r = product->init();
   assert(r);
 }
 
@@ -71,7 +71,8 @@ bool Instance::init(Instance *instance) {
       continue;
     }
     Log::instance()->verboseMessage(location,
-      "This algebra product results in choice fns of type PRETTY. I.e. you may get an exponential number of answers.");
+      "This algebra product results in choice fns of type PRETTY. I.e. you may"
+      " get an exponential number of answers.");
   }
   return r;
 }

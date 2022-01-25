@@ -319,7 +319,7 @@ class Simple : public Base {
  private:
   // Stores the yield size of this perser.
   Yield::Size terminal_ys;
-  // stores a flag as sorthand to determine if this
+  // stores a flag as shorthand to determine if this
   // Alt::Simple is just a terminal symbol. This flag
   // is set at initialization time in the constructor
   // Alt::Simple::Simple where the static hashtable

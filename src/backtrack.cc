@@ -74,7 +74,7 @@ void Backtrack::apply_filter(Filter *f) {
 
 
 void Backtrack::gen_backtrack(AST &ast) {
-  bool r = ast.check_instances(instance);
+  [[maybe_unused]] bool r = ast.check_instances(instance);
   assert(r);
   r = ast.insert_instance(instance);
   assert(r);

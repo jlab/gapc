@@ -56,8 +56,6 @@ class CycleMarkAttribute : public Attribute {
     std::set<CycleSet*> getCycleSets();
 
     virtual Attribute* clone();
-
-
 };
 }  // namespace Util
 

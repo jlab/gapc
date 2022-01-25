@@ -29,12 +29,10 @@
 #include <exception>
 #include <cmath>
 #include <vector>
-#include <cstring>
 
 extern "C" {
 #include <rnalib.h>
 }
-
 
 #include "sequence.hh"
 #include "subsequence.hh"
@@ -75,8 +73,8 @@ inline bool basepairing(const Basic_Sequence<alphabet, pos_type> &seq,
   for (unsigned k = 0; k < seq.rows(); ++k) {
     // GAP-GAP pairs doesn't count at all!
     // Thus, the denominator is not seq.rows() but valid+invalid pairs.
-    if ((char(seq.row(k)[i]) == GAP_BASE) &&
-        (char(seq.row(k)[j-1]) == GAP_BASE)) {
+    if ((static_cast<char>(seq.row(k)[i]) == GAP_BASE) &&
+        (static_cast<char>(seq.row(k)[j-1]) == GAP_BASE)) {
       continue;
     }
     if (basepairing(seq.row(k), i, j)) {
@@ -86,7 +84,8 @@ inline bool basepairing(const Basic_Sequence<alphabet, pos_type> &seq,
     }
   }
   assert(threshold >= 0);
-  return 100.0 * float(valid)/(valid+invalid) >= unsigned(threshold);
+  return 100.0 * static_cast<float>(valid)/(valid+invalid) >=
+    unsigned(threshold);
 }
 
 template<typename alphabet, typename pos_type, typename T>
@@ -115,11 +114,11 @@ class BaseException : public std::exception {
     ~BaseException() throw() { delete[] msg; }
     const char* what() const throw() {
       if (!*msg) {
-        std::strcpy(msg, "Unknown base '");
+        snprintf(msg, std::strlen("Unknown base '")+1, "Unknown base '");
         unsigned l = std::strlen(msg);
         msg[l] = z;
         msg[l+1] = 0;
-        std::strcat(msg, "' in input.");
+        snprintf(msg, std::strlen("' in input.")+1, "' in input.");
       }
       return msg;
     }
@@ -189,7 +188,7 @@ inline void append_deep_rna(
   rope::Ref<X> &str, const Basic_Subsequence<alphabet, pos_type> &sub) {
   for (typename Basic_Subsequence<alphabet, pos_type>::const_iterator
        i = sub.begin(); i != sub.end(); ++i)
-    str.append((char) base_to_char(*i));
+    str.append(static_cast<char>(base_to_char(*i)));
 }
 
 // ======== energy wrapper function ========

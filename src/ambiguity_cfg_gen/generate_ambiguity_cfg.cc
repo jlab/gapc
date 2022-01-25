@@ -127,13 +127,13 @@ void AmbiguityCFG::GenerateAmbiguityCFG::checkChoiceFuntion(Algebra* alg) {
   if (!prettyPrintMode) {
     Log::instance()->warning(
       alg->location,
-      "gap-00133: This algebra choice funtion is not of type PRETTY. Is this a real pretty print algebra?");
+      "gap-00133: This algebra choice funtion is not of type PRETTY. "
+      "Is this a real pretty print algebra?");
   }
 }
 
 
 void AmbiguityCFG::GenerateAmbiguityCFG::checkReturnType(Algebra* alg) {
-  Type::Base* stringType = new Type::Usage(new Type::List(new Type::String()));
   bool allChoiceFunctionsAreOfTypeString = true;
   for (hashtable<std::string, Fn_Def*>::iterator i = alg->choice_fns.begin();
        i != alg->choice_fns.end(); ++i) {
@@ -160,7 +160,8 @@ void AmbiguityCFG::GenerateAmbiguityCFG::checkReturnType(Algebra* alg) {
   }
   if (!allChoiceFunctionsAreOfTypeString) {
     Log::instance()->warning(alg->location,
-      "gap-00199: This algebra choice funtion has not the return type [String]. Is this a real pretty print algebra?");
+      "gap-00199: This algebra choice funtion has not the return type "
+      "[String]. Is this a real pretty print algebra?");
   }
 }
 
@@ -239,7 +240,9 @@ CFG::Base* AmbiguityCFG::GenerateAmbiguityCFG::generateFragment(
     return generateFragment(terminal);
   } else {
     throw LogError(b->location,
-      "gap-00117: Internal: Unhandled subclass type of base class Symbol::Base: AmbiguityCFG::GenerateAmbiguityCFG::generateFragment (Symbol::Base *b)");
+      "gap-00117: Internal: Unhandled subclass type of base class "
+      "Symbol::Base: AmbiguityCFG::GenerateAmbiguityCFG::generateFragment"
+      " (Symbol::Base *b)");
   }
 }
 
@@ -288,7 +291,9 @@ CFG::Base* AmbiguityCFG::GenerateAmbiguityCFG::generateFragment(
   }
 
   throw LogError(terminal->location,
-    "gap-00118: Internal: Not-implemented exception: AmbiguityCFG::GenerateAmbiguityCFG::generateFragment (Symbol::Terminal *terminal). Found terminal parser '" + *terminal->name + "'");
+    "gap-00118: Internal: Not-implemented exception: AmbiguityCFG::"
+    "GenerateAmbiguityCFG::generateFragment (Symbol::Terminal *terminal). "
+    "Found terminal parser '" + *terminal->name + "'");
 }
 
 
@@ -315,7 +320,8 @@ CFG::Base* AmbiguityCFG::GenerateAmbiguityCFG::generateFragment(
     return generateFragment(multi);
   } else {
     throw LogError(alt->location,
-      "gap-00119: Internal: Unhandled subclass type of base class Alt::Base: AmbiguityCFG::GenerateAmbiguityCFG::generateFragment (Alt::Base *alt)");
+      "gap-00119: Internal: Unhandled subclass type of base class Alt::Base: "
+      "AmbiguityCFG::GenerateAmbiguityCFG::generateFragment (Alt::Base *alt)");
   }
 }
 
@@ -364,7 +370,8 @@ CFG::Base* AmbiguityCFG::GenerateAmbiguityCFG::generateFragment(
 }
 
 
-CFG::Base* AmbiguityCFG::GenerateAmbiguityCFG::generateFragment(Alt::Link *alt) {
+CFG::Base* AmbiguityCFG::GenerateAmbiguityCFG::generateFragment(
+  Alt::Link *alt) {
   // Handle the Alt::Link by processing the Symbol::Base reference
   // with the appropriate function via generateFragment (Symbol::Base *b)
 
@@ -393,11 +400,13 @@ CFG::Base* AmbiguityCFG::GenerateAmbiguityCFG::generateFragment(Alt::Link *alt) 
           bounds->setLowerBound(constInt->i);
         } else {
           throw LogError(
-            "gap-00121: Unsupported argument type to min- or maxsize filter application");
+            "gap-00121: Unsupported argument type to min- or maxsize filter"
+            " application");
         }
       } else {
         throw LogError(
-          "gap-00122: Unsupported expression in min- or maxsize filter application.");
+          "gap-00122: Unsupported expression in min- or maxsize filter"
+          " application.");
       }
     } else if (filter->is(Filter::MAX_SIZE)) {
       std::list<Expr::Base*>::iterator j = filter->args.begin();
@@ -415,11 +424,13 @@ CFG::Base* AmbiguityCFG::GenerateAmbiguityCFG::generateFragment(Alt::Link *alt) 
           bounds->setUpperBound(constInt->i);
         } else {
           throw LogError(
-            "gap-00121: Unsupported argument type to min- or maxsize filter application");
+            "gap-00121: Unsupported argument type to min- or maxsize filter"
+            " application");
         }
       } else {
         throw LogError(
-          "gap-00122: Unsupported expression in min- or maxsize filter application.");
+          "gap-00122: Unsupported expression in min- or maxsize filter"
+          " application.");
       }
 
     } else {
@@ -462,7 +473,8 @@ CFG::Base* AmbiguityCFG::GenerateAmbiguityCFG::generateFragment(
   Alt::Multi *alt) {
   // std::cout << "Alt::Multi" << std::endl;
   throw LogError(alt->location,
-    "gap-00115: Internal: Not-implemented exception: AmbiguityCFG::GenerateAmbiguityCFG::generateFragment (Alt::Multi *alt)");
+    "gap-00115: Internal: Not-implemented exception: AmbiguityCFG::"
+    "GenerateAmbiguityCFG::generateFragment (Alt::Multi *alt)");
 }
 
 
@@ -522,14 +534,17 @@ CFG::Base* AmbiguityCFG::GenerateAmbiguityCFG::generateFunctionDefFragment(
           "%1%") % constInt->i)));
       } else {
         throw LogError(constant->location,
-          "gap-00116: Unsupported constant value type in parameter list of append-function call.");
+          "gap-00116: Unsupported constant value type in parameter list of "
+          "append-function call.");
       }
     } else if ((*i)->is(Fn_Arg::ALT)) {
       Fn_Arg::Alt *alt = dynamic_cast<Fn_Arg::Alt*> (*i);
       variableValue = generateFragment(alt->alt);
     } else {
       throw LogError((*i)->location,
-        "gap-00117: Unhandled subclass type of base class Fn_Arg::Base: AmbiguityCFG::GenerateAmbiguityCFG::generateFunctionDefFragment (Fn_Def *algebra_function, std::list<Fn_Arg::Base*> &args)");
+        "gap-00117: Unhandled subclass type of base class Fn_Arg::Base: "
+        "AmbiguityCFG::GenerateAmbiguityCFG::generateFunctionDefFragment "
+        "(Fn_Def *algebra_function, std::list<Fn_Arg::Base*> &args)");
     }
     assert(variableValue != NULL);
     // Wrap the result into a base-wrapper, which marks a CFG expression
