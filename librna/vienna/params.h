@@ -110,11 +110,11 @@ PUBLIC pf_paramT *get_boltzmann_factors_ali(unsigned int n_seq,
                                             model_detailsT md,
                                             double pf_scale);
 
-DEPRECATED(paramT     *copy_parameters(void));
-DEPRECATED(paramT     *set_parameters(paramT *dest));
-DEPRECATED(pf_paramT  *scale_pf_parameters(void));
-DEPRECATED(pf_paramT  *copy_pf_param(void));
-DEPRECATED(pf_paramT  *set_pf_param(paramT *dest));
+//~ DEPRECATED(paramT     *copy_parameters(void));
+//~ DEPRECATED(paramT     *set_parameters(paramT *dest));
+//~ DEPRECATED(pf_paramT  *scale_pf_parameters(void));
+//~ DEPRECATED(pf_paramT  *copy_pf_param(void));
+//~ DEPRECATED(pf_paramT  *set_pf_param(paramT *dest));
 
 
 
