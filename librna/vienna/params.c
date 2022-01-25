@@ -544,31 +544,31 @@ PUBLIC paramT *get_parameter_copy(paramT *par){
 /*# deprecated functions below              #*/
 /*###########################################*/
 
-PUBLIC paramT *copy_parameters(void){
-  paramT *copy;
-  if (p.id != id) scale_parameters();
-  copy = (paramT *) space(sizeof(paramT));
-  memcpy(copy, &p, sizeof(paramT));
-  return copy;
-}
+//~ PUBLIC paramT *copy_parameters(void){
+  //~ paramT *copy;
+  //~ if (p.id != id) scale_parameters();
+  //~ copy = (paramT *) space(sizeof(paramT));
+  //~ memcpy(copy, &p, sizeof(paramT));
+  //~ return copy;
+//~ }
 
-PUBLIC paramT *set_parameters(paramT *dest){
-  memcpy(&p, dest, sizeof(paramT));
-  return &p;
-}
+//~ PUBLIC paramT *set_parameters(paramT *dest){
+  //~ memcpy(&p, dest, sizeof(paramT));
+  //~ return &p;
+//~ }
 
-PUBLIC pf_paramT *copy_pf_param(void){
-  pf_paramT *copy;
-  if (pf.id != pf_id) scale_pf_parameters();
-  copy = (pf_paramT *) space(sizeof(pf_paramT));
-  memcpy(copy, &pf, sizeof(pf_paramT));
-  return copy;
-}
+//~ PUBLIC pf_paramT *copy_pf_param(void){
+  //~ pf_paramT *copy;
+  //~ if (pf.id != pf_id) scale_pf_parameters();
+  //~ copy = (pf_paramT *) space(sizeof(pf_paramT));
+  //~ memcpy(copy, &pf, sizeof(pf_paramT));
+  //~ return copy;
+//~ }
 
-PUBLIC pf_paramT *set_pf_param(paramT *dest){
-  memcpy(&pf, dest, sizeof(pf_paramT));
-  return &pf;
-}
+//~ PUBLIC pf_paramT *set_pf_param(paramT *dest){
+  //~ memcpy(&pf, dest, sizeof(pf_paramT));
+  //~ return &pf;
+//~ }
 
 PUBLIC pf_paramT *scale_pf_parameters(void){
   return get_scaled_pf_parameters();
