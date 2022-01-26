@@ -213,7 +213,7 @@
 #define VRNA_WITH_SIMD_SSE41 1
 
 /* Compute z-scores for RNALfold */
-#define VRNA_WITH_SVM 1
+#undef VRNA_WITH_SVM
 
 /* Include C-library Unit tests */
 /* #undef WITH_CHECK */
