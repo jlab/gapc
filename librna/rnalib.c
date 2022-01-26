@@ -18,7 +18,7 @@
 #include "rnalib.h"
 
 #include "ViennaRNA/datastructures/basic.h"
-static paramT  *P = 0;
+static vrna_param_t  *P = 0;
 // if nonzero use logarithmic ML energy in energy_of_struct
 // used in vienna/fold_vars.c, set_model_details()
 //int logML     = 0;
@@ -46,13 +46,26 @@ static paramT  *P = 0;
 
 void librna_read_param_file(const char *filename)
 {
-  if (filename)
-    read_parameter_file(filename);
-  if (P)
+  if (P) {
     free(P);
-  model_detailsT md;
-  set_model_details(&md);
-  P = get_scaled_parameters(temperature, md);
+  }
+
+  /* create a new model details structure to store the Model Settings */
+  vrna_md_t md;
+
+  /* ALWAYS set default model settings first! */
+  vrna_md_set_default(&md);
+
+  if (filename) {
+      /* overwrite default energy parameters with those from given file,
+         iff filename is not Null */
+      vrna_params_load(filename, VRNA_PARAMETER_FORMAT_DEFAULT);
+    }
+
+  /* adjust temperature for energy parameters */
+  md.temperature = temperature;
+  /* re-scale energies to updated temperature */
+  P = vrna_params(&md);
 }
 
 // test if dangling an unpaired base from 5' onto a stack AND another from 3' onto the stack results in the same energy as
