@@ -1,7 +1,7 @@
 
 # configure support 07/2015
 
-AC_INIT([gapc], [pr1.0], [tgatter@cebitec.uni-bielefeld.de])
+AC_INIT([gapc], [pr1.0], [stefan.janssen@computational.bio.uni-giessen.de])
 
 AC_CONFIG_FILES([config.mf])
 
@@ -146,5 +146,12 @@ AC_FUNC_MALLOC
 AC_FUNC_MEMCMP
 AC_FUNC_REALLOC
 AC_CHECK_FUNCS([memset strerror])
+
+# compile flags for ViennaRNA part
+AC_CHECK_FUNCS([strdup], [CFLAGS+=" -DHAVE_STRDUP "])
+AC_CHECK_FUNCS([erand48], [CFLAGS+=" -DHAVE_ERAND48 "])
+AC_CHECK_FUNCS([vasprintf], [CFLAGS+=" -DHAVE_VASPRINTF "])
+CFLAGS+=" -UVRNA_WITH_SVM "
+
 
 AC_OUTPUT
