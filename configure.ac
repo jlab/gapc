@@ -153,4 +153,8 @@ AC_CHECK_FUNCS([memset strerror])
 #AC_CHECK_FUNCS([vasprintf], [CFLAGS+=" -DHAVE_VASPRINTF "])
 CFLAGS+=" -DHAVE_CONFIG_H "
 
+
+AC_CONFIG_SUBDIRS([librna])
+
+
 AC_OUTPUT
