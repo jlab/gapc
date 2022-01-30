@@ -52,7 +52,7 @@ class CFGPrettyPrint {
     std::string* commandLineCall;
 
  public:
-    CFGPrettyPrint(std::ostream &oStream);
+    explicit CFGPrettyPrint(std::ostream &oStream);
 
     // Sets the command line call.
     void setCommandLineCall(std::string* commandLineCall);

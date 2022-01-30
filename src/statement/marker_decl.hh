@@ -36,7 +36,7 @@ class Marker_Decl : public Base {
     std::string name_;
 
  public:
-    Marker_Decl(const Symbol::NT &nt);
+    explicit Marker_Decl(const Symbol::NT &nt);
 
     const std::string &name() const {
       return name_;
