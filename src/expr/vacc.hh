@@ -46,12 +46,12 @@ class Vacc : public Base {
     }
 
 
-    Vacc(Var_Acc::Base *v) : Base(VACC), var_acc(v) {
+    explicit Vacc(Var_Acc::Base *v) : Base(VACC), var_acc(v) {
     }
 
 
-    Vacc(std::string *n);
-    Vacc(Statement::Var_Decl &vdecl);
+    explicit Vacc(std::string *n);
+    explicit Vacc(Statement::Var_Decl &vdecl);
 
     Vacc(std::string* a, std::string *b);
     std::string *name();
