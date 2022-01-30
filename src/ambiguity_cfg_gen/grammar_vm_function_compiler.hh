@@ -86,7 +86,7 @@ class GrammarVMFunctionCompiler {
     void clear();
 
  public:
-    GrammarVMFunctionCompiler(Algebra* algebra);
+    explicit GrammarVMFunctionCompiler(Algebra* algebra);
     ~GrammarVMFunctionCompiler();
 
     // Main entry point for the processing of a function definition.

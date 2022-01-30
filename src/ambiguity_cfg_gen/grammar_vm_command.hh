@@ -94,7 +94,7 @@ class LoadIntCommand : public GrammarVMCommand {
 // onto the stack.
 class LoadThisCommand : public GrammarVMCommand {
  public:
-    LoadThisCommand(Loc& location);
+    explicit LoadThisCommand(Loc& location);
     ~LoadThisCommand();
 };
 
@@ -149,7 +149,7 @@ class CreateVarCommand : public GrammarVMCommand {
 // Loads the current context onto the stack.
 class LoadContextCommand : public GrammarVMCommand {
  public:
-    LoadContextCommand(Loc& location);
+    explicit LoadContextCommand(Loc& location);
     ~LoadContextCommand();
 };
 
@@ -159,7 +159,7 @@ class LoadContextCommand : public GrammarVMCommand {
 // to be a context, otherwise an exception is thrown.
 class StoreContextCommand : public GrammarVMCommand {
  public:
-    StoreContextCommand(Loc& location);
+    explicit StoreContextCommand(Loc& location);
     ~StoreContextCommand();
 };
 
@@ -169,7 +169,7 @@ class StoreContextCommand : public GrammarVMCommand {
 // created.
 class WrapContextCommand : public GrammarVMCommand {
  public:
-    WrapContextCommand(Loc& location);
+    explicit WrapContextCommand(Loc& location);
     ~WrapContextCommand();
 };
 
@@ -179,7 +179,7 @@ class WrapContextCommand : public GrammarVMCommand {
 // instances, an error is thrown.
 class MergeContextsCommand : public GrammarVMCommand {
  public:
-    MergeContextsCommand(Loc& location);
+    explicit MergeContextsCommand(Loc& location);
     ~MergeContextsCommand();
 };
 
@@ -189,7 +189,7 @@ class MergeContextsCommand : public GrammarVMCommand {
 // the top of the stack, an exception is thrown.
 class ClearContextCommand : public GrammarVMCommand {
  public:
-    ClearContextCommand(Loc& location);
+    explicit ClearContextCommand(Loc& location);
     ~ClearContextCommand();
 };
 
@@ -199,7 +199,7 @@ class ClearContextCommand : public GrammarVMCommand {
 // context untouched.
 class ClearLocalContextCommand : public GrammarVMCommand {
  public:
-    ClearLocalContextCommand(Loc& location);
+    explicit ClearLocalContextCommand(Loc& location);
     ~ClearLocalContextCommand();
 };
 
@@ -207,7 +207,7 @@ class ClearLocalContextCommand : public GrammarVMCommand {
 // Creates an epsilon grammar fragment on top of the VM stack.
 class CreateEpsilonCommand : public GrammarVMCommand {
  public:
-    CreateEpsilonCommand(Loc& location);
+    explicit CreateEpsilonCommand(Loc& location);
     ~CreateEpsilonCommand();
 };
 
@@ -267,7 +267,7 @@ class CreateProductionFragmentCommand : public GrammarVMCommand {
 // the stack into a new result.
 class CombineCommand : public GrammarVMCommand {
  public:
-    CombineCommand(Loc& location);
+    explicit CombineCommand(Loc& location);
     ~CombineCommand();
 };
 
@@ -277,7 +277,7 @@ class CombineCommand : public GrammarVMCommand {
 // list of result expressions for the current algebra function.
 class ReturnCommand : public GrammarVMCommand {
  public:
-    ReturnCommand(Loc& location);
+    explicit ReturnCommand(Loc& location);
     ~ReturnCommand();
 };
 
@@ -287,7 +287,7 @@ class ReturnCommand : public GrammarVMCommand {
 // which represent the same value.
 class DuplicateCommand : public GrammarVMCommand {
  public:
-    DuplicateCommand(Loc& location);
+    explicit DuplicateCommand(Loc& location);
     ~DuplicateCommand();
 };
 
@@ -297,7 +297,7 @@ class DuplicateCommand : public GrammarVMCommand {
 // thrown.
 class SwapCommand : public GrammarVMCommand {
  public:
-    SwapCommand(Loc& location);
+    explicit SwapCommand(Loc& location);
     ~SwapCommand();
 };
 
@@ -306,7 +306,7 @@ class SwapCommand : public GrammarVMCommand {
 // contains at least one element.
 class PopStackCommand : public GrammarVMCommand {
  public:
-    PopStackCommand(Loc& location);
+    explicit PopStackCommand(Loc& location);
     ~PopStackCommand();
 };
 
