@@ -47,7 +47,7 @@ class NamingDomain {
 
  public:
     NamingDomain();
-    NamingDomain(NamingDomain* d);
+    explicit NamingDomain(NamingDomain* d);
     ~NamingDomain();
 
     // Returns TRUE if the domain contains the name in
