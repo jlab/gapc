@@ -148,7 +148,7 @@ class M_Char {
     M_Char()
       : begin(0) {
     }
-    M_Char(alphabet *x)
+    explicit M_Char(alphabet *x)
       : begin(x) {
       assert(x);
     }
@@ -260,7 +260,7 @@ class Basic_Sequence {
       : seq(0) {
       copy(s, l);
     }
-    Basic_Sequence(alphabet *s) : seq(0) {
+    explicit Basic_Sequence(alphabet *s) : seq(0) {
       n = std::strlen(s);
       copy(s, n);
     }
