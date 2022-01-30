@@ -33,7 +33,7 @@ namespace Printer {
 class CC : public Base {
  public:
   CC() : Base() {}
-  CC(std::ostream &o) : Base(o) {}
+  explicit CC(std::ostream &o) : Base(o) {}
   void print(const Statement::For &stmt);
   void print(const Statement::Var_Decl &stmt);
   void print(const Statement::If &stmt);

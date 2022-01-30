@@ -46,7 +46,7 @@ class Base {
   Yield::Size ys;
   ::Type::Base *datatype;
   Base(Type t, const Loc &l) : type(t), location(l), datatype(NULL) {}
-  Base(Type t) : type(t), datatype(NULL) {}
+  explicit Base(Type t) : type(t), datatype(NULL) {}
 
  public:
   virtual ~Base();
@@ -87,7 +87,7 @@ class Number : public Base {
   }
 
 
-  Number(Type t) : Base(t) {}
+  explicit Number(Type t) : Base(t) {}
 
  public:
   virtual void setNegative();
@@ -99,7 +99,7 @@ class Char : public Base {
  public:
   char c;
   Char(const std::string &n, const Loc &l);
-  Char(char x) : Base(CHAR), c(x) {}
+  explicit Char(char x) : Base(CHAR), c(x) {}
   void put(std::ostream &s);
 };
 
@@ -108,7 +108,7 @@ class Bool : public Base {
  private:
  public:
   bool b;
-  Bool(bool t) : Base(BOOL), b(t) {
+  explicit Bool(bool t) : Base(BOOL), b(t) {
   datatype = new ::Type::Bool();
   }
   void put(std::ostream &s);
@@ -120,7 +120,7 @@ class Int : public Number {
  public:
   int i;
 
-  Int(int n) : Number(INT) {
+  explicit Int(int n) : Number(INT) {
     i = n;
     datatype = new ::Type::Int();
   }
@@ -153,7 +153,7 @@ class Float : public Number {
   }
 
 
-  Float(double d);
+  explicit Float(double d);
 
 
   void setNegative() {
@@ -170,7 +170,7 @@ class Size : public Number {
  public:
   size_t u;
 
-  Size(size_t a) : Number(SIZE), u(a) {
+  explicit Size(size_t a) : Number(SIZE), u(a) {
     datatype = new ::Type::Size();
   }
 
@@ -194,7 +194,7 @@ class String : public Base {
   }
 
 
-  String(const std::string &n) : Base(STRING) {
+  explicit String(const std::string &n) : Base(STRING) {
     s = new std::string(n);
   }
 

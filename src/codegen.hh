@@ -116,7 +116,7 @@ class Gen {
 
  public:
   Gen() : return_type_(0) { }
-  Gen(AST &ast);
+  explicit Gen(AST &ast);
   const Type::Base *return_type() const {
     assert(return_type_); return return_type_;
   }

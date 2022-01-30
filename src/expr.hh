@@ -108,13 +108,13 @@ class Const : public Base {
  public:
   ::Const::Base *base;
   Const(::Const::Base* b, const Loc &l) : Base(CONST, l), base(b) {}
-  Const(::Const::Base* b) : Base(CONST), base(b) {}
-  Const(const Yield::Poly &p);
-  Const(const Yield::Size &ys);
-  Const(int p);
-  Const(double d);
-  Const(const std::string &s);
-  Const(char c);
+  explicit Const(::Const::Base* b) : Base(CONST), base(b) {}
+  explicit Const(const Yield::Poly &p);
+  explicit Const(const Yield::Size &ys);
+  explicit Const(int p);
+  explicit Const(double d);
+  explicit Const(const std::string &s);
+  explicit Const(char c);
 
     void put(std::ostream &s) const;
 
@@ -239,7 +239,7 @@ class Not : public Base {
  public:
     Base *base;
     Not(Base *b, const Loc &l) : Base(NOT, l), base(b) { }
-    Not(Base *b) : Base(NOT), base(b) { }
+    explicit Not(Base *b) : Base(NOT), base(b) { }
     void put(std::ostream &s) const;
     Base *copy() const;
 };

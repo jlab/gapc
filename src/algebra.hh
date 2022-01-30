@@ -77,7 +77,7 @@ class Algebra : public Signature_Base {
       signature(NULL), signature_name(NULL) {
   }
 
-  Algebra(std::string *n)
+  explicit Algebra(std::string *n)
     :  Signature_Base(n), default_choice_fn_mode(0),
       signature(NULL), signature_name(NULL) {
   }
