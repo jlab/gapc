@@ -148,9 +148,10 @@ AC_FUNC_REALLOC
 AC_CHECK_FUNCS([memset strerror])
 
 # compile flags for ViennaRNA part
-#AC_CHECK_FUNCS([strdup], [CFLAGS+=" -DHAVE_STRDUP "])
-#AC_CHECK_FUNCS([erand48], [CFLAGS+=" -DHAVE_ERAND48 "])
-#AC_CHECK_FUNCS([vasprintf], [CFLAGS+=" -DHAVE_VASPRINTF "])
 CFLAGS+=" -DHAVE_CONFIG_H "
+
+
+AC_CONFIG_SUBDIRS([librna])
+
 
 AC_OUTPUT
