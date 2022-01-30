@@ -68,7 +68,7 @@ class Usage : public Base {
     Base *base;
 
     Usage(Base *b, const Loc &l) : Base(USAGE, l), base(b) {}
-    Usage(Base *b) : Base(USAGE), base(b) {}
+    explicit Usage(Base *b) : Base(USAGE), base(b) {}
 
     bool is_eq(const Base & base) const;
     Base * simple();
@@ -96,7 +96,7 @@ class List : public Base {
 
     List(Base *b, const Loc &l) : Base(LIST, l), push_type_(NORMAL),
          hash_decl_(0), of(b) {}
-    List(Base *b) : Base(LIST), push_type_(NORMAL), hash_decl_(0),
+    explicit List(Base *b) : Base(LIST), push_type_(NORMAL), hash_decl_(0),
                   of(b) {}
 
     Base *of;
@@ -129,7 +129,7 @@ class Name {
     Loc location;
 
     Name(Base *lh, const Loc &l) : lhs(lh), location(l) {}
-    Name(Base *lh) : lhs(lh) {}
+    explicit Name(Base *lh) : lhs(lh) {}
 
     std::ostream & put(std::ostream &s) const;
 
@@ -146,7 +146,7 @@ class Tuple : public Base {
  public:
     MAKE_CLONE(Tuple);
 
-    Tuple(const Loc &l) : Base(TUPLE, l) {}
+    explicit Tuple(const Loc &l) : Base(TUPLE, l) {}
     Tuple(Base *a, Base *b);
 
     hashtable<std::string, Name*> members;
@@ -178,7 +178,7 @@ class TupleDef : public Tuple {
     MAKE_CLONE(TupleDef);
     std::string name;
 
-    TupleDef(const Loc &l) : Tuple(l) { type = TUPLEDEF; }
+    explicit TupleDef(const Loc &l) : Tuple(l) { type = TUPLEDEF; }
 
     bool is_eq(const Base & base) const;
     void print(Printer::Base &s) const;
@@ -192,7 +192,7 @@ class Alphabet : public Base {
     Base *temp;
     ::Signature *signature;
 
-    Alphabet(Loc &l) : Base(ALPHABET, l), temp(NULL),
+    explicit Alphabet(Loc &l) : Base(ALPHABET, l), temp(NULL),
               signature(NULL) {}
     Alphabet() : Base(ALPHABET), temp(NULL), signature(NULL) {}
 
@@ -243,7 +243,7 @@ class Void : public Base {
  public:
     MAKE_CLONE(Void);
 
-    Void(Loc &l) : Base(VOID, l) {}
+    explicit Void(Loc &l) : Base(VOID, l) {}
     Void() : Base(VOID) {}
 
     std::ostream & put(std::ostream &s) const;
@@ -266,7 +266,7 @@ class Int : public Base {
  public:
     MAKE_CLONE(Int);
 
-    Int(Loc &l) : Base(INT, l) {}
+    explicit Int(Loc &l) : Base(INT, l) {}
     Int() : Base(INT) {}
 
     std::ostream & put(std::ostream &s) const;
@@ -277,7 +277,7 @@ class Int : public Base {
 class Integer : public Base {
  public:
     MAKE_CLONE(Integer);
-    Integer(Loc &l) : Base(INTEGER, l) {}
+    explicit Integer(Loc &l) : Base(INTEGER, l) {}
     Integer() : Base(INTEGER) {}
     std::ostream & put(std::ostream &s) const;
     void print(Printer::Base &s) const;
@@ -299,7 +299,7 @@ class Float : public Base {
  public:
     MAKE_CLONE(Float);
 
-    Float(Loc &l) : Base(FLOAT, l) {}
+    explicit Float(Loc &l) : Base(FLOAT, l) {}
     Float() : Base(FLOAT) {}
 
     std::ostream & put(std::ostream &s) const;
@@ -310,7 +310,7 @@ class Float : public Base {
 class Single : public Base {
  public:
     MAKE_CLONE(Single);
-    Single(Loc &l) : Base(FLOAT, l) {}
+    explicit Single(Loc &l) : Base(FLOAT, l) {}
     Single() : Base(SINGLE) {}
     std::ostream & put(std::ostream &s) const;
     void print(Printer::Base &s) const;
@@ -321,7 +321,7 @@ class String : public Base {
  public:
     MAKE_CLONE(String);
 
-    String(Loc &l) : Base(STRING, l) {}
+    explicit String(Loc &l) : Base(STRING, l) {}
     String() : Base(STRING) {}
 
     std::ostream & put(std::ostream &s) const;
@@ -333,7 +333,7 @@ class Char : public Base {
  public:
     MAKE_CLONE(Char);
 
-    Char(Loc &l) : Base(CHAR, l) {}
+    explicit Char(Loc &l) : Base(CHAR, l) {}
     Char() : Base(CHAR) {}
 
     std::ostream & put(std::ostream &s) const;
@@ -345,7 +345,7 @@ class Bool : public Base {
  public:
     MAKE_CLONE(Bool);
 
-    Bool(Loc &l) : Base(BOOL, l) {}
+    explicit Bool(Loc &l) : Base(BOOL, l) {}
     Bool() : Base(BOOL) {}
 
     std::ostream & put(std::ostream &s) const;
@@ -385,7 +385,7 @@ class Range : public Base {
     Base *original_tuple;
     Component component;
 
-    Range(Base *b) : Base(RANGE), element_type(b),
+    explicit Range(Base *b) : Base(RANGE), element_type(b),
               original_tuple(NULL), component(NONE) {}
     Range(Base *b, Base *o, Component c) : Base(RANGE), element_type(b),
           original_tuple(o), component(c) {}
@@ -405,7 +405,7 @@ class Seq : public Base {
     Seq() : Base(SEQ), element_type(NULL) {
       element_type = new Char();
     }
-    Seq(Base *b) : Base(SEQ), element_type(b) {}
+    explicit Seq(Base *b) : Base(SEQ), element_type(b) {}
     std::ostream & put(std::ostream &s) const;
     void print(Printer::Base &s) const;
 };
@@ -432,7 +432,7 @@ class Subseq : public Base {
  public:
     MAKE_CLONE(Subseq);
     Subseq() : Base(SUBSEQ), seq(NULL) {}
-    Subseq(Seq *s) : Base(SUBSEQ), seq(s) {}
+    explicit Subseq(Seq *s) : Base(SUBSEQ), seq(s) {}
     std::ostream & put(std::ostream &s) const;
     void print(Printer::Base &s) const;
 };
@@ -441,7 +441,7 @@ class Subseq : public Base {
 class Generic : public Base {
  public:
     std::string name;
-    Generic(Type t) : Base(t) {}
+    explicit Generic(Type t) : Base(t) {}
     Generic(Type t, const Loc &l) : Base(t, l) {}
     std::ostream & put(std::ostream &s) const;
 };
@@ -451,7 +451,7 @@ class Shape : public Generic {
  public:
     MAKE_CLONE(Shape);
     Shape() : Generic(SHAPE) { name = "shape"; }
-    Shape(const Loc &l) : Generic(SHAPE, l) { name = "shape"; }
+    explicit Shape(const Loc &l) : Generic(SHAPE, l) { name = "shape"; }
     void print(Printer::Base &s) const;
 };
 
@@ -461,7 +461,7 @@ class Referencable : public Base {
  public:
     MAKE_CLONE(Referencable);
     Base *base;
-    Referencable(Base *b) : Base(REFERENCABLE), base(b) {}
+    explicit Referencable(Base *b) : Base(REFERENCABLE), base(b) {}
     std::ostream & put(std::ostream &s) const;
     void print(Printer::Base &s) const;
     Base *deref();
@@ -472,7 +472,7 @@ class Rational : public Generic {
  public:
     MAKE_CLONE(Rational);
     Rational() : Generic(RATIONAL) { name = "rational"; }
-    Rational(const Loc &l) : Generic(RATIONAL, l) {
+    explicit Rational(const Loc &l) : Generic(RATIONAL, l) {
       name = "rational";
     }
     void print(Printer::Base &s) const;
@@ -482,7 +482,7 @@ class BigInt : public Generic {
  public:
     MAKE_CLONE(BigInt);
     BigInt() : Generic(BIGINT) { name = "bigint"; }
-    BigInt(const Loc &l) : Generic(BIGINT, l) { name = "bigint"; }
+    explicit BigInt(const Loc &l) : Generic(BIGINT, l) { name = "bigint"; }
     void print(Printer::Base &s) const;
 };
 
@@ -493,8 +493,8 @@ class External : public Base {
     MAKE_CLONE(External);
     std::string *name;
     External(std::string *n, const Loc &l) : Base(EXTERNAL, l), name(n) {}
-    External(std::string *n) : Base(EXTERNAL), name(n) {}
-    External(const std::string &n) : Base(EXTERNAL),
+    explicit External(std::string *n) : Base(EXTERNAL), name(n) {}
+    explicit External(const std::string &n) : Base(EXTERNAL),
                       name(new std::string(n)) {}
     std::ostream & put(std::ostream &s) const;
     void print(Printer::Base &s) const;
