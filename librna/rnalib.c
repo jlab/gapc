@@ -17,42 +17,43 @@
 
 #include "rnalib.h"
 
-#include "vienna/data_structures.h"
-static paramT  *P = 0;
-// if nonzero use logarithmic ML energy in energy_of_struct
-// used in vienna/fold_vars.c, set_model_details()
-int logML     = 0;
+#include "ViennaRNA/datastructures/basic.h"
+static vrna_param_t  *P = 0;
 
-#include "vienna/energy_par.h"
-#include "vienna/energy_const.h"
-
-#include "vienna/params.h"
-#include "vienna/read_epars.h"
-#include "vienna/fold_vars.h"
-
-//#define PUBLIC const
-//#include "energy_par.c"
-//#undef PUBLIC
+#include "ViennaRNA/params/default.h"
+#include "ViennaRNA/params/constants.h"
+#include "ViennaRNA/params/basic.h"
+#include "ViennaRNA/params/io.h"
+#include "ViennaRNA/fold_vars.h"
 
 #include <assert.h>
-
-// strncmp()
 #include <string.h>
-// abort()
 #include <stdlib.h>
-// fprintf()
 #include <stdio.h>
 #include <math.h>
 
 void librna_read_param_file(const char *filename)
 {
-  if (filename)
-    read_parameter_file(filename);
-  if (P)
+  if (P) {
     free(P);
-  model_detailsT md;
-  set_model_details(&md);
-  P = get_scaled_parameters(temperature, md);
+  }
+
+  /* create a new model details structure to store the Model Settings */
+  vrna_md_t md;
+
+  /* ALWAYS set default model settings first! */
+  vrna_md_set_default(&md);
+
+  if (filename) {
+      /* overwrite default energy parameters with those from given file,
+         iff filename is not Null */
+      vrna_params_load(filename, VRNA_PARAMETER_FORMAT_DEFAULT);
+    }
+
+  /* adjust temperature for energy parameters */
+  md.temperature = temperature;
+  /* re-scale energies to updated temperature */
+  P = vrna_params(&md);
 }
 
 // test if dangling an unpaired base from 5' onto a stack AND another from 3' onto the stack results in the same energy as
@@ -1006,7 +1007,7 @@ int ss_energy(rsize i, rsize j)
 */
 double mk_pf(double x)
 {
-  // temperature is defined in vienna/fold_vars.c
+  // temperature is defined in ViennaRNA/params/basic.h
   return exp((-1.0 * x/100.0) / (GASCONST/1000 * (temperature + K0)));
 }
 

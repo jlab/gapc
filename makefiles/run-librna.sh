@@ -55,7 +55,7 @@ install -m 644 librna/rnalib.c "$SHARE"/librna
 install -m 644 librna/librna$SO_SUFFIX "$PREFIX"/lib
 install -m 644 librna/librnafast$SO_SUFFIX "$PREFIX"/lib
 
-for i in librna/vienna/*.par
+for i in librna/paramfiles/*.par
 do
   install -m 644 $i "$SHARE"/librna
 done
@@ -66,5 +66,3 @@ done
   #~ grammar/affinelocsim2.gap; do
   #~ install -m 644 $i "$EXAMPLES"
 #~ done
-
-

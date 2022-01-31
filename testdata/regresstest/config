@@ -10,7 +10,7 @@ check_new_old_eq loco3stem.gap unused count caucguacgucagucguagucaguugcagugcaucg
 check_new_old_eq loco3stem.gap unused count gggcguucucauagguccgcguggguuagacauucaagguuauuuuuuauccggaguuaccucaucuaauugauagauuaagaaauucuuuuguucgaauaaggcgcaguuauuuacccuuuugauuccuaaaaacuuuccgccgccgucaagaugacaaauaacaaacuugccaaggcggcauccguuuuuagauaauu bar
 
 GAPC="../../../gapc -t"
-RUN_CPP_FLAGS="-P ../../../librna/vienna/rna_turner1999.par"
+RUN_CPP_FLAGS="-P ../../../librna/paramfiles/rna_turner1999.par"
 
 check_new_old_eq rnashapes2wip.gap unused mfepp gcgcggugcgucacgcaucacauacucaucaacgaugagaagc foo
 
@@ -20,7 +20,7 @@ RUN_CPP_FLAGS=""
 
 check_new_old_eq cmsmallint.gap unused enum a foo
 
-RUN_CPP_FLAGS="-P ../../../librna/vienna/rna_turner1999.par"
+RUN_CPP_FLAGS="-P ../../../librna/paramfiles/rna_turner1999.par"
 
 check_new_old_eq adpf.gap unused shapemfepp acgugucagucagucauggucaucauacugccgua foo
 
@@ -42,7 +42,7 @@ RUN_CPP_FLAGS="-w 23 -i 8"
 
 check_new_old_eq adpf.gap unused bpmaxpp auagacguguaauuauugaggaacaggcaucgaucauaauaggguaucagggauacaugaauaggcuuagcgucaguuguuggcuauuccaucaucggguacaauuccauacuucgcaugggaucaaccaagcucuaguggccgccuaug bar
 
-RUN_CPP_FLAGS="-w 100 -i 50 -P ../../../librna/vienna/rna_turner1999.par"
+RUN_CPP_FLAGS="-w 100 -i 50 -P ../../../librna/paramfiles/rna_turner1999.par"
 
 check_new_old_eq adpf.gap unused mfepp cuccccucuucggacgcaacuuaugccuaggaccuauuuugcacagaaugagggcuagggaagagccgucccucagugagcagaguuaaguuguuguuugaguaacucccggcgggcuaagccauugcacccaaccgcuugccugucauucuggaccgggauggaaccguaccucugcacuuaagacagacuaucaaaagcguauggcggguuguggucucaagugggaggacaaucaccguauauuugaucaacgauucagggaugcucacccguuucuuauuugaaacuuggcacccggaauauucugaagccaauacaguuugugacacaaccccgucaguugagacucuuuuaacgccgugugccgacgaaucuccccacgguaugcgcuggucggucccacgagggcguauaucgccaaggcagcuuaugguaacgucgcauaccagcucaagccgguugaaauaacagguccaguuuguaggucucuucugugacguaggccugcagcaagaacugcgcaugcuugucguagaggccaauagagcugaucuggcaaucguaaagguaguguuuagguagcuucauguauucaucuuucgucaucgcaagcuaaacuugcgcucaucacuauggcgucaucugaggucguugcgagaaagaugcuagguugcgcgcauaacgacuuuaagcguuagauuccgccucucaucgggccagcgaaagacccauacgcaaacgcgcuaucgcaguaauggaauaauuggcaguacucaucgccggcgucgcuauguucuaugcucacgcucucuccaggcggcggauggucccugccagcgcucgagaggcauccaaguuggaacuauauccuaugaaucacaaugccggucacuucgcgggcuaauaaguuccucaggggaccaggacgugauuuuccgugcagggggggccggucacacgcaggagguuugggcuagcacaagcccaacaaccacau foo
 
@@ -66,20 +66,20 @@ LDLIBS_EXTRA=$DEFAULT_LDLIBS_EXTRA
 GAPC="../../../gapc -t --subopt"
 
 # 30 %
-RUN_CPP_FLAGS="-d 552 -P ../../../librna/vienna/rna_turner1999.par"
+RUN_CPP_FLAGS="-d 552 -P ../../../librna/paramfiles/rna_turner1999.par"
 
 check_new_old_eq rnashapesmfe.gap unused mfepp ugcuagucagcuaucgacucgugcagcaguacgaucagcauagcuagcacuacgcua subopt30
 
 # 31 %
 GAPC="../../../gapc -t --cyk --subopt"
-RUN_CPP_FLAGS="-d 570 -P ../../../librna/vienna/rna_turner1999.par"
+RUN_CPP_FLAGS="-d 570 -P ../../../librna/paramfiles/rna_turner1999.par"
 
 check_new_old_eq rnashapesmfe.gap unused mfepp ugcuagucagcuaucgacucgugcagcaguacgaucagcauagcuagcacuacgcua subopt31
 
 # Jens subopt old adpc bug report 2 (prob sum > 1.0)
 
 GAPC="../../../gapc -t --subopt"
-RUN_CPP_FLAGS="-d 1090 -P ../../../librna/vienna/rna_turner1999.par"
+RUN_CPP_FLAGS="-d 1090 -P ../../../librna/paramfiles/rna_turner1999.par"
 
 check_new_old_eq adpf_nonamb.gap unused mfepppf CCacaccaacacacCuGuCACGGGAGAGAAuGuGGGuuCAAAuCCCAuCGGuCGCGCCA subopt
 
@@ -90,7 +90,7 @@ check_feature adpf_nonamb.gap mfepppf CCacaccaacacacCuGuCACGGGAGAGAAuGuGGGuuCAAA
 # another Jens subopt RNAshapes -r -s  Probability sum > 1.0 bug
 # mail from Date: Fri, 13 Feb 2009 11:16:32
 
-RUN_CPP_FLAGS="-d 224 -P ../../../librna/vienna/rna_turner1999.par"
+RUN_CPP_FLAGS="-d 224 -P ../../../librna/paramfiles/rna_turner1999.par"
 
 check_feature adpf_nonamb.gap mfepppf UCACCGUCGGAAAGUGUGCGCUUUCCCUGAUGAGCCCAAAAGGGCGAAACGGUAC suboptpfsum2 out $KSH ../check_prob_sum 5.06405e+08
 
@@ -110,7 +110,7 @@ RUN_CPP_FLAGS="-f"
 #GSL_RNG_SEED=`../rand 1`
 #export GSL_RNG_SEED
 
-RUN_CPP_FLAGS="-r 1000 -P ../../../librna/vienna/rna_turner1999.par -f"
+RUN_CPP_FLAGS="-r 1000 -P ../../../librna/paramfiles/rna_turner1999.par -f"
 GAPC="../../../gapc -t --sample"
 
 check_feature adpf.gap pfsampleshape ../../input/rna100 sample out $KSH ../check_samples ../adpf.rna100shapepf 0.000349275 0.00005
@@ -118,19 +118,19 @@ check_feature adpf.gap pfsampleshape ../../input/rna100 sample out $KSH ../check
 
 # Sequence from Jens RNAshapes sampling mode bug report
 
-RUN_CPP_FLAGS="-r 1000 -P ../../../librna/vienna/rna_turner1999.par"
+RUN_CPP_FLAGS="-r 1000 -P ../../../librna/paramfiles/rna_turner1999.par"
 
 check_feature adpf_nonamb.gap pfsampleshape AGAGAACAUGAGAGAGAUUCCCAACAGAGGCCUGCACGCACUUGGACUCU sample out $KSH ../check_samples ../nonamb_shape_pf.log 6.33459e-05 0.00005
 
 # Sequence from Jens RNAshapes sampling mode bug report, distribution test
 
-RUN_CPP_FLAGS="-r 1000 -P ../../../librna/vienna/rna_turner1999.par"
+RUN_CPP_FLAGS="-r 1000 -P ../../../librna/paramfiles/rna_turner1999.par"
 
 check_feature_repeat_mean_var adpf_nonamb.gap pfsampleshape AGAGAACAUGAGAGAGAUUCCCAACAGAGGCCUGCACGCACUUGGACUCU sample2
 
 # Too much sample output bug ( see a9fed4287fda and 980a3871b4a7 )
 GAPC="../../../gapc -t --sample --cyk"
-RUN_CPP_FLAGS="-r 1 -P ../../../librna/vienna/rna_turner1999.par -f"
+RUN_CPP_FLAGS="-r 1 -P ../../../librna/paramfiles/rna_turner1999.par -f"
 check_feature adpf_nonamb.gap pfsampleshapeall ../../input/rna400 samplecount out $KSH ../check_sample_count
 
 RUN_CPP_FLAGS="-f"
@@ -156,22 +156,22 @@ GAPC="../../../gapc -t --backtrack"
 check_new_old_eq nussinov.gap unused bpmax1pp ../../input/rna150 takeonebt
 
 GAPC="../../../gapc -t --kbacktrack"
-RUN_CPP_FLAGS="-P ../../../librna/vienna/rna_turner1999.par"
+RUN_CPP_FLAGS="-P ../../../librna/paramfiles/rna_turner1999.par"
 
 check_new_old_eq adpf_nonamb.gap unused shapemfepf acgccucuucgaaguucaggauuugaccgccgcaugcgaacucggauuacgaaacauuuc kbt
 
 # FIXME remove - obsoleted by external test case, which is more robust
 #check_new_old_eq adpf_nonamb.gap unused shapemfepfx acgccucuucgaaguucaggauuugaccgccgcaugcgaacucggauuacgaaacauuuc kbtpfx
 
-RUN_CPP_FLAGS="-P ../../../librna/vienna/rna_turner1999.par -f"
+RUN_CPP_FLAGS="-P ../../../librna/paramfiles/rna_turner1999.par -f"
 GAPC="../../../gapc -t --cyk --kbacktrack"
 
 check_new_old_eq helene.gap unused mfepp ../../input/rna100 rope
 
 
-check_external extpfx ../check_shape_filter_old_new "../../test/shapemfepfx/main -w 2 -i 1 -P ../../../librna/vienna/rna_turner1999.par" $REF/shapemfepfx.150.log 0.000001 0.000001 2 `cat ../../input/rna150`
+check_external extpfx ../check_shape_filter_old_new "../../test/shapemfepfx/main -w 2 -i 1 -P ../../../librna/paramfiles/rna_turner1999.par" $REF/shapemfepfx.150.log 0.000001 0.000001 2 `cat ../../input/rna150`
 
-check_external extsample ../check_shape_filter "../../test/shrepmfesample/main -r 2000 -P ../../../librna/vienna/rna_turner1999.par" $REF/shrepmfesample.2000.150.log 0.0002 0.0002 1 `cat ../../input/rna150`
+check_external extsample ../check_shape_filter "../../test/shrepmfesample/main -r 2000 -P ../../../librna/paramfiles/rna_turner1999.par" $REF/shrepmfesample.2000.150.log 0.0002 0.0002 1 `cat ../../input/rna150`
 
 
 check_external extpfxwindow ../../test/shapemfepfx/test.pl ../../test/shapemfepfx/main ../../test/shapemfepfx/nowindow `cat ../../input/rna100`
@@ -179,33 +179,33 @@ check_external extpfxwindow ../../test/shapemfepfx/test.pl ../../test/shapemfepf
 
 #RUN_CPP_FLAGS="-x -300 -f"
 # thresh of 0
-RUN_CPP_FLAGS="-P ../../../librna/vienna/rna_turner1999.par -f"
+RUN_CPP_FLAGS="-P ../../../librna/paramfiles/rna_turner1999.par -f"
 GAPC="../../../gapc -t --kbacktrack --cyk"
 
 check_new_old_eq adpf_hl.gap unused mfepp ../../input/rna200 suchthat
 
 
 GAPC="../../../gapc -t --cyk --subopt-classify --kbacktrack"
-RUN_CPP_FLAGS="-d 0 -P ../../../librna/vienna/rna_turner1999.par -f"
+RUN_CPP_FLAGS="-d 0 -P ../../../librna/paramfiles/rna_turner1999.par -f"
 
 check_new_old_eq adpf.gap unused shapemfepp ../../input/rna80 subshape
 
-RUN_CPP_FLAGS="-d 50 -P ../../../librna/vienna/rna_turner1999.par -f"
+RUN_CPP_FLAGS="-d 50 -P ../../../librna/paramfiles/rna_turner1999.par -f"
 check_new_old_eq adpf.gap unused shapemfepp ../../input/rna80 subshape2
 
-RUN_CPP_FLAGS="-d 100 -P ../../../librna/vienna/rna_turner1999.par -f"
+RUN_CPP_FLAGS="-d 100 -P ../../../librna/paramfiles/rna_turner1999.par -f"
 check_new_old_eq adpf.gap unused shapemfepp ../../input/rna80 subshape3
 
-RUN_CPP_FLAGS="-d 429 -P ../../../librna/vienna/rna_turner1999.par -f"
+RUN_CPP_FLAGS="-d 429 -P ../../../librna/paramfiles/rna_turner1999.par -f"
 check_new_old_eq adpf.gap unused shapemfepp ../../input/rna20 subshape4
 
-RUN_CPP_FLAGS="-d 430 -P ../../../librna/vienna/rna_turner1999.par -f"
+RUN_CPP_FLAGS="-d 430 -P ../../../librna/paramfiles/rna_turner1999.par -f"
 check_new_old_eq adpf.gap unused shapemfepp ../../input/rna20 subshape5
 
-RUN_CPP_FLAGS="-d 100 -P ../../../librna/vienna/rna_turner1999.par -f"
+RUN_CPP_FLAGS="-d 100 -P ../../../librna/paramfiles/rna_turner1999.par -f"
 check_new_old_eq adpf_nonamb.gap unused shapemfepp ../../input/rna80 subshape8
 
-RUN_CPP_FLAGS="-P ../../../librna/vienna/rna_turner1999.par -f"
+RUN_CPP_FLAGS="-P ../../../librna/paramfiles/rna_turner1999.par -f"
 GAPC="../../../gapc -t --cyk --kbacktrack"
 check_new_old_eq adpf.gap unused shapemfeppcl ../../input/rna20 subshape6
 
@@ -223,11 +223,11 @@ GAPC="../../../gapc -t"
 RUN_CPP_FLAGS="-f"
 check_new_old_eq flowgram.gap unused foo ../../input/flow  flow
 
-RUN_CPP_FLAGS="-w 20 -i 5 -P ../../../librna/vienna/rna_turner1999.par -f"
+RUN_CPP_FLAGS="-w 20 -i 5 -P ../../../librna/paramfiles/rna_turner1999.par -f"
 GAPC="../../../gapc -t --backtrack --window-mode"
 check_new_old_eq adpf.gap unused mfepp ../../input/rna80 windowbacktrack
 
-RUN_CPP_FLAGS="-w 20 -i 1 -P ../../../librna/vienna/rna_turner1999.par -f"
+RUN_CPP_FLAGS="-w 20 -i 1 -P ../../../librna/paramfiles/rna_turner1999.par -f"
 GAPC="../../../gapc -t --kbacktrack --no-coopt --window-mode"
 check_new_old_eq adpf.gap unused mfepp ../../input/rna80 windowkbacktrack
 
@@ -262,7 +262,7 @@ check_new_old_eq mchoice.gap unused shape 'gattaca' multiplechoiceclass
 # FIXME add pknotsRG shape5
 
 GAPC="../../../gapc -t --cyk --kbacktrack"
-RUN_CPP_FLAGS="-P ../../../librna/vienna/rna_turner1999.par"
+RUN_CPP_FLAGS="-P ../../../librna/paramfiles/rna_turner1999.par"
 
 check_new_old_eq pknotsRG.gap unused mfepp 'acgucgaaauaaaugccuugucugcuauauucgacgcgagcuuaauauuuggggcc' index
 
@@ -303,7 +303,7 @@ check_new_old_eq ochoice.gap unused buyer '1+2*3*4+5' optchoice
 
 
 GAPC="../../../gapc --tab-all  "
-RUN_CPP_FLAGS="-P ../../../librna/vienna/rna_turner1999.par"
+RUN_CPP_FLAGS="-P ../../../librna/paramfiles/rna_turner1999.par"
 GRAMMAR=../../grammar2
 
 check_new_old_eq p7.gap unused mfe 'gagacugcagucc' tablegen
@@ -316,7 +316,7 @@ RUN_CPP_FLAGS=""
 check_new_old_eq rf01380.gap unused cykpp 'AGUCA' tablegen.rightlin
 
 GAPC="../../../gapc -t --kbest"
-RUN_CPP_FLAGS="-k 5 -P ../../../librna/vienna/rna_turner1999.par -f"
+RUN_CPP_FLAGS="-k 5 -P ../../../librna/paramfiles/rna_turner1999.par -f"
 GRAMMAR=../../grammar
 
 check_new_old_eq adpf.gap unused shapemfe ../../input/rna200 kbest
@@ -336,21 +336,21 @@ check_compiler_output ../../grammar2 ttcounterr.gap test compile.multi grep "doe
 
 GRAMMAR=../../grammar
 GAPC="../../../gapc -t"
-RUN_CPP_FLAGS="-P ../../../librna/vienna/rna_turner1999.par"
+RUN_CPP_FLAGS="-P ../../../librna/paramfiles/rna_turner1999.par"
 
 check_new_old_eq adpf.gap unused mfepp UUGCGCCGAUGGUUUGAGCAGCAACGCGAUCUACUUUCCAUCAGGAUAAACGUUGACUUUUAGUAAGAAACACAGCCUCAGCUAGGCUGCCCUUAUAGUUCAACG mfe1.t1999
 check_new_old_eq adpf.gap unused mfepp CCCUGAUACCCUCAUGCCUCGUGG mfe2.t1999
 check_new_old_eq adpf.gap unused mfepp GGCGAGCGAGCCCCGGGCGGACGCGCGCCCGAAACGGGCGCGCGCCGCCCGGAAAGGCACGCCGCC mfe3.t1999
 
 GAPC="../../../gapc -t"
-RUN_CPP_FLAGS="-P ../../../librna/vienna/rna_turner2004.par"
+RUN_CPP_FLAGS="-P ../../../librna/paramfiles/rna_turner2004.par"
 
 check_new_old_eq adpf.gap unused mfepp UUGCGCCGAUGGUUUGAGCAGCAACGCGAUCUACUUUCCAUCAGGAUAAACGUUGACUUUUAGUAAGAAACACAGCCUCAGCUAGGCUGCCCUUAUAGUUCAACG mfe1.t2004
 check_new_old_eq adpf.gap unused mfepp CCCUGAUACCCUCAUGCCUCGUGG mfe2.t2004
 check_new_old_eq adpf.gap unused mfepp GGCGAGCGAGCCCCGGGCGGACGCGCGCCCGAAACGGGCGCGCGCCGCCCGGAAAGGCACGCCGCC mfe3.t2004
 
 
-RUN_CPP_FLAGS="-t 50.742 -P ../../../librna/vienna/rna_turner1999.par"
+RUN_CPP_FLAGS="-t 50.742 -P ../../../librna/paramfiles/rna_turner1999.par"
 
 GAPC="../../../gapc -t"
 
@@ -359,7 +359,7 @@ check_new_old_eq adpf.gap unused mfepp CCCUGAUACCCUCAUGCCUCGUGG temp50.mfe2.t199
 check_new_old_eq adpf.gap unused mfepp GGCGAGCGAGCCCCGGGCGGACGCGCGCCCGAAACGGGCGCGCGCCGCCCGGAAAGGCACGCCGCC temp50.mfe3.t1999
 
 GAPC="../../../gapc -t"
-RUN_CPP_FLAGS="-t 50.742 -P ../../../librna/vienna/rna_turner2004.par"
+RUN_CPP_FLAGS="-t 50.742 -P ../../../librna/paramfiles/rna_turner2004.par"
 
 check_new_old_eq adpf.gap unused mfepp UUGCGCCGAUGGUUUGAGCAGCAACGCGAUCUACUUUCCAUCAGGAUAAACGUUGACUUUUAGUAAGAAACACAGCCUCAGCUAGGCUGCCCUUAUAGUUCAACG temp50.mfe1.t2004
 check_new_old_eq adpf.gap unused mfepp CCCUGAUACCCUCAUGCCUCGUGG temp50.mfe2.t2004
@@ -394,7 +394,7 @@ RUN_CPP_FLAGS=""
 check_new_old_eq overlay.gap unused count '1+2*3*4*5' overlay
 
 GAPC="../../../gapc -t --kbacktrace"
-RUN_CPP_FLAGS="-P ../../../librna/vienna/rna_turner1999.par"
+RUN_CPP_FLAGS="-P ../../../librna/paramfiles/rna_turner1999.par"
 check_new_old_eq backtraceminys.gap unused  mfepre a kbt
 
 GAPC="../../../gapc -t --cyk"

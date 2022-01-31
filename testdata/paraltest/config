@@ -127,7 +127,7 @@ GRAMMAR="../../grammar2"
 GRAMMAR="../../grammar"
 
 GAPC="$DEFAULT_GAPC -t --cyk"
-RUN_CPP_FLAGS="-P ../../../librna/vienna/rna_turner1999.par"
+RUN_CPP_FLAGS="-P ../../../librna/paramfiles/rna_turner1999.par"
 	check_eq adpf.gap AdpfMain.lhs mfe cucccugauacccucaugccucgugggacacuagaacguauccaugucuucgugggacgugagcguucuucacgcguccgucaguguacgcccuagagucgccgauugcgccgaugguuugagcagcaacgcgaucuacuuuccaucaggauaaacguugacuuuuaguaagaaacacagccucagcuaggcugcccuuauaguucaacggcuccgguaccguuauccucuaguccucauucccuugauccugauacgcugguguaccgcuaagcacuagaauuauggugcaguaguuacugugccuuaucaugcgcgcgguuuccacuc cyk
 	check_eq adpf.gap AdpfMain.lhs ppmfe GGGaaaCCC foo
 	check_eq adpf.gap AdpfMain.lhs mfepp guccugucaaacgcgaaacgagaggguacugucuaguacgaggaaggggacuauguccacucuccgccgauaaugcagagacgacuacgaacauacuucuuagaaugcgccauugu foo
@@ -136,19 +136,19 @@ RUN_CPP_FLAGS="-P ../../../librna/vienna/rna_turner1999.par"
 RUN_CPP_FLAGS=""
 
 GAPC="$DEFAULT_GAPC -t --cyk --backtrack"
-RUN_CPP_FLAGS="-P ../../../librna/vienna/rna_turner1999.par"
+RUN_CPP_FLAGS="-P ../../../librna/paramfiles/rna_turner1999.par"
 	check_eq adpf.gap AdpfMain.lhs mfepp cucccugauacccucaugccucgugggacacuagaacguauccaugucuucgugggacgugagcguucuucacgcguccgucaguguacgcccuagagucgccgauugcgccgaugguuugagcagcaacgcgaucuacuuuccaucaggauaaacguugacuuuuaguaagaaacacagccucagcuaggcugcccuuauaguucaacggcuccgguaccguuauccucuaguccucauucccuugauccugauacgcugguguaccgcuaagcacuagaauuauggugcaguaguuacugugccuuaucaugcgcgcgguuuccacuc bt
 RUN_CPP_FLAGS=""
 
 GAPC="$DEFAULT_GAPC --cyk -t -p mfe"
-RUN_CPP_FLAGS="-P ../../../librna/vienna/rna_turner1999.par"
+RUN_CPP_FLAGS="-P ../../../librna/paramfiles/rna_turner1999.par"
 IGNORE_INSTANCE="yes"
 	check_eq adpf_index.gap AdpfMain.lhs mfe cucccugauacccucaugccucgugggacacuagaacguauccaugucuucgugggacgugagcguucuucacgcguccgucaguguacgcccuagagucgccgauugcgccgaugguuugagcagcaacgcgaucuacuuuccaucaggauaaacguugacuuuuaguaagaaacacagccucagcuaggcugcccuuauaguucaacggcuccgguaccguuauccucuaguccucauucccuugauccugauacgcugguguaccgcuaagcacuagaauuauggugcaguaguuacugugccuuaucaugcgcgcgguuuccacuc cykindex
 RUN_CPP_FLAGS=""
 IGNORE_INSTANCE="no"
 
 GAPC="$DEFAULT_GAPC -t"
-RUN_CPP_FLAGS="-P ../../../librna/vienna/rna_turner1999.par"
+RUN_CPP_FLAGS="-P ../../../librna/paramfiles/rna_turner1999.par"
 	check_eq adpf.gap AdpfMain.lhs shapemfepp cgcugaacgcggaucaaugucgcugaacgcggaucaaugucgcugaacgcggaucaaugu kbt
 RUN_CPP_FLAGS=""
 
@@ -161,7 +161,7 @@ fi
 OMP_NUM_THREADS=2
 export OMP_NUM_THREADS
 GAPC="$DEFAULT_GAPC -t --cyk --backtrack"
-RUN_CPP_FLAGS="-P ../../../librna/vienna/rna_turner1999.par"
+RUN_CPP_FLAGS="-P ../../../librna/paramfiles/rna_turner1999.par"
 	check_eq adpf.gap AdpfMain.lhs mfepp cucccugauacccucaugccucgugggacacuagaacguauccaugucuucgugggacgugagcguucuucacgcguccgucaguguacgcccuagagucgccgauugcgccgaugguuugagcagcaacgcgaucuacuuuccaucaggauaaacguugacuuuuaguaagaaacacagccucagcuaggcugcccuuauaguucaacggcuccgguaccguuauccucuaguccucauucccuugauccugauacgcugguguaccgcuaagcacuagaauuauggugcaguaguuacugugccuuaucaugcgcgcgguuuccacuc openmp
 export OMP_NUM_THREADS=
 CPPFLAGS_EXTRA=$DEFAULT_CPPFLAGS_EXTRA
@@ -171,7 +171,7 @@ RUN_CPP_FLAGS=""
 GAPC="$DEFAULT_GAPC -t"
 SED=`cat ../../../config.mf | grep "^SED" | cut -d "=" -f 2`
 CPP_FILTER="$SED -i -e s/(\([^,]\\+\),[^)]\\+)/\\1/"
-RUN_CPP_FLAGS="-P ../../../librna/vienna/rna_turner1999.par"
+RUN_CPP_FLAGS="-P ../../../librna/paramfiles/rna_turner1999.par"
 	check_eq rnashapesmfe.gap RNAshapesMfeMain.lhs mfepp augguguaaccggugggacaauacaauaacuuugacagagguacgugauugagaucaauuucuaaagcuuuggaccccguugcaguauga foo
 	check_eq rnashapesmfe.gap RNAshapesMfeMain.lhs mfepp augguguaaccgguggga bar
 	check_eq rnashapesmfe.gap RNAshapesMfeMain.lhs mfepp aaccgaaucgaaggaa bas
@@ -180,7 +180,7 @@ CPP_FILTER=""
 RUN_CPP_FLAGS=""
 
 GAPC="$DEFAULT_GAPC -t --subopt"
-RUN_CPP_FLAGS="-P ../../../librna/vienna/rna_turner1999.par"
+RUN_CPP_FLAGS="-P ../../../librna/paramfiles/rna_turner1999.par"
 SED=`cat ../../../config.mf | grep "^SED" | cut -d "=" -f 2`
 CPP_FILTER="$SED -i -e s/(\([^,]\\+\),[^)]\\+)/\\1/"
 rm -f temp/string.o
