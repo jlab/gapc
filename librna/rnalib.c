@@ -19,28 +19,16 @@
 
 #include "ViennaRNA/datastructures/basic.h"
 static vrna_param_t  *P = 0;
-// if nonzero use logarithmic ML energy in energy_of_struct
-// used in vienna/fold_vars.c, set_model_details()
-//int logML     = 0;
 
 #include "ViennaRNA/params/default.h"
 #include "ViennaRNA/params/constants.h"
-
 #include "ViennaRNA/params/basic.h"
 #include "ViennaRNA/params/io.h"
 #include "ViennaRNA/fold_vars.h"
 
-//#define PUBLIC const
-//#include "energy_par.c"
-//#undef PUBLIC
-
 #include <assert.h>
-
-// strncmp()
 #include <string.h>
-// abort()
 #include <stdlib.h>
-// fprintf()
 #include <stdio.h>
 #include <math.h>
 
@@ -1019,7 +1007,7 @@ int ss_energy(rsize i, rsize j)
 */
 double mk_pf(double x)
 {
-  // temperature is defined in vienna/fold_vars.c
+  // temperature is defined in ViennaRNA/params/basic.h
   return exp((-1.0 * x/100.0) / (GASCONST/1000 * (temperature + K0)));
 }
 
