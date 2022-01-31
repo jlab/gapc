@@ -48,7 +48,7 @@ class OptException : public std::exception {
     std::string msg;
 
  public:
-    OptException(const std::string &s) : std::exception(), msg(s) {
+    explicit OptException(const std::string &s) : std::exception(), msg(s) {
     }
     ~OptException() throw() { }
     const char* what() const throw() {

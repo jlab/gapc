@@ -64,7 +64,7 @@ class Base {
 
 
  protected:
-    Base(Type t) : type(t) {}
+    explicit Base(Type t) : type(t) {}
     Base(Type t, const Loc& l) : type(t), location(l) {}
 
  public:
@@ -114,7 +114,7 @@ class Iterator {
     void fwd();
 
  public:
-    Iterator(std::list<Statement::Base*> &l) : end(false) {
+    explicit Iterator(std::list<Statement::Base*> &l) : end(false) {
       i = l.begin();
       j = l.end();
       list = &l;

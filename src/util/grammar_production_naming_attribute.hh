@@ -38,7 +38,7 @@ class GrammarProductionNamingAttribute : public Attribute {
     std::string* originalName;
 
  public:
-    GrammarProductionNamingAttribute(std::string* originalName);
+    explicit GrammarProductionNamingAttribute(std::string* originalName);
     GrammarProductionNamingAttribute(GrammarProductionNamingAttribute& a);
     ~GrammarProductionNamingAttribute();
 

@@ -49,7 +49,7 @@ class NamingPath {
     NamingPath();
     // Creates a naming-path with the a first suffix
     // as given by the parameter 'name'.
-    NamingPath(std::string* name);
+    explicit NamingPath(std::string* name);
     // Copy constructor, creates a deep copy of this instance.
     NamingPath(NamingPath& p);
     ~NamingPath();

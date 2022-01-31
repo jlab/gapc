@@ -74,7 +74,7 @@ class Iterator : public std::iterator<std::random_access_iterator_tag,
 
     Iterator() {}
 
-    Iterator(Itr i) : curr(i) {}
+    explicit Iterator(Itr i) : curr(i) {}
 
     Iterator(const Iterator &other) {
         curr = other.curr;

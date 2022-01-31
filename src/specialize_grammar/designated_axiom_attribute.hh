@@ -36,7 +36,7 @@ class DesignatedAxiomAttribute : public Util::Attribute {
     std::string* originalAxiomName;
 
  public:
-    DesignatedAxiomAttribute(std::string* originalAxiomName);
+    explicit DesignatedAxiomAttribute(std::string* originalAxiomName);
     DesignatedAxiomAttribute(DesignatedAxiomAttribute& a);
     virtual ~DesignatedAxiomAttribute();
 

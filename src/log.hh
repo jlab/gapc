@@ -55,7 +55,7 @@ class LogError : public std::exception {
   std::string msg;
 
  public:
-  LogError(std::string m) : std::exception() {
+  explicit LogError(std::string m) : std::exception() {
     msg = "Error: " + m;
   }
 

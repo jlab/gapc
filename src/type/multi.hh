@@ -41,7 +41,7 @@ class Multi : public Base {
     Multi(const std::list<Base*> &ts, const Loc &l) :
       Base(MULTI, l), types_(ts) {
     }
-    Multi(const std::list<Base*> &ts) : Base(MULTI), types_(ts) {
+    explicit Multi(const std::list<Base*> &ts) : Base(MULTI), types_(ts) {
     }
 
     bool is_eq(const Base & base) const;

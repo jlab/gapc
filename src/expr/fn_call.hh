@@ -90,20 +90,20 @@ class Fn_Call : public Base {
     Fn_Call(std::string *n, const Loc &l);
 
 
-    Fn_Call(std::string *n)
+    explicit Fn_Call(std::string *n)
       : Base(FN_CALL), name(n), builtin(NONE), type_param(NULL) {
     }
 
 
-    Fn_Call(Builtin b)
+    explicit Fn_Call(Builtin b)
       : Base(FN_CALL), name(NULL), builtin(b), type_param(NULL) {
     }
 
 
-    Fn_Call(const Fn_Decl &f);
-    Fn_Call(const Fn_Def &f);
+    explicit Fn_Call(const Fn_Decl &f);
+    explicit Fn_Call(const Fn_Def &f);
     Fn_Call(std::string *n, std::list<Statement::Var_Decl*> &l);
-    Fn_Call(const Filter &f);
+    explicit Fn_Call(const Filter &f);
 
     // The list of arguments passed in this function call.
     std::list<Base*> exprs;

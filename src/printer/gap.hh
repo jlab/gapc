@@ -50,7 +50,7 @@ class GapPrinter {
     std::stack<std::string> indentionStrings;
 
  public:
-    GapPrinter(std::ostream& oStream);
+    explicit GapPrinter(std::ostream& oStream);
     ~GapPrinter();
 
     // Prints the Bellman's GAP Program into the stream.

@@ -37,7 +37,7 @@ class ActualParameterPositionAttribute : public Util::Attribute {
     unsigned int parameterPosition;
 
  public:
-    ActualParameterPositionAttribute(unsigned int position);
+    explicit ActualParameterPositionAttribute(unsigned int position);
     ActualParameterPositionAttribute(ActualParameterPositionAttribute& a);
     virtual ~ActualParameterPositionAttribute();
 

@@ -81,7 +81,7 @@ class GrammarVMStackElement {
 
     // Inits this instance and sets the instance type to
     // the value of the parameter.
-    GrammarVMStackElement(GrammarVMStackElementType t);
+    explicit GrammarVMStackElement(GrammarVMStackElementType t);
 
  public:
     virtual ~GrammarVMStackElement();
@@ -100,7 +100,7 @@ class ProductionFragmentGrammarVMStackElement : public GrammarVMStackElement {
     CFG::Base* productionFragment;
 
  public:
-    ProductionFragmentGrammarVMStackElement(CFG::Base* b);
+    explicit ProductionFragmentGrammarVMStackElement(CFG::Base* b);
     ~ProductionFragmentGrammarVMStackElement();
 
     // Returns the terminal element that is wrapped by this
@@ -118,7 +118,7 @@ class NamedAccessGrammarVMStackElement : public GrammarVMStackElement {
     NamedAccess* access;
 
  public:
-    NamedAccessGrammarVMStackElement(NamedAccess* element);
+    explicit NamedAccessGrammarVMStackElement(NamedAccess* element);
     ~NamedAccessGrammarVMStackElement();
 
     // Returns the named-access element this instance wraps.
@@ -135,7 +135,7 @@ class VarDeclItemGrammarVMStackElement : public GrammarVMStackElement {
     VarDeclInfo* infoItem;
 
  public:
-    VarDeclItemGrammarVMStackElement(VarDeclInfo* infoItem);
+    explicit VarDeclItemGrammarVMStackElement(VarDeclInfo* infoItem);
     ~VarDeclItemGrammarVMStackElement();
 
     // Returns the variable information items wrapped in this
@@ -174,7 +174,7 @@ class ContextGrammarVMStackElement : public GrammarVMStackElement {
     MultiVariableContext* context;
 
  public:
-    ContextGrammarVMStackElement(MultiVariableContext* cntxt);
+    explicit ContextGrammarVMStackElement(MultiVariableContext* cntxt);
     ~ContextGrammarVMStackElement();
 
     // Returns the context this stack element holds.

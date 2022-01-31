@@ -35,7 +35,7 @@ class Signature_Base {
   Loc location;
   Signature_Base() : name(NULL) {}
   Signature_Base(std::string *n, const Loc &l) : name(n), location(l) {}
-  Signature_Base(std::string *n) : name(n) {}
+  explicit Signature_Base(std::string *n) : name(n) {}
   virtual ~Signature_Base();
 
   virtual Fn_Decl* decl(const std::string &s) = 0;
