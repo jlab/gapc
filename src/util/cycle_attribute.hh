@@ -40,7 +40,7 @@ class CycleAttribute : public Attribute {
     std::set<CycleSet*> cycleSets;
 
  public:
-    CycleAttribute(std::set<CycleSet*> cycleSet);
+    explicit CycleAttribute(std::set<CycleSet*> cycleSet);
     CycleAttribute(CycleAttribute& a);
     ~CycleAttribute();
 

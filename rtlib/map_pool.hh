@@ -153,7 +153,7 @@ class Block {
         multiplicity(1) {
       init();
     }
-    Block(size_t c)
+    explicit Block(size_t c)
       : used(0),
         multiplicity(c) {
       init();
@@ -203,7 +203,7 @@ class Pool {
         multiplicity(1) {
       pool = new boost::pool<>(sizeof(Type));
     }
-    Pool(size_t m)
+    explicit Pool(size_t m)
       : count(0),
         multiplicity(m) {
       pool = new boost::pool<>(sizeof(Type)*multiplicity);
@@ -263,7 +263,7 @@ class Pool {
       init();
     }
 
-    Pool(size_t c)
+    explicit Pool(size_t c)
       : head(0),
 #ifndef NDEBUG
         count(0),

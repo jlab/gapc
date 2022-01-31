@@ -52,7 +52,7 @@ class Backtrace : public Base {
       : Base(BACKTRACE), name_(0), pos_type_(0), value_type_(0),
         score_type_(0), d(NONE) {
     }
-    Backtrace(std::string *n)
+    explicit Backtrace(std::string *n)
       : Base(BACKTRACE), name_(n), pos_type_(0), value_type_(0),
         score_type_(0), d(FN) {
     }
@@ -77,7 +77,7 @@ class Backtrace : public Base {
         d(NT_BACKEND) {
     }
 
-    Backtrace(Backtrace *bt)
+    explicit Backtrace(Backtrace *bt)
       : Base(BACKTRACE), name_(bt->name_), pos_type_(bt->pos_type_),
         value_type_(bt->value_type_), score_type_(bt->score_type_),
         d(NT_FRONTEND) {

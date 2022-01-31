@@ -51,7 +51,7 @@ class Tracks_Visitor : public Visitor {
     bool again;
     bool error;
 
-    Tracks_Visitor(Grammar &g);
+    explicit Tracks_Visitor(Grammar &g);
 
     void visit(Symbol::NT &n);
 

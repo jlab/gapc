@@ -85,7 +85,8 @@ class Base {
  public:
   Base() : ind_count(0), out(std::cerr), line_number(0), stream(*this),
     fwd_decls(false) {}
-  Base(std::ostream &o) : ind_count(0), out(o), line_number(0), stream(*this),
+  explicit Base(std::ostream &o) : ind_count(0), out(o), line_number(0),
+  stream(*this),
     fwd_decls(false) {}
 
   virtual ~Base();

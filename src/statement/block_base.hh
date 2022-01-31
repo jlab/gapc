@@ -32,7 +32,7 @@ namespace Statement {
 class Block_Base : public Base {
  public:
     std::list<Base*> statements;
-    Block_Base(Type t) : Base(t) {}
+    explicit Block_Base(Type t) : Base(t) {}
     Block_Base(Type t, const Loc &l) : Base(t, l) {}
 
     std::list<Base*> *stmts();

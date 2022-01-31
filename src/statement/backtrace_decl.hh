@@ -123,7 +123,7 @@ class Backtrace_NT_Decl : public Base {
     void init(Symbol::NT &n);
 
  public:
-    Backtrace_NT_Decl(Symbol::NT &n);
+    explicit Backtrace_NT_Decl(Symbol::NT &n);
     Backtrace_NT_Decl(Symbol::NT  &n, ::Type::Base *s);
 
     void print(Printer::Base &p) const;

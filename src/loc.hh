@@ -43,7 +43,7 @@ class Loc : public yy::location {
  public:
   // FIXME needed?
   Loc();
-  Loc(const yy::location &l);
+  explicit Loc(const yy::location &l);
 
   int64_t offset() const { return off; }
   void setOffset(int64_t o) { off = o; }

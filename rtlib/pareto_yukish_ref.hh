@@ -85,7 +85,7 @@ struct y_split {
 template<class T> struct y_split_p {
  public:
   y_split_p() {}
-  y_split_p(int depth) {
+  explicit y_split_p(int depth) {
       this->depth = depth;
   }
   int depth;
@@ -95,7 +95,7 @@ template<class T> struct y_split_p {
 template <typename T>
 class Deleter {
  public:
-  Deleter(T* pointer) {
+  explicit Deleter(T* pointer) {
   l.reset(pointer);
   }
   Deleter(const Deleter& deleter) {

@@ -33,7 +33,7 @@ class Inline_Nts : public Visitor {
  private:
   Grammar *grammar;
  public:
-  Inline_Nts(Grammar *g);
+  explicit Inline_Nts(Grammar *g);
   void visit_end(Symbol::NT &n);
   void visit(Fn_Arg::Alt &f);
 };

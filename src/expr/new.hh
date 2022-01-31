@@ -40,7 +40,7 @@ class New : public Base {
     std::list<Base*> args_;
 
  public:
-    New(::Type::Base *x) : Base(NEW), obj_(x) {
+    explicit New(::Type::Base *x) : Base(NEW), obj_(x) {
     }
     template<typename Iterator>
     void add_args(Iterator begin, Iterator end) {

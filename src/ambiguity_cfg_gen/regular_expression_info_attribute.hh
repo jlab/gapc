@@ -40,7 +40,7 @@ class RegularExpressionInfoAttribute : public Attribute {
     Alt::Base* baseExpression;
 
  public:
-    RegularExpressionInfoAttribute(Alt::Base* b);
+    explicit RegularExpressionInfoAttribute(Alt::Base* b);
     RegularExpressionInfoAttribute(RegularExpressionInfoAttribute& a);
     virtual ~RegularExpressionInfoAttribute();
 

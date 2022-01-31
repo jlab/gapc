@@ -74,12 +74,12 @@ class Fn_Call : public Base {
     Fn_Call(std::string *n, std::list<Expr::Base*> *l, const Loc &loc);
 
 
-    Fn_Call(const std::string &n)
+    explicit Fn_Call(const std::string &n)
       : Base(FN_CALL), builtin(NONE), name_(new std::string(n)) {
     }
 
 
-    Fn_Call(Builtin b)
+    explicit Fn_Call(Builtin b)
       : Base(FN_CALL), builtin(b), name_(NULL) {
     }
 
