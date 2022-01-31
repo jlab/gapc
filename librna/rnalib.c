@@ -1,3 +1,26 @@
+/* {{{
+
+    This file is part of gapc (GAPC - Grammars, Algebras, Products - Compiler;
+      a system to compile algebraic dynamic programming programs)
+
+    Copyright (C) 2008-2011  Georg Sauthoff
+         email: gsauthof@techfak.uni-bielefeld.de or gsauthof@sdf.lonestar.org
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+}}} */
+
 /* RNA energy library
 
    library of wrapper functions to access the Vienna-Tables for the Turner1999 and Turner2004 energy values from Bellman's GAP programs
@@ -17,8 +40,13 @@
 
 #include "rnalib.h"
 
+#include <assert.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
+
 #include "ViennaRNA/datastructures/basic.h"
-static vrna_param_t  *P = 0;
 
 #include "ViennaRNA/params/default.h"
 #include "ViennaRNA/params/constants.h"
@@ -26,14 +54,10 @@ static vrna_param_t  *P = 0;
 #include "ViennaRNA/params/io.h"
 #include "ViennaRNA/fold_vars.h"
 
-#include <assert.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
+static vrna_param_t  *P = 0;
 
-void librna_read_param_file(const char *filename)
-{
+
+void librna_read_param_file(const char *filename) {
   if (P) {
     free(P);
   }
@@ -56,55 +80,64 @@ void librna_read_param_file(const char *filename)
   P = vrna_params(&md);
 }
 
-// test if dangling an unpaired base from 5' onto a stack AND another from 3' onto the stack results in the same energy as
-// forming an exterior mismatch. This was the case for Turner1999, but not for Turner2004.
-// Unfortunately, macrostate depends on this assumption
-// minimal counter example is "CCcCCaaaGGCCaaaGGuuGG" with structure "((.((...))((...))..))"
+/* test if dangling an unpaired base from 5' onto a stack AND another from
+   3' onto the stack results in the same energy as forming an exterior
+   mismatch. This was the case for Turner1999, but not for Turner2004.
+   Unfortunately, macrostate depends on this assumption
+   minimal counter example is "CCcCCaaaGGCCaaaGGuuGG" with structure
+   "((.((...))((...))..))"
+*/
 bool test_macrostate_mme_assumption() {
-	// enum bp_t { N_BP, CG_BP, GC_BP, GU_BP, UG_BP, AU_BP, UA_BP, NO_BP };
-	for (int closingBP = CG_BP; closingBP != UA_BP; closingBP++ ) {
-		// enum base_t {N_BASE, A_BASE, C_BASE, G_BASE, U_BASE, GAP_BASE, SEPARATOR_BASE }
-		for (int lbase = A_BASE; lbase != U_BASE; lbase++) {
-			for (int rbase = A_BASE; rbase != U_BASE; rbase++) {
-				if (abs(P->mismatchExt[closingBP][lbase][rbase] - (P->dangle5[closingBP][lbase] + P->dangle3[closingBP][rbase])) > 2) {
-					fprintf(stderr, "WARNING\n"
-						"The macrostate grammar has two aims:\n"
-						"1) enumerating all dot bracket candidates (but no more) and\n"
-						"2) compute proper energy contributions for dangling ends.\n"
-						"The design was based on the assumption that dangling an unpaired base directly\n"
-						"left of a stem onto this stem (dl_energy) and - at the same time - dangling\n"
-						"another unpaired base directly right of the stem onto the very same stem\n"
-						"(dr_energy) results in the same energy contribution as forming an external\n"
-						"mismatch of both unpaired bases onto the stem (ext_mismatch_energy).\n"
-						"This was true for the Turner1999 energy parameters, but is violated by the\n"
-						"ones provided here!\n"
-						"See https://github.com/jlab/fold-grammars/issues/26 for more details.\n"
-						"Expect Macrostate mfe/pfunc values to be slightly off.\n");
-					return false;
-				}
-			}
-		}
-	}
-	return true;
+  // enum bp_t { N_BP, CG_BP, GC_BP, GU_BP, UG_BP, AU_BP, UA_BP, NO_BP };
+  for (int closingBP = CG_BP; closingBP != UA_BP; closingBP++) {
+    // enum base_t {N_BASE, A_BASE, C_BASE, G_BASE, U_BASE, GAP_BASE,
+    // SEPARATOR_BASE }
+    for (int lbase = A_BASE; lbase != U_BASE; lbase++) {
+      for (int rbase = A_BASE; rbase != U_BASE; rbase++) {
+        if (abs(P->mismatchExt[closingBP][lbase][rbase] -
+                (P->dangle5[closingBP][lbase] +
+                 P->dangle3[closingBP][rbase])) > 2) {
+          fprintf(stderr, "WARNING\n"
+            "The macrostate grammar has two aims:\n"
+            "1) enumerating all dot bracket candidates (but no more) and\n"
+            "2) compute proper energy contributions for dangling ends.\n"
+            "The design was based on the assumption that dangling an unpaired "
+            "base directly\nleft of a stem onto this stem (dl_energy) and - "
+            "at the same time - dangling\nanother unpaired base directly right"
+            " of the stem onto the very same stem\n(dr_energy) results in the "
+            "same energy contribution as forming an external\nmismatch of both"
+            " unpaired bases onto the stem (ext_mismatch_energy).\nThis was "
+            "true for the Turner1999 energy parameters, but is violated by "
+            "the\nones provided here!\n"
+            "See https://github.com/jlab/fold-grammars/issues/26 for more "
+            "details.\n"
+            "Expect Macrostate mfe/pfunc values to be slightly off.\n");
+          return false;
+        }
+      }
+    }
+  }
+  return true;
 }
 
 /*
-   encodes a basepair to an int. This is necessary to address the correct cells in the energy tables
-   Codes are the following (see /usr/include/librna/rnalib.h bp_t):
-     0 = no base pair
-     1 = C-G
-     2 = G-C
-     3 = G-U
-     4 = U-G
-     5 = A-U
-     6 = U-A
-     7 = N-N, N might be a gap. Opposite to N_BP=0, NO_BP is set 0, instead of -INF in the Turner1999 energies.
-   Input is
-     x = 5' base of the basepair
-     y = 3' base of the basepair
+  encodes a basepair to an int. This is necessary to address the correct cells
+  in the energy tables
+  Codes are the following (see /usr/include/librna/rnalib.h bp_t):
+    0 = no base pair
+    1 = C-G
+    2 = G-C
+    3 = G-U
+    4 = U-G
+    5 = A-U
+    6 = U-A
+    7 = N-N, N might be a gap. Opposite to N_BP=0, NO_BP is set 0, instead of
+        -INF in the Turner1999 energies.
+  Input is
+    x = 5' base of the basepair
+    y = 3' base of the basepair
 */
-int bp_index(char x, char y)
-{
+int bp_index(char x, char y) {
   switch (x) {
     case A_BASE : switch (y) {
         case U_BASE : return AU_BP;
@@ -130,14 +163,15 @@ int bp_index(char x, char y)
 
 /* ============== Alignment functions ================= */
 /*
-   counts how many GAP symbols are between i and j in input s to find the real length of a loop
+   counts how many GAP symbols are between i and j in input s to find the real
+   length of a loop
    Input is
-     s = the input RNA sequence in bit encoding, i.e. N=0, A=1, C=2, G=3, U=4, GAP=5 (see /usr/include/librna/rnalib.h base_t)
+     s = the input RNA sequence in bit encoding, i.e. N=0, A=1, C=2, G=3, U=4,
+         GAP=5 (see /usr/include/librna/rnalib.h base_t)
      i = first base of loop region
      j = last base of loop region
 */
-static rsize noGaps(const char *s, rsize i, rsize j)
-{
+static rsize noGaps(const char *s, rsize i, rsize j) {
   rsize noGaps = 0;
   for (rsize k = i; k <= j; ++k)
     if (s[k] == GAP_BASE)
@@ -146,15 +180,17 @@ static rsize noGaps(const char *s, rsize i, rsize j)
 }
 
 /*
-   fills char array ungapped with s, but GAP_BASEs will be skipped. This is necessary for tetra- and hexaloop energies for hairpins.
+   fills char array ungapped with s, but GAP_BASEs will be skipped. This is
+   necessary for tetra- and hexaloop energies for hairpins.
    Input is
-     s = the input RNA sequence in bit encoding, i.e. N=0, A=1, C=2, G=3, U=4, GAP=5 (see /usr/include/librna/rnalib.h base_t)
+     s = the input RNA sequence in bit encoding, i.e. N=0, A=1, C=2, G=3, U=4,
+         GAP=5 (see /usr/include/librna/rnalib.h base_t)
      i = first base of loop region
      j = last base of loop region
-     ungapped = a char array of appropriate size, i.e. j-i+1, to hold the ungapped string between i and j
+     ungapped = a char array of appropriate size, i.e. j-i+1, to hold the
+                ungapped string between i and j
 */
-static size_t ungapRegion(const char *s, rsize i, rsize j, char *ungapped)
-{
+static size_t ungapRegion(const char *s, rsize i, rsize j, char *ungapped) {
   rsize pos = 0;
   for (rsize y = i; y <= j; ++y) {
     if (s[y] != GAP_BASE) {
@@ -173,7 +209,7 @@ static size_t ungapRegion(const char *s, rsize i, rsize j, char *ungapped)
      rightBorder = last character position to look for right neighboring non-GAP bases.
 */
 static rsize getNext(const char *s, rsize pos, rsize steps, rsize rightBorder) {
-  assert(steps>0);
+  assert(steps > 0);
   rsize nongaps = 0;
   rsize x = pos+1;
   if (x >= rightBorder)
@@ -181,8 +217,8 @@ static rsize getNext(const char *s, rsize pos, rsize steps, rsize rightBorder) {
   do {
     if (s[x] != GAP_BASE)
       ++nongaps;
-	if (s[x] == SEPARATOR_BASE)
-	  return x-1;
+    if (s[x] == SEPARATOR_BASE)
+      return x-1;
   } while (nongaps < steps && ++x < rightBorder);
   return x;
 }
@@ -196,10 +232,10 @@ static rsize getNext(const char *s, rsize pos, rsize steps, rsize rightBorder) {
      leftBorder = startpoint of search for left neighboring non-GAP base.
 */
 static rsize getPrev(const char *s, rsize pos, rsize steps, rsize leftBorder) {
-  assert(pos>=0);
-  assert(steps>0);
+  assert(pos >= 0);
+  assert(steps > 0);
   rsize nongaps = 0;
-  rsize x=pos-1;
+  rsize x = pos-1;
 
   if ((pos <= leftBorder) || (x <= leftBorder))
     return leftBorder;
@@ -223,12 +259,11 @@ static rsize getPrev(const char *s, rsize pos, rsize steps, rsize leftBorder) {
      *x = the input RNA sequence in bit encoding, i.e. N=0, A=1, C=2, G=3, U=4, GAP=5 (see /usr/include/librna/rnalib.h base_t)
      len = the length of the RNA bit encoded sequence, since with C arrays one does not know their length
 */
-static void decode(char *s, const char *x, const int len)
-{
-	unsigned int i;
-	for (i = 0; i < len; ++i) {
+static void decode(char *s, const char *x, const int len) {
+    unsigned int i;
+    for (i = 0; i < len; ++i) {
     s[i] = BASE_CHARS[x[i]];
-	}
+    }
 }
 
 /*
@@ -238,9 +273,8 @@ static void decode(char *s, const char *x, const int len)
    Input is
      just the size, i.e. number of bases, of the unpaired loop region: l
 */
-static int jacobson_stockmayer(rsize l)
-{
-	return (int)(P->lxc*log((l)/(1.0 * MAXLOOP)));
+static int jacobson_stockmayer(rsize l) {
+    return static_cast<int>(P->lxc*log((l)/(1.0 * MAXLOOP)));
 }
 
 /*
@@ -250,12 +284,11 @@ static int jacobson_stockmayer(rsize l)
    Input is
      just the size, i.e. number of bases, of the unpaired loop region: l
 */
-static int hl_ent(rsize l)
-{
-  if (l>MAXLOOP) {
-	  return P->hairpin[MAXLOOP]+jacobson_stockmayer(l);
+static int hl_ent(rsize l) {
+  if (l > MAXLOOP) {
+      return P->hairpin[MAXLOOP]+jacobson_stockmayer(l);
   } else {
-	  return P->hairpin[l];
+      return P->hairpin[l];
   }
 }
 
@@ -278,11 +311,10 @@ static int hl_ent(rsize l)
      2. index = lbase = code for 5' base i+1 stacking on closing basepair i-j
      3. index = rbase = code for 3' base j-1 stacking on closing basepair i-j
 */
-static int hl_stack(const char *s, rsize i, rsize j)
-{
+static int hl_stack(const char *s, rsize i, rsize j) {
   int bp = bp_index(s[i], s[j]);
-  char lbase = s[getNext(s,i,1,j-1)];
-  char rbase = s[getPrev(s,j,1,i+1)];
+  char lbase = s[getNext(s, i, 1, j-1)];
+  char rbase = s[getPrev(s, j, 1, i+1)];
   return P->mismatchH[bp][lbase][rbase];
 }
 
@@ -298,23 +330,21 @@ static int hl_stack(const char *s, rsize i, rsize j)
      i = the index (first base of s is 0, second 1, ...) of the 5' partner of the stem terminating basepair
      j = the index (first base of s is 0, second 1, ...) of the 3' partner of the stem terminating basepair
 */
-int termau_energy(const char *s, rsize i, rsize j)
-{
+int termau_energy(const char *s, rsize i, rsize j) {
   if (
     (s[i] == G_BASE && s[j] == C_BASE) ||
     (s[i] == C_BASE && s[j] == G_BASE)
   ) {
     return 0;
   } else {
-	return P->TerminalAU;
+    return P->TerminalAU;
   }
 }
 
 /*
   returns the destabilizing energy of two RNA molecules that form a dimere. Needed for co-folding and initial penalty.
 */
-int duplex_energy(void)
-{
+int duplex_energy(void) {
   return P->DuplexInit;
 }
 
@@ -337,17 +367,17 @@ int duplex_energy(void)
      i = the index (first base of s is 0, second 1, ...) of the 5' partner of the hairpin closing basepair
      j = the index (first base of s is 0, second 1, ...) of the 3' partner of the hairpin closing basepair
 */
-int hl_energy(const char *s, rsize i, rsize j)
-{
-  assert(j-i>1);
+int hl_energy(const char *s, rsize i, rsize j) {
+  assert(j-i > 1);
 
-  // if we are in an alignment, it might be true, that 5' partner of closing basepair is a gap from the start up to this position --> end gap
-  char lbase = s[getPrev(s,i+1,1,0)];
+  // if we are in an alignment, it might be true, that 5' partner of closing
+  // basepair is a gap from the start up to this position --> end gap
+  char lbase = s[getPrev(s, i+1, 1, 0)];
   if ((lbase == GAP_BASE) || (lbase == SEPARATOR_BASE)) {
-	  return 0;
+    return 0;
   }
 
-  rsize size = j-i-1 - noGaps(s,i+1,j-1);
+  rsize size = j-i-1 - noGaps(s, i+1, j-1);
 
   // destabilizing energy for the unpaired region in correlation to its length
   int entropy = hl_ent(size);
@@ -355,52 +385,56 @@ int hl_energy(const char *s, rsize i, rsize j)
   // stabilizing energy for stacking bases
   int stack_mismatch = hl_stack(s, i, j);
 
-  // handling for hairpin loops in alignments, where the sequence is completely missing
+  // handling for hairpin loops in alignments, where the sequence is
+  // completely missing
   if (size < 3) {
-      return 600;
+    return 600;
   }
 
-  //test for special loop cases, i.e. Tri-, Tetra- and Hexa-loops. Wired comparison stems from the Vienna Package: H/loop_energies.h method "E_Hairpin()"
+  // test for special loop cases, i.e. Tri-, Tetra- and Hexa-loops. Wired
+  // comparison stems from the Vienna Package: H/loop_energies.h method
+  // "E_Hairpin()"
   if (size == 3 || size == 4 || size == 6) {
-	//loop type depends on ungapped loop sequence
-	char ungapped[j-i+1];
-	int sizeUngapped = ungapRegion(s, i, j, ungapped);
+    // loop type depends on ungapped loop sequence
+    char ungapped[j-i+1];
+    int sizeUngapped = ungapRegion(s, i, j, ungapped);
         char loop[sizeUngapped+1];
         loop[sizeUngapped] = 0;
-	decode(loop, ungapped, sizeUngapped);
-	if (sizeUngapped == 3+2) {
-	  //special triloop cases
-	  char tl[6]={0,0,0,0,0,0}, *ts;
-	  strncpy(tl, loop, 5);
-	  if ((ts=strstr(P->Triloops, tl))) {
-	    return (P->Triloop_E[(ts - P->Triloops)/6]);
-	  }
-	} else if (sizeUngapped == 4+2) {
-	  //special tetraloop cases
-	  char tl[7]={0}, *ts;
-	  strncpy(tl, loop, 6);
-	  if ((ts=strstr(P->Tetraloops, tl))) {
-	    return (P->Tetraloop_E[(ts - P->Tetraloops)/7]);
-	  }
-	} else if (sizeUngapped == 6+2) {
-	  //special hexaloop cases
-	  char tl[9]={0}, *ts;
-	  strncpy(tl, loop, 8);
-	  if ((ts=strstr(P->Hexaloops, tl))) {
-	    return (P->Hexaloop_E[(ts - P->Hexaloops)/9]);
-	  }
-	}
+    decode(loop, ungapped, sizeUngapped);
+    if (sizeUngapped == 3+2) {
+      // special triloop cases
+      char tl[6] = {0, 0, 0, 0, 0, 0}, *ts;
+      strncpy(tl, loop, 5);
+      if ((ts=strstr(P->Triloops, tl))) {
+        return (P->Triloop_E[(ts - P->Triloops)/6]);
+      }
+    } else if (sizeUngapped == 4+2) {
+      // special tetraloop cases
+      char tl[7]={0}, *ts;
+      strncpy(tl, loop, 6);
+      if ((ts=strstr(P->Tetraloops, tl))) {
+        return (P->Tetraloop_E[(ts - P->Tetraloops)/7]);
+      }
+    } else if (sizeUngapped == 6+2) {
+      // special hexaloop cases
+      char tl[9]={0}, *ts;
+      strncpy(tl, loop, 8);
+      if ((ts=strstr(P->Hexaloops, tl))) {
+        return (P->Hexaloop_E[(ts - P->Hexaloops)/9]);
+      }
+    }
   }
 
   if (size == 3) {
-	//normal hairpins of loop size 3
+    // normal hairpins of loop size 3
     return entropy + termau_energy(s, i, j);
   } else {
-	//normal hairpins of loop sizes larger than three
-	return entropy + stack_mismatch;
+    // normal hairpins of loop sizes larger than three
+    return entropy + stack_mismatch;
   }
 
-  //throw a warning to Bellman's GAP user, if they forget to restrict the loop region to sizes larger than two
+  // throw a warning to Bellman's GAP user, if they forget to restrict the
+  // loop region to sizes larger than two
   fprintf(stderr, "hairpin loop < 3 found. Please use production\n");
   fprintf(stderr, "hl(BASE, REGION with minsize(3), BASE)\n");
   fprintf(stderr, "in your grammar.\n");
@@ -409,10 +443,9 @@ int hl_energy(const char *s, rsize i, rsize j)
 }
 
 /* like hl_energy, just no penalty for size > 4 structures */
-int hl_energy_stem(const char *s, rsize i, rsize j)
-{
+int hl_energy_stem(const char *s, rsize i, rsize j) {
   int r = hl_energy(s, i, j);
-  rsize size = j-i-1 - noGaps(s,i+1,j-1);
+  rsize size = j-i-1 - noGaps(s, i+1, j-1);
   if (size >= 4) {
     int stack_mismatch = hl_stack(s, i, j);
     return r - stack_mismatch;
@@ -441,12 +474,14 @@ int hl_energy_stem(const char *s, rsize i, rsize j)
      3. index = lbase = code for 5' unpaired base of the internal loop
      4. index = rbase = code for 3' unpaired base of the internal loop
 */
-static int il11_energy(const char *s, rsize i, rsize k, rsize l, rsize j)
-{
-  int closingBP = bp_index(s[i],   s[j]  );
-  int enclosedBP = bp_index(s[getPrev(s,j,2,l)], s[getNext(s,i,2,k)]); //we know that the enclosed base pair is at exactly this position, since both unpaired regions have size 1.  Note, basepair is reversed to preserver 5'-3' order.
-  char lbase = s[getNext(s,i,1,k)];
-  char rbase = s[getPrev(s,j,1,l)];
+static int il11_energy(const char *s, rsize i, rsize k, rsize l, rsize j) {
+  int closingBP = bp_index(s[i], s[j]);
+  // we know that the enclosed base pair is at exactly this position, since
+  // both unpaired regions have size 1.  Note, basepair is reversed to
+  // preserver 5'-3' order.
+  int enclosedBP = bp_index(s[getPrev(s, j, 2, l)], s[getNext(s, i, 2, k)]);
+  char lbase = s[getNext(s, i, 1, k)];
+  char rbase = s[getPrev(s, j, 1, l)];
   return P->int11[closingBP][enclosedBP][lbase][rbase];
 }
 
@@ -473,26 +508,26 @@ static int il11_energy(const char *s, rsize i, rsize k, rsize l, rsize j)
      4. index = rbase = code for first (= close to the embedded substructure) 3' unpaired base of the internal loop, j-2
      5. index = rrbase = code for second (= close to the i-j basepair) 3' unpaired base of the internal loop, j-1
 */
-static int il12_energy(const char *s, rsize i, rsize k, rsize l, rsize j)
-{
-  int closingBP = bp_index(s[i],   s[j]  );
-  int enclosedBP = bp_index(s[getPrev(s,j,3,l)], s[getNext(s,i,2,k)]); // Note, basepair is reversed to preserver 5'-3' order
-  char lbase = s[getNext(s,i,1,k)];
-  char rbase = s[getPrev(s,j,2,l)];
-  char rrbase = s[getPrev(s,j,1,l)];
+static int il12_energy(const char *s, rsize i, rsize k, rsize l, rsize j) {
+  int closingBP = bp_index(s[i], s[j]);
+  // Note, basepair is reversed to preserver 5'-3' order
+  int enclosedBP = bp_index(s[getPrev(s, j, 3, l)], s[getNext(s, i, 2, k)]);
+  char lbase = s[getNext(s, i, 1, k)];
+  char rbase = s[getPrev(s, j, 2, l)];
+  char rrbase = s[getPrev(s, j, 1, l)];
   return P->int21[closingBP][enclosedBP][lbase][rbase][rrbase];
 }
 
 /*
    symmetric case to il12_energy
 */
-static int il21_energy(const char *s, rsize i, rsize k, rsize l, rsize j)
-{
-  int closingBP = bp_index(s[getPrev(s,j,2,l)], s[getNext(s,i,3,k)]); // Note, basepair is reversed to preserver 5'-3' order
-  int enclosedBP = bp_index(s[i],   s[j]  );
-  char lbase = s[getPrev(s,j,1,l)];
-  char rbase = s[getNext(s,i,1,k)];
-  char rrbase = s[getNext(s,i,2,k)];
+static int il21_energy(const char *s, rsize i, rsize k, rsize l, rsize j) {
+  // Note, basepair is reversed to preserver 5'-3' order
+  int closingBP = bp_index(s[getPrev(s, j, 2, l)], s[getNext(s, i, 3, k)]);
+  int enclosedBP = bp_index(s[i], s[j]);
+  char lbase = s[getPrev(s, j, 1, l)];
+  char rbase = s[getNext(s, i, 1, k)];
+  char rrbase = s[getNext(s, i, 2, k)];
   return P->int21[closingBP][enclosedBP][lbase][rbase][rrbase];
 }
 
@@ -521,14 +556,14 @@ static int il21_energy(const char *s, rsize i, rsize k, rsize l, rsize j)
      6. index = rbase = code for first (= closer to the embedded substructure) 3' unpaired base of the internal loop, j-2
      7. index = rrbase = code for second (= closer to the closing basepair) 3' unpaired base of the internal loop, j-1
 */
-static int il22_energy(const char *s, rsize i, rsize k, rsize l, rsize j)
-{
-  int closingBP = bp_index(s[i],   s[j]  );
-  int enclosedBP = bp_index(s[getPrev(s,j,3,l)], s[getNext(s,i,3,k)]); // Note, basepair is reversed to preserver 5'-3' order
-  char lbase = s[getNext(s,i,1,k)];
-  char llbase = s[getNext(s,i,2,k)];
-  char rbase = s[getPrev(s,j,2,l)];
-  char rrbase = s[getPrev(s,j,1,l)];
+static int il22_energy(const char *s, rsize i, rsize k, rsize l, rsize j) {
+  int closingBP = bp_index(s[i], s[j]);
+  // Note, basepair is reversed to preserver 5'-3' order
+  int enclosedBP = bp_index(s[getPrev(s, j, 3, l)], s[getNext(s, i, 3, k)]);
+  char lbase = s[getNext(s, i, 1, k)];
+  char llbase = s[getNext(s, i, 2, k)];
+  char rbase = s[getPrev(s, j, 2, l)];
+  char rrbase = s[getPrev(s, j, 1, l)];
   return P->int22[closingBP][enclosedBP][lbase][llbase][rbase][rrbase];
 }
 
@@ -538,13 +573,12 @@ static int il22_energy(const char *s, rsize i, rsize k, rsize l, rsize j)
    currently (11.09.2011) MAXLOOP is 30
    Input is just the size, i.e. number of bases, of the unpaired loop region: l
 */
-static int il_ent(rsize l)
-{
-  assert(l>1);
+static int il_ent(rsize l) {
+  assert(l > 1);
   if (l > MAXLOOP) {
-	  return P->internal_loop[MAXLOOP] + jacobson_stockmayer(l);
+      return P->internal_loop[MAXLOOP] + jacobson_stockmayer(l);
   } else {
-	  return P->internal_loop[l];
+      return P->internal_loop[l];
   }
 }
 
@@ -571,15 +605,16 @@ static int il_ent(rsize l)
      2. index = out_lbase = in_lbase = code for first (= closer to the closing basepair) 5' unpaired base of the internal loop, i+1
      3. index = out_rbase = in_rbase = code for second (= closer to the closing basepair) 3' unpaired base of the internal loop, j-1
 */
-static int il_stack(const char *s, rsize i, rsize k, rsize l, rsize j)
-{
+static int il_stack(const char *s, rsize i, rsize k, rsize l, rsize j) {
   int out_closingBP = bp_index(s[i], s[j]);
-  char out_lbase = s[getNext(s,i,1,j-1)];
-  char out_rbase = s[getPrev(s,j,1,i+1)];
-  int in_closingBP = bp_index(s[l], s[k]); // Note, basepair and stacking bases are reversed to preserver 5'-3' order
-  char in_lbase = s[getNext(s,l,1,j-1)];
-  char in_rbase = s[getPrev(s,k,1,i+1)];
-  return P->mismatchI[out_closingBP][out_lbase][out_rbase] + P->mismatchI[in_closingBP][in_lbase][in_rbase];
+  char out_lbase = s[getNext(s, i, 1, j-1)];
+  char out_rbase = s[getPrev(s, j, 1, i+1)];
+  // Note, basepair and stacking bases are reversed to preserver 5'-3' order
+  int in_closingBP = bp_index(s[l], s[k]);
+  char in_lbase = s[getNext(s, l, 1, j-1)];
+  char in_rbase = s[getPrev(s, k, 1, i+1)];
+  return P->mismatchI[out_closingBP][out_lbase][out_rbase] +
+         P->mismatchI[in_closingBP][in_lbase][in_rbase];
 }
 
 /*
@@ -590,8 +625,7 @@ static int il_stack(const char *s, rsize i, rsize k, rsize l, rsize j)
      sl = size of the 5' unpaired loop region
      sr = size of the 3' unpaired loop region
 */
-static int il_asym(rsize sl, rsize sr)
-{
+static int il_asym(rsize sl, rsize sr) {
   int r = abs(sl-sr) * P->ninio[2];
   if (r < MAX_NINIO) {
     return r;
@@ -630,44 +664,56 @@ static int il_asym(rsize sl, rsize sr)
      l = the index (first base of s is 0, second 1, ...) of the 3' partner of the internal loop embedded basepair.
      j = the index (first base of s is 0, second 1, ...) of the 3' partner of the internal loop closing basepair
 */
-int il_energy(const char *s, rsize i, rsize k, rsize l, rsize j)
-{
+int il_energy(const char *s, rsize i, rsize k, rsize l, rsize j) {
   rsize sl = k-i-1 - noGaps(s, i+1, k-1);
   rsize sr = j-l-1 - noGaps(s, l+1, j-1);
 
   int out_closingBP = bp_index(s[i], s[j]);
-  int out_lbase = s[getNext(s,i,1,j-1)];
-  int out_rbase = s[getPrev(s,j,1,i+1)];
-  int in_closingBP = bp_index(s[l], s[k]); // Note, basepair and stacking bases are reversed to preserver 5'-3' order
-  int in_lbase = s[getNext(s,l,1,j-1)];
-  int in_rbase = s[getPrev(s,k,1,i+1)];
+  int out_lbase = s[getNext(s, i, 1, j-1)];
+  int out_rbase = s[getPrev(s, j, 1, i+1)];
+  // Note, basepair and stacking bases are reversed to preserver 5'-3' order
+  int in_closingBP = bp_index(s[l], s[k]);
+  int in_lbase = s[getNext(s, l, 1, j-1)];
+  int in_rbase = s[getPrev(s, k, 1, i+1)];
 
-  if (sl == 0) return br_energy(s, i, l+1, j-1, j, k); //internal loop really is an right bulge, because left unpaired region is just a gap
-  if (sr == 0) return bl_energy(s, i, i+1, k-1, j, l); //internal loop really is an left bulge, because right unpaired region is just a gap
+  // internal loop really is an right bulge, because left unpaired region is
+  // just a gap
+  if (sl == 0) return br_energy(s, i, l+1, j-1, j, k);
+  // internal loop really is an left bulge, because right unpaired region is
+  // just a gap
+  if (sr == 0) return bl_energy(s, i, i+1, k-1, j, l);
 
 
   if (sl == 1) {
-	if (sr == 1) {
-	  return il11_energy(s, i, k, l, j);
-	} else if (sr == 2) {
+    if (sr == 1) {
+      return il11_energy(s, i, k, l, j);
+    } else if (sr == 2) {
       return il12_energy(s, i, k, l, j);
-	} else {
-	  return il_ent(sl+sr) + il_asym(sl,sr) + P->mismatch1nI[out_closingBP][out_lbase][out_rbase] + P->mismatch1nI[in_closingBP][in_lbase][in_rbase];
-	}
+    } else {
+      return il_ent(sl+sr) + il_asym(sl, sr) +
+        P->mismatch1nI[out_closingBP][out_lbase][out_rbase] +
+        P->mismatch1nI[in_closingBP][in_lbase][in_rbase];
+    }
   } else if (sl == 2) {
-	if (sr == 1) {
-	  return il21_energy(s, i, k, l, j);
-	} else if (sr == 2) {
-	  return il22_energy(s, i, k, l, j);
-	} else if (sr == 3) {
-	  return P->internal_loop[5]+P->ninio[2] + P->mismatch23I[out_closingBP][out_lbase][out_rbase] + P->mismatch23I[in_closingBP][in_lbase][in_rbase];
-	}
+    if (sr == 1) {
+      return il21_energy(s, i, k, l, j);
+    } else if (sr == 2) {
+      return il22_energy(s, i, k, l, j);
+    } else if (sr == 3) {
+      return P->internal_loop[5]+P->ninio[2] +
+        P->mismatch23I[out_closingBP][out_lbase][out_rbase] +
+        P->mismatch23I[in_closingBP][in_lbase][in_rbase];
+    }
   } else if ((sl == 3) && (sr == 2)) {
-	return P->internal_loop[5]+P->ninio[2] + P->mismatch23I[out_closingBP][out_lbase][out_rbase] + P->mismatch23I[in_closingBP][in_lbase][in_rbase];
+    return P->internal_loop[5]+P->ninio[2] +
+      P->mismatch23I[out_closingBP][out_lbase][out_rbase] +
+      P->mismatch23I[in_closingBP][in_lbase][in_rbase];
   } else {
-	if (sr == 1) {
-	  return il_ent(sl+sr) + il_asym(sl,sr) + P->mismatch1nI[out_closingBP][out_lbase][out_rbase] + P->mismatch1nI[in_closingBP][in_lbase][in_rbase];
-	}
+    if (sr == 1) {
+      return il_ent(sl+sr) + il_asym(sl, sr) +
+        P->mismatch1nI[out_closingBP][out_lbase][out_rbase] +
+        P->mismatch1nI[in_closingBP][in_lbase][in_rbase];
+    }
   }
 
   return il_ent(sl+sr) + il_stack(s, i, k, l, j) + il_asym(sl, sr);
@@ -680,13 +726,12 @@ int il_energy(const char *s, rsize i, rsize k, rsize l, rsize j)
    Input is
      just the size, i.e. number of bases, of the unpaired loop region: l
 */
-static int bl_ent(rsize l)
-{
-  assert(l>0);
+static int bl_ent(rsize l) {
+  assert(l > 0);
   if (l > MAXLOOP) {
-	return P->bulge[MAXLOOP] + jacobson_stockmayer(l);
+    return P->bulge[MAXLOOP] + jacobson_stockmayer(l);
   } else {
-	return P->bulge[l];
+    return P->bulge[l];
   }
 }
 
@@ -714,24 +759,27 @@ static int bl_ent(rsize l)
      j = the index (first base of s is 0, second 1, ...) of the 3' partner of the internal loop closing basepair
      Xright = for GAP case: the 3' partner of the enclosed basepair might not be at j-1 if we consider gaps. We have two possibilities: either it is seperated from j by one or more GAPs, or it might even be missing at all. Thus we have to know where the closed substructure X has its right border.
 */
-int bl_energy(const char *s, rsize i, rsize k, rsize l, rsize j, rsize Xright)
-{
-  assert(j >= 2); // this is of no biological relevance, just to avoid an underflow
+int bl_energy(const char *s, rsize i, rsize k, rsize l, rsize j, rsize Xright) {
+  // this is of no biological relevance, just to avoid an underflow
+  assert(j >= 2);
 
   rsize size = l-k+1 - noGaps(s, k, l);
 
-  if (size==0) {
+  if (size == 0) {
     int closingBP = bp_index(s[i], s[j]);
-    int enclosedBP = bp_index(s[getPrev(s,j,1,Xright)],s[l+1]); // Note, basepair is reversed to preserver 5'-3' order
+    // Note, basepair is reversed to preserver 5'-3' order
+    int enclosedBP = bp_index(s[getPrev(s, j, 1, Xright)], s[l+1]);
     return P->stack[closingBP][enclosedBP];
   }
-  if (size==1) {
+  if (size == 1) {
     int closingBP = bp_index(s[i], s[j]);
-    int enclosedBP = bp_index(s[getPrev(s,j,1,Xright)],s[l+1]); // Note, basepair is reversed to preserver 5'-3' order
+    // Note, basepair is reversed to preserver 5'-3' order
+    int enclosedBP = bp_index(s[getPrev(s, j, 1, Xright)], s[l+1]);
     return bl_ent(size) + P->stack[closingBP][enclosedBP];
   }
-  if (size>1) {
-	return bl_ent(size) + termau_energy(s, i, j) + termau_energy(s, getPrev(s,j,1,Xright), l+1);
+  if (size > 1) {
+    return bl_ent(size) + termau_energy(s, i, j) +
+      termau_energy(s, getPrev(s, j, 1, Xright), l+1);
   }
 
   fprintf(stderr, "bl_energy size < 1\n");
@@ -750,24 +798,27 @@ int bl_energy(const char *s, rsize i, rsize k, rsize l, rsize j, rsize Xright)
      |   |
      5'  3'
 */
-int br_energy(const char *s, rsize i, rsize k, rsize l, rsize j, rsize Xleft)
-{
-  assert(j >= 1); // this is of no biological relevance, just to avoid an underflow
+int br_energy(const char *s, rsize i, rsize k, rsize l, rsize j, rsize Xleft) {
+  // this is of no biological relevance, just to avoid an underflow
+  assert(j >= 1);
 
   rsize size = l-k+1 - noGaps(s, k, l);
 
   if (size == 0) {
     int closingBP = bp_index(s[i], s[j]);
-    int enclosedBP = bp_index(s[k-1],s[getNext(s,i,1,Xleft)]); // Note, basepair is reversed to preserver 5'-3' order
+    // Note, basepair is reversed to preserver 5'-3' order
+    int enclosedBP = bp_index(s[k-1], s[getNext(s, i, 1, Xleft)]);
     return P->stack[closingBP][enclosedBP];
   }
   if (size == 1) {
     int closingBP = bp_index(s[i], s[j]);
-    int enclosedBP = bp_index(s[k-1],s[getNext(s,i,1,Xleft)]); // Note, basepair is reversed to preserver 5'-3' order
+    // Note, basepair is reversed to preserver 5'-3' order
+    int enclosedBP = bp_index(s[k-1], s[getNext(s, i, 1, Xleft)]);
     return bl_ent(size) + P->stack[closingBP][enclosedBP];
   }
-  if (size > 1){
-	return bl_ent(size) + termau_energy(s, i, j) + termau_energy(s, k-1, getNext(s,i,1,Xleft));
+  if (size > 1) {
+    return bl_ent(size) + termau_energy(s, i, j) +
+      termau_energy(s, k-1, getNext(s, i, 1, Xleft));
   }
 
   fprintf(stderr, "br_energy size < 1\n");
@@ -791,10 +842,10 @@ int br_energy(const char *s, rsize i, rsize k, rsize l, rsize j, rsize Xleft)
      1. index = closingBP = code for closing basepair i-j
      2. index = enclosedBP = code for enclosed basepair i+1 and j-1. Note, basepair is reversed to preserver 5'-3' order
 */
-int sr_energy(const char *s, rsize i, rsize j)
-{
+int sr_energy(const char *s, rsize i, rsize j) {
   int closingBP = bp_index(s[i], s[j]);
-  int enclosedBP = bp_index(s[j-1],s[i+1]); // Note, basepair is reversed to preserver 5'-3' order
+  // Note, basepair is reversed to preserver 5'-3' order
+  int enclosedBP = bp_index(s[j-1], s[i+1]);
   return P->stack[closingBP][enclosedBP];
 }
 
@@ -802,10 +853,10 @@ int sr_energy(const char *s, rsize i, rsize j)
    the same as "sr_energy" but here the input is not relative to the RNA input sequence, but can be any combination of four bases
    currently used for the coaxial stacking of both stems of a pseudoknot
 */
-int sr_pk_energy(char a, char b, char c, char d)
-{
+int sr_pk_energy(char a, char b, char c, char d) {
   int closingBP = bp_index(a, b);
-  int enclosedBP = bp_index(d, c); // Note, basepair is reversed to preserver 5'-3' order
+  // Note, basepair is reversed to preserver 5'-3' order
+  int enclosedBP = bp_index(d, c);
   return P->stack[closingBP][enclosedBP];
 }
 
@@ -824,14 +875,15 @@ int sr_pk_energy(char a, char b, char c, char d)
      1. index = closingBP = code for closing basepair i-j
      2. index = dbase = code for dangling base
 */
-int dl_energy(const char *s, rsize i, rsize j)
-{
+int dl_energy(const char *s, rsize i, rsize j) {
   if (i == 0) return 0;
   int closingBP = bp_index(s[i], s[j]);
-  char dbase = s[getPrev(s,i,1,0)];
-  if (dbase == GAP_BASE) dbase = N_BASE; //RNAfold treats a gap like a N-base that is dangling on the pair. Strange but true.
+  char dbase = s[getPrev(s, i, 1, 0)];
+  // RNAfold treats a gap like a N-base that is dangling on the pair.
+  // Strange but true.
+  if (dbase == GAP_BASE) dbase = N_BASE;
   int dd = P->dangle5[closingBP][dbase];
-  return (dd>0) ? 0 : dd;  /* must be <= 0 */
+  return (dd > 0) ? 0 : dd;  /* must be <= 0 */
 }
 
 /*
@@ -844,14 +896,15 @@ int dl_energy(const char *s, rsize i, rsize j)
    Input is
      in addition: n = length of the input RNA sequence (necessary for OverDangle, should there be no more base on the right side of a stem)
 */
-int dr_energy(const char *s, rsize i, rsize j, rsize n)
-{
+int dr_energy(const char *s, rsize i, rsize j, rsize n) {
   if ((j+1) >= n) return 0;
   int closingBP = bp_index(s[i], s[j]);
-  char dbase = s[getNext(s,j,1,n-1)];
-  if (dbase == GAP_BASE) dbase = N_BASE; //RNAfold treats a gap like a N-base that is dangling on the pair. Strange but true.
+  char dbase = s[getNext(s, j, 1, n-1)];
+  // RNAfold treats a gap like a N-base that is dangling on the pair.
+  // Strange but true.
+  if (dbase == GAP_BASE) dbase = N_BASE;
   int dd = P->dangle3[closingBP][dbase];
-  return (dd>0) ? 0 : dd;  /* must be <= 0 */
+  return (dd > 0) ? 0 : dd;  /* must be <= 0 */
 }
 
 /*
@@ -862,12 +915,12 @@ int dr_energy(const char *s, rsize i, rsize j, rsize n)
      |   |
      5'  3'
 */
-int dli_energy(const char *s, rsize i, rsize j)
-{
-  int closingBP = bp_index(s[j], s[i]); // Note, basepair is reversed to preserver 5'-3' order
-  char dbase = s[getNext(s,i,1,j-1)];
+int dli_energy(const char *s, rsize i, rsize j) {
+  // Note, basepair is reversed to preserver 5'-3' order
+  int closingBP = bp_index(s[j], s[i]);
+  char dbase = s[getNext(s, i, 1, j-1)];
   int dd = P->dangle3[closingBP][dbase];
-  return (dd>0) ? 0 : dd;  /* must be <= 0 */
+  return (dd > 0) ? 0 : dd;  /* must be <= 0 */
 }
 
 /*
@@ -878,12 +931,12 @@ int dli_energy(const char *s, rsize i, rsize j)
      |   |
      5'  3'
 */
-int dri_energy(const char *s, rsize i, rsize j)
-{
-  int closingBP = bp_index(s[j], s[i]); // Note, basepair is reversed to preserver 5'-3' order
-  char dbase = s[getPrev(s,j,1,i+1)];
+int dri_energy(const char *s, rsize i, rsize j) {
+  // Note, basepair is reversed to preserver 5'-3' order
+  int closingBP = bp_index(s[j], s[i]);
+  char dbase = s[getPrev(s, j, 1, i+1)];
   int dd = P->dangle5[closingBP][dbase];
-  return (dd>0) ? 0 : dd;  /* must be <= 0 */
+  return (dd > 0) ? 0 : dd;  /* must be <= 0 */
 }
 
 /*
@@ -903,36 +956,44 @@ int dri_energy(const char *s, rsize i, rsize j)
      2. index = lbase = code for dangling 5' base
      3. index = rbase = code for dangling 3' base
 */
-int ext_mismatch_energy(const char *s, rsize i, rsize j, rsize n)
-{
-  int rbasePos = getNext(s,j,1,n-1);
-  if ((i > 0) && ((j+1) < n) &&                            //we try to dangle left and right neighboring base if available. They are not if we already are at first or last base ...
-	  (s[i-1] != SEPARATOR_BASE) && ((j+1) <= rbasePos)) { //or in outside mode, if left / right neighbor is the separator base
-    int closingBP = bp_index(s[i],s[j]);
-    int lbase = s[getPrev(s,i,1,0)];
+int ext_mismatch_energy(const char *s, rsize i, rsize j, rsize n) {
+  int rbasePos = getNext(s, j, 1, n-1);
+  // we try to dangle left and right neighboring base if available. They are
+  // not if we already are at first or last base ...
+  if ((i > 0) && ((j+1) < n) &&
+      (s[i-1] != SEPARATOR_BASE) && ((j+1) <= rbasePos)) {
+    // or in outside mode, if left / right neighbor is the separator base
+    int closingBP = bp_index(s[i], s[j]);
+    int lbase = s[getPrev(s, i, 1, 0)];
     int rbase = s[rbasePos];
-	if (lbase == GAP_BASE) lbase = N_BASE;
-	if (rbase == GAP_BASE) rbase = N_BASE;
-	if ((lbase <  5) && (rbase <  5)) {
-		return P->mismatchExt[closingBP][lbase][rbase]; //left and right dangling positions are real bases
-	}
-	if ((lbase <  5) && (rbase >= 5)) {
-		return dl_energy(s,i,j); //if right position is a gap and left position is a real base, we resort to a left dangle
-	}
-	if ((lbase >= 5) && (rbase <  5)) {
-		return dr_energy(s,i,j,n); //if left position is a gap and right position is a real base, we resort to a right dangle
-	}
-	if ((lbase >= 5) && (rbase >= 5)) {
-		return 0; //if left and right positions are gaps, we just return 0;
-	}
+    if (lbase == GAP_BASE) lbase = N_BASE;
+    if (rbase == GAP_BASE) rbase = N_BASE;
+    if ((lbase <  5) && (rbase <  5)) {
+      // left and right dangling positions are real bases
+      return P->mismatchExt[closingBP][lbase][rbase];
+    }
+    if ((lbase <  5) && (rbase >= 5)) {
+      // if right position is a gap and left position is a real base, we resort
+      // to a left dangle
+      return dl_energy(s, i, j);
+    }
+    if ((lbase >= 5) && (rbase <  5)) {
+      // if left position is a gap and right position is a real base, we resort
+      // to a right dangle
+      return dr_energy(s, i, j, n);
+    }
+    if ((lbase >= 5) && (rbase >= 5)) {
+      // if left and right positions are gaps, we just return 0;
+      return 0;
+    }
   } else {
     if ((i > 0) && (s[i-1] != SEPARATOR_BASE)) {
-		return dl_energy(s,i,j);
+      return dl_energy(s, i, j);
     }
     if (((j+1) < n) && ((j+1) <= rbasePos)) {
-		return dr_energy(s,i,j,n);
+      return dr_energy(s, i, j, n);
     }
-	return 0;
+    return 0;
   }
 }
 
@@ -944,22 +1005,28 @@ int ext_mismatch_energy(const char *s, rsize i, rsize j, rsize n)
      |   |
      5'  3'
 */
-int ml_mismatch_energy(const char *s, rsize i, rsize j)
-{
-  int closingBP = bp_index(s[j],s[i]); // Note, basepairs and stacking bases are reversed to preserver 5'-3' order
-  int lbase = s[getPrev(s,j,1,i+1)];
-  int rbase = s[getNext(s,i,1,j-1)];
+int ml_mismatch_energy(const char *s, rsize i, rsize j) {
+  // Note, basepairs and stacking bases are reversed to preserver 5'-3' order
+  int closingBP = bp_index(s[j], s[i]);
+  int lbase = s[getPrev(s, j, 1, i+1)];
+  int rbase = s[getNext(s, i, 1, j-1)];
   if ((lbase <  5) && (rbase <  5)) {
-  	return P->mismatchM[closingBP][lbase][rbase]; //left and right dangling positions are real bases
+    // left and right dangling positions are real bases
+    return P->mismatchM[closingBP][lbase][rbase];
   }
   if ((lbase <  5) && (rbase >= 5)) {
-	return dli_energy(s,i,j); //if right position is a gap and left position is a real base, we resort to a left dangle
+    // if right position is a gap and left position is a real base, we resort
+    // to a left dangle
+    return dli_energy(s, i, j);
   }
   if ((lbase >= 5) && (rbase <  5)) {
-  	return dri_energy(s,i,j); //if left position is a gap and right position is a real base, we resort to a right dangle
+    // if left position is a gap and right position is a real base, we resort
+    // to a right dangle
+    return dri_energy(s, i, j);
   }
   if ((lbase >= 5) && (rbase >= 5)) {
-  	return 0; //if left and right positions are gaps, we just return 0;
+    // if left and right positions are gaps, we just return 0;
+    return 0;
   }
 }
 
@@ -968,8 +1035,7 @@ int ml_mismatch_energy(const char *s, rsize i, rsize j)
    version 1999: currently (12.09.2011) this value is set to 340
    version 2004: currently (12.09.2011) this value is set to 930
 */
-int ml_energy(void)
-{
+int ml_energy(void) {
   return P->MLclosing;
 }
 
@@ -978,8 +1044,7 @@ int ml_energy(void)
    version 1999: currently (12.09.2011) this value is set to 40
    version 2004: currently (12.09.2011) this value is set to -90
 */
-int ul_energy(void)
-{
+int ul_energy(void) {
   return P->MLintern[0];
 }
 
@@ -987,8 +1052,7 @@ int ul_energy(void)
    returns the energy for one unpaired base, not included into loops (hairpin-, bulge-, internal- loops), but in single stranded stretches next to closed substructures also in multiloops
    currently (12.09.2011) this value is set to 0
 */
-int sbase_energy(void)
-{
+int sbase_energy(void) {
   return 0;
 }
 
@@ -996,8 +1060,7 @@ int sbase_energy(void)
    same es sbase_energy, but for zero to n bases
    currently (12.09.2011) this value is set to 0
 */
-int ss_energy(rsize i, rsize j)
-{
+int ss_energy(rsize i, rsize j) {
   return 0;
 }
 
@@ -1005,8 +1068,7 @@ int ss_energy(rsize i, rsize j)
 /*
    scales the energy value x into a partition function value
 */
-double mk_pf(double x)
-{
+double mk_pf(double x) {
   // temperature is defined in ViennaRNA/params/basic.h
   return exp((-1.0 * x/100.0) / (GASCONST/1000 * (temperature + K0)));
 }
@@ -1014,10 +1076,11 @@ double mk_pf(double x)
 /*
    returns a partition function bonus for x unpaired bases
 */
-double scale(int x)
-{
-  double mean_nrg= -0.1843;  /* mean energy for random sequences: 184.3*length cal */
-  double mean_scale = exp (-1.0 * mean_nrg / (GASCONST/1000 * (temperature + K0)));
+double scale(int x) {
+  /* mean energy for random sequences: 184.3*length cal */
+  double mean_nrg = -0.1843;
+  double mean_scale = exp(-1.0 * mean_nrg / (GASCONST/1000 * (
+    temperature + K0)));
 
   return (1.0 / pow(mean_scale, x));
 }
@@ -1034,11 +1097,10 @@ dangle   |        (dangle = 5' dangling base)
      i = the code for the 5' partner of the closing basepair, note: here it is not an index of the input RNA sequence!
      j = the code for the 3' partner of the closing basepair, note: here it is not an index of the input RNA sequence!
 */
-int dl_dangle_dg(enum base_t dangle, enum base_t i, enum base_t j)
-{
-  int closingBP = bp_index(i,j);
+int dl_dangle_dg(enum base_t dangle, enum base_t i, enum base_t j) {
+  int closingBP = bp_index(i, j);
   int dd = P->dangle5[closingBP][dangle];
-  return (dd>0) ? 0 : dd;  /* must be <= 0 */
+  return (dd > 0) ? 0 : dd;  /* must be <= 0 */
 }
 
 /*
@@ -1053,26 +1115,30 @@ int dr_dangle_dg(enum base_t i, enum base_t j, enum base_t dangle) {
   int closingBP = bp_index(i, j);
   return P->dangle3[closingBP][dangle];
   int dd = P->dangle3[closingBP][dangle];
-  return (dd>0) ? 0 : dd;  /* must be <= 0 */
+  return (dd > 0) ? 0 : dd;  /* must be <= 0 */
 }
 
 // added by gsauthof, 2012
 
-static const bool map_base_iupac[5][13] =
-{
-             /*      { N    , A     , C     , G     , U     , _     , +     , B     , D     , H     , R     , V     , Y     }  , */
-             /* N */ { true , true  , true  , true  , true  , true  , false , true  , true  , true  , true  , true  , true  }  ,
-             /* A */ { true , true  , false , false , false , false , false , false , true  , true  , true  , true  , false }  ,
-             /* C */ { true , false , true  , false , false , false , false , true  , false , true  , false , true  , true  }  ,
-             /* G */ { true , false , false , true  , false , false , false , true  , true  , false , true  , true  , false }  ,
-             /* U */ { true , false , false , false , true  , false , false , true  , true  , true  , false , false , true  }  ,
+static const bool map_base_iupac[5][13] = {
+  /*      {N   , A    , C    , G    , U    , _    , +    , B    , D    ,
+           H    , R    , V    , Y    }, */
+  /* N */ {true, true , true , true , true , true , false, true , true ,
+           true , true , true , true },
+  /* A */ {true, true , false, false, false, false, false, false, true ,
+           true , true , true , false},
+  /* C */ {true, false, true , false, false, false, false, true , false,
+           true , false, true , true },
+  /* G */ {true, false, false, true , false, false, false, true , true ,
+           false, true , true , false},
+  /* U */ {true, false, false, false, true , false, false, true , true ,
+           true , false, false, true },
 };
 
-bool iupac_match(char base, char iupac_base)
-{
-  assert(base>=0);
-  assert(base<6);
-  assert(iupac_base>=0);
-  assert(iupac_base<13);
+bool iupac_match(char base, char iupac_base) {
+  assert(base >= 0);
+  assert(base < 6);
+  assert(iupac_base >= 0);
+  assert(iupac_base < 13);
   return map_base_iupac[base][iupac_base];
 }
