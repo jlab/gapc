@@ -93,7 +93,7 @@ class Backtrace : public Base {
 
     Base *component();
 
-    void set_body_context() { body_context_ = true; }
+    void set_body_context() { body_context_ = ::Bool(true); }
 
     bool body_context() const { return body_context_; }
 };

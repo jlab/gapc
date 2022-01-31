@@ -71,7 +71,7 @@ class Base {
     bool is(Type t) { return type == t; }
     Type getType() { return this->type; }
 
-    void disable() { disabled_ = true; }
+    void disable() { disabled_ = Bool(true); }
     bool is_disabled() const { return disabled_; }
 
     virtual ~Base();

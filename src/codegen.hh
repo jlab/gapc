@@ -96,13 +96,13 @@ class Mode {
   }
 
   bool subopt_buddy() const { return subopt_buddy_; }
-  void set_subopt_buddy() { subopt_buddy_ = true; }
+  void set_subopt_buddy() { subopt_buddy_ = Bool(true); }
 
   bool marker() const { return marker_; }
-  void set_marker() { marker_ = true; }
+  void set_marker() { marker_ = Bool(true); }
 
   bool sample() const { return sample_; }
-  void set_sample(bool b) { sample_ = b; }
+  void set_sample(bool b) { sample_ = Bool(b); }
 };
 
 inline std::ostream &operator<<(std::ostream &o, const Mode &m) {

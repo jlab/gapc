@@ -94,7 +94,7 @@ void Product::Single::eliminate_lists() {
 
   reduce_return_type();
 
-  eliminate_lists_computed = true;
+  eliminate_lists_computed = Bool(true);
 }
 
 // looks for all choice function that don't need LIST as return type,
@@ -107,7 +107,7 @@ void Product::Two::eliminate_lists() {
   l->eliminate_lists();
   r->eliminate_lists();
 
-  eliminate_lists_computed = true;
+  eliminate_lists_computed = Bool(true);
 }
 
 bool Product::Single::init() {

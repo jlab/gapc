@@ -1402,7 +1402,7 @@ void Symbol::NT::optimize_choice(::Type::List::Push_Type push,
 void Symbol::NT::set_alts(const std::list<Alt::Base*> &a) {
   alts = a;
   for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i)
-    (*i)->top_level = true;
+    (*i)->top_level = Bool(true);
 }
 
 void Symbol::NT::set_tracks(size_t x, size_t y) {
@@ -1592,7 +1592,7 @@ void Symbol::NT::set_ntargs(std::list<Para_Decl::Base*> *l) {
     return;
   }
   ntargs_ = *l;
-  never_tabulate_ = true;
+  never_tabulate_ = Bool(true);
 }
 
 void Symbol::Base::set_tabulated() {

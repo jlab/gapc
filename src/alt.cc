@@ -2856,7 +2856,7 @@ void Alt::Simple::set_index_overlay(Alt::Base *alt) {
     return;
   }
   index_overlay.push_back(f);
-  f->is_index_overlay_ = true;
+  f->is_index_overlay_ = Bool(true);
 }
 
 

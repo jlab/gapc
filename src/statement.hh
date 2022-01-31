@@ -251,7 +251,7 @@ class Var_Decl : public Base {
 
 
   void set_itr(bool b) {
-    use_as_itr = b;
+    use_as_itr = Bool(b);
   }
 
 

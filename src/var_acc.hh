@@ -59,7 +59,7 @@ class Base {
     // string representation out to the given stream.
     virtual void put(std::ostream &s) const;
 
-    void set_itr(bool b) { itr_access = b; }
+    void set_itr(bool b) { itr_access = Bool(b); }
     bool is_itr() const { return itr_access; }
 };
 

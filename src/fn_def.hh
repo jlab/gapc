@@ -285,7 +285,7 @@ class Fn_Def : public Fn_Decl {
 
 
     void disable() {
-      disabled_ = true;
+      disabled_ = Bool(true);
     }
 
 
