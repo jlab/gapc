@@ -25,14 +25,14 @@
 #ifndef RTLIB_RNA_HH_
 #define RTLIB_RNA_HH_
 
+extern "C" {
+#include <rnalib.h>
+}
+
 #include <cstring>
 #include <exception>
 #include <cmath>
 #include <vector>
-
-extern "C" {
-#include <rnalib.h>
-}
 
 #include "sequence.hh"
 #include "subsequence.hh"
