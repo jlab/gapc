@@ -96,7 +96,7 @@ class Opts {
 #ifdef WINDOW_MODE
         << " (-[wi] [0-9]+)*"
 #endif
-#ifdef RNALIB_H
+#ifdef LIBRNA_RNALIB_H_
         << " (-[tT] [0-9]+)? (-P PARAM-file)?"
 #endif
         << " (-[drk] [0-9]+)* (-h)? (INPUT|-f INPUT-file)\n";
@@ -105,14 +105,14 @@ class Opts {
     void parse(int argc, char **argv) {
       int o = 0;
       char *input = 0;
-#ifdef RNALIB_H
+#ifdef LIBRNA_RNALIB_H_
       char *par_filename = 0;
 #endif
       while ((o = getopt(argc, argv, ":f:"
 #ifdef WINDOW_MODE
               "w:i:"
 #endif
-#ifdef RNALIB_H
+#ifdef LIBRNA_RNALIB_H_
               "t:T:P:"
 #endif
               "hd:r:k:")) != -1) {
@@ -154,7 +154,7 @@ class Opts {
           case 'i' :
             window_increment = std::atoi(optarg);
             break;
-#ifdef RNALIB_H
+#ifdef LIBRNA_RNALIB_H_
           case 'T' :
           case 't' :
             temperature = std::atof(optarg);
@@ -209,7 +209,7 @@ class Opts {
         if (window_increment >= window_size )
           throw OptException("window_increment >= window_size");
       }
-#ifdef RNALIB_H
+#ifdef LIBRNA_RNALIB_H_
       librna_read_param_file(par_filename);
 #endif
     }
