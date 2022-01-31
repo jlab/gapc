@@ -38,7 +38,7 @@ class Attribute {
     std::string kindOfName;
 
  public:
-    Attribute(std::string kindOfName);
+    explicit Attribute(std::string kindOfName);
     Attribute(Attribute& a);
     virtual ~Attribute();
 

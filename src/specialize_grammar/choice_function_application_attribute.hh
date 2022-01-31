@@ -43,7 +43,8 @@ class ChoiceFunctionApplicationAttribute : public Util::Attribute {
     std::string* choiceFunctionName;
 
  public:
-    ChoiceFunctionApplicationAttribute(std::string* choiceFunctionName);
+    explicit ChoiceFunctionApplicationAttribute(
+      std::string* choiceFunctionName);
     ChoiceFunctionApplicationAttribute(
         ChoiceFunctionApplicationAttribute& a);
     virtual ~ChoiceFunctionApplicationAttribute();

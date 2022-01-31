@@ -120,7 +120,7 @@ inline void join_sort(List_Ref<T> &l, List_Ref<int> &markers, Compare &c) {
 
 template<class T, typename Compare>
 struct join_marked_multi_comp {
-  join_marked_multi_comp(Compare &c) : c(c) {}
+  explicit join_marked_multi_comp(Compare &c) : c(c) {}
         Compare c;
 
  public:

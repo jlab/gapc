@@ -42,7 +42,7 @@ class Dep_Analysis {
     hashtable<Symbol::NT*, size_t> nt_map;
 
  public:
-    Dep_Analysis(const hashtable<std::string, Symbol::Base*> &s);
+    explicit Dep_Analysis(const hashtable<std::string, Symbol::Base*> &s);
 
     void sort();
 

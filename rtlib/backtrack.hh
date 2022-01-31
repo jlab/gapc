@@ -384,7 +384,7 @@ class Backtrace_NT_Back_Base {
     virtual void backtrack() = 0;
 
  public:
-    Backtrace_NT_Back_Base(Klass *klass_)
+    explicit Backtrace_NT_Back_Base(Klass *klass_)
       : klass(klass_), count(0) {}
     virtual ~Backtrace_NT_Back_Base() {}
 

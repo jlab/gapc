@@ -42,7 +42,7 @@ class SetOfCycleSets {
 
  public:
     SetOfCycleSets();
-    SetOfCycleSets(std::set<CycleSet*> sets);
+    explicit SetOfCycleSets(std::set<CycleSet*> sets);
     SetOfCycleSets(SetOfCycleSets& s);
     ~SetOfCycleSets();
 

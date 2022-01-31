@@ -569,7 +569,7 @@ BOOST_AUTO_TEST_CASE( opplus )
 {
   Shape a;
   Shape b;
-  b.append("_]");
+  b.append(Shape("_]"));
   a = '[' +  b + "[]";
   std::ostringstream o;
   o << a;
@@ -579,7 +579,7 @@ BOOST_AUTO_TEST_CASE( opplus )
 BOOST_AUTO_TEST_CASE( frontback )
 {
   Shape a;
-  a.append("_]");
+  a.append(Shape("_]"));
   std::ostringstream o;
   o << a;
   CHECK_EQ(*o.str().begin(), front(a));
@@ -589,8 +589,8 @@ BOOST_AUTO_TEST_CASE( frontback )
 BOOST_AUTO_TEST_CASE( tailer )
 {
   Shape a;
-  a.append("_[");
-  a.append("][");
+  a.append(Shape("_["));
+  a.append(Shape("]["));
   a.append(']');
   std::ostringstream o;
   o << tail(a);

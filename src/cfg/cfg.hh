@@ -130,7 +130,7 @@ class Base : public Util::Attributable {
     std::string* annotation;
 
  public:
-    Base(Type t);
+    explicit Base(Type t);
     Base(Base& b);
     virtual ~Base();
 
@@ -168,7 +168,7 @@ class Base : public Util::Attributable {
 // a undividable entity, i.g. Termina, NonTerminal, RegularExpression.
 class SimpleElement : public Base {
  public:
-    SimpleElement(Type t);
+    explicit SimpleElement(Type t);
     SimpleElement(SimpleElement& s);
     virtual ~SimpleElement();
 
@@ -180,7 +180,7 @@ class SimpleElement : public Base {
 // of base to a new structure, e.g. ProductionSequence, ProductionAlternative.
 class ComplexElement : public Base {
  public:
-    ComplexElement(Type t);
+    explicit ComplexElement(Type t);
     ComplexElement(ComplexElement& c);
     virtual ~ComplexElement();
 };
@@ -198,7 +198,7 @@ class BaseWrapper : public SimpleElement {
     Base* wrappedValue;
 
  public:
-    BaseWrapper(Base* b);
+    explicit BaseWrapper(Base* b);
     BaseWrapper(BaseWrapper& wrapper);
     virtual ~BaseWrapper();
 
@@ -235,7 +235,7 @@ class Snapshot : public Base {
     Base* changes;
 
  public:
-    Snapshot(Base* original);
+    explicit Snapshot(Base* original);
     Snapshot(Snapshot& s);
     virtual ~Snapshot();
 
@@ -293,7 +293,7 @@ class Terminal : public SimpleElement {
     std::string *value;
 
  public:
-    Terminal(std::string *value);
+    explicit Terminal(std::string *value);
     Terminal(Terminal& t);
     virtual ~Terminal();
 
@@ -323,7 +323,7 @@ class NonTerminal : public SimpleElement {
     std::string *name;
 
  public:
-    NonTerminal(std::string *name);
+    explicit NonTerminal(std::string *name);
     NonTerminal(NonTerminal& n);
     virtual ~NonTerminal();
 
@@ -480,7 +480,7 @@ class ProductionAlternative : public ComplexElement {
  public:
     ProductionAlternative();
     ProductionAlternative(ProductionAlternative& a);
-    ProductionAlternative(std::list<Base*> alts);
+    explicit ProductionAlternative(std::list<Base*> alts);
     virtual ~ProductionAlternative();
 
     // Adds an alternative to this block of alternatives.
@@ -517,7 +517,7 @@ class GrammarProduction : public Util::Attributable {
     ProductionAlternative *rhs;
 
  public:
-    GrammarProduction(NonTerminal *lhs);
+    explicit GrammarProduction(NonTerminal *lhs);
     GrammarProduction(GrammarProduction& p);
     ~GrammarProduction();
 

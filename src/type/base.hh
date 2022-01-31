@@ -65,7 +65,7 @@ class Base {
     Type type;
     bool terminal;
     Base(Type t, const Loc &l) : type(t), terminal(false), location(l) {}
-    Base(Type t) : type(t), terminal(false) {}
+    explicit Base(Type t) : type(t), terminal(false) {}
 
  public:
     virtual Base *clone() = 0;

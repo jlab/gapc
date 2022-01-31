@@ -46,7 +46,7 @@ class Stapel {
   Stapel() : array(0), top_(0), size_(0) {
   }
 
-  Stapel(U i) : array(0), top_(0), size_(0) {
+  explicit Stapel(U i) : array(0), top_(0), size_(0) {
     resize(i);
   }
 
@@ -134,7 +134,7 @@ template <typename T, typename U = size_t> class Vector_Sparse {
   Vector_Sparse() : array(0), size_(0) {
   }
 
-  Vector_Sparse(U i) : array(0), size_(0) {
+  explicit Vector_Sparse(U i) : array(0), size_(0) {
     resize(i);
   }
 

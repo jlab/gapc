@@ -37,7 +37,7 @@ class List_Warn : public Visitor {
 
  public:
   List_Warn() : instance(0), skip(false) {}
-  List_Warn(Instance *i) : instance(i), skip(false) {}
+  explicit List_Warn(Instance *i) : instance(i), skip(false) {}
   void visit(Symbol::NT &n);
   void visit_begin(Alt::Block &a);
 };

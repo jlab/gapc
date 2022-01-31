@@ -45,7 +45,7 @@ class Iterator {
     std::stack<Base*> stack;
 
  public:
-    Iterator(Base *expr) {
+    explicit Iterator(Base *expr) {
       stack.push(expr);
     }
 

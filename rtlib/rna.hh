@@ -107,7 +107,7 @@ class BaseException : public std::exception {
     char *msg;
 
  public:
-    BaseException(char c) : std::exception(), z(c), msg(0) {
+    explicit BaseException(char c) : std::exception(), z(c), msg(0) {
       msg = new char[100];
       msg[0] = 0;
     }

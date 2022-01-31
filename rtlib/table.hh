@@ -148,12 +148,12 @@ class Constant {
     pos_type count;
 
     template<typename alphabet, typename seqpos>
-    Constant(const Basic_Sequence<alphabet, seqpos> &seq)
+    explicit Constant(const Basic_Sequence<alphabet, seqpos> &seq)
       : count(0) {
       n = seq.size();
     }
 
-    Constant(pos_type l)
+    explicit Constant(pos_type l)
       : n(l), count(0) {
     }
 
@@ -280,13 +280,13 @@ class Linear {
     typedef T element_type;
 
     template<typename alphabet, typename seqpos>
-    Linear(const Basic_Sequence<alphabet, seqpos> &seq)
+    explicit Linear(const Basic_Sequence<alphabet, seqpos> &seq)
       : count(0) {
       n = seq.size();
       init();
     }
 
-    Linear(pos_type l)
+    explicit Linear(pos_type l)
       : n(l), count(0) {
       init();
     }
@@ -458,7 +458,7 @@ class Quadratic {
     typedef T element_type;
 
     template<typename alphabet, typename seqpos>
-    Quadratic(const Basic_Sequence<alphabet, seqpos> &seq)
+    explicit Quadratic(const Basic_Sequence<alphabet, seqpos> &seq)
 #ifdef STATS
       : count(0)
 #endif
@@ -467,7 +467,7 @@ class Quadratic {
       init();
     }
 
-      Quadratic(pos_type l)
+      explicit Quadratic(pos_type l)
         : n(l)
 #ifdef STATS
           , count(0)

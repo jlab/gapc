@@ -82,7 +82,7 @@ template<class T> struct yp_split {
 template<class T> struct yp_split_p {
  public:
   yp_split_p() {}
-  yp_split_p(int depth) {
+  explicit yp_split_p(int depth) {
       this->depth = depth;
   }
   int depth;
@@ -97,7 +97,7 @@ template<class T> struct yp_split_p_raw {
 
 template <typename T> class yp_deleter {
  public:
-  yp_deleter(T* pointer) {
+  explicit yp_deleter(T* pointer) {
   l.reset(pointer);
   }
   yp_deleter(const yp_deleter& deleter) {
@@ -176,7 +176,7 @@ struct yp_sorter {
 
 template<class T, typename Sorter> struct yp_fullsorter {
  public:
-     yp_fullsorter(Sorter &c) {
+     explicit yp_fullsorter(Sorter &c) {
          this->c = c;
      }
 

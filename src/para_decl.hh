@@ -46,7 +46,7 @@ class Base {
 
 
  protected:
-  Base(Type t) : type(t) {}
+  explicit Base(Type t) : type(t) {}
   Base(const Loc &l, Type t) : loc(l), type(t) {}
   virtual ~Base();
 
@@ -95,7 +95,8 @@ class Multi : public Base {
 
 
  public:
-  Multi(const std::list<Simple*> &l) : Base(MULTI), list_(l), type_(0) {
+  explicit Multi(const std::list<Simple*> &l) : Base(MULTI), list_(l),
+  type_(0) {
   }
 
   Multi(const std::list<Base*> &l, const Loc &lo);

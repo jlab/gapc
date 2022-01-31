@@ -55,7 +55,7 @@ template<class TKey, class TValue> class SymbolTable {
     }
 
 
-    SymbolTable(SymbolTable<TKey, TValue>* parent)
+    explicit SymbolTable(SymbolTable<TKey, TValue>* parent)
       : parentTable(parent) {
     }
 

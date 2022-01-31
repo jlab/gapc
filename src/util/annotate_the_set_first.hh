@@ -147,7 +147,7 @@ class FirstSetAttribute : public Attribute {
     Util::FirstSet firstSet;
 
  public:
-    FirstSetAttribute(FirstSet firstSet);
+    explicit FirstSetAttribute(FirstSet firstSet);
     FirstSetAttribute(FirstSetAttribute& a);
     ~FirstSetAttribute();
 

@@ -35,7 +35,7 @@ class Init_Decls : public Visitor {
   std::string prefix;
  public:
   Init_Decls() : ret(0), arg(0) {}
-  Init_Decls(const std::string &s) : ret(0), arg(0), prefix(s) {}
+  explicit Init_Decls(const std::string &s) : ret(0), arg(0), prefix(s) {}
 
 
   void visit(Symbol::NT &n);

@@ -317,7 +317,7 @@ BOOST_AUTO_TEST_CASE ( const_rope_iter )
   Rope r;
 
   Rope::iterator a = r.begin();
-  Rope::const_iterator b = a;
+  [[maybe_unused]] Rope::const_iterator b = a;
 
   append(r, "foobar");
   std::string s;
