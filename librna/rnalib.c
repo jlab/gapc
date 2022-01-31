@@ -274,7 +274,7 @@ static void decode(char *s, const char *x, const int len) {
      just the size, i.e. number of bases, of the unpaired loop region: l
 */
 static int jacobson_stockmayer(rsize l) {
-    return static_cast<int>(P->lxc*log((l)/(1.0 * MAXLOOP)));
+    return (int)(P->lxc*log((l)/(1.0 * MAXLOOP)));
 }
 
 /*
