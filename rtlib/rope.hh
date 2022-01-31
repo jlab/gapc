@@ -398,7 +398,7 @@ class Ref {
       append(s, std::strlen(s));
     }
 
-    explicit Ref(const char *s)
+    Ref(const char *s)
       : first(0), last(0), empty_(false), readonly(false) {
       assert(s);
       if (s && *s)
