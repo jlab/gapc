@@ -25,14 +25,14 @@
 #ifndef RTLIB_RNA_HH_
 #define RTLIB_RNA_HH_
 
+extern "C" {
+#include <rnalib.h>
+}
+
 #include <cstring>
 #include <exception>
 #include <cmath>
 #include <vector>
-
-extern "C" {
-#include <rnalib.h>
-}
 
 #include "sequence.hh"
 #include "subsequence.hh"
@@ -107,7 +107,7 @@ class BaseException : public std::exception {
     char *msg;
 
  public:
-    BaseException(char c) : std::exception(), z(c), msg(0) {
+    explicit BaseException(char c) : std::exception(), z(c), msg(0) {
       msg = new char[100];
       msg[0] = 0;
     }
