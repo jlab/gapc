@@ -41,15 +41,15 @@ struct neq {
 
 // see also http://lists.boost.org/Archives/boost/2007/08/126826.php
 #include <boost/lambda/lambda.hpp>
-using namespace boost::lambda;
+// using namespace boost::lambda;
 #define CHECK_NOT_EQ(L, R) \
-  BOOST_CHECK_PREDICATE( _1 != _2, (L)(R))
+  BOOST_CHECK_PREDICATE( boost::lambda::_1 != boost::lambda::_2, (L)(R))
 
 #define CHECK_LESS(L, R) \
-  BOOST_CHECK_PREDICATE( _1 < _2, (L)(R))
+  BOOST_CHECK_PREDICATE( boost::lambda::_1 < boost::lambda::_2, (L)(R))
 
 #define CHECK_GREATER(L, R) \
-  BOOST_CHECK_PREDICATE( _1 > _2, (L)(R))
+  BOOST_CHECK_PREDICATE( boost::lambda::_1 > boost::lambda::_2, (L)(R))
 
 #define CHECK_EQ(L, R) BOOST_CHECK_EQUAL(L, R)
 
