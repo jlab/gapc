@@ -681,6 +681,16 @@ inline void append(rope::Ref<X> &str, double i) {
 }
 
 template<typename X>
+inline bool operator!=(const rope::Ref<X> &str, const char *s) {
+  return str != Rope(s);
+}
+
+template<typename X>
+inline bool operator==(const rope::Ref<X> &str, const char *s) {
+  return str == Rope(s);
+}
+
+template<typename X>
 inline Rope operator+=(rope::Ref<X> &str, const Rope &i) {
   Rope res;
   append(res, str);
