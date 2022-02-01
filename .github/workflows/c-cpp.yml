@@ -138,8 +138,9 @@ jobs:
     - uses: actions/checkout@v1
     - uses: actions/setup-python@v1
     - run: pip install cpplint
-    - run: cpplint --recursive --counting 'detailed' --filter="-runtime/references,-runtime/explicit" --extensions=cc,hh src/ rtlib/
+    - run: cpplint --recursive --counting 'detailed' --filter="-runtime/references" --extensions=cc,hh src/ rtlib/
     - run: cpplint --counting 'detailed' --filter="-build/include_subdir,-readability/casting,-runtime/arrays" --extensions=c,h librna/rnalib.{c,h}
+    - run: cpplint --recursive --counting 'detailed' --filter="-runtime/references" testdata/unittest/*
     - uses: vishnudxb/cancel-workflow@v1.2
       if: failure()
       with:

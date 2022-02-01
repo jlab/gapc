@@ -169,12 +169,12 @@ class Base {
   bool one_per_class();
 
   static void set_no_coopt() {
-    no_coopt_ = true;
+    no_coopt_ = Bool(true);
   }
   static bool no_coopt() { return no_coopt_; }
 
   static void set_no_coopt_class() {
-    no_coopt_class_ = true;
+    no_coopt_class_ = Bool(true);
   }
   static bool no_coopt_class() { return no_coopt_class_; }
 

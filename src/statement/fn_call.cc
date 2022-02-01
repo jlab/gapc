@@ -86,7 +86,7 @@ void Statement::Fn_Call::add_arg(Table_Decl &vdecl) {
 }
 
 void Statement::Fn_Call::add(Table_Decl &v) {
-  is_obj = true;
+  is_obj = Bool(true);
 
   add_arg(new std::string(v.name()));
 

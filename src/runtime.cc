@@ -71,7 +71,7 @@ Runtime::Poly::Poly(const Yield::Multi &s)
   Poly p(*i);
   ++i;
   for (; i != s.end(); ++i)
-    p *= *i;
+    p *= Poly(*i);
   *this = p;
 }
 

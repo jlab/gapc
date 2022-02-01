@@ -1,3 +1,25 @@
+/* {{{
+
+    This file is part of gapc (GAPC - Grammars, Algebras, Products - Compiler;
+      a system to compile algebraic dynamic programming programs)
+
+    Copyright (C) 2008-2011  Georg Sauthoff
+         email: gsauthof@techfak.uni-bielefeld.de or gsauthof@sdf.lonestar.org
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+}}} */
 
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MAIN
@@ -8,13 +30,13 @@
 #include "../../rtlib/vector_sparse.hh"
 
 struct cmp_stefan {
-  bool operator()(const std::pair<char, int> &src, const std::pair<char, int> &dst) const     {
+  bool operator()(const std::pair<char, int> &src,
+                  const std::pair<char, int> &dst) const {
     return (src.second < dst.second);
   }
 };
 
-BOOST_AUTO_TEST_CASE( stapel )
-{
+BOOST_AUTO_TEST_CASE(stapel) {
   Stapel<size_t> stack;
   stack.resize(3);
   stack.push(23);
@@ -31,24 +53,20 @@ BOOST_AUTO_TEST_CASE( stapel )
 
 struct A {
   static size_t count;
-  A()
-  {
+  A() {
     ++count;
   }
-  A(const A &a)
-  {
+  A(const A &a) {
     ++count;
   }
-  ~A()
-  {
+  ~A() {
     --count;
   }
 };
 
 size_t A::count = 0;
 
-BOOST_AUTO_TEST_CASE( vector )
-{
+BOOST_AUTO_TEST_CASE(vector) {
   A a;
   Vector_Sparse<A> *vector = new Vector_Sparse<A>();
   vector->resize(4096);
@@ -61,8 +79,7 @@ BOOST_AUTO_TEST_CASE( vector )
   CHECK_EQ(A::count, 1u);
 }
 
-BOOST_AUTO_TEST_CASE( vector2 )
-{
+BOOST_AUTO_TEST_CASE(vector2) {
   Vector_Sparse<size_t> v;
   v.resize(4096);
   v.init(23, 46);
@@ -73,8 +90,7 @@ BOOST_AUTO_TEST_CASE( vector2 )
   CHECK_EQ(v(187), 2u*187u);
 }
 
-BOOST_AUTO_TEST_CASE( reverse )
-{
+BOOST_AUTO_TEST_CASE(reverse) {
   Stapel<size_t> stack;
   stack.resize(3);
   stack.push(23);
@@ -90,8 +106,7 @@ BOOST_AUTO_TEST_CASE( reverse )
     CHECK_EQ(t[i], o[i]);
 }
 
-BOOST_AUTO_TEST_CASE( vector_itr )
-{
+BOOST_AUTO_TEST_CASE(vector_itr) {
   Vector_Sparse<size_t> v;
   v.resize(4096);
   v.init(23, 46);
@@ -106,7 +121,7 @@ BOOST_AUTO_TEST_CASE( vector_itr )
     CHECK_EQ(a[i], t[i]);
 }
 
-BOOST_AUTO_TEST_CASE( sort ) {
+BOOST_AUTO_TEST_CASE(sort) {
   // https://github.com/jlab/gapc/issues/40
   // SMJ: I found that sorting vector_sparce did yield wrong results if
   //      executed on OSX

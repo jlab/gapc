@@ -1,13 +1,42 @@
+/* {{{
+
+    This file is part of gapc (GAPC - Grammars, Algebras, Products - Compiler;
+      a system to compile algebraic dynamic programming programs)
+
+    Copyright (C) 2008-2011  Georg Sauthoff
+         email: gsauthof@techfak.uni-bielefeld.de or gsauthof@sdf.lonestar.org
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+}}} */
+
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MAIN
 #define BOOST_TEST_MODULE shape
+#include <iostream>
+#include <ctime>
 #include <boost/test/unit_test.hpp>
 
 #include "macros.hh"
 
 #include "../../rtlib/shape.hh"
 
-#include <iostream>
+#include <boost/random/linear_congruential.hpp>
+#include <boost/random/uniform_int.hpp>
+#include <boost/random/variate_generator.hpp>
+#include <boost/random.hpp>
+
 
 #ifdef __APPLE__
   // work around weird Mac OS X type ambiguity problems
@@ -22,8 +51,7 @@
   typedef size_t size_shape;
 #endif
 
-BOOST_AUTO_TEST_CASE( char_shape )
-{
+BOOST_AUTO_TEST_CASE(char_shape) {
   Fiber<unsigned char, unsigned char> f;
   f.append('[');
   f.append(']');
@@ -59,8 +87,7 @@ BOOST_AUTO_TEST_CASE( char_shape )
   CHECK_EQ(t.str(), "[]__]__][]__]__]");
 }
 
-BOOST_AUTO_TEST_CASE( char_shape_odd )
-{
+BOOST_AUTO_TEST_CASE(char_shape_odd) {
   Fiber<unsigned char, unsigned char> f;
   f.append('[');
   f.append(']');
@@ -95,8 +122,7 @@ BOOST_AUTO_TEST_CASE( char_shape_odd )
   CHECK_EQ(t.str(), "[]__]_][]__]_]");
 }
 
-BOOST_AUTO_TEST_CASE( char_shape_eq )
-{
+BOOST_AUTO_TEST_CASE(char_shape_eq) {
   Fiber<unsigned char, unsigned char> f;
   f.append('[');
   f.append(']');
@@ -118,8 +144,7 @@ BOOST_AUTO_TEST_CASE( char_shape_eq )
   CHECK_NOT_EQ(f, h);
 }
 
-BOOST_AUTO_TEST_CASE( char_shape_less )
-{
+BOOST_AUTO_TEST_CASE(char_shape_less) {
   Fiber<unsigned char, unsigned char> f;
   f.append('[');
   f.append(']');
@@ -144,8 +169,7 @@ BOOST_AUTO_TEST_CASE( char_shape_less )
   CHECK(!(g < h));
 }
 
-BOOST_AUTO_TEST_CASE( shape )
-{
+BOOST_AUTO_TEST_CASE(shape) {
   Shape h;
   h.append('[');
   h.append(']');
@@ -169,8 +193,7 @@ BOOST_AUTO_TEST_CASE( shape )
 
 #include <set>
 
-BOOST_AUTO_TEST_CASE( shape_set )
-{
+BOOST_AUTO_TEST_CASE(shape_set) {
   Shape h;
   h.append('[');
   h.append(']');
@@ -194,10 +217,10 @@ BOOST_AUTO_TEST_CASE( shape_set )
 
 #include "../../rtlib/cm_alph.hh"
 
-BOOST_AUTO_TEST_CASE ( cm_alph )
-{
-  //std::cerr << "======================================" << std::endl;
-  typedef Fiber<size_shape, unsigned char, CmAlph<size_shape, unsigned char> > Ambi;
+BOOST_AUTO_TEST_CASE(cm_alph) {
+  // std::cerr << "======================================" << std::endl;
+  typedef Fiber<size_shape, unsigned char,
+                CmAlph<size_shape, unsigned char> > Ambi;
   Ambi s;
   s.append('D');
   s.append('I');
@@ -250,9 +273,9 @@ BOOST_AUTO_TEST_CASE ( cm_alph )
   CHECK_EQ(z.str(), "KRrDILPMl");
 }
 
-BOOST_AUTO_TEST_CASE ( cm_alph_app )
-{
-  typedef Fiber<size_shape, unsigned char, CmAlph<size_shape, unsigned char> > Ambi;
+BOOST_AUTO_TEST_CASE(cm_alph_app) {
+  typedef Fiber<size_shape, unsigned char,
+                CmAlph<size_shape, unsigned char> > Ambi;
   Ambi s;
   s.append('D');
   s.append('I');
@@ -268,25 +291,17 @@ BOOST_AUTO_TEST_CASE ( cm_alph_app )
   CHECK_EQ(z.str(), "DIlLKD");
 }
 
-#include <boost/random/linear_congruential.hpp>
-#include <boost/random/uniform_int.hpp>
-#include <boost/random/variate_generator.hpp>
-#include <boost/random.hpp>
-#include <ctime>
-
 typedef boost::mt19937 rand_gen;
 typedef boost::uniform_int<> rand_dist;
 
 template <typename T, typename Size, typename alphset >
 static
-void app(Fiber<T, Size, alphset> &a, const std::string &s)
-{
-  for (std::string::const_iterator i = s.begin(); i!=s.end(); ++i)
-    a.append(*i);
+void app(Fiber<T, Size, alphset> *a, const std::string &s) {
+  for (std::string::const_iterator i = s.begin(); i != s.end(); ++i)
+    a->append(*i);
 }
 
-BOOST_AUTO_TEST_CASE ( cm_alph_random )
-{
+BOOST_AUTO_TEST_CASE(cm_alph_random) {
   typedef Fiber<uint32_t, unsigned char, CmAlph<uint32_t, unsigned char> >
     Ambi;
 
@@ -308,9 +323,9 @@ BOOST_AUTO_TEST_CASE ( cm_alph_random )
     for (int a = 0; a < die_len(); ++a) {
       t.push_back(alph[die_alph()]);
     }
-    app(a, s);
-    app(b, t);
-    //std::cerr << "App: " << s << " " << t << '\n';
+    app(&a, s);
+    app(&b, t);
+    // std::cerr << "App: " << s << " " << t << '\n';
     x.append(a);
     x.append(b);
     std::ostringstream o;
@@ -319,14 +334,12 @@ BOOST_AUTO_TEST_CASE ( cm_alph_random )
   }
 }
 
-BOOST_AUTO_TEST_CASE ( shape_random )
-{
-
+BOOST_AUTO_TEST_CASE(shape_random) {
   rand_gen gen(static_cast<unsigned int>(std::time(0)));
   boost::variate_generator<rand_gen&, rand_dist>
-    die_alph(gen, rand_dist(0,2));
+    die_alph(gen, rand_dist(0, 2));
   boost::variate_generator<rand_gen&, rand_dist>
-    die_len(gen, rand_dist(1,100));
+    die_len(gen, rand_dist(1, 100));
 
   const char alph[3] =
      { '[', ']', '_' };
@@ -340,9 +353,9 @@ BOOST_AUTO_TEST_CASE ( shape_random )
     for (int a = 0; a < die_len(); ++a) {
       t.push_back(alph[die_alph()]);
     }
-    app(a, s);
-    app(b, t);
-    //std::cerr << "App: " << s << " " << t << '\n';
+    app(&a, s);
+    app(&b, t);
+    // std::cerr << "App: " << s << " " << t << '\n';
     x.append(a);
     x.append(b);
     std::ostringstream o;
@@ -351,8 +364,7 @@ BOOST_AUTO_TEST_CASE ( shape_random )
   }
 }
 
-BOOST_AUTO_TEST_CASE ( shape_itr )
-{
+BOOST_AUTO_TEST_CASE(shape_itr) {
   Shape a;
   a.append('[');
   Shape::iterator i = a.begin();
@@ -364,8 +376,7 @@ BOOST_AUTO_TEST_CASE ( shape_itr )
   CHECK(i != a.begin());
 }
 
-BOOST_AUTO_TEST_CASE (shape_rev_itr )
-{
+BOOST_AUTO_TEST_CASE(shape_rev_itr) {
   Shape a;
   a.append('[');
   a.append('_');
@@ -387,8 +398,7 @@ BOOST_AUTO_TEST_CASE (shape_rev_itr )
   CHECK(i != a.rbegin());
 }
 
-BOOST_AUTO_TEST_CASE (shape_rev_itr_cm )
-{
+BOOST_AUTO_TEST_CASE(shape_rev_itr_cm) {
   typedef Fiber<size_shape, unsigned char, CmAlph<size_shape, unsigned char> >
     Str;
   Str a;
@@ -412,13 +422,12 @@ BOOST_AUTO_TEST_CASE (shape_rev_itr_cm )
   CHECK(i != a.rbegin());
 }
 
-BOOST_AUTO_TEST_CASE (shape_rev_itr_rand )
-{
+BOOST_AUTO_TEST_CASE(shape_rev_itr_rand) {
   typedef Fiber<size_shape, unsigned char, CmAlph<size_shape, unsigned char> >
     Str;
   rand_gen gen(static_cast<unsigned int>(std::time(0)));
   boost::variate_generator<rand_gen&, rand_dist>
-    die_len(gen, rand_dist(0,50));
+    die_len(gen, rand_dist(0, 50));
   boost::variate_generator<rand_gen&, rand_dist>
     die_alph(gen, rand_dist(0, 8));
   const char alph[9] =
@@ -428,7 +437,7 @@ BOOST_AUTO_TEST_CASE (shape_rev_itr_rand )
     for (size_t i = 0; i < size_t(die_len()); ++i)
       s.push_back(alph[die_alph()]);
     Str a;
-    app(a, s);
+    app(&a, s);
     std::string t;
     for (Str::reverse_iterator i = a.rbegin(); i != a.rend(); ++i)
       t.push_back(*i);
@@ -437,13 +446,12 @@ BOOST_AUTO_TEST_CASE (shape_rev_itr_rand )
   }
 }
 
-BOOST_AUTO_TEST_CASE (shape_rev_itr_rand_set )
-{
+BOOST_AUTO_TEST_CASE(shape_rev_itr_rand_set) {
   typedef Fiber<size_shape, unsigned char, CmAlph<size_shape, unsigned char> >
     Str;
   rand_gen gen(static_cast<unsigned int>(std::time(0)));
   boost::variate_generator<rand_gen&, rand_dist>
-    die_len(gen, rand_dist(2,50));
+    die_len(gen, rand_dist(2, 50));
   boost::variate_generator<rand_gen&, rand_dist>
     die_alph(gen, rand_dist(0, 8));
   const char alph[9] =
@@ -455,7 +463,7 @@ BOOST_AUTO_TEST_CASE (shape_rev_itr_rand_set )
       s.push_back(alph[die_alph()]);
 
     Str a;
-    app(a, s);
+    app(&a, s);
 
     boost::variate_generator<rand_gen&, rand_dist>
       die_rep(gen, rand_dist(0, l-1));
@@ -464,11 +472,11 @@ BOOST_AUTO_TEST_CASE (shape_rev_itr_rand_set )
 
     size_t u = 0;
     Str::reverse_iterator i = a.rbegin();
-    for (; u<rep; ++i, u++)
-      ;
-    assert(i!=a.rend());
+    for (; u < rep; ++i, u++) {}
+    assert(i != a.rend());
     char c = alph[die_alph()];
-    //std::cout << "Replace " << rep << " th with " << c << "( " << s << " " << s.size() << " )" << std::endl;
+    // std::cout << "Replace " << rep << " th with " << c << "( " << s << " "
+    //           << s.size() << " )" << std::endl;
     i.set(c);
     std::reverse(s.begin(), s.end());
     s[u] = c;
@@ -484,13 +492,12 @@ BOOST_AUTO_TEST_CASE (shape_rev_itr_rand_set )
   }
 }
 
-BOOST_AUTO_TEST_CASE (shape_itr_rand )
-{
+BOOST_AUTO_TEST_CASE(shape_itr_rand) {
   typedef Fiber<size_shape, unsigned char, CmAlph<size_shape, unsigned char> >
     Str;
   rand_gen gen(static_cast<unsigned int>(std::time(0)));
   boost::variate_generator<rand_gen&, rand_dist>
-    die_len(gen, rand_dist(0,50));
+    die_len(gen, rand_dist(0, 50));
   boost::variate_generator<rand_gen&, rand_dist>
     die_alph(gen, rand_dist(0, 8));
   const char alph[9] =
@@ -500,7 +507,7 @@ BOOST_AUTO_TEST_CASE (shape_itr_rand )
     for (size_t i = 0; i < size_t(die_len()); ++i)
       s.push_back(alph[die_alph()]);
     Str a;
-    app(a, s);
+    app(&a, s);
     std::string t;
     for (Str::iterator i = a.begin(); i != a.end(); ++i)
       t.push_back(*i);
@@ -508,8 +515,7 @@ BOOST_AUTO_TEST_CASE (shape_itr_rand )
   }
 }
 
-BOOST_AUTO_TEST_CASE (shape_drop)
-{
+BOOST_AUTO_TEST_CASE(shape_drop) {
   Shape a;
   a.append('[');
   a.append('_');
@@ -520,8 +526,7 @@ BOOST_AUTO_TEST_CASE (shape_drop)
   CHECK_EQ(*i, '_');
 }
 
-BOOST_AUTO_TEST_CASE (shape_push_after)
-{
+BOOST_AUTO_TEST_CASE(shape_push_after) {
   Shape a;
   a.append('[');
   a.append('[');
@@ -534,8 +539,7 @@ BOOST_AUTO_TEST_CASE (shape_push_after)
   CHECK_EQ(o.str(), "[[[]_]");
 }
 
-BOOST_AUTO_TEST_CASE (shape_push_before)
-{
+BOOST_AUTO_TEST_CASE(shape_push_before) {
   Shape a;
   a.append('[');
   a.append('[');
@@ -548,9 +552,7 @@ BOOST_AUTO_TEST_CASE (shape_push_before)
   CHECK_EQ(o.str(), "[[[]__");
 }
 
-
-BOOST_AUTO_TEST_CASE( empty_class )
-{
+BOOST_AUTO_TEST_CASE(empty_class) {
   Shape a;
   a.append('_');
   CHECK_EQ(a, '_');
@@ -564,9 +566,7 @@ BOOST_AUTO_TEST_CASE( empty_class )
   CHECK_NOT_EQ(b, '_');
 }
 
-
-BOOST_AUTO_TEST_CASE( opplus )
-{
+BOOST_AUTO_TEST_CASE(opplus) {
   Shape a;
   Shape b;
   b.append(Shape("_]"));
@@ -576,8 +576,7 @@ BOOST_AUTO_TEST_CASE( opplus )
   CHECK_EQ(o.str(), "[_][]");
 }
 
-BOOST_AUTO_TEST_CASE( frontback )
-{
+BOOST_AUTO_TEST_CASE(frontback) {
   Shape a;
   a.append(Shape("_]"));
   std::ostringstream o;
@@ -586,8 +585,7 @@ BOOST_AUTO_TEST_CASE( frontback )
   CHECK_EQ(*o.str().rbegin(), back(a));
 }
 
-BOOST_AUTO_TEST_CASE( tailer )
-{
+BOOST_AUTO_TEST_CASE(tailer) {
   Shape a;
   a.append(Shape("_["));
   a.append(Shape("]["));

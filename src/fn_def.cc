@@ -2939,7 +2939,7 @@ void Fn_Def::remove_return_list() {
 // set the kind of function (predefined types, modes, yield type)
 Mode Fn_Def::derive_role() const {
   Mode r;
-  r.set(Yield::UP);
+  r.set(Yield::Poly(Yield::UP));
   if (!stmts.back()->is(Statement::RETURN))
     return r;
   Statement::Return *ret = dynamic_cast<Statement::Return*>(stmts.back());

@@ -23,7 +23,7 @@ algebra count auto count ;
 
 algebra shape5 implements Algebra(alphabet = char, answer = shapestring) {
   shapestring sadd(char b, shapestring x) {
-    if (x == "") {
+    if (x == shapestring("")) {
       return "_" + x;
     } else {
       return x;
@@ -31,7 +31,7 @@ algebra shape5 implements Algebra(alphabet = char, answer = shapestring) {
   }
   
   shapestring cadd(shapestring x, shapestring y) {
-    if (y == "_") {
+    if (y == shapestring("_")) {
       return x;
     } else {
       return x + y;
@@ -39,7 +39,7 @@ algebra shape5 implements Algebra(alphabet = char, answer = shapestring) {
   }
   
   shapestring nil(void) {
-    return "";
+    return shapestring("");
   }
   
   shapestring combine(shapestring x, shapestring y) {
@@ -55,7 +55,7 @@ algebra shape5 implements Algebra(alphabet = char, answer = shapestring) {
   }
   
   shapestring hairpin(char llb, char lb, Subsequence u, char rb, char rrb) {
-    return "[]";
+    return shapestring("[]");
   }
   
   shapestring stack(char lb, shapestring x, char rb) {

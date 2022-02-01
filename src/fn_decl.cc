@@ -65,7 +65,7 @@ void Fn_Decl::init_table() {
   Fn_Decl *f = new Fn_Decl(r, s, l);
   f->types.push_back(r);
 
-  Yield::Size ys(1, 1);
+  Yield::Size ys(Yield::Poly(1), Yield::Poly(1));
   f->set_yield_size(ys);
 
   builtins[*s] = f;
@@ -74,7 +74,7 @@ void Fn_Decl::init_table() {
   s = new std::string("CONST_FLOAT");
   f = new Fn_Decl(r, s, l);
   f->types.push_back(r);
-  ys = Yield::Size(0, 0);
+  ys = Yield::Size(Yield::Poly(0), Yield::Poly(0));
   f->set_yield_size(ys);
   builtins[*s] = f;
 
@@ -82,7 +82,7 @@ void Fn_Decl::init_table() {
   s = new std::string("CONST_INT");
   f = new Fn_Decl(r, s, l);
   f->types.push_back(r);
-  ys = Yield::Size(0, 0);
+  ys = Yield::Size(Yield::Poly(0), Yield::Poly(0));
   f->set_yield_size(ys);
   builtins[*s] = f;
 
@@ -90,7 +90,7 @@ void Fn_Decl::init_table() {
   s = new std::string("CONST_CHAR");
   f = new Fn_Decl(r, s, l);
   f->types.push_back(r);
-  ys = Yield::Size(0, 0);
+  ys = Yield::Size(Yield::Poly(0), Yield::Poly(0));
   f->set_yield_size(ys);
   builtins[*s] = f;
 
@@ -98,7 +98,7 @@ void Fn_Decl::init_table() {
   s = new std::string("CONST_RATIO");
   f = new Fn_Decl(r, s, l);
   f->types.push_back(r);
-  ys = Yield::Size(0, 0);
+  ys = Yield::Size(Yield::Poly(0), Yield::Poly(0));
   f->set_yield_size(ys);
   builtins[*s] = f;
 
@@ -116,7 +116,7 @@ void Fn_Decl::init_table() {
   s = new std::string("CONST_ROPE");
   f = new Fn_Decl(r, s, l);
   f->types.push_back(new Type::String());
-  ys = Yield::Size(0, 0);
+  ys = Yield::Size(Yield::Poly(0), Yield::Poly(0));
   f->set_yield_size(ys);
   builtins[*s] = f;
 
@@ -126,7 +126,7 @@ void Fn_Decl::init_table() {
   f->types.push_back(r);
   /* yield size will be later determined according to constant terminal
      arguments like ROPE("stefan") */
-  ys = Yield::Size(1, 1);
+  ys = Yield::Size(Yield::Poly(1), Yield::Poly(1));
   f->set_yield_size(ys);
   builtins[*s] = f;
 }
