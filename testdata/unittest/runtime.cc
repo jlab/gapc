@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE( runtime_poly )
   a = Poly();
   b = Poly(42, 32);
   b += Poly(23,43);
-  b += 1;
+  b += Poly(1);
   b.zero();
   CHECK(!(a<b) && !(a>b));
 
@@ -184,7 +184,7 @@ c += Poly(12443190, 4);
 c += Poly(2646798, 3);
 c += Poly(392100, 2);
 c += Poly(35992, 1);
-c += 1536;
+c += Poly(1536);
 
   CHECK(!(c<a)&&!(c>a));
 
@@ -199,11 +199,11 @@ BOOST_AUTO_TEST_CASE( runtime_saturate)
   i--;
   CHECK_EQ(i, UINT32_MAX);
   Poly a(i, 5);
-  a += 1;
+  a += Poly(1);
   CHECK_EQ(a[5], i);
   i -= 23;
   a = Poly(i);
-  a += 42;
+  a += Poly(42);
   CHECK_EQ(a[0], UINT32_MAX);
   a += Poly(UINT32_MAX, 5);
   a *= Poly(i);

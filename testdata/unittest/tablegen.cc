@@ -61,8 +61,8 @@ BOOST_AUTO_TEST_CASE( cons )
   std::vector<Table> v;
   Table t;
   t |= Table::CONSTANT;
-  t.set_left_rest(Yield::Size(0, 2));
-  t.set_right_rest(Yield::Size(0, 3));
+  t.set_left_rest(Yield::Size(Yield::Poly(0), Yield::Poly(2)));
+  t.set_right_rest(Yield::Size(Yield::Poly(0), Yield::Poly(3)));
   v.push_back(t);
 
   Printer::Cpp cpp;
@@ -157,13 +157,13 @@ BOOST_AUTO_TEST_CASE( left_lin2 )
   Table t;
   t |= Table::LINEAR;
   t.set_sticky(Table::LEFT);
-  t.set_left_rest(Yield::Size(0, 2));
+  t.set_left_rest(Yield::Size(Yield::Poly(0), Yield::Poly(2)));
   v.push_back(t);
 
   Table u;
   u |= Table::LINEAR;
   u.set_sticky(Table::LEFT);
-  u.set_left_rest(Yield::Size(0, 1));
+  u.set_left_rest(Yield::Size(Yield::Poly(0), Yield::Poly(1)));
   v.push_back(u);
 
   Printer::Cpp cpp;
@@ -214,14 +214,14 @@ BOOST_AUTO_TEST_CASE( right_lin )
   Table t;
   t |= Table::LINEAR;
   t.set_sticky(Table::RIGHT);
-  t.set_right_rest(Yield::Size(0, 2));
+  t.set_right_rest(Yield::Size(Yield::Poly(0), Yield::Poly(2)));
   v.push_back(t);
 
 
   Table u;
   u |= Table::LINEAR;
   u.set_sticky(Table::RIGHT);
-  u.set_right_rest(Yield::Size(0, 1));
+  u.set_right_rest(Yield::Size(Yield::Poly(0), Yield::Poly(1)));
   v.push_back(u);
 
   Printer::Cpp cpp;

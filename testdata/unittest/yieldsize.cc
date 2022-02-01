@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE( yield_poly )
 
   q = Yield::UP;
   CHECK_EQ(q, n);
-  CHECK_NOT_EQ(r, Yield::UP);
+  CHECK_NOT_EQ(r, Yield::Poly(Yield::UP));
 
   q.set(42);
   CHECK_EQ(q, r);
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE( yield_size )
   CHECK_EQ(a.high(), Yield::UP);
   a.set(23, Yield::UP);
   a /= b;
-  CHECK_NOT_EQ(a.low(), Yield::UP);
+  CHECK_NOT_EQ(a.low(), Yield::Poly(Yield::UP));
   CHECK_EQ(a.high(), Yield::UP);
 }
 

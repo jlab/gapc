@@ -141,9 +141,9 @@ BOOST_AUTO_TEST_CASE ( rope_rand )
 
 BOOST_AUTO_TEST_CASE ( cstring )
 {
-  Rope s = "Hello";
+  Rope s = Rope("Hello");
   append(s, " World");
-  CHECK_EQ(s, "Hello World");
+  CHECK_EQ(s, Rope("Hello World"));
 }
 
 #include "../../rtlib/list.hh"
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE( collision )
 
 BOOST_AUTO_TEST_CASE ( front_ )
 {
-  Rope s = "Hello";
+  Rope s = Rope("Hello");
   CHECK_EQ('H', front(s));
 }
 
@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE ( empty_rope )
 BOOST_AUTO_TEST_CASE ( is_empty_rope )
 {
   Rope s("");
-  CHECK_EQ("", s);
+  CHECK_EQ(Rope(""), s);
 }
 
 
@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE ( empty_ass )
   Rope s, t;
   t.append('x', 0);
   s = t;
-  CHECK_EQ(s, "");
+  CHECK_EQ(s, Rope(""));
 }
 
 BOOST_AUTO_TEST_CASE ( empty_copy )
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE ( empty_copy )
   Rope y;
   s.append(x);
   y = s;
-  CHECK_EQ(y, "");
+  CHECK_EQ(y, Rope(""));
 }
 
 BOOST_AUTO_TEST_CASE ( empty_copy2 )
@@ -250,7 +250,7 @@ BOOST_AUTO_TEST_CASE ( empty_copy2 )
   Rope y;
   s.append(x);
   y = s;
-  CHECK_EQ(y, "");
+  CHECK_EQ(y, Rope(""));
 }
 
 BOOST_AUTO_TEST_CASE ( rope_size )
