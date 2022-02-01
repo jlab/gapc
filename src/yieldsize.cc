@@ -42,8 +42,8 @@ namespace Yield {
     if (f.type != Filter::WITH || !f.is(Filter::MIN_SIZE))
       return;
     uint32_t l = f.uint_arg();
-    if (min < l)
-      min = l;
+    if (min < Poly(l))
+      min = Poly(l);
   }
   void Size::with_max(const Filter &f) {
     if (f.type != Filter::WITH || !f.is(Filter::MAX_SIZE))
@@ -103,7 +103,7 @@ namespace Yield {
     std::vector<Size>::const_iterator j = o.array.begin();
     for (std::vector<Size>::iterator i = array.begin(); i != array.end();
         ++i, ++j)
-      if ((*i).high() != UP)
+      if ((*i).high() != Poly(UP))
         (*i).high() -= (*j).low();
   }
 

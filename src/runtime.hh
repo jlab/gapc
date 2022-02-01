@@ -65,13 +65,13 @@ class Poly {
  public:
   Poly() : n(0) { }
 
-  Poly(uint32_t term) : n(term+1) {
+  explicit Poly(uint32_t term) : n(term+1) {
   }
 
   Poly(uint32_t a, uint32_t b) : n(b+1) {
   }
 
-  Poly(const Table &t) {
+  explicit Poly(const Table &t) {
     assert(t.type() != Table::NONE);
     n = 1;
     switch (t.type()) {
@@ -84,7 +84,7 @@ class Poly {
     }
   }
 
-  Poly(const Yield::Poly &y) {
+  explicit Poly(const Yield::Poly &y) {
     if (y == Yield::UP) {
       n = 2;
     } else {
@@ -199,7 +199,7 @@ class Poly {
     coefficients.resize(1);
   }
 
-  Poly(uint32_t a) : n(0), exponential(false) {
+  explicit Poly(uint32_t a) : n(0), exponential(false) {
     coefficients.resize(1);
     coefficients[0] = a;
   }
@@ -212,13 +212,13 @@ class Poly {
   }
 
 
-  Poly(const Yield::Poly &p) : exponential(false) {
+  explicit Poly(const Yield::Poly &p) : exponential(false) {
     init(p);
   }
 
 
-  Poly(const Yield::Size &s);
-  Poly(const Yield::Multi &s);
+  explicit Poly(const Yield::Size &s);
+  explicit Poly(const Yield::Multi &s);
 
 
   uint32_t degree() const {
@@ -430,8 +430,8 @@ class Poly {
   }
 
 
-  Poly(const Table &t);
-  Poly(const std::vector<Table> &t);
+  explicit Poly(const Table &t);
+  explicit Poly(const std::vector<Table> &t);
 
 
   std::ostream &put(std::ostream &s) const;

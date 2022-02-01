@@ -629,7 +629,7 @@ Product::Nop::Nop(Times &times) : Two(NOP, times.left(), times.right()) {
        i != algebra_->choice_fns.end(); ++i) {
     Fn_Def *fn = i->second;
     fn->choice_mode().set(Mode::PRETTY);
-    fn->choice_mode().set(Yield::UP);
+    fn->choice_mode().set(Yield::Poly(Yield::UP));
   }
 }
 

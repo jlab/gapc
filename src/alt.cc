@@ -911,12 +911,12 @@ bool Alt::Multi::eliminate_lists() {
 
 bool Alt::Simple::init_list_sizes() {
   bool r = false;
-  if (has_moving_k() && list_size_ != Yield::UP) {
+  if (has_moving_k() && list_size_ != Yield::Poly(Yield::UP)) {
     list_size_ = Yield::UP;
     r = true;
   }
   bool args_uninit = false;
-  Yield::Poly t = 1;
+  Yield::Poly t = Yield::Poly(1);
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end();
        ++i) {
     if ((*i)->is(Fn_Arg::ALT)) {
@@ -941,7 +941,7 @@ bool Alt::Simple::init_list_sizes() {
 
 
 bool Alt::Link::init_list_sizes() {
-  if (nt->list_size() != 0) {
+  if (nt->list_size() != Yield::Poly(0)) {
     if (list_size_ == 0) {
       list_size_ = nt->list_size();
       assert(list_size_ > 0);
@@ -1514,7 +1514,7 @@ void Alt::Simple::init_guards() {
        i != left_indices.end(); ++i, ++j, ++k) {
     Expr::Base *e = (*j)->minus(*i);
     l.push_back(new Expr::Greater_Eq(e, (*k).low()));
-    if ((*k).high() != Yield::UP) {
+    if ((*k).high() != Yield::Poly(Yield::UP)) {
       l.push_back(new Expr::Less_Eq(e, (*k).high()));
     }
   }
@@ -2758,7 +2758,7 @@ void Alt::Link::multi_init_calls(
     return;
   }
   Runtime::Poly p(rest);
-  p *= m_ys;
+  p *= Runtime::Poly(m_ys);
   calls = p;
   for (size_t i = 0; i < base_tracks; ++i) {
     calls.divide_by_n();
