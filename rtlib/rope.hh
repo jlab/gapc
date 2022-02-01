@@ -765,9 +765,25 @@ Rope operator+(const Rope &a, char b) {
 }
 
 inline
+Rope operator+(const Rope &a, const char *b) {
+  Rope r;
+  append(r, a);
+  append(r, Rope(b));
+  return r;
+}
+
+inline
 Rope operator+(char a, const Rope &b) {
   Rope r;
   append(r, a);
+  append(r, b);
+  return r;
+}
+
+inline
+Rope operator+(const char *a, const Rope &b) {
+  Rope r;
+  append(r, Rope(a));
   append(r, b);
   return r;
 }
