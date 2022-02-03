@@ -30,7 +30,7 @@ class Bool {
 
  public:
   Bool() : b(false) {}
-  Bool(bool a) : b(a) {}
+  explicit Bool(bool a) : b(a) {}
 
   operator bool() const { return b; }
 };

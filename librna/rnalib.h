@@ -1,5 +1,28 @@
-#ifndef RNALIB_H
-#define RNALIB_H
+/* {{{
+
+    This file is part of gapc (GAPC - Grammars, Algebras, Products - Compiler;
+      a system to compile algebraic dynamic programming programs)
+
+    Copyright (C) 2008-2011  Georg Sauthoff
+         email: gsauthof@techfak.uni-bielefeld.de or gsauthof@sdf.lonestar.org
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+}}} */
+
+#ifndef LIBRNA_RNALIB_H_
+#define LIBRNA_RNALIB_H_
 
 // Sun CC (C++ compiler) really makes an effort to educate the user that parts
 // of C99 are not standarized in the last C++ specification
@@ -10,7 +33,7 @@
 enum base_t {
   N_BASE, A_BASE, C_BASE, G_BASE, U_BASE, GAP_BASE, SEPARATOR_BASE };
 static char BASE_CHARS[SEPARATOR_BASE+1] = {
- 'N',    'A',    'C',    'G',    'U',    '_',      '+'};
+  'N', 'A', 'C', 'G', 'U', '_', '+'};
 
 enum iupac_t { N_IUPAC = 0,
   B_IUPAC = 7,
@@ -35,7 +58,8 @@ int duplex_energy(void);
 int hl_energy(const char *s, rsize i, rsize j);
 int hl_energy_stem(const char *s, rsize i, rsize j);
 int il_energy(const char *s, rsize i, rsize j, rsize k, rsize l);
-int bl_energy(const char *s, rsize bl, rsize i, rsize j, rsize br, rsize Xright);
+int bl_energy(const char *s, rsize bl, rsize i, rsize j, rsize br,
+              rsize Xright);
 int br_energy(const char *s, rsize bl, rsize i, rsize j, rsize br, rsize Xleft);
 int sr_energy(const char *s, rsize i, rsize j);
 int sr_pk_energy(char a, char b, char c, char d);
@@ -50,9 +74,9 @@ int ul_energy(void);
 int sbase_energy(void);
 int ss_energy(rsize i, rsize j);
 
-//for MacroState partition function
+// for MacroState partition function
 int dl_dangle_dg(enum base_t dangle, enum base_t i, enum base_t j);
-//for MacroState partition function
+// for MacroState partition function
 int dr_dangle_dg(enum base_t i, enum base_t j, enum base_t dangle);
 
 // not in rna.hh
@@ -64,7 +88,7 @@ double scale(int x);
 bool iupac_match(char base, char iupac_base);
 int bp_index(char x, char y);
 
-// for RNAhybrid
+/* the below functions are exposed to recreate energy computation of the original RNAhybrid, i.e. Haskell and ADPc */
 int bl_ent(rsize l);
 int il11_energy(const char *s, rsize i, rsize k, rsize l, rsize j);
 int il12_energy(const char *s, rsize i, rsize k, rsize l, rsize j);
@@ -73,4 +97,5 @@ int il22_energy(const char *s, rsize i, rsize k, rsize l, rsize j);
 int il_ent(rsize l);
 int il_stack(const char *s, rsize i, rsize k, rsize l, rsize j);
 int il_asym(rsize sl, rsize sr);
-#endif
+
+#endif  // LIBRNA_RNALIB_H_

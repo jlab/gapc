@@ -1,3 +1,26 @@
+/* {{{
+
+    This file is part of gapc (GAPC - Grammars, Algebras, Products - Compiler;
+      a system to compile algebraic dynamic programming programs)
+
+    Copyright (C) 2008-2011  Georg Sauthoff
+         email: gsauthof@techfak.uni-bielefeld.de or gsauthof@sdf.lonestar.org
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+}}} */
+
 // link against -lboost_unit_test_framework if boost/test/unit_test.hpp is
 // used ...
 
@@ -5,28 +28,27 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MAIN
 #define BOOST_TEST_MODULE tablegen
-#include <boost/test/unit_test.hpp>
 
 // include everything - no linking needed ...
-//#define BOOST_TEST_MAIN
-//#include <boost/test/included/unit_test_framework.hpp>
+// #define BOOST_TEST_MAIN
+// #include <boost/test/included/unit_test_framework.hpp>
+
+#include <map>
+#include <set>
+#include <string>
+#include <sstream>
+
+#include <boost/test/unit_test.hpp>
 
 #include "macros.hh"
 
 #include "../../src/tablegen.hh"
 #include "../../src/cpp.hh"
-
-#include <map>
-#include <set>
-#include <string>
-
 #include "expr_parser.hh"
-
 #include "../../src/lexer.h"
 #include "../../src/lexer_priv.h"
 
-BOOST_AUTO_TEST_CASE( parser )
-{
+BOOST_AUTO_TEST_CASE(parser) {
   std::string s("(1+2)*3+x");
   yy_scan_string(s.c_str());
 
@@ -39,12 +61,10 @@ BOOST_AUTO_TEST_CASE( parser )
 }
 
 #include "../../src/expr/base.hh"
-#include <sstream>
 
 typedef std::map<std::string, int> env_t;
 
-static int parse(Expr::Base *e, env_t &x)
-{
+static int parse(Expr::Base *e, env_t x) {
   std::ostringstream o;
   o << *e;
   yy_scan_string(o.str().c_str());
@@ -56,13 +76,12 @@ static int parse(Expr::Base *e, env_t &x)
 
 typedef std::set<int> set_t;
 
-BOOST_AUTO_TEST_CASE( cons )
-{
+BOOST_AUTO_TEST_CASE(cons) {
   std::vector<Table> v;
   Table t;
   t |= Table::CONSTANT;
-  t.set_left_rest(Yield::Size(0, 2));
-  t.set_right_rest(Yield::Size(0, 3));
+  t.set_left_rest(Yield::Size(Yield::Poly(0), Yield::Poly(2)));
+  t.set_right_rest(Yield::Size(Yield::Poly(0), Yield::Poly(3)));
   v.push_back(t);
 
   Printer::Cpp cpp;
@@ -75,7 +94,7 @@ BOOST_AUTO_TEST_CASE( cons )
   for (int i = 0; i < 3; ++i)
     for (int j = 0; j < 4; ++j) {
       env_t e;
-      //e["t_0_i"] = i;
+      // e["t_0_i"] = i;
       e["t_0_real_i"] = i;
       e["t_0_real_j"] = j;
       int r = parse(tg.off, e);
@@ -83,9 +102,9 @@ BOOST_AUTO_TEST_CASE( cons )
       CHECK(a == m.end());
       m.insert(r);
 
-      if (i==2 && j==3)
+      if (i == 2 && j == 3)
         CHECK_EQ(r, 11);
-      if (i==0 && j==0)
+      if (i == 0 && j == 0)
         CHECK_EQ(r, 0);
     }
 
@@ -100,11 +119,9 @@ BOOST_AUTO_TEST_CASE( cons )
   std::cerr << *tg.off << '\n';
   cpp.print(tg.code);
   */
-
 }
 
-BOOST_AUTO_TEST_CASE( left_lin )
-{
+BOOST_AUTO_TEST_CASE(left_lin) {
   std::vector<Table> v;
   Table t;
   t |= Table::LINEAR;
@@ -132,9 +149,9 @@ BOOST_AUTO_TEST_CASE( left_lin )
       CHECK(x == m.end());
       m.insert(r);
 
-      if (a==12 && b==22)
+      if (a == 12 && b == 22)
         CHECK_EQ(r, 298);
-      if (a==0 && b==0)
+      if (a == 0 && b == 0)
         CHECK_EQ(r, 0);
     }
 
@@ -151,19 +168,18 @@ BOOST_AUTO_TEST_CASE( left_lin )
   */
 }
 
-BOOST_AUTO_TEST_CASE( left_lin2 )
-{
+BOOST_AUTO_TEST_CASE(left_lin2) {
   std::vector<Table> v;
   Table t;
   t |= Table::LINEAR;
   t.set_sticky(Table::LEFT);
-  t.set_left_rest(Yield::Size(0, 2));
+  t.set_left_rest(Yield::Size(Yield::Poly(0), Yield::Poly(2)));
   v.push_back(t);
 
   Table u;
   u |= Table::LINEAR;
   u.set_sticky(Table::LEFT);
-  u.set_left_rest(Yield::Size(0, 1));
+  u.set_left_rest(Yield::Size(Yield::Poly(0), Yield::Poly(1)));
   v.push_back(u);
 
   Printer::Cpp cpp;
@@ -188,9 +204,9 @@ BOOST_AUTO_TEST_CASE( left_lin2 )
       CHECK(x == m.end());
       m.insert(r);
 
-      if (c==2 && d==1 && a==12 && b==22)
+      if (c == 2 && d == 1 && a == 12 && b == 22)
         CHECK_EQ(r, 1793);
-      if (c==0 && d==0 && a==0 && b==0)
+      if (c == 0 && d == 0 && a == 0 && b == 0)
         CHECK_EQ(r, 0);
     }
 
@@ -208,20 +224,19 @@ BOOST_AUTO_TEST_CASE( left_lin2 )
 }
 
 
-BOOST_AUTO_TEST_CASE( right_lin )
-{
+BOOST_AUTO_TEST_CASE(right_lin) {
   std::vector<Table> v;
   Table t;
   t |= Table::LINEAR;
   t.set_sticky(Table::RIGHT);
-  t.set_right_rest(Yield::Size(0, 2));
+  t.set_right_rest(Yield::Size(Yield::Poly(0), Yield::Poly(2)));
   v.push_back(t);
 
 
   Table u;
   u |= Table::LINEAR;
   u.set_sticky(Table::RIGHT);
-  u.set_right_rest(Yield::Size(0, 1));
+  u.set_right_rest(Yield::Size(Yield::Poly(0), Yield::Poly(1)));
   v.push_back(u);
 
   Printer::Cpp cpp;
@@ -247,9 +262,9 @@ BOOST_AUTO_TEST_CASE( right_lin )
       CHECK(x == m.end());
       m.insert(r);
 
-      if (c==2 && d==1 && a==12 && b==22)
+      if (c == 2 && d == 1 && a == 12 && b == 22)
         CHECK_EQ(r, 1793);
-      if (c==0 && d==0 && a==0 && b==0)
+      if (c == 0 && d == 0 && a == 0 && b == 0)
         CHECK_EQ(r, 0);
     }
 
@@ -264,11 +279,9 @@ BOOST_AUTO_TEST_CASE( right_lin )
   cpp.print(tg.code);
   std::cerr << "=====\n";
   */
-
 }
 
-BOOST_AUTO_TEST_CASE( right_lin2 )
-{
+BOOST_AUTO_TEST_CASE(right_lin2) {
   std::vector<Table> v;
   Table t;
   t |= Table::LINEAR;
@@ -301,9 +314,9 @@ BOOST_AUTO_TEST_CASE( right_lin2 )
       CHECK(x == m.end());
       m.insert(r);
 
-      if (a==12 && b==22)
+      if (a == 12 && b == 22)
         CHECK_EQ(r, 298);
-      if (a==0 && b==0)
+      if (a == 0 && b == 0)
         CHECK_EQ(r, 0);
     }
 
@@ -320,9 +333,10 @@ BOOST_AUTO_TEST_CASE( right_lin2 )
   */
 }
 
-//Stefan Janssen: I had to rename it to "my_quad", because gcc-4.5 at Solaris CeBiTec has some iso/math_c99.h include-fixed header file with the name "quad"
-BOOST_AUTO_TEST_CASE( my_quad )
-{
+/* Stefan Janssen: I had to rename it to "my_quad", because gcc-4.5 at Solaris
+   CeBiTec has some iso/math_c99.h include-fixed header file with the 
+   name "quad" */
+BOOST_AUTO_TEST_CASE(my_quad) {
   std::vector<Table> v;
   Table t;
   t |= Table::QUADRATIC;
@@ -354,9 +368,9 @@ BOOST_AUTO_TEST_CASE( my_quad )
       CHECK(x == m.end());
       m.insert(r);
 
-      if (c==7 && d==4 && a==7 && b==4)
+      if (c == 7 && d == 4 && a == 7 && b == 4)
         CHECK_EQ(r, 539);
-      if (c==0 && d==0 && a==0 && b==0)
+      if (c == 0 && d == 0 && a == 0 && b == 0)
         CHECK_EQ(r, 0);
     }
 
@@ -365,11 +379,9 @@ BOOST_AUTO_TEST_CASE( my_quad )
   e["t_1_n"] = 4;
   int s = parse(tg.size, e);
   CHECK_EQ(s, 540);
-
 }
 
-BOOST_AUTO_TEST_CASE( diag )
-{
+BOOST_AUTO_TEST_CASE(diag) {
   std::vector<Table> v;
   Table t;
   t |= Table::QUADRATIC;
@@ -394,9 +406,9 @@ BOOST_AUTO_TEST_CASE( diag )
       CHECK(x == m.end());
       m.insert(r);
 
-      if (a==12 && b==12)
+      if (a == 12 && b == 12)
         CHECK_EQ(r, 90);
-      if (a==0 && b==0)
+      if (a == 0 && b == 0)
         CHECK_EQ(r, 0);
     }
 
@@ -404,11 +416,9 @@ BOOST_AUTO_TEST_CASE( diag )
   e["t_0_n"] = 12;
   int s = parse(tg.size, e);
   CHECK_EQ(s, 91);
-
 }
 
-BOOST_AUTO_TEST_CASE( mixed )
-{
+BOOST_AUTO_TEST_CASE(mixed) {
   std::vector<Table> v;
   Table t;
   t |= Table::QUADRATIC;
@@ -443,9 +453,9 @@ BOOST_AUTO_TEST_CASE( mixed )
       CHECK(x == m.end());
       m.insert(r);
 
-      if (c==7 && a==12 && b==12)
+      if (c == 7 && a == 12 && b == 12)
         CHECK_EQ(r, 727);
-      if (c==0 && a==0 && b==0)
+      if (c == 0 && a == 0 && b == 0)
         CHECK_EQ(r, 0);
     }
 
@@ -454,8 +464,4 @@ BOOST_AUTO_TEST_CASE( mixed )
   e["t_1_n"] = 7;
   int s = parse(tg.size, e);
   CHECK_EQ(s, 728);
-
 }
-
-
-

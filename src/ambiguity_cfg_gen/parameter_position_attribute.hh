@@ -41,7 +41,7 @@ class ParameterPositionAttribute : public Attribute {
     int parameterPosition;
 
  public:
-    ParameterPositionAttribute(int parameterPosition);
+    explicit ParameterPositionAttribute(int parameterPosition);
     ParameterPositionAttribute(ParameterPositionAttribute& a);
     virtual ~ParameterPositionAttribute();
 

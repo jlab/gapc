@@ -198,7 +198,7 @@ void Expr::Fn_Call::add_arg(const Statement::Table_Decl &v) {
 #include "../symbol.hh"
 
 void Expr::Fn_Call::add(const Statement::Table_Decl &v) {
-  is_obj = true;
+  is_obj = Bool(true);
 
   add_arg(new std::string(v.name()));
 

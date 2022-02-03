@@ -350,7 +350,7 @@ class Main {
 
     // configure the window and k-best mode
     driver.ast.set_window_mode(opts.window_mode);
-    driver.ast.kbest = opts.kbest;
+    driver.ast.kbest = Bool(opts.kbest);
 
     if (opts.cyk) {
       driver.ast.set_cyk();

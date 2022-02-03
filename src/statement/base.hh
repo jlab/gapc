@@ -64,14 +64,14 @@ class Base {
 
 
  protected:
-    Base(Type t) : type(t) {}
+    explicit Base(Type t) : type(t) {}
     Base(Type t, const Loc& l) : type(t), location(l) {}
 
  public:
     bool is(Type t) { return type == t; }
     Type getType() { return this->type; }
 
-    void disable() { disabled_ = true; }
+    void disable() { disabled_ = Bool(true); }
     bool is_disabled() const { return disabled_; }
 
     virtual ~Base();
@@ -114,7 +114,7 @@ class Iterator {
     void fwd();
 
  public:
-    Iterator(std::list<Statement::Base*> &l) : end(false) {
+    explicit Iterator(std::list<Statement::Base*> &l) : end(false) {
       i = l.begin();
       j = l.end();
       list = &l;

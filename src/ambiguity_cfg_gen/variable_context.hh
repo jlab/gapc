@@ -82,7 +82,7 @@ class VariableContext : public NamedAccess {
     VariableContext();
     // Inits a new instance of this variable-store with the
     // given parent instance.
-    VariableContext(VariableContext* parent);
+    explicit VariableContext(VariableContext* parent);
     ~VariableContext();
 
     // Clears the whole contents of the variable-store.
@@ -135,8 +135,8 @@ class MultiVariableContext : public NamedAccess {
 
  public:
     MultiVariableContext();
-    MultiVariableContext(VariableContext* parentContext);
-    MultiVariableContext(MultiVariableContext* parentContext);
+    explicit MultiVariableContext(VariableContext* parentContext);
+    explicit MultiVariableContext(MultiVariableContext* parentContext);
     MultiVariableContext(
       MultiVariableContext* fstContext, MultiVariableContext* sndContext);
     ~MultiVariableContext();

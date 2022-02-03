@@ -57,15 +57,15 @@ class Return : public Base {
   Return() : Base(RETURN), expr(NULL) {
   }
 
-  Return(Expr::Base *e) : Base(RETURN), expr(e) {
+  explicit Return(Expr::Base *e) : Base(RETURN), expr(e) {
   }
 
   Return(Expr::Base *e, const Loc &l) : Base(RETURN, l), expr(e) {
   }
 
-  Return(Var_Decl &vdecl);
+  explicit Return(Var_Decl &vdecl);
 
-  Return(std::string *n);
+  explicit Return(std::string *n);
 
   Expr::Base *expr;
 
@@ -80,7 +80,7 @@ class Break : public Base {
   Break() : Base(BREAK) {
   }
 
-  Break(const Loc &l) : Base(BREAK, l) {
+  explicit Break(const Loc &l) : Base(BREAK, l) {
   }
 
   void print(Printer::Base &p) const;
@@ -94,7 +94,7 @@ class Continue : public Base {
   Continue() : Base(CONTINUE) {
   }
 
-  Continue(const Loc &l) : Base(CONTINUE, l) {
+  explicit Continue(const Loc &l) : Base(CONTINUE, l) {
   }
 
   void print(Printer::Base &p) const;
@@ -129,7 +129,7 @@ class If : public Base {
     push(els, e);
   }
 
-  If(Expr::Base *c) : Base(IF), cond(c) {
+  explicit If(Expr::Base *c) : Base(IF), cond(c) {
   }
 
   Expr::Base *cond;
@@ -144,7 +144,7 @@ class If : public Base {
 
 class Switch : public Base {
  public:
-  Switch(Expr::Base *c): Base(SWITCH), cond(c) {
+  explicit Switch(Expr::Base *c): Base(SWITCH), cond(c) {
   }
 
   Expr::Base *cond;
@@ -164,10 +164,10 @@ class Decrease : public Base {
   Decrease() : Base(DECREASE) {
   }
 
-  Decrease(std::string *n) : Base(DECREASE), name(n) {
+  explicit Decrease(std::string *n) : Base(DECREASE), name(n) {
   }
 
-  Decrease(const Loc &l) : Base(DECREASE, l) {
+  explicit Decrease(const Loc &l) : Base(DECREASE, l) {
   }
 
   void print(Printer::Base &p) const;
@@ -182,10 +182,10 @@ class Increase : public Base {
   Increase() : Base(INCREASE) {
   }
 
-  Increase(std::string *n) : Base(INCREASE), name(n) {
+  explicit Increase(std::string *n) : Base(INCREASE), name(n) {
   }
 
-  Increase(const Loc &l) : Base(INCREASE, l) {
+  explicit Increase(const Loc &l) : Base(INCREASE, l) {
   }
 
   void print(Printer::Base &p) const;
@@ -251,7 +251,7 @@ class Var_Decl : public Base {
 
 
   void set_itr(bool b) {
-    use_as_itr = b;
+    use_as_itr = Bool(b);
   }
 
 
@@ -327,7 +327,7 @@ class Var_Assign : public Base {
  public:
   Var_Acc::Base *acc;
   Expr::Base *rhs;
-  Var_Assign(Var_Decl &a);
+  explicit Var_Assign(Var_Decl &a);
   Var_Assign(Var_Decl &a, Var_Decl &b);
   Var_Assign(Var_Decl &a, Expr::Base *b);
   Var_Assign(Var_Acc::Base *a, Expr::Base *b, const Loc &l);

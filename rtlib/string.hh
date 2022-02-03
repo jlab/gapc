@@ -79,7 +79,7 @@ class String {
           unsigned char i;
 
        public:
-          Iterator(Block *block) : b(block), i(0) {
+          explicit Iterator(Block *block) : b(block), i(0) {
             this->operator++();
           }
 
@@ -378,14 +378,14 @@ class String {
         }
 
      public:
-        Iterator(Block *b)
+        explicit Iterator(Block *b)
           : i(0), block(b), end(false), in_seq(false), in_rep(false), rep(0) {
           if (!b)
             end = true;
           else
             fwd();
         }
-        Iterator(bool b) : i(0), block(NULL), end(true), in_seq(false),
+        explicit Iterator(bool b) : i(0), block(NULL), end(true), in_seq(false),
           in_rep(false), rep(0) {}
 
         void operator++() {

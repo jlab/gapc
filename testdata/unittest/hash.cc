@@ -1,6 +1,33 @@
+/* {{{
+
+    This file is part of gapc (GAPC - Grammars, Algebras, Products - Compiler;
+      a system to compile algebraic dynamic programming programs)
+
+    Copyright (C) 2008-2011  Georg Sauthoff
+         email: gsauthof@techfak.uni-bielefeld.de or gsauthof@sdf.lonestar.org
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+}}} */
+
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MAIN
 #define BOOST_TEST_MODULE hash
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
 #include <boost/test/unit_test.hpp>
 
 #include "macros.hh"
@@ -8,10 +35,9 @@
 #define STATS
 #include "../../rtlib/hash.hh"
 
-#include <iostream>
 
 /* FIXME delete - now in vector_sparse
-BOOST_AUTO_TEST_CASE( stack )
+BOOST_AUTO_TEST_CASE(stack)
 {
   Stack<size_t> stack;
   stack.init(1024);
@@ -21,14 +47,13 @@ BOOST_AUTO_TEST_CASE( stack )
 */
 
 
-BOOST_AUTO_TEST_CASE( hash )
-{
+BOOST_AUTO_TEST_CASE(hash) {
   Hash::Set<size_t> set;
   set.resize(64);
   set.add(size_t(23));
   set.add(size_t(42));
   set.finalize();
-  
+
   Hash::Set<size_t>::iterator i = set.begin();
   CHECK(i != set.end());
   size_t x = *i;
@@ -45,8 +70,7 @@ BOOST_AUTO_TEST_CASE( hash )
   }
 }
 
-BOOST_AUTO_TEST_CASE( bits )
-{
+BOOST_AUTO_TEST_CASE(bits) {
   uint32_t t = uint32_t(1) << 31;
   CHECK_EQ(count_leading_zeroes(t), 0);
   uint32_t s = uint32_t(1) << 28;
@@ -56,8 +80,7 @@ BOOST_AUTO_TEST_CASE( bits )
   CHECK_EQ(slow_clz(s), 3);
 }
 
-BOOST_AUTO_TEST_CASE( next_power )
-{
+BOOST_AUTO_TEST_CASE(next_power) {
   uint32_t t = uint32_t(1);
   CHECK_EQ(size_to_next_power(t), uint32_t(1));
   uint32_t u = uint32_t(42);
@@ -68,11 +91,7 @@ BOOST_AUTO_TEST_CASE( next_power )
   CHECK_EQ(size_to_next_power(w), uint32_t(1) << 31);
 }
 
-#include <vector>
-#include <algorithm>
-
-BOOST_AUTO_TEST_CASE( rehash )
-{
+BOOST_AUTO_TEST_CASE(rehash) {
   Hash::Set<size_t> set;
   set.resize(7);
   for (size_t i = 0; i < 129; ++i)
@@ -80,18 +99,18 @@ BOOST_AUTO_TEST_CASE( rehash )
   set.finalize();
   std::vector<size_t> l;
   for (Hash::Set<size_t>::iterator j = set.begin();
-       j!=set.end(); ++j)
+       j != set.end(); ++j)
     l.push_back(*j);
   CHECK_EQ(l.size(), uint32_t(129));
   std::sort(l.begin(), l.end());
   size_t a = 0;
-  for (std::vector<size_t>::iterator i = l.begin(); i!=l.end(); ++i, ++a)
+  for (std::vector<size_t>::iterator i = l.begin(); i != l.end(); ++i, ++a)
     CHECK_EQ(*i, a*a);
 }
 
 
 /*
-BOOST_AUTO_TEST_CASE( hint )
+BOOST_AUTO_TEST_CASE(hint)
 {
   Hash::Set<size_t> set;
   set.hint(42);
@@ -104,8 +123,7 @@ BOOST_AUTO_TEST_CASE( hint )
 
 #include "../../rtlib/shape.hh"
 
-BOOST_AUTO_TEST_CASE( shape )
-{
+BOOST_AUTO_TEST_CASE(shape) {
   Hash::Set<Shape> set;
   set.resize(64);
   Shape t;
@@ -118,8 +136,7 @@ BOOST_AUTO_TEST_CASE( shape )
   CHECK_EQ(*j, t);
 }
 
-BOOST_AUTO_TEST_CASE( uint32 )
-{
+BOOST_AUTO_TEST_CASE(uint32) {
   uint64_t t = 0;
   t |= uint64_t(1) << 23;
   t |= uint64_t(1) << 42;
@@ -132,7 +149,7 @@ BOOST_AUTO_TEST_CASE( uint32 )
 
 // FIXME
 /*
-BOOST_AUTO_TEST_CASE( collision )
+BOOST_AUTO_TEST_CASE(collision)
 {
   Hash::Set<Shape> set;
   set.resize(16);
@@ -177,18 +194,17 @@ BOOST_AUTO_TEST_CASE( collision )
 
 
 
-BOOST_AUTO_TEST_CASE( coverage )
-{
+BOOST_AUTO_TEST_CASE(coverage) {
   std::vector<bool> t(64);
-  for (std::vector<bool>::iterator i = t.begin(); i!=t.end(); ++i)
+  for (std::vector<bool>::iterator i = t.begin(); i != t.end(); ++i)
     CHECK_EQ(*i, false);
   Hash::Multhash hash;
-  for (int i = 0; i<100; ++i) {
-    uint32_t x = hash(i,64);
+  for (int i = 0; i < 100; ++i) {
+    uint32_t x = hash(i, 64);
     CHECK_LESS(x, uint32_t(64));
     t[x] = true;
   }
-  for (std::vector<bool>::iterator i = t.begin(); i!=t.end(); ++i)
+  for (std::vector<bool>::iterator i = t.begin(); i != t.end(); ++i)
     CHECK_EQ(*i, true);
 }
 
@@ -196,40 +212,33 @@ BOOST_AUTO_TEST_CASE( coverage )
   template <typename T, typename U = uint32_t>
   struct MyInspector {
     T init(const T &x) const { return x; }
-    U hash(const T &x) const
-    {
+    U hash(const T &x) const {
       return x.first;
     }
-    void update(T &dst, const T &src) const
-    {
+    void update(T &dst, const T &src) const {
       dst.second += src.second;
     }
-    bool equal(const T &a, const T &b) const
-    {
+    bool equal(const T &a, const T &b) const {
       return a.first == b.first;
     }
-    void finalize(T &src) const
-    {
+    void finalize(T &src) const {
     }
 
 uint32_t k() const { return 0; }
 bool cutoff() const { return false; }
-bool equal_score(const T &a, const T &b) const
-{
+bool equal_score(const T &a, const T &b) const {
   CHECK_EQ(0, 1);
   return false;
 }
 struct compare {
-  bool operator()(const T &a, const T &b) const
-  {
+  bool operator()(const T &a, const T &b) const {
     CHECK_EQ(0, 1);
     return false;
   }
 };
   };
 
-BOOST_AUTO_TEST_CASE ( values )
-{
+BOOST_AUTO_TEST_CASE(values) {
   typedef std::pair<int , int> tupel;
   Hash::Set<tupel, MyInspector<tupel> > set;
   set.add(std::make_pair(23, 3));
@@ -247,16 +256,14 @@ BOOST_AUTO_TEST_CASE ( values )
   CHECK_EQ(array[42], 2);
 }
 
-BOOST_AUTO_TEST_CASE ( ref )
-{
+BOOST_AUTO_TEST_CASE(ref) {
   typedef std::pair<int , int> tupel;
   typedef Hash::Ref<tupel, MyInspector<tupel> > ref;
   ref href;
   href->add(std::make_pair(42, 23));
   ref a = href;
   ref b = href;
- // CHECK_EQ(b.ref().ref_count, unsigned(3));
-
+  // CHECK_EQ(b.ref().ref_count, unsigned(3));
 }
 
 
@@ -265,49 +272,41 @@ BOOST_AUTO_TEST_CASE ( ref )
     double sum;
     PfInspector() : sum(0) {}
     T init(const T &x) const { return x; }
-    U hash(const T &x) const
-    {
+    U hash(const T &x) const {
       return hashable_value(x.first);
     }
-    void update(T &dst, const T &src)
-    {
+    void update(T &dst, const T &src) {
       if (src.second.first < dst.second.first)
         dst.second.first = src.second.first;
       dst.second.second += src.second.second;
       sum += src.second.second;
     }
-    bool equal(const T &a, const T &b) const
-    {
+    bool equal(const T &a, const T &b) const {
       return a.first == b.first;
     }
     bool filter() const { return true; }
-    bool filter(const T &x) const
-    {
+    bool filter(const T &x) const {
       double thresh = 0.000001 * sum;
       return x.second.second <= thresh;
     }
-    void finalize(T &src) const
-    {
+    void finalize(T &src) const {
     }
 
 uint32_t k() const { return 0; }
 bool cutoff() const { return false; }
-bool equal_score(const T &a, const T &b) const
-{
+bool equal_score(const T &a, const T &b) const {
   CHECK_EQ(0, 1);
   return false;
 }
 struct compare {
-  bool operator()(const T &a, const T &b) const
-  {
+  bool operator()(const T &a, const T &b) const {
     CHECK_EQ(0, 1);
     return false;
   }
 };
   };
 
-BOOST_AUTO_TEST_CASE ( filter )
-{
+BOOST_AUTO_TEST_CASE(filter) {
   typedef std::pair<Shape, std::pair<double, double> > tupel;
   typedef Hash::Ref<tupel, PfInspector<tupel> > ref;
   ref h;
@@ -326,15 +325,15 @@ BOOST_AUTO_TEST_CASE ( filter )
   h->filter();
   h->finalize();
   for (ref::iterator i = h->begin(); i != h->end(); ++i) {
-    CHECK_EQ( (*i).second.first, 5);
-    CHECK_EQ( (*i).second.second, 3);
+    CHECK_EQ((*i).second.first, 5);
+    CHECK_EQ((*i).second.second, 3);
   }
-  //h->purge();
+  // h->purge();
 }
 
 
 /*
-BOOST_AUTO_TEST_CASE ( erase_test )
+BOOST_AUTO_TEST_CASE(erase_test)
 {
   typedef std::pair<Shape, std::pair<double, double> > tupel;
   typedef Hash::Ref<tupel, PfInspector<tupel> > ref;
@@ -377,58 +376,47 @@ BOOST_AUTO_TEST_CASE ( erase_test )
 #include "../../rtlib/push_back.hh"
 
 class insp_hash_h {
-public:
-typedef std::pair<Shape, int>  type;
-private:
-public:
-uint32_t hash(const type &x) const
-{
-return hashable_value(left_most(x));
-}
-type init(const type &src) const
-{
-type dst(src);
-{
-  return src;
-}
-}
-void update(type &dst, const type &src) 
-{
-  if ((src.second < dst.second))
+ public:
+  typedef std::pair<Shape, int>  type;
+
+ public:
+  uint32_t hash(const type &x) const {
+    return hashable_value(left_most(x));
+  }
+  type init(const type &src) const {
+    type dst(src);
     {
+      return src;
+    }
+  }
+  void update(type &dst, const type &src) {
+    if ((src.second < dst.second)) {
       dst.second = src.second;
     }
-
-}
-bool equal(const type &a, const type &b) const
-{
-return left_most(a) == left_most(b);
-}
-bool filter() const { return false; }
-bool filter(const type &x) const
-{
-assert(0); return false;
-}
-void finalize(type &src) const
-{
-}
-
-uint32_t k() const { return 2; }
-bool cutoff() const { return true; }
-bool equal_score(const type &a, const type &b) const
-{
-  return a.second == b.second;
-}
-struct compare {
-  bool operator()(const type &a, const type &b) const
-  {
-    return a.second < b.second;
   }
-};
+  bool equal(const type &a, const type &b) const {
+  return left_most(a) == left_most(b);
+  }
+  bool filter() const { return false; }
+  bool filter(const type &x) const {
+  assert(0); return false;
+  }
+  void finalize(const type &src) const {
+  }
+
+  uint32_t k() const { return 2; }
+  bool cutoff() const { return true; }
+  bool equal_score(const type &a, const type &b) const {
+    return a.second == b.second;
+  }
+  struct compare {
+    bool operator()(const type &a, const type &b) const {
+      return a.second < b.second;
+    }
+  };
 };
 
-BOOST_AUTO_TEST_CASE ( cutoff )
-{
+BOOST_AUTO_TEST_CASE(cutoff) {
   typedef std::pair<Shape, int> tupel;
   typedef Hash::Ref<tupel, insp_hash_h > ref;
   ref h;
@@ -439,109 +427,103 @@ BOOST_AUTO_TEST_CASE ( cutoff )
   append(t.first, "[]", 2);
   t.second = 3;
   push_back(h, t);
-  //
   append(t.first, "[]", 2);
   t.second = 2;
   push_back(h, t);
-  //
-  //
   append(t.first, "[]", 2);
   t.second = 2;
   push_back(h, t);
-  // 
   h->filter();
   h->finalize();
   size_t a = 0;
   const int d[4] = { 2, 2, 3, 3 };
   for (ref::iterator i = h->begin(); i != h->end(); ++i, ++a)
-    if (a<4)
+    if (a < 4)
       CHECK_EQ((*i).second, d[a]);
     else
       CHECK_EQ(23, 46);
 }
 
 template <typename T, typename Size, typename alphset >
-inline void append(Fiber<T, Size, alphset> &s, const char *c)
-{
-  for (size_t i = 0; i<std::strlen(c); ++i)
-    s.append(c[i]);
+inline void append(Fiber<T, Size, alphset> *s, const char *c) {
+  for (size_t i = 0; i < std::strlen(c); ++i)
+    s->append(c[i]);
 }
 
-BOOST_AUTO_TEST_CASE ( cutoff_big )
-{
+BOOST_AUTO_TEST_CASE(cutoff_big) {
   typedef std::pair<Shape, int> tupel;
   typedef Hash::Ref<tupel, insp_hash_h > ref;
   ref h;
   tupel t;
 
-t = tupel();
-append(t.first, "[][]");
-t.second = -930;
-push_back(h, t); 
-t = tupel();
-append(t.first, "[[][]][]");
-t.second = -920;
-push_back(h, t); 
-t = tupel();
-append(t.first, "[][][]");
-t.second = -730;
-push_back(h, t); 
-t = tupel();
-append(t.first, "[][[][]]");
-t.second = -680;
-push_back(h, t); 
-t = tupel();
-append(t.first, "[][[][]][]");
-t.second = -480;
-push_back(h, t); 
-t = tupel();
-append(t.first, "[][][][]");
-t.second = 541;
-push_back(h, t); 
-t = tupel();
-append(t.first, "[[][]][][]");
-t.second = -40;
-push_back(h, t); 
-t = tupel();
-append(t.first, "[[][]][[][]]");
-t.second = 130;
-push_back(h, t); 
-t = tupel();
-append(t.first, "[[][]][][][]");
-t.second = 980;
-push_back(h, t); 
-t = tupel();
-append(t.first, "[][[][][]]");
-t.second = 150;
-push_back(h, t); 
-t = tupel();
-append(t.first, "[[][]][[][][]]");
-t.second = 720;
-push_back(h, t); 
-t = tupel();
-append(t.first, "[[][][]][]");
-t.second = -250;
-push_back(h, t); 
-t = tupel();
-append(t.first, "[[][][]][][]");
-t.second = 290;
-push_back(h, t); 
-t = tupel();
-append(t.first, "[[][][]][[][]]");
-t.second = 610;
-push_back(h, t); 
-t = tupel();
-append(t.first, "[[][[][]]][]");
-t.second = 410;
-push_back(h, t); 
-t = tupel();
-append(t.first, "[[][[][]]][][]");
-t.second = 890;
-push_back(h, t); 
-t = tupel();
-append(t.first, "[[][[][]]][[][]]");
-t.second = 1350;
-push_back(h, t); 
+  t = tupel();
+  append(&t.first, "[][]");
+  t.second = -930;
+  push_back(h, t);
+  t = tupel();
+  append(&t.first, "[[][]][]");
+  t.second = -920;
+  push_back(h, t);
+  t = tupel();
+  append(&t.first, "[][][]");
+  t.second = -730;
+  push_back(h, t);
+  t = tupel();
+  append(&t.first, "[][[][]]");
+  t.second = -680;
+  push_back(h, t);
+  t = tupel();
+  append(&t.first, "[][[][]][]");
+  t.second = -480;
+  push_back(h, t);
+  t = tupel();
+  append(&t.first, "[][][][]");
+  t.second = 541;
+  push_back(h, t);
+  t = tupel();
+  append(&t.first, "[[][]][][]");
+  t.second = -40;
+  push_back(h, t);
+  t = tupel();
+  append(&t.first, "[[][]][[][]]");
+  t.second = 130;
+  push_back(h, t);
+  t = tupel();
+  append(&t.first, "[[][]][][][]");
+  t.second = 980;
+  push_back(h, t);
+  t = tupel();
+  append(&t.first, "[][[][][]]");
+  t.second = 150;
+  push_back(h, t);
+  t = tupel();
+  append(&t.first, "[[][]][[][][]]");
+  t.second = 720;
+  push_back(h, t);
+  t = tupel();
+  append(&t.first, "[[][][]][]");
+  t.second = -250;
+  push_back(h, t);
+  t = tupel();
+  append(&t.first, "[[][][]][][]");
+  t.second = 290;
+  push_back(h, t);
+  t = tupel();
+  append(&t.first, "[[][][]][[][]]");
+  t.second = 610;
+  push_back(h, t);
+  t = tupel();
+  append(&t.first, "[[][[][]]][]");
+  t.second = 410;
+  push_back(h, t);
+  t = tupel();
+  append(&t.first, "[[][[][]]][][]");
+  t.second = 890;
+  push_back(h, t);
+  t = tupel();
+  append(&t.first, "[[][[][]]][[][]]");
+  t.second = 1350;
+  push_back(h, t);
 
   h->filter();
   h->finalize();

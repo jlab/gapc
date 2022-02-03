@@ -930,7 +930,7 @@ void AST::set_window_mode(bool w) {
   if (grammar()->axiom->tracks() > 1)
     throw LogError("Window mode currently just works with one-track grammars.");
 
-  window_mode = w;
+  window_mode = Bool(w);
 
   grammar()->window_table_dims();
 }

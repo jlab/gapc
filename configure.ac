@@ -1,7 +1,7 @@
 
 # configure support 07/2015
 
-AC_INIT([gapc], [pr1.0], [tgatter@cebitec.uni-bielefeld.de])
+AC_INIT([gapc], [pr1.0], [stefan.janssen@computational.bio.uni-giessen.de])
 
 AC_CONFIG_FILES([config.mf])
 
@@ -25,6 +25,9 @@ CXXFLAGS+=" -g "
 CFLAGS+=" -O3 "
 CXXFLAGS+=" -O3 "
 ])
+
+## adding librna path for includes due to re-structuring ViennaRNA code
+CFLAGS+="-I librna/"
 
 ## get compiler
 AC_PROG_CXX
@@ -143,5 +146,12 @@ AC_FUNC_MALLOC
 AC_FUNC_MEMCMP
 AC_FUNC_REALLOC
 AC_CHECK_FUNCS([memset strerror])
+
+# compile flags for ViennaRNA part
+CFLAGS+=" -DHAVE_CONFIG_H "
+
+
+AC_CONFIG_SUBDIRS([librna])
+
 
 AC_OUTPUT

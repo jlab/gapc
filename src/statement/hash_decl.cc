@@ -43,7 +43,7 @@ void Statement::Hash_Decl::set_suffix(const std::string &n) {
 }
 
 void Statement::Hash_Decl::set_kbest(bool b) {
-  kbest_ = b;
+  kbest_ = Bool(b);
   if (kbest_) {
     cutoff_code_.push_back(
       new Statement::Return(new Expr::Const(new Const::Bool(true))));

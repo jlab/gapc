@@ -96,13 +96,13 @@ class Mode {
   }
 
   bool subopt_buddy() const { return subopt_buddy_; }
-  void set_subopt_buddy() { subopt_buddy_ = true; }
+  void set_subopt_buddy() { subopt_buddy_ = Bool(true); }
 
   bool marker() const { return marker_; }
-  void set_marker() { marker_ = true; }
+  void set_marker() { marker_ = Bool(true); }
 
   bool sample() const { return sample_; }
-  void set_sample(bool b) { sample_ = b; }
+  void set_sample(bool b) { sample_ = Bool(b); }
 };
 
 inline std::ostream &operator<<(std::ostream &o, const Mode &m) {
@@ -116,7 +116,7 @@ class Gen {
 
  public:
   Gen() : return_type_(0) { }
-  Gen(AST &ast);
+  explicit Gen(AST &ast);
   const Type::Base *return_type() const {
     assert(return_type_); return return_type_;
   }

@@ -46,7 +46,7 @@ const Mode::pair Mode::map_string_to_mode[] = {
 hashtable<std::string, Mode::Type> Mode::table;
 
 void Mode::set(Mode::Type t) {
-  number = map_type_to_number[t] > ONE ? Yield::UP :
+  number = map_type_to_number[t] > ONE ? Yield::Poly(Yield::UP) :
     Yield::Poly((uint32_t) map_type_to_number[t]);
   type = t;
 }

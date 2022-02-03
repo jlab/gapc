@@ -112,7 +112,7 @@ Runtime::Poly Fn_Arg::Alt::runtime(
 
 Runtime::Poly Fn_Arg::Const::runtime(
   std::list<Symbol::NT*> &active_list, Runtime::Poly accum_rt) {
-  return 1;
+  return Runtime::Poly(1);
   // just const, does not change the module test
   // return calls;
 }
@@ -125,7 +125,7 @@ Runtime::Poly Fn_Arg::Const::init_in_out() {
   // before: return calls
   // since this is just a const call, it make more sense to just return 1
   // (does not change the module test results, anyways)
-  return 1;
+  return Runtime::Poly(1);
 }
 
 bool Fn_Arg::Alt::set_data_type(::Type::Base *t, const Loc &l) {

@@ -1,3 +1,26 @@
+/* {{{
+
+    This file is part of gapc (GAPC - Grammars, Algebras, Products - Compiler;
+      a system to compile algebraic dynamic programming programs)
+
+    Copyright (C) 2008-2011  Georg Sauthoff
+         email: gsauthof@techfak.uni-bielefeld.de or gsauthof@sdf.lonestar.org
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+}}} */
+
 // link against -lboost_unit_test_framework if boost/test/unit_test.hpp is
 // used ...
 
@@ -5,11 +28,14 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MAIN
 #define BOOST_TEST_MODULE rtlib
+#include <algorithm>
+#include <iostream>
+
 #include <boost/test/unit_test.hpp>
 
 // include everything - no linking needed ...
-//#define BOOST_TEST_MAIN
-//#include <boost/test/included/unit_test_framework.hpp>
+// #define BOOST_TEST_MAIN
+// #include <boost/test/included/unit_test_framework.hpp>
 
 #include "macros.hh"
 
@@ -21,12 +47,8 @@
 #include "../../rtlib/string.hh"
 #include "../../rtlib/push_back.hh"
 
-#include <algorithm>
 
-#include <iostream>
-
-BOOST_AUTO_TEST_CASE( listtest )
-{
+BOOST_AUTO_TEST_CASE(listtest) {
   List<int> l;
   for (int i = 0; i < 100; i++)
     l.push_back(i);
@@ -49,8 +71,7 @@ BOOST_AUTO_TEST_CASE( listtest )
   CHECK_NOT_EQ(is_not_empty(g), true);
 }
 
-BOOST_AUTO_TEST_CASE( algebra )
-{
+BOOST_AUTO_TEST_CASE(algebra) {
   List<int> l;
   for (int i = 100; i > 0; i--) {
     int a = i + i % 2;
@@ -59,7 +80,7 @@ BOOST_AUTO_TEST_CASE( algebra )
   typedef typename List<int>::iterator itr;
   std::pair<itr, itr> p = std::make_pair(l.begin(), l.end());
   l = unique(p).ref();
-  
+
   size_t size = 0;
   for (List<int>::iterator i = l.begin(); i != l.end(); ++i)
     size++;
@@ -67,7 +88,7 @@ BOOST_AUTO_TEST_CASE( algebra )
 
   int i = minimum(l.begin(), l.end());
   CHECK_EQ(i, 2);
-  
+
   i = maximum(l.begin(), l.end());
   CHECK_EQ(i, 100);
 
@@ -75,8 +96,7 @@ BOOST_AUTO_TEST_CASE( algebra )
   CHECK_EQ(i, 2550);
 }
 
-BOOST_AUTO_TEST_CASE( table )
-{
+BOOST_AUTO_TEST_CASE(table) {
   Table::Constant<int> a(10);
   int x = 23;
   for (int y = 0; y < 5; y++) {
@@ -104,7 +124,8 @@ BOOST_AUTO_TEST_CASE( table )
       x += y + 1;
     }
   x = 66;
-  Table::Quadratic<int, Table::Unger, unsigned int, Table::RawIndex<unsigned int> > t(10);
+  Table::Quadratic<int, Table::Unger, unsigned int,
+                   Table::RawIndex<unsigned int> > t(10);
   for (int y = 0; y < 10; y++)
     for (int z = 0; z < 10; z++) {
       tabulate(t, y, z, x);
@@ -134,8 +155,7 @@ BOOST_AUTO_TEST_CASE( table )
     }
 }
 
-BOOST_AUTO_TEST_CASE( term )
-{
+BOOST_AUTO_TEST_CASE(term) {
   static char s[] = "123Hello world!";
   Sequence seq(s);
   int i = INT(seq, 0, 3);
@@ -150,17 +170,16 @@ BOOST_AUTO_TEST_CASE( term )
   CHECK_EQ(j, 2);
 }
 
-BOOST_AUTO_TEST_CASE( leer )
-{
-  int i=0;
+BOOST_AUTO_TEST_CASE(leer) {
+  int i = 0;
   CHECK(!isEmpty(i));
   empty(i);
   CHECK(isEmpty(i));
-  double d=0;;
+  double d = 0;;
   CHECK(!isEmpty(d));
   empty(d);
   CHECK(isEmpty(d));
-  bool b=true;
+  bool b = true;
   CHECK(!isEmpty(b));
   empty(d);
   char c = 'c';
@@ -186,8 +205,7 @@ BOOST_AUTO_TEST_CASE( leer )
   CHECK(isEmpty(l));
 }
 
-BOOST_AUTO_TEST_CASE ( filter )
-{
+BOOST_AUTO_TEST_CASE(filter) {
   static char s[] = "acgtuACGTUacgtu";
   Sequence seq(s);
   CHECK(!char_basepairing(seq, 0, 1));
@@ -204,21 +222,19 @@ BOOST_AUTO_TEST_CASE ( filter )
   CHECK(char_basepairing(seq, 9, 11));
 }
 
-BOOST_AUTO_TEST_CASE ( list_ref )
-{
+BOOST_AUTO_TEST_CASE(list_ref) {
   List_Ref<int> l;
   List_Ref<int> r;
   r = l;
   CHECK(isEmpty(l));
   int i = 23;
   push_back(r, i);
-  //old pointer like semantic:
-  //CHECK(!isEmpty(l));
+  // old pointer like semantic:
+  // CHECK(!isEmpty(l));
   CHECK(isEmpty(l));
 }
 
-BOOST_AUTO_TEST_CASE ( filter_equal )
-{
+BOOST_AUTO_TEST_CASE(filter_equal) {
   Sequence a;
   CHECK(!equal(a, 0, 0));
   static char s[] = "aa";
@@ -229,8 +245,7 @@ BOOST_AUTO_TEST_CASE ( filter_equal )
   CHECK(!equal(a, 0, 2));
 }
 
-BOOST_AUTO_TEST_CASE ( pushback )
-{
+BOOST_AUTO_TEST_CASE(pushback) {
   List_Ref<int> l;
   int a = 23;
   int b = 42;
@@ -268,8 +283,7 @@ BOOST_AUTO_TEST_CASE ( pushback )
   CHECK_EQ(n.ref().front(), 106);
 }
 
-BOOST_AUTO_TEST_CASE ( pushback_other )
-{
+BOOST_AUTO_TEST_CASE(pushback_other) {
   List_Ref<std::pair<int, String> > l;
   std::pair<int, String> p;
   p.first = 23;
@@ -296,8 +310,7 @@ BOOST_AUTO_TEST_CASE ( pushback_other )
   CHECK_EQ(m.ref().front().first, 23);
 }
 
-BOOST_AUTO_TEST_CASE ( string_rep )
-{
+BOOST_AUTO_TEST_CASE(string_rep) {
   String s;
   s.append('.', 5);
   String t;
@@ -308,8 +321,7 @@ BOOST_AUTO_TEST_CASE ( string_rep )
   CHECK_EQ(s, u);
 }
 
-BOOST_AUTO_TEST_CASE ( rt_string )
-{
+BOOST_AUTO_TEST_CASE(rt_string) {
   String a;
   a.append("123456", 6);
   String b;
@@ -330,8 +342,7 @@ BOOST_AUTO_TEST_CASE ( rt_string )
   CHECK_EQ(o.str(), "x+xyz");
 }
 
-BOOST_AUTO_TEST_CASE ( string_len )
-{
+BOOST_AUTO_TEST_CASE(string_len) {
   String t;
   t.append("foobar", 6);
   String r;
@@ -342,8 +353,7 @@ BOOST_AUTO_TEST_CASE ( string_len )
   r.append("))", 2);
 }
 
-BOOST_AUTO_TEST_CASE ( string_eq )
-{
+BOOST_AUTO_TEST_CASE(string_eq) {
   String a;
   String b;
   String c;
@@ -364,8 +374,7 @@ BOOST_AUTO_TEST_CASE ( string_eq )
   CHECK_EQ(a, d);
 }
 
-BOOST_AUTO_TEST_CASE ( string_lt )
-{
+BOOST_AUTO_TEST_CASE(string_lt) {
   String a;
   a.append("anna", 4);
   String b;
@@ -382,8 +391,7 @@ BOOST_AUTO_TEST_CASE ( string_lt )
   CHECK_LESS(x, y);
 }
 
-BOOST_AUTO_TEST_CASE ( min_max_empty )
-{
+BOOST_AUTO_TEST_CASE(min_max_empty) {
   List_Ref<int> l;
   int x = maximum(l.ref().begin(), l.ref().end());
   CHECK(isEmpty(x));
@@ -392,15 +400,13 @@ BOOST_AUTO_TEST_CASE ( min_max_empty )
   CHECK(isEmpty(y));
 }
 
-BOOST_AUTO_TEST_CASE ( bit_ops )
-{
+BOOST_AUTO_TEST_CASE(bit_ops) {
   unsigned int x(-1);
   unsigned int y(-1);
   CHECK_NOT_EQ(x, y >> 1);
 }
 
-BOOST_AUTO_TEST_CASE ( string_neg )
-{
+BOOST_AUTO_TEST_CASE(string_neg) {
   String s;
   s.append(10);
   s.append('c');

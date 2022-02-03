@@ -32,12 +32,12 @@
 void Char_Visitor::visit_begin(Alt::Simple &a) {
   if (a.is_terminal()) {
     if (a.args.size() == 1 && *a.name == "CHAR")
-      active = true;
+      active = Bool(true);
   }
 }
 
 void Char_Visitor::visit_end(Alt::Simple &a) {
-  active = false;
+  active = Bool(false);
 }
 
 void Char_Visitor::visit(Fn_Arg::Const &f) {

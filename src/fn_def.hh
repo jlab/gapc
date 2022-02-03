@@ -129,7 +129,7 @@ class Fn_Def : public Fn_Decl {
     }
 
 
-    Fn_Def(const Fn_Decl &other);
+    explicit Fn_Def(const Fn_Decl &other);
 
     void set_paras(const std::list<Para_Decl::Base*> &l);
 
@@ -285,7 +285,7 @@ class Fn_Def : public Fn_Decl {
 
 
     void disable() {
-      disabled_ = true;
+      disabled_ = Bool(true);
     }
 
 

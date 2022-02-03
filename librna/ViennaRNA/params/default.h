@@ -2,10 +2,10 @@
    prototypes for energy_par.c
 */
 
-#ifndef __VIENNA_RNA_PACKAGE_ENERGY_PAR_H__
-#define __VIENNA_RNA_PACKAGE_ENERGY_PAR_H__
+#ifndef VIENNA_RNA_PACKAGE_PARAMS_DEFAULT_H
+#define VIENNA_RNA_PACKAGE_PARAMS_DEFAULT_H
 
-#include "energy_const.h"
+#include <ViennaRNA/params/constants.h>
 
 #define PUBLIC
 
@@ -15,7 +15,6 @@ extern double lxc37;   /* parameter for logarithmic loop
 
 extern int stack37[NBPAIRS+1][NBPAIRS+1];
 extern int stackdH[NBPAIRS+1][NBPAIRS+1]; /* stack enthalpies */
-extern int entropies[NBPAIRS+1][NBPAIRS+1];  /* not used anymore */
 
 extern int hairpin37[31];
 extern int hairpindH[31];
@@ -23,8 +22,6 @@ extern int bulge37[31];
 extern int bulgedH[31];
 extern int internal_loop37[31];
 extern int internal_loopdH[31];
-extern int internal2_energy;
-extern int old_mismatch_37[NBPAIRS+1][5][5];
 extern int mismatchI37[NBPAIRS+1][5][5];  /* interior loop mismatches */
 extern int mismatchIdH[NBPAIRS+1][5][5];  /* interior loop mismatches */
 extern int mismatch1nI37[NBPAIRS+1][5][5];  /* interior loop mismatches */
@@ -80,15 +77,23 @@ extern int TerminalAUdH;
 extern int DuplexInit37;
 extern int DuplexInitdH;
 /* stabilizing contribution due to special hairpins of size 4 (tetraloops) */
-extern char Tetraloops[];  /* string containing the special tetraloops */
-extern int  Tetraloop37[];  /* Bonus energy for special tetraloops */
-extern int  TetraloopdH[];
-extern char Triloops[];    /* string containing the special triloops */
-extern int  Triloop37[]; /* Bonus energy for special Triloops */
-extern int  TriloopdH[]; /* Bonus energy for special Triloops */
-extern char Hexaloops[];    /* string containing the special triloops */
-extern int  Hexaloop37[]; /* Bonus energy for special Triloops */
-extern int  HexaloopdH[]; /* Bonus energy for special Triloops */
+extern char Tetraloops[281];  /* string containing the special tetraloops */
+extern int  Tetraloop37[40];  /* Bonus energy for special tetraloops */
+extern int  TetraloopdH[40];
+extern char Triloops[241];    /* string containing the special triloops */
+extern int  Triloop37[40]; /* Bonus energy for special Triloops */
+extern int  TriloopdH[40]; /* Bonus energy for special Triloops */
+extern char Hexaloops[361];    /* string containing the special triloops */
+extern int  Hexaloop37[40]; /* Bonus energy for special Triloops */
+extern int  HexaloopdH[40]; /* Bonus energy for special Triloops */
+
+extern int GQuadAlpha37;
+extern int GQuadAlphadH;
+extern int GQuadBeta37;
+extern int GQuadBetadH;
+extern int GQuadLayerMismatch37;  /* penalty per incompatible gquad layer in a sub-alignment (applied twice for inner layers) */
+extern int GQuadLayerMismatchH;
+extern int GQuadLayerMismatchMax; /* maximum number of mismatching sequences in the alignment when gquad should be formed */
 
 extern double Tmeasure;       /* temperature of param measurements */
 

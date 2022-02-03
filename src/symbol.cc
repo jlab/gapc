@@ -189,23 +189,23 @@ void Symbol::NT::init_table_dim(const Yield::Size &l, const Yield::Size &r,
   if (active) {
     if (l != temp_l && r != temp_r) {
       table_dim |= Table::QUADRATIC;
-      if (temp_l.high() != Yield::UP) {
+      if (temp_l.high() != Yield::Poly(Yield::UP)) {
         recompute = true;
         temp_l.set(temp_l.low(), Yield::Poly(Yield::UP));
       }
-      if (temp_r.high() != Yield::UP) {
+      if (temp_r.high() != Yield::Poly(Yield::UP)) {
         recompute = true;
         temp_r.set(temp_r.low(), Yield::Poly(Yield::UP));
       }
     } else if (l != temp_l) {
-      if (temp_r.high() == Yield::UP) {
+      if (temp_r.high() == Yield::Poly(Yield::UP)) {
         table_dim |= Table::QUADRATIC;
       } else {
         table_dim |= Table::LINEAR;
         table_dim.set_sticky(Table::RIGHT);
         table_dim.set_right_rest(r);
       }
-      if (temp_l.high() != Yield::UP) {
+      if (temp_l.high() != Yield::Poly(Yield::UP)) {
         recompute = true;
         temp_l.set(temp_l.low(), Yield::Poly(Yield::UP));
       }
@@ -217,7 +217,7 @@ void Symbol::NT::init_table_dim(const Yield::Size &l, const Yield::Size &r,
         table_dim.set_sticky(Table::LEFT);
         table_dim.set_left_rest(l);
       }
-      if (temp_r.high() != Yield::UP) {
+      if (temp_r.high() != Yield::Poly(Yield::UP)) {
         recompute = true;
         temp_r.set(temp_r.low(), Yield::Poly(Yield::UP));
       }
@@ -225,7 +225,7 @@ void Symbol::NT::init_table_dim(const Yield::Size &l, const Yield::Size &r,
     return;
   }
   active = true;
-  if (m_ys(track).high() != Yield::UP)
+  if (m_ys(track).high() != Yield::Poly(Yield::UP))
     table_dim.set_bounded(m_ys(track).high());
   if (!temp_l.initialized())
     temp_l = l;
@@ -237,7 +237,8 @@ void Symbol::NT::init_table_dim(const Yield::Size &l, const Yield::Size &r,
     Table dim_t;
     dim_t = table_dim;
 
-    if (l.high() == Yield::UP && r.high() == Yield::UP) {
+    if (l.high() == Yield::Poly(Yield::UP) &&
+        r.high() == Yield::Poly(Yield::UP)) {
       table_dim |= Table::QUADRATIC;
     } else if (l.high() == Yield::UP || r.high() == Yield::UP) {
       table_dim |= Table::LINEAR;
@@ -797,9 +798,9 @@ void Symbol::NT::gen_ys_guards(std::list<Expr::Base*> &ors) const {
 
     Expr::Base *size = new Expr::Minus(j, i);
 
-    if (y.low() != 0)
+    if (y.low() != Yield::Poly(0))
       ors.push_back(new Expr::Less(size, new Expr::Const(y.low())));
-    if (y.high() != Yield::UP)
+    if (y.high() != Yield::Poly(Yield::UP))
       ors.push_back(new Expr::Greater(size, new Expr::Const(y.high())));
     // FIXME, check this
     // ors.push_back(new Expr::Greater(j, i));
@@ -1402,7 +1403,7 @@ void Symbol::NT::optimize_choice(::Type::List::Push_Type push,
 void Symbol::NT::set_alts(const std::list<Alt::Base*> &a) {
   alts = a;
   for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i)
-    (*i)->top_level = true;
+    (*i)->top_level = Bool(true);
 }
 
 void Symbol::NT::set_tracks(size_t x, size_t y) {
@@ -1592,7 +1593,7 @@ void Symbol::NT::set_ntargs(std::list<Para_Decl::Base*> *l) {
     return;
   }
   ntargs_ = *l;
-  never_tabulate_ = true;
+  never_tabulate_ = Bool(true);
 }
 
 void Symbol::Base::set_tabulated() {

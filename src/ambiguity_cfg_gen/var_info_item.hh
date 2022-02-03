@@ -59,7 +59,7 @@ class VarInfoItem {
     // A protected constructor and a pure virtual function
     // (clone) ensures that we can not create an instance
     // of this class.
-    VarInfoItem(InfoType type);
+    explicit VarInfoItem(InfoType type);
     virtual ~VarInfoItem();
 
  public:
@@ -126,7 +126,7 @@ class MultiVarInfoItem : public VarInfoItem {
  protected:
     // The protected constructor simply passes the type
     // information to the parent class VarInfoItem.
-    MultiVarInfoItem(InfoType type);
+    explicit MultiVarInfoItem(InfoType type);
 
  public:
     // Returns the dimension of this info item, that is

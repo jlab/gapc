@@ -86,7 +86,7 @@ class Base {
   Bool eliminate_lists_computed;
 
   Base(Type t, const Loc &l);
-  Base(Type t);
+  explicit Base(Type t);
 
  public:
   virtual ~Base();
@@ -169,12 +169,12 @@ class Base {
   bool one_per_class();
 
   static void set_no_coopt() {
-    no_coopt_ = true;
+    no_coopt_ = Bool(true);
   }
   static bool no_coopt() { return no_coopt_; }
 
   static void set_no_coopt_class() {
-    no_coopt_class_ = true;
+    no_coopt_class_ = Bool(true);
   }
   static bool no_coopt_class() { return no_coopt_class_; }
 
@@ -210,7 +210,7 @@ class Single : public Base {
 
  public:
   Single(std::string *n, const Loc &l) : Base(SINGLE, l), name_(n) { }
-  Single(Algebra *a);
+  explicit Single(Algebra *a);
 
   bool init();
   void eliminate_lists();
@@ -295,7 +295,7 @@ class Times : public Two {
  public:
   Times(Base *a, Base *b, const Loc &lo);
   Times(Base *a, Base *b) : Two(TIMES, a, b) { }
-  Times(const Two &t);
+  explicit Times(const Two &t);
   bool init();
   bool contains_only_times();
 
@@ -341,7 +341,7 @@ class Cartesian : public Two {
 
 class Nop : public Two {
  public:
-  Nop(Times &times);
+  explicit Nop(Times &times);
   bool contains_only_times();
 };
 

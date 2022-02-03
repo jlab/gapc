@@ -47,7 +47,7 @@ class Base {
 
  protected:
     Base(Type t, const Loc&l) : type(t), location(l) {}
-    Base(Type t) : type(t) {}
+    explicit Base(Type t) : type(t) {}
     Bool itr_access;
 
  public:
@@ -59,7 +59,7 @@ class Base {
     // string representation out to the given stream.
     virtual void put(std::ostream &s) const;
 
-    void set_itr(bool b) { itr_access = b; }
+    void set_itr(bool b) { itr_access = Bool(b); }
     bool is_itr() const { return itr_access; }
 };
 
@@ -73,8 +73,8 @@ class Plain : public Base {
 
     Plain(std::string *n, const Loc &l) : Base(PLAIN, l), name(n),
           vdecl(NULL) {}
-    Plain(std::string *n) : Base(PLAIN), name(n), vdecl(NULL) {}
-    Plain(Statement::Var_Decl &a);
+    explicit Plain(std::string *n) : Base(PLAIN), name(n), vdecl(NULL) {}
+    explicit Plain(Statement::Var_Decl &a);
 
     void put(std::ostream &s) const;
 };

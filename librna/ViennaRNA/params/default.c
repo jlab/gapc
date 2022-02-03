@@ -44,11 +44,11 @@
      Biochemistry 1991, 30, 6428--6435
 */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
-
-#include "energy_const.h"
-/*@unused@*/
-static char rcsid[] = "$Id: energy_par.c,v 1.6 2004/08/12 12:11:57 ivo Exp $";
+#include "ViennaRNA/params/default.h"
 
 #define NST 0     /* Energy for nonstandard stacked pairs */
 #define DEF -50   /* Default terminal mismatch, used for I */
@@ -86,6 +86,9 @@ PUBLIC int GQuadAlpha37 = -1800;
 PUBLIC int GQuadAlphadH = -11934;
 PUBLIC int GQuadBeta37 = 1200;
 PUBLIC int GQuadBetadH = 0;
+PUBLIC int GQuadLayerMismatch37   = 300;
+PUBLIC int GQuadLayerMismatchH    = 0;
+PUBLIC int GQuadLayerMismatchMax  = 1;
 
 PUBLIC int stack37[NBPAIRS+1][NBPAIRS+1] =
 {{   INF,   INF,   INF,   INF,   INF,   INF,   INF,   INF}

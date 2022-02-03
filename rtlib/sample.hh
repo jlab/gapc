@@ -80,7 +80,7 @@ class ran_discrete {
       : x(0), r(Singleton<scil::rng>::ref()), state(CLEAR) {
       array.reserve(4096/sizeof(double));
     }
-    ran_discrete(rng &a)
+    explicit ran_discrete(rng &a)
       : x(0), r(a), state(CLEAR) {
       array.reserve(4096/sizeof(double));
     }

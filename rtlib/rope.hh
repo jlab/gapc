@@ -177,7 +177,7 @@ class Readonly<Ref_Count> {
     Readonly()
       : pos(0) {
     }
-    Readonly(bool b)
+    explicit Readonly(bool b)
       : pos(0) {
       assert(!b);
     }
@@ -200,7 +200,7 @@ class Readonly<No_Ref_Count> {
  public:
     Readonly() {
     }
-    Readonly(bool b) {
+    explicit Readonly(bool b) {
       assert(!b);
     }
     Readonly<No_Ref_Count> &operator=(bool b) {
@@ -398,7 +398,7 @@ class Ref {
       append(s, std::strlen(s));
     }
 
-    Ref(const char *s)
+    explicit Ref(const char *s)
       : first(0), last(0), empty_(false), readonly(false) {
       assert(s);
       if (s && *s)
@@ -499,7 +499,7 @@ class Ref {
         friend class Ref<Refcount>;
 
      protected:
-        Iterator(Ref<Refcount> &r) : Const_Iterator(r) {}
+        explicit Iterator(Ref<Refcount> &r) : Const_Iterator(r) {}
         Iterator(Ref<Refcount> &r, Ref<Refcount> &rr) : Const_Iterator(r, r) {
         }
 
@@ -681,6 +681,16 @@ inline void append(rope::Ref<X> &str, double i) {
 }
 
 template<typename X>
+inline bool operator!=(const rope::Ref<X> &str, const char *s) {
+  return str != Rope(s);
+}
+
+template<typename X>
+inline bool operator==(const rope::Ref<X> &str, const char *s) {
+  return str == Rope(s);
+}
+
+template<typename X>
 inline Rope operator+=(rope::Ref<X> &str, const Rope &i) {
   Rope res;
   append(res, str);
@@ -765,9 +775,25 @@ Rope operator+(const Rope &a, char b) {
 }
 
 inline
+Rope operator+(const Rope &a, const char *b) {
+  Rope r;
+  append(r, a);
+  append(r, Rope(b));
+  return r;
+}
+
+inline
 Rope operator+(char a, const Rope &b) {
   Rope r;
   append(r, a);
+  append(r, b);
+  return r;
+}
+
+inline
+Rope operator+(const char *a, const Rope &b) {
+  Rope r;
+  append(r, Rope(a));
   append(r, b);
   return r;
 }

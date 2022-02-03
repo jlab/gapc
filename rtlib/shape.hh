@@ -232,12 +232,12 @@ class Fiber {
       alphset()(*t, x, a);
     }
 
-    Fiber(char c)
+    explicit Fiber(char c)
      : array(&null_elem) {
       append(c);
     }
 
-    Fiber(const char *s)
+    explicit Fiber(const char *s)
      : array(&null_elem) {
       assert(s);
       assert(*s && s[1] && !s[2]);
@@ -252,7 +252,7 @@ class Fiber {
         char c;
 
      public:
-        Iterator(T *t)
+        explicit Iterator(T *t)
           : a(t), i(bits), c(0) {
           alphset alph;
           if (!a)
@@ -303,7 +303,7 @@ class Fiber {
         Reverse_Iterator()
           : a(0), beg(0), i(0) {
         }
-        Reverse_Iterator(T *t)
+        explicit Reverse_Iterator(T *t)
           : a(t), beg(0), i(bits+char_width) {
         }
         Reverse_Iterator(T *t, Size u, T *b)

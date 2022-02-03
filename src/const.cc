@@ -101,7 +101,7 @@ void Const::Bool::put(std::ostream &o) {
 
 void Const::Number::setNegative() {
   Yield::Poly r(ys.high());
-  r += 1;
+  r += Yield::Poly(1);
   ys.set(ys.low(), r);
 }
 

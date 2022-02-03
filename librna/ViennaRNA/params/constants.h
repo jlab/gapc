@@ -1,11 +1,12 @@
-#ifndef __VIENNA_RNA_PACKAGE_ENERGY_CONST_H__
-#define __VIENNA_RNA_PACKAGE_ENERGY_CONST_H__
+#ifndef VIENNA_RNA_PACKAGE_PARAMS_CONSTANTS_H
+#define VIENNA_RNA_PACKAGE_PARAMS_CONSTANTS_H
 
 #include <limits.h>
 
 /**
- *  \file energy_const.h
- *  energy constants
+ *  @file     ViennaRNA/params/constants.h
+ *  @ingroup  energy_parameters
+ *  @brief    Energy parameter constants
  */
 
 /** The gas constant */
@@ -13,7 +14,7 @@
 /** 0 deg Celsius in Kelvin */
 #define K0  273.15
 /** Infinity as used in minimization routines */
-#define INF (INT_MAX/10)
+#define INF 10000000 /* (INT_MAX/10) */
 
 #define EMAX (INF/10)
 /** forbidden */
@@ -26,5 +27,9 @@
 #define TURN 3
 /** The maximum loop length */
 #define MAXLOOP 30
+
+#define UNIT 100
+
+#define MINPSCORE -2 * UNIT
 
 #endif

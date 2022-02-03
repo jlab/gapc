@@ -39,7 +39,7 @@ class AlgebraFunctionNameAttribute : public Attribute {
   std::string* algebraFunctionName;
 
  public:
-  AlgebraFunctionNameAttribute(std::string* algebraFunctionName);
+  explicit AlgebraFunctionNameAttribute(std::string* algebraFunctionName);
   AlgebraFunctionNameAttribute(AlgebraFunctionNameAttribute& a);
   virtual ~AlgebraFunctionNameAttribute();
 

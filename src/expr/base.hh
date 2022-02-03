@@ -47,7 +47,7 @@ class Base {
 
  protected:
     Base(Type t, const Loc&l) : type(t), location(l) {}
-    Base(Type t) : type(t) {}
+    explicit Base(Type t) : type(t) {}
 
  public:
     virtual ~Base();
@@ -84,7 +84,7 @@ class Two : public Base {
     Two(Type t, Base *l, Base *r, const Loc &lo)
     : Base(t, lo), left_(l), right_(r) {}
     Two(Type t, Base *l, Base *r) : Base(t), left_(l), right_(r) {}
-    Two(Type t) : Base(t) {}
+    explicit Two(Type t) : Base(t) {}
     void set_pretty_op(const std::string &s) { op = s; }
     Base *left_, *right_;
 

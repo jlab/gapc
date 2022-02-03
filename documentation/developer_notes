@@ -1,3 +1,11 @@
+2022-01-30 (Stefan Janssen):
+Regarding integration of ViennaRNA for librna: to properly compile the ViennaRNA code, you need to have some compiler flags set.
+This is done through the librna/config.h file which in turn is produced by "autoheader". If you change settings / code, please
+update the configuration in the librna sub-directory, by
+  cd librna
+  aclocal && autoheader && autoconf
+Thus, the configure script in the librna sub-dir should be called if you use ./configure from the main dir!
+
 2020-06-03 (Stefan Janssen):
 The configure script will gather your systems settings in order to setup correct environment variables for the make process.
 This script is generated itself, see: https://thoughtbot.com/blog/the-magic-behind-configure-make-make-install
