@@ -31,14 +31,14 @@
 
 
 Expr::Const::Const(const Yield::Poly &p) : Base(CONST) {
-  assert(p != Yield::UP);
+  assert(p != Yield::Poly(Yield::UP));
   base = new ::Const::Size(p.konst());
 }
 
 Expr::Const::Const(const Yield::Size &ys)
   : Base(CONST) {
-  assert(ys.low() != Yield::UP);
-  assert(ys.high() != Yield::UP);
+  assert(ys.low() != Yield::Poly(Yield::UP));
+  assert(ys.high() != Yield::Poly(Yield::UP));
   assert(ys.low().konst() <= ys.high().konst());
   base = new ::Const::Size(ys.high().konst() - ys.low().konst() + 1);
 }
@@ -143,7 +143,7 @@ Expr::Base *Expr::Base::plus(Base *b) {
 }
 
 Expr::Base *Expr::Base::plus(const Yield::Poly &p) {
-  assert(p != Yield::UP);
+  assert(p != Yield::Poly(Yield::UP));
   if (p == 0)
     return this;
   Expr::Const *c = new Expr::Const(p);
@@ -159,7 +159,7 @@ Expr::Base *Expr::Base::minus(Base *b) {
 }
 
 Expr::Base *Expr::Base::minus(const Yield::Poly &p) {
-  assert(p != Yield::UP);
+  assert(p != Yield::Poly(Yield::UP));
   if (p == 0)
     return this;
   Expr::Const *c = new Expr::Const(p);
