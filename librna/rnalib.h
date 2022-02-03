@@ -88,7 +88,8 @@ double scale(int x);
 bool iupac_match(char base, char iupac_base);
 int bp_index(char x, char y);
 
-/* the below functions are exposed to recreate energy computation of the original RNAhybrid, i.e. Haskell and ADPc */
+/* the below 8 functions are exposed to recreate energy computation of the
+   original RNAhybrid, i.e. Haskell and ADPc */
 int bl_ent(rsize l);
 int il11_energy(const char *s, rsize i, rsize k, rsize l, rsize j);
 int il12_energy(const char *s, rsize i, rsize k, rsize l, rsize j);
