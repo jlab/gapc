@@ -304,7 +304,6 @@ void Grammar::init_multi_yield_sizes() {
       print_multi_ys();
     }
 
-    assert(a < m);
     ++a;
   } while (cont);
 }
@@ -424,7 +423,6 @@ bool Grammar::init_tracks() {
     }
     move_new_nts();
     ++i;
-    assert(i < m);
   } while (v.again);
   return true;
 }
