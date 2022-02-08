@@ -172,13 +172,13 @@ void Log::build_message(
 
   out << line << std::endl;
   std::string mark;
-  build_mark(l, mark);
+  build_mark(l, &mark);
   out << mark << std::endl;
   out << l << ": " << m << std::endl;
 }
 
 
-void Log::build_mark(const Loc& l, std::string &s) {
+void Log::build_mark(const Loc& l, std::string *s) {
   // vanilla bison 2.3 counts columns from 0
   // with sed hack in makefiles/lexyaccxx.mf from 1
   size_t off = l.begin.column;
@@ -197,11 +197,11 @@ void Log::build_mark(const Loc& l, std::string &s) {
     std::string fill(length, '-');
     fill[0] = '^';
     fill[length-1] = '^';
-    s = t + fill;
+    *s = t + fill;
     return;
   }
   std::string fill("^");
-  s = t + fill;
+  *s = t + fill;
 }
 
 
