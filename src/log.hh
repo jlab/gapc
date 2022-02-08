@@ -103,7 +103,7 @@ class Log {
     const Loc* l, const std::string &m, LogLevel messageLogLevel);
   virtual void writeLogMessageContinued(const Loc* l, const std::string &m);
 
-  void build_mark(const Loc &l, std::string &s);
+  void build_mark(const Loc &l, std::string *s);
 
 
  public:

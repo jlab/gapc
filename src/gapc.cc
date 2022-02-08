@@ -71,7 +71,7 @@ static void version() {
  * the compiler calls (although this is not an invariant one
  * should build on).
  */
-static void parse_options(int argc, char **argv, Options &rec) {
+static void parse_options(int argc, char **argv, Options *rec) {
   po::variables_map vm;
   po::options_description visible("Options");
   visible.add_options()
@@ -158,101 +158,101 @@ static void parse_options(int argc, char **argv, Options &rec) {
     std::cerr << "No filename specified." << std::endl;
     std::exit(1);
   }
-  rec.in_file = vm["file"].as<std::string>();
+  rec->in_file = vm["file"].as<std::string>();
   if (vm.count("instance"))
-    rec.instance = vm["instance"].as<std::string>();
+    rec->instance = vm["instance"].as<std::string>();
   if (vm.count("product"))
-    rec.product = vm["product"].as<std::string>();
+    rec->product = vm["product"].as<std::string>();
 
   if (vm.count("output"))
-    rec.out_file = vm["output"].as<std::string>();
+    rec->out_file = vm["output"].as<std::string>();
   else
     //    rec.out_file = basename(rec.in_file) + ".cc";
-    rec.out_file = "out.cc";
-  rec.header_file = basename(rec.out_file) + ".hh";
-  rec.make_file = basename(rec.out_file) + ".mf";
+    rec->out_file = "out.cc";
+  rec->header_file = basename(rec->out_file) + ".hh";
+  rec->make_file = basename(rec->out_file) + ".mf";
 
   if (vm.count("class-name"))
-    rec.class_name = vm["class-name"].as<std::string>();
+    rec->class_name = vm["class-name"].as<std::string>();
   else
-    rec.class_name = classname(rec.out_file);
+    rec->class_name = classname(rec->out_file);
 
   if (vm.count("stdout"))
-    rec.out_file.clear();
+    rec->out_file.clear();
 
   if (vm.count("inline"))
-    rec.inline_nts = true;
+    rec->inline_nts = true;
 
   if (vm.count("table-design"))
-    rec.approx_table_design = true;
+    rec->approx_table_design = true;
   if (vm.count("tab-all"))
-    rec.tab_everything = true;
+    rec->tab_everything = true;
   if (vm.count("tab"))
-    rec.tab_list = vm["tab"].as< std::vector<std::string> >();
+    rec->tab_list = vm["tab"].as< std::vector<std::string> >();
   if (vm.count("include"))
-    rec.includes = vm["include"].as< std::vector<std::string> >();
+    rec->includes = vm["include"].as< std::vector<std::string> >();
   if (vm.count("cyk"))
-    rec.cyk = true;
+    rec->cyk = true;
   if (vm.count("backtrack") || vm.count("backtrace") || vm.count("sample"))
-    rec.backtrack = true;
+    rec->backtrack = true;
   if (vm.count("sample"))
-    rec.sample = true;
+    rec->sample = true;
   if (vm.count("subopt"))
-    rec.subopt = true;
+    rec->subopt = true;
   if (vm.count("kbacktrack") || vm.count("kbacktrace"))
-    rec.kbacktrack = true;
+    rec->kbacktrack = true;
   if (vm.count("no-coopt"))
-    rec.no_coopt = true;
+    rec->no_coopt = true;
   if (vm.count("no-coopt-class"))
-    rec.no_coopt_class = true;
+    rec->no_coopt_class = true;
   if (vm.count("subopt-classify"))
-    rec.classified = true;
+    rec->classified = true;
   if (vm.count("window-mode"))
-    rec.window_mode = true;
+    rec->window_mode = true;
   if (vm.count("kbest"))
-    rec.kbest = true;
+    rec->kbest = true;
   if (vm.count("ambiguity")) {
-    rec.ambiguityCheck = true;
+    rec->ambiguityCheck = true;
   }
   if (vm.count("specialize_grammar")) {
-    rec.specializeGrammar = true;
+    rec->specializeGrammar = true;
   }
   if (vm.count("verbose"))
-    rec.verbose_mode = true;
+    rec->verbose_mode = true;
   if (vm.count("log-level")) {
     int level = vm["log-level"].as<int>();
-    rec.logLevel = level;
+    rec->logLevel = level;
   }
-        if (vm.count("pareto-version")) {
+  if (vm.count("pareto-version")) {
     int pareto = vm["pareto-version"].as<int>();
-    rec.pareto = pareto;
+    rec->pareto = pareto;
   }
 
-        if (vm.count("multi-dim-pareto")) {
-                rec.multiDimPareto = true;
-        }
+  if (vm.count("multi-dim-pareto")) {
+    rec->multiDimPareto = true;
+  }
 
-        if (vm.count("cut-off")) {
-                int cutoff = vm["cut-off"].as<int>();
-    rec.cutoff = cutoff;
-        }
+  if (vm.count("cut-off")) {
+    int cutoff = vm["cut-off"].as<int>();
+    rec->cutoff = cutoff;
+  }
 
-        if (vm.count("float-accuracy")) {
-            int float_acc = vm["float-accuracy"].as<int>();
-            rec.float_acc = float_acc;
-        }
+  if (vm.count("float-accuracy")) {
+    int float_acc = vm["float-accuracy"].as<int>();
+    rec->float_acc = float_acc;
+  }
 
-        if (vm.count("specialized-adp")) {
+  if (vm.count("specialized-adp")) {
     int spec = vm["specialized-adp"].as<int>();
-    rec.specialization = spec;
+    rec->specialization = spec;
   }
 
-        if (vm.count("step-mode")) {
+  if (vm.count("step-mode")) {
     int s = vm["step-mode"].as<int>();
-    rec.step_option = s;
+    rec->step_option = s;
   }
 
-  bool r = rec.check();
+  bool r = rec->check();
   if (!r) {
     throw LogError("Seen improper option usage.");
   }
@@ -280,14 +280,14 @@ class Main {
   Code::Gen code_;
 
   // classified product are replaced by times product
-  void conv_classified_product(Options &opts) {
-    Instance *instance = driver.ast.instance(opts.instance);
+  void conv_classified_product(Options *opts) {
+    Instance *instance = driver.ast.instance(opts->instance);
     if (!instance) {
       return;
     }
     bool r = instance->replace_classified_product();
     if (r) {
-      opts.classified = true;
+      opts->classified = true;
     }
   }
 
@@ -307,7 +307,7 @@ class Main {
   void front() {
     // parses the command line options and fills the Options
     // instance "opts".
-    parse_options(argc, argv, opts);
+    parse_options(argc, argv, &opts);
 
     // before we do anything, set the log-level. Create a new
     // instance, which automatically will
@@ -678,7 +678,7 @@ class Main {
   void runKernal() {
     makefile();
 
-    conv_classified_product(opts);
+    conv_classified_product(&opts);
 
     if (opts.classified) {
       std::string class_name = opts.class_name;
