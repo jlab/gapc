@@ -151,8 +151,8 @@ void Fn_Decl::replace(Type::Base *a, Type::Base *b) {
 
 
 void Fn_Decl::replace_types(
-  std::pair<std::string*, Type::Base*> &alph,
-  std::pair<std::string*, Type::Base*> &answer) {
+  const std::pair<std::string*, Type::Base*> &alph,
+  const std::pair<std::string*, Type::Base*> &answer) {
   // FIXME for multiple answer types ...
   if (choice_fn) {
     assert(types.size() == 1);
@@ -207,13 +207,13 @@ void Fn_Decl::set_types(std::list<Type::Base*> *l) {
 }
 
 
-void Fn_Decl::add_fn_decl(hashtable<std::string, Fn_Decl *> &h, Fn_Decl *f) {
-  if (h.find(*f->name) != h.end()) {
+void Fn_Decl::add_fn_decl(hashtable<std::string, Fn_Decl *> *h, Fn_Decl *f) {
+  if (h->find(*f->name) != h->end()) {
     Log::instance()->error(
       f->location, "Operator name " + *f->name + " redefined");
-    Log::instance()->error(h[*f->name]->location, "here.");
+    Log::instance()->error(h->operator[](*f->name)->location, "here.");
   } else {
-    h[*f->name] = f;
+    h->operator[](*f->name) = f;
   }
 }
 
@@ -255,7 +255,7 @@ bool Fn_Decl::operator==(const Fn_Decl &d) const {
 }
 
 
-bool Fn_Decl::types_equal(Fn_Decl &d) {
+bool Fn_Decl::types_equal(const Fn_Decl &d) {
   return types.size() == d.types.size();
 }
 

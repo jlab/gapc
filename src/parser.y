@@ -627,11 +627,11 @@ signtparas: ';' datatypes
 sig_decls: decl ';'
              { hashtable<std::string, Fn_Decl*> *h =
                  new hashtable<std::string, Fn_Decl*>();
-               Fn_Decl::add_fn_decl(*h, $1);
+               Fn_Decl::add_fn_decl(h, $1);
                $$ = h; }
            |
            sig_decls decl ';'
-             { Fn_Decl::add_fn_decl(*$1, $2);
+             { Fn_Decl::add_fn_decl($1, $2);
                $$ = $1; }
            ;
 

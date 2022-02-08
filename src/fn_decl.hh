@@ -54,7 +54,7 @@ class Fn_Decl {
   // declaration.
   bool choice_fn;
 
-  bool types_equal(Fn_Decl &d);
+  bool types_equal(const Fn_Decl &d);
 
 
  public:
@@ -87,10 +87,10 @@ class Fn_Decl {
   void replace(Type::Base *a, Type::Base *b);
 
   virtual void replace_types(
-    std::pair<std::string*, Type::Base*> &alph,
-    std::pair<std::string*, Type::Base*> &answer);
+    const std::pair<std::string*, Type::Base*> &alph,
+    const std::pair<std::string*, Type::Base*> &answer);
 
-  static void add_fn_decl(hashtable<std::string, Fn_Decl *> &h, Fn_Decl *f);
+  static void add_fn_decl(hashtable<std::string, Fn_Decl *> *h, Fn_Decl *f);
 
   bool operator==(const Fn_Decl &d) const;
 
