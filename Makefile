@@ -188,6 +188,10 @@ endif
 librna/librna.a: $(LIBRNA_OBJ)
 	$(AR) -r $@ $^
 
+librna/rnalib.py: $(LIBRNA_PIO)
+	cd librna && swig -python rnalib.i
+	$(CC) -c $(LIBRNA_SRC) librna/rnalib_wrap.c $(PIC_FLAGS) $(CFLAGS) -I /home/sjanssen/miniconda3/include/python3.7m/
+	$(LD) $(LDLIBS) $(SHARED_FLAGS) $(LIBRNA_PIO) rnalib_wrap.o -o librna/_gapcrna.so
 
 ################################################################################
 # version number generation
