@@ -674,7 +674,7 @@ void Printer::Cpp::print(const Fn_Def &fn_def) {
   }
   lines_end_mark(fn_def.stmts);
   dec_indent();
-  stream << indent() << '}' << endl << endl;
+  stream << indent() << '}' << endl;
   choice_range = NULL;
 }
 
@@ -1009,7 +1009,7 @@ void Printer::Cpp::print_names(
 void Printer::Cpp::print_eqs(const std::list<Statement::Var_Decl*> &l, char c) {
   for (std::list<Statement::Var_Decl*>::const_iterator i = l.begin();
        i != l.end(); ++i) {
-    stream << *(*i)->name << " = " << *(*i)->name << c << ";\n";
+    stream << indent() << *(*i)->name << " = " << *(*i)->name << c << ";" << endl;
   }
 }
 
@@ -1017,8 +1017,8 @@ void Printer::Cpp::print_eqs(const std::list<Statement::Var_Decl*> &l, char c) {
 void Printer::Cpp::print_most_decl(const Symbol::NT &nt) {
   ::Type::Base *type = new Type::Size();
   for (size_t t = nt.track_pos(); t < nt.track_pos() + nt.tracks(); ++t) {
-    stream << *type << " t_" << t << "_left_most;\n";
-    stream << *type << " t_" << t << "_right_most;\n";
+    stream << indent() << *type << " t_" << t << "_left_most;" << endl;
+    stream << indent() << *type << " t_" << t << "_right_most;" << endl;
   }
 }
 
@@ -1066,29 +1066,41 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   bool cyk = t.cyk();
   const std::list<Statement::Var_Decl*> &ns = t.ns();
 
-  stream << "class " << tname << " {\n\n";
-  stream << "private:\n\n";
+  stream << indent() << "class " << tname << " {" << endl;
+  inc_indent();
+
+  dec_indent();
+  stream << indent() << " private:" << endl;
+  inc_indent();
 
   if (wmode) {
-    stream << "unsigned wsize;\nunsigned winc;\n";
+    stream << indent() << "unsigned wsize;" << endl;
+    stream << indent() << "unsigned winc;" << endl;
   }
 
   print_most_decl(t.nt());
 
-  stream << "std::vector<" << dtype << " > array;\n";
+  stream << indent() << "std::vector<" << dtype << "> array;" << endl;
   if  (!cyk) {
-    stream << "std::vector<bool> tabulated;\n";
+    stream << indent() << "std::vector<bool> tabulated;" << endl;
   }
   print(ns);
-  stream << dtype << " zero;\n";
+  stream << indent() << dtype << " zero;" << endl;
 
-  stream << t.fn_size() << '\n';
+  stream << t.fn_size() << endl;
 
-  stream << "public:\n\n";
+  dec_indent();
+  stream << indent() << " public:" << endl;
+  inc_indent();
 
-  stream << tname << "()\n{\n  empty(zero);\n}\n\n";
+  stream << indent() << tname << "() {" << endl;
+  inc_indent();
+  stream << indent() << "empty(zero);" << endl;
+  dec_indent();
+  stream << indent() << "}" << endl << endl;
 
-  stream << "void init(";
+  // start "void init()"
+  stream << indent() << "void init(";
   print_paras(ns, '_');
 
   if (wmode) {
@@ -1096,26 +1108,32 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   }
 
   stream << ", const std::string &tname";
-  stream << ")\n";
-  stream << "{\n";
+  stream << ") {" << endl;
+  inc_indent();
   print_eqs(ns, '_');
 
   for (size_t track = t.nt().track_pos();
        track < t.nt().track_pos() + t.nt().tracks(); ++track) {
-    stream << "t_" << track << "_left_most = 0;\n" << "t_" << track;
-    stream << "_right_most = t_" << track << "_n;\n";
+    stream << indent() << "t_" << track << "_left_most = 0;" << endl;
+    stream << indent() << "t_" << track << "_right_most = t_" << track << "_n;" << endl;
   }
 
   if (wmode) {
-    stream << "wsize = wsize_;\nwinc = winc_;\nt_0_right_most = wsize;\n";
+    stream << indent() << "wsize = wsize_;" << endl;
+    stream << indent() << "winc = winc_;" << endl;
+    stream << indent() << "t_0_right_most = wsize;" << endl;
   }
 
-  stream << ptype << " newsize = size(";
-  stream << ");\narray.resize(newsize);\n";
+  stream << indent() << ptype << " newsize = size(";
+  stream << ");" << endl;
+  stream << indent() << "array.resize(newsize);" << endl;
   if (!cyk) {
-    stream << "tabulated.clear();\ntabulated.resize(newsize);\n";
+    stream << indent() << "tabulated.clear();" << endl;
+    stream << indent() << "tabulated.resize(newsize);" << endl;
   }
-  stream << "}\n";
+  dec_indent();
+  stream << indent() << "}" << endl << endl;
+  // end "void init()"
 
   if (wmode) {
     stream << t.fn_untab();
@@ -1123,16 +1141,22 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   }
 
   if (!cyk) {
-    stream << t.fn_is_tab() << '\n';
+    stream << t.fn_is_tab() << endl;
     // needed by subopt classify
-    stream << "void clear() { tabulated.clear(); }\n";
+    stream << indent() << "void clear() {" << endl;
+    inc_indent();
+    stream << indent() << "tabulated.clear();" << endl;
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
   }
 
-  stream << t.fn_get_tab() << '\n';
+  stream << t.fn_get_tab() << endl;
 
-  stream << t.fn_tab() << '\n';
+  stream << t.fn_tab();
 
-  stream << "};\n" << tname << ' ' << t.name() << ";\n\n";
+  dec_indent();
+  stream << indent() << "};" << endl;
+  stream << indent() << tname << ' ' << t.name() << ";" << endl;
 
   in_class = false;
 }
@@ -1404,7 +1428,6 @@ void Printer::Cpp::print_table_decls(const Grammar &grammar) {
        grammar.tabulated.begin();
        i != grammar.tabulated.end(); ++i)
     stream << *i->second->table_decl << endl;
-  stream << endl;
 }
 
 
@@ -1467,7 +1490,7 @@ void Printer::Cpp::print_table_init(const AST &ast) {
   for (hashtable<std::string, Symbol::NT*>::const_iterator i =
        ast.grammar()->tabulated.begin(); i != ast.grammar()->tabulated.end();
        ++i) {
-    stream << indent() << i->second->table_decl->name() << ".init( ";
+    stream << indent() << i->second->table_decl->name() << ".init(";
     size_t a = 0;
     for (std::vector<Statement::Var_Decl*>::const_iterator j =
          ast.seq_decls.begin(); j != ast.seq_decls.end(); ++j, ++a) {
@@ -1548,8 +1571,7 @@ void Printer::Cpp::print_most_init(const AST &ast) {
 
 
 void Printer::Cpp::print_init_fn(const AST &ast) {
-  stream << "void init(";
-
+  stream << indent() << "void init(";
   stream << "const gapc::Opts &opts)" << " {" << endl;
 
   inc_indent();
@@ -1573,7 +1595,7 @@ void Printer::Cpp::print_init_fn(const AST &ast) {
   }
 
   dec_indent();
-  stream << '}' << endl << endl;
+  stream << indent() << '}' << endl << endl;
 }
 
 void Printer::Cpp::print_window_inc_fn(const AST &ast) {
@@ -1666,8 +1688,9 @@ void Printer::Cpp::header(const AST &ast) {
   }
   imports(ast);
   print_hash_decls(ast);
-  stream << "class " << class_name << " {" << endl << endl
-    << "  public:" << endl;
+  stream << indent() << "class " << class_name << " {" << endl;
+  stream << indent() << " public:" << endl;
+  inc_indent();
 
   for (std::vector<Statement::Var_Decl*>::const_iterator i =
        ast.seq_decls.begin(); i != ast.seq_decls.end(); ++i) {
@@ -1677,7 +1700,8 @@ void Printer::Cpp::header(const AST &ast) {
   print_most_decl(*ast.grammar()->axiom);
 
   if (ast.window_mode) {
-    stream << "unsigned wsize;\nunsigned winc;\n";
+    stream << indent() << "unsigned wsize;" << endl;
+    stream << indent() << "unsigned winc;" << endl;
   }
 
   stream << endl;
@@ -1689,8 +1713,8 @@ void Printer::Cpp::header(const AST &ast) {
   set_tracks(ast);
   print_init_fn(ast);
   print_window_inc_fn(ast);
-  stream << "  private:" << endl;
-  inc_indent();
+  dec_indent();
+  stream << indent() << " private:" << endl;
   inc_indent();
 }
 
@@ -1909,7 +1933,7 @@ void Printer::Cpp::multi_print_cyk(
 
 void Printer::Cpp::print_cyk_fn(const AST &ast) {
   if (fwd_decls) {
-    stream << "   void cyk();" << endl << endl;
+    stream << indent() << "void cyk();" << endl << endl;
     return;
   }
 
@@ -1965,9 +1989,9 @@ void Printer::Cpp::print_cyk_fn(const AST &ast) {
 
 
 void Printer::Cpp::print_run_fn(const AST &ast) {
-  stream << "   " << *ast.grammar()->axiom->code()->return_type << " run()";
-  stream << endl << '{' << endl
-    << "  return nt_" << *ast.grammar()->axiom_name << '(';
+  stream << indent() << *ast.grammar()->axiom->code()->return_type << " run() {" << endl;
+  inc_indent();
+  stream << indent() << "return nt_" << *ast.grammar()->axiom_name << '(';
 
   bool first = true;
   size_t track = 0;
@@ -1991,15 +2015,16 @@ void Printer::Cpp::print_run_fn(const AST &ast) {
     }
   }
 
-  stream << ");" << endl
-  << '}' << endl;
+  stream << ");" << endl;
+  dec_indent();
+  stream << indent() << '}' << endl << endl;
 }
 
 
 void Printer::Cpp::print_stats_fn(const AST &ast) {
-  stream << "void print_stats(std::ostream &o)" << endl << '{' << endl;
+  stream << indent() << "void print_stats(std::ostream &o) {" << endl;
 
-  stream << "#ifdef STATS\n";
+  stream << "#ifdef STATS" << endl;
 
   inc_indent();
   stream << indent() << "o << \"\\n\\nN = \" << seq.size() << '\\n'" << ';'
@@ -2013,14 +2038,16 @@ void Printer::Cpp::print_stats_fn(const AST &ast) {
   }
   dec_indent();
 
-  stream << "#endif\n";
+  stream << "#endif" << endl;
 
-  stream << '}' << endl << endl;
+  stream << indent() << '}' << endl << endl;
 }
 
 
 void Printer::Cpp::header_footer(const AST &ast) {
-  stream << " public:" << endl;
+  dec_indent();
+  stream << indent() << " public:" << endl;
+  inc_indent();
   print_run_fn(ast);
   print_stats_fn(ast);
 }
@@ -2043,7 +2070,9 @@ void Printer::Cpp::print_id() {
 
 void Printer::Cpp::footer(const AST &ast) {
   if (fwd_decls) {
-    stream << endl << " public:" << endl;
+	dec_indent();
+    stream << indent() << " public:" << endl;
+    inc_indent();
   }
   print_cyk_fn(ast);
   print_id();
@@ -2059,20 +2088,21 @@ void Printer::Cpp::print_backtrack_fn(const AST &ast) {
     return;
   }
 
-  stream << "   " << *ast.grammar()->axiom->code()->return_type << " backtrack";
+  stream << indent() << *ast.grammar()->axiom->code()->return_type << " backtrack";
   print(
     ast.grammar()->axiom->code()->types, ast.grammar()->axiom->code()->names);
-  stream << endl << '{' << endl;
+  stream << " {" << endl;
+  inc_indent();
 
   bool axiom_use_btproxy = ast.code_mode().kscoring()
     // FIXME workaround mfe*pp, axiom without h, axiom returns list of scores
     // see helene.gap, adpf_hl
     && ast.instance_->product->algebra()->is_compatible(Mode::KSCORING);
   if (axiom_use_btproxy) {
-    stream << *ast.grammar()->axiom->data_type()
+    stream << indent() << *ast.grammar()->axiom->data_type()
     << " bt  = bt_proxy_nt_"  << *ast.grammar()->axiom_name << '(';
   } else {
-    stream << "  return bt_nt_" << *ast.grammar()->axiom_name << '(';
+    stream << indent() << "return bt_nt_" << *ast.grammar()->axiom_name << '(';
   }
 
   std::list<std::string*>::const_iterator i =
@@ -2088,10 +2118,10 @@ void Printer::Cpp::print_backtrack_fn(const AST &ast) {
   stream << ");" << endl;
 
   if (axiom_use_btproxy) {
-    stream << "return execute_backtrack_k(bt);" << endl;
+    stream << indent() << "return execute_backtrack_k(bt);" << endl;
   }
-
-  stream << '}' << endl;
+  dec_indent();
+  stream << indent() << '}' << endl << endl;
 }
 
 
@@ -2146,23 +2176,25 @@ void Printer::Cpp::print_kbacktrack_pp(const AST &ast) {
 
 
 void Printer::Cpp::print_backtrack_pp(const AST &ast) {
-  stream << "template <typename Value>";
-  stream << "   void  print_backtrack(std::ostream &out, "
-    << "Value&" << " value)" << endl;
+  stream << indent() << "template <typename Value>";
+  stream << " void print_backtrack(std::ostream &out, "
+    << "Value&" << " value) {" << endl;
+  inc_indent();
 
-  stream << endl << '{' << endl;
   if (ast.code_mode() != Code::Mode::BACKTRACK) {
-    stream << '}' << endl;
+	dec_indent();
+    stream << indent() << '}' << endl << endl;
     return;
   }
 
   if (ast.code_mode().kscoring()) {
     print_kbacktrack_pp(ast);
-    stream << '}' << endl;
+    dec_indent();
+    stream << indent() << '}' << endl;
     return;
   }
 
-  stream << *ast.grammar()->axiom->code()->return_type << " bt = backtrack(";
+  stream << indent() << *ast.grammar()->axiom->code()->return_type << " bt = backtrack(";
 
   print_axiom_args(ast);
 
@@ -2176,18 +2208,21 @@ void Printer::Cpp::print_backtrack_pp(const AST &ast) {
     assert(bt_type);
     assert(bt_type->value_type());
 
-    stream << "if (!bt)\nreturn;\n";
+    stream << indent() << "if (!bt)" << endl;
+    inc_indent();
+    stream << indent() << "return;" << endl;
+    dec_indent();
 
-    stream << "intrusive_ptr<Eval_List<" << *bt_type->value_type()
+    stream << indent() << "intrusive_ptr<Eval_List<" << *bt_type->value_type()
       << "> > elist = bt->eval();"
       << endl
-      << "elist->print(out, value);" << endl
-      << "erase(elist);" << endl
-      << "erase(bt);" << endl;
+      << indent() << "elist->print(out, value);" << endl
+      << indent() << "erase(elist);" << endl
+      << indent() << "erase(bt);" << endl;
   }
 
-  stream << endl
-    << '}' << endl;
+  dec_indent();
+  stream << indent() << '}' << endl << endl;
 }
 
 
@@ -2223,8 +2258,9 @@ void Printer::Cpp::print_marker_clear(const AST &ast) {
 
 void Printer::Cpp::print_subopt_fn(const AST &ast) {
   if (ast.code_mode() != Code::Mode::SUBOPT) {
-    stream << "   void  print_subopt(std::ostream &out, "
-    << "int " << " delta = 0) {}" << endl;
+    stream << indent() << "void print_subopt(std::ostream &out, "
+    << "int " << " delta = 0) {" << endl;
+    stream << indent() << '}' << endl;
     return;
   }
   Fn_Def *f = ast.grammar()->axiom->code();
@@ -2232,9 +2268,9 @@ void Printer::Cpp::print_subopt_fn(const AST &ast) {
   ::Type::Base *bt_type = f->return_type->deref()->component()->right();
   ::Type::Base *pp_type = f->return_type->deref()->component()->right()
   ->component();
-  stream << "void print_subopt(std::ostream &out, " << *score_type
-  << " delta = 0)"
-  << endl << '{' << endl;
+  stream << indent() << "void print_subopt(std::ostream &out, " << *score_type
+  << " delta = 0) {" << endl;
+  inc_indent();
   print_table_init(ast);
   print_zero_init(*ast.grammar());
   stream << endl << endl;
@@ -2275,7 +2311,8 @@ void Printer::Cpp::print_subopt_fn(const AST &ast) {
 
   print_marker_clear(ast);
 
-  stream << '}' << endl;
+  dec_indent();
+  stream << indent() << '}' << endl;
 }
 
 
@@ -2288,44 +2325,50 @@ void Printer::Cpp::backtrack_footer(const AST &ast) {
 
 
 void Printer::Cpp::print_value_pp(const AST &ast) {
-  stream << "template <typename Value>";
-  stream << "   void  print_result(std::ostream &out, "
-    << "Value&" << " res)" << endl;
-  stream << endl << '{' << endl;
+  stream << indent() << "template <typename Value>";
+  stream << " void  print_result(std::ostream &out, "
+         << "Value&" << " res) {" << endl;
+  inc_indent();
   if (ast.code_mode() == Code::Mode::BACKTRACK ||
       ast.code_mode() == Code::Mode::SUBOPT) {
-    stream << '}' << endl;
+	dec_indent();
+    stream << indent() << '}' << endl;
     return;
   }
 
-  stream << "if (isEmpty(res))" << endl
-    << "  out << \"[]\\n\";" << endl
-    << "else" << endl
-    << "  out << res << '\\n';" << endl;
+  stream << indent() << "if (isEmpty(res)) {" << endl;
+  inc_indent();
+  stream << indent() << "out << \"[]\\n\";" << endl;
+  dec_indent();
+  stream << indent() << "} else {" << endl;
+  inc_indent();
+  stream << indent() << "out << res << '\\n';" << endl;
+  dec_indent();
+  stream << indent() << '}' << endl;
 
-  stream << endl
-    << '}' << endl;
+  dec_indent();
+  stream << indent() << '}' << endl << endl;
 }
 
 
 void Printer::Cpp::close_class() {
-  stream << endl << "};" << endl << endl;
+  dec_indent();
+  stream << indent() << "};" << endl << endl;
 }
 
 
 void Printer::Cpp::typedefs(Code::Gen &code) {
   stream << "#ifndef NO_GAPC_TYPEDEFS" << endl;
-  stream << "namespace gapc {" << endl
-    << "  typedef " << class_name << " class_name;" << endl
-    << "  typedef " << *code.return_type()
-    << " return_type;" << endl
-    << '}' << endl;
-  stream << "#endif";
-  stream  << endl;
-  stream  << endl;
-  stream << "#endif";
-  stream  << endl;
-  stream  << endl;
+  stream << indent() << "namespace gapc {" << endl;
+  inc_indent();
+  stream << indent() << "typedef " << class_name << " class_name;" << endl;
+  stream << indent() << "typedef " << *code.return_type()
+    << " return_type;" << endl;
+  dec_indent();
+  stream << indent() << '}' << endl;
+  stream << "#endif" << endl;
+  stream << endl;
+  stream << "#endif" << endl;
 }
 
 void Printer::Cpp::prelude(const Options &opts, const AST &ast) {
