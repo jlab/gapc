@@ -1106,8 +1106,10 @@ Expr::Base *Alt::Simple::next_index_var(unsigned &k, size_t track,
           cond, new Expr::Less_Eq (ivar, last_var->plus(lhs_ys.high())));
       }
 
-      Statement::For *f = new Statement::For (new Statement::Var_Decl(
-        new ::Type::Size(), ivar, index.first), cond);
+      Statement::Var_Decl *loopvariable = new Statement::Var_Decl(new ::Type::Size(), ivar, index.first);
+      // flag this variable as being an iterator e.g. in for-loops, such that it won't have a trailing indent for code generation
+      loopvariable->set_itr(true);
+      Statement::For *f = new Statement::For (loopvariable, cond);
       loops.push_back(f);
       return ivar;
     }
