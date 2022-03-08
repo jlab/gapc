@@ -604,7 +604,7 @@ class Main {
     cc.set_files(opts.in_file, opts.out_file);
     cc.prelude(opts, driver.ast);
     cc.imports(driver.ast);
-                      cc.global_constants(driver.ast);
+    cc.global_constants(driver.ast);
     driver.ast.print_code(cc);
     instance->print_code(cc);
     cc.footer(driver.ast);
