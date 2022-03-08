@@ -953,6 +953,7 @@ void Grammar::print_code(Printer::Base &out) {
       for (std::list<Fn_Def*>::iterator i = l.begin(); i != l.end(); ++i) {
         out << **i;
       }
+      out << endl;
     }
   }
 }
