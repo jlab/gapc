@@ -58,7 +58,7 @@ static std::string make_comments(const std::string &s, const std::string &c) {
        lines.begin(); i != lines.end(); ++i) {
     o << c;
     if (!(*i).empty()) {
-    	o << " ";
+      o << " ";
     }
     o << *i << '\n';
   }
@@ -121,7 +121,7 @@ void Printer::Cpp::print(const Statement::Var_Decl &stmt) {
   }
 
   if (!stmt.is_itr()) {
-	  stream << indent();
+    stream << indent();
   }
   stream << *stmt.type << ' ' << *stmt.name;
   if (stmt.rhs)
@@ -1009,7 +1009,8 @@ void Printer::Cpp::print_names(
 void Printer::Cpp::print_eqs(const std::list<Statement::Var_Decl*> &l, char c) {
   for (std::list<Statement::Var_Decl*>::const_iterator i = l.begin();
        i != l.end(); ++i) {
-    stream << indent() << *(*i)->name << " = " << *(*i)->name << c << ";" << endl;
+    stream << indent() << *(*i)->name << " = " << *(*i)->name << c << ";"
+    stream << endl;
   }
 }
 
@@ -1115,7 +1116,8 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   for (size_t track = t.nt().track_pos();
        track < t.nt().track_pos() + t.nt().tracks(); ++track) {
     stream << indent() << "t_" << track << "_left_most = 0;" << endl;
-    stream << indent() << "t_" << track << "_right_most = t_" << track << "_n;" << endl;
+    stream << indent() << "t_" << track << "_right_most = t_";
+    stream << track << "_n;" << endl;
   }
 
   if (wmode) {
@@ -1940,7 +1942,7 @@ void Printer::Cpp::print_cyk_fn(const AST &ast) {
   stream << indent() << "void " << class_name << "::cyk() {" << endl;
   inc_indent();
   if (!ast.cyk()) {
-	dec_indent();
+    dec_indent();
     stream << indent() << '}' << endl << endl;
     return;
   }
@@ -1989,7 +1991,8 @@ void Printer::Cpp::print_cyk_fn(const AST &ast) {
 
 
 void Printer::Cpp::print_run_fn(const AST &ast) {
-  stream << indent() << *ast.grammar()->axiom->code()->return_type << " run() {" << endl;
+  stream << indent() << *ast.grammar()->axiom->code()->return_type;
+  stream << " run() {" << endl;
   inc_indent();
   stream << indent() << "return nt_" << *ast.grammar()->axiom_name << '(';
 
@@ -2070,7 +2073,7 @@ void Printer::Cpp::print_id() {
 
 void Printer::Cpp::footer(const AST &ast) {
   if (fwd_decls) {
-	dec_indent();
+    dec_indent();
     stream << indent() << " public:" << endl;
     inc_indent();
   }
@@ -2088,7 +2091,8 @@ void Printer::Cpp::print_backtrack_fn(const AST &ast) {
     return;
   }
 
-  stream << indent() << *ast.grammar()->axiom->code()->return_type << " backtrack";
+  stream << indent() << *ast.grammar()->axiom->code()->return_type;
+  stream << " backtrack";
   print(
     ast.grammar()->axiom->code()->types, ast.grammar()->axiom->code()->names);
   stream << " {" << endl;
@@ -2182,7 +2186,7 @@ void Printer::Cpp::print_backtrack_pp(const AST &ast) {
   inc_indent();
 
   if (ast.code_mode() != Code::Mode::BACKTRACK) {
-	dec_indent();
+    dec_indent();
     stream << indent() << '}' << endl << endl;
     return;
   }
@@ -2194,7 +2198,8 @@ void Printer::Cpp::print_backtrack_pp(const AST &ast) {
     return;
   }
 
-  stream << indent() << *ast.grammar()->axiom->code()->return_type << " bt = backtrack(";
+  stream << indent() << *ast.grammar()->axiom->code()->return_type;
+  stream << " bt = backtrack(";
 
   print_axiom_args(ast);
 
@@ -2331,7 +2336,7 @@ void Printer::Cpp::print_value_pp(const AST &ast) {
   inc_indent();
   if (ast.code_mode() == Code::Mode::BACKTRACK ||
       ast.code_mode() == Code::Mode::SUBOPT) {
-	dec_indent();
+    dec_indent();
     stream << indent() << '}' << endl;
     return;
   }
