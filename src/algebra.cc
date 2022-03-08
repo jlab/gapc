@@ -271,6 +271,7 @@ void Algebra::print_code(Printer::Base &s) {
     if (!i->second->in_use())
       continue;
     s << *i->second;
+    s << endl;
   }
   s << endl;
 }
