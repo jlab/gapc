@@ -1009,7 +1009,7 @@ void Printer::Cpp::print_names(
 void Printer::Cpp::print_eqs(const std::list<Statement::Var_Decl*> &l, char c) {
   for (std::list<Statement::Var_Decl*>::const_iterator i = l.begin();
        i != l.end(); ++i) {
-    stream << indent() << *(*i)->name << " = " << *(*i)->name << c << ";"
+    stream << indent() << *(*i)->name << " = " << *(*i)->name << c << ";";
     stream << endl;
   }
 }
