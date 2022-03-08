@@ -55,27 +55,31 @@ static std::string make_comments(const std::string &s, const std::string &c) {
   boost::char_separator<char> nl("\n", "", boost::keep_empty_tokens);
   boost::tokenizer<boost::char_separator<char> > lines(s, nl);
   for (boost::tokenizer<boost::char_separator<char> >::iterator i =
-       lines.begin(); i != lines.end(); ++i)
-    o << c << " " << *i << '\n';
+       lines.begin(); i != lines.end(); ++i) {
+    o << c;
+    if (!(*i).empty()) {
+    	o << " ";
+    }
+    o << *i << '\n';
+  }
   return o.str();
 }
 
 
 void Printer::Cpp::print(const std::list<Statement::Base*> &stmts) {
-  stream << indent() << '{' << endl;
+  stream << '{' << endl;
   inc_indent();
   for (std::list<Statement::Base*>::const_iterator i = stmts.begin();
        i != stmts.end(); ++i)
     stream << **i << endl;
   dec_indent();
-  stream << indent() << '}' << endl;
+  stream << indent() << '}';
 }
 
 void Printer::Cpp::print(const Statement::For &stmt) {
-  stream << indent() << "for(";
+  stream << indent() << "for (";
   stream << *stmt.var_decl;
-  stream << ' '
-    << *stmt.cond << "; ";
+  stream << ' ' << *stmt.cond << "; ";
   if (!stmt.inc) {
     stream << "++" << *stmt.var_decl->name << ")";
   } else {
@@ -84,7 +88,7 @@ void Printer::Cpp::print(const Statement::For &stmt) {
     stream << *stmt.inc << ")";
     in_fn_head = t;
   }
-  stream << endl;
+  stream << " ";
   stream << stmt.statements;
 }
 
@@ -116,7 +120,10 @@ void Printer::Cpp::print(const Statement::Var_Decl &stmt) {
     return;
   }
 
-  stream << indent() << *stmt.type << ' ' << *stmt.name;
+  if (!stmt.is_itr()) {
+	  stream << indent();
+  }
+  stream << *stmt.type << ' ' << *stmt.name;
   if (stmt.rhs)
     stream << " = " << *stmt.rhs;
   stream << ';';
@@ -127,20 +134,12 @@ void Printer::Cpp::print(const Statement::Var_Decl &stmt) {
 }
 
 void Printer::Cpp::print(const Statement::If &stmt) {
-  stream << indent() << "if (" << *stmt.cond << ")" << endl;
-  if (stmt.then.size() == 1)
-    inc_indent();
+  stream << indent() << "if (" << *stmt.cond << ") ";
   stream << stmt.then;
-  if (stmt.then.size() == 1)
-    dec_indent();
   if (stmt.els.empty())
     return;
-  stream << endl << indent() << "else" << std::endl;
-  if (stmt.els.size() == 1)
-    inc_indent();
+  stream << " else ";
   stream << stmt.els;
-  if (stmt.els.size() == 1)
-    dec_indent();
 }
 
 void Printer::Cpp::print(const Statement::Switch &stmt) {
@@ -474,12 +473,12 @@ void Printer::Cpp::print(const Statement::Fn_Call &stmt) {
           stream << "_";
           stream << l->push_str();
         }
-        stream << "( ";
+        stream << "(";
       } else {
-        stream << indent() << stmt.name() << "( ";
+        stream << indent() << stmt.name() << "(";
       }
     } else {
-      stream << indent() << stmt.name() << "( ";
+      stream << indent() << stmt.name() << "(";
 
       // If this is a function call inside of a used defined
       // algebra function, its builtin-type is not set properly
@@ -521,7 +520,7 @@ void Printer::Cpp::print(const Statement::Fn_Call &stmt) {
       }
     }
   } else {
-    stream << indent() << **i << '.' << stmt.name() << "( ";
+    stream << indent() << **i << '.' << stmt.name() << "(";
     ++i;
   }
   if (i != stmt.args.end()) {
@@ -636,7 +635,7 @@ void Printer::Cpp::print(const Fn_Def &fn_def) {
       for ( ; a != fn_def.names.end(); ++a, ++b)
       stream << ", " << **b << ' ' << **a;
     }
-  stream << ')' << endl;
+    stream << ')' << endl;
   } else {
     stream << indent() << *fn_def.return_type << ' ';
     if (!fwd_decls && !in_class) {
@@ -665,10 +664,8 @@ void Printer::Cpp::print(const Fn_Def &fn_def) {
   if (fwd_decls) {
     stream << ';' << endl;
     return;
-  } else {
-    stream << endl;
   }
-  stream << indent() << '{' << endl;
+  stream << ' ' << '{' << endl;
   inc_indent();
   lines_start_mark(fn_def.stmts);
   for (std::list<Statement::Base*>::const_iterator s = fn_def.stmts.begin();
@@ -1916,10 +1913,11 @@ void Printer::Cpp::print_cyk_fn(const AST &ast) {
     return;
   }
 
-  stream << "    void " << class_name << "::cyk()";
-  stream << endl << '{' << endl;
+  stream << indent() << "void " << class_name << "::cyk() {" << endl;
+  inc_indent();
   if (!ast.cyk()) {
-    stream << endl << '}' << endl << endl;
+	dec_indent();
+    stream << indent() << '}' << endl << endl;
     return;
   }
 
@@ -1959,6 +1957,7 @@ void Printer::Cpp::print_cyk_fn(const AST &ast) {
   }
   stream << "#endif" << endl;
 
+  dec_indent();
   stream << endl << "}" << endl;
 
   stream << endl << endl << endl;
