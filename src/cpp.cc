@@ -1721,57 +1721,7 @@ void Printer::Cpp::header(const AST &ast) {
 }
 
 
-// FIXME adjust for multi-track (> 1 track)
-void Printer::Cpp::print_openmp_cyk(const AST &ast) {
-  // FIXME abstract from unsigned int, int -> perhaps wait for OpenMP 3
-  // since OpenMP < 3 doesn't allow unsigned int in workshared fors
-
-  const char* helper_vars =
-    "  unsigned int n = t_0_seq.size();\n"
-    "  unsigned int tile_size = 32;\n"
-    "#ifdef TILE_SIZE\n"
-    "  tile_size = TILE_SIZE;\n"
-    "#endif\n"
-    "  assert(tile_size);\n"
-    "  unsigned int max_tiles = n / tile_size;\n"
-    "  int max_tiles_n = max_tiles * tile_size;\n";
-
-  const char* paral_start =
-    "  #pragma omp parallel\n"
-    "  {\n";
-
-  const char* diag =
-    "  #pragma omp for\n"
-    "  // OPENMP < 3 requires signed int here ...\n"
-    "  for (int z = 0; z < max_tiles_n; z+=tile_size)\n"
-    "    for (unsigned int t_0_j = z; t_0_j < z + tile_size; ++t_0_j)\n"
-    "      for (int t_0_i = t_0_j + 1; t_0_i > z; --t_0_i) {\n";
-
-
-  const char* middle =
-    "      }\n"
-    "\n"
-    "  for (int z = tile_size; z < max_tiles_n; z+=tile_size)\n"
-    "    #pragma omp for\n"
-    "    for (int y = z; y < max_tiles_n; y+=tile_size) {\n"
-    "      unsigned int x = y - z + tile_size;\n"
-    "      for (unsigned int t_0_j = y; t_0_j < y + tile_size; ++t_0_j)\n"
-    "        for (unsigned int t_0_i = x - 1 + 1; t_0_i > x - tile_size; "
-    "--t_0_i) {\n";
-
-  const char *paral_end =
-    "        }\n"
-    "    }\n"
-    "\n"
-    "  } // end parallel\n";
-
-  const char *single =
-    "  for (unsigned int t_0_j = max_tiles_n; t_0_j <= n; ++t_0_j)\n"
-    "    for (unsigned int t_0_i=t_0_j+1; t_0_i > 0; --t_0_i) {\n";
-
-  const char *single_end =
-    "    }\n";
-
+void Printer::Cpp::print_openmp_cyk_nt_calls(const AST &ast) {
   std::list<Symbol::NT*> &tord = ast.grammar()->topological_ord();
   assert(tord.size() <= ast.grammar()->NTs.size());
   std::ostringstream o1;
@@ -1779,29 +1729,129 @@ void Printer::Cpp::print_openmp_cyk(const AST &ast) {
        i != tord.end(); ++i) {
     assert(!(*i)->tables().empty());
     if ((*i)->is_tabulated() && !(*i)->tables().front().is_cyk_right()) {
-      o1 << "nt_tabulate_" << *(*i)->name << "("
+      o1 << indent() << "nt_tabulate_" << *(*i)->name << "("
         << multi_index_str((*i)->tables(), (*i)->multi_ys())
         << ");\n";
     }
   }
+  std::string nt_calls = o1.str();
+  stream << nt_calls;
+}
 
+void Printer::Cpp::print_openmp_cyk_all_nt_calls(const AST &ast) {
+  std::list<Symbol::NT*> &tord = ast.grammar()->topological_ord();
   std::ostringstream o2;
   for (std::list<Symbol::NT*>::iterator i = tord.begin();
        i != tord.end(); ++i) {
     if ((*i)->is_tabulated()) {
-      o2 << "nt_tabulate_" << *(*i)->name << "("
+      o2 << indent() << "nt_tabulate_" << *(*i)->name << "("
         << multi_index_str((*i)->tables(), (*i)->multi_ys())
         << ");\n";
     }
   }
-
-  std::string nt_calls = o1.str();
   std::string all_nt_calls = o2.str();
-  stream << paral_start << helper_vars << diag << nt_calls
-    << middle << nt_calls
-    << paral_end << helper_vars
-    << single << all_nt_calls
-    << single_end;
+  stream << all_nt_calls;
+}
+
+void Printer::Cpp::print_openmp_cyk_helpervars() {
+  stream << indent() << "unsigned int n = t_0_seq.size();" << endl;
+  stream << indent() << "unsigned int tile_size = 32;" << endl;
+  stream << "#ifdef TILE_SIZE" << endl;
+  stream << indent() << "tile_size = TILE_SIZE;" << endl;
+  stream << "#endif" << endl;
+  stream << indent() << "assert(tile_size);" << endl;
+  stream << indent() << "unsigned int max_tiles = n / tile_size;" << endl;
+  stream << indent() << "int max_tiles_n = max_tiles * tile_size;" << endl;
+}
+
+// FIXME adjust for multi-track (> 1 track)
+void Printer::Cpp::print_openmp_cyk(const AST &ast) {
+  // FIXME abstract from unsigned int, int -> perhaps wait for OpenMP 3
+  // since OpenMP < 3 doesn't allow unsigned int in workshared fors
+
+  // paral_start
+  stream << indent() << "#pragma omp parallel {" << endl;
+  inc_indent();
+
+  // helper_vars
+  print_openmp_cyk_helpervars();
+
+  // diag
+  stream << indent() << "#pragma omp for" << endl;
+  stream << indent() << "// OPENMP < 3 requires signed int here ..." << endl;
+  stream << indent();
+  stream << "for (int z = 0; z < max_tiles_n; z+=tile_size) {" << endl;
+  inc_indent();
+  stream << indent();
+  stream << "for (unsigned int t_0_j = z; t_0_j < z + tile_size; ++t_0_j) {";
+  stream << endl;
+  inc_indent();
+  stream << indent() << "for (int t_0_i = t_0_j + 1; t_0_i > z; --t_0_i) {";
+  stream << endl;
+  inc_indent();
+  print_openmp_cyk_nt_calls(ast);
+  dec_indent();
+  stream << indent() << "}" << endl;
+  dec_indent();
+  stream << indent() << "}" << endl;
+  dec_indent();
+  stream << indent() << "}" << endl;
+
+  // middle
+  stream << endl;
+  stream << indent()
+         << "for (int z = tile_size; z < max_tiles_n; z+=tile_size) {"
+         << endl;
+  inc_indent();
+  stream << indent() << "#pragma omp for" << endl;
+  stream << indent()
+         << "for (int y = z; y < max_tiles_n; y+=tile_size) {" << endl;
+  inc_indent();
+  stream << indent() << "unsigned int x = y - z + tile_size;" << endl;
+  stream << indent()
+         << "for (unsigned int t_0_j = y; t_0_j < y + tile_size; ++t_0_j) {"
+         << endl;
+  inc_indent();
+  stream << indent()
+         << "for (unsigned int t_0_i = x - 1 + 1; t_0_i > x - tile_size;"
+         << " --t_0_i) {"
+         << endl;
+  inc_indent();
+
+  print_openmp_cyk_nt_calls(ast);
+
+  // paral_end
+  dec_indent();
+  stream << indent() << "}" << endl;
+  dec_indent();
+  stream << indent() << "}" << endl;
+  dec_indent();
+  stream << indent() << "}" << endl;
+  dec_indent();
+  stream << indent() << "}" << endl;
+  dec_indent();
+  stream << indent() << "}  // end parallel" << endl;
+  stream << endl;
+
+  // REPEAT: helper_vars
+  print_openmp_cyk_helpervars();
+
+  // single
+  stream << indent()
+         << "for (unsigned int t_0_j = max_tiles_n; t_0_j <= n; ++t_0_j) {"
+         << endl;
+  inc_indent();
+  stream << indent()
+         << "for (unsigned int t_0_i=t_0_j+1; t_0_i > 0; --t_0_i) {" << endl;
+  inc_indent();
+
+  print_openmp_cyk_all_nt_calls(ast);
+
+  // single_end
+  dec_indent();
+  stream << indent() << "}" << endl;
+  dec_indent();
+  stream << indent() << "}" << endl;
 }
 
 
@@ -1841,7 +1891,8 @@ void Printer::Cpp::multi_print_inner_cyk(
   for (std::list<Symbol::NT*>::const_iterator i = l.begin();
        i != l.end(); ++i) {
     std::string index_str = multi_index_str((*i)->tables(), (*i)->multi_ys());
-    stream << "nt_tabulate_" << *(*i)->name << '(' << index_str << ");\n";
+    stream << indent() << "nt_tabulate_" << *(*i)->name << '('
+           << index_str << ");" << endl;
   }
 }
 
@@ -1893,41 +1944,50 @@ void Printer::Cpp::multi_print_cyk(
   sns << "t_" << real_track << "_n";
   std::string is(sis.str()), js(sjs.str()), ns(sns.str());
 
-  stream << *t << " t_" << track << "_n = t_" << real_track
-    << "_seq.size();\n\n";
+  stream << indent() << *t << " t_" << track << "_n = t_" << real_track
+    << "_seq.size();" << endl << endl;
 
   if (!inner.empty()) {
-    stream << "for (" << *t << " " << js << " = 0; " << js << " < "
-      << ns << "; " << "++" << js << ") {\n";
-    stream << "  for (" << *t << " " << is << " = " << js << " + 1; "
-      << is << " > 1; " << is << "--) {\n";
+    stream << indent() << "for (" << *t << " " << js << " = 0; " << js << " < "
+      << ns << "; " << "++" << js << ") {" << endl;
+    inc_indent();
+    stream << indent() << "for (" << *t << " " << is << " = " << js << " + 1; "
+      << is << " > 1; " << is << "--) {" << endl;
+    inc_indent();
 
     multi_print_inner_cyk(inner, tord, track, tracks, track_pos, t);
-    stream << "}\n\n";
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
 
     if (!left.empty()) {
-      stream << *t << " " << is << " = 1;\n";
+      stream << indent() << *t << " " << is << " = 1;" << endl;
       multi_print_inner_cyk(left, tord, track, tracks, track_pos, t);
     }
-    stream << "}\n\n";
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
   }
   if (inner.empty() && !left.empty()) {
-    stream << "for (" << *t << " " << js << " = 0; " << js << " < " << ns
-      << "; " << "++" << js << ") {\n";
-    stream << *t << " " << is << " = 1;\n";
+    stream << indent() << "for (" << *t << " " << js << " = 0; "
+           << js << " < " << ns
+           << "; " << "++" << js << ") {" << endl;
+    inc_indent();
+    stream << indent() << *t << " " << is << " = 1;" << endl;
     multi_print_inner_cyk(left, tord, track, tracks, track_pos, t);
-    stream << "}\n\n";
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
   }
   if (!right.empty()) {
-    stream << *t << " " << js << " = " << ns << ";\n";
-    stream << "  for (" << *t << " "<< is << " = " << js << " + 1; "
-      << is << " > 1; " << is << "--) {\n";
+    stream << indent() << *t << " " << js << " = " << ns << ";" << endl;
+    stream << indent() << "for (" << *t << " "<< is << " = " << js << " + 1; "
+      << is << " > 1; " << is << "--) {" << endl;
+    inc_indent();
     multi_print_inner_cyk(right, tord, track, tracks, track_pos, t);
-    stream << "}\n\n";
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
   }
 
   if (!all.empty()) {
-    stream << *t << " " << is << " = 1;\n";
+    stream << indent() << *t << " " << is << " = 1;" << endl;
     multi_print_inner_cyk(all, tord, track, tracks, track_pos, t);
   }
 }
@@ -1966,9 +2026,9 @@ void Printer::Cpp::print_cyk_fn(const AST &ast) {
   if (ast.grammar()->axiom->tracks() > 1) {
     for (size_t track_pos = 0; track_pos < ast.grammar()->axiom->tracks();
          ++track_pos) {
-      stream << "\n{\n";
+      stream << endl << "{" << endl;
       multi_print_cyk(ast.grammar()->topological_ord(), 0, 1, track_pos, t);
-      stream << "\n}\n";
+      stream << endl << "}" << endl;
     }
   }
 
@@ -1984,9 +2044,9 @@ void Printer::Cpp::print_cyk_fn(const AST &ast) {
   stream << "#endif" << endl;
 
   dec_indent();
-  stream << endl << "}" << endl;
+  stream << indent() << "}" << endl;
 
-  stream << endl << endl << endl;
+  stream << endl;
 }
 
 
@@ -2063,11 +2123,11 @@ void Printer::Cpp::print_id() {
   if (fwd_decls) {
     return;
   }
-  stream << endl<< endl
+  stream
     << "#ident \"$Id: Compiled with gapc "
     << gapc::version_id
     << " $\""
-    << endl << endl;
+    << endl;
 }
 
 
