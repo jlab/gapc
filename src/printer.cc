@@ -453,7 +453,10 @@ void Printer::Base::set_argv(char **argv, int argc) {
     << "  GAP-C version:\n    " << gapc::version_id << "\n\n"
     << "  GAP-C call:\n    ";
   for (int i = 0; i < argc; ++i) {
-    o << argv[i] << ' ';
+    o << argv[i];
+    if (i+1 < argc) {
+      o << ' ';
+    }
   }
   o << "\n\n";
   id_string = o.str();
