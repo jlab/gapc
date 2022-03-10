@@ -1770,7 +1770,8 @@ void Printer::Cpp::print_openmp_cyk(const AST &ast) {
   // since OpenMP < 3 doesn't allow unsigned int in workshared fors
 
   // paral_start
-  stream << indent() << "#pragma omp parallel {" << endl;
+  stream << indent() << "#pragma omp parallel" << endl;
+  stream << indent() << '{' << endl;
   inc_indent();
 
   // helper_vars
