@@ -2928,3 +2928,73 @@ const std::list<Statement::Var_Decl*> &Alt::Multi::ret_decls() const {
 bool Alt::Base::choice_set() {
     return datatype->simple()->is(::Type::LIST) && eval_nullary_fn;
 }
+
+
+void Alt::Base::get_nonterminals(std::list<Symbol::NT*> *nt_list) {
+}
+void Alt::Simple::get_nonterminals(std::list<Symbol::NT*> *nt_list) {
+	for (Fn_Arg::Base *arg : this->args) {
+		Fn_Arg::Alt *arg_alt = dynamic_cast<Fn_Arg::Alt*>(arg);
+		if (arg_alt) {
+			// recurse into arguments
+			arg_alt->alt->get_nonterminals(nt_list);
+		}
+	}
+}
+void Alt::Link::get_nonterminals(std::list<Symbol::NT*> *nt_list) {
+	// test if Link is a non-terminal
+	if (this->nt) {
+		if (this->nt->is(Symbol::NONTERMINAL)) {
+			nt_list->push_back(dynamic_cast<Symbol::NT*>(this->nt));
+		} else if (this->nt->is(Symbol::TERMINAL)) {
+
+		}
+	} else {
+		throw LogError("Link is something else");
+	}
+}
+void Alt::Block::get_nonterminals(std::list<Symbol::NT*> *nt_list) {
+	for (Alt::Base *alt : this->alts) {
+		// recurse into alternatives
+		alt->get_nonterminals(nt_list);
+	}
+}
+void Alt::Multi::get_nonterminals(std::list<Symbol::NT*> *nt_list) {
+	throw LogError("Alt::Multi::get_nonterminals is not yet implemented!");
+}
+
+
+void Alt::Base::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace) {
+}
+void Alt::Simple::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace) {
+	for (Fn_Arg::Base *arg : this->args) {
+		Fn_Arg::Alt *arg_alt = dynamic_cast<Fn_Arg::Alt*>(arg);
+		if (arg_alt) {
+			arg_alt->alt->replace_nonterminal(find, replace);
+		}
+	}
+}
+void Alt::Link::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace) {
+	if (this->nt) {
+		if (this->nt->is(Symbol::NONTERMINAL)) {
+			if (this->nt == find) {
+				// replace old NT (=find) with novel NT (=replace)
+				this->nt = replace;
+				this->name = replace->name;
+			}
+		} else if (this->nt->is(Symbol::TERMINAL)) {
+
+		}
+	} else {
+		throw LogError("Link is something else");
+	}
+}
+void Alt::Block::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace) {
+	for (Alt::Base *alt : this->alts) {
+		// recurse into alternatives
+		alt->replace_nonterminal(find, replace);
+	}
+}
+void Alt::Multi::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace) {
+	throw LogError("Alt::Multi::replace_nonterminal is not yet implemented!");
+}
