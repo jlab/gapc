@@ -1027,10 +1027,14 @@ void Grammar::inject_outside_nts() {
 	// pointing to the very same novel outside non-terminal.
 	hashtable<std::string, Symbol::Base*> outside_NTs;
 	for (Symbol::NT* nt : *outside_nts) {
-		Symbol::NT *outside_nt = new Symbol::NT(new std::string(OUTSIDE_NT_PREFIX + (*nt->name)), *(new Loc()));
-		// carry over evaluation function from inside to outside NT
+		// use inside NT as template ...
 		Symbol::NT *inside_nt = dynamic_cast<Symbol::NT*>(this->NTs.find(*nt->name)->second);
-		outside_nt->set_eval_fn(inside_nt->eval_fn);
+		// and clone for outside version
+		Symbol::NT *outside_nt = inside_nt->clone(inside_nt->track_pos());
+		// remove all existing alternative production rules
+		outside_nt->alts.clear();
+		// and correct NT name, to now point to outside version
+		outside_nt->name = new std::string(OUTSIDE_NT_PREFIX + (*nt->name));
 
 		outside_NTs[OUTSIDE_NT_PREFIX + (*nt->name)] = outside_nt;
 		outside_NTs[(*nt->name)] = outside_nt;
@@ -1069,7 +1073,7 @@ void Grammar::inject_outside_nts() {
 	}
 
 	// 5) TODO(smj): how to determine new axiom?
-	this->axiom_name = new std::string("outside_hairpin");
+	//this->axiom_name = new std::string("outside_hairpin");
+	this->axiom_name = new std::string("outside_struct");
 	this->init_axiom();
-	//this->axiom = dynamic_cast<Symbol::NT*>(this->NTs.find(*(this->axiom_name))->second);
 }

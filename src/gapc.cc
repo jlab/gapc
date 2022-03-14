@@ -350,11 +350,7 @@ class Main {
 
     // inject rules for outside grammar
     grammar->inject_outside_nts();
-    // repeat semantic checking (and linking) for the newly generated outside non-terminals
-    bool r2 = grammar->check_semantic();
-    if (!r2) {
-      throw LogError("Seen semantic errors for outside version.");
-    }
+
 
     // configure the window and k-best mode
     driver.ast.set_window_mode(opts.window_mode);
