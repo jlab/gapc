@@ -248,6 +248,9 @@ class Base {
     virtual bool multi_detect_loop(const Yield::Multi &left,
                                    const Yield::Multi &right, Symbol::NT *nt);
     virtual bool multi_detect_loop();
+
+    virtual unsigned int to_dot(unsigned int *nodeID, std::ostream &out,
+                                bool is_rhs, Symbol::NT *axiom);
 };
 
 
@@ -305,6 +308,8 @@ class Terminal : public Base {
 
     void setPredefinedTerminalParser(bool isPredefined);
     bool isPredefinedTerminalParser();
+    unsigned int to_dot(unsigned int *nodeID, std::ostream &out,
+                        bool is_rhs, Symbol::NT *axiom);
 };
 
 
@@ -508,6 +513,8 @@ class NT : public Base {
     const std::list<Para_Decl::Base*> &ntargs() const {
       return ntargs_;
     }
+    unsigned int to_dot(unsigned int *nodeID, std::ostream &out,
+                        bool is_rhs, Symbol::NT *axiom);
 };
 
 

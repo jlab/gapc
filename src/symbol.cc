@@ -1622,3 +1622,38 @@ void Symbol::Terminal::setPredefinedTerminalParser(bool isPredefined) {
 bool Symbol::Terminal::isPredefinedTerminalParser() {
   return this->predefinedTerminalParser;
 }
+
+unsigned int Symbol::Base::to_dot(unsigned int *nodeID, std::ostream &out,
+                                  bool is_rhs, Symbol::NT *axiom) {
+  return ((unsigned int)*nodeID);
+}
+unsigned int Symbol::Terminal::to_dot(unsigned int *nodeID, std::ostream &out,
+                                      bool is_rhs, Symbol::NT *axiom) {
+  unsigned int thisID = (unsigned int)((*nodeID)++);
+  out << "node_" << thisID << " [ label=\"" << *this->name
+      << "\", color=\"blue\", fontcolor=\"blue\" ];\n";
+  return thisID;
+}
+unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
+                                bool is_rhs, Symbol::NT *axiom) {
+  unsigned int thisID = (unsigned int)((*nodeID)++);
+  if (is_rhs) {
+    // a non-terminal "used" on any right hand side of a production
+    out << "node_" << thisID << " [ label=\"" << *this->name
+        << "\", color=\"black\" ];\n";
+  } else {
+    // a non-terminal "calling" productions, i.e. on the left hand side
+    out << "node_" << thisID << " [ label=\"" << *this->name
+        << "\", color=\"black\", shape=\"box\"";
+    if (this == axiom) {
+      out << ", penwidth=3";
+    }
+    out << " ];\n";
+    for (std::list<Alt::Base*>::const_iterator alt = this->alts.begin();
+         alt != this->alts.end(); ++alt) {
+      unsigned int childID = (*alt)->to_dot(nodeID, out);
+      out << "node_" << thisID << " -> node_" << childID << ";\n";
+    }
+  }
+  return thisID;
+}

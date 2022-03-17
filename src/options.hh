@@ -56,7 +56,8 @@ struct Options {
       logLevel(3),
       pareto(0), multiDimPareto(false), cutoff(65),
       float_acc(0),
-      specialization(0), step_option(0) {
+      specialization(0), step_option(0),
+      plot_grammar(false), plotgrammar_stream_(NULL) {
   }
 
 
@@ -67,6 +68,8 @@ struct Options {
     h_stream_ = NULL;
     delete m_stream_;
     m_stream_ = NULL;
+    delete plotgrammar_stream_;
+    plotgrammar_stream_ = NULL;
   }
 
 
@@ -184,7 +187,20 @@ struct Options {
     return *m_stream_;
   }
 
+  std::string plot_grammar_file;
+  bool plot_grammar;
+  std::ostream *plotgrammar_stream_;
+  std::ostream &plotgrammar_stream() {
+    if (is_stdout()) {
+      return std::cout;
+    }
 
+    assert(!plotgrammar_stream_);
+    plotgrammar_stream_ = new std::ofstream(plot_grammar_file.c_str());
+    plotgrammar_stream_->exceptions(std::ios_base::badbit |
+                          std::ios_base::failbit | std::ios_base::eofbit);
+    return *plotgrammar_stream_;
+  }
   bool check();
 };
 

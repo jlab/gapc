@@ -2928,3 +2928,81 @@ const std::list<Statement::Var_Decl*> &Alt::Multi::ret_decls() const {
 bool Alt::Base::choice_set() {
     return datatype->simple()->is(::Type::LIST) && eval_nullary_fn;
 }
+
+unsigned int Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out) {
+  unsigned int thisID = (unsigned int)((*nodeID))-1;
+  for (std::list<Filter*>::const_iterator filter = this->filters.begin();
+       filter != this->filters.end(); ++filter) {
+    unsigned int childID = (unsigned int)((*nodeID)++);
+    out << "node_" << childID << " [ label=\"" << *(*filter)->name;
+    for (std::list<Expr::Base*>::const_iterator arg = (*filter)->args.begin();
+         arg != (*filter)->args.end(); ++arg) {
+      if (arg == (*filter)->args.begin()) {
+        out << "(";
+      }
+      (*arg)->put(out);
+      if (std::next(arg) != (*filter)->args.end()) {
+        out << ", ";
+      } else {
+        out << ")";
+      }
+    }
+    out << "\" , fontcolor=\"magenta\" , shape=none ];\n";
+    out << "node_" << thisID << " -> node_" << childID
+        << " [ arrowhead=none, color=\"magenta\" ];\n";
+  }
+  return thisID;
+}
+unsigned int Alt::Simple::to_dot(unsigned int *nodeID, std::ostream &out) {
+  unsigned int thisID = (unsigned int)((*nodeID)++);
+  out << "node_" << thisID << " [ label=\"" << *this->name;
+  if (this->is_terminal_) {
+    for (std::list<Fn_Arg::Base*>::const_iterator arg = this->args.begin();
+         arg != this->args.end(); ++arg) {
+      if (arg == this->args.begin()) {
+        out << "(";
+      }
+      (*arg)->print(out);
+      if (std::next(arg) != this->args.end()) {
+        out << ", ";
+      } else {
+        out << ")";
+      }
+    }
+    out << "\", color=\"blue\", fontcolor=\"blue\"";
+  } else {
+    out << "\", color=\"green\"";
+  }
+  out << "];\n";
+  Alt::Base::to_dot(nodeID, out);
+  for (std::list<Fn_Arg::Base*>::const_iterator arg = this->args.begin();
+       arg != this->args.end(); ++arg) {
+    Fn_Arg::Alt *argalt = dynamic_cast<Fn_Arg::Alt*>(*arg);
+    if (argalt) {
+      unsigned int childID = argalt->alt_ref()->to_dot(nodeID, out);
+      out << "node_" << thisID << " -> node_" << childID
+          << " [ arrowhead=none ];\n";
+    }
+  }
+  return thisID;
+}
+unsigned int Alt::Link::to_dot(unsigned int *nodeID, std::ostream &out) {
+  unsigned int childID = ((unsigned int)this->nt->to_dot(
+    nodeID, out, true, NULL));
+  Alt::Base::to_dot(nodeID, out);
+  return childID;
+}
+unsigned int Alt::Block::to_dot(unsigned int *nodeID, std::ostream &out) {
+  unsigned int thisID = (unsigned int)((*nodeID)++);
+  out << "node_" << thisID << " [ label=\"{a block}\", color=\"black\" ];\n";
+  for (std::list<Alt::Base*>::const_iterator alt = this->alts.begin();
+       alt != this->alts.end(); ++alt) {
+    unsigned int childID = (*alt)->to_dot(nodeID, out);
+    out << "node_" << thisID << " -> node_" << childID << ";\n";
+  }
+  return thisID;
+}
+unsigned int Alt::Multi::to_dot(unsigned int *nodeID, std::ostream &out) {
+  std::cerr << "";
+  return 0;
+}
