@@ -1627,11 +1627,11 @@ bool Symbol::Terminal::isPredefinedTerminalParser() {
 unsigned int Symbol::Base::to_dot(unsigned int *nodeID, std::ostream &out,
                                   bool is_rhs, Symbol::NT *axiom) {
   unsigned int thisID = (unsigned int)((*nodeID)++);
-  out << "node_" << thisID << " [ label=<";
+  out << "node_" << thisID << " [ label=<<table border='0'><tr>";
   to_dot_indices(this->left_indices, out);
-  out << *this->name;
+  out << "<td>" << *this->name << "</td>";
   to_dot_indices(this->right_indices, out);
-  out << ">";
+  out << "</tr></table>>";
   return thisID;
 }
 unsigned int Symbol::Terminal::to_dot(unsigned int *nodeID, std::ostream &out,
