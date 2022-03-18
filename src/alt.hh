@@ -744,7 +744,10 @@ class Multi : public Base {
   unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
 };
 
-
 }  // namespace Alt
+
+// prints left or right indices of a parser to out stream.
+// used as a helper for to_dot functions
+void to_dot_indices(std::vector<Expr::Base*> indices, std::ostream &out);
 
 #endif  // SRC_ALT_HH_

@@ -406,19 +406,6 @@ class Main {
     }
     // apply this to identify standard functions like Min, Max, Exp etc.
     driver.ast.derive_roles();
-
-    // to ease inspection of the selected grammar, one can create a graphviz
-    // dot-file for the grammar. This is handy if gapc modifies the original
-    // grammar from the source file.
-    // activate with command line argument --plot-grammar
-    if (opts.plot_grammar) {
-      unsigned int nodeID = 1;
-      grammar->to_dot(&nodeID, opts.plotgrammar_stream());
-      Log::instance()->normalMessage(
-        "Graphviz representation of selected grammar has been saved in '"
-        + opts.plot_grammar_file + "'.\nUse e.g. 'dot -Tpdf "
-        + opts.plot_grammar_file + " > foo.pdf' to generate a PDF.");
-    }
   }
 
 
@@ -595,6 +582,19 @@ class Main {
         Log::instance()->warning(
           "Choice function and classification optimization are disabled for "
           "specialized ADP.");
+    }
+
+    // to ease inspection of the selected grammar, one can create a graphviz
+    // dot-file for the grammar. This is handy if gapc modifies the original
+    // grammar from the source file.
+    // activate with command line argument --plot-grammar
+    if (opts.plot_grammar) {
+      unsigned int nodeID = 1;
+      grammar->to_dot(&nodeID, opts.plotgrammar_stream());
+      Log::instance()->normalMessage(
+        "Graphviz representation of selected grammar has been saved in '"
+        + opts.plot_grammar_file + "'.\nUse e.g. 'dot -Tpdf "
+        + opts.plot_grammar_file + " > foo.pdf' to generate a PDF.");
     }
 
     driver.ast.set_class_name(opts.class_name);

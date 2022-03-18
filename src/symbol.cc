@@ -45,7 +45,7 @@
 #include "ast.hh"
 
 #include "type/backtrace.hh"
-
+#include "alt.hh"
 
 
 Symbol::Base::Base(std::string *n, Type t, const Loc &l)
@@ -1623,28 +1623,30 @@ bool Symbol::Terminal::isPredefinedTerminalParser() {
   return this->predefinedTerminalParser;
 }
 
+// the following functions produce graphViz code to represent the grammar
 unsigned int Symbol::Base::to_dot(unsigned int *nodeID, std::ostream &out,
                                   bool is_rhs, Symbol::NT *axiom) {
-  return ((unsigned int)*nodeID);
+  unsigned int thisID = (unsigned int)((*nodeID)++);
+  out << "node_" << thisID << " [ label=<";
+  to_dot_indices(this->left_indices, out);
+  out << *this->name;
+  to_dot_indices(this->right_indices, out);
+  out << ">";
+  return thisID;
 }
 unsigned int Symbol::Terminal::to_dot(unsigned int *nodeID, std::ostream &out,
                                       bool is_rhs, Symbol::NT *axiom) {
-  unsigned int thisID = (unsigned int)((*nodeID)++);
-  out << "node_" << thisID << " [ label=\"" << *this->name
-      << "\", color=\"blue\", fontcolor=\"blue\" ];\n";
+  unsigned int thisID = Symbol::Base::to_dot(nodeID, out, is_rhs, axiom);
+  out << ", color=\"blue\", fontcolor=\"blue\" ];\n";
   return thisID;
 }
 unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
                                 bool is_rhs, Symbol::NT *axiom) {
-  unsigned int thisID = (unsigned int)((*nodeID)++);
-  if (is_rhs) {
-    // a non-terminal "used" on any right hand side of a production
-    out << "node_" << thisID << " [ label=\"" << *this->name
-        << "\", color=\"black\" ];\n";
-  } else {
+  unsigned int thisID = Symbol::Base::to_dot(nodeID, out, is_rhs, axiom);
+  out << ", color=\"black\"";
+  if (!is_rhs) {
     // a non-terminal "calling" productions, i.e. on the left hand side
-    out << "node_" << thisID << " [ label=\"" << *this->name
-        << "\", color=\"black\", shape=\"box\"";
+    out << ", shape=\"box\"";
     if (this == axiom) {
       out << ", penwidth=3";
     }
@@ -1657,3 +1659,4 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
   }
   return thisID;
 }
+// END functions produce graphViz code to represent the grammar
