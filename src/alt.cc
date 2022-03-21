@@ -2929,7 +2929,6 @@ bool Alt::Base::choice_set() {
     return datatype->simple()->is(::Type::LIST) && eval_nullary_fn;
 }
 
-<<<<<<< HEAD
 
 void Alt::Base::get_nonterminals(std::list<Symbol::NT*> *nt_list) {
 }
