@@ -1416,7 +1416,7 @@ std::list<Statement::Base*>* SpecializeGrammar::CreateSpecializedGrammar::
   std::list<Fn_Arg::Base*> originalArguments =
     this->algebraFunctionInfoAttribute->getAlgebraFunctionArguments();
   assert(originalAlgebraFunctionName != NULL);
-  assert(originalArguments != NULL);
+  //assert(originalArguments != NULL);  // not a pointer, therefore cannot be NULL!
 
 
   std::list<Statement::Base*>* result = new std::list<Statement::Base*>();
@@ -1705,7 +1705,7 @@ std::list<Statement::Base*>* SpecializeGrammar::CreateSpecializedGrammar::
   std::list<Fn_Arg::Base*> originalArguments =
     algebraFunctionInfoAttribute->getAlgebraFunctionArguments();
   assert(originalAlgebraFunctionName != NULL);
-  assert(originalArguments != NULL);
+  //assert(originalArguments != NULL);  // not a pointer, therefore cannot be NULL!
 
 
   // Before we start, we need to order all arguments and create
