@@ -320,6 +320,8 @@ class Base {
   // traverses the alternative (=rhs of a production), iff non-terminal find is contained, replace with first occurence of non-terminal replace
   virtual bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, unsigned int &skip_occurences);
 
+  virtual unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
+
  protected:
   // private flag to indicate if alternative is for inside (the default) or outside
   // production rules. See set_partof_outside()
@@ -495,9 +497,11 @@ class Simple : public Base {
 
  public:
   void set_ntparas(std::list<Expr::Base*> *l);
+
   void get_nonterminals(std::list<Symbol::NT*> *nt_list);
   void set_partof_outside(bool is_outside);
   bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, unsigned int &skip_occurences);
+  unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
 
  private:
   std::list<Statement::Base*> *insert_index_stmts(
@@ -619,9 +623,11 @@ class Link : public Base {
   bool check_ntparas();
 
   void optimize_choice();
+
   void get_nonterminals(std::list<Symbol::NT*> *nt_list);
   void set_partof_outside(bool is_outside);
   bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, unsigned int &skip_occurences);
+  unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
 };
 
 
@@ -689,9 +695,11 @@ class Block : public Base {
 
   void multi_collect_factors(Runtime::Poly &p);
   void multi_init_calls(const Runtime::Poly &p, size_t base_tracks);
+
   void get_nonterminals(std::list<Symbol::NT*> *nt_list);
   void set_partof_outside(bool is_outside);
   bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, unsigned int &skip_occurences);
+  unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
 };
 
 
@@ -762,12 +770,17 @@ class Multi : public Base {
   void types(std::list< ::Type::Base*> &) const;
   const std::list<Statement::Var_Decl*> &ret_decls() const;
   void init_ret_decl(unsigned int i, const std::string &prefix);
+
   void get_nonterminals(std::list<Symbol::NT*> *nt_list);
   void set_partof_outside(bool is_outside);
   bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, unsigned int &skip_occurences);
+  unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
 };
 
-
 }  // namespace Alt
+
+// prints left or right indices of a parser to out stream.
+// used as a helper for to_dot functions
+void to_dot_indices(std::vector<Expr::Base*> indices, std::ostream &out);
 
 #endif  // SRC_ALT_HH_

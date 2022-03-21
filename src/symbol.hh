@@ -251,6 +251,9 @@ class Base {
 
     // flag to indicate if alternative is for inside (the default) or outside production rules.
     bool is_partof_outside;
+    // prints grammar rules as GraphViz commands
+    virtual unsigned int to_dot(unsigned int *nodeID, std::ostream &out,
+                                bool is_rhs, Symbol::NT *axiom);
 };
 
 
@@ -308,6 +311,8 @@ class Terminal : public Base {
 
     void setPredefinedTerminalParser(bool isPredefined);
     bool isPredefinedTerminalParser();
+    unsigned int to_dot(unsigned int *nodeID, std::ostream &out,
+                        bool is_rhs, Symbol::NT *axiom);
 };
 
 
@@ -511,6 +516,8 @@ class NT : public Base {
     const std::list<Para_Decl::Base*> &ntargs() const {
       return ntargs_;
     }
+    unsigned int to_dot(unsigned int *nodeID, std::ostream &out,
+                        bool is_rhs, Symbol::NT *axiom);
 };
 
 

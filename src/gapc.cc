@@ -126,7 +126,11 @@ static void parse_options(int argc, char **argv, Options *rec) {
       "(Standard), 1 (Sorted ADP), 2 (Pareto Eager ADP)")
     ("step-mode", po::value<int>(),
       "Mode of specialization: 0 force block mode, 1 force stepwise mode. This"
-      " is automatically set to best option if not specified.");
+      " is automatically set to best option if not specified.")
+    ("plot-grammar",
+      "generates a graphviz dot-file from the selected (and potentially "
+      "modified) grammar.\n(Use 'dot -Tpdf out.dot' to generate a PDF.)\n"
+      "default file is out.dot");
   po::options_description hidden("");
   hidden.add_options()
     ("backtrack", "deprecated for --backtrace")
@@ -250,6 +254,11 @@ static void parse_options(int argc, char **argv, Options *rec) {
   if (vm.count("step-mode")) {
     int s = vm["step-mode"].as<int>();
     rec->step_option = s;
+  }
+
+  if (vm.count("plot-grammar")) {
+    rec->plot_grammar = true;
+    rec->plot_grammar_file = basename(rec->out_file) + ".dot";
   }
 
   bool r = rec->check();
@@ -577,6 +586,19 @@ class Main {
         Log::instance()->warning(
           "Choice function and classification optimization are disabled for "
           "specialized ADP.");
+    }
+
+    // to ease inspection of the selected grammar, one can create a graphviz
+    // dot-file for the grammar. This is handy if gapc modifies the original
+    // grammar from the source file.
+    // activate with command line argument --plot-grammar
+    if (opts.plot_grammar) {
+      unsigned int nodeID = 1;
+      grammar->to_dot(&nodeID, opts.plotgrammar_stream());
+      Log::instance()->normalMessage(
+        "Graphviz representation of selected grammar has been saved in '"
+        + opts.plot_grammar_file + "'.\nUse e.g. 'dot -Tpdf "
+        + opts.plot_grammar_file + " > foo.pdf' to generate a PDF.");
     }
 
     driver.ast.set_class_name(opts.class_name);
