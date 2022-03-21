@@ -1003,7 +1003,7 @@ void Grammar::remove(Symbol::NT *x) {
 void Grammar::inject_outside_nts() {
 	std::string OUTSIDE_NT_PREFIX = "outside_";
 
-	std::set<Symbol::NT*> *outside_nts = new std::set<Symbol::NT*>();
+	std::set<Symbol::NT*> outside_nts = std::set<Symbol::NT*>();
 
 	// 1) collect non-terminals used in rhs of productions together with their calling lhs non-terminal
 	// we thus exclude e.g. non-terminal foo in production "foo = BASE;"
@@ -1015,8 +1015,8 @@ void Grammar::inject_outside_nts() {
 				(*alt)->get_nonterminals(rhs_nts);
 				if (rhs_nts->size() > 0) {
 					// if rhs uses at least one non-terminal, both (= calling lhs non-terminal and all rhs non-terminal(s)) will be added as novel outside non-terminals
-					outside_nts->insert(nt);
-					outside_nts->insert(rhs_nts->begin(), rhs_nts->end());
+					outside_nts.insert(nt);
+					outside_nts.insert(rhs_nts->begin(), rhs_nts->end());
 				}
 			}
 		}
@@ -1026,7 +1026,7 @@ void Grammar::inject_outside_nts() {
 	// add both (new outside and user provided inside) non-terminal **names** as keys to the hash,
 	// pointing to the very same novel outside non-terminal.
 	hashtable<std::string, Symbol::Base*> outside_NTs;
-	for (Symbol::NT* nt : *outside_nts) {
+	for (Symbol::NT* nt : outside_nts) {
 		// use inside NT as template ...
 		Symbol::NT *inside_nt = dynamic_cast<Symbol::NT*>(this->NTs.find(*nt->name)->second);
 		// and clone for outside version
@@ -1035,6 +1035,9 @@ void Grammar::inject_outside_nts() {
 		outside_nt->alts.clear();
 		// and correct NT name, to now point to outside version
 		outside_nt->name = new std::string(OUTSIDE_NT_PREFIX + (*nt->name));
+
+		// flag this new non-terminal as being part of the outside rules
+		outside_nt->is_partof_outside = true;
 
 		outside_NTs[OUTSIDE_NT_PREFIX + (*nt->name)] = outside_nt;
 		outside_NTs[(*nt->name)] = outside_nt;
@@ -1048,17 +1051,24 @@ void Grammar::inject_outside_nts() {
 				std::list<Symbol::NT*> *rhs_nts = new std::list<Symbol::NT*>();
 				(*alt)->get_nonterminals(rhs_nts);
 				if (rhs_nts->size() > 0) {
-					for (Symbol::NT *nt : *rhs_nts) {
+					unsigned int skip_occurences = 0;
+					for (Symbol::NT *rhs_nt : *rhs_nts) {
 						// create a copy (=clone) of the inside alternative
 						Alt::Base *outside_alt = (*alt)->clone();
 						// replace one of the inside non-terminals with the outside version of the calling non-terminal
-						outside_alt->replace_nonterminal(nt, dynamic_cast<Symbol::NT*>(outside_NTs.find(i->first)->second));
+						outside_alt->replace_nonterminal(rhs_nt, dynamic_cast<Symbol::NT*>(outside_NTs.find(i->first)->second), skip_occurences);
+						// flag outside_alt as being part of an automatically generated outside production rule
+						outside_alt->set_partof_outside(true);
 						// append copied+replaced alternative to the list of alternatives for the outside version of the called non-terminal
-						(dynamic_cast<Symbol::NT*>(outside_NTs.find(*(nt->name))->second))->alts.push_back(outside_alt);
+						(dynamic_cast<Symbol::NT*>(outside_NTs.find(*(rhs_nt->name))->second))->alts.push_back(outside_alt);
+						skip_occurences++;
 					}
 				} else {
 					// e.g. struct = nil(LOC) has no non-terminal on the rhs, but should become an alternative for outside version of struct
-					(dynamic_cast<Symbol::NT*>(outside_NTs.find(*(nt->name))->second))->alts.push_back((*alt)->clone());
+					Alt::Base *outside_alt = (*alt)->clone();
+					// flag outside_alt as being part of an automatically generated outside production rule
+					outside_alt->set_partof_outside(true);
+					(dynamic_cast<Symbol::NT*>(outside_NTs.find(*(nt->name))->second))->alts.push_back(outside_alt);
 				}
 			}
 		}
@@ -1077,3 +1087,4 @@ void Grammar::inject_outside_nts() {
 	this->axiom_name = new std::string("outside_struct");
 	this->init_axiom();
 }
+

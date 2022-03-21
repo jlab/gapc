@@ -248,6 +248,9 @@ class Base {
     virtual bool multi_detect_loop(const Yield::Multi &left,
                                    const Yield::Multi &right, Symbol::NT *nt);
     virtual bool multi_detect_loop();
+
+    // flag to indicate if alternative is for inside (the default) or outside production rules.
+    bool is_partof_outside;
 };
 
 

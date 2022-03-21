@@ -58,7 +58,7 @@ Alt::Base::Base(Type t, const Loc &l) :
   terminal_type(false), location(l),
   ret_decl(NULL), filter_guards(NULL),
   choice_fn_type_(Expr::Fn_Call::NONE),
-  tracks_(0), track_pos_(0) {
+  tracks_(0), track_pos_(0), is_partof_outside(false) {
 }
 
 
@@ -2963,24 +2963,65 @@ void Alt::Multi::get_nonterminals(std::list<Symbol::NT*> *nt_list) {
 	throw LogError("Alt::Multi::get_nonterminals is not yet implemented!");
 }
 
-
-void Alt::Base::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace) {
+// recursively flag this alternative as being part of an inside (=false=default)
+// or outside (=true) production rule
+void Alt::Base::set_partof_outside(bool is_outside) {
 }
-void Alt::Simple::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace) {
-	for (Fn_Arg::Base *arg : this->args) {
-		Fn_Arg::Alt *arg_alt = dynamic_cast<Fn_Arg::Alt*>(arg);
+void Alt::Simple::set_partof_outside(bool is_outside) {
+	this->is_partof_outside = is_outside;
+	for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
+		Fn_Arg::Alt *arg_alt = dynamic_cast<Fn_Arg::Alt*>(*i);
 		if (arg_alt) {
-			arg_alt->alt->replace_nonterminal(find, replace);
+			arg_alt->alt->set_partof_outside(is_outside);
 		}
 	}
 }
-void Alt::Link::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace) {
+void Alt::Link::set_partof_outside(bool is_outside) {
+	if (this->nt) {
+		if (this->nt->is(Symbol::NONTERMINAL)) {
+			// end recursion on non-terminal call
+		} else if (this->nt->is(Symbol::TERMINAL)) {
+			this->is_partof_outside = is_outside;
+		}
+	} else {
+		throw LogError("Link is something else");
+	}
+}
+void Alt::Block::set_partof_outside(bool is_outside) {
+	throw LogError("Alt::Block::set_partof_outside is not yet implemented!");
+}
+void Alt::Multi::set_partof_outside(bool is_outside) {
+	throw LogError("Alt::Multi::set_partof_outside is not yet implemented!");
+}
+
+
+bool Alt::Base::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, unsigned int &skip_occurences) {
+	return false;
+}
+bool Alt::Simple::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, unsigned int &skip_occurences) {
+	for (Fn_Arg::Base *arg : this->args) {
+		Fn_Arg::Alt *arg_alt = dynamic_cast<Fn_Arg::Alt*>(arg);
+		if (arg_alt) {
+			if (arg_alt->alt->replace_nonterminal(find, replace, skip_occurences)) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+bool Alt::Link::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, unsigned int &skip_occurences) {
 	if (this->nt) {
 		if (this->nt->is(Symbol::NONTERMINAL)) {
 			if (this->nt == find) {
-				// replace old NT (=find) with novel NT (=replace)
-				this->nt = replace;
-				this->name = replace->name;
+				if (skip_occurences == 0) {
+					// replace old NT (=find) with novel NT (=replace)
+					this->nt = replace;
+					this->name = replace->name;
+					this->is_partof_outside = replace->is_partof_outside;
+					return true;
+				} else {
+					skip_occurences--;
+				}
 			}
 		} else if (this->nt->is(Symbol::TERMINAL)) {
 
@@ -2988,13 +3029,18 @@ void Alt::Link::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace) {
 	} else {
 		throw LogError("Link is something else");
 	}
+	return false;
 }
-void Alt::Block::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace) {
+bool Alt::Block::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, unsigned int &skip_occurences) {
 	for (Alt::Base *alt : this->alts) {
 		// recurse into alternatives
-		alt->replace_nonterminal(find, replace);
+		if (alt->replace_nonterminal(find, replace, skip_occurences)) {
+			return true;
+		}
 	}
+	return false;
 }
-void Alt::Multi::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace) {
+bool Alt::Multi::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, unsigned int &skip_occurences) {
 	throw LogError("Alt::Multi::replace_nonterminal is not yet implemented!");
+	return false;
 }

@@ -313,8 +313,17 @@ class Base {
   // e.g. ml_comps = cadd(incl(dangle), ml_comps1) should return [*dangle, *ml_comps1]
   virtual void get_nonterminals(std::list<Symbol::NT*> *nt_list);
 
+  // flag alternative as being part of a generated outside non-terminal
+  // such that code generation can discriminate between inside (default)
+  // and outside.
+  virtual void set_partof_outside(bool is_outside);
   // traverses the alternative (=rhs of a production), iff non-terminal find is contained, replace with first occurence of non-terminal replace
-  virtual void replace_nonterminal(Symbol::NT *find, Symbol::NT *replace);
+  virtual bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, unsigned int &skip_occurences);
+
+ protected:
+  // private flag to indicate if alternative is for inside (the default) or outside
+  // production rules. See set_partof_outside()
+  bool is_partof_outside;
 };
 
 
@@ -487,7 +496,8 @@ class Simple : public Base {
  public:
   void set_ntparas(std::list<Expr::Base*> *l);
   void get_nonterminals(std::list<Symbol::NT*> *nt_list);
-  void replace_nonterminal(Symbol::NT *find, Symbol::NT *replace);
+  void set_partof_outside(bool is_outside);
+  bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, unsigned int &skip_occurences);
 
  private:
   std::list<Statement::Base*> *insert_index_stmts(
@@ -610,7 +620,8 @@ class Link : public Base {
 
   void optimize_choice();
   void get_nonterminals(std::list<Symbol::NT*> *nt_list);
-  void replace_nonterminal(Symbol::NT *find, Symbol::NT *replace);
+  void set_partof_outside(bool is_outside);
+  bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, unsigned int &skip_occurences);
 };
 
 
@@ -679,7 +690,8 @@ class Block : public Base {
   void multi_collect_factors(Runtime::Poly &p);
   void multi_init_calls(const Runtime::Poly &p, size_t base_tracks);
   void get_nonterminals(std::list<Symbol::NT*> *nt_list);
-  void replace_nonterminal(Symbol::NT *find, Symbol::NT *replace);
+  void set_partof_outside(bool is_outside);
+  bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, unsigned int &skip_occurences);
 };
 
 
@@ -751,7 +763,8 @@ class Multi : public Base {
   const std::list<Statement::Var_Decl*> &ret_decls() const;
   void init_ret_decl(unsigned int i, const std::string &prefix);
   void get_nonterminals(std::list<Symbol::NT*> *nt_list);
-  void replace_nonterminal(Symbol::NT *find, Symbol::NT *replace);
+  void set_partof_outside(bool is_outside);
+  bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, unsigned int &skip_occurences);
 };
 
 
