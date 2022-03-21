@@ -335,7 +335,7 @@ class Main {
     }
 
     // simply gets the selected grammar, which is either the
-    // grammar that occured first in the source code or is the
+    // grammar that occurred first in the source code or is the
     // one that was named in the parameters on the command line
     Grammar *grammar = driver.ast.grammar();
     // Now check the semantic, which does more than the function
@@ -347,6 +347,10 @@ class Main {
     if (!r) {
       throw LogError("Seen semantic errors.");
     }
+
+    // inject rules for outside grammar
+    grammar->inject_outside_nts();
+
 
     // configure the window and k-best mode
     driver.ast.set_window_mode(opts.window_mode);
@@ -383,8 +387,8 @@ class Main {
     // suboptimal designs and present a message to the user.
     driver.ast.warn_user_table_conf_suboptimal();
 
-                      // find what type of input is read
-                      // chars, sequence of ints etc.
+    // find what type of input is read
+    // chars, sequence of ints etc.
     driver.ast.derive_temp_alphabet();
 
     r = driver.ast.check_signature();

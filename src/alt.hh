@@ -308,6 +308,13 @@ class Base {
   virtual void set_ntparas(const Loc &loc, std::list<Expr::Base*> *l);
 
   bool choice_set();
+
+  // traverses the alternative (=rhs of a production) and collects pointers to all referenced non-terminals
+  // e.g. ml_comps = cadd(incl(dangle), ml_comps1) should return [*dangle, *ml_comps1]
+  virtual void get_nonterminals(std::list<Symbol::NT*> *nt_list);
+
+  // traverses the alternative (=rhs of a production), iff non-terminal find is contained, replace with first occurence of non-terminal replace
+  virtual void replace_nonterminal(Symbol::NT *find, Symbol::NT *replace);
 };
 
 
@@ -479,7 +486,8 @@ class Simple : public Base {
 
  public:
   void set_ntparas(std::list<Expr::Base*> *l);
-
+  void get_nonterminals(std::list<Symbol::NT*> *nt_list);
+  void replace_nonterminal(Symbol::NT *find, Symbol::NT *replace);
 
  private:
   std::list<Statement::Base*> *insert_index_stmts(
@@ -507,9 +515,9 @@ class Link : public Base {
   Symbol::Base *nt;
 
 
-  // Inits the insatnce and sets the local fields according to
+  // Inits the instance and sets the local fields according to
   // the parameter values of the non-terminal name. It also sets
-  // the pointer to the non-terminal grammar-node explicitely
+  // the pointer to the non-terminal grammar-node explicitly
   // to NULL.
   Link(std::string *n, const Loc&l)
     : Base(LINK, l), name(n), nt(NULL) {
@@ -601,6 +609,8 @@ class Link : public Base {
   bool check_ntparas();
 
   void optimize_choice();
+  void get_nonterminals(std::list<Symbol::NT*> *nt_list);
+  void replace_nonterminal(Symbol::NT *find, Symbol::NT *replace);
 };
 
 
@@ -668,6 +678,8 @@ class Block : public Base {
 
   void multi_collect_factors(Runtime::Poly &p);
   void multi_init_calls(const Runtime::Poly &p, size_t base_tracks);
+  void get_nonterminals(std::list<Symbol::NT*> *nt_list);
+  void replace_nonterminal(Symbol::NT *find, Symbol::NT *replace);
 };
 
 
@@ -738,6 +750,8 @@ class Multi : public Base {
   void types(std::list< ::Type::Base*> &) const;
   const std::list<Statement::Var_Decl*> &ret_decls() const;
   void init_ret_decl(unsigned int i, const std::string &prefix);
+  void get_nonterminals(std::list<Symbol::NT*> *nt_list);
+  void replace_nonterminal(Symbol::NT *find, Symbol::NT *replace);
 };
 
 

@@ -99,7 +99,7 @@ void Grammar::move_new_nts() {
 
 /*
  * Annotates each nonterminal that was marked in the source code
- * with the "tabultated" keyword internally and adds it to the
+ * with the "tabulated" keyword internally and adds it to the
  * table of tabulated non-terminals (Grammar.tabulated).
  * This method also does some integrity checks on the source data
  * structures this method iterates through.
@@ -338,7 +338,7 @@ void Grammar::multi_propagate_max_filter() {
     (*i)->update_max_ys(*j);
   }
 
-  // defines the cisitor used a few lines later to set the max size
+  // defines the visitor used a few lines later to set the max size
   struct Multi_Max_Visitor : public Visitor {
     void visit(Alt::Base &b) {
       b.multi_set_max_size();
@@ -429,7 +429,7 @@ bool Grammar::init_tracks() {
 
 
 /*
- * Checks the semantik of the grammar. This includes the following
+ * Checks the semantic of the grammar. This includes the following
  * things:
  * 1) setting the axiom by resolving the axiom name to a pointer
  *    that is of type  Symbol::NT*
@@ -998,4 +998,82 @@ void Grammar::remove(Symbol::NT *x) {
   assert(NTs.find(nt)->second != axiom);
   NTs.erase(nt);
   tabulated.erase(nt);
+}
+
+void Grammar::inject_outside_nts() {
+	std::string OUTSIDE_NT_PREFIX = "outside_";
+
+	std::set<Symbol::NT*> *outside_nts = new std::set<Symbol::NT*>();
+
+	// 1) collect non-terminals used in rhs of productions together with their calling lhs non-terminal
+	// we thus exclude e.g. non-terminal foo in production "foo = BASE;"
+	for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin(); i != NTs.end(); ++i) {
+		Symbol::NT *nt = dynamic_cast<Symbol::NT*>(i->second);
+		if (nt) {  // skip terminals
+			for (std::list<Alt::Base*>::iterator alt = nt->alts.begin(); alt != nt->alts.end(); ++alt) {
+				std::list<Symbol::NT*> *rhs_nts = new std::list<Symbol::NT*>();
+				(*alt)->get_nonterminals(rhs_nts);
+				if (rhs_nts->size() > 0) {
+					// if rhs uses at least one non-terminal, both (= calling lhs non-terminal and all rhs non-terminal(s)) will be added as novel outside non-terminals
+					outside_nts->insert(nt);
+					outside_nts->insert(rhs_nts->begin(), rhs_nts->end());
+				}
+			}
+		}
+	}
+
+	// 2) create a novel outside non-terminal for each collected non-terminal in the inside grammar
+	// add both (new outside and user provided inside) non-terminal **names** as keys to the hash,
+	// pointing to the very same novel outside non-terminal.
+	hashtable<std::string, Symbol::Base*> outside_NTs;
+	for (Symbol::NT* nt : *outside_nts) {
+		// use inside NT as template ...
+		Symbol::NT *inside_nt = dynamic_cast<Symbol::NT*>(this->NTs.find(*nt->name)->second);
+		// and clone for outside version
+		Symbol::NT *outside_nt = inside_nt->clone(inside_nt->track_pos());
+		// remove all existing alternative production rules
+		outside_nt->alts.clear();
+		// and correct NT name, to now point to outside version
+		outside_nt->name = new std::string(OUTSIDE_NT_PREFIX + (*nt->name));
+
+		outside_NTs[OUTSIDE_NT_PREFIX + (*nt->name)] = outside_nt;
+		outside_NTs[(*nt->name)] = outside_nt;
+	}
+
+	// 3) create copy of inside alternative, replace called non-terminal with calling outside version and append to called outside version
+	for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin(); i != NTs.end(); ++i) {
+		Symbol::NT *nt = dynamic_cast<Symbol::NT*>(i->second);
+		if (nt) {  // skip terminals
+			for (std::list<Alt::Base*>::iterator alt = nt->alts.begin(); alt != nt->alts.end(); ++alt) {
+				std::list<Symbol::NT*> *rhs_nts = new std::list<Symbol::NT*>();
+				(*alt)->get_nonterminals(rhs_nts);
+				if (rhs_nts->size() > 0) {
+					for (Symbol::NT *nt : *rhs_nts) {
+						// create a copy (=clone) of the inside alternative
+						Alt::Base *outside_alt = (*alt)->clone();
+						// replace one of the inside non-terminals with the outside version of the calling non-terminal
+						outside_alt->replace_nonterminal(nt, dynamic_cast<Symbol::NT*>(outside_NTs.find(i->first)->second));
+						// append copied+replaced alternative to the list of alternatives for the outside version of the called non-terminal
+						(dynamic_cast<Symbol::NT*>(outside_NTs.find(*(nt->name))->second))->alts.push_back(outside_alt);
+					}
+				} else {
+					// e.g. struct = nil(LOC) has no non-terminal on the rhs, but should become an alternative for outside version of struct
+					(dynamic_cast<Symbol::NT*>(outside_NTs.find(*(nt->name))->second))->alts.push_back((*alt)->clone());
+				}
+			}
+		}
+	}
+
+	// 4) add novel outside NTs to grammar
+	for (std::pair<std::string, Symbol::Base*> nt : outside_NTs) {
+		if (this->NTs.find(nt.first) == this->NTs.end()) {  // only for NTs that are not already part of the grammar
+			this->NTs.insert(nt);
+			this->nt_list.push_back(dynamic_cast<Symbol::NT*>(nt.second));
+		}
+	}
+
+	// 5) TODO(smj): how to determine new axiom?
+	//this->axiom_name = new std::string("outside_hairpin");
+	this->axiom_name = new std::string("outside_struct");
+	this->init_axiom();
 }

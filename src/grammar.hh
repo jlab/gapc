@@ -205,6 +205,10 @@ class Grammar {
   bool multi_detect_loops();
 
   void multi_propagate_max_filter();
+
+  // inject additional non-terminals to grammar, to automatically create
+  // an outside version for user provided grammar
+  void inject_outside_nts();
 };
 
 
