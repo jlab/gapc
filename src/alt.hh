@@ -468,8 +468,8 @@ class Simple : public Base {
  public:
   void init_indices(
     Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
-  Expr::Base *get_next_var_right2left(unsigned &k, size_t track);
-  Expr::Base *get_next_var_left2right(unsigned &k, size_t track);
+  Expr::Base *get_next_var_right2left(Expr::Base *left_index, unsigned &k, size_t track, Yield::Size ys_this);
+  Expr::Base *get_next_var_left2right(Expr::Base *right_index, unsigned &k, size_t track, Yield::Size ys_this);
   void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track);
   parser_indices *init_indices_outside(
       Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, bool called_from_lhsNT);

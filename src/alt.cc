@@ -3209,21 +3209,46 @@ Symbol::NT *get_outside_NT(Alt::Base *alt) {
 	return NULL;
 }
 
-Expr::Base *Alt::Simple::get_next_var_right2left(unsigned &k, size_t track) {
+Expr::Base *get_next_var_name(unsigned &k, size_t track) {
   std::ostringstream o;
   o << "t_" << track << "_k_" << k;
   k++;
   Expr::Vacc *ivar = new Expr::Vacc(new std::string(o.str()));
-
   return ivar;
 }
-Expr::Base *Alt::Simple::get_next_var_left2right(unsigned &k, size_t track) {
-  std::ostringstream o;
-  o << "t_" << track << "_k_" << k;
-  k++;
-  Expr::Vacc *ivar = new Expr::Vacc(new std::string(o.str()));
+Expr::Base *Alt::Simple::get_next_var_right2left(Expr::Base *left_index, unsigned &k, size_t track, Yield::Size ys_this) {
+  if (ys_this.low() == ys_this.high()) {
+    // constant yield size
+    return left_index->minus(ys_this.low());
+  }
 
-  return ivar;
+  // variable yield size
+  Expr::Base *next_index = get_next_var_name(k, track);
+
+
+//  std::pair<Expr::Base*, Expr::Base*> index(0, 0);
+//  index.second = new Expr::Base(Expr::Const(555));
+//  Statement::Var_Decl *loopvariable = new Statement::Var_Decl(
+//    new ::Type::Size(), next_index, index.first);
+//  // flag this variable as being an iterator e.g. in for-loops,
+//  // such that it won't have a trailing indent for code generation
+//  loopvariable->set_itr(true);
+//  Expr::Base *cond = new Expr::Less_Eq(next_index, index.second);
+//  Statement::For *f = new Statement::For (loopvariable, cond);
+//  loops.push_back(f);
+
+  return next_index;
+}
+Expr::Base *Alt::Simple::get_next_var_left2right(Expr::Base *right_index, unsigned &k, size_t track, Yield::Size ys_this) {
+  if (right_index == NULL) {
+	  return get_next_var_name(k, track);
+  }
+
+  if (ys_this.low() == ys_this.high()) {
+	return right_index->plus(ys_this.low());
+  } else {
+	return get_next_var_name(k, track);
+  }
 }
 
 void Alt::Base::expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track) {
@@ -3326,35 +3351,34 @@ parser_indices *Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *
 	//     foo(  BASE,    REGION,   bar,    REGION,     BASE )
 	//                <-- ^^^^^^     X
 	Expr::Base *right_index = pind_sub->var_left;
+	Expr::Base *left_index = pind_sub->var_left;
 	for (std::list<Fn_Arg::Base*>::const_reverse_iterator i = args_left->rbegin(); i != args_left->rend(); ++i) {
-		Expr::Base *left_index = get_next_var_right2left(k, track);
+		left_index = get_next_var_right2left(left_index, k, track, (*i)->multi_ys()(track));
 		parser_indices *pind = (*i)->alt_ref()->init_indices_outside(left_index, right_index, k, track, false);
 		// prepare for next element: right = left
 		right_index = pind->var_left;
 	}
+	// before doing 2c, save current left_index as the "leftmost_index"
+	Expr::Base *leftmost_index = left_index;
 
 	// 2c) same as above, but start right of outside non-terminal
 	//     foo(  BASE,    REGION,   bar,    REGION,     BASE )
 	//                               X      ^^^^^^ -->
-	Expr::Base *left_index = pind_sub->var_right;
+	left_index = pind_sub->var_right;
+	right_index = pind_sub->var_right;
 	for (std::list<Fn_Arg::Base*>::const_iterator i = args_right->begin(); i != args_right->end(); ++i) {
-		Expr::Base *right_index = get_next_var_left2right(k, track);
+		right_index = get_next_var_left2right(right_index, k, track, (*i)->multi_ys()(track));
 		parser_indices *pind = (*i)->alt_ref()->init_indices_outside(left_index, right_index, k, track, false);
 		// prepare for next element: left = right
 		left_index = pind->var_right;
 	}
 
-	this->expand_outside_nt_indices(right_index, left_index, track);
+	this->expand_outside_nt_indices(leftmost_index, right_index, track);
 	// 3) set indices for THIS
 	// foo(  BASE,    REGION,   bar,    REGION,     BASE )
 	// ^^^
-//	if (called_from_lhsNT) {
-//		parser_indices *pind_this = Alt::Base::init_indices_outside(left, right, k, track, false);
-//		return pind_this;
-//	} else {
-		parser_indices *pind_this = Alt::Base::init_indices_outside(right_index, left_index, k, track, false);
-		return pind_this;
-//	}
+	parser_indices *pind_this = Alt::Base::init_indices_outside(leftmost_index, right_index, k, track, false);
+	return pind_this;
 }
 parser_indices *Alt::Link::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, bool called_from_lhsNT) {
   parser_indices *pind = Alt::Base::init_indices_outside(left, right, k, track, false);
