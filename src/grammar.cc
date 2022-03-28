@@ -1026,6 +1026,11 @@ void Grammar::inject_outside_nts() {
 	// add both (new outside and user provided inside) non-terminal **names** as keys to the hash,
 	// pointing to the very same novel outside non-terminal.
 	hashtable<std::string, Symbol::Base*> outside_NTs;
+	if (outside_nts.size() == 0) {
+		// the grammar does not have any non-terminals on the rhs of productions.
+		// Thus, no new NTs have to be injected
+		return;
+	}
 	for (Symbol::NT* nt : outside_nts) {
 		// use inside NT as template ...
 		Symbol::NT *inside_nt = dynamic_cast<Symbol::NT*>(this->NTs.find(*nt->name)->second);
