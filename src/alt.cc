@@ -3051,6 +3051,7 @@ void to_dot_indices(std::vector<Expr::Base*> indices, std::ostream &out) {
   out << "<td><font point-size='8' color='#555555'>";
   for (std::vector<Expr::Base*>::const_iterator track = indices.begin();
        track != indices.end(); ++track) {
+	assert(*track != NULL);
     (*track)->put(out);
     if (std::next(track) != indices.end()) {
       out << "<br/>";
@@ -3186,4 +3187,185 @@ unsigned int Alt::Multi::to_dot(unsigned int *nodeID, std::ostream &out) {
   return thisID+1;  // return not the cluster ID but the id of the first element
 }
 // END functions produce graphViz code to represent the grammar
+
+
+// traverses an alternative, collects all non-terminals and returns the one outside non-terminal if present, otherwise NULL
+Symbol::NT *get_outside_NT(Alt::Base *alt) {
+	std::list<Symbol::NT*> *nt_list = new std::list<Symbol::NT*>();
+	alt->get_nonterminals(nt_list);
+	for (std::list<Symbol::NT*>::iterator i = nt_list->begin(); i != nt_list->end(); ++i) {
+		//std::cerr << *((*i)->name) << "\n";
+		if ((*i)->is_partof_outside == false) {
+			// i-- because we need to make sure not to destroy the iterator
+			// we are using at this moment:
+			// https://www.techiedelight.com/remove-elements-list-iterating-cpp/
+			nt_list->erase(i--);
+		}
+	}
+    assert(nt_list->size() <= 1);  // by design of the outside NT injection, there can at most be ONE outside-nt on any rhs of a production!
+    if (nt_list->size() == 1) {
+    	return nt_list->front();
+    }
+	return NULL;
+}
+
+Expr::Base *Alt::Simple::get_next_var_right2left(unsigned &k, size_t track) {
+  std::ostringstream o;
+  o << "t_" << track << "_k_" << k;
+  k++;
+  Expr::Vacc *ivar = new Expr::Vacc(new std::string(o.str()));
+
+  return ivar;
+}
+Expr::Base *Alt::Simple::get_next_var_left2right(unsigned &k, size_t track) {
+  std::ostringstream o;
+  o << "t_" << track << "_k_" << k;
+  k++;
+  Expr::Vacc *ivar = new Expr::Vacc(new std::string(o.str()));
+
+  return ivar;
+}
+
+void Alt::Base::expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track) {
+	this->left_indices[track] = left;
+	this->right_indices[track] = right;
+}
+void Alt::Simple::expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track) {
+	// 1) identify outside non-terminal
+	for (std::list<Fn_Arg::Base*>::const_iterator i = args.begin(); i != args.end(); ++i) {
+		Symbol::NT *ont = get_outside_NT((*i)->alt_ref());
+		if (ont) {
+			// e.g. outside_iloop
+			Alt::Link *link = dynamic_cast<Alt::Link*>((*i)->alt_ref());
+			if (link) {
+				if (link->nt == ont) {
+					// the link->nt could also be a terminal
+					Symbol::NT *check = dynamic_cast<Symbol::NT*>(link->nt);
+					assert(check);
+					// we have identified this fn_arg as the one being the outside non-terminal,
+					// 2) let's expand its indices
+					link->expand_outside_nt_indices(left, right, track);
+					// we are done
+					return;
+				}
+			}
+			// e.g. incl(outside_iloop)
+			Alt::Simple *algfct = dynamic_cast<Alt::Simple*>((*i)->alt_ref());
+			if (algfct) {
+				algfct->expand_outside_nt_indices(left, right, track);
+			}
+		}
+	}
+}
+void Alt::Link::expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track) {
+	Alt::Base::expand_outside_nt_indices(left, right, track);
+}
+void Alt::Block::expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track) {
+  throw LogError("Alt::Block::expand_outside_nt_indices is not yet implemented!");
+}
+void Alt::Multi::expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track) {
+  throw LogError("Alt::Block::expand_outside_nt_indices is not yet implemented!");
+}
+
+parser_indices *Alt::Base::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, bool called_from_lhsNT) {
+  Alt::Base::init_indices(left, right, k, track);
+  parser_indices *res = new parser_indices(left, right);
+  return res;
+}
+
+parser_indices *Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, bool called_from_lhsNT) {
+	/* We need to set the moving boundaries for outside non terminals. As opposed to the inside version,
+	 * we here have to start in the inside and work towards left and right ends, e.g.
+	 * foo(  BASE,    REGION,   bar,    REGION,     BASE )
+	 *     i      i+1        k0      k1        k1+1     j     <-- inside
+	 *     k0-1   k0          i      j         k1       k1+1  <-- outside
+	 * Note that bar itself can either be a non-terminal or a nested argument, e.g.
+	 * foo(BASE, incl(bar), BASE) where incl(bar) has to be initialized BEFOR
+	 * we can initialize foo(BASE, x, BASE)
+	 *
+	 * 1) Let's first iterate through the arguments and store them in:
+	 * - args left of the outside NT
+	 * - the arg containing the outside NT
+	 * - args right of the outside NT
+	 */
+	std::list<Fn_Arg::Base*> *args_left = new std::list<Fn_Arg::Base*>();
+	std::list<Fn_Arg::Base*> *args_right = new std::list<Fn_Arg::Base*>();
+	Fn_Arg::Base *arg_outside = NULL;  // = the argument containing the outside non-terminal somewhere (mutually exclusive to nt_outside)
+	Symbol::NT *nt_outside = NULL;  // = the final outside non terminal (mutually exclusive to arg_outside)
+	for (std::list<Fn_Arg::Base*>::const_iterator i = args.begin(); i != args.end(); ++i) {
+		Symbol::NT *ont = get_outside_NT((*i)->alt_ref());
+		if (ont) {
+			Alt::Link *link = dynamic_cast<Alt::Link*>((*i)->alt_ref());
+			if (link) {
+				if (link->nt == ont) {
+					// the link->nt could also be a terminal
+					Symbol::NT *check = dynamic_cast<Symbol::NT*>(link->nt);
+					assert(check);
+					nt_outside = check;
+				}
+			}
+			arg_outside = *i;
+			continue;
+		}
+		if (arg_outside == NULL) {
+			args_left->push_back(*i);
+		} else {
+			args_right->push_back(*i);
+		}
+	}
+
+	// 2a) if the outside non terminal is deeper into an argument, recurse into this arg first
+	//     foo(  BASE,    REGION,   incl(bar),    REGION,     BASE )
+	//                              ^^^^
+	parser_indices *pind_sub = new parser_indices(left, right);
+	if (arg_outside) {
+		pind_sub = arg_outside->alt_ref()->init_indices_outside(left, right, k, track, false);
+	}
+
+	// 2b) start left of the outside non-terminal and initialize indices from right to left
+	//     foo(  BASE,    REGION,   bar,    REGION,     BASE )
+	//                <-- ^^^^^^     X
+	Expr::Base *right_index = pind_sub->var_left;
+	for (std::list<Fn_Arg::Base*>::const_reverse_iterator i = args_left->rbegin(); i != args_left->rend(); ++i) {
+		Expr::Base *left_index = get_next_var_right2left(k, track);
+		parser_indices *pind = (*i)->alt_ref()->init_indices_outside(left_index, right_index, k, track, false);
+		// prepare for next element: right = left
+		right_index = pind->var_left;
+	}
+
+	// 2c) same as above, but start right of outside non-terminal
+	//     foo(  BASE,    REGION,   bar,    REGION,     BASE )
+	//                               X      ^^^^^^ -->
+	Expr::Base *left_index = pind_sub->var_right;
+	for (std::list<Fn_Arg::Base*>::const_iterator i = args_right->begin(); i != args_right->end(); ++i) {
+		Expr::Base *right_index = get_next_var_left2right(k, track);
+		parser_indices *pind = (*i)->alt_ref()->init_indices_outside(left_index, right_index, k, track, false);
+		// prepare for next element: left = right
+		left_index = pind->var_right;
+	}
+
+	this->expand_outside_nt_indices(right_index, left_index, track);
+	// 3) set indices for THIS
+	// foo(  BASE,    REGION,   bar,    REGION,     BASE )
+	// ^^^
+//	if (called_from_lhsNT) {
+//		parser_indices *pind_this = Alt::Base::init_indices_outside(left, right, k, track, false);
+//		return pind_this;
+//	} else {
+		parser_indices *pind_this = Alt::Base::init_indices_outside(right_index, left_index, k, track, false);
+		return pind_this;
+//	}
+}
+parser_indices *Alt::Link::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, bool called_from_lhsNT) {
+  parser_indices *pind = Alt::Base::init_indices_outside(left, right, k, track, false);
+  return pind;
+}
+parser_indices *Alt::Block::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, bool called_from_lhsNT) {
+  throw LogError("Alt::Block::init_indices_outside is not yet implemented!");
+  return NULL;
+}
+parser_indices *Alt::Multi::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, bool called_from_lhsNT) {
+  throw LogError("Alt::Multi::init_indices_outside is not yet implemented!");
+  return NULL;
+}
 

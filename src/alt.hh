@@ -56,6 +56,25 @@ class Signature_Base;
 class Visitor;
 class Fn_Decl;
 
+struct parser_indices {
+  // the current variable for leftmost index, e.g. t_0_i
+  Expr::Base *var_left;
+  // the current variable for rightmost index, e.g. t_0_j
+  Expr::Base *var_right;
+
+  // accumulated yield size for constant parser on the left of non-terminal parser
+  // e.g. foo(x, BASE, BASE, nt, ...) if "nt" is the flagged (outside) non-terminal,
+  // we "know" that BASE and BASE each consumes exactly 1 char, i.e. 2 in total
+  // which can guard running indices for x parser
+  Yield::Size *ys_left;
+  // as above, but for right of nt
+  Yield::Size *ys_right;
+
+  parser_indices(Expr::Base *left, Expr::Base *right) : ys_left(), ys_right() {
+	  this->var_left = left;
+	  this->var_right = right;
+  }
+};
 
 namespace Alt {
 /*
@@ -219,6 +238,14 @@ class Base {
 
   virtual void init_indices(
     Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
+  // recurses into alternatives, finds the single outside NT and updates only its left and right indices
+  // used after init_indices_outside initializes all other incides
+  // e.g. foo(k1_REGION_i, i_bar_j, j_REGION_k2) --> foo(k1_REGION_i, k1_bar_k2, j_REGION_k2)
+  //                       ^     ^                                    ^^     ^^
+  virtual void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track);
+  // sets indices for outside rules, respecting yield sizes
+  virtual parser_indices *init_indices_outside(
+    Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, bool called_from_lhsNT);
 
   virtual void init_ret_decl(unsigned int i, const std::string &prefix);
 
@@ -321,7 +348,8 @@ class Base {
   virtual bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, unsigned int &skip_occurences);
 
   virtual unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
-
+  // returns either the single outside non-terminal or NULL
+  Symbol::NT *get_outside_nt(Alt::Base *alt);
  protected:
   // private flag to indicate if alternative is for inside (the default) or outside
   // production rules. See set_partof_outside()
@@ -440,6 +468,11 @@ class Simple : public Base {
  public:
   void init_indices(
     Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
+  Expr::Base *get_next_var_right2left(unsigned &k, size_t track);
+  Expr::Base *get_next_var_left2right(unsigned &k, size_t track);
+  void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track);
+  parser_indices *init_indices_outside(
+      Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, bool called_from_lhsNT);
   void put_indices(std::ostream &s);
 
   void reset();
@@ -578,6 +611,9 @@ class Link : public Base {
 
   void init_indices(
     Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
+  void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track);
+  parser_indices *init_indices_outside(
+        Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, bool called_from_lhsNT);
 
   // void init_ret_decl(unsigned int i);
 
@@ -678,6 +714,9 @@ class Block : public Base {
   void traverse(Visitor &v);
   void init_indices(
     Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
+  void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track);
+  parser_indices *init_indices_outside(
+        Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, bool called_from_lhsNT);
 
   void codegen(AST &ast);
 
@@ -751,6 +790,10 @@ class Multi : public Base {
 
   void init_indices(
     Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
+  void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track);
+  parser_indices *init_indices_outside(
+        Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, bool called_from_lhsNT);
+
   void codegen(AST &ast);
   void print_dot_edge(std::ostream &out, Symbol::NT &nt);
   void print(std::ostream &s);
