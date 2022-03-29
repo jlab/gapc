@@ -245,7 +245,7 @@ class Base {
   virtual void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track);
   // sets indices for outside rules, respecting yield sizes
   virtual parser_indices *init_indices_outside(
-    Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, bool called_from_lhsNT);
+    Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
 
   virtual void init_ret_decl(unsigned int i, const std::string &prefix);
 
@@ -472,7 +472,7 @@ class Simple : public Base {
   Expr::Base *get_next_var_left2right(Expr::Base *right_index, unsigned &k, size_t track, Yield::Size ys_this);
   void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track);
   parser_indices *init_indices_outside(
-      Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, bool called_from_lhsNT);
+      Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
   void put_indices(std::ostream &s);
 
   void reset();
@@ -613,7 +613,7 @@ class Link : public Base {
     Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
   void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track);
   parser_indices *init_indices_outside(
-        Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, bool called_from_lhsNT);
+        Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
 
   // void init_ret_decl(unsigned int i);
 
@@ -716,7 +716,7 @@ class Block : public Base {
     Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
   void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track);
   parser_indices *init_indices_outside(
-        Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, bool called_from_lhsNT);
+        Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
 
   void codegen(AST &ast);
 
@@ -792,7 +792,7 @@ class Multi : public Base {
     Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
   void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track);
   parser_indices *init_indices_outside(
-        Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, bool called_from_lhsNT);
+        Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
 
   void codegen(AST &ast);
   void print_dot_edge(std::ostream &out, Symbol::NT &nt);

@@ -3292,13 +3292,13 @@ void Alt::Multi::expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, 
   throw LogError("Alt::Block::expand_outside_nt_indices is not yet implemented!");
 }
 
-parser_indices *Alt::Base::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, bool called_from_lhsNT) {
+parser_indices *Alt::Base::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track) {
   Alt::Base::init_indices(left, right, k, track);
   parser_indices *res = new parser_indices(left, right);
   return res;
 }
 
-parser_indices *Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, bool called_from_lhsNT) {
+parser_indices *Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track) {
 	/* We need to set the moving boundaries for outside non terminals. As opposed to the inside version,
 	 * we here have to start in the inside and work towards left and right ends, e.g.
 	 * foo(  BASE,    REGION,   bar,    REGION,     BASE )
@@ -3344,7 +3344,7 @@ parser_indices *Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *
 	//                              ^^^^
 	parser_indices *pind_sub = new parser_indices(left, right);
 	if (arg_outside) {
-		pind_sub = arg_outside->alt_ref()->init_indices_outside(left, right, k, track, false);
+		pind_sub = arg_outside->alt_ref()->init_indices_outside(left, right, k, track);
 	}
 
 	// 2b) start left of the outside non-terminal and initialize indices from right to left
@@ -3354,7 +3354,7 @@ parser_indices *Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *
 	Expr::Base *left_index = pind_sub->var_left;
 	for (std::list<Fn_Arg::Base*>::const_reverse_iterator i = args_left->rbegin(); i != args_left->rend(); ++i) {
 		left_index = get_next_var_right2left(left_index, k, track, (*i)->multi_ys()(track));
-		parser_indices *pind = (*i)->alt_ref()->init_indices_outside(left_index, right_index, k, track, false);
+		parser_indices *pind = (*i)->alt_ref()->init_indices_outside(left_index, right_index, k, track);
 		// prepare for next element: right = left
 		right_index = pind->var_left;
 	}
@@ -3368,7 +3368,7 @@ parser_indices *Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *
 	right_index = pind_sub->var_right;
 	for (std::list<Fn_Arg::Base*>::const_iterator i = args_right->begin(); i != args_right->end(); ++i) {
 		right_index = get_next_var_left2right(right_index, k, track, (*i)->multi_ys()(track));
-		parser_indices *pind = (*i)->alt_ref()->init_indices_outside(left_index, right_index, k, track, false);
+		parser_indices *pind = (*i)->alt_ref()->init_indices_outside(left_index, right_index, k, track);
 		// prepare for next element: left = right
 		left_index = pind->var_right;
 	}
@@ -3377,18 +3377,18 @@ parser_indices *Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *
 	// 3) set indices for THIS
 	// foo(  BASE,    REGION,   bar,    REGION,     BASE )
 	// ^^^
-	parser_indices *pind_this = Alt::Base::init_indices_outside(leftmost_index, right_index, k, track, false);
+	parser_indices *pind_this = Alt::Base::init_indices_outside(leftmost_index, right_index, k, track);
 	return pind_this;
 }
-parser_indices *Alt::Link::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, bool called_from_lhsNT) {
-  parser_indices *pind = Alt::Base::init_indices_outside(left, right, k, track, false);
+parser_indices *Alt::Link::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track) {
+  parser_indices *pind = Alt::Base::init_indices_outside(left, right, k, track);
   return pind;
 }
-parser_indices *Alt::Block::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, bool called_from_lhsNT) {
+parser_indices *Alt::Block::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track) {
   throw LogError("Alt::Block::init_indices_outside is not yet implemented!");
   return NULL;
 }
-parser_indices *Alt::Multi::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, bool called_from_lhsNT) {
+parser_indices *Alt::Multi::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track) {
   throw LogError("Alt::Multi::init_indices_outside is not yet implemented!");
   return NULL;
 }
