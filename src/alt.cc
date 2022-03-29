@@ -3373,8 +3373,13 @@ parser_indices *Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *
 		left_index = pind->var_right;
 	}
 
+	// 3) update indices of outside non-terminal such that they reach from leftmost to rightmost
+	// e.g. foo(  REGION, outside_bar, REGION  )
+	//          k0       i            j      k1
+	//  -->     k0       k0          k1      k1
 	this->expand_outside_nt_indices(leftmost_index, right_index, track);
-	// 3) set indices for THIS
+
+	// 4) set indices for THIS
 	// foo(  BASE,    REGION,   bar,    REGION,     BASE )
 	// ^^^
 	parser_indices *pind_this = Alt::Base::init_indices_outside(leftmost_index, right_index, k, track);
