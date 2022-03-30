@@ -752,9 +752,7 @@ void Symbol::NT::init_indices(Expr::Vacc *left, Expr::Vacc *right,
 
   for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
 	if (this->is_partof_outside) {
-	  Yield::Size *ys_lefts = new Yield::Size();
-	  Yield::Size *ys_rights = new Yield::Size();
-	  parser_indices *pind = (*i)->init_indices_outside(left, right, k, track, ys_lefts, ys_rights);
+	  parser_indices *pind = (*i)->init_indices_outside(left, right, k, track, new Yield::Size(), new Yield::Size());
 	} else {
 	  (*i)->init_indices(left, right, k, track);
 	}
