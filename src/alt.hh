@@ -70,9 +70,14 @@ struct parser_indices {
   // as above, but for right of nt
   Yield::Size *ys_right;
 
-  parser_indices(Expr::Base *left, Expr::Base *right) : ys_left(), ys_right() {
+  Yield::Size *ys_left_upper;
+
+  parser_indices(Expr::Base *left, Expr::Base *right) : ys_left(), ys_right(), ys_left_upper() {
 	  this->var_left = left;
 	  this->var_right = right;
+
+	  this->ys_left_upper = new Yield::Size();
+	  this->ys_left_upper->set(0, 0);
   }
 };
 
@@ -245,7 +250,7 @@ class Base {
   virtual void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track);
   // sets indices for outside rules, respecting yield sizes
   virtual parser_indices *init_indices_outside(
-    Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
+    Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Yield::Size *ys_lefts, Yield::Size *ys_rights);
 
   virtual void init_ret_decl(unsigned int i, const std::string &prefix);
 
@@ -468,11 +473,11 @@ class Simple : public Base {
  public:
   void init_indices(
     Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
-  Expr::Base *get_next_var_right2left(Expr::Base *left_index, unsigned &k, size_t track, Yield::Size ys_this);
-  Expr::Base *get_next_var_left2right(Expr::Base *right_index, unsigned &k, size_t track, Yield::Size ys_this);
+  Expr::Base *get_next_var_right2left(Expr::Base *left_index, unsigned &k, size_t track, Yield::Size ys_this, Yield::Size *ys_lefts);
+  Expr::Base *get_next_var_left2right(Expr::Base *right_index, unsigned &k, size_t track, Yield::Size ys_this, Yield::Size *ys_rights);
   void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track);
   parser_indices *init_indices_outside(
-      Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
+      Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Yield::Size *ys_lefts, Yield::Size *ys_rights);
   void put_indices(std::ostream &s);
 
   void reset();
@@ -499,6 +504,9 @@ class Simple : public Base {
     Yield::Size &y, std::list<Fn_Arg::Base*>::const_iterator i,
     const std::list<Fn_Arg::Base*>::const_iterator &end,
     size_t track) const;
+  Yield::Size *sum_ys_lefts(Yield::Size *y, std::list<Fn_Arg::Base*>::const_reverse_iterator i, const std::list<Fn_Arg::Base*>::const_reverse_iterator &end, size_t track) const;
+  Yield::Size *sum_ys_rights(Yield::Size *y, std::list<Fn_Arg::Base*>::const_iterator i, const std::list<Fn_Arg::Base*>::const_iterator &end, size_t track) const;
+
 
  public:
   bool multi_detect_loop(
@@ -613,7 +621,7 @@ class Link : public Base {
     Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
   void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track);
   parser_indices *init_indices_outside(
-        Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
+        Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Yield::Size *ys_lefts, Yield::Size *ys_rights);
 
   // void init_ret_decl(unsigned int i);
 
@@ -716,7 +724,7 @@ class Block : public Base {
     Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
   void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track);
   parser_indices *init_indices_outside(
-        Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
+        Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Yield::Size *ys_lefts, Yield::Size *ys_rights);
 
   void codegen(AST &ast);
 
@@ -792,7 +800,7 @@ class Multi : public Base {
     Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
   void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track);
   parser_indices *init_indices_outside(
-        Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
+        Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Yield::Size *ys_lefts, Yield::Size *ys_rights);
 
   void codegen(AST &ast);
   void print_dot_edge(std::ostream &out, Symbol::NT &nt);
