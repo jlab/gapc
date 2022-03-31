@@ -56,30 +56,6 @@ class Signature_Base;
 class Visitor;
 class Fn_Decl;
 
-struct parser_indices {
-  // the current variable for leftmost index, e.g. t_0_i
-  Expr::Base *var_left;
-  // the current variable for rightmost index, e.g. t_0_j
-  Expr::Base *var_right;
-
-  // accumulated yield size for constant parser on the left of non-terminal parser
-  // e.g. foo(x, BASE, BASE, nt, ...) if "nt" is the flagged (outside) non-terminal,
-  // we "know" that BASE and BASE each consumes exactly 1 char, i.e. 2 in total
-  // which can guard running indices for x parser
-  Yield::Size *ys_left;
-  // as above, but for right of nt
-  Yield::Size *ys_right;
-
-  Yield::Size *ys_left_upper;
-
-  parser_indices(Expr::Base *left, Expr::Base *right) : ys_left(), ys_right(), ys_left_upper() {
-	  this->var_left = left;
-	  this->var_right = right;
-
-	  this->ys_left_upper = new Yield::Size();
-	  this->ys_left_upper->set(0, 0);
-  }
-};
 
 namespace Alt {
 /*
@@ -474,8 +450,8 @@ class Simple : public Base {
  public:
   void init_indices(
     Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
-  Expr::Base *get_next_var_right2left(Expr::Base *left_index, unsigned &k, size_t track, Yield::Size ys_this, Yield::Size *ys_lefts);
-  Expr::Base *get_next_var_left2right(Expr::Base *right_index, unsigned &k, size_t track, Yield::Size ys_this, Yield::Size *ys_rights);
+  Expr::Base *get_next_var_right2left(Expr::Base *left_index, Expr::Base *innermost_left_index, unsigned &k, size_t track, Yield::Size ys_this, Yield::Size *ys_lefts);
+  Expr::Base *get_next_var_left2right(Expr::Base *right_index, Expr::Base *innermost_right_index, unsigned &k, size_t track, Yield::Size ys_this, Yield::Size *ys_rights);
   void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track);
   std::pair<Yield::Size*, Yield::Size*> *get_outside_accum_yieldsizes(size_t track);
   void init_indices_outside(
