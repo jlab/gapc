@@ -3219,44 +3219,44 @@ Expr::Base *get_next_var_name(unsigned &k, size_t track) {
 Expr::Base *Alt::Simple::get_next_var_right2left(Expr::Base *left_index, unsigned &k, size_t track, Yield::Size ys_this, Yield::Size *ys_lefts) {
   if (ys_this.low() == ys_this.high()) {
     // constant yield size
-    return left_index->minus(ys_this.low());
+    return left_index->plus(ys_this.low());
   }
 
   // variable yield size
   Expr::Base *next_index = get_next_var_name(k, track);
 
-  // add for loop
-  std::ostringstream o;
-  o << "t_" << track << "_left_most";
-  Expr::Vacc *left_border = new Expr::Vacc(new std::string(o.str()));
-  Statement::Var_Decl *loopvariable = new Statement::Var_Decl(new ::Type::Size(), next_index, left_index->minus(ys_this.low()));
-  loopvariable->set_itr(true);
-  Expr::Base *cond = new Expr::Greater_Eq(next_index, left_border->plus(ys_lefts->low()));
-  Statement::For *f = new Statement::For(loopvariable, cond);
-  f->decrement = true;  // --loopvar instead of ++loopvar
-  loops.push_back(f);
+//  // add for loop
+//  std::ostringstream o;
+//  o << "t_" << track << "_left_most";
+//  Expr::Vacc *left_border = new Expr::Vacc(new std::string(o.str()));
+//  Statement::Var_Decl *loopvariable = new Statement::Var_Decl(new ::Type::Size(), next_index, left_index->minus(ys_this.low()));
+//  loopvariable->set_itr(true);
+//  Expr::Base *cond = new Expr::Greater_Eq(next_index, left_border->plus(ys_lefts->low()));
+//  Statement::For *f = new Statement::For(loopvariable, cond);
+//  f->decrement = true;  // --loopvar instead of ++loopvar
+//  loops.push_back(f);
 
   return next_index;
 }
 Expr::Base *Alt::Simple::get_next_var_left2right(Expr::Base *right_index, unsigned &k, size_t track, Yield::Size ys_this, Yield::Size *ys_rights) {
   if (ys_this.low() == ys_this.high()) {
 	  // constant yield size
-	return right_index->plus(ys_this.low());
+	return right_index->minus(ys_this.low());
   }
 
   // variable yield size
   Expr::Base *next_index = get_next_var_name(k, track);
 
-  // add for loop
-  std::ostringstream o;
-  o << "t_" << track << "_right_most";
-  Expr::Vacc *right_border = new Expr::Vacc(new std::string(o.str()));
-  Statement::Var_Decl *loopvariable = new Statement::Var_Decl(new ::Type::Size(), next_index, right_index->plus(ys_this.low()));
-  loopvariable->set_itr(true);
-  Expr::Base *cond = new Expr::Less_Eq(next_index, right_border->minus(ys_rights->low()));
-  Statement::For *f = new Statement::For(loopvariable, cond);
-  f->decrement = false;  // --loopvar instead of ++loopvar
-  loops.push_back(f);
+//  // add for loop
+//  std::ostringstream o;
+//  o << "t_" << track << "_right_most";
+//  Expr::Vacc *right_border = new Expr::Vacc(new std::string(o.str()));
+//  Statement::Var_Decl *loopvariable = new Statement::Var_Decl(new ::Type::Size(), next_index, right_index->plus(ys_this.low()));
+//  loopvariable->set_itr(true);
+//  Expr::Base *cond = new Expr::Less_Eq(next_index, right_border->minus(ys_rights->low()));
+//  Statement::For *f = new Statement::For(loopvariable, cond);
+//  f->decrement = false;  // --loopvar instead of ++loopvar
+//  loops.push_back(f);
 
   return next_index;
 }
@@ -3302,33 +3302,30 @@ void Alt::Multi::expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, 
   throw LogError("Alt::Block::expand_outside_nt_indices is not yet implemented!");
 }
 
-parser_indices *Alt::Base::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Yield::Size *ys_lefts, Yield::Size *ys_rights) {
+void Alt::Base::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right) {
   Alt::Base::init_indices(left, right, k, track);
-  parser_indices *res = new parser_indices(left, right);
-  return res;
 }
 
-parser_indices *Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Yield::Size *ys_lefts, Yield::Size *ys_rights) {
-	/* We need to set the moving boundaries for outside non terminals. As opposed to the inside version,
-	 * we here have to start in the inside and work towards left and right ends, e.g.
-	 * foo(  BASE,    REGION,   bar,    REGION,     BASE )
-	 *     i      i+1        k0      k1        k1+1     j     <-- inside
-	 *     k0-1   k0          i      j         k1       k1+1  <-- outside
-	 * Note that bar itself can either be a non-terminal or a nested argument, e.g.
-	 * foo(BASE, incl(bar), BASE) where incl(bar) has to be initialized BEFOR
-	 * we can initialize foo(BASE, x, BASE)
-	 *
-	 * 1) Let's first iterate through the arguments and store them in:
-	 * - args left of the outside NT
-	 * - the arg containing the outside NT
-	 * - args right of the outside NT
-	 */
+void printLR(Expr::Base *l, Expr::Base *r) {
+	std::cerr << "(";
+	if (l) {
+		std::cerr << *l;
+	} else {
+		std::cerr << "NULL";
+	}
+	std::cerr << ",";
+	if (r) {
+		std::cerr << *r;
+	} else {
+		std::cerr << "NULL";
+	}
+	std::cerr << ")";
+}
+void Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right) {
 	std::list<Fn_Arg::Base*> *args_left = new std::list<Fn_Arg::Base*>();
 	std::list<Fn_Arg::Base*> *args_right = new std::list<Fn_Arg::Base*>();
-	Yield::Size *ys_lefts_this = new Yield::Size();
-	Yield::Size *ys_rights_this = new Yield::Size();
-	Fn_Arg::Base *arg_outside = NULL;  // = the argument containing the outside non-terminal somewhere (mutually exclusive to nt_outside)
-	Symbol::NT *nt_outside = NULL;  // = the final outside non terminal (mutually exclusive to arg_outside)
+	Fn_Arg::Base *arg_outside = NULL;
+	Symbol::NT *nt_outside = NULL;
 	for (std::list<Fn_Arg::Base*>::const_iterator i = args.begin(); i != args.end(); ++i) {
 		Symbol::NT *ont = get_outside_NT((*i)->alt_ref());
 		if (ont) {
@@ -3346,76 +3343,225 @@ parser_indices *Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *
 		}
 		if (arg_outside == NULL) {
 			args_left->push_back(*i);
-			*ys_lefts_this += (*i)->multi_ys()(track);
 		} else {
 			args_right->push_back(*i);
-			*ys_rights_this += (*i)->multi_ys()(track);
 		}
 	}
 
-	// 2a) if the outside non terminal is deeper into an argument, recurse into this arg first
-	//     foo(  BASE,    REGION,   incl(bar),    REGION,     BASE )
-	//                              ^^^^
-	parser_indices *pind_sub = new parser_indices(left, right);
-	if (arg_outside) {
-		pind_sub = arg_outside->alt_ref()->init_indices_outside(left, right, k, track, ys_lefts_this, ys_rights_this);
+
+	// yield sizes for sub-structure
+	std::pair<Yield::Size*, Yield::Size*> *ys_sub = new std::pair<Yield::Size*, Yield::Size*>(new Yield::Size(), new Yield::Size());
+	if (arg_outside != NULL) {
+		arg_outside->alt_ref()->get_outside_accum_yieldsizes(track);
 	}
 
-	// 2b) start left of the outside non-terminal and initialize indices from right to left
-	//     foo(  BASE,    REGION,   bar,    REGION,     BASE )
-	//                <-- ^^^^^^     X
-	Expr::Base *right_index = pind_sub->var_left;
-	Expr::Base *left_index = pind_sub->var_left;
-	for (std::list<Fn_Arg::Base*>::const_reverse_iterator i = args_left->rbegin(); i != args_left->rend(); ++i) {
-		// total yield size left of this argument
-		ys_lefts_this = sum_ys_lefts(ys_lefts, i, args_left->rend(), track);
-		left_index = get_next_var_right2left(left_index, k, track, (*i)->multi_ys()(track), ys_lefts_this);
-		parser_indices *pind = (*i)->alt_ref()->init_indices_outside(left_index, right_index, k, track, ys_lefts, ys_rights);
-		// prepare for next element: right = left
-		right_index = pind->var_left;
+//	std::cerr << "==LEFT==\n";
+	Expr::Base *left_index;
+//	Expr::Base *leftmost_index = NULL;
+	if (center_left) {
+		left_index = center_left;
+	} else {
+		left_index = get_next_var_name(k, track);
+//		leftmost_index = left_index;
 	}
-	// before doing 2c, save current left_index as the "leftmost_index"
 	Expr::Base *leftmost_index = left_index;
+	Expr::Base *right_index = NULL;
+	for (std::list<Fn_Arg::Base*>::const_iterator i = args_left->begin(); i != args_left->end(); ++i) {
+		Yield::Size ys_this = (*i)->multi_ys()(track);
+		Yield::Size *ys_right2center = new Yield::Size();
+		*ys_right2center += *(ys_sub->first);
+		*ys_right2center += *(sum_ys_rights(&ys_this, i, args_left->end(), track));
+		if ((std::next(i) == args_left->end()) && (nt_outside != NULL)) {
+			right_index = left;
+		} else {
+			right_index = get_next_var_right2left(left_index, k, track, ys_this, ys_right2center);
+		}
+//		std::cerr << " index="; printLR(left_index,right_index); std::cerr << ", center="; printLR(center_left, center_right); std::cerr << ", left-right"; printLR(left, right); std::cerr << "\n";
+		(*i)->alt_ref()->init_indices_outside(left_index, right_index, k, track, center_left, center_right);
+		left_index = right_index;
+	}
+	Expr::Base *lhs_right_index = right_index;
 
-	// 2c) same as above, but start right of outside non-terminal
-	//     foo(  BASE,    REGION,   bar,    REGION,     BASE )
-	//                               X      ^^^^^^ -->
-	left_index = pind_sub->var_right;
-	right_index = pind_sub->var_right;
-	for (std::list<Fn_Arg::Base*>::const_iterator i = args_right->begin(); i != args_right->end(); ++i) {
-		// total yield size left of this argument
-		ys_rights_this = sum_ys_rights(ys_rights, i, args_right->end(), track);
-		right_index = get_next_var_left2right(right_index, k, track, (*i)->multi_ys()(track), ys_rights_this);
-		parser_indices *pind = (*i)->alt_ref()->init_indices_outside(left_index, right_index, k, track, ys_lefts, ys_rights);
-		// prepare for next element: left = right
-		left_index = pind->var_right;
+
+//	std::cerr << "==RIGHT=\n";
+	if (center_right) {
+		right_index = center_right;
+	} else {
+		right_index = get_next_var_name(k, track);
+	}
+	Expr::Base *rightmost_index = right_index;
+	left_index = NULL;
+	for (std::list<Fn_Arg::Base*>::const_reverse_iterator i = args_right->rbegin(); i != args_right->rend(); ++i) {
+		Yield::Size ys_this = (*i)->multi_ys()(track);
+		Yield::Size *ys_left2center = new Yield::Size();
+		*ys_left2center += *(ys_sub->second);
+		*ys_left2center += *(sum_ys_lefts(&ys_this, i, args_right->rend(), track));
+		if ((std::next(i) == args_right->rend()) && (nt_outside != NULL)) {
+			left_index = right;
+		} else {
+			left_index = get_next_var_left2right(right_index, k, track, ys_this, ys_left2center);
+		}
+//		std::cerr << " index="; printLR(left_index,right_index); std::cerr << ", center="; printLR(center_left, center_right); std::cerr << ", left-right"; printLR(left, right); std::cerr << "\n";
+		(*i)->alt_ref()->init_indices_outside(left_index, right_index, k, track, center_left, center_right);
+		right_index = left_index;
 	}
 
-	// 3) update indices of outside non-terminal such that they reach from leftmost to rightmost
-	// e.g. foo(  REGION, outside_bar, REGION  )
-	//          k0       i            j      k1
-	//  -->     k0       k0          k1      k1
-	this->expand_outside_nt_indices(leftmost_index, right_index, track);
+	//std::cerr << *this->name; printLR(leftmost_index, rightmost_index); std::cerr << "\n";
+	Alt::Base::init_indices_outside(leftmost_index, rightmost_index, k, track, center_left, center_right);
 
-	// 4) set indices for THIS
-	// foo(  BASE,    REGION,   bar,    REGION,     BASE )
-	// ^^^
-	parser_indices *pind_this = Alt::Base::init_indices_outside(leftmost_index, right_index, k, track, ys_lefts, ys_rights);
-	//pind_this->ys_left_upper = &ys_accum_upper;
-	return pind_this;
+	if (arg_outside != NULL) {
+		arg_outside->alt_ref()->init_indices_outside(left, right, k, track, lhs_right_index, right_index);
+		if (nt_outside == NULL) {
+			this->expand_outside_nt_indices(leftmost_index, rightmost_index, track);
+		}
+	}
+
+
+//	/* We need to set the moving boundaries for outside non terminals. As opposed to the inside version,
+//	 * we here have to start in the inside and work towards left and right ends, e.g.
+//	 * foo(  BASE,    REGION,   bar,    REGION,     BASE )
+//	 *     i      i+1        k0      k1        k1+1     j     <-- inside
+//	 *     k0-1   k0          i      j         k1       k1+1  <-- outside
+//	 * Note that bar itself can either be a non-terminal or a nested argument, e.g.
+//	 * foo(BASE, incl(bar), BASE) where incl(bar) has to be initialized BEFOR
+//	 * we can initialize foo(BASE, x, BASE)
+//	 *
+//	 * 1) Let's first iterate through the arguments and store them in:
+//	 * - args left of the outside NT
+//	 * - the arg containing the outside NT
+//	 * - args right of the outside NT
+//	 */
+//	std::list<Fn_Arg::Base*> *args_left = new std::list<Fn_Arg::Base*>();
+//	std::list<Fn_Arg::Base*> *args_right = new std::list<Fn_Arg::Base*>();
+//	Yield::Size *ys_lefts_this = new Yield::Size();
+//	Yield::Size *ys_rights_this = new Yield::Size();
+//	Fn_Arg::Base *arg_outside = NULL;  // = the argument containing the outside non-terminal somewhere (mutually exclusive to nt_outside)
+//	Symbol::NT *nt_outside = NULL;  // = the final outside non terminal (mutually exclusive to arg_outside)
+//	for (std::list<Fn_Arg::Base*>::const_iterator i = args.begin(); i != args.end(); ++i) {
+//		Symbol::NT *ont = get_outside_NT((*i)->alt_ref());
+//		if (ont) {
+//			Alt::Link *link = dynamic_cast<Alt::Link*>((*i)->alt_ref());
+//			if (link) {
+//				if (link->nt == ont) {
+//					// the link->nt could also be a terminal
+//					Symbol::NT *check = dynamic_cast<Symbol::NT*>(link->nt);
+//					assert(check);
+//					nt_outside = check;
+//				}
+//			}
+//			arg_outside = *i;
+//			continue;
+//		}
+//		if (arg_outside == NULL) {
+//			args_left->push_back(*i);
+//			*ys_lefts_this += (*i)->multi_ys()(track);
+//		} else {
+//			args_right->push_back(*i);
+//			*ys_rights_this += (*i)->multi_ys()(track);
+//		}
+//	}
+//
+//	// 2a) if the outside non terminal is deeper into an argument, recurse into this arg first
+//	//     foo(  BASE,    REGION,   incl(bar),    REGION,     BASE )
+//	//                              ^^^^
+//	parser_indices *pind_sub = new parser_indices(left, right);
+//	if (arg_outside) {
+//		pind_sub = arg_outside->alt_ref()->init_indices_outside(left, right, k, track, ys_lefts_this, ys_rights_this);
+//	}
+//
+//	// 2b) start left of the outside non-terminal and initialize indices from right to left
+//	//     foo(  BASE,    REGION,   bar,    REGION,     BASE )
+//	//                <-- ^^^^^^     X
+//	Expr::Base *right_index = pind_sub->var_left;
+//	Expr::Base *left_index = pind_sub->var_left;
+//	for (std::list<Fn_Arg::Base*>::const_reverse_iterator i = args_left->rbegin(); i != args_left->rend(); ++i) {
+//		// total yield size left of this argument
+//		ys_lefts_this = sum_ys_lefts(ys_lefts, i, args_left->rend(), track);
+//		left_index = get_next_var_right2left(left_index, k, track, (*i)->multi_ys()(track), ys_lefts_this);
+//		parser_indices *pind = (*i)->alt_ref()->init_indices_outside(left_index, right_index, k, track, ys_lefts, ys_rights);
+//		// prepare for next element: right = left
+//		right_index = pind->var_left;
+//	}
+//	// before doing 2c, save current left_index as the "leftmost_index"
+//	Expr::Base *leftmost_index = left_index;
+//
+//	// 2c) same as above, but start right of outside non-terminal
+//	//     foo(  BASE,    REGION,   bar,    REGION,     BASE )
+//	//                               X      ^^^^^^ -->
+//	left_index = pind_sub->var_right;
+//	right_index = pind_sub->var_right;
+//	for (std::list<Fn_Arg::Base*>::const_iterator i = args_right->begin(); i != args_right->end(); ++i) {
+//		// total yield size left of this argument
+//		ys_rights_this = sum_ys_rights(ys_rights, i, args_right->end(), track);
+//		right_index = get_next_var_left2right(right_index, k, track, (*i)->multi_ys()(track), ys_rights_this);
+//		parser_indices *pind = (*i)->alt_ref()->init_indices_outside(left_index, right_index, k, track, ys_lefts, ys_rights);
+//		// prepare for next element: left = right
+//		left_index = pind->var_right;
+//	}
+//
+//	// 3) update indices of outside non-terminal such that they reach from leftmost to rightmost
+//	// e.g. foo(  REGION, outside_bar, REGION  )
+//	//          k0       i            j      k1
+//	//  -->     k0       k0          k1      k1
+//	this->expand_outside_nt_indices(leftmost_index, right_index, track);
+//
+//	// 4) set indices for THIS
+//	// foo(  BASE,    REGION,   bar,    REGION,     BASE )
+//	// ^^^
+//	parser_indices *pind_this = Alt::Base::init_indices_outside(leftmost_index, right_index, k, track, ys_lefts, ys_rights);
+//	//pind_this->ys_left_upper = &ys_accum_upper;
+//	return pind_this;
 }
-parser_indices *Alt::Link::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Yield::Size *ys_lefts, Yield::Size *ys_rights) {
-  parser_indices *pind = Alt::Base::init_indices_outside(left, right, k, track, ys_lefts, ys_rights);
-  return pind;
+void Alt::Link::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right) {
+  Alt::Base::init_indices_outside(left, right, k, track, center_left, center_right);
 }
-parser_indices *Alt::Block::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Yield::Size *ys_lefts, Yield::Size *ys_rights) {
+void Alt::Block::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right) {
   throw LogError("Alt::Block::init_indices_outside is not yet implemented!");
-  return NULL;
 }
-parser_indices *Alt::Multi::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Yield::Size *ys_lefts, Yield::Size *ys_rights) {
+void Alt::Multi::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right) {
   throw LogError("Alt::Multi::init_indices_outside is not yet implemented!");
+}
+
+std::pair<Yield::Size*, Yield::Size*> *Alt::Base::get_outside_accum_yieldsizes(size_t track) {
+  std::pair<Yield::Size*, Yield::Size*> *res = new std::pair<Yield::Size*, Yield::Size*>(new Yield::Size(), new Yield::Size());
+  return res;
+}
+std::pair<Yield::Size*, Yield::Size*> *Alt::Simple::get_outside_accum_yieldsizes(size_t track) {
+	//first = left, second = right
+	std::pair<Yield::Size*, Yield::Size*> *res = new std::pair<Yield::Size*, Yield::Size*>(new Yield::Size(), new Yield::Size());
+
+	Fn_Arg::Base *arg_outside = NULL;
+	for (std::list<Fn_Arg::Base*>::const_iterator i = args.begin(); i != args.end(); ++i) {
+		Symbol::NT *ont = get_outside_NT((*i)->alt_ref());
+		if (ont) {
+			arg_outside = *i;
+			std::pair<Yield::Size*, Yield::Size*> *sub_ys = arg_outside->alt_ref()->get_outside_accum_yieldsizes(track);
+			*(res->first) += *(sub_ys->first);
+			*(res->second) += *(sub_ys->second);
+			continue;
+		}
+		if (arg_outside == NULL) {
+			*(res->first) += (*i)->multi_ys()(track);
+		} else {
+			*(res->second) += (*i)->multi_ys()(track);
+		}
+	}
+
+	return res;
+}
+std::pair<Yield::Size*, Yield::Size*> *Alt::Link::get_outside_accum_yieldsizes(size_t track) {
+  return Alt::Base::get_outside_accum_yieldsizes(track);
+}
+std::pair<Yield::Size*, Yield::Size*> *Alt::Block::get_outside_accum_yieldsizes(size_t track) {
+  throw LogError("Alt::Block::get_outside_accum_yieldsizes is not yet implemented!");
+  return NULL;
+
+}
+std::pair<Yield::Size*, Yield::Size*> *Alt::Multi::get_outside_accum_yieldsizes(size_t track) {
+  throw LogError("Alt::Block::get_outside_accum_yieldsizes is not yet implemented!");
   return NULL;
 }
+
 
 Yield::Size *Alt::Simple::sum_ys_lefts(Yield::Size *y, std::list<Fn_Arg::Base*>::const_reverse_iterator i, const std::list<Fn_Arg::Base*>::const_reverse_iterator &end, size_t track) const {
   Yield::Size *res = new Yield::Size();
