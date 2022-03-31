@@ -1186,6 +1186,9 @@ struct SetADPDisabled : public Visitor {
 };
 
 void Symbol::NT::codegen(AST &ast) {
+  // moving this uninizialized list to the front of the method to avoid issues with gdb within eclipse: https://www.eclipse.org/forums/index.php/t/1109346/
+  std::list<Statement::Base*> stmts;
+
   // disable specialisation if needed in backtrace mode
   SetADPDisabled v = SetADPDisabled(ast.code_mode() == Code::Mode::BACKTRACK &&
     tabulated, ast.code_mode().keep_cooptimal());
@@ -1215,8 +1218,6 @@ void Symbol::NT::codegen(AST &ast) {
     f = new Fn_Def(dt, new std::string("nt_" + *name));
   }
   f->add_para(*this);
-
-  std::list<Statement::Base*> stmts;
 
   subopt_header(ast, score_code, f, stmts);
 
