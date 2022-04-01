@@ -1056,17 +1056,21 @@ void Grammar::inject_outside_nts() {
 				std::list<Symbol::NT*> *rhs_nts = new std::list<Symbol::NT*>();
 				(*alt)->get_nonterminals(rhs_nts);
 				if (rhs_nts->size() > 0) {
-					unsigned int skip_occurences = 0;
-					for (Symbol::NT *rhs_nt : *rhs_nts) {
+					hashtable<std::string, unsigned int> skip_occurences;
+					for (std::list<Symbol::NT*>::iterator it_nt = rhs_nts->begin(); it_nt != rhs_nts->end(); ++it_nt) {
+						skip_occurences[*((*it_nt)->name)] = 0;
+					}
+					//unsigned int skip_occurences = 0;
+					for (std::list<Symbol::NT*>::iterator it_nt = rhs_nts->begin(); it_nt != rhs_nts->end(); ++it_nt) {
 						// create a copy (=clone) of the inside alternative
 						Alt::Base *outside_alt = (*alt)->clone();
 						// replace one of the inside non-terminals with the outside version of the calling non-terminal
-						outside_alt->replace_nonterminal(rhs_nt, dynamic_cast<Symbol::NT*>(outside_NTs.find(i->first)->second), skip_occurences);
+						outside_alt->replace_nonterminal(*it_nt, dynamic_cast<Symbol::NT*>(outside_NTs.find(i->first)->second), skip_occurences);
 						// flag outside_alt as being part of an automatically generated outside production rule
 						outside_alt->set_partof_outside(true);
 						// append copied+replaced alternative to the list of alternatives for the outside version of the called non-terminal
-						(dynamic_cast<Symbol::NT*>(outside_NTs.find(*(rhs_nt->name))->second))->alts.push_back(outside_alt);
-						skip_occurences++;
+						(dynamic_cast<Symbol::NT*>(outside_NTs.find(*((*it_nt)->name))->second))->alts.push_back(outside_alt);
+						skip_occurences[*((*it_nt)->name)]++;
 					}
 				} else {
 					// e.g. struct = nil(LOC) has no non-terminal on the rhs, but should become an alternative for outside version of struct
@@ -1088,8 +1092,8 @@ void Grammar::inject_outside_nts() {
 	}
 
 	// 5) TODO(smj): how to determine new axiom?
-	//this->axiom_name = new std::string("outside_hairpin");
-	this->axiom_name = new std::string("outside_struct");
+	this->axiom_name = new std::string("outside_hairpin");
+	//this->axiom_name = new std::string("outside_struct");
 	this->init_axiom();
 }
 

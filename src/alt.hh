@@ -330,7 +330,7 @@ class Base {
   // and outside.
   virtual void set_partof_outside(bool is_outside);
   // traverses the alternative (=rhs of a production), iff non-terminal find is contained, replace with first occurence of non-terminal replace
-  virtual bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, unsigned int &skip_occurences);
+  virtual bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, hashtable<std::string, unsigned int> &skip_occurences);
 
   virtual unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
   // returns either the single outside non-terminal or NULL
@@ -529,7 +529,7 @@ class Simple : public Base {
 
   void get_nonterminals(std::list<Symbol::NT*> *nt_list);
   void set_partof_outside(bool is_outside);
-  bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, unsigned int &skip_occurences);
+  bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, hashtable<std::string, unsigned int> &skip_occurences);
   unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
 
  private:
@@ -659,7 +659,7 @@ class Link : public Base {
 
   void get_nonterminals(std::list<Symbol::NT*> *nt_list);
   void set_partof_outside(bool is_outside);
-  bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, unsigned int &skip_occurences);
+  bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, hashtable<std::string, unsigned int> &skip_occurences);
   unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
 };
 
@@ -735,7 +735,7 @@ class Block : public Base {
 
   void get_nonterminals(std::list<Symbol::NT*> *nt_list);
   void set_partof_outside(bool is_outside);
-  bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, unsigned int &skip_occurences);
+  bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, hashtable<std::string, unsigned int> &skip_occurences);
   unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
 };
 
@@ -815,7 +815,7 @@ class Multi : public Base {
 
   void get_nonterminals(std::list<Symbol::NT*> *nt_list);
   void set_partof_outside(bool is_outside);
-  bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, unsigned int &skip_occurences);
+  bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, hashtable<std::string, unsigned int> &skip_occurences);
   unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
 };
 

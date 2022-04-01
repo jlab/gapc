@@ -1527,12 +1527,24 @@ void Alt::Simple::init_guards() {
 	  std::ostringstream o_left; o_left << "t_" << track << "_left_most";
 	  Expr::Vacc *leftmost = new Expr::Vacc(new std::string(o_left.str()));
 	  assert(*it_left_inner_indices);
-	  l.push_back(new Expr::Greater_Eq((*it_left_inner_indices)->minus(ys->first->low()), leftmost));
+	  Expr::Vacc *lname = dynamic_cast<Expr::Vacc*>(*it_left_inner_indices);
+	  if (lname && (lname->name()->compare(*leftmost->name()) == 0)) {
+		// the rare case where guards check themselves
+	    // happens e.g. if table has only one dimension
+	  } else {
+	    l.push_back(new Expr::Greater_Eq((*it_left_inner_indices)->minus(ys->first->low()), leftmost));
+	  }
 
 	  std::ostringstream o_right; o_right << "t_" << track << "_right_most";
 	  Expr::Vacc *rightmost = new Expr::Vacc(new std::string(o_right.str()));
 	  assert(*it_right_inner_indices);
-	  l.push_back(new Expr::Less_Eq((*it_right_inner_indices)->plus(ys->second->low()), rightmost));
+	  Expr::Vacc *rname = dynamic_cast<Expr::Vacc*>(*it_right_inner_indices);
+	  if (rname && (rname->name()->compare(*rightmost->name()) == 0)) {
+		// the rare case where guards check themselves
+		// happens e.g. if table has only one dimension
+	  } else {
+		l.push_back(new Expr::Less_Eq((*it_right_inner_indices)->plus(ys->second->low()), rightmost));
+	  }
 	} else {
       Expr::Base *e = (*j)->minus(*i);
       l.push_back(new Expr::Greater_Eq(e, (*k).low()));
@@ -3042,12 +3054,12 @@ void Alt::Multi::set_partof_outside(bool is_outside) {
 }
 
 
-bool Alt::Base::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, unsigned int &skip_occurences) {
+bool Alt::Base::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, hashtable<std::string, unsigned int> &skip_occurences) {
 	return false;
 }
-bool Alt::Simple::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, unsigned int &skip_occurences) {
-	for (Fn_Arg::Base *arg : this->args) {
-		Fn_Arg::Alt *arg_alt = dynamic_cast<Fn_Arg::Alt*>(arg);
+bool Alt::Simple::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, hashtable<std::string, unsigned int> &skip_occurences) {
+	for (std::list<Fn_Arg::Base*>::iterator it_arg = this->args.begin(); it_arg != this->args.end(); ++it_arg) {
+		Fn_Arg::Alt *arg_alt = dynamic_cast<Fn_Arg::Alt*>(*it_arg);
 		if (arg_alt) {
 			if (arg_alt->alt->replace_nonterminal(find, replace, skip_occurences)) {
 				return true;
@@ -3056,18 +3068,18 @@ bool Alt::Simple::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, uns
 	}
 	return false;
 }
-bool Alt::Link::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, unsigned int &skip_occurences) {
+bool Alt::Link::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, hashtable<std::string, unsigned int> &skip_occurences) {
 	if (this->nt) {
 		if (this->nt->is(Symbol::NONTERMINAL)) {
 			if (this->nt == find) {
-				if (skip_occurences == 0) {
+				if (skip_occurences[*(find->name)] == 0) {
 					// replace old NT (=find) with novel NT (=replace)
 					this->nt = replace;
 					this->name = replace->name;
 					this->is_partof_outside = replace->is_partof_outside;
 					return true;
 				} else {
-					skip_occurences--;
+					skip_occurences[*(find->name)]--;
 				}
 			}
 		} else if (this->nt->is(Symbol::TERMINAL)) {
@@ -3078,7 +3090,7 @@ bool Alt::Link::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, unsig
 	}
 	return false;
 }
-bool Alt::Block::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, unsigned int &skip_occurences) {
+bool Alt::Block::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, hashtable<std::string, unsigned int> &skip_occurences) {
 	for (Alt::Base *alt : this->alts) {
 		// recurse into alternatives
 		if (alt->replace_nonterminal(find, replace, skip_occurences)) {
@@ -3087,7 +3099,7 @@ bool Alt::Block::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, unsi
 	}
 	return false;
 }
-bool Alt::Multi::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, unsigned int &skip_occurences) {
+bool Alt::Multi::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, hashtable<std::string, unsigned int> &skip_occurences) {
 	throw LogError("Alt::Multi::replace_nonterminal is not yet implemented!");
 	return false;
 }
