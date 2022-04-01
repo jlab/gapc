@@ -1826,7 +1826,9 @@ std::list<Statement::Base*> *Alt::Simple::insert_index_stmts(
   return ret;
 }
 
-std::list<Statement::Base*> *Alt::Simple::add_filter_guards(AST &ast, std::list<Statement::Base*> *stmts, Statement::If *filter_guards) {
+std::list<Statement::Base*> *Alt::Simple::add_filter_guards(
+    std::list<Statement::Base*> *stmts,
+    Statement::If *filter_guards) {
   if (filter_guards) {
     stmts->push_back(filter_guards);
     stmts = &filter_guards->then;
@@ -1834,7 +1836,10 @@ std::list<Statement::Base*> *Alt::Simple::add_filter_guards(AST &ast, std::list<
   }
   return stmts;
 }
-std::list<Statement::Base*> *Alt::Simple::add_for_loops(std::list<Statement::Base*> *stmts, std::list<Statement::For *> loops, bool has_index_overlay) {
+std::list<Statement::Base*> *Alt::Simple::add_for_loops(
+    std::list<Statement::Base*> *stmts,
+    std::list<Statement::For *> loops,
+    bool has_index_overlay) {
   if (!loops.empty() && !has_index_overlay) {
     std::list<Statement::For*> *l = &loops;
     /*
