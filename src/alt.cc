@@ -1514,13 +1514,32 @@ void Alt::Simple::init_guards() {
   assert(m_ys.tracks() == left_indices.size());
   Yield::Multi::iterator k = m_ys.begin();
   std::vector<Expr::Base*>::iterator j = right_indices.begin();
+  std::vector<Expr::Base*>::iterator it_left_inner_indices = this->left_inside_indices.begin();
+  std::vector<Expr::Base*>::iterator it_right_inner_indices = this->right_inside_indices.begin();
+
+  unsigned int track = 0;
   for (std::vector<Expr::Base*>::iterator i = left_indices.begin();
-       i != left_indices.end(); ++i, ++j, ++k) {
-    Expr::Base *e = (*j)->minus(*i);
-    l.push_back(new Expr::Greater_Eq(e, (*k).low()));
-    if ((*k).high() != Yield::Poly(Yield::UP)) {
-      l.push_back(new Expr::Less_Eq(e, (*k).high()));
-    }
+       i != left_indices.end(); ++i, ++j, ++k, ++track, ++it_left_inner_indices, ++it_right_inner_indices) {
+	if (this->is_partof_outside) {
+	  // obtain yield sizes left and right of outside non-terminal
+	  std::pair<Yield::Size*, Yield::Size*> *ys = this->get_outside_accum_yieldsizes(track);
+
+	  std::ostringstream o_left; o_left << "t_" << track << "_left_most";
+	  Expr::Vacc *leftmost = new Expr::Vacc(new std::string(o_left.str()));
+	  assert(*it_left_inner_indices);
+	  l.push_back(new Expr::Greater_Eq((*it_left_inner_indices)->minus(ys->first->low()), leftmost));
+
+	  std::ostringstream o_right; o_right << "t_" << track << "_right_most";
+	  Expr::Vacc *rightmost = new Expr::Vacc(new std::string(o_right.str()));
+	  assert(*it_right_inner_indices);
+	  l.push_back(new Expr::Less_Eq((*it_right_inner_indices)->plus(ys->second->low()), rightmost));
+	} else {
+      Expr::Base *e = (*j)->minus(*i);
+      l.push_back(new Expr::Greater_Eq(e, (*k).low()));
+      if ((*k).high() != Yield::Poly(Yield::UP)) {
+        l.push_back(new Expr::Less_Eq(e, (*k).high()));
+      }
+	}
   }
 
   Expr::Base *cond  = Expr::seq_to_tree<Expr::Base, Expr::And>(
@@ -3412,8 +3431,15 @@ void Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *right, unsi
 		right_index = left_index;
 	}
 
-	// argument containing outside NT
 	Alt::Base::init_indices_outside(leftmost_index, rightmost_index, k, track, center_left, center_right);
+	// store original left/right for e.g.
+	// correct initialization of IF guards; see function init_guards()
+	this->left_inside_indices.resize(this->left_indices.size());
+	this->right_inside_indices.resize(this->right_indices.size());
+	this->left_inside_indices[track] = left;
+	this->right_inside_indices[track] = right;
+
+	// argument containing outside NT
 	if (arg_outside != NULL) {
 		arg_outside->alt_ref()->init_indices_outside(left, right, k, track, lhs_right_index, right_index);
 		if (nt_outside == NULL) {

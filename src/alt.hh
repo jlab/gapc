@@ -136,6 +136,9 @@ class Base {
  protected:
   std::vector<Expr::Base*> left_indices;
   std::vector<Expr::Base*> right_indices;
+  // for outside non-terminals: store original inner left/right indices for guards construction
+  std::vector<Expr::Base*> left_inside_indices;
+  std::vector<Expr::Base*> right_inside_indices;
 
  public:
   Statement::Var_Decl *ret_decl;
