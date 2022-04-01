@@ -128,7 +128,7 @@ gapc: src/gapc.o $(MAIN_OBJ) src/version.o src/prefix.o
 
 stats \
 test_rt_tab \
-multi_cyk multi_deps multi_indices multi_list_size multi_eliminate_lists_more multi_eliminate_lists multi_algebra multi_signature multi_rt_approx multi_rt_all multi_in_out multi_self_rec multi_calls multi_table_dim multi_max_filter multi_loops multi_ys parser: src/version.o src/prefix.o
+multi_cyk multi_deps multi_indices multi_list_size multi_eliminate_lists_more multi_eliminate_lists multi_algebra multi_signature multi_rt_approx multi_rt_all multi_in_out multi_self_rec multi_calls multi_table_dim multi_max_filter multi_loops multi_ys multi_outside_indices parser: src/version.o src/prefix.o
 
 backtrack: src/version.o
 
