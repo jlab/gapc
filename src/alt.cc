@@ -1942,11 +1942,22 @@ void Alt::Simple::codegen(AST &ast) {
             }
         }
 
-  // add filter_guards
-  stmts = add_filter_guards(ast, stmts, filter_guards);
+  if (is_partof_outside) {
+	// syntactic filter indices are only initialized through the for-loops in outside alternatives
+	// thus, reverse the order of filters/loops:
 
-  // add for loops for moving boundaries
-  stmts = add_for_loops(stmts, loops, has_index_overlay());
+    // add for loops for moving boundaries
+    stmts = add_for_loops(stmts, loops, has_index_overlay());
+
+    // add filter_guards
+    stmts = add_filter_guards(ast, stmts, filter_guards);
+  } else {
+    // add filter_guards
+    stmts = add_filter_guards(ast, stmts, filter_guards);
+
+    // add for loops for moving boundaries
+    stmts = add_for_loops(stmts, loops, has_index_overlay());
+  }
 
   add_subopt_guards(stmts, ast);
 
