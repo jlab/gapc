@@ -1862,12 +1862,6 @@ void Alt::Simple::codegen(AST &ast) {
     }
     stmts = &guards->then;
   }
-  init_filter_guards(ast);
-  if (filter_guards) {
-    stmts->push_back(filter_guards);
-    stmts = &filter_guards->then;
-    ret_decl_empty_block(filter_guards);
-  }
 
 
         // answer_list is always set when return type is a list
@@ -1905,6 +1899,13 @@ void Alt::Simple::codegen(AST &ast) {
                 statements.push_back(mark);
             }
         }
+
+  init_filter_guards(ast);
+  if (filter_guards) {
+    stmts->push_back(filter_guards);
+    stmts = &filter_guards->then;
+    ret_decl_empty_block(filter_guards);
+  }
 
   if (!loops.empty() && !has_index_overlay()) {
     std::list<Statement::For*> *l = &loops;
