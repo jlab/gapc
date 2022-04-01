@@ -478,6 +478,8 @@ class Simple : public Base {
   void init_multi_ys();
 
  private:
+  std::list<Statement::Base*> *add_filter_guards(AST &ast, std::list<Statement::Base*> *stmts, Statement::If *filter_guards);
+  std::list<Statement::Base*> *add_for_loops(std::list<Statement::Base*> *stmts, std::list<Statement::For *> loops, bool has_index_overlay);
   void sum_rhs(
     Yield::Multi &y, std::list<Fn_Arg::Base*>::const_iterator i,
     const std::list<Fn_Arg::Base*>::const_iterator &end) const;
