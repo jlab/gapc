@@ -1826,6 +1826,33 @@ std::list<Statement::Base*> *Alt::Simple::insert_index_stmts(
   return ret;
 }
 
+std::list<Statement::Base*> *Alt::Simple::add_filter_guards(
+    std::list<Statement::Base*> *stmts,
+    Statement::If *filter_guards) {
+  if (filter_guards) {
+    stmts->push_back(filter_guards);
+    stmts = &filter_guards->then;
+    ret_decl_empty_block(filter_guards);
+  }
+  return stmts;
+}
+std::list<Statement::Base*> *Alt::Simple::add_for_loops(
+    std::list<Statement::Base*> *stmts,
+    std::list<Statement::For *> loops,
+    bool has_index_overlay) {
+  if (!loops.empty() && !has_index_overlay) {
+    std::list<Statement::For*> *l = &loops;
+    /*
+    if (has_index_overlay()) {
+      l = &index_overlay.front()->loops;
+    }
+    */
+    stmts->push_back(l->front());
+    Statement::For *loop = nest_for_loops(l->begin(), l->end());
+    stmts = &loop->statements;
+  }
+  return stmts;
+}
 
 void Alt::Simple::codegen(AST &ast) {
   // std::cout << "-----------Simple IN" << std::endl;
@@ -1862,13 +1889,8 @@ void Alt::Simple::codegen(AST &ast) {
     }
     stmts = &guards->then;
   }
-  init_filter_guards(ast);
-  if (filter_guards) {
-    stmts->push_back(filter_guards);
-    stmts = &filter_guards->then;
-    ret_decl_empty_block(filter_guards);
-  }
 
+  init_filter_guards(ast);
 
         // answer_list is always set when return type is a list
         // see symbol set_ret_decl_rhs
@@ -1906,17 +1928,12 @@ void Alt::Simple::codegen(AST &ast) {
             }
         }
 
-  if (!loops.empty() && !has_index_overlay()) {
-    std::list<Statement::For*> *l = &loops;
-    /*
-    if (has_index_overlay()) {
-    l = &index_overlay.front()->loops;
-    }
-    */
-    stmts->push_back(l->front());
-    Statement::For *loop = nest_for_loops(l->begin(), l->end());
-    stmts = &loop->statements;
-  }
+  // add filter_guards
+  stmts = add_filter_guards(stmts, filter_guards);
+
+  // add for loops for moving boundaries
+  stmts = add_for_loops(stmts, loops, has_index_overlay());
+
   add_subopt_guards(stmts, ast);
 
   stmts = insert_index_stmts(stmts);
