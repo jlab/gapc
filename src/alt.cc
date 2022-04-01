@@ -1955,10 +1955,10 @@ void Alt::Simple::codegen(AST &ast) {
     stmts = add_for_loops(stmts, loops, has_index_overlay());
 
     // add filter_guards
-    stmts = add_filter_guards(ast, stmts, filter_guards);
+    stmts = add_filter_guards(stmts, filter_guards);
   } else {
     // add filter_guards
-    stmts = add_filter_guards(ast, stmts, filter_guards);
+    stmts = add_filter_guards(stmts, filter_guards);
 
     // add for loops for moving boundaries
     stmts = add_for_loops(stmts, loops, has_index_overlay());
