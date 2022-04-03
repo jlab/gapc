@@ -29,10 +29,6 @@ jobs:
     - uses: actions/checkout@v2
     - name: configure
       run: ./configure --prefix $GITHUB_WORKSPACE
-    - name: make
-      run: make -j 2
-    - name: make install
-      run: sudo make install
 
     - name: test-mod
-      run: make test-mod_outside TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu
+      run: make -j 2 test-mod_outside TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu
