@@ -1049,6 +1049,7 @@ void Grammar::inject_outside_nts() {
 	}
 
 	// 3) create copy of inside alternative, replace called non-terminal with calling outside version and append to called outside version
+	std::set<Symbol::NT*> *axiom_candidates = new std::set<Symbol::NT*>();
 	for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin(); i != NTs.end(); ++i) {
 		Symbol::NT *nt = dynamic_cast<Symbol::NT*>(i->second);
 		if (nt) {  // skip terminals
@@ -1078,6 +1079,11 @@ void Grammar::inject_outside_nts() {
 					// flag outside_alt as being part of an automatically generated outside production rule
 					outside_alt->set_partof_outside(true);
 					(dynamic_cast<Symbol::NT*>(outside_NTs.find(*(nt->name))->second))->alts.push_back(outside_alt);
+
+					// if production rule does not have any non-terminals on the right hand side, the calling non-terminal
+					// is a candidate for being called from the axiom for outside
+					// e.g. hairpin = hl(BASE, REGION, BASE) --> outside_hairin get's added
+					axiom_candidates->insert(dynamic_cast<Symbol::NT*>(outside_NTs.find(*(nt->name))->second));
 				}
 			}
 		}
@@ -1091,10 +1097,35 @@ void Grammar::inject_outside_nts() {
 		}
 	}
 
-	// 5) TODO(smj): how to determine new axiom?
-	this->axiom_name = new std::string("outside_hairpin");
-	//this->axiom_name = new std::string("outside_struct");
-	this->init_axiom();
+	// 5) inside production rules that have NO non-terminals on their right hand sides
+	//    must be those that parse the final sub-words of the input.
+	//    Therefore, they must be the smallest start-points for outside construction,
+	//    i.e. the axiom should point to them. These non-terminals have been
+	//    collected in step 3.
+	if (axiom_candidates->size() == 1) {
+		// if there is only one inside non-terminal to be accessed from the axiom
+		// we can directly define its outside version as the axiom
+		this->axiom_name = (*axiom_candidates->begin())->name;
+		this->init_axiom();
+	} else {
+		// otherwise, we need to add another left hand side non-terminal
+		// which points to multiple non-terminals WITHOUT making a choice
+		std::string *nt_axiom_name = new std::string("outside_axioms");
+		Symbol::NT *nt_axiom = new Symbol::NT(nt_axiom_name, Loc());
+
+		for (std::set<Symbol::NT*>::iterator i = axiom_candidates->begin(); i != axiom_candidates->end(); ++i) {
+			nt_axiom->alts.push_back(new Alt::Link((*i)->name, Loc()));
+		}
+		// add new lhs non-terminal to grammar
+		this->NTs.insert(std::make_pair(*nt_axiom_name, dynamic_cast<Symbol::Base*>(nt_axiom)));
+		this->nt_list.push_back(nt_axiom);
+
+		this->axiom_name = nt_axiom_name;
+		this->init_axiom();
+
+		// re-run check symantics to properly integrate new production rules
+		this->check_semantic();
+	}
 }
 
 unsigned int Grammar::to_dot(unsigned int *nodeID, std::ostream &out) {
