@@ -3418,20 +3418,27 @@ void Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *right, unsi
 	if (center_left) {
 		left_index = center_left;
 	} else {
-		left_index = get_next_var_name(k, track);
+		if (ys_this->first->low() != ys_this->first->high()) {
+			left_index = get_next_var_name(k, track);
 
-		// add for-loop
-		std::ostringstream o;
-		o << "t_" << track << "_left_most";
-		Expr::Vacc *left_border = new Expr::Vacc(new std::string(o.str()));
-		Statement::Var_Decl *loopvariable = new Statement::Var_Decl(new ::Type::Size(), left_index, left_border);
-		loopvariable->set_itr(true);
-		Expr::Base *cond = new Expr::Less_Eq(left_index, left->minus(ys_this->first->low()));
-		Statement::For *f = new Statement::For(loopvariable, cond);
-		loops.push_back(f);
+			// add for-loop
+			std::ostringstream o;
+			o << "t_" << track << "_left_most";
+			Expr::Vacc *left_border = new Expr::Vacc(new std::string(o.str()));
+			Statement::Var_Decl *loopvariable = new Statement::Var_Decl(new ::Type::Size(), left_index, left_border);
+			loopvariable->set_itr(true);
+			Expr::Base *cond = new Expr::Less_Eq(left_index, left->minus(ys_this->first->low()));
+			Statement::For *f = new Statement::For(loopvariable, cond);
+			loops.push_back(f);
+		} else {
+			// no new index if there are no parsers or only parsers with const yield size left of outside nt
+			// e.g. incl(outside_foo)
+			// e.g. sadd(BASE, outside_foo)
+			left_index = left->minus(ys_this->first->low());
+		}
 	}
 	Expr::Base *leftmost_index = left_index;
-	Expr::Base *right_index = NULL;
+	Expr::Base *right_index = left_index;
 	for (std::list<Fn_Arg::Base*>::const_iterator i = args_left->begin(); i != args_left->end(); ++i) {
 		Yield::Size ys_this = (*i)->multi_ys()(track);
 		Yield::Size *ys_right2center = new Yield::Size();
@@ -3447,17 +3454,24 @@ void Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *right, unsi
 	if (center_right) {
 		right_index = center_right;
 	} else {
-		right_index = get_next_var_name(k, track);
+		if (ys_this->second->low() != ys_this->second->high()) {
+			right_index = get_next_var_name(k, track);
 
-		// add for-loop
-		std::ostringstream o;
-		o << "t_" << track << "_right_most";
-		Expr::Vacc *right_border = new Expr::Vacc(new std::string(o.str()));
-		Statement::Var_Decl *loopvariable = new Statement::Var_Decl(new ::Type::Size(), right_index, right->plus(ys_this->second->low()));
-		loopvariable->set_itr(true);
-		Expr::Base *cond = new Expr::Less_Eq(right_index, right_border);
-		Statement::For *f = new Statement::For(loopvariable, cond);
-		loops.push_back(f);
+			// add for-loop
+			std::ostringstream o;
+			o << "t_" << track << "_right_most";
+			Expr::Vacc *right_border = new Expr::Vacc(new std::string(o.str()));
+			Statement::Var_Decl *loopvariable = new Statement::Var_Decl(new ::Type::Size(), right_index, right->plus(ys_this->second->low()));
+			loopvariable->set_itr(true);
+			Expr::Base *cond = new Expr::Less_Eq(right_index, right_border);
+			Statement::For *f = new Statement::For(loopvariable, cond);
+			loops.push_back(f);
+		} else {
+			// no new index if there are no parsers or only parsers with const yield size right of outside nt
+			// e.g. incl(outside_foo)
+			// e.g. adds(outside_foo, BASE)
+			right_index = right;
+		}
 	}
 	Expr::Base *rightmost_index = right_index;
 	left_index = NULL;
