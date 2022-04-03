@@ -307,9 +307,9 @@ test-mod: modtests
 	cd testdata/modtest &&\
 	$(SHELL) run.sh $(TRUTH_DIR)/Mod$(TRUTH_SUFFIX) $(MODTESTS)
 
-test-mod_outside: testdata/modtest/multi_outside_indices.cc
+test-mod_outside: multi_outside_indices
 	cd testdata/modtest &&\
-	$(SHELL) run_outside.sh $(TRUTH_DIR)/Mod$(TRUTH_SUFFIX) multi_outside_indices
+	$(SHELL) run_outside.sh $(TRUTH_DIR)/Mod$(TRUTH_SUFFIX) $?
 
 gen-mod: modtests
 	cd testdata/modtest &&\
