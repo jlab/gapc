@@ -1077,7 +1077,7 @@ void Grammar::inject_outside_nts() {
 					// e.g. struct = nil(LOC) has no non-terminal on the rhs, but should become an alternative for outside version of struct
 					Alt::Base *outside_alt = (*alt)->clone();
 					// flag outside_alt as being part of an automatically generated outside production rule
-					outside_alt->set_partof_outside(true);
+					outside_alt->set_partof_outside(false);
 					(dynamic_cast<Symbol::NT*>(outside_NTs.find(*(nt->name))->second))->alts.push_back(outside_alt);
 
 					// if production rule does not have any non-terminals on the right hand side, the calling non-terminal

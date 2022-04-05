@@ -3380,6 +3380,13 @@ void Alt::Base::init_indices_outside(Expr::Base *left, Expr::Base *right, unsign
 }
 
 void Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right) {
+	// if this alternative is called from an outside non-terminal, but does not contain another outside non-terminal, e.g. hl(BASE, REGION, BASE)
+	// we can default to inside indices generation!
+	if (this->is_partof_outside == false) {
+		Alt::Simple::init_indices(left, right, k, track);
+		return;
+	}
+
 	std::list<Fn_Arg::Base*> *args_left = new std::list<Fn_Arg::Base*>();
 	std::list<Fn_Arg::Base*> *args_right = new std::list<Fn_Arg::Base*>();
 	Fn_Arg::Base *arg_outside = NULL;
