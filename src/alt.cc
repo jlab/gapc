@@ -3496,9 +3496,7 @@ void Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *right, unsi
 	// argument containing outside NT
 	if (arg_outside != NULL) {
 		arg_outside->alt_ref()->init_indices_outside(left, right, k, track, lhs_right_index, right_index);
-		if (nt_outside == NULL) {
-			this->expand_outside_nt_indices(leftmost_index, rightmost_index, track);
-		}
+		this->expand_outside_nt_indices(leftmost_index, rightmost_index, track);
 	}
 }
 void Alt::Link::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right) {
