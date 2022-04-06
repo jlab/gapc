@@ -3375,17 +3375,30 @@ void Alt::Block::expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, 
 void Alt::Multi::expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track) {
   throw LogError("Alt::Block::expand_outside_nt_indices is not yet implemented!");
 }
-void Alt::Base::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right) {
+void Alt::Base::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right, bool is_right_of_outside_nt) {
   Alt::Base::init_indices(left, right, k, track);
 }
 
-void Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right) {
+void Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right, bool is_right_of_outside_nt) {
 	// if this alternative is called from an outside non-terminal, but does not contain another outside non-terminal, e.g. hl(BASE, REGION, BASE)
 	// we can default to inside indices generation!
 	if (this->is_partof_outside == false) {
 		Alt::Simple::init_indices(left, right, k, track);
 		return;
 	}
+//	std::cerr << *this->name << ": Alt::Simple::init_indices_outside(" << *left << ", " << *right << ", ";
+//	if (center_left) {
+//		std::cerr << *center_left;
+//	} else {
+//		std::cerr << center_left;
+//	}
+//	std::cerr << ", ";
+//	if (center_right) {
+//		std::cerr << *center_right;
+//	} else {
+//		std::cerr << center_right;
+//	}
+//	std::cerr << ", " << is_right_of_outside_nt << ")\n";
 
 	std::list<Fn_Arg::Base*> *args_left = new std::list<Fn_Arg::Base*>();
 	std::list<Fn_Arg::Base*> *args_right = new std::list<Fn_Arg::Base*>();
@@ -3406,7 +3419,7 @@ void Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *right, unsi
 			arg_outside = *i;
 			continue;
 		}
-		if (arg_outside == NULL) {
+		if ((arg_outside == NULL) and (is_right_of_outside_nt == false)) {
 			args_left->push_back(*i);
 		} else {
 			args_right->push_back(*i);
@@ -3418,7 +3431,7 @@ void Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *right, unsi
 	if (arg_outside != NULL) {
 		ys_sub = arg_outside->alt_ref()->get_outside_accum_yieldsizes(track);
 	}
-	std::pair<Yield::Size*, Yield::Size*> *ys_this = this->get_outside_accum_yieldsizes(track);
+	std::pair<Yield::Size*, Yield::Size*> *ys_this = this->get_outside_accum_yieldsizes(track, is_right_of_outside_nt);
 
 	// arguments left of outside NT
 	Expr::Base *left_index;
@@ -3482,13 +3495,16 @@ void Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *right, unsi
 	}
 	Expr::Base *rightmost_index = right_index;
 	left_index = NULL;
+	if (is_right_of_outside_nt) {
+		right = left;
+	}
 	for (std::list<Fn_Arg::Base*>::const_reverse_iterator i = args_right->rbegin(); i != args_right->rend(); ++i) {
 		Yield::Size ys_arg = (*i)->multi_ys()(track);
 		Yield::Size *ys_left2center = new Yield::Size();
 		*ys_left2center += *(ys_sub->second);
 		*ys_left2center += *(sum_ys_lefts(&ys_arg, i, args_right->rend(), track));
 		left_index = get_next_var_left2right(right_index, right, k, track, ys_arg, ys_left2center);
-		(*i)->alt_ref()->init_indices_outside(left_index, right_index, k, track, center_left, center_right);
+		(*i)->alt_ref()->init_indices_outside(left_index, right_index, k, track, center_left, rightmost_index, true);
 		right_index = left_index;
 	}
 
@@ -3506,21 +3522,21 @@ void Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *right, unsi
 		this->expand_outside_nt_indices(leftmost_index, rightmost_index, track);
 	}
 }
-void Alt::Link::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right) {
+void Alt::Link::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right, bool is_right_of_outside_nt) {
   Alt::Base::init_indices_outside(left, right, k, track, center_left, center_right);
 }
-void Alt::Block::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right) {
+void Alt::Block::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right, bool is_right_of_outside_nt) {
   throw LogError("Alt::Block::init_indices_outside is not yet implemented!");
 }
-void Alt::Multi::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right) {
+void Alt::Multi::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right, bool is_right_of_outside_nt) {
   throw LogError("Alt::Multi::init_indices_outside is not yet implemented!");
 }
 
-std::pair<Yield::Size*, Yield::Size*> *Alt::Base::get_outside_accum_yieldsizes(size_t track) {
+std::pair<Yield::Size*, Yield::Size*> *Alt::Base::get_outside_accum_yieldsizes(size_t track, bool is_right_of_outside_nt) {
   std::pair<Yield::Size*, Yield::Size*> *res = new std::pair<Yield::Size*, Yield::Size*>(new Yield::Size(), new Yield::Size());
   return res;
 }
-std::pair<Yield::Size*, Yield::Size*> *Alt::Simple::get_outside_accum_yieldsizes(size_t track) {
+std::pair<Yield::Size*, Yield::Size*> *Alt::Simple::get_outside_accum_yieldsizes(size_t track, bool is_right_of_outside_nt) {
 	//first = left, second = right
 	std::pair<Yield::Size*, Yield::Size*> *res = new std::pair<Yield::Size*, Yield::Size*>(new Yield::Size(), new Yield::Size());
 
@@ -3529,12 +3545,12 @@ std::pair<Yield::Size*, Yield::Size*> *Alt::Simple::get_outside_accum_yieldsizes
 		Symbol::NT *ont = get_outside_NT((*i)->alt_ref());
 		if (ont) {
 			arg_outside = *i;
-			std::pair<Yield::Size*, Yield::Size*> *sub_ys = arg_outside->alt_ref()->get_outside_accum_yieldsizes(track);
+			std::pair<Yield::Size*, Yield::Size*> *sub_ys = arg_outside->alt_ref()->get_outside_accum_yieldsizes(track, is_right_of_outside_nt);
 			*(res->first) += *(sub_ys->first);
 			*(res->second) += *(sub_ys->second);
 			continue;
 		}
-		if (arg_outside == NULL) {
+		if ((arg_outside == NULL) and (is_right_of_outside_nt == false)) {
 			*(res->first) += (*i)->multi_ys()(track);
 		} else {
 			*(res->second) += (*i)->multi_ys()(track);
@@ -3543,15 +3559,15 @@ std::pair<Yield::Size*, Yield::Size*> *Alt::Simple::get_outside_accum_yieldsizes
 
 	return res;
 }
-std::pair<Yield::Size*, Yield::Size*> *Alt::Link::get_outside_accum_yieldsizes(size_t track) {
-  return Alt::Base::get_outside_accum_yieldsizes(track);
+std::pair<Yield::Size*, Yield::Size*> *Alt::Link::get_outside_accum_yieldsizes(size_t track, bool is_right_of_outside_nt) {
+  return Alt::Base::get_outside_accum_yieldsizes(track, is_right_of_outside_nt);
 }
-std::pair<Yield::Size*, Yield::Size*> *Alt::Block::get_outside_accum_yieldsizes(size_t track) {
+std::pair<Yield::Size*, Yield::Size*> *Alt::Block::get_outside_accum_yieldsizes(size_t track, bool is_right_of_outside_nt) {
   throw LogError("Alt::Block::get_outside_accum_yieldsizes is not yet implemented!");
   return NULL;
 
 }
-std::pair<Yield::Size*, Yield::Size*> *Alt::Multi::get_outside_accum_yieldsizes(size_t track) {
+std::pair<Yield::Size*, Yield::Size*> *Alt::Multi::get_outside_accum_yieldsizes(size_t track, bool is_right_of_outside_nt) {
   throw LogError("Alt::Block::get_outside_accum_yieldsizes is not yet implemented!");
   return NULL;
 }

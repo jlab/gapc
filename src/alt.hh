@@ -227,10 +227,10 @@ class Base {
   // e.g. foo(k1_REGION_i, i_bar_j, j_REGION_k2) --> foo(k1_REGION_i, k1_bar_k2, j_REGION_k2)
   //                       ^     ^                                    ^^     ^^
   virtual void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track);
-  virtual std::pair<Yield::Size*, Yield::Size*> *get_outside_accum_yieldsizes(size_t track);
+  virtual std::pair<Yield::Size*, Yield::Size*> *get_outside_accum_yieldsizes(size_t track, bool is_right_of_outside_nt=false);
   // sets indices for outside rules, respecting yield sizes
   virtual void init_indices_outside(
-    Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right);
+    Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right, bool is_right_of_outside_nt=false);
 
   virtual void init_ret_decl(unsigned int i, const std::string &prefix);
 
@@ -456,9 +456,9 @@ class Simple : public Base {
   Expr::Base *get_next_var_right2left(Expr::Base *left_index, Expr::Base *innermost_left_index, unsigned &k, size_t track, Yield::Size ys_this, Yield::Size *ys_lefts);
   Expr::Base *get_next_var_left2right(Expr::Base *right_index, Expr::Base *innermost_right_index, unsigned &k, size_t track, Yield::Size ys_this, Yield::Size *ys_rights);
   void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track);
-  std::pair<Yield::Size*, Yield::Size*> *get_outside_accum_yieldsizes(size_t track);
+  std::pair<Yield::Size*, Yield::Size*> *get_outside_accum_yieldsizes(size_t track, bool is_right_of_outside_nt=false);
   void init_indices_outside(
-      Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right);
+      Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right, bool is_right_of_outside_nt=false);
   void put_indices(std::ostream &s);
 
   void reset();
@@ -607,10 +607,10 @@ class Link : public Base {
 
   void init_indices(
     Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
-  std::pair<Yield::Size*, Yield::Size*> *get_outside_accum_yieldsizes(size_t track);
+  std::pair<Yield::Size*, Yield::Size*> *get_outside_accum_yieldsizes(size_t track, bool is_right_of_outside_nt=false);
   void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track);
   void init_indices_outside(
-        Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right);
+        Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right, bool is_right_of_outside_nt=false);
 
   // void init_ret_decl(unsigned int i);
 
@@ -712,9 +712,9 @@ class Block : public Base {
   void init_indices(
     Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
   void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track);
-  std::pair<Yield::Size*, Yield::Size*> *get_outside_accum_yieldsizes(size_t track);
+  std::pair<Yield::Size*, Yield::Size*> *get_outside_accum_yieldsizes(size_t track, bool is_right_of_outside_nt=false);
   void init_indices_outside(
-        Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right);
+        Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right, bool is_right_of_outside_nt=false);
 
   void codegen(AST &ast);
 
@@ -789,9 +789,9 @@ class Multi : public Base {
   void init_indices(
     Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
   void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track);
-  std::pair<Yield::Size*, Yield::Size*> *get_outside_accum_yieldsizes(size_t track);
+  std::pair<Yield::Size*, Yield::Size*> *get_outside_accum_yieldsizes(size_t track, bool is_right_of_outside_nt=false);
   void init_indices_outside(
-        Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right);
+        Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right, bool is_right_of_outside_nt=false);
 
   void codegen(AST &ast);
   void print_dot_edge(std::ostream &out, Symbol::NT &nt);
