@@ -2945,3 +2945,145 @@ const std::list<Statement::Var_Decl*> &Alt::Multi::ret_decls() const {
 bool Alt::Base::choice_set() {
     return datatype->simple()->is(::Type::LIST) && eval_nullary_fn;
 }
+
+// the following functions produce graphViz code to represent the grammar
+// the following functions produce graphViz code to represent the grammar
+void to_dot_indices(std::vector<Expr::Base*> indices, std::ostream &out) {
+  out << "<td><font point-size='8' color='#555555'>";
+  for (std::vector<Expr::Base*>::const_iterator track = indices.begin();
+       track != indices.end(); ++track) {
+    (*track)->put(out);
+    if (std::next(track) != indices.end()) {
+      out << "<br/>";
+    }
+  }
+  out << "</font></td>";
+}
+unsigned int Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out) {
+  unsigned int thisID = (unsigned int)((*nodeID)++);
+  out << "node_" << thisID << " [ label=<<table border='0'><tr>";
+  to_dot_indices(this->left_indices, out);
+  Alt::Simple *simple = dynamic_cast<Alt::Simple*>(this);
+  if (simple) {
+    out << "<td>" << *simple->name << "</td>";
+
+    // terminal arguments e.g. CHAR('A')
+    if (simple->is_terminal()) {
+      for (std::list<Fn_Arg::Base*>::const_iterator arg = simple->args.begin();
+           arg != simple->args.end(); ++arg) {
+        if (arg == simple->args.begin()) {
+          out << "(";
+        }
+        (*arg)->print(out);
+        if (std::next(arg) != simple->args.end()) {
+          out << ", ";
+        } else {
+          out << ")";
+        }
+      }
+    }
+  }
+  Alt::Link *link = dynamic_cast<Alt::Link*>(this);
+  if (link) {
+    out << "<td>" << *link->name << "</td>";
+  }
+  Alt::Block *block = dynamic_cast<Alt::Block*>(this);
+  if (block) {
+    out << "<td>a block</td>";
+  }
+  to_dot_indices(this->right_indices, out);
+  out << "</tr></table>>, color=\"";
+  if (simple) {
+    if (simple->is_terminal()) {
+      out << "blue";
+    } else {
+      out << "green";
+    }
+  } else if (link) {
+    Symbol::NT *nt = dynamic_cast<Symbol::NT*>(link->nt);
+    if (nt) {
+      out << "black";
+    } else {
+      out << "blue";
+    }
+  } else if (block) {
+    out << "gray";
+  } else {
+    out << "black";
+  }
+  out << "\" ];\n";
+
+  // add syntactic filters
+  for (std::list<Filter*>::const_iterator filter = this->filters.begin();
+       filter != this->filters.end(); ++filter) {
+    unsigned int childID = (unsigned int)((*nodeID)++);
+    out << "node_" << childID << " [ label=\"" << *(*filter)->name;
+    for (std::list<Expr::Base*>::const_iterator arg = (*filter)->args.begin();
+         arg != (*filter)->args.end(); ++arg) {
+      if (arg == (*filter)->args.begin()) {
+        out << "(";
+      }
+      (*arg)->put(out);
+      if (std::next(arg) != (*filter)->args.end()) {
+        out << ", ";
+      } else {
+        out << ")";
+      }
+    }
+    out << "\" , fontcolor=\"magenta\" , shape=none ];\n";
+    out << "node_" << thisID << " -> node_" << childID
+        << " [ arrowhead=none, color=\"magenta\" ];\n";
+  }
+
+  return thisID;
+}
+unsigned int Alt::Simple::to_dot(unsigned int *nodeID, std::ostream &out) {
+  unsigned int thisID = Alt::Base::to_dot(nodeID, out);
+  for (std::list<Fn_Arg::Base*>::const_iterator arg = this->args.begin();
+       arg != this->args.end(); ++arg) {
+    Fn_Arg::Alt *argalt = dynamic_cast<Fn_Arg::Alt*>(*arg);
+    if (argalt) {
+      unsigned int childID = argalt->alt_ref()->to_dot(nodeID, out);
+      out << "node_" << thisID << " -> node_" << childID
+          << " [ arrowhead=none ";
+      Alt::Multi *multi = dynamic_cast<Alt::Multi*>(argalt->alt_ref());
+      if (multi) {
+        out << ", lhead=cluster_node_" << (childID-1) << " ";
+      }
+      out << "];\n";
+    }
+  }
+  return thisID;
+}
+unsigned int Alt::Link::to_dot(unsigned int *nodeID, std::ostream &out) {
+  return Alt::Base::to_dot(nodeID, out);
+}
+unsigned int Alt::Block::to_dot(unsigned int *nodeID, std::ostream &out) {
+  unsigned int thisID = Alt::Base::to_dot(nodeID, out);
+
+  for (std::list<Alt::Base*>::const_iterator alt = this->alts.begin();
+       alt != this->alts.end(); ++alt) {
+    unsigned int childID = (*alt)->to_dot(nodeID, out);
+    out << "node_" << thisID << " -> node_" << childID
+        << " [ ];\n";
+  }
+
+  return thisID;
+}
+unsigned int Alt::Multi::to_dot(unsigned int *nodeID, std::ostream &out) {
+  unsigned int thisID = (unsigned int)((*nodeID)++);
+  out << "subgraph cluster_node_" << thisID << " {\n";
+  unsigned int lastID = 0;
+  for (std::list<Alt::Base*>::const_iterator alt = this->list.begin();
+       alt != this->list.end(); ++alt) {
+    unsigned int childID = (*alt)->to_dot(nodeID, out);
+    if (lastID > 0) {
+      out << "node_" << lastID << " -> node_" << childID
+          << " [ style=\"invis\" ];\n";
+    }
+    lastID = childID;
+  }
+  out << "};\n";
+  return thisID+1;  // return not the cluster ID but the id of the first element
+}
+// END functions produce graphViz code to represent the grammar

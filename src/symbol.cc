@@ -45,7 +45,7 @@
 #include "ast.hh"
 
 #include "type/backtrace.hh"
-
+#include "alt.hh"
 
 
 Symbol::Base::Base(std::string *n, Type t, const Loc &l)
@@ -1622,3 +1622,41 @@ void Symbol::Terminal::setPredefinedTerminalParser(bool isPredefined) {
 bool Symbol::Terminal::isPredefinedTerminalParser() {
   return this->predefinedTerminalParser;
 }
+
+// the following functions produce graphViz code to represent the grammar
+unsigned int Symbol::Base::to_dot(unsigned int *nodeID, std::ostream &out,
+                                  bool is_rhs, Symbol::NT *axiom) {
+  unsigned int thisID = (unsigned int)((*nodeID)++);
+  out << "node_" << thisID << " [ label=<<table border='0'><tr>";
+  to_dot_indices(this->left_indices, out);
+  out << "<td>" << *this->name << "</td>";
+  to_dot_indices(this->right_indices, out);
+  out << "</tr></table>>";
+  return thisID;
+}
+unsigned int Symbol::Terminal::to_dot(unsigned int *nodeID, std::ostream &out,
+                                      bool is_rhs, Symbol::NT *axiom) {
+  unsigned int thisID = Symbol::Base::to_dot(nodeID, out, is_rhs, axiom);
+  out << ", color=\"blue\", fontcolor=\"blue\" ];\n";
+  return thisID;
+}
+unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
+                                bool is_rhs, Symbol::NT *axiom) {
+  unsigned int thisID = Symbol::Base::to_dot(nodeID, out, is_rhs, axiom);
+  out << ", color=\"black\"";
+  if (!is_rhs) {
+    // a non-terminal "calling" productions, i.e. on the left hand side
+    out << ", shape=\"box\"";
+    if (this == axiom) {
+      out << ", penwidth=3";
+    }
+    out << " ];\n";
+    for (std::list<Alt::Base*>::const_iterator alt = this->alts.begin();
+         alt != this->alts.end(); ++alt) {
+      unsigned int childID = (*alt)->to_dot(nodeID, out);
+      out << "node_" << thisID << " -> node_" << childID << ";\n";
+    }
+  }
+  return thisID;
+}
+// END functions produce graphViz code to represent the grammar

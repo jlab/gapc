@@ -308,6 +308,7 @@ class Base {
   virtual void set_ntparas(const Loc &loc, std::list<Expr::Base*> *l);
 
   bool choice_set();
+  virtual unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
 };
 
 
@@ -486,7 +487,7 @@ class Simple : public Base {
 
  public:
   void set_ntparas(std::list<Expr::Base*> *l);
-
+  unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
 
  private:
   std::list<Statement::Base*> *insert_index_stmts(
@@ -608,6 +609,7 @@ class Link : public Base {
   bool check_ntparas();
 
   void optimize_choice();
+  unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
 };
 
 
@@ -675,6 +677,7 @@ class Block : public Base {
 
   void multi_collect_factors(Runtime::Poly &p);
   void multi_init_calls(const Runtime::Poly &p, size_t base_tracks);
+  unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
 };
 
 
@@ -745,9 +748,13 @@ class Multi : public Base {
   void types(std::list< ::Type::Base*> &) const;
   const std::list<Statement::Var_Decl*> &ret_decls() const;
   void init_ret_decl(unsigned int i, const std::string &prefix);
+  unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
 };
 
-
 }  // namespace Alt
+
+// prints left or right indices of a parser to out stream.
+// used as a helper for to_dot functions
+void to_dot_indices(std::vector<Expr::Base*> indices, std::ostream &out);
 
 #endif  // SRC_ALT_HH_
