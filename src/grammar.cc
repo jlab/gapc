@@ -1031,21 +1031,21 @@ void Grammar::inject_outside_nts() {
 		// Thus, no new NTs have to be injected
 		return;
 	}
-	for (Symbol::NT* nt : outside_nts) {
+	for (std::set<Symbol::NT*>::iterator nt = outside_nts.begin(); nt != outside_nts.end(); ++nt) {
 		// use inside NT as template ...
-		Symbol::NT *inside_nt = dynamic_cast<Symbol::NT*>(this->NTs.find(*nt->name)->second);
+		Symbol::NT *inside_nt = dynamic_cast<Symbol::NT*>(this->NTs.find(*(*nt)->name)->second);
 		// and clone for outside version
 		Symbol::NT *outside_nt = inside_nt->clone(inside_nt->track_pos());
 		// remove all existing alternative production rules
 		outside_nt->alts.clear();
 		// and correct NT name, to now point to outside version
-		outside_nt->name = new std::string(OUTSIDE_NT_PREFIX + (*nt->name));
+		outside_nt->name = new std::string(OUTSIDE_NT_PREFIX + (*(*nt)->name));
 
 		// flag this new non-terminal as being part of the outside rules
 		outside_nt->is_partof_outside = true;
 
-		outside_NTs[OUTSIDE_NT_PREFIX + (*nt->name)] = outside_nt;
-		outside_NTs[(*nt->name)] = outside_nt;
+		outside_NTs[OUTSIDE_NT_PREFIX + (*(*nt)->name)] = outside_nt;
+		outside_NTs[(*(*nt)->name)] = outside_nt;
 	}
 
 	// 3) create copy of inside alternative, replace called non-terminal with calling outside version and append to called outside version
@@ -1092,8 +1092,20 @@ void Grammar::inject_outside_nts() {
 	// 4) add novel outside NTs to grammar
 	for (std::pair<std::string, Symbol::Base*> nt : outside_NTs) {
 		if (this->NTs.find(nt.first) == this->NTs.end()) {  // only for NTs that are not already part of the grammar
+			Symbol::NT *nt_nt = dynamic_cast<Symbol::NT*>(nt.second);
+            /* calling NT might never occur on rhs of productions, e.g. "start" in:
+			 * grammar gra_nodangle uses sig_foldrna(axiom = start) {
+             *   start = incl(struct) # h;
+             *   struct = sadd(BASE, struct) | nil(LOC) # h; }
+             * the outside version of such non terminals shall point to the inside axiom
+			 */
+			if (nt_nt->alts.size() == 0) {
+				Alt::Link *link = new Alt::Link(this->axiom_name, this->axiom_loc);
+				link->nt = dynamic_cast<Symbol::Base*>(this->axiom);
+				nt_nt->alts.push_back(link);
+			}
 			this->NTs.insert(nt);
-			this->nt_list.push_back(dynamic_cast<Symbol::NT*>(nt.second));
+			this->nt_list.push_back(nt_nt);
 		}
 	}
 
@@ -1122,10 +1134,9 @@ void Grammar::inject_outside_nts() {
 
 		this->axiom_name = nt_axiom_name;
 		this->init_axiom();
-
-		// re-run check symantics to properly integrate new production rules
-		this->check_semantic();
 	}
+	// re-run check symantics to properly integrate new production rules
+	this->check_semantic();
 }
 
 unsigned int Grammar::to_dot(unsigned int *nodeID, std::ostream &out) {
