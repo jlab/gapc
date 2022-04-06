@@ -3407,6 +3407,11 @@ void Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *right, unsi
 	Fn_Arg::Base *arg_outside = NULL;
 	Symbol::NT *nt_outside = NULL;
 	for (std::list<Fn_Arg::Base*>::const_iterator i = args.begin(); i != args.end(); ++i) {
+		Fn_Arg::Const *constarg = dynamic_cast<Fn_Arg::Const*>(*i);
+		if (constarg != NULL) {
+			// argument is a constant like 'A' in CHAR('A')
+			continue;
+		}
 		Symbol::NT *ont = get_outside_NT((*i)->alt_ref());
 		if (ont) {
 			Alt::Link *link = dynamic_cast<Alt::Link*>((*i)->alt_ref());
@@ -3550,6 +3555,11 @@ std::pair<Yield::Size*, Yield::Size*> *Alt::Simple::get_outside_accum_yieldsizes
 
 	Fn_Arg::Base *arg_outside = NULL;
 	for (std::list<Fn_Arg::Base*>::const_iterator i = args.begin(); i != args.end(); ++i) {
+		Fn_Arg::Const *constarg = dynamic_cast<Fn_Arg::Const*>(*i);
+		if (constarg != NULL) {
+			// skip constant arguments like CHAR('A')
+			continue;
+		}
 		Symbol::NT *ont = get_outside_NT((*i)->alt_ref());
 		if (ont) {
 			arg_outside = *i;
