@@ -3429,7 +3429,7 @@ void Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *right, unsi
 	// yield sizes for sub-structure
 	std::pair<Yield::Size*, Yield::Size*> *ys_sub = new std::pair<Yield::Size*, Yield::Size*>(new Yield::Size(), new Yield::Size());
 	if (arg_outside != NULL) {
-		ys_sub = arg_outside->alt_ref()->get_outside_accum_yieldsizes(track);
+		ys_sub = arg_outside->alt_ref()->get_outside_accum_yieldsizes(track, is_right_of_outside_nt);
 	}
 	std::pair<Yield::Size*, Yield::Size*> *ys_this = this->get_outside_accum_yieldsizes(track, is_right_of_outside_nt);
 
@@ -3464,8 +3464,14 @@ void Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *right, unsi
 		Yield::Size *ys_right2center = new Yield::Size();
 		*ys_right2center += *(ys_sub->first);
 		*ys_right2center += *(sum_ys_rights(&ys_arg, i, args_left->end(), track));
+		if (arg_outside == NULL) {
+			// if this level does NOT hold the outside non-terminal, but args are left of the outside non-terminal
+			// propagate the rightmost index (must be the one from the outside non-terminal in higher levels)
+			// as the left index
+			left = right;
+		}
 		right_index = get_next_var_right2left(left_index, left, k, track, ys_arg, ys_right2center);
-		(*i)->alt_ref()->init_indices_outside(left_index, right_index, k, track, center_left, center_right);
+		(*i)->alt_ref()->init_indices_outside(left_index, right_index, k, track, leftmost_index, center_right);
 		left_index = right_index;
 	}
 	Expr::Base *lhs_right_index = right_index;
