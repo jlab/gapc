@@ -2965,7 +2965,7 @@ unsigned int Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out) {
   to_dot_indices(this->left_indices, out);
   Alt::Simple *simple = dynamic_cast<Alt::Simple*>(this);
   if (simple) {
-    out << "<td>" << *simple->name << "</td>";
+    out << "<td>" << *simple->name;
 
     // terminal arguments e.g. CHAR('A')
     if (simple->is_terminal()) {
@@ -2982,6 +2982,8 @@ unsigned int Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out) {
         }
       }
     }
+
+    out << "</td>";
   }
   Alt::Link *link = dynamic_cast<Alt::Link*>(this);
   if (link) {
