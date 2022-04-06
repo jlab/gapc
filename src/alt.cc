@@ -3447,11 +3447,11 @@ void Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *right, unsi
 	Expr::Base *leftmost_index = left_index;
 	Expr::Base *right_index = left_index;
 	for (std::list<Fn_Arg::Base*>::const_iterator i = args_left->begin(); i != args_left->end(); ++i) {
-		Yield::Size ys_this = (*i)->multi_ys()(track);
+		Yield::Size ys_arg = (*i)->multi_ys()(track);
 		Yield::Size *ys_right2center = new Yield::Size();
 		*ys_right2center += *(ys_sub->first);
-		*ys_right2center += *(sum_ys_rights(&ys_this, i, args_left->end(), track));
-		right_index = get_next_var_right2left(left_index, left, k, track, ys_this, ys_right2center);
+		*ys_right2center += *(sum_ys_rights(&ys_arg, i, args_left->end(), track));
+		right_index = get_next_var_right2left(left_index, left, k, track, ys_arg, ys_right2center);
 		(*i)->alt_ref()->init_indices_outside(left_index, right_index, k, track, center_left, center_right);
 		left_index = right_index;
 	}
@@ -3483,11 +3483,11 @@ void Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *right, unsi
 	Expr::Base *rightmost_index = right_index;
 	left_index = NULL;
 	for (std::list<Fn_Arg::Base*>::const_reverse_iterator i = args_right->rbegin(); i != args_right->rend(); ++i) {
-		Yield::Size ys_this = (*i)->multi_ys()(track);
+		Yield::Size ys_arg = (*i)->multi_ys()(track);
 		Yield::Size *ys_left2center = new Yield::Size();
 		*ys_left2center += *(ys_sub->second);
-		*ys_left2center += *(sum_ys_lefts(&ys_this, i, args_right->rend(), track));
-		left_index = get_next_var_left2right(right_index, right, k, track, ys_this, ys_left2center);
+		*ys_left2center += *(sum_ys_lefts(&ys_arg, i, args_right->rend(), track));
+		left_index = get_next_var_left2right(right_index, right, k, track, ys_arg, ys_left2center);
 		(*i)->alt_ref()->init_indices_outside(left_index, right_index, k, track, center_left, center_right);
 		right_index = left_index;
 	}
