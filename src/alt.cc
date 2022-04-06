@@ -3490,7 +3490,7 @@ void Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *right, unsi
 			// no new index if there are no parsers or only parsers with const yield size right of outside nt
 			// e.g. incl(outside_foo)
 			// e.g. adds(outside_foo, BASE)
-			right_index = right;
+			right_index = right->plus(ys_this->second->low());
 		}
 	}
 	Expr::Base *rightmost_index = right_index;
