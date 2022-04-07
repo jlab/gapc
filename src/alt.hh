@@ -281,11 +281,13 @@ class Base {
  protected:
   Yield::Multi m_ys;
 
+
  public:
   virtual void init_multi_ys();
   const Yield::Multi &multi_ys() const {
     return m_ys;
   }
+  Yield::Multi m_ys_inside;
 
  private:
   std::vector<std::list<Filter*> > multi_filter;
@@ -339,6 +341,10 @@ class Base {
   // private flag to indicate if alternative is for inside (the default) or outside
   // production rules. See set_partof_outside()
   bool is_partof_outside;
+ public:
+  bool get_is_partof_outside() {
+	return this->is_partof_outside;
+  }
 };
 
 
@@ -423,6 +429,7 @@ class Simple : public Base {
   std::list<Statement::Base*> body_stmts;
 
   Statement::If *guards;
+  Statement::If *guards_inside;
   void ret_decl_empty_block(Statement::If *stmt);
   void deep_erase_if_backtrace(
     Statement::If *stmt, std::vector<Fn_Arg::Base*>::iterator start,
@@ -485,6 +492,9 @@ class Simple : public Base {
     std::list<Statement::Base*> *stmts,
     std::list<Statement::For *> loops,
     bool has_index_overlay);
+  std::list<Statement::Base*> *add_guards(
+    std::list<Statement::Base*> *stmts,
+  	Statement::If *guards);
   void sum_rhs(
     Yield::Multi &y, std::list<Fn_Arg::Base*>::const_iterator i,
     const std::list<Fn_Arg::Base*>::const_iterator &end) const;
@@ -650,6 +660,7 @@ class Link : public Base {
 
  private:
   std::list<Expr::Base*> ntparas;
+  Statement::If *guards;
 
  public:
   void set_ntparas(const Loc &loc, std::list<Expr::Base*> *l);
@@ -661,6 +672,7 @@ class Link : public Base {
   void set_partof_outside(bool is_outside);
   bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, hashtable<std::string, unsigned int> &skip_occurences);
   unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
+  void init_outside_guards();
 };
 
 
