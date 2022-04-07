@@ -1324,7 +1324,6 @@ void Alt::Simple::init_foreach() {
   }
 }
 
-
 void Alt::Simple::ret_decl_empty_block(Statement::If *stmt) {
   if (!datatype->simple()->is(::Type::LIST)) {
     Statement::Fn_Call *e = new Statement::Fn_Call(Statement::Fn_Call::EMPTY);
@@ -1508,18 +1507,37 @@ void Alt::Simple::init_body(AST &ast) {
   }
 }
 
+void Alt::Link::init_outside_guards() {
+	std::list<Expr::Base*> l;
 
+	unsigned int track = 0;
+	std::vector<Expr::Base*>::iterator j = right_indices.begin();
+	for (std::vector<Expr::Base*>::iterator i = left_indices.begin();
+	       i != left_indices.end(); ++i, ++j, ++track) {
+	  std::ostringstream o_left; o_left << "t_" << track << "_right_most";
+	  Expr::Vacc *leftmost = new Expr::Vacc(new std::string(o_left.str()));
+	  l.push_back(new Expr::Greater_Eq((*i), leftmost));
+	}
+
+	Expr::Base *cond  = Expr::seq_to_tree<Expr::Base, Expr::And>(
+	    l.begin(), l.end());
+
+	guards = new Statement::If(cond);
+	//ret_decl_empty_block(guards);
+}
 void Alt::Simple::init_guards() {
   std::list<Expr::Base*> l;
+  std::list<Expr::Base*> l_inside;
   assert(m_ys.tracks() == left_indices.size());
   Yield::Multi::iterator k = m_ys.begin();
+  Yield::Multi::iterator k_inside = m_ys_inside.begin();
   std::vector<Expr::Base*>::iterator j = right_indices.begin();
   std::vector<Expr::Base*>::iterator it_left_inner_indices = this->left_inside_indices.begin();
   std::vector<Expr::Base*>::iterator it_right_inner_indices = this->right_inside_indices.begin();
 
   unsigned int track = 0;
   for (std::vector<Expr::Base*>::iterator i = left_indices.begin();
-       i != left_indices.end(); ++i, ++j, ++k, ++track, ++it_left_inner_indices, ++it_right_inner_indices) {
+       i != left_indices.end(); ++i, ++j, ++k, ++k_inside, ++track, ++it_left_inner_indices, ++it_right_inner_indices) {
 	if (this->is_partof_outside) {
 	  // obtain yield sizes left and right of outside non-terminal
 	  std::pair<Yield::Size*, Yield::Size*> *ys = this->get_outside_accum_yieldsizes(track);
@@ -1532,7 +1550,8 @@ void Alt::Simple::init_guards() {
 		// the rare case where guards check themselves
 	    // happens e.g. if table has only one dimension
 	  } else {
-	    l.push_back(new Expr::Greater_Eq((*it_left_inner_indices)->minus(ys->first->low()), leftmost));
+		l.push_back(new Expr::Greater_Eq((*it_left_inner_indices), leftmost->plus(ys->first->low())));
+	    //l.push_back(new Expr::Greater_Eq((*it_left_inner_indices)->minus(ys->first->low()), leftmost));
 	  }
 
 	  std::ostringstream o_right; o_right << "t_" << track << "_right_most";
@@ -1544,6 +1563,15 @@ void Alt::Simple::init_guards() {
 		// happens e.g. if table has only one dimension
 	  } else {
 		l.push_back(new Expr::Less_Eq((*it_right_inner_indices)->plus(ys->second->low()), rightmost));
+	  }
+
+	  // additionally, add guards from original inside rules
+	  if (k_inside != m_ys_inside.end()) {
+		  Expr::Base *e = (*j)->minus(*i);
+		  l_inside.push_back(new Expr::Greater_Eq(e, (*k_inside).low()));
+		  if ((*k_inside).high() != Yield::Poly(Yield::UP)) {
+			l_inside.push_back(new Expr::Less_Eq(e, (*k_inside).high()));
+		  }
 	  }
 	} else {
       Expr::Base *e = (*j)->minus(*i);
@@ -1559,6 +1587,14 @@ void Alt::Simple::init_guards() {
 
   guards = new Statement::If(cond);
   ret_decl_empty_block(guards);
+
+  if (l_inside.size() > 0) {
+	  Expr::Base *cond  = Expr::seq_to_tree<Expr::Base, Expr::And>(
+			  l_inside.begin(), l_inside.end());
+
+	  guards_inside = new Statement::If(cond);
+	  ret_decl_empty_block(guards_inside);
+  }
 }
 
 
@@ -1884,6 +1920,24 @@ std::list<Statement::Base*> *Alt::Simple::add_for_loops(
   }
   return stmts;
 }
+std::list<Statement::Base*> *Alt::Simple::add_guards(
+	std::list<Statement::Base*> *stmts,
+	Statement::If *guards) {
+  if (guards) {
+    stmts->push_back(guards);
+    if (datatype->simple()->is(::Type::LIST)) {
+      // only call finalize on hash lists
+      if (!ret_decl->rhs && adp_specialization == ADP_Mode::STANDARD) {
+        Statement::Fn_Call *f = new Statement::Fn_Call(
+          Statement::Fn_Call::FINALIZE);
+        f->add_arg(*ret_decl);
+        stmts->push_back(f);
+      }
+    }
+    stmts = &guards->then;
+  }
+  return stmts;
+}
 
 void Alt::Simple::codegen(AST &ast) {
   // std::cout << "-----------Simple IN" << std::endl;
@@ -1907,19 +1961,20 @@ void Alt::Simple::codegen(AST &ast) {
 
 
   init_guards();
-  if (guards) {
-    stmts->push_back(guards);
-    if (datatype->simple()->is(::Type::LIST)) {
-      // only call finalize on hash lists
-      if (!ret_decl->rhs && adp_specialization == ADP_Mode::STANDARD) {
-        Statement::Fn_Call *f = new Statement::Fn_Call(
-          Statement::Fn_Call::FINALIZE);
-        f->add_arg(*ret_decl);
-        stmts->push_back(f);
-      }
-    }
-    stmts = &guards->then;
-  }
+//  if (guards) {
+//    stmts->push_back(guards);
+//    if (datatype->simple()->is(::Type::LIST)) {
+//      // only call finalize on hash lists
+//      if (!ret_decl->rhs && adp_specialization == ADP_Mode::STANDARD) {
+//        Statement::Fn_Call *f = new Statement::Fn_Call(
+//          Statement::Fn_Call::FINALIZE);
+//        f->add_arg(*ret_decl);
+//        stmts->push_back(f);
+//      }
+//    }
+//    stmts = &guards->then;
+//  }
+  stmts = add_guards(stmts, guards);
 
   init_filter_guards(ast);
 
@@ -1965,6 +2020,22 @@ void Alt::Simple::codegen(AST &ast) {
 
     // add for loops for moving boundaries
     stmts = add_for_loops(stmts, loops, has_index_overlay());
+
+//    if (guards_inside) {
+//      stmts->push_back(guards_inside);
+//      if (datatype->simple()->is(::Type::LIST)) {
+//        // only call finalize on hash lists
+//        if (!ret_decl->rhs && adp_specialization == ADP_Mode::STANDARD) {
+//          Statement::Fn_Call *f = new Statement::Fn_Call(
+//            Statement::Fn_Call::FINALIZE);
+//          f->add_arg(*ret_decl);
+//          stmts->push_back(f);
+//        }
+//      }
+//      stmts = &guards_inside->then;
+//    }
+    // guards_inside have already initialized through init_guards()
+    stmts = add_guards(stmts, guards_inside);
 
     // add filter_guards
     stmts = add_filter_guards(stmts, filter_guards);
@@ -2104,6 +2175,21 @@ void Alt::Link::codegen(AST &ast) {
     fn->exprs.push_back(new Expr::Vacc(new std::string("global_score")));
     fn->exprs.push_back(new Expr::Vacc(new std::string("delta")));
   }
+
+//  std::list<Statement::Base*> *stmts = &statements;
+//  if (guards) {
+//    stmts->push_back(guards);
+//    if (datatype->simple()->is(::Type::LIST)) {
+//      // only call finalize on hash lists
+//      if (!ret_decl->rhs && adp_specialization == ADP_Mode::STANDARD) {
+//        Statement::Fn_Call *f = new Statement::Fn_Call(
+//          Statement::Fn_Call::FINALIZE);
+//        f->add_arg(*ret_decl);
+//        stmts->push_back(f);
+//      }
+//    }
+//    stmts = &guards->then;
+//  }
 
   init_filter_guards(ast);
   if (filter_guards) {
@@ -3378,7 +3464,7 @@ void Alt::Multi::expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, 
   throw LogError("Alt::Block::expand_outside_nt_indices is not yet implemented!");
 }
 void Alt::Base::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right, bool is_right_of_outside_nt) {
-  Alt::Base::init_indices(left, right, k, track);
+	Alt::Base::init_indices(left, right, k, track);
 }
 
 void Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right, bool is_right_of_outside_nt) {
@@ -3471,7 +3557,7 @@ void Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *right, unsi
 		Yield::Size *ys_right2center = new Yield::Size();
 		*ys_right2center += *(ys_sub->first);
 		*ys_right2center += *(sum_ys_rights(&ys_arg, i, args_left->end(), track));
-		if (arg_outside == NULL) {
+		if ((arg_outside == NULL) and (ys_arg.low() > 0)) {
 			// if this level does NOT hold the outside non-terminal, but args are left of the outside non-terminal
 			// propagate the rightmost index (must be the one from the outside non-terminal in higher levels)
 			// as the left index
