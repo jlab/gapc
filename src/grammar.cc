@@ -1069,16 +1069,18 @@ void Grammar::inject_outside_nts() {
 						outside_alt->replace_nonterminal(*it_nt, dynamic_cast<Symbol::NT*>(outside_NTs.find(i->first)->second), skip_occurences);
 						// flag outside_alt as being part of an automatically generated outside production rule
 						outside_alt->set_partof_outside(true);
+
+						outside_alt->m_ys_inside = outside_alt->multi_ys();
 						// append copied+replaced alternative to the list of alternatives for the outside version of the called non-terminal
 						(dynamic_cast<Symbol::NT*>(outside_NTs.find(*((*it_nt)->name))->second))->alts.push_back(outside_alt);
 						skip_occurences[*((*it_nt)->name)]++;
 					}
 				} else {
-					// e.g. struct = nil(LOC) has no non-terminal on the rhs, but should become an alternative for outside version of struct
-					Alt::Base *outside_alt = (*alt)->clone();
-					// flag outside_alt as being part of an automatically generated outside production rule
-					outside_alt->set_partof_outside(false);
-					(dynamic_cast<Symbol::NT*>(outside_NTs.find(*(nt->name))->second))->alts.push_back(outside_alt);
+//					// e.g. struct = nil(LOC) has no non-terminal on the rhs, but should become an alternative for outside version of struct
+//					Alt::Base *outside_alt = (*alt)->clone();
+//					// flag outside_alt as being part of an automatically generated outside production rule
+//					outside_alt->set_partof_outside(true);
+//					(dynamic_cast<Symbol::NT*>(outside_NTs.find(*(nt->name))->second))->alts.push_back(outside_alt);
 
 					// if production rule does not have any non-terminals on the right hand side, the calling non-terminal
 					// is a candidate for being called from the axiom for outside
@@ -1088,6 +1090,12 @@ void Grammar::inject_outside_nts() {
 			}
 		}
 	}
+	Alt::Link *link = new Alt::Link(this->axiom_name, this->axiom_loc);
+    link->nt = dynamic_cast<Symbol::Base*>(this->axiom);
+    Filter *f = new Filter(new std::string("complete_track"), Loc());
+    f->type = Filter::WITH;
+    link->filters.push_back(f);
+    dynamic_cast<Symbol::NT*>(outside_NTs.find(*this->axiom_name)->second)->alts.push_back(link);
 
 	// 4) add novel outside NTs to grammar
 	for (std::pair<std::string, Symbol::Base*> nt : outside_NTs) {
