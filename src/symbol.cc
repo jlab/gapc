@@ -752,10 +752,16 @@ void Symbol::NT::init_indices(Expr::Vacc *left, Expr::Vacc *right,
 
   for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
 	if (this->is_partof_outside) {
-	  (*i)->init_indices_outside(left, right, k, track, NULL, NULL, false);
-	} else {
-	  (*i)->init_indices(left, right, k, track);
-	}
+      if ((*i)->get_is_partof_outside() == false) {
+        // special treatment for a link to the original inside axiom, ensure that it has to consume the full input sequence(s)
+        (*i)->init_indices_outside(left->plus(right), right->minus(left), k, track, NULL, NULL, false);
+        dynamic_cast<Alt::Link*>(*i)->init_outside_guards();
+      } else {
+        (*i)->init_indices_outside(left, right, k, track, NULL, NULL, false);
+      }
+    } else {
+      (*i)->init_indices(left, right, k, track);
+    }
   }
 }
 
