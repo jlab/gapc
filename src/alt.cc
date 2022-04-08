@@ -3657,6 +3657,17 @@ std::pair<Yield::Size*, Yield::Size*> *Alt::Simple::get_outside_accum_yieldsizes
 		if ((arg_outside == NULL) and (is_right_of_outside_nt == false)) {
 			*(res->first) += (*i)->multi_ys()(track);
 		} else {
+			// if the alternative links to a non-terminal AND the non-terminal has a sub-quadratic table, we do NOT add the yield size
+			if (arg_outside != NULL) {
+				if (arg_outside->alt_ref()->is(Alt::LINK)) {
+					Symbol::NT *linkedNT = dynamic_cast<Symbol::NT*>(dynamic_cast<Alt::Link*>(arg_outside->alt_ref())->nt);
+					if (linkedNT) {
+						if (linkedNT->tables()[track].is_cyk_right()) {
+							continue;
+						}
+					}
+				}
+			}
 			*(res->second) += (*i)->multi_ys()(track);
 		}
 	}
