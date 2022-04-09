@@ -2269,6 +2269,7 @@ void Alt::Base::init_filter_guards(AST &ast) {
     // filter since this would "empty"=erase the answer list of ALL
     // alternatives of a symbol due to the return decl replacement happening
     // in Symbol::NT::eliminate_list_ass
+    // see https://github.com/jlab/gapc/pull/123
   } else {
     guard->els.push_back(new Statement::Fn_Call(
       Statement::Fn_Call::EMPTY, *ret_decl));
