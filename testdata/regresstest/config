@@ -435,3 +435,9 @@ check_compiler_output ../../grammar2 testtermarg.gap testme termarg grep "6), \"
 GRAMMAR=../../grammar
 GAPC="../../../gapc --float-accuracy 2"
 check_new_old_eq elm.gap unused pareto "1+2*3+4*5" floatacc
+
+# ensure that previously composed answers are not erased by later application of filters for completely different alternatives, see PR https://github.com/jlab/gapc/pull/123
+GRAMMAR=../../grammar2
+GAPC="../../../gapc"
+check_new_old_eq eraseanswers.gap unused ins_count_failing "AC" eraseanswer
+check_new_old_eq eraseanswers.gap unused ins_count_working "AC" eraseanswer
