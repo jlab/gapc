@@ -1095,6 +1095,8 @@ void Grammar::inject_outside_nts() {
     Filter *f = new Filter(new std::string("complete_track"), Loc());
     f->type = Filter::WITH;
     link->filters.push_back(f);
+    link->set_tracks(this->axiom->tracks(), this->axiom->track_pos());
+    link->init_multi_ys();
     dynamic_cast<Symbol::NT*>(outside_NTs.find(*this->axiom_name)->second)->alts.push_back(link);
 
 	// 4) add novel outside NTs to grammar
@@ -1132,9 +1134,16 @@ void Grammar::inject_outside_nts() {
 		// which points to multiple non-terminals WITHOUT making a choice
 		std::string *nt_axiom_name = new std::string("outside_axioms");
 		Symbol::NT *nt_axiom = new Symbol::NT(nt_axiom_name, Loc());
+		// carry over tracks from original inside axiom
+		nt_axiom->set_tracks(this->axiom->tracks(), this->axiom->track_pos());
+		nt_axiom->setup_multi_ys();
 
 		for (std::set<Symbol::NT*>::iterator i = axiom_candidates->begin(); i != axiom_candidates->end(); ++i) {
-			nt_axiom->alts.push_back(new Alt::Link((*i)->name, Loc()));
+			Alt::Link *link = new Alt::Link((*i)->name, Loc());
+			link->nt = dynamic_cast<Symbol::NT*>(outside_NTs.find(*(*i)->name)->second);
+			link->set_tracks((*i)->tracks(), (*i)->track_pos());
+			link->init_multi_ys();
+			nt_axiom->alts.push_back(link);
 		}
 		// add new lhs non-terminal to grammar
 		this->NTs.insert(std::make_pair(*nt_axiom_name, dynamic_cast<Symbol::Base*>(nt_axiom)));
@@ -1143,8 +1152,13 @@ void Grammar::inject_outside_nts() {
 		this->axiom_name = nt_axiom_name;
 		this->init_axiom();
 	}
-	// re-run check symantics to properly integrate new production rules
-	this->check_semantic();
+	// re-run parts of "check_semantics" to properly initialize novel non-
+	// terminals and links to non-terminals, but explicitly do NOT
+	// re-run yield size analysis since it does not respect outside
+	// situations.
+	this->init_calls();
+	this->init_in_out();
+	this->init_table_dims();
 }
 
 unsigned int Grammar::to_dot(unsigned int *nodeID, std::ostream &out) {
