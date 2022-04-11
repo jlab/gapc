@@ -1097,6 +1097,7 @@ void Grammar::inject_outside_nts() {
     link->filters.push_back(f);
     link->set_tracks(this->axiom->tracks(), this->axiom->track_pos());
     link->init_multi_ys();
+    link->top_level = Bool(true);
     dynamic_cast<Symbol::NT*>(outside_NTs.find(*this->axiom_name)->second)->alts.push_back(link);
 
 	// 4) add novel outside NTs to grammar
