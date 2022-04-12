@@ -1200,7 +1200,6 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
     // carry over tracks from original inside axiom
     nt_axiom->set_tracks(this->axiom->tracks(), this->axiom->track_pos());
     nt_axiom->setup_multi_ys();
-    nt_axiom->is_partof_outside = true;
 
     for (std::set<Symbol::NT*>::iterator i = axiom_candidates->begin();
          i != axiom_candidates->end(); ++i) {
