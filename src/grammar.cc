@@ -1226,6 +1226,9 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
   this->init_in_out();
   this->init_table_dims();
 
+  // mark the modified grammar as an outside one
+  this->outside = true;
+
   Log::instance()->verboseMessage(
     "Grammar has been modified into an outside version.");
 }

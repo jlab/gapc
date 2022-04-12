@@ -64,7 +64,14 @@ class Grammar {
   void renumber_nts();
   void move_new_nts();
 
+  // flag the grammar as being an outside version
+  // default is false, will be set to true by function inject_outside_nts
+  bool outside = false;
+
  public:
+  bool is_outside() {
+    return this->outside;
+  }
   // The name of the grammar as defined in the grammar name of
   // the gap-source-code file.
   std::string *name;
