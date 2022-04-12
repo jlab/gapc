@@ -865,11 +865,11 @@ void Symbol::NT::set_ret_decl_rhs(Code::Mode mode) {
   }
 
   for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
-    if (!(*i)->data_type()->simple()->is(::Type::LIST)) {
-      Expr::Fn_Call *e = new Expr::Fn_Call(Expr::Fn_Call::NOT_EMPTY);
-      e->add_arg(*(*i)->ret_decl);
-      Statement::If *cond = new Statement::If(e);
+    Expr::Fn_Call *e = new Expr::Fn_Call(Expr::Fn_Call::NOT_EMPTY);
+    e->add_arg(*(*i)->ret_decl);
+    Statement::If *cond = new Statement::If(e);
 
+    if (!(*i)->data_type()->simple()->is(::Type::LIST)) {
       if ((mode != Code::Mode::BACKTRACK || !tabulated) &&
         adp_specialization != ADP_Mode::STANDARD ) {
         // directly join the elements in append function
@@ -925,7 +925,15 @@ void Symbol::NT::set_ret_decl_rhs(Code::Mode mode) {
             add_specialised_arguments(fn, mode.keep_cooptimal());
         }
 
-        post_alt_stmts.push_back(fn);
+        // if the link to another non-terminal is decorated by a filter,
+        // add an "is_not_empty" guard around the addition of potentially
+        // empty list of solutions. Can only be empty due to filtering.
+        if ((*i)->filters.size() > 0) {
+          cond->then.push_back(fn);
+          post_alt_stmts.push_back(cond);
+        } else {
+          post_alt_stmts.push_back(fn);
+        }
       } else {
         post_alt_stmts.push_back(NULL);
       }
