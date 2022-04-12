@@ -81,12 +81,7 @@ void Printer::Cpp::print(const Statement::For &stmt) {
   stream << *stmt.var_decl;
   stream << ' ' << *stmt.cond << "; ";
   if (!stmt.inc) {
-    if (stmt.decrement) {
-      stream << "--";
-    } else {
-      stream << "++";
-    }
-    stream << *stmt.var_decl->name << ")";
+    stream << "++" << *stmt.var_decl->name << ")";
   } else {
     bool t = in_fn_head;
     in_fn_head = true;
