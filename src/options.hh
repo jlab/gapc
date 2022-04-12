@@ -115,6 +115,11 @@ struct Options {
   // ignore most of the other options (except the instance selector
   // and output file name).
   bool specializeGrammar;
+  // if not empty, automatically generate an outside version of
+  // the provided grammar and print out results of the provided
+  // list of outside non-terminals. Report ALL non-terminals,
+  // if list states 'ALL'.
+  std::vector<std::string> outside_nt_list;
   // flag that is used to turn on verbose mode, i.g. all suppressed
   // warnings and messages will be shown
   bool verbose_mode;

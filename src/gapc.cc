@@ -104,6 +104,10 @@ static void parse_options(int argc, char **argv, Options *rec) {
       "uses the selected instance and creates a GAP program which creates "
       "specialized GAP programs that recognize a subset of candidates of the "
       "original grammar.")
+	("outside_grammar", po::value< std::vector<std::string> >(),
+      "generate an outside version of the grammar and report outside results "
+	  "for the provided list of inside non-terminals. Will report ALL non-"
+	  "terminals, if provided list says 'ALL'.")
     ("verbose", "show suppressed warnings and messages")
     ("log-level,l", po::value<int>(),
       "the log level, valid values are 0 (VERBOSE), 1 (INFO),  2 (NORMAL), 3 "
@@ -221,6 +225,8 @@ static void parse_options(int argc, char **argv, Options *rec) {
   if (vm.count("specialize_grammar")) {
     rec->specializeGrammar = true;
   }
+  if (vm.count("outside_grammar"))
+    rec->outside_nt_list = vm["outside_grammar"].as< std::vector<std::string> >();
   if (vm.count("verbose"))
     rec->verbose_mode = true;
   if (vm.count("log-level")) {
