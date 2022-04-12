@@ -911,6 +911,8 @@ void Symbol::NT::set_ret_decl_rhs(Code::Mode mode) {
       post_alt_stmts.push_back(cond);
     } else {
       assert(ret_decl->type->simple()->is(::Type::LIST));
+      Expr::Vacc *e = new Expr::Vacc(*ret_decl);
+      (*i)->ret_decl->rhs = e;
 
       if ((*i)->is(Alt::LINK)) {
         Statement::Fn_Call *fn = new Statement::Fn_Call(
@@ -931,15 +933,15 @@ void Symbol::NT::set_ret_decl_rhs(Code::Mode mode) {
         if ((*i)->filters.size() > 0) {
           cond->then.push_back(fn);
           post_alt_stmts.push_back(cond);
+          // avoid declarations like "ret_1 = answers" if potentially
+          // empty ret_1 candidates shall be pushed onto answers later
+          (*i)->ret_decl->rhs = NULL;
         } else {
           post_alt_stmts.push_back(fn);
         }
       } else {
         post_alt_stmts.push_back(NULL);
       }
-
-      Expr::Vacc *e = new Expr::Vacc(*ret_decl);
-      (*i)->ret_decl->rhs = e;
     }
   }
 }
