@@ -208,7 +208,7 @@ class Grammar {
 
   // inject additional non-terminals to grammar, to automatically create
   // an outside version for user provided grammar
-  void inject_outside_nts();
+  void inject_outside_nts(std::vector<std::string> outside_nt_list);
   unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
 };
 

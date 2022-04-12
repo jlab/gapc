@@ -249,7 +249,8 @@ class Base {
                                    const Yield::Multi &right, Symbol::NT *nt);
     virtual bool multi_detect_loop();
 
-    // flag to indicate if alternative is for inside (the default) or outside production rules.
+    // flag to indicate if alternative is for inside (the default) or outside
+    // production rules.
     bool is_partof_outside;
     // prints grammar rules as GraphViz commands
     virtual unsigned int to_dot(unsigned int *nodeID, std::ostream &out,

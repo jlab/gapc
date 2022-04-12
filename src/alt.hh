@@ -28,6 +28,7 @@
 #include <list>
 #include <vector>
 #include <string>
+#include <utility>
 
 #include "grammar.hh"
 #include "runtime.hh"
@@ -136,7 +137,8 @@ class Base {
  protected:
   std::vector<Expr::Base*> left_indices;
   std::vector<Expr::Base*> right_indices;
-  // for outside non-terminals: store original inner left/right indices for guards construction
+  // for outside non-terminals: store original inner left/right indices for
+  // guards construction
   std::vector<Expr::Base*> left_inside_indices;
   std::vector<Expr::Base*> right_inside_indices;
 
@@ -222,15 +224,22 @@ class Base {
 
   virtual void init_indices(
     Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
-  // recurses into alternatives, finds the single outside NT and updates only its left and right indices
-  // used after init_indices_outside initializes all other incides
-  // e.g. foo(k1_REGION_i, i_bar_j, j_REGION_k2) --> foo(k1_REGION_i, k1_bar_k2, j_REGION_k2)
-  //                       ^     ^                                    ^^     ^^
-  virtual void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track);
-  virtual std::pair<Yield::Size*, Yield::Size*> *get_outside_accum_yieldsizes(size_t track, bool is_right_of_outside_nt=false);
+  // recurses into alternatives, finds the single outside NT and updates
+  // only its left and right indices used after init_indices_outside
+  // initializes all other incides
+  // e.g. foo(k1_REGION_i, i_bar_j, j_REGION_k2) --> foo(k1_REGION_i,
+  //                       ^     ^
+  //          k1_bar_k2, j_REGION_k2)
+  //          ^^     ^^
+  virtual void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right,
+    size_t track);
+  virtual std::pair<Yield::Size*, Yield::Size*> *get_outside_accum_yieldsizes(
+    size_t track, bool is_right_of_outside_nt = false);
   // sets indices for outside rules, respecting yield sizes
   virtual void init_indices_outside(
-    Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right, bool is_right_of_outside_nt=false);
+    Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track,
+    Expr::Base *center_left, Expr::Base *center_right,
+    bool is_right_of_outside_nt = false);
 
   virtual void init_ret_decl(unsigned int i, const std::string &prefix);
 
@@ -323,27 +332,33 @@ class Base {
 
   bool choice_set();
 
-  // traverses the alternative (=rhs of a production) and collects pointers to all referenced non-terminals
-  // e.g. ml_comps = cadd(incl(dangle), ml_comps1) should return [*dangle, *ml_comps1]
+  // traverses the alternative (=rhs of a production) and collects pointers
+  // to all referenced non-terminals e.g.
+  // ml_comps = cadd(incl(dangle), ml_comps1)
+  // should return [*dangle, *ml_comps1]
   virtual void get_nonterminals(std::list<Symbol::NT*> *nt_list);
 
   // flag alternative as being part of a generated outside non-terminal
   // such that code generation can discriminate between inside (default)
   // and outside.
   virtual void set_partof_outside(bool is_outside);
-  // traverses the alternative (=rhs of a production), iff non-terminal find is contained, replace with first occurence of non-terminal replace
-  virtual bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, hashtable<std::string, unsigned int> &skip_occurences);
+  // traverses the alternative (=rhs of a production), iff non-terminal find
+  // is contained, replace with first occurence of non-terminal replace
+  virtual bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace,
+    hashtable<std::string, unsigned int> &skip_occurences);
 
   virtual unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
   // returns either the single outside non-terminal or NULL
   Symbol::NT *get_outside_nt(Alt::Base *alt);
+
  protected:
-  // private flag to indicate if alternative is for inside (the default) or outside
-  // production rules. See set_partof_outside()
+  // private flag to indicate if alternative is for inside (the default) or
+  // outside production rules. See set_partof_outside()
   bool is_partof_outside;
+
  public:
   bool get_is_partof_outside() {
-	return this->is_partof_outside;
+    return this->is_partof_outside;
   }
 };
 
@@ -460,12 +475,20 @@ class Simple : public Base {
  public:
   void init_indices(
     Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
-  Expr::Base *get_next_var_right2left(Expr::Base *left_index, Expr::Base *innermost_left_index, unsigned &k, size_t track, Yield::Size ys_this, Yield::Size *ys_lefts);
-  Expr::Base *get_next_var_left2right(Expr::Base *right_index, Expr::Base *innermost_right_index, unsigned &k, size_t track, Yield::Size ys_this, Yield::Size *ys_rights);
-  void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track);
-  std::pair<Yield::Size*, Yield::Size*> *get_outside_accum_yieldsizes(size_t track, bool is_right_of_outside_nt=false);
+  Expr::Base *get_next_var_right2left(Expr::Base *left_index,
+    Expr::Base *innermost_left_index, unsigned &k, size_t track,
+    Yield::Size ys_this, Yield::Size *ys_lefts);
+  Expr::Base *get_next_var_left2right(Expr::Base *right_index,
+    Expr::Base *innermost_right_index, unsigned &k, size_t track,
+    Yield::Size ys_this, Yield::Size *ys_rights);
+  void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right,
+    size_t track);
+  std::pair<Yield::Size*, Yield::Size*> *get_outside_accum_yieldsizes(
+    size_t track, bool is_right_of_outside_nt = false);
   void init_indices_outside(
-      Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right, bool is_right_of_outside_nt=false);
+    Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track,
+    Expr::Base *center_left, Expr::Base *center_right,
+    bool is_right_of_outside_nt = false);
   void put_indices(std::ostream &s);
 
   void reset();
@@ -494,7 +517,7 @@ class Simple : public Base {
     bool has_index_overlay);
   std::list<Statement::Base*> *add_guards(
     std::list<Statement::Base*> *stmts,
-  	Statement::If *guards);
+    Statement::If *guards);
   void sum_rhs(
     Yield::Multi &y, std::list<Fn_Arg::Base*>::const_iterator i,
     const std::list<Fn_Arg::Base*>::const_iterator &end) const;
@@ -502,8 +525,13 @@ class Simple : public Base {
     Yield::Size &y, std::list<Fn_Arg::Base*>::const_iterator i,
     const std::list<Fn_Arg::Base*>::const_iterator &end,
     size_t track) const;
-  Yield::Size *sum_ys_lefts(Yield::Size *y, std::list<Fn_Arg::Base*>::const_reverse_iterator i, const std::list<Fn_Arg::Base*>::const_reverse_iterator &end, size_t track) const;
-  Yield::Size *sum_ys_rights(Yield::Size *y, std::list<Fn_Arg::Base*>::const_iterator i, const std::list<Fn_Arg::Base*>::const_iterator &end, size_t track) const;
+  Yield::Size *sum_ys_lefts(
+    Yield::Size *y, std::list<Fn_Arg::Base*>::const_reverse_iterator i,
+    const std::list<Fn_Arg::Base*>::const_reverse_iterator &end, size_t track)
+    const;
+  Yield::Size *sum_ys_rights(
+    Yield::Size *y, std::list<Fn_Arg::Base*>::const_iterator i,
+    const std::list<Fn_Arg::Base*>::const_iterator &end, size_t track) const;
 
 
  public:
@@ -539,7 +567,8 @@ class Simple : public Base {
 
   void get_nonterminals(std::list<Symbol::NT*> *nt_list);
   void set_partof_outside(bool is_outside);
-  bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, hashtable<std::string, unsigned int> &skip_occurences);
+  bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace,
+    hashtable<std::string, unsigned int> &skip_occurences);
   unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
 
  private:
@@ -617,10 +646,14 @@ class Link : public Base {
 
   void init_indices(
     Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
-  std::pair<Yield::Size*, Yield::Size*> *get_outside_accum_yieldsizes(size_t track, bool is_right_of_outside_nt=false);
-  void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track);
+  std::pair<Yield::Size*, Yield::Size*> *get_outside_accum_yieldsizes(
+    size_t track, bool is_right_of_outside_nt = false);
+  void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right,
+    size_t track);
   void init_indices_outside(
-        Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right, bool is_right_of_outside_nt=false);
+    Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track,
+    Expr::Base *center_left, Expr::Base *center_right,
+    bool is_right_of_outside_nt = false);
 
   // void init_ret_decl(unsigned int i);
 
@@ -670,7 +703,8 @@ class Link : public Base {
 
   void get_nonterminals(std::list<Symbol::NT*> *nt_list);
   void set_partof_outside(bool is_outside);
-  bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, hashtable<std::string, unsigned int> &skip_occurences);
+  bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace,
+    hashtable<std::string, unsigned int> &skip_occurences);
   unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
   void init_outside_guards();
 };
@@ -723,10 +757,14 @@ class Block : public Base {
   void traverse(Visitor &v);
   void init_indices(
     Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
-  void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track);
-  std::pair<Yield::Size*, Yield::Size*> *get_outside_accum_yieldsizes(size_t track, bool is_right_of_outside_nt=false);
+  void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right,
+    size_t track);
+  std::pair<Yield::Size*, Yield::Size*> *get_outside_accum_yieldsizes(
+    size_t track, bool is_right_of_outside_nt = false);
   void init_indices_outside(
-        Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right, bool is_right_of_outside_nt=false);
+    Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track,
+    Expr::Base *center_left, Expr::Base *center_right,
+    bool is_right_of_outside_nt = false);
 
   void codegen(AST &ast);
 
@@ -747,7 +785,8 @@ class Block : public Base {
 
   void get_nonterminals(std::list<Symbol::NT*> *nt_list);
   void set_partof_outside(bool is_outside);
-  bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, hashtable<std::string, unsigned int> &skip_occurences);
+  bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace,
+    hashtable<std::string, unsigned int> &skip_occurences);
   unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
 };
 
@@ -800,10 +839,14 @@ class Multi : public Base {
 
   void init_indices(
     Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
-  void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right, size_t track);
-  std::pair<Yield::Size*, Yield::Size*> *get_outside_accum_yieldsizes(size_t track, bool is_right_of_outside_nt=false);
+  void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right,
+    size_t track);
+  std::pair<Yield::Size*, Yield::Size*> *get_outside_accum_yieldsizes(
+    size_t track, bool is_right_of_outside_nt = false);
   void init_indices_outside(
-        Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track, Expr::Base *center_left, Expr::Base *center_right, bool is_right_of_outside_nt=false);
+    Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track,
+    Expr::Base *center_left, Expr::Base *center_right,
+    bool is_right_of_outside_nt = false);
 
   void codegen(AST &ast);
   void print_dot_edge(std::ostream &out, Symbol::NT &nt);
@@ -827,7 +870,8 @@ class Multi : public Base {
 
   void get_nonterminals(std::list<Symbol::NT*> *nt_list);
   void set_partof_outside(bool is_outside);
-  bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace, hashtable<std::string, unsigned int> &skip_occurences);
+  bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace,
+    hashtable<std::string, unsigned int> &skip_occurences);
   unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
 };
 

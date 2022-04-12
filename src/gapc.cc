@@ -104,10 +104,11 @@ static void parse_options(int argc, char **argv, Options *rec) {
       "uses the selected instance and creates a GAP program which creates "
       "specialized GAP programs that recognize a subset of candidates of the "
       "original grammar.")
-	("outside_grammar", po::value< std::vector<std::string> >(),
+    ("outside_grammar", po::value< std::vector<std::string> >(),
       "generate an outside version of the grammar and report outside results "
-	  "for the provided list of inside non-terminals. Will report ALL non-"
-	  "terminals, if provided list says 'ALL'.")
+      "for an inside non-terminal. Provide multiple times for lists of "
+      "non-terminals or type \"ALL\" to report results for all non-"
+      "terminals.")
     ("verbose", "show suppressed warnings and messages")
     ("log-level,l", po::value<int>(),
       "the log level, valid values are 0 (VERBOSE), 1 (INFO),  2 (NORMAL), 3 "
@@ -226,7 +227,8 @@ static void parse_options(int argc, char **argv, Options *rec) {
     rec->specializeGrammar = true;
   }
   if (vm.count("outside_grammar"))
-    rec->outside_nt_list = vm["outside_grammar"].as< std::vector<std::string> >();
+    rec->outside_nt_list = vm["outside_grammar"]
+      .as< std::vector<std::string> >();
   if (vm.count("verbose"))
     rec->verbose_mode = true;
   if (vm.count("log-level")) {
@@ -364,8 +366,9 @@ class Main {
     }
 
     // inject rules for outside grammar
-    grammar->inject_outside_nts();
-
+    if (opts.outside_nt_list.size() > 0) {
+      grammar->inject_outside_nts(opts.outside_nt_list);
+    }
 
     // configure the window and k-best mode
     driver.ast.set_window_mode(opts.window_mode);
