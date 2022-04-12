@@ -1002,6 +1002,10 @@ void Grammar::remove(Symbol::NT *x) {
   tabulated.erase(nt);
 }
 
+void Grammar::inject_outside_nts() {
+  std::vector<std::string> outside_nt_list;
+  Grammar::inject_outside_nts(outside_nt_list);
+}
 void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
   std::string OUTSIDE_NT_PREFIX = "outside_";
   hashtable<std::string, Symbol::Base*> outside_NTs;
