@@ -1684,7 +1684,19 @@ void Printer::Cpp::header(const AST &ast) {
     if (ast.get_float_acc() > 0) {
       stream << "#define FLOAT_ACC " << ast.get_float_acc() << "\n";
     }
-    if (ast.grammar()->axiom->is_partof_outside) {
+    bool contains_outside_rules = false;
+    for (hashtable<std::string, Symbol::Base*>::iterator
+         i = (*ast.grammar()).NTs.begin();
+         i != (*ast.grammar()).NTs.end(); ++i) {
+      Symbol::NT *nt = dynamic_cast<Symbol::NT*>((*i).second);
+      if (nt) {
+        if (nt->is_partof_outside) {
+          contains_outside_rules = true;
+          break;
+        }
+      }
+    }
+    if (contains_outside_rules) {
       stream << "#define OUTSIDE\n";
     }
     includes();
@@ -2097,6 +2109,9 @@ void Printer::Cpp::print_insideoutside_report_fn(
            j != (*ast.grammar()).NTs.end(); ++j) {
         Symbol::NT *inside_nt = dynamic_cast<Symbol::NT*>(j->second);
         if (inside_nt) {
+          if (inside_nt->name->compare(std::string("outside_axioms")) == 0) {
+            continue;
+          }
           if (!inside_nt->is_partof_outside) {
             reported_nts->push_back(inside_nt);
           }
