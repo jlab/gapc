@@ -2053,7 +2053,8 @@ void Printer::Cpp::print_cyk_fn(const AST &ast) {
   stream << endl;
 }
 
-void Printer::Cpp::print_insideoutside(Symbol::NT *nt, Table::Dim table_dimension) {
+void Printer::Cpp::print_insideoutside(
+    Symbol::NT *nt, Table::Dim table_dimension) {
   std::string args = std::string("");
   std::string args_print = std::string("");
   if (table_dimension == Table::QUADRATIC) {
@@ -2064,72 +2065,89 @@ void Printer::Cpp::print_insideoutside(Symbol::NT *nt, Table::Dim table_dimensio
     args = std::string("i");
     args_print = std::string(" << i << ");
   }
-  stream << indent() << "out << \"start answers " << *nt->name << "(\"" << args_print << "\"):\\n\";\n";
+  stream << indent() << "out << \"start answers " << *nt->name
+         << "(\"" << args_print << "\"):\\n\";\n";
   std::list<Fn_Def*> &l = nt->code_list();
   for (std::list<Fn_Def*>::iterator i = l.begin(); i != l.end(); ++i) {
-	std::string res = "res_";
-	if (nt->is_partof_outside) {
-		res += std::string("outside");
-	} else {
-		res += std::string("inside");
-	}
-    stream << indent() << *((*i)->return_type) << " " << res << " = nt_" << *nt->name << "(" << args << ");\n";
+    std::string res = "res_";
+    if (nt->is_partof_outside) {
+      res += std::string("outside");
+    } else {
+      res += std::string("inside");
+    }
+    stream << indent() << *((*i)->return_type) << " " << res << " = nt_"
+           << *nt->name << "(" << args << ");\n";
     stream << indent() << "print_result(std::cout, " << res << ");\n";
   }
-  stream << indent() << "out << \"//end answers " << *nt->name << "(\"" << args_print << "\")\\n\";\n";
+  stream << indent() << "out << \"//end answers " << *nt->name << "(\""
+         << args_print << "\")\\n\";\n";
 }
-void Printer::Cpp::print_insideoutside_report_fn(std::vector<std::string> outside_nt_list, const AST &ast) {
-  stream << indent() << "void report_insideoutside(std::ostream &out) {" << endl;
+void Printer::Cpp::print_insideoutside_report_fn(
+    std::vector<std::string> outside_nt_list, const AST &ast) {
+  stream << indent() << "void report_insideoutside(std::ostream &out) {"
+         << endl;
   inc_indent();
   std::list<Symbol::NT*> *reported_nts = new std::list<Symbol::NT*>();
-  for (std::vector<std::string>::iterator i = outside_nt_list.begin(); i != outside_nt_list.end(); ++i) {
-	  if ((*i).compare(std::string("ALL")) == 0) {
-		reported_nts->clear();
-		for (hashtable<std::string, Symbol::Base*>::iterator j = (*ast.grammar()).NTs.begin(); j != (*ast.grammar()).NTs.end(); ++j) {
-			Symbol::NT *inside_nt = dynamic_cast<Symbol::NT*>(j->second);
-			if (inside_nt) {
-				if (!inside_nt->is_partof_outside) {
-					reported_nts->push_back(inside_nt);
-				}
-			}
-		}
-		break;
-	  } else {
-		reported_nts->push_back(dynamic_cast<Symbol::NT*>((*ast.grammar()->NTs.find(*i)).second));
-	  }
+  for (std::vector<std::string>::iterator i = outside_nt_list.begin();
+       i != outside_nt_list.end(); ++i) {
+    if ((*i).compare(std::string("ALL")) == 0) {
+      reported_nts->clear();
+      for (hashtable<std::string, Symbol::Base*>::iterator
+           j = (*ast.grammar()).NTs.begin();
+           j != (*ast.grammar()).NTs.end(); ++j) {
+        Symbol::NT *inside_nt = dynamic_cast<Symbol::NT*>(j->second);
+        if (inside_nt) {
+          if (!inside_nt->is_partof_outside) {
+            reported_nts->push_back(inside_nt);
+          }
+        }
+      }
+      break;
+    } else {
+      reported_nts->push_back(
+        dynamic_cast<Symbol::NT*>((*ast.grammar()->NTs.find(*i)).second));
+    }
   }
 
-  for (std::list<Symbol::NT*>::iterator nt_inside = reported_nts->begin(); nt_inside != reported_nts->end(); ++nt_inside) {
-	  Symbol::NT *nt_outside = dynamic_cast<Symbol::NT*>((*ast.grammar()->NTs.find(std::string("outside_") + *((*nt_inside)->name))).second);
-	  size_t track = 0;
-	  if ((*nt_inside)->tables()[track].type() == Table::QUADRATIC) {
-		  stream << indent() << "for (unsigned int i = t_" << track << "_left_most; i <= t_" << track << "_right_most; ++i) {" << endl;
-		  inc_indent();
-		  stream << indent() << "for (unsigned int j = i; j <= t_" << track << "_right_most; ++j) {" << endl;
-		  inc_indent();
+  for (std::list<Symbol::NT*>::iterator nt_inside = reported_nts->begin();
+       nt_inside != reported_nts->end(); ++nt_inside) {
+    Symbol::NT *nt_outside = dynamic_cast<Symbol::NT*>(
+      (*ast.grammar()->NTs.find(std::string("outside_") +
+       *((*nt_inside)->name))).second);
+    size_t track = 0;
+    if ((*nt_inside)->tables()[track].type() == Table::QUADRATIC) {
+      stream << indent() << "for (unsigned int i = t_" << track
+             << "_left_most; i <= t_" << track << "_right_most; ++i) {"
+             << endl;
+      inc_indent();
+      stream << indent() << "for (unsigned int j = i; j <= t_" << track
+             << "_right_most; ++j) {" << endl;
+      inc_indent();
 
-		  print_insideoutside(*nt_inside, (*nt_inside)->tables()[track].type());
-		  print_insideoutside(nt_outside, nt_outside->tables()[track].type());
+      print_insideoutside(*nt_inside, (*nt_inside)->tables()[track].type());
+      print_insideoutside(nt_outside, nt_outside->tables()[track].type());
 
-		  dec_indent();
-		  stream << indent() << "}" << endl;
-		  dec_indent();
-		  stream << indent() << "}" << endl;
-	  }
-	  if ((*nt_inside)->tables()[track].type() == Table::LINEAR) {
-		  stream << indent() << "for (unsigned int i = t_" << track << "_left_most; i <= t_" << track << "_right_most; ++i) {" << endl;
-		  inc_indent();
+      dec_indent();
+      stream << indent() << "}" << endl;
+      dec_indent();
+      stream << indent() << "}" << endl;
+    }
+    if ((*nt_inside)->tables()[track].type() == Table::LINEAR) {
+      stream << indent() << "for (unsigned int i = t_" << track
+             << "_left_most; i <= t_" << track << "_right_most; ++i) {"
+             << endl;
+      inc_indent();
 
-		  print_insideoutside(*nt_inside, (*nt_inside)->tables()[track].type());
-		  print_insideoutside(nt_outside, nt_outside->tables()[track].type());
+      print_insideoutside(*nt_inside, (*nt_inside)->tables()[track].type());
+      print_insideoutside(nt_outside, nt_outside->tables()[track].type());
 
-		  dec_indent();
-		  stream << indent() << "}" << endl;
-	  }
-	  if ((*nt_inside)->tables()[track].type() == Table::CONSTANT) {
-		  print_insideoutside(*nt_inside, (*nt_inside)->tables()[track].type());
-		  print_insideoutside(nt_outside, nt_outside->tables()[track].type());
-	  }
+      dec_indent();
+      stream << indent() << "}" << endl;
+    }
+    if ((*nt_inside)->tables()[track].type() == Table::CONSTANT) {
+      print_insideoutside(*nt_inside, (*nt_inside)->tables()[track].type());
+      print_insideoutside(nt_outside, nt_outside->tables()[track].type());
+    }
   }
   dec_indent();
   stream << indent() << "}" << endl << endl;
