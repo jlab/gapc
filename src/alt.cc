@@ -2401,10 +2401,11 @@ void Alt::Base::init_filter_guards(AST &ast) {
     exprs.begin(), exprs.end());
   Statement::If *guard = new Statement::If(arg);
   if ((this->data_type()->is(::Type::LIST)) && (this->top_level)) {
-    // don't add an else statement (which erases the return type) to the filter
-    // since this would erase the answer list of ALL alternatives of a symbol
-    // due to the return decl replacement happening in
-    // Symbol::NT::eliminate_list_ass
+    // don't add an else statement (which erases the return type) to the
+    // filter since this would "empty"=erase the answer list of ALL
+    // alternatives of a symbol due to the return decl replacement happening
+    // in Symbol::NT::eliminate_list_ass
+    // see https://github.com/jlab/gapc/pull/123
   } else {
     guard->els.push_back(new Statement::Fn_Call(
       Statement::Fn_Call::EMPTY, *ret_decl));
