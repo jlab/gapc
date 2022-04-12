@@ -630,6 +630,7 @@ class Main {
     hh.footer(driver.ast);
     hh.end_fwd_decls();
     hh.header_footer(driver.ast);
+    hh.print_insideoutside_report_fn(opts.outside_nt_list, driver.ast);
 
     // Write out the C++ implementation file of the
     // compile-result.

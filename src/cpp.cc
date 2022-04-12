@@ -2050,6 +2050,60 @@ void Printer::Cpp::print_cyk_fn(const AST &ast) {
   stream << endl;
 }
 
+void Printer::Cpp::print_insideoutside(Symbol::NT *nt, Table::Dim table_dimension) {
+  std::string args = std::string("");
+  std::string args_print = std::string("");
+  if (table_dimension == Table::QUADRATIC) {
+    args = std::string("i,j");
+    args_print = std::string(" << i << \",\" << j << ");
+  }
+  if (table_dimension == Table::LINEAR) {
+    args = std::string("i");
+    args_print = std::string(" << i << ");
+  }
+  stream << indent() << "std::cout << \"start answers " << *nt->name << "(\"" << args_print << "\"):\\n\";\n";
+  stream << indent() << "print_result(std::cout, nt_" << *nt->name << "(" << args << "));\n";
+  stream << indent() << "std::cout << \"//end answers " << *nt->name << "(\"" << args_print << "\")\\n\";\n";
+}
+void Printer::Cpp::print_insideoutside_report_fn(std::vector<std::string> outside_nt_list, const AST &ast) {
+  stream << indent() << "void report() {" << endl;
+  inc_indent();
+  for (std::vector<std::string>::iterator i = outside_nt_list.begin(); i != outside_nt_list.end(); ++i) {
+	  Symbol::NT *nt_inside = dynamic_cast<Symbol::NT*>((*ast.grammar()->NTs.find(*i)).second);
+	  Symbol::NT *nt_outside = dynamic_cast<Symbol::NT*>((*ast.grammar()->NTs.find(std::string("outside_") + *i)).second);
+	  size_t track = 0;
+	  if (nt_inside->tables()[track].type() == Table::QUADRATIC) {
+		  stream << indent() << "for (unsigned int i = t_" << track << "_left_most; i <= t_" << track << "_right_most; ++i) {" << endl;
+		  inc_indent();
+		  stream << indent() << "for (unsigned int j = i; j <= t_" << track << "_right_most; ++j) {" << endl;
+		  inc_indent();
+
+		  print_insideoutside(nt_inside, nt_inside->tables()[track].type());
+		  print_insideoutside(nt_outside, nt_inside->tables()[track].type());
+
+		  dec_indent();
+		  stream << indent() << "}" << endl;
+		  dec_indent();
+		  stream << indent() << "}" << endl;
+	  }
+	  if (nt_inside->tables()[track].type() == Table::LINEAR) {
+		  stream << indent() << "for (unsigned int i = t_" << track << "_left_most; i <= t_" << track << "_right_most; ++i) {" << endl;
+		  inc_indent();
+
+		  print_insideoutside(nt_inside, nt_inside->tables()[track].type());
+		  print_insideoutside(nt_outside, nt_inside->tables()[track].type());
+
+		  dec_indent();
+		  stream << indent() << "}" << endl;
+	  }
+	  if (nt_inside->tables()[track].type() == Table::CONSTANT) {
+		  print_insideoutside(nt_inside, nt_inside->tables()[track].type());
+		  print_insideoutside(nt_outside, nt_inside->tables()[track].type());
+	  }
+  }
+  dec_indent();
+  stream << indent() << "}" << endl << endl;
+}
 
 void Printer::Cpp::print_run_fn(const AST &ast) {
   stream << indent() << *ast.grammar()->axiom->code()->return_type;

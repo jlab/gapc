@@ -96,8 +96,10 @@ class Cpp : public Base {
 
  public:
     void print_cyk_fn(const AST &ast);
+    void print_insideoutside_report_fn(std::vector<std::string> outside_nt_list, const AST &ast);
 
  private:
+    void print_insideoutside(Symbol::NT *nt, Table::Dim table_dimension);
     void print_run_fn(const AST &ast);
     void print_stats_fn(const AST &ast);
 
