@@ -441,4 +441,5 @@ GRAMMAR=../../grammar2
 GAPC="../../../gapc"
 check_new_old_eq eraseanswers.gap unused ins_count_failing "AC" eraseanswer
 check_new_old_eq eraseanswers.gap unused ins_count_working "AC" eraseanswer
-check_new_old_eq eraseanswers_product.gap unused ins "CaaG" eraseanswer
+check_new_old_eq eraseanswers_product.gap unused ins "CaaG" eraseanswer_one
+check_new_old_eq eraseanswers_product.gap unused ins "CaaaG" eraseanswer_four
