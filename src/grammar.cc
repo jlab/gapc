@@ -1150,15 +1150,19 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
     }
   }
   Alt::Link *link = new Alt::Link(this->axiom_name, this->axiom_loc);
-    link->nt = dynamic_cast<Symbol::Base*>(this->axiom);
-    Filter *f = new Filter(new std::string("complete_track"), Loc());
-    f->type = Filter::WITH;
-    link->filters.push_back(f);
-    link->set_tracks(this->axiom->tracks(), this->axiom->track_pos());
-    link->init_multi_ys();
-    link->top_level = Bool(true);
-    dynamic_cast<Symbol::NT*>(outside_NTs.find(
-      *this->axiom_name)->second)->alts.push_back(link);
+  link->nt = dynamic_cast<Symbol::Base*>(this->axiom);
+  Filter *f = new Filter(new std::string("complete_track"), Loc());
+  f->type = Filter::WITH;
+  std::list<Filter*> *comptracks = new std::list<Filter*>();
+  for (unsigned int track = 0; track < this->axiom->tracks(); ++track) {
+	  comptracks->push_back(f);
+  }
+  link->set_tracks(this->axiom->tracks(), this->axiom->track_pos());
+  link->init_multi_ys();
+  link->add_multitrack_filter(*comptracks, f->type, Loc());
+  link->top_level = Bool(true);
+  dynamic_cast<Symbol::NT*>(outside_NTs.find(
+    *this->axiom_name)->second)->alts.push_back(link);
 
   // 4) add novel outside NTs to grammar
   for (std::pair<std::string, Symbol::Base*> nt : outside_NTs) {
