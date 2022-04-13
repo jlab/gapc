@@ -3234,6 +3234,21 @@ void to_dot_indices(std::vector<Expr::Base*> indices, std::ostream &out) {
   }
   out << "</font></td>";
 }
+void to_dot_filter(Filter *filter, std::ostream &out) {
+  out << *filter->name;
+  for (std::list<Expr::Base*>::const_iterator arg = filter->args.begin();
+       arg != filter->args.end(); ++arg) {
+    if (arg == filter->args.begin()) {
+      out << "(";
+    }
+    (*arg)->put(out);
+    if (std::next(arg) != filter->args.end()) {
+      out << ", ";
+    } else {
+      out << ")";
+    }
+  }
+}
 unsigned int Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out) {
   unsigned int thisID = (unsigned int)((*nodeID)++);
   out << "node_" << thisID << " [ label=<<table border='0'><tr>";
@@ -3294,20 +3309,42 @@ unsigned int Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out) {
   for (std::list<Filter*>::const_iterator filter = this->filters.begin();
        filter != this->filters.end(); ++filter) {
     unsigned int childID = (unsigned int)((*nodeID)++);
-    out << "node_" << childID << " [ label=\"" << *(*filter)->name;
-    for (std::list<Expr::Base*>::const_iterator arg = (*filter)->args.begin();
-         arg != (*filter)->args.end(); ++arg) {
-      if (arg == (*filter)->args.begin()) {
-        out << "(";
-      }
-      (*arg)->put(out);
-      if (std::next(arg) != (*filter)->args.end()) {
-        out << ", ";
-      } else {
-        out << ")";
-      }
-    }
+    out << "node_" << childID << " [ label=\"";
+    to_dot_filter(*filter, out);
     out << "\" , fontcolor=\"magenta\" , shape=none ];\n";
+    out << "node_" << thisID << " -> node_" << childID
+        << " [ arrowhead=none, color=\"magenta\" ];\n";
+  }
+  // Multiple filter can be added to each track.
+  // Unfortunately, filters are stored in a list per track, containing
+  // lists of filter. However, we want to draw one node per set of
+  // filters, i.e. filters at same position on all tracks. Therefore,
+  // we need to know the max number of filters across tracks and
+  // then add one node per position each containing all tracks.
+  unsigned int max_multifilter_number = 0;
+  for (std::vector<std::list<Filter*> >::iterator track = this->multi_filter.begin();
+       track != this->multi_filter.end(); ++track) {
+    if ((*track).size() > max_multifilter_number) {
+      max_multifilter_number = (*track).size();
+    }
+  }
+  for (unsigned int filterpos = 0; filterpos < max_multifilter_number; ++filterpos) {
+    unsigned int childID = (unsigned int)((*nodeID)++);
+    out << "node_" << childID << " [ label=<<table border='0'>";
+    for (std::vector<std::list<Filter*> >::iterator i = this->multi_filter.begin();
+         i != this->multi_filter.end(); ++i) {
+      out << "<tr><td>";
+      std::list<Filter*>::const_iterator filter = (*i).begin();
+      // advance to filter position
+      for (unsigned int i = 0; i < filterpos; ++i, ++filter) {}
+      if (filter != (*i).end()) {
+        to_dot_filter(*filter, out);
+      } else {
+        out << "-";
+      }
+      out << "</td></tr>";
+    }
+    out << "</table>>, fontcolor=\"magenta\", shape=none ];\n";
     out << "node_" << thisID << " -> node_" << childID
         << " [ arrowhead=none, color=\"magenta\" ];\n";
   }
