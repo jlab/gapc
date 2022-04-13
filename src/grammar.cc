@@ -1155,7 +1155,7 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
   f->type = Filter::WITH;
   std::list<Filter*> *comptracks = new std::list<Filter*>();
   for (unsigned int track = 0; track < this->axiom->tracks(); ++track) {
-	  comptracks->push_back(f);
+    comptracks->push_back(f);
   }
   link->set_tracks(this->axiom->tracks(), this->axiom->track_pos());
   link->init_multi_ys();

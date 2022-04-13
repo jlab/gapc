@@ -3151,7 +3151,8 @@ void Alt::Link::set_partof_outside(bool is_outside) {
   }
 }
 void Alt::Block::set_partof_outside(bool is_outside) {
-  for (std::list<Alt::Base*>::iterator i = this->alts.begin(); i != this->alts.end(); ++i) {
+  for (std::list<Alt::Base*>::iterator i = this->alts.begin();
+       i != this->alts.end(); ++i) {
     (*i)->set_partof_outside(is_outside);
   }
 }
@@ -3322,16 +3323,19 @@ unsigned int Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out) {
   // we need to know the max number of filters across tracks and
   // then add one node per position each containing all tracks.
   unsigned int max_multifilter_number = 0;
-  for (std::vector<std::list<Filter*> >::iterator track = this->multi_filter.begin();
+  for (std::vector<std::list<Filter*> >::iterator
+       track = this->multi_filter.begin();
        track != this->multi_filter.end(); ++track) {
     if ((*track).size() > max_multifilter_number) {
       max_multifilter_number = (*track).size();
     }
   }
-  for (unsigned int filterpos = 0; filterpos < max_multifilter_number; ++filterpos) {
+  for (unsigned int filterpos = 0; filterpos < max_multifilter_number;
+       ++filterpos) {
     unsigned int childID = (unsigned int)((*nodeID)++);
     out << "node_" << childID << " [ label=<<table border='0'>";
-    for (std::vector<std::list<Filter*> >::iterator i = this->multi_filter.begin();
+    for (std::vector<std::list<Filter*> >::iterator
+         i = this->multi_filter.begin();
          i != this->multi_filter.end(); ++i) {
       out << "<tr><td>";
       std::list<Filter*>::const_iterator filter = (*i).begin();
@@ -3751,7 +3755,8 @@ void Alt::Multi::init_indices_outside(Expr::Base *left, Expr::Base *right,
     unsigned int &k, size_t track, Expr::Base *center_left,
     Expr::Base *center_right, bool is_right_of_outside_nt) {
 
-  Alt::Base::init_indices_outside(left, right, k, track, center_left, center_right);
+  Alt::Base::init_indices_outside(left, right, k, track, center_left,
+    center_right);
   size_t j = 0;
   assert(track < list.size());
   std::list<Base*>::iterator i = list.begin();

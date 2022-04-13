@@ -2126,17 +2126,19 @@ void Printer::Cpp::print_insideoutside_report_fn(
 
     for (size_t track = 0; track < (*nt_inside)->tracks(); ++track) {
       if ((*nt_inside)->tables()[track].type() == Table::QUADRATIC) {
-        stream << indent() << "for (unsigned int t_" << track << "_i = t_" << track
-               << "_left_most; t_" << track << "_i <= t_" << track << "_right_most; ++t_" << track << "_i) {"
-               << endl;
+        stream << indent() << "for (unsigned int t_" << track << "_i = t_"
+               << track << "_left_most; t_" << track << "_i <= t_" << track
+               << "_right_most; ++t_" << track << "_i) {" << endl;
         inc_indent();
-        stream << indent() << "for (unsigned int t_" << track << "_j = t_" << track << "_i; t_" << track << "_j <= t_" << track
+        stream << indent() << "for (unsigned int t_" << track << "_j = t_"
+               << track << "_i; t_" << track << "_j <= t_" << track
                << "_right_most; ++t_" << track << "_j) {" << endl;
         inc_indent();
       }
       if ((*nt_inside)->tables()[track].type() == Table::LINEAR) {
-        stream << indent() << "for (unsigned int t_" << track << "_i = t_" << track
-               << "_left_most; t_" << track << "_i <= t_" << track << "_right_most; ++t_" << track << "_i) {"
+        stream << indent() << "for (unsigned int t_" << track << "_i = t_"
+               << track << "_left_most; t_" << track << "_i <= t_" << track
+               << "_right_most; ++t_" << track << "_i) {"
                << endl;
         inc_indent();
       }
