@@ -443,3 +443,9 @@ check_new_old_eq eraseanswers.gap unused ins_count_failing "AC" eraseanswer
 check_new_old_eq eraseanswers.gap unused ins_count_working "AC" eraseanswer
 check_new_old_eq eraseanswers_product.gap unused ins "CaaG" eraseanswer_one
 check_new_old_eq eraseanswers_product.gap unused ins "CaaaG" eraseanswer_four
+
+GRAMMAR=../../grammar_outside
+GAPC="../../../gapc --outside_grammar weak --outside_grammar struct"
+check_new_old_eq nodangle.gap unused pfunc "CCaCCaaaGGaCCaaaGGaCCaaaGGaGG" outside
+check_new_old_eq nodangle.gap unused mfe "CCaCCaaaGGaCCaaaGGaCCaaaGGaGG" outside
+check_new_old_eq nodangle.gap unused count "CCaCCaaaGGaCCaaaGGaCCaaaGGaGG" outside
