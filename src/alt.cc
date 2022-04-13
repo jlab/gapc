@@ -3120,7 +3120,9 @@ void Alt::Block::get_nonterminals(std::list<Symbol::NT*> *nt_list) {
   }
 }
 void Alt::Multi::get_nonterminals(std::list<Symbol::NT*> *nt_list) {
-  throw LogError("Alt::Multi::get_nonterminals is not yet implemented!");
+  for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i) {
+    (*i)->get_nonterminals(nt_list);
+  }
 }
 
 // recursively flag this alternative as being part of an inside (=false=default)
@@ -3150,11 +3152,13 @@ void Alt::Link::set_partof_outside(bool is_outside) {
 }
 void Alt::Block::set_partof_outside(bool is_outside) {
   for (std::list<Alt::Base*>::iterator i = this->alts.begin(); i != this->alts.end(); ++i) {
-	(*i)->set_partof_outside(is_outside);
+    (*i)->set_partof_outside(is_outside);
   }
 }
 void Alt::Multi::set_partof_outside(bool is_outside) {
-  throw LogError("Alt::Multi::set_partof_outside is not yet implemented!");
+  for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i) {
+    (*i)->set_partof_outside(is_outside);
+  }
 }
 
 
@@ -3209,7 +3213,11 @@ bool Alt::Block::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace,
 }
 bool Alt::Multi::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace,
     hashtable<std::string, unsigned int> &skip_occurences) {
-  throw LogError("Alt::Multi::replace_nonterminal is not yet implemented!");
+  for (std::list<Base*>::iterator i = list.begin(); i != list.end(); ++i) {
+    if ((*i)->replace_nonterminal(find, replace, skip_occurences)) {
+      return true;
+    }
+  }
   return false;
 }
 
@@ -3705,7 +3713,16 @@ void Alt::Block::init_indices_outside(Expr::Base *left, Expr::Base *right,
 void Alt::Multi::init_indices_outside(Expr::Base *left, Expr::Base *right,
     unsigned int &k, size_t track, Expr::Base *center_left,
     Expr::Base *center_right, bool is_right_of_outside_nt) {
-  throw LogError("Alt::Multi::init_indices_outside is not yet implemented!");
+
+  Alt::Base::init_indices_outside(left, right, k, track, center_left, center_right);
+  size_t j = 0;
+  assert(track < list.size());
+  std::list<Base*>::iterator i = list.begin();
+  for (; j < track; ++i, ++j) {}
+
+  // each component is in a single-track context, thus we here deal only with
+  // ONE list element, chosen by the track
+  (*i)->init_indices_outside(left, right, k, 0, center_left, center_right);
 }
 
 std::pair<Yield::Size*, Yield::Size*> *Alt::Base::get_outside_accum_yieldsizes(
