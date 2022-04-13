@@ -444,6 +444,7 @@ check_new_old_eq eraseanswers.gap unused ins_count_working "AC" eraseanswer
 check_new_old_eq eraseanswers_product.gap unused ins "CaaG" eraseanswer_one
 check_new_old_eq eraseanswers_product.gap unused ins "CaaaG" eraseanswer_four
 
+# results have been verified against "RNAfold -p -d0 --bppmThreshold=0" v2.4.17 and Stefan's manual python outside version of nodangle
 GRAMMAR=../../grammar_outside
 GAPC="../../../gapc --outside_grammar weak --outside_grammar struct"
 check_new_old_eq nodangle.gap unused pfunc "CCaCCaaaGGaCCaaaGGaCCaaaGGaGG" outside
