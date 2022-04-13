@@ -3149,7 +3149,9 @@ void Alt::Link::set_partof_outside(bool is_outside) {
   }
 }
 void Alt::Block::set_partof_outside(bool is_outside) {
-  throw LogError("Alt::Block::set_partof_outside is not yet implemented!");
+  for (std::list<Alt::Base*>::iterator i = this->alts.begin(); i != this->alts.end(); ++i) {
+	(*i)->set_partof_outside(is_outside);
+  }
 }
 void Alt::Multi::set_partof_outside(bool is_outside) {
   throw LogError("Alt::Multi::set_partof_outside is not yet implemented!");
