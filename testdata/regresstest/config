@@ -450,3 +450,6 @@ GAPC="../../../gapc --outside_grammar weak --outside_grammar struct"
 check_new_old_eq nodangle.gap unused pfunc "CCaCCaaaGGaCCaaaGGaCCaaaGGaGG" outside
 check_new_old_eq nodangle.gap unused mfe "CCaCCaaaGGaCCaaaGGaCCaaaGGaGG" outside
 check_new_old_eq nodangle.gap unused count "CCaCCaaaGGaCCaaaGGaCCaaaGGaGG" outside
+
+# check that fn_arg (with alt) instead of only alt gets initialized
+check_new_old_eq nodangle_withoverlay.gap unused ins_pfunc "CCaCCaaaGGaCCaaaGGaCCaaaGGaGG" outside_overlay
