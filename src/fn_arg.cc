@@ -312,6 +312,28 @@ void Fn_Arg::Const::init_indices(Expr::Base *left, Expr::Base *right,
   Base::init_indices(left, right, k, track);
 }
 
+void Fn_Arg::Base::init_indices_outside(Expr::Base *left, Expr::Base *right,
+    unsigned int &k, size_t track, Expr::Base *center_left,
+    Expr::Base *center_right, bool is_right_of_outside_nt) {
+  Fn_Arg::Base::init_indices(left, right, k, track);
+}
+
+void Fn_Arg::Alt::init_indices_outside(Expr::Base *left, Expr::Base *right,
+    unsigned int &k, size_t track, Expr::Base *center_left,
+    Expr::Base *center_right, bool is_right_of_outside_nt) {
+  Base::init_indices_outside(left, right, k, track, center_left,
+    center_right, is_right_of_outside_nt);
+  alt->init_indices_outside(left, right, k, track, center_left,
+    center_right, is_right_of_outside_nt);
+}
+
+void Fn_Arg::Const::init_indices_outside(Expr::Base *left, Expr::Base *right,
+    unsigned int &k, size_t track, Expr::Base *center_left,
+    Expr::Base *center_right, bool is_right_of_outside_nt) {
+  Base::init_indices_outside(left, right, k, track, center_left,
+    center_right, is_right_of_outside_nt);
+}
+
 void Fn_Arg::Base::init_ret_decl(unsigned int i, const std::string &prefix) {
   ret_decls_.clear();
   var_decls_.clear();

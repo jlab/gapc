@@ -3675,7 +3675,7 @@ void Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *right,
     }
     right_index = get_next_var_right2left(left_index, left, k, track, ys_arg,
       ys_right2center);
-    (*i)->alt_ref()->init_indices_outside(left_index, right_index, k, track,
+    (*i)->init_indices_outside(left_index, right_index, k, track,
       leftmost_index, center_right);
     left_index = right_index;
   }
@@ -3719,7 +3719,7 @@ void Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *right,
     *ys_left2center += *(sum_ys_lefts(&ys_arg, i, args_right->rend(), track));
     left_index = get_next_var_left2right(right_index, right, k, track,
       ys_arg, ys_left2center);
-    (*i)->alt_ref()->init_indices_outside(left_index, right_index, k,
+    (*i)->init_indices_outside(left_index, right_index, k,
       track, center_left, rightmost_index, true);
     right_index = left_index;
   }
@@ -3735,7 +3735,7 @@ void Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *right,
 
   // argument containing outside NT
   if (arg_outside != NULL) {
-    arg_outside->alt_ref()->init_indices_outside(left, right, k, track,
+    arg_outside->init_indices_outside(left, right, k, track,
       lhs_right_index, right_index);
     this->expand_outside_nt_indices(leftmost_index, rightmost_index, track);
   }
