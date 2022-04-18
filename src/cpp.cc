@@ -1733,7 +1733,8 @@ void Printer::Cpp::print_openmp_cyk_nt_calls(const AST &ast) {
     assert(!(*i)->tables().empty());
     if ((*i)->is_tabulated() && !(*i)->tables().front().is_cyk_right()) {
       o1 << indent() << "nt_tabulate_" << *(*i)->name << "("
-        << multi_index_str((*i)->tables(), (*i)->multi_ys())
+        << multi_index_str((*i)->tables(), (*i)->multi_ys(),
+                           (*i)->is_partof_outside)
         << ");\n";
     }
   }
@@ -1748,7 +1749,8 @@ void Printer::Cpp::print_openmp_cyk_all_nt_calls(const AST &ast) {
        i != tord.end(); ++i) {
     if ((*i)->is_tabulated()) {
       o2 << indent() << "nt_tabulate_" << *(*i)->name << "("
-        << multi_index_str((*i)->tables(), (*i)->multi_ys())
+        << multi_index_str((*i)->tables(), (*i)->multi_ys(),
+                           (*i)->is_partof_outside)
         << ");\n";
     }
   }
@@ -1860,7 +1862,8 @@ void Printer::Cpp::print_openmp_cyk(const AST &ast) {
 
 
 std::string Printer::Cpp::multi_index_str(
-  const std::vector<Table> &tables, const Yield::Multi &mys) {
+  const std::vector<Table> &tables, const Yield::Multi &mys,
+  bool is_outside) {
   assert(tables.size() == mys.tracks());
   std::ostringstream o;
   size_t track = 0;
@@ -1868,10 +1871,18 @@ std::string Printer::Cpp::multi_index_str(
   for (std::vector<Table>::const_iterator i = tables.begin();
        i != tables.end(); ++i, ++j, ++track) {
     if (!(*i).delete_left_index()) {
-      o << ", t_" << track << "_i-1";
+      if (is_outside == false) {
+        o << ", t_" << track << "_i-1";
+      } else {
+        o << ", (t_" << track << "_j - t_" << track << "_i + 1)";
+      }
     }
     if (!(*i).delete_right_index()) {
-      o << ", t_" << track << "_j";
+      if (is_outside == false) {
+        o << ", t_" << track << "_j";
+      } else {
+        o << ", (t_" << track << "_n - t_" << track << "_i + 1)";
+      }
     }
   }
   std::string r(o.str());
@@ -1894,7 +1905,8 @@ void Printer::Cpp::multi_print_inner_cyk(
   }
   for (std::list<Symbol::NT*>::const_iterator i = l.begin();
        i != l.end(); ++i) {
-    std::string index_str = multi_index_str((*i)->tables(), (*i)->multi_ys());
+    std::string index_str = multi_index_str((*i)->tables(), (*i)->multi_ys(),
+                                            (*i)->is_partof_outside);
     stream << indent() << "nt_tabulate_" << *(*i)->name << '('
            << index_str << ");" << endl;
   }
@@ -2057,6 +2069,8 @@ void Printer::Cpp::print_insideoutside(
     Symbol::NT *nt) {
   std::ostringstream args;
   std::ostringstream args_print;
+  std::list<Fn_Def*> &l = nt->code_list();
+
   for (size_t track = 0; track < (*nt).tracks(); ++track) {
     if ((*nt).tables()[track].type() == Table::QUADRATIC) {
       args << "t_" << track << "_i,t_" << track << "_j";
@@ -2073,7 +2087,6 @@ void Printer::Cpp::print_insideoutside(
   }
   stream << indent() << "out << \"start answers " << *nt->name
          << "(\"" << args_print.str() << " << \"):\\n\";\n";
-  std::list<Fn_Def*> &l = nt->code_list();
   for (std::list<Fn_Def*>::iterator i = l.begin(); i != l.end(); ++i) {
     std::string res = "res_";
     if (nt->is_partof_outside) {
@@ -2084,6 +2097,8 @@ void Printer::Cpp::print_insideoutside(
     stream << indent() << *((*i)->return_type) << " " << res << " = nt_"
            << *nt->name << "(" << args.str() << ");\n";
     stream << indent() << "print_result(std::cout, " << res << ");\n";
+    // only for first return statement
+    break;
   }
   stream << indent() << "out << \"//end answers " << *nt->name << "(\""
          << args_print.str() << " << \")\\n\";\n";
