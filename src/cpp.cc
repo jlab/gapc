@@ -1897,7 +1897,8 @@ std::string Printer::Cpp::multi_index_str(
 void Printer::Cpp::multi_print_inner_cyk(
   const std::list<Symbol::NT*> &l,
   const std::list<Symbol::NT*> &tord,
-  size_t track, size_t tracks, size_t track_pos, Type::Base *t) {
+  size_t track, size_t tracks, size_t track_pos, Type::Base *t,
+  bool for_outsideNTs) {
   assert(track < tracks);
   if (track+1 != tracks) {
     multi_print_cyk(tord, track+1, tracks, track_pos, t);
@@ -1905,19 +1906,21 @@ void Printer::Cpp::multi_print_inner_cyk(
   }
   for (std::list<Symbol::NT*>::const_iterator i = l.begin();
        i != l.end(); ++i) {
-    std::string index_str = multi_index_str((*i)->tables(), (*i)->multi_ys(),
-                                            (*i)->is_partof_outside);
-    stream << indent() << "nt_tabulate_" << *(*i)->name << '('
-           << index_str << ");" << endl;
+    if ((*i)->is_partof_outside == for_outsideNTs) {
+      std::string index_str = multi_index_str((*i)->tables(), (*i)->multi_ys(),
+                                              (*i)->is_partof_outside);
+      stream << indent() << "nt_tabulate_" << *(*i)->name << '('
+             << index_str << ");" << endl;
+    }
   }
 }
 
 
 void Printer::Cpp::multi_partition_nts(
-  const std::list<Symbol::NT*> &tord, std::list<Symbol::NT*> &all,
-  std::list<Symbol::NT*> &inner, std::list<Symbol::NT*> &left,
-  std::list<Symbol::NT*> &right,
-  size_t track, size_t tracks, size_t track_pos) {
+    const std::list<Symbol::NT*> &tord, std::list<Symbol::NT*> &all,
+    std::list<Symbol::NT*> &inner, std::list<Symbol::NT*> &left,
+    std::list<Symbol::NT*> &right,
+    size_t track, size_t tracks, size_t track_pos) {
   for (std::list<Symbol::NT*>::const_iterator i = tord.begin();
        i != tord.end(); ++i) {
     if (!(*i)->is_tabulated()) {
@@ -1946,6 +1949,105 @@ void Printer::Cpp::multi_partition_nts(
 }
 
 
+void Printer::Cpp::multi_print_cyk_loops_quadratic(
+    const std::list<Symbol::NT*> &tord,
+    size_t track,
+    size_t tracks,
+    size_t track_pos,
+    Type::Base *t,
+    std::list<Symbol::NT*> *inner,
+    std::list<Symbol::NT*> *left,
+    std::string *is,
+    std::string *js,
+    std::string *ns, bool for_outsideNTs) {
+  if (!inner->empty()) {
+    stream << indent() << "for (" << *t << " " << *js << " = 0; " << *js
+           << " < " << *ns << "; " << "++" << *js << ") {" << endl;
+    inc_indent();
+    stream << indent() << "for (" << *t << " " << *is << " = " << *js
+           << " + 1; " << *is << " > 1; " << *is << "--) {" << endl;
+    inc_indent();
+
+    multi_print_inner_cyk(*inner, tord, track, tracks, track_pos, t,
+                          for_outsideNTs);
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
+
+    if (!left->empty()) {
+      stream << indent();
+      if (!for_outsideNTs) {
+        stream << *t << " ";
+      }
+      stream << *is << " = 1;" << endl;
+      multi_print_inner_cyk(*left, tord, track, tracks, track_pos, t,
+                            for_outsideNTs);
+    }
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
+  }
+}
+void Printer::Cpp::multi_print_cyk_loops_linear(
+    const std::list<Symbol::NT*> &tord,
+    size_t track,
+    size_t tracks,
+    size_t track_pos,
+    Type::Base *t,
+    std::list<Symbol::NT*> *inner,
+    std::list<Symbol::NT*> *left,
+    std::list<Symbol::NT*> *right,
+    std::string *is,
+    std::string *js,
+    std::string *ns, bool for_outsideNTs
+    ) {
+  if (inner->empty() && !left->empty()) {
+    stream << indent() << "for (" << *t << " " << *js << " = 0; "
+           << *js << " < " << *ns
+           << "; " << "++" << *js << ") {" << endl;
+    inc_indent();
+    stream << indent();
+    if (!for_outsideNTs) {
+      stream << *t << " ";
+    }
+    stream << *is << " = 1;" << endl;
+    multi_print_inner_cyk(*left, tord, track, tracks, track_pos, t,
+                          for_outsideNTs);
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
+  }
+  if (!right->empty()) {
+    stream << indent();
+    if (!for_outsideNTs) {
+      stream << *t << " ";
+    }
+    stream << *js << " = " << *ns << ";" << endl;
+    stream << indent() << "for (" << *t << " "<< *is << " = " << *js
+           << " + 1; " << *is << " > 1; " << *is << "--) {" << endl;
+    inc_indent();
+    multi_print_inner_cyk(*right, tord, track, tracks, track_pos, t,
+                          for_outsideNTs);
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
+  }
+}
+void Printer::Cpp::multi_print_cyk_loops_constant(
+    const std::list<Symbol::NT*> &tord,
+    size_t track,
+    size_t tracks,
+    size_t track_pos,
+    Type::Base *t,
+    std::list<Symbol::NT*> *all,
+    std::string *is, bool for_outsideNTs
+    ) {
+  if (!all->empty()) {
+    stream << indent();
+    if (!for_outsideNTs) {
+      stream << *t << " ";
+    }
+    stream << *is << " = 1;" << endl;
+    multi_print_inner_cyk(*all, tord, track, tracks, track_pos, t,
+                          for_outsideNTs);
+  }
+}
 void Printer::Cpp::multi_print_cyk(
   const std::list<Symbol::NT*> &tord, size_t track, size_t tracks,
   size_t track_pos, Type::Base *t) {
@@ -1963,48 +2065,25 @@ void Printer::Cpp::multi_print_cyk(
   stream << indent() << *t << " t_" << track << "_n = t_" << real_track
     << "_seq.size();" << endl << endl;
 
-  if (!inner.empty()) {
-    stream << indent() << "for (" << *t << " " << js << " = 0; " << js << " < "
-      << ns << "; " << "++" << js << ") {" << endl;
-    inc_indent();
-    stream << indent() << "for (" << *t << " " << is << " = " << js << " + 1; "
-      << is << " > 1; " << is << "--) {" << endl;
-    inc_indent();
+  // inside NTs
+  multi_print_cyk_loops_quadratic(
+    tord, track, tracks, track_pos, t, &inner, &left, &is, &js, &ns, false);
+  multi_print_cyk_loops_linear(
+    tord, track, tracks, track_pos, t, &inner, &left, &right, &is, &js, &ns,
+    false);
+  multi_print_cyk_loops_constant(
+    tord, track, tracks, track_pos, t, &all, &is, false);
 
-    multi_print_inner_cyk(inner, tord, track, tracks, track_pos, t);
-    dec_indent();
-    stream << indent() << "}" << endl << endl;
-
-    if (!left.empty()) {
-      stream << indent() << *t << " " << is << " = 1;" << endl;
-      multi_print_inner_cyk(left, tord, track, tracks, track_pos, t);
-    }
-    dec_indent();
-    stream << indent() << "}" << endl << endl;
-  }
-  if (inner.empty() && !left.empty()) {
-    stream << indent() << "for (" << *t << " " << js << " = 0; "
-           << js << " < " << ns
-           << "; " << "++" << js << ") {" << endl;
-    inc_indent();
-    stream << indent() << *t << " " << is << " = 1;" << endl;
-    multi_print_inner_cyk(left, tord, track, tracks, track_pos, t);
-    dec_indent();
-    stream << indent() << "}" << endl << endl;
-  }
-  if (!right.empty()) {
-    stream << indent() << *t << " " << js << " = " << ns << ";" << endl;
-    stream << indent() << "for (" << *t << " "<< is << " = " << js << " + 1; "
-      << is << " > 1; " << is << "--) {" << endl;
-    inc_indent();
-    multi_print_inner_cyk(right, tord, track, tracks, track_pos, t);
-    dec_indent();
-    stream << indent() << "}" << endl << endl;
-  }
-
-  if (!all.empty()) {
-    stream << indent() << *t << " " << is << " = 1;" << endl;
-    multi_print_inner_cyk(all, tord, track, tracks, track_pos, t);
+  // outside NTs (which access inside NT values)
+  if (this->ast->grammar()->is_outside()) {
+    stream << endl << endl;
+    multi_print_cyk_loops_linear(
+      tord, track, tracks, track_pos, t, &inner, &left, &right, &is, &js, &ns,
+      true);
+    multi_print_cyk_loops_constant(
+      tord, track, tracks, track_pos, t, &all, &is, true);
+    multi_print_cyk_loops_quadratic(
+      tord, track, tracks, track_pos, t, &inner, &left, &is, &js, &ns, true);
   }
 }
 

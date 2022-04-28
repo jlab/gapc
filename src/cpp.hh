@@ -86,11 +86,42 @@ class Cpp : public Base {
     void multi_print_inner_cyk(const std::list<Symbol::NT*> &l,
       const std::list<Symbol::NT*> &tord, size_t track, size_t tracks,
       size_t track_pos,
-      Type::Base *t);
+      Type::Base *t, bool for_outsideNTs = false);
     void multi_partition_nts(const std::list<Symbol::NT*> &tord,
       std::list<Symbol::NT*> &all, std::list<Symbol::NT*> &inner,
       std::list<Symbol::NT*> &left, std::list<Symbol::NT*> &right,
       size_t track, size_t tracks, size_t track_pos);
+    void multi_print_cyk_loops_quadratic(
+      const std::list<Symbol::NT*> &tord,
+      size_t track,
+      size_t tracks,
+      size_t track_pos,
+      Type::Base *t,
+      std::list<Symbol::NT*> *inner,
+      std::list<Symbol::NT*> *left,
+      std::string *is,
+      std::string *js,
+      std::string *ns, bool for_outsideNTs = false);
+    void multi_print_cyk_loops_linear(
+      const std::list<Symbol::NT*> &tord,
+      size_t track,
+      size_t tracks,
+      size_t track_pos,
+      Type::Base *t,
+      std::list<Symbol::NT*> *inner,
+      std::list<Symbol::NT*> *left,
+      std::list<Symbol::NT*> *right,
+      std::string *is,
+      std::string *js,
+      std::string *ns, bool for_outsideNTs = false);
+    void multi_print_cyk_loops_constant(
+      const std::list<Symbol::NT*> &tord,
+      size_t track,
+      size_t tracks,
+      size_t track_pos,
+      Type::Base *t,
+      std::list<Symbol::NT*> *all,
+      std::string *is, bool for_outsideNTs = false);
     void multi_print_cyk(const std::list<Symbol::NT*> &tord,
       size_t track, size_t tracks, size_t track_pos, Type::Base *t);
 
