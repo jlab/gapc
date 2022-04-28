@@ -453,3 +453,15 @@ check_new_old_eq nodangle.gap unused count "CCaCCaaaGGaCCaaaGGaCCaaaGGaGG" outsi
 
 # check that fn_arg (with alt) instead of only alt gets initialized
 check_new_old_eq nodangle_withoverlay.gap unused ins_pfunc "CCaCCaaaGGaCCaaaGGaCCaaaGGaGG" outside_overlay
+
+# same as above, but with CYK code generation
+GAPC="../../../gapc --outside_grammar weak --outside_grammar struct --cyk"
+check_new_old_eq nodangle.gap unused pfunc "CCaCCaaaGGaCCaaaGGaCCaaaGGaGG" outside
+
+# same as above, but with CYK code generation AND openMP parallelization
+GAPC="../../../gapc --outside_grammar weak --outside_grammar struct --cyk"
+CPPFLAGS_EXTRA="$DEFAULT_CPPFLAGS_EXTRA -fopenmp"
+LDLIBS_EXTRA="$DEFAULT_LDLIBS_EXTRA -fopenmp"
+OMP_NUM_THREADS=2
+export OMP_NUM_THREADS
+check_new_old_eq nodangle.gap unused pfunc "CCaCCaaaGGaCCaaaGGaCCaaaGGaGG" outside
