@@ -76,9 +76,16 @@ class Cpp : public Base {
 
     void print_window_inc_fn(const AST &ast);
 
-    void print_openmp_cyk_nt_calls(const AST &ast);
-    void print_openmp_cyk_all_nt_calls(const AST &ast);
-    void print_openmp_cyk_helpervars();
+    void print_openmp_cyk_nt_calls(const AST &ast, bool for_outsideNTs = false);
+    void print_openmp_cyk_all_nt_calls(const AST &ast,
+                                       bool for_outsideNTs = false);
+    void print_openmp_cyk_helpervars(bool for_outsideNTs = false);
+    void print_openmp_cyk_loops_diag(const AST &ast,
+                                     bool for_outsideNTs = false);
+    void print_openmp_cyk_loops_middle(const AST &ast,
+                                       bool for_outsideNTs = false);
+    void print_openmp_cyk_loops_single(const AST &ast,
+                                       bool for_outsideNTs = false);
     void print_openmp_cyk(const AST &ast);
 
     std::string multi_index_str(const std::vector<Table> &tables,

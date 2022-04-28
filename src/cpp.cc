@@ -1724,65 +1724,64 @@ void Printer::Cpp::header(const AST &ast) {
 }
 
 
-void Printer::Cpp::print_openmp_cyk_nt_calls(const AST &ast) {
+void Printer::Cpp::print_openmp_cyk_nt_calls(const AST &ast,
+                                             bool for_outsideNTs) {
   std::list<Symbol::NT*> &tord = ast.grammar()->topological_ord();
   assert(tord.size() <= ast.grammar()->NTs.size());
   std::ostringstream o1;
   for (std::list<Symbol::NT*>::iterator i = tord.begin();
        i != tord.end(); ++i) {
-    assert(!(*i)->tables().empty());
-    if ((*i)->is_tabulated() && !(*i)->tables().front().is_cyk_right()) {
-      o1 << indent() << "nt_tabulate_" << *(*i)->name << "("
-        << multi_index_str((*i)->tables(), (*i)->multi_ys(),
-                           (*i)->is_partof_outside)
-        << ");\n";
+    if ((*i)->is_partof_outside == for_outsideNTs) {
+      assert(!(*i)->tables().empty());
+      if ((*i)->is_tabulated() && !(*i)->tables().front().is_cyk_right()) {
+        o1 << indent() << "nt_tabulate_" << *(*i)->name << "("
+          << multi_index_str((*i)->tables(), (*i)->multi_ys(),
+                             (*i)->is_partof_outside)
+          << ");\n";
+      }
     }
   }
   std::string nt_calls = o1.str();
   stream << nt_calls;
 }
 
-void Printer::Cpp::print_openmp_cyk_all_nt_calls(const AST &ast) {
+void Printer::Cpp::print_openmp_cyk_all_nt_calls(const AST &ast,
+                                                 bool for_outsideNTs) {
   std::list<Symbol::NT*> &tord = ast.grammar()->topological_ord();
   std::ostringstream o2;
   for (std::list<Symbol::NT*>::iterator i = tord.begin();
        i != tord.end(); ++i) {
-    if ((*i)->is_tabulated()) {
-      o2 << indent() << "nt_tabulate_" << *(*i)->name << "("
-        << multi_index_str((*i)->tables(), (*i)->multi_ys(),
-                           (*i)->is_partof_outside)
-        << ");\n";
+    if ((*i)->is_partof_outside == for_outsideNTs) {
+      if ((*i)->is_tabulated()) {
+        o2 << indent() << "nt_tabulate_" << *(*i)->name << "("
+          << multi_index_str((*i)->tables(), (*i)->multi_ys(),
+                             (*i)->is_partof_outside)
+          << ");\n";
+      }
     }
   }
   std::string all_nt_calls = o2.str();
   stream << all_nt_calls;
 }
 
-void Printer::Cpp::print_openmp_cyk_helpervars() {
-  stream << indent() << "unsigned int n = t_0_seq.size();" << endl;
-  stream << indent() << "unsigned int tile_size = 32;" << endl;
-  stream << "#ifdef TILE_SIZE" << endl;
-  stream << indent() << "tile_size = TILE_SIZE;" << endl;
-  stream << "#endif" << endl;
-  stream << indent() << "assert(tile_size);" << endl;
-  stream << indent() << "unsigned int max_tiles = n / tile_size;" << endl;
-  stream << indent() << "int max_tiles_n = max_tiles * tile_size;" << endl;
+void Printer::Cpp::print_openmp_cyk_helpervars(bool for_outsideNTs) {
+  stream << indent() << "unsigned int ";
+  if (for_outsideNTs) {
+    stream << "t_0_";
+  }
+  stream << "n = t_0_seq.size();" << endl;
+  if (!for_outsideNTs) {
+    stream << indent() << "unsigned int tile_size = 32;" << endl;
+    stream << "#ifdef TILE_SIZE" << endl;
+    stream << indent() << "tile_size = TILE_SIZE;" << endl;
+    stream << "#endif" << endl;
+    stream << indent() << "assert(tile_size);" << endl;
+    stream << indent() << "unsigned int max_tiles = n / tile_size;" << endl;
+    stream << indent() << "int max_tiles_n = max_tiles * tile_size;" << endl;
+  }
 }
-
-// FIXME adjust for multi-track (> 1 track)
-void Printer::Cpp::print_openmp_cyk(const AST &ast) {
-  // FIXME abstract from unsigned int, int -> perhaps wait for OpenMP 3
-  // since OpenMP < 3 doesn't allow unsigned int in workshared fors
-
-  // paral_start
-  stream << indent() << "#pragma omp parallel" << endl;
-  stream << indent() << '{' << endl;
-  inc_indent();
-
-  // helper_vars
-  print_openmp_cyk_helpervars();
-
-  // diag
+void Printer::Cpp::print_openmp_cyk_loops_diag(const AST &ast,
+                                               bool for_outsideNTs) {
   stream << indent() << "#pragma omp for" << endl;
   stream << indent() << "// OPENMP < 3 requires signed int here ..." << endl;
   stream << indent();
@@ -1795,15 +1794,16 @@ void Printer::Cpp::print_openmp_cyk(const AST &ast) {
   stream << indent() << "for (int t_0_i = t_0_j + 1; t_0_i > z; --t_0_i) {";
   stream << endl;
   inc_indent();
-  print_openmp_cyk_nt_calls(ast);
+  print_openmp_cyk_nt_calls(ast, for_outsideNTs);
   dec_indent();
   stream << indent() << "}" << endl;
   dec_indent();
   stream << indent() << "}" << endl;
   dec_indent();
   stream << indent() << "}" << endl;
-
-  // middle
+}
+void Printer::Cpp::print_openmp_cyk_loops_middle(const AST &ast,
+                                                 bool for_outsideNTs) {
   stream << endl;
   stream << indent()
          << "for (int z = tile_size; z < max_tiles_n; z+=tile_size) {"
@@ -1824,7 +1824,7 @@ void Printer::Cpp::print_openmp_cyk(const AST &ast) {
          << endl;
   inc_indent();
 
-  print_openmp_cyk_nt_calls(ast);
+  print_openmp_cyk_nt_calls(ast, for_outsideNTs);
 
   // paral_end
   dec_indent();
@@ -1838,11 +1838,9 @@ void Printer::Cpp::print_openmp_cyk(const AST &ast) {
   dec_indent();
   stream << indent() << "}  // end parallel" << endl;
   stream << endl;
-
-  // REPEAT: helper_vars
-  print_openmp_cyk_helpervars();
-
-  // single
+}
+void Printer::Cpp::print_openmp_cyk_loops_single(const AST &ast,
+                                                 bool for_outsideNTs) {
   stream << indent()
          << "for (unsigned int t_0_j = max_tiles_n; t_0_j <= n; ++t_0_j) {"
          << endl;
@@ -1851,13 +1849,62 @@ void Printer::Cpp::print_openmp_cyk(const AST &ast) {
          << "for (unsigned int t_0_i=t_0_j+1; t_0_i > 0; --t_0_i) {" << endl;
   inc_indent();
 
-  print_openmp_cyk_all_nt_calls(ast);
+  print_openmp_cyk_all_nt_calls(ast, for_outsideNTs);
 
   // single_end
   dec_indent();
   stream << indent() << "}" << endl;
   dec_indent();
   stream << indent() << "}" << endl;
+}
+// FIXME adjust for multi-track (> 1 track)
+void Printer::Cpp::print_openmp_cyk(const AST &ast) {
+  // FIXME abstract from unsigned int, int -> perhaps wait for OpenMP 3
+  // since OpenMP < 3 doesn't allow unsigned int in workshared fors
+
+  // paral_start
+  stream << indent() << "#pragma omp parallel" << endl;
+  stream << indent() << '{' << endl;
+  inc_indent();
+
+  // helper_vars
+  print_openmp_cyk_helpervars();
+
+  // diag
+  print_openmp_cyk_loops_diag(ast);
+
+  // middle
+  print_openmp_cyk_loops_middle(ast);
+
+  // REPEAT: helper_vars
+  print_openmp_cyk_helpervars();
+
+  // single
+  print_openmp_cyk_loops_single(ast);
+
+  // same as above but for outside non terminals
+  if (ast.grammar()->is_outside()) {
+    // paral_start
+    stream << endl << indent() << "// repeat for outside non-terminals" << endl;
+    stream << indent() << "#pragma omp parallel" << endl;
+    stream << indent() << '{' << endl;
+    inc_indent();
+
+    // helper_vars
+    print_openmp_cyk_helpervars(true);
+
+    // diag
+    print_openmp_cyk_loops_diag(ast, true);
+
+    // middle
+    print_openmp_cyk_loops_middle(ast, true);
+
+    // REPEAT: helper_vars
+    print_openmp_cyk_helpervars(true);
+
+    // single
+    print_openmp_cyk_loops_single(ast, true);
+  }
 }
 
 
