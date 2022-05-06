@@ -1674,6 +1674,9 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
     if (this == axiom) {
       out << ", penwidth=3";
     }
+    if (!this->tabulated) {
+      out << ", style=\"dotted\"";
+    }
     out << " ];\n";
     for (std::list<Alt::Base*>::const_iterator alt = this->alts.begin();
          alt != this->alts.end(); ++alt) {
