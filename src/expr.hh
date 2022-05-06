@@ -117,6 +117,7 @@ class Const : public Base {
   explicit Const(char c);
 
     void put(std::ostream &s) const;
+    void put_noquote(std::ostream &s) const;
 
     Base *copy() const;
 };

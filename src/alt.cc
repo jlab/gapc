@@ -2966,7 +2966,14 @@ void to_dot_filternameargs(Filter *filter, std::ostream &out) {
     if (arg == filter->args.begin()) {
       out << "(";
     }
-    (*arg)->put(out);
+    Expr::Const *c = dynamic_cast<Expr::Const*>(*arg);
+    if (c && c->base->is(Const::STRING)) {
+      out << "\\\"";
+      (*c).put_noquote(out);
+      out << "\\\"";
+    } else {
+      (*arg)->put(out);
+    }
     if (std::next(arg) != filter->args.end()) {
       out << ", ";
     } else {
