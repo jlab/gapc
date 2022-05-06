@@ -308,6 +308,8 @@ class Base {
   virtual void set_ntparas(const Loc &loc, std::list<Expr::Base*> *l);
 
   bool choice_set();
+  void to_dot_semanticfilters(unsigned int *nodeID, unsigned int thisID,
+    std::ostream &out, std::vector<unsigned int> *childIDs = NULL);
   virtual unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
 };
 
