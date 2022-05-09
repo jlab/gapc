@@ -158,7 +158,7 @@ grammar bill uses Bill (axiom=formula) {
 
   number = f(INT);
 
-  plus = char('+') ;
+  plus = CHAR('+') ;
   times = CHAR('*') ;
 
 }
