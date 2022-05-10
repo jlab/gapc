@@ -2947,6 +2947,15 @@ bool Alt::Base::choice_set() {
 }
 
 // the following functions produce graphViz code to represent the grammar
+void Alt::Link::to_dot_overlayindices(std::ostream &out, bool is_left_index) {
+  out << "<td><font point-size='8' color='#cc5555'><b>";
+  if (is_left_index) {
+    this->indices.front()->put(out);
+  } else {
+    this->indices.back()->put(out);
+  }
+  out << "</b></font></td>";
+}
 void to_dot_indices(std::vector<Expr::Base*> indices, std::ostream &out) {
   out << "<td><font point-size='8' color='#555555'>";
   for (std::vector<Expr::Base*>::const_iterator track = indices.begin();
@@ -3042,10 +3051,23 @@ void Alt::Base::to_dot_semanticfilters(unsigned int *nodeID,
 unsigned int Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out) {
   unsigned int thisID = (unsigned int)((*nodeID)++);
   out << "node_" << thisID << " [ label=<<table border='0'><tr>";
-  to_dot_indices(this->left_indices, out);
+  Alt::Link *link = dynamic_cast<Alt::Link*>(this);
+  if (link && (link->is_explicit() == true)) {
+    // indices have been given via index hack in source file:
+    link->to_dot_overlayindices(out, true);
+  } else {
+    to_dot_indices(this->left_indices, out);
+  }
   Alt::Simple *simple = dynamic_cast<Alt::Simple*>(this);
   if (simple) {
-    out << "<td>" << *simple->name;
+    out << "<td>";
+    if (simple->has_index_overlay()) {
+      out << ".[ ";
+    }
+    out << *simple->name;
+    if (simple->has_index_overlay()) {
+      out << " ].";
+    }
 
     // terminal arguments e.g. CHAR('A')
     if (simple->is_terminal()) {
@@ -3065,7 +3087,6 @@ unsigned int Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out) {
 
     out << "</td>";
   }
-  Alt::Link *link = dynamic_cast<Alt::Link*>(this);
   if (link) {
     out << "<td>" << *link->name << "</td>";
   }
@@ -3073,7 +3094,12 @@ unsigned int Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out) {
   if (block) {
     out << "<td>a block</td>";
   }
-  to_dot_indices(this->right_indices, out);
+  if (link && (link->is_explicit() == true)) {
+    // indices have been given via index hack in source file:
+    link->to_dot_overlayindices(out, false);
+  } else {
+    to_dot_indices(this->right_indices, out);
+  }
   out << "</tr></table>>, color=\"";
   if (simple) {
     if (simple->is_terminal()) {
@@ -3093,7 +3119,13 @@ unsigned int Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out) {
   } else {
     out << "black";
   }
-  out << "\" ];\n";
+  out << "\" ";
+  // indicate index hack via 8-sided polygon instead of circle
+  if ((simple && simple->has_index_overlay()) ||
+      (link && link->is_explicit())) {
+    out << ", shape=\"polygon\", sides=8";
+  }
+  out << "];\n";
 
   // add syntactic filters
   to_dot_semanticfilters(nodeID, thisID, out);

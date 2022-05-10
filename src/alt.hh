@@ -602,6 +602,7 @@ class Link : public Base {
   bool is_explicit() const {
     return !indices.empty();
   }
+  void to_dot_overlayindices(std::ostream &out, bool is_left_index);
 
  private:
   std::list<Expr::Base*> ntparas;
