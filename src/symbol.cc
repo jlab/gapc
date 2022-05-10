@@ -1683,6 +1683,13 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
       unsigned int childID = (*alt)->to_dot(nodeID, out);
       out << "node_" << thisID << " -> node_" << childID << ";\n";
     }
+    if (this->eval_fn != NULL) {
+      unsigned int choiceID = (unsigned int)((*nodeID)++);
+      out << "node_" << choiceID << " [ label=" << *this->eval_fn
+          << ", fontcolor=\"purple\" , shape=none ];\n";
+      out << "node_" << thisID << " -> node_" << choiceID
+          << " [ arrowhead=none, color=\"purple\" ];\n";
+    }
   }
   return thisID;
 }

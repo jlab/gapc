@@ -89,6 +89,9 @@ void Const::Char::put(std::ostream &s) {
 void Const::String::put(std::ostream &o) {
   o << '"' << *s << '"';
 }
+void Const::String::put_noquote(std::ostream &o) {
+  o << *s;
+}
 
 void Const::Rational::put(std::ostream &o) {
   o << "Rational(\"" << *a << "/" << *b << "\")";

@@ -3090,6 +3090,247 @@ bool Alt::Base::choice_set() {
     return datatype->simple()->is(::Type::LIST) && eval_nullary_fn;
 }
 
+// the following functions produce graphViz code to represent the grammar
+void Alt::Link::to_dot_overlayindices(std::ostream &out, bool is_left_index) {
+  out << "<td><font point-size='8' color='#cc5555'><b>";
+  if (is_left_index) {
+    this->indices.front()->put(out);
+  } else {
+    this->indices.back()->put(out);
+  }
+  out << "</b></font></td>";
+}
+void to_dot_indices(std::vector<Expr::Base*> indices, std::ostream &out) {
+  out << "<td><font point-size='8' color='#555555'>";
+  for (std::vector<Expr::Base*>::const_iterator track = indices.begin();
+       track != indices.end(); ++track) {
+    assert(*track != NULL);
+    (*track)->put(out);
+    if (std::next(track) != indices.end()) {
+      out << "<br/>";
+    }
+  }
+  out << "</font></td>";
+}
+void to_dot_filternameargs(Filter *filter, std::ostream &out) {
+  out << *filter->name;
+  for (std::list<Expr::Base*>::const_iterator arg = filter->args.begin();
+       arg != filter->args.end(); ++arg) {
+    if (arg == filter->args.begin()) {
+      out << "(";
+    }
+    Expr::Const *c = dynamic_cast<Expr::Const*>(*arg);
+    if (c && c->base->is(Const::STRING)) {
+      out << "\\\"";
+      (*c).put_noquote(out);
+      out << "\\\"";
+    } else {
+      (*arg)->put(out);
+    }
+    if (std::next(arg) != filter->args.end()) {
+      out << ", ";
+    } else {
+      out << ")";
+    }
+  }
+}
+void Alt::Base::to_dot_semanticfilters(unsigned int *nodeID,
+    unsigned int thisID, std::ostream &out,
+    std::vector<unsigned int> *childIDs) {
+  // add syntactic filters
+  for (std::list<Filter*>::const_iterator filter = this->filters.begin();
+       filter != this->filters.end(); ++filter) {
+    unsigned int childID = (unsigned int)((*nodeID)++);
+    out << "node_" << childID << " [ label=\"";
+    to_dot_filternameargs(*filter, out);
+    out << "\" , fontcolor=\"magenta\" , shape=none ];\n";
+    if (childIDs) {
+      for (std::vector<unsigned int>::const_iterator i = childIDs->begin();
+           i != childIDs->end(); ++i) {
+        out << "node_" << *i << " -> node_" << childID
+            << " [ arrowhead=none, color=\"magenta\" ];\n";
+      }
+    } else {
+      out << "node_" << thisID << " -> node_" << childID
+          << " [ arrowhead=none, color=\"magenta\" ];\n";
+    }
+  }
+  // Multiple filter can be added to each track.
+  // Unfortunately, filters are stored in a list per track, containing
+  // lists of filter. However, we want to draw one node per set of
+  // filters, i.e. filters at same position on all tracks. Therefore,
+  // we need to know the max number of filters across tracks and
+  // then add one node per position each containing all tracks.
+  unsigned int max_multifilter_number = 0;
+  for (std::vector<std::list<Filter*> >::iterator
+       track = this->multi_filter.begin();
+       track != this->multi_filter.end(); ++track) {
+    if ((*track).size() > max_multifilter_number) {
+      max_multifilter_number = (*track).size();
+    }
+  }
+  for (unsigned int filterpos = 0; filterpos < max_multifilter_number;
+       ++filterpos) {
+    unsigned int childID = (unsigned int)((*nodeID)++);
+    out << "node_" << childID << " [ label=<<table border='0'>";
+    for (std::vector<std::list<Filter*> >::iterator
+         i = this->multi_filter.begin();
+         i != this->multi_filter.end(); ++i) {
+      out << "<tr><td>";
+      std::list<Filter*>::const_iterator filter = (*i).begin();
+      // advance to filter position
+      for (unsigned int i = 0; i < filterpos; ++i, ++filter) {}
+      if (filter != (*i).end()) {
+        to_dot_filternameargs(*filter, out);
+      } else {
+        out << "-";
+      }
+      out << "</td></tr>";
+    }
+    out << "</table>>, fontcolor=\"magenta\", shape=none ];\n";
+    out << "node_" << thisID << " -> node_" << childID
+        << " [ arrowhead=none, color=\"magenta\" ];\n";
+  }
+}
+unsigned int Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out) {
+  unsigned int thisID = (unsigned int)((*nodeID)++);
+  out << "node_" << thisID << " [ label=<<table border='0'><tr>";
+  Alt::Link *link = dynamic_cast<Alt::Link*>(this);
+  if (link && (link->is_explicit() == true)) {
+    // indices have been given via index hack in source file:
+    link->to_dot_overlayindices(out, true);
+  } else {
+    to_dot_indices(this->left_indices, out);
+  }
+  Alt::Simple *simple = dynamic_cast<Alt::Simple*>(this);
+  if (simple) {
+    out << "<td>";
+    if (simple->has_index_overlay()) {
+      out << ".[ ";
+    }
+    out << *simple->name;
+    if (simple->has_index_overlay()) {
+      out << " ].";
+    }
+
+    // terminal arguments e.g. CHAR('A')
+    if (simple->is_terminal()) {
+      for (std::list<Fn_Arg::Base*>::const_iterator arg = simple->args.begin();
+           arg != simple->args.end(); ++arg) {
+        if (arg == simple->args.begin()) {
+          out << "(";
+        }
+        (*arg)->print(out);
+        if (std::next(arg) != simple->args.end()) {
+          out << ", ";
+        } else {
+          out << ")";
+        }
+      }
+    }
+
+    out << "</td>";
+  }
+  if (link) {
+    out << "<td>" << *link->name << "</td>";
+  }
+  Alt::Block *block = dynamic_cast<Alt::Block*>(this);
+  if (block) {
+    out << "<td>a block</td>";
+  }
+  if (link && (link->is_explicit() == true)) {
+    // indices have been given via index hack in source file:
+    link->to_dot_overlayindices(out, false);
+  } else {
+    to_dot_indices(this->right_indices, out);
+  }
+  out << "</tr></table>>, color=\"";
+  if (simple) {
+    if (simple->is_terminal()) {
+      out << "blue";
+    } else {
+      out << "green";
+    }
+  } else if (link) {
+    Symbol::NT *nt = dynamic_cast<Symbol::NT*>(link->nt);
+    if (nt) {
+      out << "black";
+    } else {
+      out << "blue";
+    }
+  } else if (block) {
+    out << "gray";
+  } else {
+    out << "black";
+  }
+  out << "\" ";
+  // indicate index hack via 8-sided polygon instead of circle
+  if ((simple && simple->has_index_overlay()) ||
+      (link && link->is_explicit())) {
+    out << ", shape=\"polygon\", sides=8";
+  }
+  out << "];\n";
+
+  // add syntactic filters
+  to_dot_semanticfilters(nodeID, thisID, out);
+
+  return thisID;
+}
+unsigned int Alt::Simple::to_dot(unsigned int *nodeID, std::ostream &out) {
+  unsigned int thisID = Alt::Base::to_dot(nodeID, out);
+  for (std::list<Fn_Arg::Base*>::const_iterator arg = this->args.begin();
+       arg != this->args.end(); ++arg) {
+    Fn_Arg::Alt *argalt = dynamic_cast<Fn_Arg::Alt*>(*arg);
+    if (argalt) {
+      unsigned int childID = argalt->alt_ref()->to_dot(nodeID, out);
+      out << "node_" << thisID << " -> node_" << childID
+          << " [ arrowhead=none ";
+      Alt::Multi *multi = dynamic_cast<Alt::Multi*>(argalt->alt_ref());
+      if (multi) {
+        out << ", lhead=cluster_node_" << (childID-1) << " ";
+      }
+      out << "];\n";
+    }
+  }
+  return thisID;
+}
+unsigned int Alt::Link::to_dot(unsigned int *nodeID, std::ostream &out) {
+  return Alt::Base::to_dot(nodeID, out);
+}
+unsigned int Alt::Block::to_dot(unsigned int *nodeID, std::ostream &out) {
+  unsigned int thisID = Alt::Base::to_dot(nodeID, out);
+
+  for (std::list<Alt::Base*>::const_iterator alt = this->alts.begin();
+       alt != this->alts.end(); ++alt) {
+    unsigned int childID = (*alt)->to_dot(nodeID, out);
+    out << "node_" << thisID << " -> node_" << childID
+        << " [ ];\n";
+  }
+
+  return thisID;
+}
+unsigned int Alt::Multi::to_dot(unsigned int *nodeID, std::ostream &out) {
+  unsigned int thisID = (unsigned int)((*nodeID)++);
+  out << "subgraph cluster_node_" << thisID << " {\n";
+  unsigned int lastID = 0;
+  std::vector<unsigned int> *childIDs = new std::vector<unsigned int>();
+  for (std::list<Alt::Base*>::const_iterator alt = this->list.begin();
+       alt != this->list.end(); ++alt) {
+    unsigned int childID = (*alt)->to_dot(nodeID, out);
+    childIDs->push_back(childID);
+    if (lastID > 0) {
+      out << "node_" << lastID << " -> node_" << childID
+          << " [ style=\"invis\" ];\n";
+    }
+    lastID = childID;
+  }
+  // add syntactic filter and draw an edge to every track component
+  to_dot_semanticfilters(nodeID, thisID, out, childIDs);
+  out << "};\n";
+  // return not the cluster ID but the id of the first element
+  return thisID+1;
+}
+// END functions produce graphViz code to represent the grammar
 
 void Alt::Base::get_nonterminals(std::list<Symbol::NT*> *nt_list) {
 }
@@ -3221,192 +3462,6 @@ bool Alt::Multi::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace,
   }
   return false;
 }
-
-// the following functions produce graphViz code to represent the grammar
-void to_dot_indices(std::vector<Expr::Base*> indices, std::ostream &out) {
-  out << "<td><font point-size='8' color='#555555'>";
-  for (std::vector<Expr::Base*>::const_iterator track = indices.begin();
-       track != indices.end(); ++track) {
-    assert(*track != NULL);
-    (*track)->put(out);
-    if (std::next(track) != indices.end()) {
-      out << "<br/>";
-    }
-  }
-  out << "</font></td>";
-}
-void to_dot_filter(Filter *filter, std::ostream &out) {
-  out << *filter->name;
-  for (std::list<Expr::Base*>::const_iterator arg = filter->args.begin();
-       arg != filter->args.end(); ++arg) {
-    if (arg == filter->args.begin()) {
-      out << "(";
-    }
-    (*arg)->put(out);
-    if (std::next(arg) != filter->args.end()) {
-      out << ", ";
-    } else {
-      out << ")";
-    }
-  }
-}
-unsigned int Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out) {
-  unsigned int thisID = (unsigned int)((*nodeID)++);
-  out << "node_" << thisID << " [ label=<<table border='0'><tr>";
-  to_dot_indices(this->left_indices, out);
-  Alt::Simple *simple = dynamic_cast<Alt::Simple*>(this);
-  if (simple) {
-    out << "<td>" << *simple->name;
-
-    // terminal arguments e.g. CHAR('A')
-    if (simple->is_terminal()) {
-      for (std::list<Fn_Arg::Base*>::const_iterator arg = simple->args.begin();
-           arg != simple->args.end(); ++arg) {
-        if (arg == simple->args.begin()) {
-          out << "(";
-        }
-        (*arg)->print(out);
-        if (std::next(arg) != simple->args.end()) {
-          out << ", ";
-        } else {
-          out << ")";
-        }
-      }
-    }
-
-    out << "</td>";
-  }
-  Alt::Link *link = dynamic_cast<Alt::Link*>(this);
-  if (link) {
-    out << "<td>" << *link->name << "</td>";
-  }
-  Alt::Block *block = dynamic_cast<Alt::Block*>(this);
-  if (block) {
-    out << "<td>a block</td>";
-  }
-  to_dot_indices(this->right_indices, out);
-  out << "</tr></table>>, color=\"";
-  if (simple) {
-    if (simple->is_terminal()) {
-      out << "blue";
-    } else {
-      out << "green";
-    }
-  } else if (link) {
-    Symbol::NT *nt = dynamic_cast<Symbol::NT*>(link->nt);
-    if (nt) {
-      out << "black";
-    } else {
-      out << "blue";
-    }
-  } else if (block) {
-    out << "gray";
-  } else {
-    out << "black";
-  }
-  out << "\" ];\n";
-
-  // add syntactic filters
-  for (std::list<Filter*>::const_iterator filter = this->filters.begin();
-       filter != this->filters.end(); ++filter) {
-    unsigned int childID = (unsigned int)((*nodeID)++);
-    out << "node_" << childID << " [ label=\"";
-    to_dot_filter(*filter, out);
-    out << "\" , fontcolor=\"magenta\" , shape=none ];\n";
-    out << "node_" << thisID << " -> node_" << childID
-        << " [ arrowhead=none, color=\"magenta\" ];\n";
-  }
-  // Multiple filter can be added to each track.
-  // Unfortunately, filters are stored in a list per track, containing
-  // lists of filter. However, we want to draw one node per set of
-  // filters, i.e. filters at same position on all tracks. Therefore,
-  // we need to know the max number of filters across tracks and
-  // then add one node per position each containing all tracks.
-  unsigned int max_multifilter_number = 0;
-  for (std::vector<std::list<Filter*> >::iterator
-       track = this->multi_filter.begin();
-       track != this->multi_filter.end(); ++track) {
-    if ((*track).size() > max_multifilter_number) {
-      max_multifilter_number = (*track).size();
-    }
-  }
-  for (unsigned int filterpos = 0; filterpos < max_multifilter_number;
-       ++filterpos) {
-    unsigned int childID = (unsigned int)((*nodeID)++);
-    out << "node_" << childID << " [ label=<<table border='0'>";
-    for (std::vector<std::list<Filter*> >::iterator
-         i = this->multi_filter.begin();
-         i != this->multi_filter.end(); ++i) {
-      out << "<tr><td>";
-      std::list<Filter*>::const_iterator filter = (*i).begin();
-      // advance to filter position
-      for (unsigned int i = 0; i < filterpos; ++i, ++filter) {}
-      if (filter != (*i).end()) {
-        to_dot_filter(*filter, out);
-      } else {
-        out << "-";
-      }
-      out << "</td></tr>";
-    }
-    out << "</table>>, fontcolor=\"magenta\", shape=none ];\n";
-    out << "node_" << thisID << " -> node_" << childID
-        << " [ arrowhead=none, color=\"magenta\" ];\n";
-  }
-
-  return thisID;
-}
-unsigned int Alt::Simple::to_dot(unsigned int *nodeID, std::ostream &out) {
-  unsigned int thisID = Alt::Base::to_dot(nodeID, out);
-  for (std::list<Fn_Arg::Base*>::const_iterator arg = this->args.begin();
-       arg != this->args.end(); ++arg) {
-    Fn_Arg::Alt *argalt = dynamic_cast<Fn_Arg::Alt*>(*arg);
-    if (argalt) {
-      unsigned int childID = argalt->alt_ref()->to_dot(nodeID, out);
-      out << "node_" << thisID << " -> node_" << childID
-          << " [ arrowhead=none ";
-      Alt::Multi *multi = dynamic_cast<Alt::Multi*>(argalt->alt_ref());
-      if (multi) {
-        out << ", lhead=cluster_node_" << (childID-1) << " ";
-      }
-      out << "];\n";
-    }
-  }
-  return thisID;
-}
-unsigned int Alt::Link::to_dot(unsigned int *nodeID, std::ostream &out) {
-  return Alt::Base::to_dot(nodeID, out);
-}
-unsigned int Alt::Block::to_dot(unsigned int *nodeID, std::ostream &out) {
-  unsigned int thisID = Alt::Base::to_dot(nodeID, out);
-
-  for (std::list<Alt::Base*>::const_iterator alt = this->alts.begin();
-       alt != this->alts.end(); ++alt) {
-    unsigned int childID = (*alt)->to_dot(nodeID, out);
-    out << "node_" << thisID << " -> node_" << childID
-        << " [ ];\n";
-  }
-
-  return thisID;
-}
-unsigned int Alt::Multi::to_dot(unsigned int *nodeID, std::ostream &out) {
-  unsigned int thisID = (unsigned int)((*nodeID)++);
-  out << "subgraph cluster_node_" << thisID << " {\n";
-  unsigned int lastID = 0;
-  for (std::list<Alt::Base*>::const_iterator alt = this->list.begin();
-       alt != this->list.end(); ++alt) {
-    unsigned int childID = (*alt)->to_dot(nodeID, out);
-    if (lastID > 0) {
-      out << "node_" << lastID << " -> node_" << childID
-          << " [ style=\"invis\" ];\n";
-    }
-    lastID = childID;
-  }
-  out << "};\n";
-  // return not the cluster ID but the id of the first element
-  return thisID+1;
-}
-// END functions produce graphViz code to represent the grammar
-
 
 // traverses an alternative, collects all non-terminals and returns the one
 // outside non-terminal if present, otherwise NULL

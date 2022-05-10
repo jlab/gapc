@@ -331,6 +331,9 @@ class Base {
   virtual void set_ntparas(const Loc &loc, std::list<Expr::Base*> *l);
 
   bool choice_set();
+  void to_dot_semanticfilters(unsigned int *nodeID, unsigned int thisID,
+    std::ostream &out, std::vector<unsigned int> *childIDs = NULL);
+  virtual unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
 
   // traverses the alternative (=rhs of a production) and collects pointers
   // to all referenced non-terminals e.g.
@@ -347,7 +350,6 @@ class Base {
   virtual bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace,
     hashtable<std::string, unsigned int> &skip_occurences);
 
-  virtual unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
   // returns either the single outside non-terminal or NULL
   Symbol::NT *get_outside_nt(Alt::Base *alt);
 
@@ -690,6 +692,7 @@ class Link : public Base {
   bool is_explicit() const {
     return !indices.empty();
   }
+  void to_dot_overlayindices(std::ostream &out, bool is_left_index);
 
  private:
   std::list<Expr::Base*> ntparas;
