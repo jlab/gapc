@@ -219,6 +219,11 @@ class Grammar {
   // same as above, without checking user provided NT list
   void inject_outside_nts();
   unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
+
+  // blocks allow alternatives for sub-productions. This function shell free
+  // a grammar of Alt::Block by explicitly adding alternatives as top level
+  // alternative production rules for non-terminals.
+  void resolve_blocks();
 };
 
 
