@@ -255,6 +255,9 @@ class Base {
     // prints grammar rules as GraphViz commands
     virtual unsigned int to_dot(unsigned int *nodeID, std::ostream &out,
                                 bool is_rhs, Symbol::NT *axiom);
+    // only for NTs: check if alternatives contain Alt::Block short-cuts
+    // if so, remove them by making alternatives explicit
+    virtual void resolve_blocks();
 };
 
 
@@ -314,6 +317,7 @@ class Terminal : public Base {
     bool isPredefinedTerminalParser();
     unsigned int to_dot(unsigned int *nodeID, std::ostream &out,
                         bool is_rhs, Symbol::NT *axiom);
+    void resolve_blocks();
 };
 
 
@@ -519,6 +523,7 @@ class NT : public Base {
     }
     unsigned int to_dot(unsigned int *nodeID, std::ostream &out,
                         bool is_rhs, Symbol::NT *axiom);
+    void resolve_blocks();
 };
 
 

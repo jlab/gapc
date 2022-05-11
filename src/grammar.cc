@@ -1002,106 +1002,10 @@ void Grammar::remove(Symbol::NT *x) {
   tabulated.erase(nt);
 }
 
-// a user provided grammar might contain production rules that use blocks
-//   e.g. NT = sadd(BASE, {hairpin | iloop})
-// this basically is a short hand notation for multiple alternatives, e.g.
-//   NT = sadd(BASE, hairpin) | sadd(BASE, iloop)
-// For outside grammar generation, we first want to make short-hand notations
-// explicit by applying this function to the selected grammar.
 void Grammar::resolve_blocks() {
   for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin();
        i != NTs.end(); ++i) {
-    Symbol::NT *nt = dynamic_cast<Symbol::NT*>(i->second);
-    if (nt) {
-      for (std::list<Alt::Base*>::iterator alt = nt->alts.begin();
-           alt != nt->alts.end(); ++alt) {
-        // check if alternative contains any Alt::Block
-        Alt::Block *block = dynamic_cast<Alt::Block*>((*alt)->find_block());
-        while (block) {
-          // locate parent of found Alt::Block
-          Alt::Base *parent = (*alt)->find_block_parent(*block);
-          if (block->alts.size() == 1) {
-            // if a Alt::Block holds only one alternative,
-            // we can simply remove Alt::Block altogether
-            if (parent == NULL) {
-              // parent is the non-terminal
-              *alt = block->alts.front();
-            } else {
-              Alt::Simple *p_simple = dynamic_cast<Alt::Simple*>(parent);
-              if (p_simple) {
-                // if parent is of type Alt::Simple
-                for (std::list<Fn_Arg::Base*>::iterator j =
-                     p_simple->args.begin();
-                     j != p_simple->args.end(); ++j) {
-                  Fn_Arg::Alt *p_simple_fnarg = dynamic_cast<Fn_Arg::Alt*>(*j);
-                  if (p_simple_fnarg && (p_simple_fnarg->alt == block)) {
-                    p_simple_fnarg->alt = block->alts.front();
-                    break;
-                  }
-                }
-              }
-
-              // a Link is a leaf and thus cannot contain a block
-              // Alt::Link *p_link = dynamic_cast<Alt::Link*>(parent);
-
-              // parent block should have been removed first!
-              // Alt::Block *p_block = dynamic_cast<Alt::Block*>(parent);
-
-              // Alternative is not allowed in Multi-Track link.
-              // Alt::Multi *p_multi = dynamic_cast<Alt::Multi*>(parent);
-            }
-          } else {
-            // the Alt::Block holds multiple alternatives.
-            if (parent == NULL) {
-              nt->alts.push_back(block->alts.front()->clone());
-              block->alts.pop_front();
-            } else {
-              Alt::Simple *p_simple = dynamic_cast<Alt::Simple*>(parent);
-              if (p_simple) {
-                // if parent is of type Alt::Simple
-                // 1) clone the full existing alternative
-                Alt::Base *newalt = (*alt)->clone();
-
-                // 2) remove first block alternative from original object
-                Alt::Base *first_block_alt = block->alts.front();
-                block->alts.pop_front();
-
-                // 3) remove Alt::Block and connect first block
-                // alternative to cloned object
-                Alt::Base *cloned_block = newalt->find_block();
-                // a clone of the alt rule containing block should have this
-                // block as well!
-                assert(cloned_block);
-                Alt::Simple *cloned_p_simple = dynamic_cast<Alt::Simple*>(
-                  newalt->find_block_parent(*cloned_block));
-                // must exist and be Alt::Simple for above reasons
-                assert(cloned_p_simple);
-                for (std::list<Fn_Arg::Base*>::iterator j =
-                     cloned_p_simple->args.begin();
-                     j != cloned_p_simple->args.end(); ++j) {
-                  Fn_Arg::Alt *cloned_p_simple_fnarg =
-                    dynamic_cast<Fn_Arg::Alt*>(*j);
-                  if (cloned_p_simple_fnarg &&
-                      (cloned_p_simple_fnarg->alt == cloned_block)) {
-                    cloned_p_simple_fnarg->alt = first_block_alt;
-                    break;
-                  }
-                }
-
-                nt->alts.push_back(newalt);
-              }
-
-              // as with the single case above, Link, Block,
-              // Multi cannot be parents
-            }
-          }
-
-          // for next iteration: check if production rules might still
-          // contain other blocks
-          block = dynamic_cast<Alt::Block*>((*alt)->find_block());
-        }
-      }
-    }
+    (*i).second->resolve_blocks();
   }
 }
 
@@ -1141,10 +1045,6 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
     msg += ", which do(es) NOT exist in your grammar!";
     throw LogError(msg);
   }
-
-  // before we inject outside rules, we need to make sure
-  // that grammar does not contain any Alt::Blocks
-  this->resolve_blocks();
 
   // 1) collect non-terminals used in rhs of productions together with their
   // calling lhs non-terminal we thus exclude e.g. non-terminal foo in
@@ -1203,8 +1103,12 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
        i != NTs.end(); ++i) {
     Symbol::NT *nt = dynamic_cast<Symbol::NT*>(i->second);
     if (nt) {  // skip terminals
-      for (std::list<Alt::Base*>::iterator alt = nt->alts.begin();
-           alt != nt->alts.end(); ++alt) {
+      // don't directly operate on given inside NTs,
+      // but first resolve Alt::Block use for outside rules
+      Symbol::NT *nt_resolved = nt->clone(nt->track_pos());
+      nt_resolved->resolve_blocks();
+      for (std::list<Alt::Base*>::iterator alt = nt_resolved->alts.begin();
+           alt != nt_resolved->alts.end(); ++alt) {
         std::list<Symbol::NT*> *rhs_nts = new std::list<Symbol::NT*>();
         (*alt)->get_nonterminals(rhs_nts);
         if (rhs_nts->size() > 0) {
