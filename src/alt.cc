@@ -3605,7 +3605,8 @@ void Alt::Link::expand_outside_nt_indices(Expr::Base *left,
 void Alt::Block::expand_outside_nt_indices(Expr::Base *left,
     Expr::Base *right, size_t track) {
   throw LogError(
-    "Alt::Block::expand_outside_nt_indices is not yet implemented!");
+    "Alt::Block::expand_outside_nt_indices blocks must be resolved prior "
+    "to outside generation, see function Grammar::resolve_blocks!");
 }
 void Alt::Multi::expand_outside_nt_indices(Expr::Base *left,
     Expr::Base *right, size_t track) {
@@ -3804,7 +3805,9 @@ void Alt::Link::init_indices_outside(Expr::Base *left, Expr::Base *right,
 void Alt::Block::init_indices_outside(Expr::Base *left, Expr::Base *right,
     unsigned int &k, size_t track, Expr::Base *center_left,
     Expr::Base *center_right, bool is_right_of_outside_nt) {
-  throw LogError("Alt::Block::init_indices_outside is not yet implemented!");
+  throw LogError("Alt::Block::init_indices_outside blocks must be "
+                 "resolved prior to outside generation, see function "
+                 "Grammar::resolve_blocks!");
 }
 void Alt::Multi::init_indices_outside(Expr::Base *left, Expr::Base *right,
     unsigned int &k, size_t track, Expr::Base *center_left,
@@ -3886,7 +3889,8 @@ std::pair<Yield::Size*, Yield::Size*>
 *Alt::Block::get_outside_accum_yieldsizes(size_t track,
     bool is_right_of_outside_nt) {
   throw LogError(
-    "Alt::Block::get_outside_accum_yieldsizes is not yet implemented!");
+    "Alt::Block::get_outside_accum_yieldsizes blocks must be resolved prior "
+    "to outside generation, see function Grammar::resolve_blocks!");
   return NULL;
 }
 std::pair<Yield::Size*, Yield::Size*>
@@ -3934,9 +3938,17 @@ Alt::Base *Alt::Base::find_block() {
 Alt::Base *Alt::Simple::find_block() {
   for (std::list<Fn_Arg::Base*>::iterator i = this->args.begin();
        i != this->args.end(); ++i) {
-    Alt::Block *block = dynamic_cast<Alt::Block*>((*i)->alt_ref());
-    if (block) {
-      return (*i)->alt_ref();
+    Fn_Arg::Alt *fn_arg = dynamic_cast<Fn_Arg::Alt*>(*i);
+    if (fn_arg) {
+      Alt::Block *block = dynamic_cast<Alt::Block*>((*i)->alt_ref());
+      if (block) {
+        return (*i)->alt_ref();
+      } else {
+        Alt::Base *sub = (*i)->alt_ref()->find_block();
+        if (sub) {
+          return sub;
+        }
+      }
     }
   }
   return NULL;
@@ -3954,6 +3966,11 @@ Alt::Base *Alt::Multi::find_block() {
     Alt::Block *block = dynamic_cast<Alt::Block*>(*i);
     if (block) {
       return *i;
+    } else {
+      Alt::Base *sub = (*i)->find_block();
+      if (sub) {
+        return sub;
+      }
     }
   }
   return NULL;
@@ -3966,9 +3983,19 @@ Alt::Base *Alt::Base::find_block_parent(const Alt::Base &block) {
 Alt::Base *Alt::Simple::find_block_parent(const Alt::Base &block) {
   for (std::list<Fn_Arg::Base*>::iterator i = this->args.begin();
        i != this->args.end(); ++i) {
-    Alt::Block *child_block = dynamic_cast<Alt::Block*>((*i)->alt_ref());
-    if (child_block && (child_block == &block)) {
-      return this;
+    Fn_Arg::Alt *fn_arg = dynamic_cast<Fn_Arg::Alt*>(*i);
+    if (fn_arg) {
+      Alt::Block *child_block = dynamic_cast<Alt::Block*>((*i)->alt_ref());
+      if (child_block) {
+        if (child_block == &block) {
+          return this;
+        }
+      } else {
+        Alt::Base *sub = (*i)->alt_ref()->find_block_parent(block);
+        if (sub) {
+          return sub;
+        }
+      }
     }
   }
   return NULL;
@@ -3981,8 +4008,15 @@ Alt::Base *Alt::Block::find_block_parent(const Alt::Base &block) {
   for (std::list<Alt::Base*>::iterator i = this->alts.begin();
        i != this->alts.end(); ++i) {
     Alt::Block *child_block = dynamic_cast<Alt::Block*>(*i);
-    if (child_block && (child_block == &block)) {
-      return this;
+    if (child_block) {
+      if (child_block == &block) {
+        return this;
+      }
+    } else {
+      Alt::Base *sub = (*i)->find_block_parent(block);
+      if (sub) {
+        return sub;
+      }
     }
   }
   return NULL;
@@ -3991,8 +4025,15 @@ Alt::Base *Alt::Multi::find_block_parent(const Alt::Base &block) {
   for (std::list<Base*>::iterator i = this->list.begin();
        i != this->list.end(); ++i) {
     Alt::Block *child_block = dynamic_cast<Alt::Block*>(*i);
-    if (child_block && (child_block == &block)) {
-      return this;
+    if (child_block) {
+      if (child_block == &block) {
+        return this;
+      }
+    } else {
+      Alt::Base *sub = (*i)->find_block_parent(block);
+      if (sub) {
+        return sub;
+      }
     }
   }
   return NULL;
