@@ -362,6 +362,13 @@ class Base {
   bool get_is_partof_outside() {
     return this->is_partof_outside;
   }
+  // traverses production rule and returns pointer to topmost Alt::Block IFF
+  // production rule contains an Alt::Block, otherwise NULL
+  virtual Alt::Base* find_block();
+  // given a Alt::Block reference, returns the Alt::Base reference of the
+  // parent with child Alt::Block (necessary to change pointer when resolving
+  // blocks)
+  virtual Alt::Base *find_block_parent(const Alt::Base &block);
 };
 
 
@@ -572,6 +579,8 @@ class Simple : public Base {
   bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace,
     hashtable<std::string, unsigned int> &skip_occurences);
   unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
+  Alt::Base* find_block();
+  Alt::Base *find_block_parent(const Alt::Base &block);
 
  private:
   std::list<Statement::Base*> *insert_index_stmts(
@@ -710,6 +719,8 @@ class Link : public Base {
     hashtable<std::string, unsigned int> &skip_occurences);
   unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
   void init_outside_guards();
+  Alt::Base* find_block();
+  Alt::Base *find_block_parent(const Alt::Base &block);
 };
 
 
@@ -791,6 +802,8 @@ class Block : public Base {
   bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace,
     hashtable<std::string, unsigned int> &skip_occurences);
   unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
+  Alt::Base* find_block();
+  Alt::Base *find_block_parent(const Alt::Base &block);
 };
 
 
@@ -876,6 +889,8 @@ class Multi : public Base {
   bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace,
     hashtable<std::string, unsigned int> &skip_occurences);
   unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
+  Alt::Base* find_block();
+  Alt::Base *find_block_parent(const Alt::Base &block);
 };
 
 }  // namespace Alt

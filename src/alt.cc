@@ -3923,3 +3923,77 @@ Yield::Size *Alt::Simple::sum_ys_rights(
   return res;
 }
 
+
+// find_block can traverse a (top-level) alternative and returns
+// the first occurrence of a Alt::Block instance OR NULL if this
+// alternative does not contain any Alt::Block instances.
+Alt::Base *Alt::Base::find_block() {
+  throw LogError("Should not be called directly!");
+  return NULL;
+}
+Alt::Base *Alt::Simple::find_block() {
+  for (std::list<Fn_Arg::Base*>::iterator i = this->args.begin();
+       i != this->args.end(); ++i) {
+    Alt::Block *block = dynamic_cast<Alt::Block*>((*i)->alt_ref());
+    if (block) {
+      return (*i)->alt_ref();
+    }
+  }
+  return NULL;
+}
+Alt::Base *Alt::Link::find_block() {
+  // a Link is a leaf and thus cannot have a Block as a child
+  return NULL;
+}
+Alt::Base *Alt::Block::find_block() {
+  return this;
+}
+Alt::Base *Alt::Multi::find_block() {
+  for (std::list<Base*>::iterator i = this->list.begin();
+       i != this->list.end(); ++i) {
+    Alt::Block *block = dynamic_cast<Alt::Block*>(*i);
+    if (block) {
+      return *i;
+    }
+  }
+  return NULL;
+}
+
+Alt::Base *Alt::Base::find_block_parent(const Alt::Base &block) {
+  throw LogError("Should not be called directly!");
+  return NULL;
+}
+Alt::Base *Alt::Simple::find_block_parent(const Alt::Base &block) {
+  for (std::list<Fn_Arg::Base*>::iterator i = this->args.begin();
+       i != this->args.end(); ++i) {
+    Alt::Block *child_block = dynamic_cast<Alt::Block*>((*i)->alt_ref());
+    if (child_block && (child_block == &block)) {
+      return this;
+    }
+  }
+  return NULL;
+}
+Alt::Base *Alt::Link::find_block_parent(const Alt::Base &block) {
+  // a Link is a leaf and thus cannot have a Block as a child
+  return NULL;
+}
+Alt::Base *Alt::Block::find_block_parent(const Alt::Base &block) {
+  for (std::list<Alt::Base*>::iterator i = this->alts.begin();
+       i != this->alts.end(); ++i) {
+    Alt::Block *child_block = dynamic_cast<Alt::Block*>(*i);
+    if (child_block && (child_block == &block)) {
+      return this;
+    }
+  }
+  return NULL;
+}
+Alt::Base *Alt::Multi::find_block_parent(const Alt::Base &block) {
+  for (std::list<Base*>::iterator i = this->list.begin();
+       i != this->list.end(); ++i) {
+    Alt::Block *child_block = dynamic_cast<Alt::Block*>(*i);
+    if (child_block && (child_block == &block)) {
+      return this;
+    }
+  }
+  return NULL;
+}
