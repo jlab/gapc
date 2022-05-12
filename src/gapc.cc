@@ -368,23 +368,24 @@ class Main {
     if (opts.approx_table_design) {
       grammar->approx_table_conf();
     }
-    // TODO(sjanssen): better write message to Log instance, instead of
-    // std::cout directly!
-    if (Log::instance()->is_verbose()) {
-      std::cout << "The following non-terminals will be tabulated (%name "
-        << "indicates linear table, %name% indicates constant tables):\n  ";
-      grammar->put_table_conf(std::cout);
-      std::cout << "\n\n";
-      std::cout << "resulting in an estimated runtime of:\n  ";
-      std::cout << grammar->runtime() << '\n';
-    }
+
+    // provide user with information about table design and runtime
+    std::ostringstream message;
+    message << "The following non-terminals will be tabulated (%name "
+            << "indicates linear table, %name% indicates constant"
+            << " tables):\n  ";
+    grammar->put_table_conf(message);
+    message << "\n\n"
+            << "resulting in an estimated runtime of:\n  "
+            << grammar->runtime() << '\n';
+    Log::instance()->normalMessage(message.str());
 
     // After the table configuration is generated, check for
     // suboptimal designs and present a message to the user.
     driver.ast.warn_user_table_conf_suboptimal();
 
-                      // find what type of input is read
-                      // chars, sequence of ints etc.
+    // find what type of input is read
+    // chars, sequence of ints etc.
     driver.ast.derive_temp_alphabet();
 
     r = driver.ast.check_signature();
