@@ -57,7 +57,7 @@ Symbol::Base::Base(std::string *n, Type t, const Loc &l)
     terminal_type(false), rt_computed(false),
     name(n), orig_name(n), location(l),
     tracks_(0),
-    track_pos_(0) {
+    track_pos_(0), is_partof_outside(false) {
   assert(name);
 }
 

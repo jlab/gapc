@@ -251,7 +251,7 @@ class Base {
 
     // flag to indicate if alternative is for inside (the default) or outside
     // production rules.
-    bool is_partof_outside;
+    bool is_partof_outside = false;
     // prints grammar rules as GraphViz commands
     virtual unsigned int to_dot(unsigned int *nodeID, std::ostream &out,
                                 bool is_rhs, Symbol::NT *axiom);
