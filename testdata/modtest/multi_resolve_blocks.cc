@@ -7,6 +7,11 @@
 #include <cassert>
 
 int main(int argc, char **argv) {
+  if (argc != 2) {
+	std::cerr << "Call " << *argv << " *.gap-file\n";
+	return 1;
+  }
+
   std::ostringstream o;
   Log log;
   log.set_debug(false);
@@ -14,16 +19,16 @@ int main(int argc, char **argv) {
 
   Driver driver;
 
-  if (argc != 2) {
-    std::cerr << "Call " << *argv << " *.gap-file\n";
-    return 1;
-  }
   // === front
   // set the file name of the gap-source-code
-  driver.setFilename(argv[1]);
+  std::string filename(argv[1]);
+  driver.setFilename(filename);
 
   // parses the input file and builds the AST
   driver.parse();
+  if (driver.is_failing()) {
+    return 4;
+  }
 
   // simply gets the selected grammar, which is either the
   // grammar that occurred first in the source code or is the
@@ -36,7 +41,7 @@ int main(int argc, char **argv) {
   // which leads to the end of the compilation process.
   bool r = grammar->check_semantic();
   if (!r) {
-    throw LogError("Seen semantic errors.");
+    return 2;
   }
 
   // replace Alt::Block from grammar rules with explicit
@@ -52,7 +57,7 @@ int main(int argc, char **argv) {
 
   r = driver.ast.check_signature();
   if (!r) {
-	throw LogError("Seen signature errors.");
+	return 3;
   }
 
   // apply this to identify standard functions like Min, Max, Exp etc.
@@ -69,4 +74,6 @@ int main(int argc, char **argv) {
 
   unsigned int nodeID = 1;
   grammar->to_dot(&nodeID, std::cout);
+
+  return 0;
 }
