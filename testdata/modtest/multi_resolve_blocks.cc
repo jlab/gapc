@@ -1,15 +1,17 @@
-#include "../../src/driver.hh"
-#include "../../src/log.hh"
+// Copyright 2022 stefan.m.janssen@gmail.com
 
 #include <iostream>
 #include <iomanip>
 #include <sstream>
 #include <cassert>
 
+#include "../../src/driver.hh"
+#include "../../src/log.hh"
+
 int main(int argc, char **argv) {
   if (argc != 2) {
-	std::cerr << "Call " << *argv << " *.gap-file\n";
-	return 1;
+    std::cerr << "Call " << *argv << " *.gap-file\n";
+    return 1;
   }
 
   std::ostringstream o;
@@ -47,7 +49,8 @@ int main(int argc, char **argv) {
   // replace Alt::Block from grammar rules with explicit
   // alternatives
   grammar->resolve_blocks();
-  
+
+
   // set approx table design
   grammar->approx_table_conf();
 
@@ -55,9 +58,15 @@ int main(int argc, char **argv) {
   // chars, sequence of ints etc.
   driver.ast.derive_temp_alphabet();
 
-  r = driver.ast.check_signature();
-  if (!r) {
-	return 3;
+  log.set_debug(true);
+  log.set_ostream(std::cerr);
+  try {
+    r = driver.ast.check_signature();
+    if (!r) {
+      return 3;
+    }
+  } catch (LogThreshException) {
+    return 9;
   }
 
   // apply this to identify standard functions like Min, Max, Exp etc.
