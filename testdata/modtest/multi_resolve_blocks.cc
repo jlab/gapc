@@ -48,8 +48,10 @@ int main(int argc, char **argv) {
 
   // replace Alt::Block from grammar rules with explicit
   // alternatives
-  grammar->resolve_blocks();
-
+  for (hashtable<std::string, Symbol::Base*>::iterator i = grammar->NTs.begin();
+       i != grammar->NTs.end(); ++i) {
+    (*i).second->resolve_blocks();
+  }
 
   // set approx table design
   grammar->approx_table_conf();
@@ -58,8 +60,6 @@ int main(int argc, char **argv) {
   // chars, sequence of ints etc.
   driver.ast.derive_temp_alphabet();
 
-  log.set_debug(true);
-  log.set_ostream(std::cerr);
   try {
     r = driver.ast.check_signature();
     if (!r) {
