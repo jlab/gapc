@@ -298,7 +298,7 @@ class Base {
   }
   Yield::Multi m_ys_inside;
 
- private:
+ public:
   std::vector<std::list<Filter*> > multi_filter;
 
  public:

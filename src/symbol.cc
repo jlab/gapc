@@ -1720,7 +1720,11 @@ void Symbol::NT::resolve_blocks() {
         // we can simply remove Alt::Block altogether
         if (parent == NULL) {
           // parent is the non-terminal
-          *alt = block->alts.front();
+          Alt::Base *child = block->alts.front();
+          child->top_level = block->top_level;
+          child->filters = block->filters;
+          child->multi_filter = block->multi_filter;
+          *alt = child;
         } else {
           Alt::Simple *p_simple = dynamic_cast<Alt::Simple*>(parent);
           if (p_simple) {
@@ -1730,7 +1734,11 @@ void Symbol::NT::resolve_blocks() {
                  j != p_simple->args.end(); ++j) {
               Fn_Arg::Alt *p_simple_fnarg = dynamic_cast<Fn_Arg::Alt*>(*j);
               if (p_simple_fnarg && (p_simple_fnarg->alt == block)) {
-                p_simple_fnarg->alt = block->alts.front();
+                Alt::Base *child = block->alts.front();
+                child->top_level = block->top_level;
+                child->filters = block->filters;
+                child->multi_filter = block->multi_filter;
+                p_simple_fnarg->alt = child;
                 break;
               }
             }
@@ -1748,7 +1756,11 @@ void Symbol::NT::resolve_blocks() {
       } else {
         // the Alt::Block holds multiple alternatives.
         if (parent == NULL) {
-          this->alts.push_back(block->alts.front()->clone());
+          Alt::Base *child = block->alts.front()->clone();
+          child->top_level = block->top_level;
+          child->filters = block->filters;
+          child->multi_filter = block->multi_filter;
+          this->alts.push_back(child);
           block->alts.pop_front();
         } else {
           Alt::Simple *p_simple = dynamic_cast<Alt::Simple*>(parent);
@@ -1759,6 +1771,9 @@ void Symbol::NT::resolve_blocks() {
 
             // 2) remove first block alternative from original object
             Alt::Base *first_block_alt = block->alts.front();
+            first_block_alt->top_level = block->top_level;
+            first_block_alt->filters = block->filters;
+            first_block_alt->multi_filter = block->multi_filter;
             block->alts.pop_front();
 
             // 3) remove Alt::Block and connect first block
