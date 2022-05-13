@@ -1724,7 +1724,11 @@ void Symbol::NT::resolve_blocks() {
           child->top_level = Bool(true);
           child->filters.insert(child->filters.end(), block->filters.begin(), block->filters.end());
           child->multi_filter.insert(child->multi_filter.end(), block->multi_filter.begin(), block->multi_filter.end());
-          *alt = child;
+          // keep original ordering, i.e. delete block and push single = last alt to the end
+          this->alts.push_back(child);
+          this->alts.erase(alt);
+          // reset iterator to first element
+          alt = this->alts.begin();
         } else {
           Alt::Simple *p_simple = dynamic_cast<Alt::Simple*>(parent);
           if (p_simple) {
@@ -1796,7 +1800,7 @@ void Symbol::NT::resolve_blocks() {
               }
             }
 
-            this->alts.push_back(newalt);
+            this->alts.insert(alt, newalt);
           }
 
           // as with the single case above, Link, Block,
