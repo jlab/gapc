@@ -1722,9 +1722,13 @@ void Symbol::NT::resolve_blocks() {
           // parent is the non-terminal
           Alt::Base *child = block->alts.front();
           child->top_level = Bool(true);
-          child->filters.insert(child->filters.end(), block->filters.begin(), block->filters.end());
-          child->multi_filter.insert(child->multi_filter.end(), block->multi_filter.begin(), block->multi_filter.end());
-          // keep original ordering, i.e. delete block and push single = last alt to the end
+          child->filters.insert(child->filters.end(), block->filters.begin(),
+                                block->filters.end());
+          child->multi_filter.insert(child->multi_filter.end(),
+                                     block->multi_filter.begin(),
+                                     block->multi_filter.end());
+          // keep original ordering, i.e. delete block and push
+          // single = last alt to the end
           this->alts.push_back(child);
           this->alts.erase(alt);
           // reset iterator to first element
@@ -1739,8 +1743,12 @@ void Symbol::NT::resolve_blocks() {
               Fn_Arg::Alt *p_simple_fnarg = dynamic_cast<Fn_Arg::Alt*>(*j);
               if (p_simple_fnarg && (p_simple_fnarg->alt == block)) {
                 Alt::Base *child = block->alts.front();
-                child->filters.insert(child->filters.end(), block->filters.begin(), block->filters.end());
-                child->multi_filter.insert(child->multi_filter.end(), block->multi_filter.begin(), block->multi_filter.end());
+                child->filters.insert(child->filters.end(),
+                                      block->filters.begin(),
+                                      block->filters.end());
+                child->multi_filter.insert(child->multi_filter.end(),
+                                           block->multi_filter.begin(),
+                                           block->multi_filter.end());
                 p_simple_fnarg->alt = child;
                 break;
               }
@@ -1761,8 +1769,12 @@ void Symbol::NT::resolve_blocks() {
         if (parent == NULL) {
           Alt::Base *child = block->alts.front()->clone();
           child->top_level = Bool(true);
-          child->filters.insert(child->filters.end(), block->filters.begin(), block->filters.end());
-          child->multi_filter.insert(child->multi_filter.end(), block->multi_filter.begin(), block->multi_filter.end());
+          child->filters.insert(child->filters.end(),
+                                block->filters.begin(),
+                                block->filters.end());
+          child->multi_filter.insert(child->multi_filter.end(),
+                                     block->multi_filter.begin(),
+                                     block->multi_filter.end());
           this->alts.push_back(child);
           block->alts.pop_front();
         } else {
@@ -1774,8 +1786,13 @@ void Symbol::NT::resolve_blocks() {
 
             // 2) remove first block alternative from original object
             Alt::Base *first_block_alt = block->alts.front();
-            first_block_alt->filters.insert(first_block_alt->filters.end(), block->filters.begin(), block->filters.end());
-            first_block_alt->multi_filter.insert(first_block_alt->multi_filter.end(), block->multi_filter.begin(), block->multi_filter.end());
+            first_block_alt->filters.insert(first_block_alt->filters.end(),
+                                            block->filters.begin(),
+                                            block->filters.end());
+            first_block_alt->multi_filter.insert(
+                  first_block_alt->multi_filter.end(),
+                  block->multi_filter.begin(),
+                  block->multi_filter.end());
             block->alts.pop_front();
 
             // 3) remove Alt::Block and connect first block
