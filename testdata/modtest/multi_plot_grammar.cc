@@ -1,4 +1,3 @@
-
 #include "../../src/driver.hh"
 #include "../../src/log.hh"
 
@@ -7,74 +6,66 @@
 #include <sstream>
 #include <cassert>
 
-
-
-#include "../../src/instance.hh"
-
-int main(int argc, char **argv)
-{
-  if (argc < 2) {
-    std::cerr << "Call " << *argv << " GRAMMAR\n";
-    return 1;
-  }
+int main(int argc, char **argv) {
   std::ostringstream o;
   Log log;
   log.set_debug(false);
   log.set_ostream(o);
+
   Driver driver;
-  std::string filename(argv[1]);
-  driver.setFilename(filename);
+
+  if (argc != 2) {
+    std::cerr << "Call " << *argv << " *.gap-file\n";
+    return 1;
+  }
+  // === front
+  // set the file name of the gap-source-code
+  driver.setFilename(argv[1]);
+
+  // parses the input file and builds the AST
   driver.parse();
-  //assert(!driver.is_failing());
-  if (driver.is_failing())
-    return 4;
 
+  // simply gets the selected grammar, which is either the
+  // grammar that occurred first in the source code or is the
+  // one that was named in the parameters on the command line
   Grammar *grammar = driver.ast.grammar();
+  // Now check the semantic, which does more than the function
+  // name suggests. The semantic check is embedded in the algorithm
+  // that links the grammar graph together, and computes yield-sizes.
+  // If the method returns false, there are some semantic errors,
+  // which leads to the end of the compilation process.
+  bool r = grammar->check_semantic();
+  if (!r) {
+    throw LogError("Seen semantic errors.");
+  }
 
-  //see grammar->check_semantic();
-  //
-  bool b, r = true;
-  b = grammar->init_tabulated();
-  r = r && b;
-  b = grammar->init_axiom();
-  //assert(b);
-  r = r && b;
-  if (r)
-  //  b = grammar->init_nt_links();
-  r = r && b;
-  grammar->remove_unreachable();
-  //assert(r);
-  b = ! grammar->has_nonproductive_NTs();
-  r = r && b;
-  //assert(r);
-  if (!r)
-    return 2;
-  b = grammar->init_tracks();
-  r = r && b;
-  //assert(r);
-  if (!r)
-    return 3;
+  // inject rules for outside grammar
+  //grammar->inject_outside_nts();
 
-  grammar->init_multi_yield_sizes();
+  // set approx table design
+  grammar->approx_table_conf();
 
-  b = !grammar->multi_detect_loops();
-  if (!b)
-    return 4;
+  // find what type of input is read
+  // chars, sequence of ints etc.
+  driver.ast.derive_temp_alphabet();
 
-  grammar->multi_propagate_max_filter();
+  r = driver.ast.check_signature();
+  if (!r) {
+	throw LogError("Seen signature errors.");
+  }
 
-  grammar->init_table_dims();
+  // apply this to identify standard functions like Min, Max, Exp etc.
+  driver.ast.derive_roles();
 
-  grammar->init_calls();
 
-  grammar->init_self_rec();
-
-  grammar->init_in_out();
+  // ------------- back ------------
+  grammar->init_list_sizes();
 
   grammar->init_indices();
+  grammar->init_decls();
+  // for cyk (ordering of NT for parsing, see page 101 of the thesis)
+  grammar->dep_analysis();
 
-  grammar->print_indices();
-
-  return 0;
+  unsigned int nodeID = 1;
+  grammar->to_dot(&nodeID, std::cout);
 }
-
