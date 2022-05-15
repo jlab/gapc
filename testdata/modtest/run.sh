@@ -51,6 +51,7 @@ for j in ${*:2}; do
   failed=0
   l=`echo $REF/$j[0-9]* | tr ' ' '\n' | sed 's/\([0-9]\+\)/:\1/' |\
     sort -n -r -k 2 -t : | tr -d : | head -1`
+  log echo $j
   log diff -ur $l $j
 
   if [ $failed != 0 ]; then
