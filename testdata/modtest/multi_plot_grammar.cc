@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
   //grammar->inject_outside_nts();
 
   // set approx table design
-  if (grammar()->tabulated.empty()) {
+  if (grammar->tabulated.empty()) {
 	  grammar->approx_table_conf();
   }
 
