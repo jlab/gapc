@@ -4,7 +4,7 @@ on:
   push:
     branches: [ master ]
   pull_request:
-    branches: [ master ]
+    branches: [ master, plot_grammar ]
   workflow_dispatch:
     inputs:
       logLevel:
