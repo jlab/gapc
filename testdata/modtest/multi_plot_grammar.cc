@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
   //grammar->inject_outside_nts();
 
   // set approx table design
-  grammar->approx_table_conf();
+  //grammar->approx_table_conf();
 
   // find what type of input is read
   // chars, sequence of ints etc.
