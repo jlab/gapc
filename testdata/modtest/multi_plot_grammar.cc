@@ -47,10 +47,10 @@ int main(int argc, char **argv) {
 
   // replace Alt::Block from grammar rules with explicit
   // alternatives
-  for (hashtable<std::string, Symbol::Base*>::iterator i = grammar->NTs.begin();
-       i != grammar->NTs.end(); ++i) {
-    (*i).second->resolve_blocks();
-  }
+  //for (hashtable<std::string, Symbol::Base*>::iterator i = grammar->NTs.begin();
+  //     i != grammar->NTs.end(); ++i) {
+  //  (*i).second->resolve_blocks();
+  //}
 
   // set approx table design
   //if (grammar->tabulated.empty()) {
