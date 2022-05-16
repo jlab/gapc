@@ -1654,7 +1654,14 @@ unsigned int Symbol::Base::to_dot(unsigned int *nodeID, std::ostream &out,
   unsigned int thisID = (unsigned int)((*nodeID)++);
   out << "node_" << thisID << " [ label=<<table border='0'><tr>";
   to_dot_indices(this->left_indices, out);
-  out << "<td>" << *this->name << "</td>";
+  out << "<td>" << *this->name;
+  if (true) {
+    // if we want to also print out datatypes
+    out << "<br/><font color='orange'>";
+    this->datatype->put(out);
+    out << "</font>";
+  }
+  out << "</td>";
   to_dot_indices(this->right_indices, out);
   out << "</tr></table>>";
   return thisID;

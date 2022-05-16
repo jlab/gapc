@@ -3228,16 +3228,21 @@ unsigned int Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out) {
         }
       }
     }
-
-    out << "</td>";
   }
   if (link) {
-    out << "<td>" << *link->name << "</td>";
+    out << "<td>" << *link->name;
   }
   Alt::Block *block = dynamic_cast<Alt::Block*>(this);
   if (block) {
-    out << "<td>a block</td>";
+    out << "<td>a block";
   }
+  if (true) {
+	// if we want to also print out datatypes
+    out << "<br/><font color='orange'>";
+    this->datatype->put(out);
+    out << "</font>";
+  }
+  out << "</td>";
   if (link && (link->is_explicit() == true)) {
     // indices have been given via index hack in source file:
     link->to_dot_overlayindices(out, false);
