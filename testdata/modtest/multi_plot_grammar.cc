@@ -63,8 +63,8 @@ int main(int argc, char **argv) {
     return 9;
   }
 	
-  b = driver.ast.check_instances(driver.ast.first_instance);
-  if (!b)
+  r = driver.ast.check_instances(driver.ast.first_instance);
+  if (!r)
     return 10;
 
   // apply this to identify standard functions like Min, Max, Exp etc.
