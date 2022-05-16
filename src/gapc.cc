@@ -343,6 +343,7 @@ class Main {
     // that links the grammar graph together, and computes yield-sizes.
     // If the method returns false, there are some semantic errors,
     // which leads to the end of the compilation process.
+    driver.ast.derive_temp_alphabet();
     bool r = grammar->check_semantic();
     if (!r) {
       throw LogError("Seen semantic errors.");
