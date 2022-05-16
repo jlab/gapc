@@ -45,19 +45,10 @@ int main(int argc, char **argv) {
   // inject rules for outside grammar
   //grammar->inject_outside_nts();
 
-  // replace Alt::Block from grammar rules with explicit
-  // alternatives
-  //for (hashtable<std::string, Symbol::Base*>::iterator i = grammar->NTs.begin();
-  //     i != grammar->NTs.end(); ++i) {
-  //  (*i).second->resolve_blocks();
-  //}
-
   // set approx table design
-  //if (grammar->tabulated.empty()) {
-  //	  grammar->approx_table_conf();
-  //}
-
-  grammar->approx_table_conf();	
+  if (grammar->tabulated.empty()) {
+  	  grammar->approx_table_conf();
+  }
 	
   // find what type of input is read
   // chars, sequence of ints etc.
