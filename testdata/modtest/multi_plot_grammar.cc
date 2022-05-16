@@ -24,7 +24,10 @@ int main(int argc, char **argv) {
 
   // parses the input file and builds the AST
   driver.parse();
-
+  if (driver.is_failing()) {
+    return 4;
+  }
+	
   // simply gets the selected grammar, which is either the
   // grammar that occurred first in the source code or is the
   // one that was named in the parameters on the command line
@@ -36,24 +39,37 @@ int main(int argc, char **argv) {
   // which leads to the end of the compilation process.
   bool r = grammar->check_semantic();
   if (!r) {
-    throw LogError("Seen semantic errors.");
+    return 2;
   }
 
   // inject rules for outside grammar
   //grammar->inject_outside_nts();
 
-  // set approx table design
-  if (grammar->tabulated.empty()) {
-	  grammar->approx_table_conf();
+  // replace Alt::Block from grammar rules with explicit
+  // alternatives
+  for (hashtable<std::string, Symbol::Base*>::iterator i = grammar->NTs.begin();
+       i != grammar->NTs.end(); ++i) {
+    (*i).second->resolve_blocks();
   }
 
+  // set approx table design
+  //if (grammar->tabulated.empty()) {
+  //	  grammar->approx_table_conf();
+  //}
+
+  grammar->approx_table_conf();	
+	
   // find what type of input is read
   // chars, sequence of ints etc.
   driver.ast.derive_temp_alphabet();
 
-  r = driver.ast.check_signature();
-  if (!r) {
-	throw LogError("Seen signature errors.");
+  try {
+    r = driver.ast.check_signature();
+    if (!r) {
+      return 3;
+    }
+  } catch (LogThreshException) {
+    return 9;
   }
 
   // apply this to identify standard functions like Min, Max, Exp etc.
@@ -70,4 +86,6 @@ int main(int argc, char **argv) {
 
   unsigned int nodeID = 1;
   grammar->to_dot(&nodeID, std::cout);
+  
+  return 0;
 }
