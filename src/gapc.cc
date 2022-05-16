@@ -347,6 +347,10 @@ class Main {
     if (!r) {
       throw LogError("Seen semantic errors.");
     }
+    r = driver.ast.check_signature();
+    if (!r) {
+      throw LogError("Seen signature errors.");
+    }
 
     // configure the window and k-best mode
     driver.ast.set_window_mode(opts.window_mode);
@@ -387,10 +391,6 @@ class Main {
                       // chars, sequence of ints etc.
     driver.ast.derive_temp_alphabet();
 
-    r = driver.ast.check_signature();
-    if (!r) {
-      throw LogError("Seen signature errors.");
-    }
     r = driver.ast.check_algebras();
     if (!r) {
       throw LogError("Seen algebra errors.");
