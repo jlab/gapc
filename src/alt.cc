@@ -3104,8 +3104,11 @@ void to_dot_indices(std::vector<Expr::Base*> indices, std::ostream &out) {
   out << "<td><font point-size='8' color='#555555'>";
   for (std::vector<Expr::Base*>::const_iterator track = indices.begin();
        track != indices.end(); ++track) {
-    assert(*track != NULL);
-    (*track)->put(out);
+    if (*track == NULL) {
+      out << "NULL";
+    } else {
+      (*track)->put(out);
+    }
     if (std::next(track) != indices.end()) {
       out << "<br/>";
     }
@@ -3239,7 +3242,11 @@ unsigned int Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out) {
   if (true) {
 	// if we want to also print out datatypes
     out << "<br/><font color='orange'>";
-    this->datatype->put(out);
+    if (this->datatype == NULL) {
+      out << "NULL";
+    } else {
+      this->datatype->put(out);
+    }
     out << "</font>";
   }
   out << "</td>";
