@@ -1658,7 +1658,11 @@ unsigned int Symbol::Base::to_dot(unsigned int *nodeID, std::ostream &out,
   if (true) {
     // if we want to also print out datatypes
     out << "<br/><font color='orange'>";
-    this->datatype->put(out);
+    if (this->datatype == NULL) {
+      out << "NULL";
+    } else {
+      this->datatype->put(out);
+    }
     out << "</font>";
   }
   out << "</td>";
