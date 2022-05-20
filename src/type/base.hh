@@ -26,6 +26,7 @@
 
 #include <cassert>
 #include <sstream>
+#include <string>
 
 #include "../loc.hh"
 #include "../printer_fwd.hh"
