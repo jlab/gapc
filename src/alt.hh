@@ -369,6 +369,7 @@ class Base {
   // parent with child Alt::Block (necessary to change pointer when resolving
   // blocks)
   virtual Alt::Base *find_block_parent(const Alt::Base &block);
+  bool inside_end = false;
 };
 
 

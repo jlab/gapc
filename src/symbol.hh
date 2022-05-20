@@ -345,7 +345,7 @@ class NT : public Base {
     // rules. There is one pointer stored for each alternative.
     std::list<Alt::Base*> alts;
     void set_alts(const std::list<Alt::Base*> &a);
-
+    bool inside_end = false;
 
  public:
     std::string *eval_fn;

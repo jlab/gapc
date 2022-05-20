@@ -1661,7 +1661,7 @@ unsigned int Symbol::Base::to_dot(unsigned int *nodeID, std::ostream &out,
     if (this->datatype == NULL) {
       out << "NULL";
     } else {
-      this->datatype->put(out);
+      this->datatype->to_dot(out);
     }
     out << "</font>";
   }

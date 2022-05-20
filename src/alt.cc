@@ -3240,12 +3240,12 @@ unsigned int Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out) {
     out << "<td>a block";
   }
   if (true) {
-	// if we want to also print out datatypes
+    // if we want to also print out datatypes
     out << "<br/><font color='orange'>";
     if (this->datatype == NULL) {
       out << "NULL";
     } else {
-      this->datatype->put(out);
+      this->datatype->to_dot(out);
     }
     out << "</font>";
   }
