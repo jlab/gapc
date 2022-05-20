@@ -1013,6 +1013,43 @@ void Grammar::resolve_blocks() {
   }
 }
 
+
+void Grammar::flag_inside_terminal_ends() {
+  // defines the visitor used a few lines later
+  // Traverses grammar and flags non-terminals that NEITHER link to other
+  // non-terminals NOR apply algebra functions, e.g. times = CHAR('*')
+  // These NTs cannot translated into outside versions.
+  struct Find_Inside_Ends : public Visitor {
+    void visit_end(Alt::Link &alt) {
+      alt.inside_end = alt.nt == NULL;
+    }
+    void visit_end(Alt::Simple &alt) {
+      for (std::list<Fn_Arg::Base*>::iterator i = alt.args.begin();
+           i != alt.args.end(); ++i) {
+        if (dynamic_cast<Fn_Arg::Alt*>(*i)) {
+          alt.inside_end = false;
+          return;
+        }
+      }
+      alt.inside_end = true;
+    }
+    void visit_end(Symbol::NT &nt) {
+      for (std::list<Alt::Base*>::iterator i = nt.alts.begin();
+           i != nt.alts.end(); ++i) {
+        if ((*i)->inside_end == false) {
+          nt.inside_end = false;
+          return;
+        }
+      }
+      nt.inside_end = true;
+    }
+  };
+
+  // create a visitor and traverse the
+  Find_Inside_Ends visitor;
+  traverse(visitor);
+}
+
 void Grammar::inject_outside_nts() {
   std::vector<std::string> outside_nt_list;
   Grammar::inject_outside_nts(outside_nt_list);
@@ -1050,13 +1087,17 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
     throw LogError(msg);
   }
 
+  // traverse grammar and flag NTs that only use terminals on their rhs
+  this->flag_inside_terminal_ends();
+
   // 1) collect non-terminals used in rhs of productions together with their
   // calling lhs non-terminal we thus exclude e.g. non-terminal foo in
   // production "foo = BASE;"
   for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin();
        i != NTs.end(); ++i) {
     Symbol::NT *nt = dynamic_cast<Symbol::NT*>(i->second);
-    if (nt) {  // skip terminals
+    if ((nt) && (!nt->inside_end)) {
+      // skip terminals and NTs that only point to terminals
       for (std::list<Alt::Base*>::iterator alt = nt->alts.begin();
            alt != nt->alts.end(); ++alt) {
         std::list<Symbol::NT*> *rhs_nts = new std::list<Symbol::NT*>();
@@ -1066,7 +1107,12 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
           // non-terminal and all rhs non-terminal(s)) will be added as
           // novel outside non-terminals
           outside_nts.insert(nt);
-          outside_nts.insert(rhs_nts->begin(), rhs_nts->end());
+          for (std::list<Symbol::NT*>::const_iterator rhs_nt = rhs_nts->begin();
+               rhs_nt != rhs_nts->end(); ++rhs_nt) {
+            if (!(*rhs_nt)->inside_end) {
+              outside_nts.insert(*rhs_nt);
+            }
+          }
         }
       }
     }
@@ -1086,6 +1132,14 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
     // use inside NT as template ...
     Symbol::NT *inside_nt = dynamic_cast<Symbol::NT*>(
       this->NTs.find(*(*nt)->name)->second);
+
+    // skip inside NTs that only point to terminals like
+    // times = CHAR('*')
+    if (inside_nt->inside_end) {
+      // inside terminal is NOT transformed into outside NT
+      continue;
+    }
+
     // and clone for outside version
     Symbol::NT *outside_nt = inside_nt->clone(inside_nt->track_pos());
     // remove all existing alternative production rules
@@ -1106,7 +1160,8 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
   for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin();
        i != NTs.end(); ++i) {
     Symbol::NT *nt = dynamic_cast<Symbol::NT*>(i->second);
-    if (nt) {  // skip terminals
+    // skip terminals and NTs that end in terminals
+    if ((nt) && (!nt->inside_end)) {
       // don't directly operate on given inside NTs,
       // but first resolve Alt::Block use for outside rules
       Symbol::NT *nt_resolved = nt->clone(nt->track_pos());
@@ -1124,6 +1179,12 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
           // unsigned int skip_occurences = 0;
           for (std::list<Symbol::NT*>::iterator it_nt = rhs_nts->begin();
                it_nt != rhs_nts->end(); ++it_nt) {
+            // skip inside NTs that only point to terminals like
+            // times = CHAR('*')
+            if ((*it_nt)->inside_end) {
+              continue;
+            }
+
             // create a copy (=clone) of the inside alternative
             Alt::Base *outside_alt = (*alt)->clone();
             // replace one of the inside non-terminals with the outside

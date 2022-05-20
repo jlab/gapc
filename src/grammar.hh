@@ -213,6 +213,10 @@ class Grammar {
 
   void multi_propagate_max_filter();
 
+  // traverse grammar and flag those NTs (and production rules)
+  // that only use terminal parsers, because these shall not be
+  // translated into outside NTs, e.g. times = CHAR('*')
+  void flag_inside_terminal_ends();
   // inject additional non-terminals to grammar, to automatically create
   // an outside version for user provided grammar
   void inject_outside_nts(std::vector<std::string> outside_nt_list);
