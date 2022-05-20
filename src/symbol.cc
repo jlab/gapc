@@ -1697,8 +1697,18 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
     }
     if (this->eval_fn != NULL) {
       unsigned int choiceID = (unsigned int)((*nodeID)++);
-      out << "node_" << choiceID << " [ label=" << *this->eval_fn
-          << ", fontcolor=\"purple\" , shape=none ];\n";
+      out << "node_" << choiceID << " [ label=<" << *this->eval_fn;
+      if (true) {
+        // if we want to also print out datatypes
+        out << "<br/><font color='orange'>";
+        if (this->eval_decl == NULL) {
+          out << "NULL";
+        } else {
+          this->eval_decl->return_type->to_dot(out);
+        }
+        out << "</font>";
+      }
+      out << ">, fontcolor=\"purple\" , shape=none ];\n";
       out << "node_" << thisID << " -> node_" << choiceID
           << " [ arrowhead=none, color=\"purple\" ];\n";
     }
