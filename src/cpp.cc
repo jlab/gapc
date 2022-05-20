@@ -2261,9 +2261,16 @@ void Printer::Cpp::print_insideoutside_report_fn(
 
   for (std::list<Symbol::NT*>::iterator nt_inside = reported_nts->begin();
        nt_inside != reported_nts->end(); ++nt_inside) {
-    Symbol::NT *nt_outside = dynamic_cast<Symbol::NT*>(
-      (*ast.grammar()->NTs.find(std::string("outside_") +
-       *((*nt_inside)->name))).second);
+    hashtable<std::string, Symbol::Base*>::iterator outside_ntpair =
+      ast.grammar()->NTs.find(std::string("outside_") + *((*nt_inside)->name));
+    if (outside_ntpair == ast.grammar()->NTs.end()) {
+      // not all inside NTs will be translated into outside NTs, e.g.
+      // times = CHAR('*') won't have an outside counterpart.
+      continue;
+    }
+
+    Symbol::NT *nt_outside =
+      dynamic_cast<Symbol::NT*>((*outside_ntpair).second);
 
     for (size_t track = 0; track < (*nt_inside)->tracks(); ++track) {
       if ((*nt_inside)->tables()[track].type() == Table::QUADRATIC) {
