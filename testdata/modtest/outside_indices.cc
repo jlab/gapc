@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
 
   r = driver.ast.check_signature();
   if (!r) {
-	throw LogError("Seen signature errors.");
+	return 4;
   }
 
   // apply this to identify standard functions like Min, Max, Exp etc.
