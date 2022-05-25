@@ -80,6 +80,8 @@ int main(int argc, char **argv) {
   grammar->dep_analysis();
 
   grammar -> init_calls();
+
+  grammar->init_self_rec();
 	
   unsigned int nodeID = 1;
   grammar->to_dot(&nodeID, std::cout);
