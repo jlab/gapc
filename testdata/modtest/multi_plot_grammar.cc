@@ -67,6 +67,7 @@ int main(int argc, char **argv) {
   if (!r)
     return 10;
 
+  driver.ast.optimize_choice()
   // apply this to identify standard functions like Min, Max, Exp etc.
   driver.ast.derive_roles();
 
@@ -78,7 +79,7 @@ int main(int argc, char **argv) {
   grammar->init_decls();
   // for cyk (ordering of NT for parsing, see page 101 of the thesis)
   grammar->dep_analysis();
-  grammar -> init_self_rec();
+
   unsigned int nodeID = 1;
   grammar->to_dot(&nodeID, std::cout);
   
