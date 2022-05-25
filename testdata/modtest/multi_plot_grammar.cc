@@ -79,6 +79,8 @@ int main(int argc, char **argv) {
   // for cyk (ordering of NT for parsing, see page 101 of the thesis)
   grammar->dep_analysis();
 
+  grammar -> init_calls();
+	
   unsigned int nodeID = 1;
   grammar->to_dot(&nodeID, std::cout);
   
