@@ -1967,8 +1967,9 @@ void Alt::Simple::codegen(AST &ast) {
   push_back_ret_decl();
   std::list<Statement::Base*> *stmts = &statements;
 
-
-  init_guards();
+  if (guards) {
+    init_guards();
+  }
 //  if (guards) {
 //    stmts->push_back(guards);
 //    if (datatype->simple()->is(::Type::LIST)) {
