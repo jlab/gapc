@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
   if (!r)
     return 10;
 
-  grammar->driver.ast.codegen();
+  driver.ast.codegen();
   
   // apply this to identify standard functions like Min, Max, Exp etc.
   driver.ast.derive_roles();
