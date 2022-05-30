@@ -1554,6 +1554,8 @@ void Alt::Simple::init_guards() {
       if (lname && (lname->name()->compare(*leftmost->name()) == 0)) {
         // the rare case where guards check themselves
         // happens e.g. if table has only one dimension
+        l.push_back(new Expr::Greater_Eq(
+          lname->minus(leftmost), new Expr::Const(0)));
       } else {
         l.push_back(new Expr::Greater_Eq((*it_left_inner_indices),
                                          leftmost->plus(ys->first->low())));
@@ -1568,6 +1570,8 @@ void Alt::Simple::init_guards() {
       if (rname && (rname->name()->compare(*rightmost->name()) == 0)) {
         // the rare case where guards check themselves
         // happens e.g. if table has only one dimension
+          l.push_back(new Expr::Less_Eq(
+            rname->minus(rightmost), new Expr::Const(0)));
       } else {
         l.push_back(new Expr::Less_Eq(
           (*it_right_inner_indices)->plus(ys->second->low()), rightmost));
@@ -1967,9 +1971,7 @@ void Alt::Simple::codegen(AST &ast) {
   push_back_ret_decl();
   std::list<Statement::Base*> *stmts = &statements;
 
-  if (guards) {
-    init_guards();
-  }
+  init_guards();
 //  if (guards) {
 //    stmts->push_back(guards);
 //    if (datatype->simple()->is(::Type::LIST)) {
