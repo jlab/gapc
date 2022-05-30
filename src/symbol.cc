@@ -1625,7 +1625,8 @@ bool Symbol::Terminal::isPredefinedTerminalParser() {
 
 // the following functions produce graphViz code to represent the grammar
 unsigned int Symbol::Base::to_dot(unsigned int *nodeID, std::ostream &out,
-                                  bool is_rhs, Symbol::NT *axiom, int plot_level) {
+                                  bool is_rhs, Symbol::NT *axiom,
+								  int plot_level) {
   unsigned int thisID = (unsigned int)((*nodeID)++);
   out << "node_" << thisID << " [ label=<<table border='0'><tr>";
   if (plot_level == 0){
@@ -1640,14 +1641,18 @@ unsigned int Symbol::Base::to_dot(unsigned int *nodeID, std::ostream &out,
   return thisID;
 }
 unsigned int Symbol::Terminal::to_dot(unsigned int *nodeID, std::ostream &out,
-                                      bool is_rhs, Symbol::NT *axiom, int plot_level) {
-  unsigned int thisID = Symbol::Base::to_dot(nodeID, out, is_rhs, axiom, plot_level);
+                                      bool is_rhs, Symbol::NT *axiom,
+									  int plot_level) {
+  unsigned int thisID = Symbol::Base::to_dot(nodeID, out, is_rhs, axiom,
+		  plot_level);
   out << ", color=\"blue\", fontcolor=\"blue\" ];\n";
   return thisID;
 }
 unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
-                                bool is_rhs, Symbol::NT *axiom, int plot_level) {
-  unsigned int thisID = Symbol::Base::to_dot(nodeID, out, is_rhs, axiom, plot_level);
+                                bool is_rhs, Symbol::NT *axiom, int plot_level)
+{
+  unsigned int thisID = Symbol::Base::to_dot(nodeID, out, is_rhs, axiom,
+		  plot_level);
   int pre_ID = thisID;
   std::string rank = "";
   out << ", color=\"black\"";
@@ -1665,14 +1670,22 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
          alt != this->alts.end(); ++alt) {
       unsigned int childID = (*alt)->to_dot(nodeID, out, plot_level);
       if (pre_ID != thisID){
-    	  out << "node_" << pre_ID << "_" << childID << "[ label=<<table border='0'><tr><td><font point-size='30'>|</font></td></tr></table>>, shape=plaintext];\n";
+    	  out << "node_" << pre_ID << "_" << childID << "[ label=<<table "
+    			  "border='0'><tr><td><font point-size='30'>|</font></td>"
+    			  "</tr></table>>, shape=plaintext];\n";
       }
       else{
-    	  out << "node_"  << pre_ID << "_" << childID << "[ label=<<table border='0'><tr><td><font point-size='30'>&rarr;</font></td></tr></table>>, shape=plaintext];\n";
+    	  out << "node_"  << pre_ID << "_" << childID << "[ label=<<table "
+    			  "border='0'><tr><td><font point-size='30'>&rarr;</font>"
+    			  "</td></tr></table>>, shape=plaintext];\n";
       }
-      out << "node_" << pre_ID << " -> node_" << pre_ID << "_" << childID << "[style= invis];\n";
-      out << "node_" << pre_ID << "_" << childID << " -> node_" << childID << "[style= invis];\n";
-      rank =  rank + "node_" + std::to_string(pre_ID) + "_" + std::to_string(childID) + " " + "node_" + std::to_string(childID) + " ";
+      out << "node_" << pre_ID << " -> node_" << pre_ID << "_" << childID <<
+    		  "[style= invis];\n";
+      out << "node_" << pre_ID << "_" << childID << " -> node_" << childID <<
+    		  "[style= invis];\n";
+      rank =  rank + "node_" + std::to_string(pre_ID) + "_" +
+    		  std::to_string(childID) + " " + "node_" +
+			  std::to_string(childID) + " ";
       pre_ID = childID;
     }
     out << "{ rank=same node_" << thisID << " " << rank << "}\n";

@@ -3048,7 +3048,8 @@ void Alt::Base::to_dot_semanticfilters(unsigned int *nodeID,
         << " [ arrowhead=none, color=\"magenta\" ];\n";
   }
 }
-unsigned int Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out, int plot_level) {
+unsigned int Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out,
+		int plot_level) {
   unsigned int thisID = (unsigned int)((*nodeID)++);
   out << "node_" << thisID << " [ label=<<table border='0'><tr>";
   Alt::Link *link = dynamic_cast<Alt::Link*>(this);
@@ -3137,13 +3138,15 @@ unsigned int Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out, int plot
 
   return thisID;
 }
-unsigned int Alt::Simple::to_dot(unsigned int *nodeID, std::ostream &out, int plot_level) {
+unsigned int Alt::Simple::to_dot(unsigned int *nodeID, std::ostream &out,
+		int plot_level) {
   unsigned int thisID = Alt::Base::to_dot(nodeID, out, plot_level);
   for (std::list<Fn_Arg::Base*>::const_iterator arg = this->args.begin();
        arg != this->args.end(); ++arg) {
     Fn_Arg::Alt *argalt = dynamic_cast<Fn_Arg::Alt*>(*arg);
     if (argalt) {
-      unsigned int childID = argalt->alt_ref()->to_dot(nodeID, out, plot_level);
+      unsigned int childID = argalt->alt_ref()->to_dot(nodeID, out,
+    		  plot_level);
       out << "node_" << thisID << " -> node_" << childID
           << " [ arrowhead=none ";
       Alt::Multi *multi = dynamic_cast<Alt::Multi*>(argalt->alt_ref());
@@ -3155,10 +3158,12 @@ unsigned int Alt::Simple::to_dot(unsigned int *nodeID, std::ostream &out, int pl
   }
   return thisID;
 }
-unsigned int Alt::Link::to_dot(unsigned int *nodeID, std::ostream &out, int plot_level) {
+unsigned int Alt::Link::to_dot(unsigned int *nodeID, std::ostream &out,
+		int plot_level) {
   return Alt::Base::to_dot(nodeID, out, plot_level);
 }
-unsigned int Alt::Block::to_dot(unsigned int *nodeID, std::ostream &out, int plot_level) {
+unsigned int Alt::Block::to_dot(unsigned int *nodeID, std::ostream &out,
+		int plot_level) {
   unsigned int thisID = Alt::Base::to_dot(nodeID, out, plot_level);
 
   for (std::list<Alt::Base*>::const_iterator alt = this->alts.begin();
@@ -3170,7 +3175,8 @@ unsigned int Alt::Block::to_dot(unsigned int *nodeID, std::ostream &out, int plo
 
   return thisID;
 }
-unsigned int Alt::Multi::to_dot(unsigned int *nodeID, std::ostream &out, int plot_level) {
+unsigned int Alt::Multi::to_dot(unsigned int *nodeID, std::ostream &out,
+		int plot_level) {
   unsigned int thisID = (unsigned int)((*nodeID)++);
   out << "subgraph cluster_node_" << thisID << " {\n";
   unsigned int lastID = 0;

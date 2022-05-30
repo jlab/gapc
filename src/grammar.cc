@@ -1000,7 +1000,8 @@ void Grammar::remove(Symbol::NT *x) {
   tabulated.erase(nt);
 }
 
-unsigned int Grammar::to_dot(unsigned int *nodeID, std::ostream &out, int plot_level) {
+unsigned int Grammar::to_dot(unsigned int *nodeID, std::ostream &out,
+		int plot_level) {
   out << "digraph " << *this->name << " {\n";
   out << "compound = True;\n newrank=True;\n";
   for (std::list<Symbol::NT*>::const_iterator nt = this->nt_list.begin();
