@@ -1,5 +1,6 @@
 #include "../../src/driver.hh"
 #include "../../src/log.hh"
+#include "../../src/instance.hh"
 
 #include <iostream>
 #include <iomanip>
@@ -62,13 +63,14 @@ int main(int argc, char **argv) {
   } catch (LogThreshException) {
     return 9;
   }
+  Instance *inst = driver.ast.first_instance;
 	
-  r = driver.ast.check_instances(driver.ast.first_instance);
+  r = driver.ast.check_instances(inst);
   if (!r)
     return 10;
 
-  driver.ast.codegen();
-  
+  driver.ast.optimize_choice()
+	  
   // apply this to identify standard functions like Min, Max, Exp etc.
   driver.ast.derive_roles();
 
