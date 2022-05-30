@@ -69,10 +69,6 @@ int main(int argc, char **argv) {
   if (!r)
     return 10;
 
-  r = driver.ast.insert_instance(inst);
-  if (!r)
-    return 11;
-	  
   // apply this to identify standard functions like Min, Max, Exp etc.
   driver.ast.derive_roles();
 
