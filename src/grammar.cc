@@ -1000,13 +1000,13 @@ void Grammar::remove(Symbol::NT *x) {
   tabulated.erase(nt);
 }
 
-unsigned int Grammar::to_dot(unsigned int *nodeID, std::ostream &out) {
+unsigned int Grammar::to_dot(unsigned int *nodeID, std::ostream &out, int plot_level) {
   out << "digraph " << *this->name << " {\n";
   out << "compound = True;\n newrank=True;\n";
   for (std::list<Symbol::NT*>::const_iterator nt = this->nt_list.begin();
        nt != this->nt_list.end(); ++nt) {
 	out << "subgraph cluster_" << &*nt << "{\n";
-    (*nt)->to_dot(nodeID, out, false, this->axiom);
+    (*nt)->to_dot(nodeID, out, false, this->axiom, plot_level);
     out << "}\n";
   }
   out << "}\n";

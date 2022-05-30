@@ -310,7 +310,7 @@ class Base {
   bool choice_set();
   void to_dot_semanticfilters(unsigned int *nodeID, unsigned int thisID,
     std::ostream &out, std::vector<unsigned int> *childIDs = NULL);
-  virtual unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
+  virtual unsigned int to_dot(unsigned int *nodeID, std::ostream &out, int plot_level);
 };
 
 
@@ -489,7 +489,7 @@ class Simple : public Base {
 
  public:
   void set_ntparas(std::list<Expr::Base*> *l);
-  unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
+  unsigned int to_dot(unsigned int *nodeID, std::ostream &out, int plot_level);
 
  private:
   std::list<Statement::Base*> *insert_index_stmts(
@@ -612,7 +612,7 @@ class Link : public Base {
   bool check_ntparas();
 
   void optimize_choice();
-  unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
+  unsigned int to_dot(unsigned int *nodeID, std::ostream &out, int plot_level);
 };
 
 
@@ -680,7 +680,7 @@ class Block : public Base {
 
   void multi_collect_factors(Runtime::Poly &p);
   void multi_init_calls(const Runtime::Poly &p, size_t base_tracks);
-  unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
+  unsigned int to_dot(unsigned int *nodeID, std::ostream &out, int plot_level);
 };
 
 
@@ -751,7 +751,7 @@ class Multi : public Base {
   void types(std::list< ::Type::Base*> &) const;
   const std::list<Statement::Var_Decl*> &ret_decls() const;
   void init_ret_decl(unsigned int i, const std::string &prefix);
-  unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
+  unsigned int to_dot(unsigned int *nodeID, std::ostream &out, int plot_level);
 };
 
 }  // namespace Alt

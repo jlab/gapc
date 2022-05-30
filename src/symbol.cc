@@ -1625,24 +1625,29 @@ bool Symbol::Terminal::isPredefinedTerminalParser() {
 
 // the following functions produce graphViz code to represent the grammar
 unsigned int Symbol::Base::to_dot(unsigned int *nodeID, std::ostream &out,
-                                  bool is_rhs, Symbol::NT *axiom) {
+                                  bool is_rhs, Symbol::NT *axiom, int plot_level) {
   unsigned int thisID = (unsigned int)((*nodeID)++);
   out << "node_" << thisID << " [ label=<<table border='0'><tr>";
-  to_dot_indices(this->left_indices, out);
-  out << "<td>" << *this->name << "</td>";
-  to_dot_indices(this->right_indices, out);
-  out << "</tr></table>>";
+  if (plot_level == 0){
+	  out << "<td>" << *this->name << "</td></tr></table>>";
+  }
+  else{
+	  to_dot_indices(this->left_indices, out);
+	  out << "<td>" << *this->name << "</td>";
+	  to_dot_indices(this->right_indices, out);
+	  out << "</tr></table>>";
+  }
   return thisID;
 }
 unsigned int Symbol::Terminal::to_dot(unsigned int *nodeID, std::ostream &out,
-                                      bool is_rhs, Symbol::NT *axiom) {
-  unsigned int thisID = Symbol::Base::to_dot(nodeID, out, is_rhs, axiom);
+                                      bool is_rhs, Symbol::NT *axiom, int plot_level) {
+  unsigned int thisID = Symbol::Base::to_dot(nodeID, out, is_rhs, axiom, plot_level);
   out << ", color=\"blue\", fontcolor=\"blue\" ];\n";
   return thisID;
 }
 unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
-                                bool is_rhs, Symbol::NT *axiom) {
-  unsigned int thisID = Symbol::Base::to_dot(nodeID, out, is_rhs, axiom);
+                                bool is_rhs, Symbol::NT *axiom, int plot_level) {
+  unsigned int thisID = Symbol::Base::to_dot(nodeID, out, is_rhs, axiom, plot_level);
   int pre_ID = thisID;
   std::string rank = "";
   out << ", color=\"black\"";
@@ -1658,7 +1663,7 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
     out << " ];\n";
     for (std::list<Alt::Base*>::const_iterator alt = this->alts.begin();
          alt != this->alts.end(); ++alt) {
-      unsigned int childID = (*alt)->to_dot(nodeID, out);
+      unsigned int childID = (*alt)->to_dot(nodeID, out, plot_level);
       if (pre_ID != thisID){
     	  out << "node_" << pre_ID << "_" << childID << "[ label=<<table border='0'><tr><td><font point-size='30'>|</font></td></tr></table>>, shape=plaintext];\n";
       }
