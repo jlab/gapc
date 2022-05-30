@@ -2214,12 +2214,7 @@ void Printer::Cpp::print_insideoutside(
   stream << indent() << "out << \"start answers " << *nt->name
          << "(\"" << args_print.str() << " << \"):\\n\";\n";
   for (std::list<Fn_Def*>::iterator i = l.begin(); i != l.end(); ++i) {
-    std::string res = "res_";
-    if (nt->is_partof_outside) {
-      res += std::string("outside");
-    } else {
-      res += std::string("inside");
-    }
+    std::string res = "res_" + *nt->name;
     stream << indent() << *((*i)->return_type) << " " << res << " = nt_"
            << *nt->name << "(" << args.str() << ");\n";
     stream << indent() << "print_result(std::cout, " << res << ");\n";
