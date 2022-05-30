@@ -63,11 +63,12 @@ int main(int argc, char **argv) {
     return 9;
   }
 	
-  r = driver.ast.check_instances(driver.ast.first_instance);
+  Instance i = driver.ast.first_instance;
+  r = driver.ast.check_instances(i);
   if (!r)
     return 10;
 
-  driver.ast.optimize_choice(&driver.ast.first_instance);
+  driver.ast.optimize_choice(&i);
   // apply this to identify standard functions like Min, Max, Exp etc.
   driver.ast.derive_roles();
 
