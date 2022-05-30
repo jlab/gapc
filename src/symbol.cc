@@ -1643,6 +1643,8 @@ unsigned int Symbol::Terminal::to_dot(unsigned int *nodeID, std::ostream &out,
 unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
                                 bool is_rhs, Symbol::NT *axiom) {
   unsigned int thisID = Symbol::Base::to_dot(nodeID, out, is_rhs, axiom);
+  int pre_ID = thisID;
+  std::string rank = "";
   out << ", color=\"black\"";
   if (!is_rhs) {
     // a non-terminal "calling" productions, i.e. on the left hand side
@@ -1657,14 +1659,25 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
     for (std::list<Alt::Base*>::const_iterator alt = this->alts.begin();
          alt != this->alts.end(); ++alt) {
       unsigned int childID = (*alt)->to_dot(nodeID, out);
-      out << "node_" << thisID << " -> node_" << childID << ";\n";
+      if (pre_ID != thisID){
+    	  out << "node_" << pre_ID << "_" << childID << "[ label=<<table border='0'><tr><td><font point-size='30'>|</font></td></tr></table>>, shape=plaintext];\n";
+      }
+      else{
+    	  out << "node_"  << pre_ID << "_" << childID << "[ label=<<table border='0'><tr><td><font point-size='30'>&rarr;</font></td></tr></table>>, shape=plaintext];\n";
+      }
+      out << "node_" << pre_ID << " -> node_" << pre_ID << "_" << childID << "[style= invis];\n";
+      out << "node_" << pre_ID << "_" << childID << " -> node_" << childID << "[style= invis];\n";
+      rank =  rank + "node_" + std::to_string(pre_ID) + "_" + std::to_string(childID) + " " + "node_" + std::to_string(childID) + " ";
+      pre_ID = childID;
     }
+    out << "{ rank=same node_" << thisID << " " << rank << "}\n";
     if (this->eval_fn != NULL) {
       unsigned int choiceID = (unsigned int)((*nodeID)++);
       out << "node_" << choiceID << " [ label=" << *this->eval_fn
           << ", fontcolor=\"purple\" , shape=none ];\n";
-      out << "node_" << thisID << " -> node_" << choiceID
+      out << "node_" << choiceID << " -> node_" << thisID
           << " [ arrowhead=none, color=\"purple\" ];\n";
+      out << "{ rank = same node_" << choiceID << " node_" << thisID << " }\n";
     }
   }
   return thisID;
