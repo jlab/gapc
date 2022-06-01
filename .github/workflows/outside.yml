@@ -2,7 +2,7 @@ name: test outside injection
 
 on:
   push:
-    branches: [ master, outside_looporder ]
+    branches: [ master ]
   pull_request:
     branches: [ master, outside_looporder ]
   workflow_dispatch:
