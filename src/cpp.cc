@@ -2192,19 +2192,19 @@ void Printer::Cpp::print_cyk_fn(const AST &ast) {
 }
 
 void Printer::Cpp::print_insideoutside(
-    Symbol::NT *nt) {
+    Symbol::NT *nt, unsigned int dim) {
   std::ostringstream args;
   std::ostringstream args_print;
   std::list<Fn_Def*> &l = nt->code_list();
 
   for (size_t track = 0; track < (*nt).tracks(); ++track) {
-    if ((*nt).tables()[track].type() == Table::QUADRATIC) {
-      args << "t_" << track << "_i,t_" << track << "_j";
-      args_print << " << t_" << track << "_i << \",\" << t_" << track << "_j";
-    }
-    if ((*nt).tables()[track].type() == Table::LINEAR) {
+    if (dim >= 1) {
       args << "t_" << track << "_i";
       args_print << " << t_" << track << "_i";
+    }
+    if (dim >= 2) {
+      args << ",t_" << track << "_j";
+      args_print << " << \",\" << t_" << track << "_j";
     }
     if (track+1 < (*nt).tracks()) {
       args << ",";
@@ -2268,38 +2268,55 @@ void Printer::Cpp::print_insideoutside_report_fn(
       dynamic_cast<Symbol::NT*>((*outside_ntpair).second);
 
     for (size_t track = 0; track < (*nt_inside)->tracks(); ++track) {
-      if ((*nt_inside)->tables()[track].type() == Table::QUADRATIC) {
+      unsigned int dim_inside = 2;
+      if ((*nt_inside)->tables()[track].delete_left_index()) {
+        dim_inside--;
+      }
+      if ((*nt_inside)->tables()[track].delete_right_index()) {
+        dim_inside--;
+      }
+
+      unsigned int dim_outside = 2;
+      if (nt_outside->tables()[track].delete_left_index()) {
+        dim_outside--;
+      }
+      if (nt_outside->tables()[track].delete_right_index()) {
+        dim_outside--;
+      }
+
+      if (dim_inside == 0) {
+        print_insideoutside(*nt_inside, dim_inside);
+      }
+      if (dim_outside == 0) {
+        print_insideoutside(nt_outside, dim_outside);
+      }
+      if ((dim_inside > 0) || (dim_outside > 0)) {
         stream << indent() << "for (unsigned int t_" << track << "_i = t_"
                << track << "_left_most; t_" << track << "_i <= t_" << track
                << "_right_most; ++t_" << track << "_i) {" << endl;
         inc_indent();
-        stream << indent() << "for (unsigned int t_" << track << "_j = t_"
-               << track << "_i; t_" << track << "_j <= t_" << track
-               << "_right_most; ++t_" << track << "_j) {" << endl;
-        inc_indent();
-      }
-      if ((*nt_inside)->tables()[track].type() == Table::LINEAR) {
-        stream << indent() << "for (unsigned int t_" << track << "_i = t_"
-               << track << "_left_most; t_" << track << "_i <= t_" << track
-               << "_right_most; ++t_" << track << "_i) {"
-               << endl;
-        inc_indent();
-      }
-    }
-
-    print_insideoutside(*nt_inside);
-    print_insideoutside(nt_outside);
-
-    for (size_t track = 0; track < (*nt_inside)->tracks(); ++track) {
-      if ((*nt_inside)->tables()[track].type() == Table::QUADRATIC) {
+        if (dim_inside == 1) {
+          print_insideoutside(*nt_inside, dim_inside);
+        }
+        if (dim_outside == 1) {
+          print_insideoutside(nt_outside, dim_outside);
+        }
+        if ((dim_inside == 2) || (dim_outside == 2)) {
+          stream << indent() << "for (unsigned int t_" << track << "_j = t_"
+                 << track << "_i; t_" << track << "_j <= t_" << track
+                 << "_right_most; ++t_" << track << "_j) {" << endl;
+          inc_indent();
+          if (dim_inside == 2) {
+            print_insideoutside(*nt_inside, dim_inside);
+          }
+          if (dim_outside == 2) {
+            print_insideoutside(nt_outside, dim_outside);
+          }
           dec_indent();
           stream << indent() << "}" << endl;
-          dec_indent();
-          stream << indent() << "}" << endl;
-      }
-      if ((*nt_inside)->tables()[track].type() == Table::LINEAR) {
-          dec_indent();
-          stream << indent() << "}" << endl;
+        }
+        dec_indent();
+        stream << indent() << "}" << endl;
       }
     }
   }
