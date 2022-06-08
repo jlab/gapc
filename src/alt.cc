@@ -3165,7 +3165,7 @@ unsigned int* Alt::Simple::to_dot(unsigned int *nodeID, std::ostream &out,
           << " [ arrowhead=none ";
       Alt::Multi *multi = dynamic_cast<Alt::Multi*>(argalt->alt_ref());
       if (multi) {
-        out << ", lhead=cluster_node_" << (childID-1) << " ";
+        out << ", lhead=cluster_node_" << (childID[0]-1) << " ";
       }
       out << "];\n";
     }
