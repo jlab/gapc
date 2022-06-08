@@ -1,6 +1,7 @@
 #include "../../src/driver.hh"
 #include "../../src/log.hh"
 #include "../../src/instance.hh"
+#include "../../src/options.hh"
 
 #include <iostream>
 #include <iomanip>
@@ -83,7 +84,7 @@ int main(int argc, char **argv) {
   grammar->dep_analysis();
 
   unsigned int nodeID = 1;
-  grammar->to_dot(&nodeID, std::cout);
+  grammar->to_dot(&nodeID, std::cout, 1);
   
   return 0;
 }
