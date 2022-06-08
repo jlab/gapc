@@ -1626,34 +1626,37 @@ bool Symbol::Terminal::isPredefinedTerminalParser() {
 // the following functions produce graphViz code to represent the grammar
 unsigned int Symbol::Base::to_dot(unsigned int *nodeID, std::ostream &out,
                                   bool is_rhs, Symbol::NT *axiom,
-								  int plot_level) {
+								  int plot_grammar) {
   unsigned int thisID = (unsigned int)((*nodeID)++);
   out << "node_" << thisID << " [ label=<<table border='0'><tr>";
-  if (plot_level == 0){
-	  out << "<td>" << *this->name << "</td></tr></table>>";
-  }
-  else{
+  if (plot_grammar > 1){
 	  to_dot_indices(this->left_indices, out);
 	  out << "<td>" << *this->name << "</td>";
 	  to_dot_indices(this->right_indices, out);
 	  out << "</tr></table>>";
   }
+  else{
+	  out << "<td>" << *this->name << "</td></tr></table>>";
+  }
   return thisID;
 }
 unsigned int Symbol::Terminal::to_dot(unsigned int *nodeID, std::ostream &out,
                                       bool is_rhs, Symbol::NT *axiom,
-									  int plot_level) {
+									  int plot_grammar) {
   unsigned int thisID = Symbol::Base::to_dot(nodeID, out, is_rhs, axiom,
-		  plot_level);
+		  plot_grammar);
   out << ", color=\"blue\", fontcolor=\"blue\" ];\n";
   return thisID;
 }
 unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
-                                bool is_rhs, Symbol::NT *axiom, int plot_level)
+                                bool is_rhs, Symbol::NT *axiom, int plot_grammar)
 {
   unsigned int thisID = Symbol::Base::to_dot(nodeID, out, is_rhs, axiom,
-		  plot_level);
-  int pre_ID = thisID;
+		  plot_grammar);
+  unsigned int pre_ID = thisID;
+  unsigned int choiceID;
+  unsigned int depth = 1;
+  unsigned int *res = (unsigned int *) malloc(2 * sizeof(int));
   std::string rank = "";
   out << ", color=\"black\"";
   if (!is_rhs) {
@@ -1666,38 +1669,73 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
       out << ", style=\"dotted\"";
     }
     out << " ];\n";
+
     for (std::list<Alt::Base*>::const_iterator alt = this->alts.begin();
          alt != this->alts.end(); ++alt) {
-      unsigned int childID = (*alt)->to_dot(nodeID, out, plot_level);
+      unsigned int d = 1;
+      res = (*alt)->to_dot(nodeID, out, plot_grammar, d);
+      unsigned int childID = res[0];
+      d = res[1];
+      if (d > depth) {
+    	  depth = d;
+      }
       if (pre_ID != thisID){
     	  out << "node_" << pre_ID << "_" << childID << "[ label=<<table "
     			  "border='0'><tr><td><font point-size='30'>|</font></td>"
     			  "</tr></table>>, shape=plaintext];\n";
+    	  out << "node_" << pre_ID << " -> node_" << pre_ID << "_" << childID <<
+    	      		  "[style= invis];\n";
+    	  out << "node_" << pre_ID << "_" << childID << " -> node_" << childID <<
+    	      		  "[style= invis];\n";
       }
       else{
     	  out << "node_"  << pre_ID << "_" << childID << "[ label=<<table "
     			  "border='0'><tr><td><font point-size='30'>&rarr;</font>"
     			  "</td></tr></table>>, shape=plaintext];\n";
+    	  out << "node_" << pre_ID << " -> node_" << pre_ID << "_" << childID <<
+    	      		  "[style= invis, weight=99];\n";
+    	  out << "node_" << pre_ID << "_" << childID << " -> node_" << childID <<
+    	      		  "[style= invis];\n";
       }
-      out << "node_" << pre_ID << " -> node_" << pre_ID << "_" << childID <<
-    		  "[style= invis];\n";
-      out << "node_" << pre_ID << "_" << childID << " -> node_" << childID <<
-    		  "[style= invis];\n";
       rank =  rank + "node_" + std::to_string(pre_ID) + "_" +
     		  std::to_string(childID) + " " + "node_" +
 			  std::to_string(childID) + " ";
       pre_ID = childID;
     }
-    out << "{ rank=same node_" << thisID << " " << rank << "}\n";
+
     if (this->eval_fn != NULL) {
-      unsigned int choiceID = (unsigned int)((*nodeID)++);
-      out << "node_" << choiceID << " [ label=" << *this->eval_fn
-          << ", fontcolor=\"purple\" , shape=none ];\n";
-      out << "node_" << choiceID << " -> node_" << thisID
-          << " [ arrowhead=none, color=\"purple\" ];\n";
-      out << "{ rank = same node_" << choiceID << " node_" << thisID << " }\n";
+          choiceID = (unsigned int)((*nodeID)++);
+          out << "node_" << choiceID << " [ label=" << *this->eval_fn
+              << ", fontcolor=\"purple\" , shape=none ];\n";
+          out << "node_" << thisID << " -> node_" << choiceID
+              << " [ arrowhead=none, color=\"purple\" , weight=99];\n";
+        }
+        else{
+          choiceID = (unsigned int)((*nodeID)++);
+          out << "node_" << choiceID << " [ label=h_" << thisID
+        	  << ", fontcolor=\"purple\" , shape=none , style=invis];\n";
+          out << "node_" << thisID << " -> node_" << choiceID
+        	  << " [ arrowhead=none, color=\"purple\" , style=invis, weight=99];\n";
+        }
+
+    for(unsigned int i = 1; i<depth; i++ ){
+    	unsigned int childID = (unsigned int)((*nodeID)++);
+    	if (plot_grammar > 1){
+    		out << "node_" << childID << "[label=<<table border='0'><tr>";
+    		to_dot_indices(this->left_indices, out);
+    		out << "<td>" << *this->name << "</td>";
+    		to_dot_indices(this->right_indices, out);
+    		out << "</tr></table>>, shape=\"box\", style=invis];\n";
+    	}
+    	else{
+    		out << "node_" << childID << "[label = " << *this->name << ", shape=\"box\", style=invis];\n";
+    	}
+    	out << "node_" << choiceID << " -> " << "node_" << childID << "[weight = 99, style = invis];\n";;
+    	choiceID = childID;
     }
+    out << "{ rank=same node_" << thisID << " " << rank << "}\n";
   }
+  free(res);
   return thisID;
 }
 // END functions produce graphViz code to represent the grammar

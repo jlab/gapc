@@ -57,8 +57,7 @@ struct Options {
       pareto(0), multiDimPareto(false), cutoff(65),
       float_acc(0),
       specialization(0), step_option(0),
-      plot_grammar(false), plotgrammar_stream_(NULL),
-	  plot_level(0) {
+      plot_grammar(0), plotgrammar_stream_(NULL) {
   }
 
 
@@ -189,7 +188,7 @@ struct Options {
   }
 
   std::string plot_grammar_file;
-  bool plot_grammar;
+  int plot_grammar;
   std::ostream *plotgrammar_stream_;
   std::ostream &plotgrammar_stream() {
     if (is_stdout()) {
@@ -202,8 +201,6 @@ struct Options {
                           std::ios_base::failbit | std::ios_base::eofbit);
     return *plotgrammar_stream_;
   }
-
-  int plot_level;
 
   bool check();
 };

@@ -127,13 +127,11 @@ static void parse_options(int argc, char **argv, Options *rec) {
     ("step-mode", po::value<int>(),
       "Mode of specialization: 0 force block mode, 1 force stepwise mode. This"
       " is automatically set to best option if not specified.")
-    ("plot-grammar,",
+    ("plot-grammar", po::value<int>(),
       "generates a graphviz dot-file from the selected (and potentially "
-      "modified) grammar.\n(Use 'dot -Tpdf out.dot' to generate a PDF.)\n"
-      "default file is out.dot")
-    ("plot-level", po::value<int>(),
-      "the plot level, valid values are 0 (without indices), 1 (with indices). "
-      "Default is 0.");
+      "modified) grammar.\n Valid values are 0(no plot), 1(simple plot), "
+      "2(plot with indices). Default is 0. \n"
+      "(Use 'dot -Tpdf out.dot' to generate a PDF.)\n default file is out.dot");
   po::options_description hidden("");
   hidden.add_options()
     ("backtrack", "deprecated for --backtrace")
@@ -260,13 +258,10 @@ static void parse_options(int argc, char **argv, Options *rec) {
   }
 
   if (vm.count("plot-grammar")) {
-    rec->plot_grammar = true;
+	rec->plot_grammar = vm["plot-grammar"].as<int>();
     rec->plot_grammar_file = basename(rec->out_file) + ".dot";
   }
 
-  if (vm.count("plot-level")) {
-     rec->plot_level = vm["plot-level"].as<int>();
-   }
 
   bool r = rec->check();
   if (!r) {
@@ -595,9 +590,9 @@ class Main {
     // dot-file for the grammar. This is handy if gapc modifies the original
     // grammar from the source file.
     // activate with command line argument --plot-grammar
-    if (opts.plot_grammar) {
+    if (opts.plot_grammar > 0) {
       unsigned int nodeID = 1;
-      grammar->to_dot(&nodeID, opts.plotgrammar_stream(), opts.plot_level);
+      grammar->to_dot(&nodeID, opts.plotgrammar_stream(), opts.plot_grammar);
       Log::instance()->normalMessage(
         "Graphviz representation of selected grammar has been saved in '"
         + opts.plot_grammar_file + "'.\nUse e.g. 'dot -Tpdf "

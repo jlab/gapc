@@ -251,7 +251,7 @@ class Base {
 
     virtual unsigned int to_dot(unsigned int *nodeID, std::ostream &out,
                                 bool is_rhs, Symbol::NT *axiom,
-								int plot_level);
+								int plot_grammar);
 };
 
 
@@ -515,7 +515,7 @@ class NT : public Base {
       return ntargs_;
     }
     unsigned int to_dot(unsigned int *nodeID, std::ostream &out,
-                        bool is_rhs, Symbol::NT *axiom, int plot_level);
+                        bool is_rhs, Symbol::NT *axiom, int plot_grammar);
 };
 
 

@@ -2992,7 +2992,7 @@ void to_dot_filternameargs(Filter *filter, std::ostream &out) {
 }
 void Alt::Base::to_dot_semanticfilters(unsigned int *nodeID,
     unsigned int thisID, std::ostream &out,
-    std::vector<unsigned int> *childIDs) {
+	std::vector<unsigned int> *childIDs) {
   // add syntactic filters
   for (std::list<Filter*>::const_iterator filter = this->filters.begin();
        filter != this->filters.end(); ++filter) {
@@ -3048,16 +3048,18 @@ void Alt::Base::to_dot_semanticfilters(unsigned int *nodeID,
         << " [ arrowhead=none, color=\"magenta\" ];\n";
   }
 }
-unsigned int Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out,
-		int plot_level) {
+unsigned int* Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out,
+		int plot_grammar, int depth) {
   unsigned int thisID = (unsigned int)((*nodeID)++);
   out << "node_" << thisID << " [ label=<<table border='0'><tr>";
   Alt::Link *link = dynamic_cast<Alt::Link*>(this);
   if (link && (link->is_explicit() == true)) {
     // indices have been given via index hack in source file:
-    link->to_dot_overlayindices(out, true);
+	if (plot_grammar > 1){
+		link->to_dot_overlayindices(out, true);
+	}
   } else {
-	if (plot_level != 0){
+	if (plot_grammar > 1){
       to_dot_indices(this->left_indices, out);
 	}
   }
@@ -3099,10 +3101,12 @@ unsigned int Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out,
   }
   if (link && (link->is_explicit() == true)) {
     // indices have been given via index hack in source file:
-    link->to_dot_overlayindices(out, false);
+	if (plot_grammar > 1){
+		link->to_dot_overlayindices(out, false);
+	}
   }
   else {
-	if (plot_level != 0){
+	if (plot_grammar > 1){
       to_dot_indices(this->left_indices, out);
   	}
   }
@@ -3136,18 +3140,29 @@ unsigned int Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out,
   // add syntactic filters
   to_dot_semanticfilters(nodeID, thisID, out);
 
-  return thisID;
+
+  unsigned int* res = (unsigned int*) malloc(2* sizeof(unsigned int*));
+  res[0] = thisID;
+  res[1] = depth;
+  return res;
 }
-unsigned int Alt::Simple::to_dot(unsigned int *nodeID, std::ostream &out,
-		int plot_level) {
-  unsigned int thisID = Alt::Base::to_dot(nodeID, out, plot_level);
+unsigned int* Alt::Simple::to_dot(unsigned int *nodeID, std::ostream &out,
+		int plot_grammar, int depth) {
+  unsigned int* res = Alt::Base::to_dot(nodeID, out, plot_grammar, depth);
+  unsigned int thisID = res[0];
+  depth = res[1];
+  depth++;
+  unsigned int d = depth;
   for (std::list<Fn_Arg::Base*>::const_iterator arg = this->args.begin();
        arg != this->args.end(); ++arg) {
-    Fn_Arg::Alt *argalt = dynamic_cast<Fn_Arg::Alt*>(*arg);
+	Fn_Arg::Alt *argalt = dynamic_cast<Fn_Arg::Alt*>(*arg);
     if (argalt) {
-      unsigned int childID = argalt->alt_ref()->to_dot(nodeID, out,
-    		  plot_level);
-      out << "node_" << thisID << " -> node_" << childID
+      unsigned int* childID = argalt->alt_ref()->to_dot(nodeID, out,
+    		  plot_grammar, depth);
+      if(childID[1] > d){
+    	  d = childID[1];
+      }
+      out << "node_" << thisID << " -> node_" << childID[0]
           << " [ arrowhead=none ";
       Alt::Multi *multi = dynamic_cast<Alt::Multi*>(argalt->alt_ref());
       if (multi) {
@@ -3156,45 +3171,67 @@ unsigned int Alt::Simple::to_dot(unsigned int *nodeID, std::ostream &out,
       out << "];\n";
     }
   }
-  return thisID;
+  depth = d;
+  res[1]=depth;
+  return res;
 }
-unsigned int Alt::Link::to_dot(unsigned int *nodeID, std::ostream &out,
-		int plot_level) {
-  return Alt::Base::to_dot(nodeID, out, plot_level);
+unsigned int* Alt::Link::to_dot(unsigned int *nodeID, std::ostream &out,
+		int plot_grammar, int depth) {
+  return Alt::Base::to_dot(nodeID, out, plot_grammar, depth);
 }
-unsigned int Alt::Block::to_dot(unsigned int *nodeID, std::ostream &out,
-		int plot_level) {
-  unsigned int thisID = Alt::Base::to_dot(nodeID, out, plot_level);
-
+unsigned int* Alt::Block::to_dot(unsigned int *nodeID, std::ostream &out,
+		int plot_grammar, int depth) {
+  unsigned int* res = Alt::Base::to_dot(nodeID, out, plot_grammar, depth);
+  unsigned int thisID = res[0];
+  depth = res[1];
+  depth++;
+  unsigned int d = depth;
   for (std::list<Alt::Base*>::const_iterator alt = this->alts.begin();
        alt != this->alts.end(); ++alt) {
-    unsigned int childID = (*alt)->to_dot(nodeID, out, plot_level);
+	d = depth;
+	unsigned int* res2 = (*alt)->to_dot(nodeID, out, plot_grammar, d);
+	if (res2[1] > d){
+		d = res2[1];
+	}
+	unsigned int childID = res2[0];
     out << "node_" << thisID << " -> node_" << childID
         << " [ ];\n";
   }
-
-  return thisID;
+  depth = d;
+  res[1] = depth;
+  return res;
 }
-unsigned int Alt::Multi::to_dot(unsigned int *nodeID, std::ostream &out,
-		int plot_level) {
+unsigned int* Alt::Multi::to_dot(unsigned int *nodeID, std::ostream &out,
+		int plot_grammar, int depth) {
   unsigned int thisID = (unsigned int)((*nodeID)++);
   out << "subgraph cluster_node_" << thisID << " {\n";
   unsigned int lastID = 0;
+  depth++;
+  unsigned int d = depth;
   std::vector<unsigned int> *childIDs = new std::vector<unsigned int>();
   for (std::list<Alt::Base*>::const_iterator alt = this->list.begin();
        alt != this->list.end(); ++alt) {
-    unsigned int childID = (*alt)->to_dot(nodeID, out, plot_level);
-    childIDs->push_back(childID);
+    unsigned int* childID = (*alt)->to_dot(nodeID, out, plot_grammar, depth);
+    if (childID[1] > d){
+    	d = childID[1];
+    }
+    childIDs->push_back(childID[0]);
     if (lastID > 0) {
-      out << "node_" << lastID << " -> node_" << childID
+      out << "node_" << lastID << " -> node_" << childID[0]
           << " [ style=\"invis\" ];\n";
     }
-    lastID = childID;
+    lastID = childID[0];
   }
+  depth = d;
   // add syntactic filter and draw an edge to every track component
   to_dot_semanticfilters(nodeID, thisID, out, childIDs);
   out << "};\n";
+
+  unsigned int* res = (unsigned int*) malloc(2*sizeof(unsigned int*));
+  res[0] = thisID+1;
+  res[1] = depth;
+
   // return not the cluster ID but the id of the first element
-  return thisID+1;
+  return res;
 }
 // END functions produce graphViz code to represent the grammar
