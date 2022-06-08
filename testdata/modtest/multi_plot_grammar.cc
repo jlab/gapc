@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
   Instance *instance = 0;
   driver.ast.codegen();
   instance->codegen();
-  driver.ast.optimize_choice(instance);	
+  driver.ast.optimize_choice(*instance);	
 
   // apply this to identify standard functions like Min, Max, Exp etc.
   driver.ast.derive_roles();
