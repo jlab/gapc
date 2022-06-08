@@ -1642,7 +1642,7 @@ unsigned int Symbol::Terminal::to_dot(unsigned int *nodeID, std::ostream &out,
                                       bool is_rhs, Symbol::NT *axiom,
                                       int plot_grammar) {
   unsigned int thisID = Symbol::Base::to_dot(nodeID, out, is_rhs, axiom,
-		  plot_grammar);
+          plot_grammar);
   out << ", color=\"blue\", fontcolor=\"blue\" ];\n";
   return thisID;
 }
@@ -1683,14 +1683,14 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
                   "</tr></table>>, shape=plaintext];\n";
           out << "node_" << pre_ID << " -> node_" << pre_ID << "_" << childID <<
                       "[style= invis];\n";
-          out << "node_" << pre_ID << "_" << childID << " -> node_" << childID <<
-              	      "[style= invis];\n";
+          out << "node_" << pre_ID << "_" << childID << " -> node_" <<
+                  childID << "[style= invis];\n";
       } else {
           out << "node_"  << pre_ID << "_" << childID << "[ label=<<table "
                   "border='0'><tr><td><font point-size='30'>&rarr;</font>"
                   "</td></tr></table>>, shape=plaintext];\n";
-          out << "node_" << pre_ID << " -> node_" << pre_ID << "_" << childID <<
-                      "[style= invis, weight=99];\n";
+          out << "node_" << pre_ID << " -> node_" << pre_ID << "_" <<
+                  childID << "[style= invis, weight=99];\n";
           out << "node_" << pre_ID << "_" << childID << " -> node_" << childID <<
                       "[style= invis];\n";
       }
@@ -1715,7 +1715,7 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
                       "weight=99];\n";
         }
 
-    for(unsigned int i = 1; i<depth; i++ ){
+    for ( unsigned int i = 1; i < depth; i++ ) {
         unsigned int childID = (unsigned int)((*nodeID)++);
         if (plot_grammar > 1) {
             out << "node_" << childID << "[label=<<table border='0'><tr>";

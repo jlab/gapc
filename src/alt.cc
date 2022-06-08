@@ -3059,7 +3059,7 @@ unsigned int* Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out,
         link->to_dot_overlayindices(out, true);
     }
   } else {
-    if (plot_grammar > 1){
+    if (plot_grammar > 1) {
       to_dot_indices(this->left_indices, out);
     }
   }
@@ -3105,7 +3105,7 @@ unsigned int* Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out,
         link->to_dot_overlayindices(out, false);
     }
   } else {
-    if (plot_grammar > 1){
+    if (plot_grammar > 1) {
       to_dot_indices(this->left_indices, out);
     }
   }
@@ -3154,7 +3154,7 @@ unsigned int* Alt::Simple::to_dot(unsigned int *nodeID, std::ostream &out,
   unsigned int d = depth;
   for (std::list<Fn_Arg::Base*>::const_iterator arg = this->args.begin();
        arg != this->args.end(); ++arg) {
-	Fn_Arg::Alt *argalt = dynamic_cast<Fn_Arg::Alt*>(*arg);
+    Fn_Arg::Alt *argalt = dynamic_cast<Fn_Arg::Alt*>(*arg);
     if (argalt) {
       unsigned int* childID = argalt->alt_ref()->to_dot(nodeID, out,
               plot_grammar, depth);
@@ -3189,7 +3189,7 @@ unsigned int* Alt::Block::to_dot(unsigned int *nodeID, std::ostream &out,
        alt != this->alts.end(); ++alt) {
     d = depth;
     unsigned int* res2 = (*alt)->to_dot(nodeID, out, plot_grammar, d);
-    if (res2[1] > d){
+    if (res2[1] > d) {
         d = res2[1];
     }
     unsigned int childID = res2[0];
