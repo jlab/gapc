@@ -63,15 +63,16 @@ int main(int argc, char **argv) {
   } catch (LogThreshException) {
     return 9;
   }
-  Instance *inst = driver.ast.first_instance;
 	
-  r = driver.ast.check_instances(inst);
+  r = driver.ast.check_instances(driver.ast.first_instance);
   if (!r)
     return 10;
+  
+  driver.ast.optimize_choice(ast.instances);	
 
   // apply this to identify standard functions like Min, Max, Exp etc.
   driver.ast.derive_roles();
-
+  
 
   // ------------- back ------------
   grammar->init_list_sizes();
