@@ -2,9 +2,9 @@ name: github action build & CI
 
 on:
   push:
-    branches: [ master, plot_grammar ]
+    branches: [ master, plot_grammar, plot_grammar_style ]
   pull_request:
-    branches: [ master, plot_grammar ]
+    branches: [ master, plot_grammar, plot_grammar_style ]
   workflow_dispatch:
     inputs:
       logLevel:
