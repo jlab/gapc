@@ -117,7 +117,7 @@ jobs:
       run: sudo make install
 
     - name: clone fold-grammars
-      run: git clone --branch  master https://github.com/jlab/fold-grammars.git $GITHUB_WORKSPACE/../fold-grammars
+      run: git clone --branch master https://github.com/jlab/fold-grammars.git $GITHUB_WORKSPACE/../fold-grammars
     - name: configure fold-grammars
       run: |
         cd $GITHUB_WORKSPACE/../fold-grammars
