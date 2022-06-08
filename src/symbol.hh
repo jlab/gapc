@@ -251,7 +251,7 @@ class Base {
 
     virtual unsigned int to_dot(unsigned int *nodeID, std::ostream &out,
                                 bool is_rhs, Symbol::NT *axiom,
-								int plot_grammar);
+                                int plot_grammar);
 };
 
 

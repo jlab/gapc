@@ -258,7 +258,7 @@ static void parse_options(int argc, char **argv, Options *rec) {
   }
 
   if (vm.count("plot-grammar")) {
-	rec->plot_grammar = vm["plot-grammar"].as<int>();
+    rec->plot_grammar = vm["plot-grammar"].as<int>();
     rec->plot_grammar_file = basename(rec->out_file) + ".dot";
   }
 

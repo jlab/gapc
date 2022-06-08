@@ -2992,7 +2992,7 @@ void to_dot_filternameargs(Filter *filter, std::ostream &out) {
 }
 void Alt::Base::to_dot_semanticfilters(unsigned int *nodeID,
     unsigned int thisID, std::ostream &out,
-	std::vector<unsigned int> *childIDs) {
+    std::vector<unsigned int> *childIDs) {
   // add syntactic filters
   for (std::list<Filter*>::const_iterator filter = this->filters.begin();
        filter != this->filters.end(); ++filter) {
@@ -3049,19 +3049,19 @@ void Alt::Base::to_dot_semanticfilters(unsigned int *nodeID,
   }
 }
 unsigned int* Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out,
-		int plot_grammar, int depth) {
+         int plot_grammar, int depth) {
   unsigned int thisID = (unsigned int)((*nodeID)++);
   out << "node_" << thisID << " [ label=<<table border='0'><tr>";
   Alt::Link *link = dynamic_cast<Alt::Link*>(this);
   if (link && (link->is_explicit() == true)) {
     // indices have been given via index hack in source file:
-	if (plot_grammar > 1){
-		link->to_dot_overlayindices(out, true);
-	}
+    if (plot_grammar > 1) {
+        link->to_dot_overlayindices(out, true);
+    }
   } else {
-	if (plot_grammar > 1){
+    if (plot_grammar > 1){
       to_dot_indices(this->left_indices, out);
-	}
+    }
   }
   Alt::Simple *simple = dynamic_cast<Alt::Simple*>(this);
   if (simple) {
@@ -3101,14 +3101,13 @@ unsigned int* Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out,
   }
   if (link && (link->is_explicit() == true)) {
     // indices have been given via index hack in source file:
-	if (plot_grammar > 1){
-		link->to_dot_overlayindices(out, false);
-	}
-  }
-  else {
-	if (plot_grammar > 1){
+    if (plot_grammar > 1) {
+        link->to_dot_overlayindices(out, false);
+    }
+  } else {
+    if (plot_grammar > 1){
       to_dot_indices(this->left_indices, out);
-  	}
+    }
   }
   out << "</tr></table>>, color=\"";
   if (simple) {
@@ -3147,7 +3146,7 @@ unsigned int* Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out,
   return res;
 }
 unsigned int* Alt::Simple::to_dot(unsigned int *nodeID, std::ostream &out,
-		int plot_grammar, int depth) {
+         int plot_grammar, int depth) {
   unsigned int* res = Alt::Base::to_dot(nodeID, out, plot_grammar, depth);
   unsigned int thisID = res[0];
   depth = res[1];
@@ -3158,9 +3157,9 @@ unsigned int* Alt::Simple::to_dot(unsigned int *nodeID, std::ostream &out,
 	Fn_Arg::Alt *argalt = dynamic_cast<Fn_Arg::Alt*>(*arg);
     if (argalt) {
       unsigned int* childID = argalt->alt_ref()->to_dot(nodeID, out,
-    		  plot_grammar, depth);
-      if(childID[1] > d){
-    	  d = childID[1];
+              plot_grammar, depth);
+      if (childID[1] > d) {
+          d = childID[1];
       }
       out << "node_" << thisID << " -> node_" << childID[0]
           << " [ arrowhead=none ";
@@ -3172,15 +3171,15 @@ unsigned int* Alt::Simple::to_dot(unsigned int *nodeID, std::ostream &out,
     }
   }
   depth = d;
-  res[1]=depth;
+  res[1] = depth;
   return res;
 }
 unsigned int* Alt::Link::to_dot(unsigned int *nodeID, std::ostream &out,
-		int plot_grammar, int depth) {
+        int plot_grammar, int depth) {
   return Alt::Base::to_dot(nodeID, out, plot_grammar, depth);
 }
 unsigned int* Alt::Block::to_dot(unsigned int *nodeID, std::ostream &out,
-		int plot_grammar, int depth) {
+        int plot_grammar, int depth) {
   unsigned int* res = Alt::Base::to_dot(nodeID, out, plot_grammar, depth);
   unsigned int thisID = res[0];
   depth = res[1];
@@ -3188,12 +3187,12 @@ unsigned int* Alt::Block::to_dot(unsigned int *nodeID, std::ostream &out,
   unsigned int d = depth;
   for (std::list<Alt::Base*>::const_iterator alt = this->alts.begin();
        alt != this->alts.end(); ++alt) {
-	d = depth;
-	unsigned int* res2 = (*alt)->to_dot(nodeID, out, plot_grammar, d);
-	if (res2[1] > d){
-		d = res2[1];
-	}
-	unsigned int childID = res2[0];
+    d = depth;
+    unsigned int* res2 = (*alt)->to_dot(nodeID, out, plot_grammar, d);
+    if (res2[1] > d){
+        d = res2[1];
+    }
+    unsigned int childID = res2[0];
     out << "node_" << thisID << " -> node_" << childID
         << " [ ];\n";
   }
@@ -3202,7 +3201,7 @@ unsigned int* Alt::Block::to_dot(unsigned int *nodeID, std::ostream &out,
   return res;
 }
 unsigned int* Alt::Multi::to_dot(unsigned int *nodeID, std::ostream &out,
-		int plot_grammar, int depth) {
+        int plot_grammar, int depth) {
   unsigned int thisID = (unsigned int)((*nodeID)++);
   out << "subgraph cluster_node_" << thisID << " {\n";
   unsigned int lastID = 0;
@@ -3212,8 +3211,8 @@ unsigned int* Alt::Multi::to_dot(unsigned int *nodeID, std::ostream &out,
   for (std::list<Alt::Base*>::const_iterator alt = this->list.begin();
        alt != this->list.end(); ++alt) {
     unsigned int* childID = (*alt)->to_dot(nodeID, out, plot_grammar, depth);
-    if (childID[1] > d){
-    	d = childID[1];
+    if (childID[1] > d) {
+        d = childID[1];
     }
     childIDs->push_back(childID[0]);
     if (lastID > 0) {
