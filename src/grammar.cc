@@ -1011,7 +1011,7 @@ unsigned int Grammar::to_dot(unsigned int *nodeID, std::ostream &out,
   out << "ordering=out;\n";
   for (std::list<Symbol::NT*>::const_iterator nt = this->nt_list.begin();
        nt != this->nt_list.end(); ++nt) {
-    out << "subgraph cluster_" << &*nt << "{\n";
+    out << "subgraph cluster_" << *this->name << "{\n";
     start_node = (*nt)->to_dot(nodeID, out, false, this->axiom, plot_grammar);
     out << "}\n";
     if (start_node > 1) {
