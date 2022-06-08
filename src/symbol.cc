@@ -1691,8 +1691,8 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
                   "</td></tr></table>>, shape=plaintext];\n";
           out << "node_" << pre_ID << " -> node_" << pre_ID << "_" <<
                   childID << "[style= invis, weight=99];\n";
-          out << "node_" << pre_ID << "_" << childID << " -> node_" << childID <<
-                      "[style= invis];\n";
+          out << "node_" << pre_ID << "_" << childID << " -> node_" <<
+                  childID << "[style= invis];\n";
       }
       rank =  rank + "node_" + std::to_string(pre_ID) + "_" +
               std::to_string(childID) + " " + "node_" +
