@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
   // which leads to the end of the compilation process.
   bool r = grammar->check_semantic();
   if (!r) {
-    return 3;
+    return 2;
   }
 
   // inject rules for outside grammar
@@ -51,9 +51,13 @@ int main(int argc, char **argv) {
   // chars, sequence of ints etc.
   driver.ast.derive_temp_alphabet();
 
-  r = driver.ast.check_signature();
-  if (!r) {
-	return 4;
+  try {
+    r = driver.ast.check_signature();
+    if (!r) {
+      return 3;
+    }
+  } catch (LogThreshException) {
+    return 9;
   }
 
   r = driver.ast.check_instances(driver.ast.first_instance);
@@ -75,4 +79,5 @@ int main(int argc, char **argv) {
   unsigned int nodeID = 1;
   int plot_level = 1;
   grammar->to_dot(&nodeID, std::cout, plot_level);
+  return 0;
 }
