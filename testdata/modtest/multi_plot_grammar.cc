@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
   // which leads to the end of the compilation process.
   bool r = grammar->check_semantic();
   if (!r) {
-    throw LogError("Seen semantic errors.");
+    return 3;
   }
 
   // inject rules for outside grammar
