@@ -1,7 +1,5 @@
 #include "../../src/driver.hh"
 #include "../../src/log.hh"
-#include "../../src/instance.hh"
-#include "../../src/options.hh"
 
 #include <iostream>
 #include <iomanip>
@@ -26,10 +24,7 @@ int main(int argc, char **argv) {
 
   // parses the input file and builds the AST
   driver.parse();
-  if (driver.is_failing()) {
-    return 4;
-  }
-	
+
   // simply gets the selected grammar, which is either the
   // grammar that occurred first in the source code or is the
   // one that was named in the parameters on the command line
@@ -41,40 +36,33 @@ int main(int argc, char **argv) {
   // which leads to the end of the compilation process.
   bool r = grammar->check_semantic();
   if (!r) {
-    return 2;
+    throw LogError("Seen semantic errors.");
   }
 
   // inject rules for outside grammar
-  //grammar->inject_outside_nts();
+  grammar->inject_outside_nts();
 
   // set approx table design
   if (grammar->tabulated.empty()) {
-  	  grammar->approx_table_conf();
+    grammar->approx_table_conf();
   }
 	
   // find what type of input is read
   // chars, sequence of ints etc.
   driver.ast.derive_temp_alphabet();
 
-  try {
-    r = driver.ast.check_signature();
-    if (!r) {
-      return 3;
-    }
-  } catch (LogThreshException) {
-    return 9;
+  r = driver.ast.check_signature();
+  if (!r) {
+	return 4;
   }
-	
+
   r = driver.ast.check_instances(driver.ast.first_instance);
   if (!r)
     return 10;
-  
-  
-  driver.ast.optimize_choice(*driver.ast.first_instance);	
-
+	
   // apply this to identify standard functions like Min, Max, Exp etc.
   driver.ast.derive_roles();
-  
+
 
   // ------------- back ------------
   grammar->init_list_sizes();
@@ -85,8 +73,5 @@ int main(int argc, char **argv) {
   grammar->dep_analysis();
 
   unsigned int nodeID = 1;
-  int plot_level = 1;
-  grammar->to_dot(&nodeID, std::cout, plot_level);
-  
-  return 0;
+  grammar->to_dot(&nodeID, std::cout);
 }
