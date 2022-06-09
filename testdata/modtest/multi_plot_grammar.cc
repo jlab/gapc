@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
   }
 
   // inject rules for outside grammar
-  grammar->inject_outside_nts();
+  // grammar->inject_outside_nts();
 
   // set approx table design
   if (grammar->tabulated.empty()) {
@@ -73,5 +73,6 @@ int main(int argc, char **argv) {
   grammar->dep_analysis();
 
   unsigned int nodeID = 1;
-  grammar->to_dot(&nodeID, std::cout);
+  int plot_level = 1
+  grammar->to_dot(&nodeID, std::cout, plot_level);
 }
