@@ -218,29 +218,30 @@ algebra alg_mult implements sig_weather(alphabet=char, answer=Rope) {
 }
 
 
-grammar gra_weather uses sig_weather(axiom=start) {
-  start = transition_start_hoch(CONST_FLOAT(0.5), hoch_emission, hoch)
-        | transition_start_tief(CONST_FLOAT(0.5), tief_emission, tief)
-        | nil(EMPTY)
-        # h;
+grammar gra_weather uses sig_weather(axiom=state_start) {
+  state_start = transition_start_hoch(CONST_FLOAT(0.5), emit_hoch, state_hoch)
+              | transition_start_tief(CONST_FLOAT(0.5), emit_tief, state_tief)
+              | nil(EMPTY)
+              # h;
 
-  hoch  = transition_hoch_tief(CONST_FLOAT(0.3), tief_emission, tief)
-        | transition_hoch_hoch(CONST_FLOAT(0.7), hoch_emission, hoch)
-        | nil(EMPTY)
-        # h;
+  state_hoch  = transition_hoch_tief(CONST_FLOAT(0.3), emit_tief, state_tief)
+              | transition_hoch_hoch(CONST_FLOAT(0.7), emit_hoch, state_hoch)
+              | nil(EMPTY)
+              # h;
 
-  tief  = transition_tief_tief(CONST_FLOAT(0.6), tief_emission, tief)
-        | transition_tief_hoch(CONST_FLOAT(0.4), hoch_emission, hoch)
-        | nil(EMPTY)
-        # h;
+  state_tief  = transition_tief_tief(CONST_FLOAT(0.6), emit_tief, state_tief)
+              | transition_tief_hoch(CONST_FLOAT(0.4), emit_hoch, state_hoch)
+              | nil(EMPTY)
+              # h;
 
-  hoch_emission = emission_hoch_sonne(CONST_FLOAT(0.8), CHAR('S'))
-                | emission_hoch_regen(CONST_FLOAT(0.2), CHAR('R'))
-                # h;
 
-  tief_emission = emission_tief_sonne(CONST_FLOAT(0.1), CHAR('S'))
-                | emission_tief_regen(CONST_FLOAT(0.9), CHAR('R'))
-                # h;
+  emit_hoch = emission_hoch_sonne(CONST_FLOAT(0.8), CHAR('S'))
+            | emission_hoch_regen(CONST_FLOAT(0.2), CHAR('R'))
+            # h;
+
+  emit_tief = emission_tief_sonne(CONST_FLOAT(0.1), CHAR('S'))
+            | emission_tief_regen(CONST_FLOAT(0.9), CHAR('R'))
+            # h;
 }
 
 instance enum = gra_weather(alg_enum);
