@@ -1,12 +1,19 @@
-#include "../../src/driver.hh"
-#include "../../src/log.hh"
+// Copyright 2022 stefan.m.janssen@gmail.com
 
 #include <iostream>
 #include <iomanip>
 #include <sstream>
 #include <cassert>
 
+#include "../../src/driver.hh"
+#include "../../src/log.hh"
+
 int main(int argc, char **argv) {
+  if (argc != 2) {
+    std::cerr << "Call " << *argv << " *.gap-file\n";
+    return 1;
+  }
+
   std::ostringstream o;
   Log log;
   log.set_debug(false);
@@ -14,16 +21,16 @@ int main(int argc, char **argv) {
 
   Driver driver;
 
-  if (argc != 2) {
-    std::cerr << "Call " << *argv << " *.gap-file\n";
-    return 1;
-  }
   // === front
   // set the file name of the gap-source-code
-  driver.setFilename(argv[1]);
+  std::string filename(argv[1]);
+  driver.setFilename(filename);
 
   // parses the input file and builds the AST
   driver.parse();
+  if (driver.is_failing()) {
+    return 4;
+  }
 
   // simply gets the selected grammar, which is either the
   // grammar that occurred first in the source code or is the
@@ -39,14 +46,9 @@ int main(int argc, char **argv) {
     return 2;
   }
 
-  // inject rules for outside grammar
-  // grammar->inject_outside_nts();
-
   // set approx table design
-  if (grammar->tabulated.empty()) {
-    grammar->approx_table_conf();
-  }
-	
+  grammar->approx_table_conf();
+
   // find what type of input is read
   // chars, sequence of ints etc.
   driver.ast.derive_temp_alphabet();
@@ -63,7 +65,7 @@ int main(int argc, char **argv) {
   r = driver.ast.check_instances(driver.ast.first_instance);
   if (!r)
     return 10;
-	
+
   // apply this to identify standard functions like Min, Max, Exp etc.
   driver.ast.derive_roles();
 
