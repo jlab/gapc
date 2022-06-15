@@ -107,6 +107,35 @@ check_new_old_eq()
   rm -f string.o
 }
 
+check_new_old_eq_twotrack()
+{
+  if [[ `echo $1$3$5 | grep $FILTER` != $1$3$5  ]]; then
+    return
+  fi
+
+  # work around 1 sec timestamp filesystems ... WTF?!?
+  sleep 1
+
+  echo +------------------------------------------------------------------------------+
+  failed=0
+  temp=$failed
+
+  cpp_base=${1%%.*}
+  build_cpp $GRAMMAR/$1 $cpp_base $3
+  run_cpp_twotrack $cpp_base $3 $4 $5 $6
+  cmp_new_old_output $cpp_base $REF $3 $5 $6
+
+  if [ $temp != $failed ]; then
+    echo --++--FAIL--++--
+    err_count=$((err_count+1))
+  else
+    echo OK
+    succ_count=$((succ_count+1))
+  fi
+  echo +------------------------------------------------------------------------------+
+  rm -f string.o
+}
+
 run_check_feature()
 {
   out=$1.$2.$3.$4
