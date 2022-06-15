@@ -27,6 +27,11 @@ run_cpp()
   log2 $1.$2.$4.out $1.$2.$4.err ./$1 $RUN_CPP_FLAGS $3
 }
 
+run_cpp_twotrack()
+{
+  log2 $1.$2.$4.out $1.$2.$4.err ./$1 $RUN_CPP_FLAGS $3 $5
+}
+
 run_haskell()
 {
   log2 $1.$2.$4.hs.out $1.$2.$4.hs.err ./$1 $2 $3

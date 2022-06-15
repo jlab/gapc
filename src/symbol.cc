@@ -944,7 +944,7 @@ void Symbol::NT::set_ret_decl_rhs(Code::Mode mode) {
         // if the link to another non-terminal is decorated by a filter,
         // add an "is_not_empty" guard around the addition of potentially
         // empty list of solutions. Can only be empty due to filtering.
-        if ((*i)->filters.size() > 0) {
+        if (((*i)->filters.size() > 0) || ((*i)->multi_filter.size() > 0)) {
           cond->then.push_back(fn);
           post_alt_stmts.push_back(cond);
           // avoid declarations like "ret_1 = answers" if potentially
