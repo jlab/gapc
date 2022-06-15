@@ -157,3 +157,4 @@ grammar gra_tmhmm uses sig_tmhmm(axiom = state_begin) {
 }
 
 instance dummy = gra_tmhmm(alg_enum);
+instance count = gra_tmhmm(alg_count);
