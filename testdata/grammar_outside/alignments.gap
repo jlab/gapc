@@ -111,3 +111,4 @@ grammar gra_needlemanwunsch uses sig_alignments(axiom=A) {
 
 
 instance count = gra_needlemanwunsch(alg_count);
+instance sim_enum = gra_needlemanwunsch(alg_similarity * alg_enum);
