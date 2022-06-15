@@ -1,4 +1,5 @@
 input <raw, raw>
+type Rope = extern
 
 signature sig_alignments(alphabet, answer) {
   answer Ins(<alphabet, void>, <Subsequence, void>, answer);
