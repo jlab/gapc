@@ -1087,6 +1087,23 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
     throw LogError(msg);
   }
 
+  // 0a) semantic check: grammar must be able to parse the empty input in
+  // order to provide recursion base for outside candidates
+  Yield::Multi ys = this->axiom->multi_ys();
+  for (std::vector<Yield::Size>::iterator i = ys.begin(); i != ys.end(); ++i) {
+    if ((*i).low() > 0) {
+      std::ostringstream msg;
+      msg << "Minimal yield size of your grammar is ";
+      (*i).low().put(msg);
+      msg << ", i.e. it cannot parse the empty input\nstring ''."
+          <<  " For outside grammar generation, this means you are lacking a\n"
+          << "recursion basis which will result in empty results for\n"
+          << "outside candidates!";
+      Log::instance()->warning(msg.str());
+      break;
+    }
+  }
+
   // traverse grammar and flag NTs that only use terminals on their rhs
   this->flag_inside_terminal_ends();
 
