@@ -138,7 +138,7 @@ class Cpp : public Base {
       std::vector<std::string> outside_nt_list, const AST &ast);
 
  private:
-    void print_insideoutside(Symbol::NT *nt, unsigned int dim);
+    void print_insideoutside(Symbol::NT *nt);
     void print_run_fn(const AST &ast);
     void print_stats_fn(const AST &ast);
 

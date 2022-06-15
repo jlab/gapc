@@ -2191,38 +2191,69 @@ void Printer::Cpp::print_cyk_fn(const AST &ast) {
   stream << endl;
 }
 
-void Printer::Cpp::print_insideoutside(
-    Symbol::NT *nt, unsigned int dim) {
-  std::ostringstream args;
-  std::ostringstream args_print;
-  std::list<Fn_Def*> &l = nt->code_list();
-
-  for (size_t track = 0; track < (*nt).tracks(); ++track) {
+void Printer::Cpp::print_insideoutside(Symbol::NT *nt) {
+  // aggregated level (=dim + tracks) of nested loops
+  unsigned int nesting = 0;
+  std::vector<std::string> *args = new std::vector<std::string>();
+  // opening for loops
+  for (size_t track = 0; track < nt->tracks(); ++track) {
+    unsigned int dim = 2;
+    if (nt->tables()[track].delete_left_index()) {
+      dim--;
+    }
+    if (nt->tables()[track].delete_right_index()) {
+      dim--;
+    }
     if (dim >= 1) {
-      args << "t_" << track << "_i";
-      args_print << " << t_" << track << "_i";
+      stream << indent() << "for (unsigned int t_" << track << "_i = t_"
+             << track << "_left_most; t_" << track << "_i <= t_" << track
+             << "_right_most; ++t_" << track << "_i) {" << endl;
+      inc_indent();
+      args->push_back("t_" + std::to_string(track) + "_i");
     }
     if (dim >= 2) {
-      args << ",t_" << track << "_j";
-      args_print << " << \",\" << t_" << track << "_j";
+      stream << indent() << "for (unsigned int t_" << track << "_j = t_"
+             << track << "_i; t_" << track << "_j <= t_" << track
+             << "_right_most; ++t_" << track << "_j) {" << endl;
+      inc_indent();
+      args->push_back("t_" + std::to_string(track) + "_j");
     }
-    if (track+1 < (*nt).tracks()) {
-      args << ",";
-      args_print << " << \",\"";
+    nesting += dim;
+  }
+
+  // loop body
+  std::list<Fn_Def*> &l = nt->code_list();
+  std::stringstream list_args;
+  std::stringstream list_args_print;
+  bool first = true;
+  for (std::vector<std::string>::const_iterator a = args->begin();
+       a != args->end(); ++a) {
+    if (!first) {
+      list_args << ", ";
+      list_args_print << " << \",\"";
     }
+    first = false;
+    list_args << *a;
+    list_args_print << " << " << *a;
   }
   stream << indent() << "out << \"start answers " << *nt->name
-         << "(\"" << args_print.str() << " << \"):\\n\";\n";
+         << "(\"" << list_args_print.str() << " << \"):\\n\";\n";
   for (std::list<Fn_Def*>::iterator i = l.begin(); i != l.end(); ++i) {
-    std::string res = "res_" + *nt->name;
+    std::string res = "res_" + *(nt->name);
     stream << indent() << *((*i)->return_type) << " " << res << " = nt_"
-           << *nt->name << "(" << args.str() << ");\n";
-    stream << indent() << "print_result(std::cout, " << res << ");\n";
+           << *nt->name << "(" << list_args.str() << ");\n"
+           << indent() << "print_result(std::cout, " << res << ");\n";
     // only for first return statement
     break;
   }
   stream << indent() << "out << \"//end answers " << *nt->name << "(\""
-         << args_print.str() << " << \")\\n\";\n";
+         << list_args_print.str() << " << \")\\n\";\n";
+
+  // close loops
+  for (unsigned int d = 0; d < nesting; ++d) {
+    dec_indent();
+    stream << indent() << "}" << endl;
+  }
 }
 void Printer::Cpp::print_insideoutside_report_fn(
     std::vector<std::string> outside_nt_list, const AST &ast) {
@@ -2264,61 +2295,10 @@ void Printer::Cpp::print_insideoutside_report_fn(
       continue;
     }
 
+    print_insideoutside(*nt_inside);
     Symbol::NT *nt_outside =
       dynamic_cast<Symbol::NT*>((*outside_ntpair).second);
-
-    for (size_t track = 0; track < (*nt_inside)->tracks(); ++track) {
-      unsigned int dim_inside = 2;
-      if ((*nt_inside)->tables()[track].delete_left_index()) {
-        dim_inside--;
-      }
-      if ((*nt_inside)->tables()[track].delete_right_index()) {
-        dim_inside--;
-      }
-
-      unsigned int dim_outside = 2;
-      if (nt_outside->tables()[track].delete_left_index()) {
-        dim_outside--;
-      }
-      if (nt_outside->tables()[track].delete_right_index()) {
-        dim_outside--;
-      }
-
-      if (dim_inside == 0) {
-        print_insideoutside(*nt_inside, dim_inside);
-      }
-      if (dim_outside == 0) {
-        print_insideoutside(nt_outside, dim_outside);
-      }
-      if ((dim_inside > 0) || (dim_outside > 0)) {
-        stream << indent() << "for (unsigned int t_" << track << "_i = t_"
-               << track << "_left_most; t_" << track << "_i <= t_" << track
-               << "_right_most; ++t_" << track << "_i) {" << endl;
-        inc_indent();
-        if (dim_inside == 1) {
-          print_insideoutside(*nt_inside, dim_inside);
-        }
-        if (dim_outside == 1) {
-          print_insideoutside(nt_outside, dim_outside);
-        }
-        if ((dim_inside == 2) || (dim_outside == 2)) {
-          stream << indent() << "for (unsigned int t_" << track << "_j = t_"
-                 << track << "_i; t_" << track << "_j <= t_" << track
-                 << "_right_most; ++t_" << track << "_j) {" << endl;
-          inc_indent();
-          if (dim_inside == 2) {
-            print_insideoutside(*nt_inside, dim_inside);
-          }
-          if (dim_outside == 2) {
-            print_insideoutside(nt_outside, dim_outside);
-          }
-          dec_indent();
-          stream << indent() << "}" << endl;
-        }
-        dec_indent();
-        stream << indent() << "}" << endl;
-      }
-    }
+    print_insideoutside(nt_outside);
   }
   dec_indent();
   stream << indent() << "}" << endl << endl;
