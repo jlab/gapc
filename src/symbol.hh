@@ -250,7 +250,8 @@ class Base {
     virtual bool multi_detect_loop();
 
     virtual unsigned int to_dot(unsigned int *nodeID, std::ostream &out,
-                                bool is_rhs, Symbol::NT *axiom);
+                                bool is_rhs, Symbol::NT *axiom,
+                                int plot_grammar);
 };
 
 
@@ -309,7 +310,7 @@ class Terminal : public Base {
     void setPredefinedTerminalParser(bool isPredefined);
     bool isPredefinedTerminalParser();
     unsigned int to_dot(unsigned int *nodeID, std::ostream &out,
-                        bool is_rhs, Symbol::NT *axiom);
+                        bool is_rhs, Symbol::NT *axiom, int plot_grammar);
 };
 
 
@@ -514,7 +515,7 @@ class NT : public Base {
       return ntargs_;
     }
     unsigned int to_dot(unsigned int *nodeID, std::ostream &out,
-                        bool is_rhs, Symbol::NT *axiom);
+                        bool is_rhs, Symbol::NT *axiom, int plot_grammar);
 };
 
 

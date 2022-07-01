@@ -206,7 +206,7 @@ class Grammar {
 
   void multi_propagate_max_filter();
 
-  unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
+  unsigned int to_dot(unsigned int *nodeID, std::ostream &out, int plot_level);
 };
 
 
