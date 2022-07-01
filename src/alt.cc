@@ -2997,7 +2997,7 @@ void Alt::Base::to_dot_semanticfilters(unsigned int *nodeID,
   for (std::list<Filter*>::const_iterator filter = this->filters.begin();
        filter != this->filters.end(); ++filter) {
     unsigned int childID = (unsigned int)((*nodeID)++);
-    out << "node_" << childID << " [ label=\"";
+    out << "    node_" << childID << " [ label=\"";
     to_dot_filternameargs(*filter, out);
     out << "\" , fontcolor=\"magenta\" , shape=none ];\n";
     if (childIDs) {
@@ -3007,7 +3007,7 @@ void Alt::Base::to_dot_semanticfilters(unsigned int *nodeID,
             << " [ arrowhead=none, color=\"magenta\" ];\n";
       }
     } else {
-      out << "node_" << thisID << " -> node_" << childID
+      out << "    node_" << thisID << " -> node_" << childID
           << " [ arrowhead=none, color=\"magenta\" ];\n";
     }
   }
@@ -3028,7 +3028,7 @@ void Alt::Base::to_dot_semanticfilters(unsigned int *nodeID,
   for (unsigned int filterpos = 0; filterpos < max_multifilter_number;
        ++filterpos) {
     unsigned int childID = (unsigned int)((*nodeID)++);
-    out << "node_" << childID << " [ label=<<table border='0'>";
+    out << "    node_" << childID << " [ label=<<table border='0'>";
     for (std::vector<std::list<Filter*> >::iterator
          i = this->multi_filter.begin();
          i != this->multi_filter.end(); ++i) {
@@ -3051,15 +3051,13 @@ void Alt::Base::to_dot_semanticfilters(unsigned int *nodeID,
 unsigned int* Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out,
          int plot_grammar, int depth) {
   unsigned int thisID = (unsigned int)((*nodeID)++);
-  out << "node_" << thisID << " [ label=<<table border='0'><tr>";
+  out << "    node_" << thisID << " [ label=<<table border='0'><tr>";
   Alt::Link *link = dynamic_cast<Alt::Link*>(this);
-  if (link && (link->is_explicit() == true)) {
-    // indices have been given via index hack in source file:
-    if (plot_grammar > 1) {
-        link->to_dot_overlayindices(out, true);
-    }
-  } else {
-    if (plot_grammar > 1) {
+  if (plot_grammar > 1) {
+    if (link && (link->is_explicit() == true)) {
+      // indices have been given via index hack in source file:
+      link->to_dot_overlayindices(out, true);
+    } else {
       to_dot_indices(this->left_indices, out);
     }
   }
@@ -3099,13 +3097,11 @@ unsigned int* Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out,
   if (block) {
     out << "<td>a block</td>";
   }
-  if (link && (link->is_explicit() == true)) {
-    // indices have been given via index hack in source file:
-    if (plot_grammar > 1) {
-        link->to_dot_overlayindices(out, false);
-    }
-  } else {
-    if (plot_grammar > 1) {
+  if (plot_grammar > 1) {
+    if (link && (link->is_explicit() == true)) {
+      // indices have been given via index hack in source file:
+      link->to_dot_overlayindices(out, false);
+    } else {
       to_dot_indices(this->left_indices, out);
     }
   }
@@ -3139,7 +3135,6 @@ unsigned int* Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out,
   // add syntactic filters
   to_dot_semanticfilters(nodeID, thisID, out);
 
-
   unsigned int* res = (unsigned int*) malloc(2* sizeof(unsigned int*));
   res[0] = thisID;
   res[1] = depth;
@@ -3161,7 +3156,7 @@ unsigned int* Alt::Simple::to_dot(unsigned int *nodeID, std::ostream &out,
       if (childID[1] > d) {
           d = childID[1];
       }
-      out << "node_" << thisID << " -> node_" << childID[0]
+      out << "    node_" << thisID << " -> node_" << childID[0]
           << " [ arrowhead=none ";
       Alt::Multi *multi = dynamic_cast<Alt::Multi*>(argalt->alt_ref());
       if (multi) {
@@ -3193,7 +3188,7 @@ unsigned int* Alt::Block::to_dot(unsigned int *nodeID, std::ostream &out,
         d = res2[1];
     }
     unsigned int childID = res2[0];
-    out << "node_" << thisID << " -> node_" << childID
+    out << "    node_" << thisID << " -> node_" << childID
         << " [ ];\n";
   }
   depth = d;
@@ -3216,7 +3211,7 @@ unsigned int* Alt::Multi::to_dot(unsigned int *nodeID, std::ostream &out,
     }
     childIDs->push_back(childID[0]);
     if (lastID > 0) {
-      out << "node_" << lastID << " -> node_" << childID[0]
+      out << "    node_" << lastID << " -> node_" << childID[0]
           << " [ style=\"invis\" ];\n";
     }
     lastID = childID[0];

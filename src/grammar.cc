@@ -1008,17 +1008,23 @@ unsigned int Grammar::to_dot(unsigned int *nodeID, std::ostream &out,
   unsigned int i = 1;
   out << "digraph " << *this->name << " {\n";
   out << "compound = True;\n";
-  out << "newrank=True;\n";
-  out << "ordering=out;\n";
+  out << "newrank = True;\n";
+  out << "ordering = out;\n";
   for (std::list<Symbol::NT*>::const_iterator nt = this->nt_list.begin();
        nt != this->nt_list.end(); ++nt) {
+    // let's organize all nodes of a lhs non-terminal in one subgraph cluster
+    // such that it can be plotted as one unit and these units are
+    // vertically stacked, while elements in the unit are horizontally aligned
     out << "subgraph cluster_" << i << "{\n";
     start_node = (*nt)->to_dot(nodeID, out, false, this->axiom, plot_grammar);
     out << "}\n";
+    // except for the first unit, we add an invisible node (anchor) and
+    // invisible edges from the anchor to the lhs non-terminal node of the
+    // next unit to enable vertical alignment
     if (start_node > 1) {
-        out << "node_" << start_node-1 << " -> node_" << start_node <<
-                " [ style = invis];\n";
-      }
+        out << "node_" << start_node-1 << " -> node_" << start_node
+            << " [ style = invis ];\n";
+    }
     i++;
   }
   out << "}\n";
