@@ -1629,12 +1629,12 @@ unsigned int Symbol::Base::to_dot(unsigned int *nodeID, std::ostream &out,
   unsigned int thisID = (unsigned int)((*nodeID)++);
   out << "    node_" << thisID << " [ label=<<table border='0'><tr>";
   if (plot_grammar > 1) {
-      to_dot_indices(this->left_indices, out);
-      out << "<td>" << *this->name << "</td>";
-      to_dot_indices(this->right_indices, out);
-      out << "</tr></table>>";
+    to_dot_indices(this->left_indices, out);
+    out << "<td>" << *this->name << "</td>";
+    to_dot_indices(this->right_indices, out);
+    out << "</tr></table>>";
   } else {
-      out << "<td>" << *this->name << "</td></tr></table>>";
+    out << "<td>" << *this->name << "</td></tr></table>>";
   }
   return thisID;
 }
@@ -1642,7 +1642,7 @@ unsigned int Symbol::Terminal::to_dot(unsigned int *nodeID, std::ostream &out,
                                       bool is_rhs, Symbol::NT *axiom,
                                       int plot_grammar) {
   unsigned int thisID = Symbol::Base::to_dot(nodeID, out, is_rhs, axiom,
-          plot_grammar);
+    plot_grammar);
   out << ", color=\"blue\", fontcolor=\"blue\" ];\n";
   return thisID;
 }
@@ -1671,6 +1671,7 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
 
     for (std::list<Alt::Base*>::const_iterator alt = this->alts.begin();
          alt != this->alts.end(); ++alt) {
+      // drawing the alternative
       unsigned int d = 1;
       res = (*alt)->to_dot(nodeID, out, plot_grammar, d);
       unsigned int childID = res[0];
@@ -1679,39 +1680,42 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
         depth = d;
       }
 
+      // add special nodes to a) add --> between lhs NT and first alternative
+      // OR a vertical bar between every two alternatives
       std::string op = "|";
       std::string weight = "";
       if (pre_ID == thisID) {
-    	  op = "&rarr;";
-    	  weight = ", weight=99";
+        op = "&rarr;";
+        weight = ", weight=99";
       }
+      // the extra node
       out << "    node_" << pre_ID << "_" << childID << "[ label=<<table "
           << "border='0'><tr><td><font point-size='30'>" << op
-		  << "</font></td></tr></table>>, shape=plaintext];\n";
+          << "</font></td></tr></table>>, shape=plaintext];\n";
+      // an extra edge
       out << "    node_" << pre_ID << " -> node_" << pre_ID << "_"
           << childID << "[style= invis" << weight << "];\n";
       out << "    node_" << pre_ID << "_" << childID << " -> node_"
-		  << childID << "[style= invis];\n";
+          << childID << "[style= invis];\n";
       rank = rank + "node_" + std::to_string(pre_ID) + "_" +
              std::to_string(childID) + " " + "node_" +
              std::to_string(childID) + " ";
       pre_ID = childID;
     }
 
+
+    choiceID = (unsigned int)((*nodeID)++);
+    std::string h_label = "h_" + std::to_string(thisID);
+    std::string h_style = ", style=invis";
     if (this->eval_fn != NULL) {
-      choiceID = (unsigned int)((*nodeID)++);
-      out << "    node_" << choiceID << " [ label=" << *this->eval_fn
-          << ", fontcolor=\"purple\", shape=none ];\n";
-      out << "    node_" << thisID << " -> node_" << choiceID
-          << " [ arrowhead=none, color=\"purple\", weight=99 ];\n";
-    } else {
-      choiceID = (unsigned int)((*nodeID)++);
-      out << "    node_" << choiceID << " [ label=h_" << thisID
-          << ", fontcolor=\"purple\", shape=none, style=invis];\n";
-      out << "    node_" << thisID << " -> node_" << choiceID
-          << " [ arrowhead=none, color=\"purple\", style=invis, "
-             "weight=99 ];\n";
+      h_label = *this->eval_fn;
+      h_style = "";
     }
+    out << "    node_" << choiceID << " [ label=" << h_label
+        << ", fontcolor=\"purple\", shape=none" << h_style << " ];\n";
+    out << "    node_" << thisID << " -> node_" << choiceID
+        << " [ arrowhead=none, color=\"purple\", weight=99"
+        << h_style << " ];\n";
 
     for ( unsigned int i = 1; i < depth; i++ ) {
       unsigned int childID = (unsigned int)((*nodeID)++);
