@@ -1022,7 +1022,7 @@ unsigned int Grammar::to_dot(unsigned int *nodeID, std::ostream &out,
     // invisible edges from the anchor to the lhs non-terminal node of the
     // next unit to enable vertical alignment
     if (start_node > 1) {
-        out << "node_" << start_node-1 << " -> node_" << start_node
+        out << "node_" << (start_node-1) << " -> node_" << start_node
             << " [ style = invis ];\n";
     }
     i++;
