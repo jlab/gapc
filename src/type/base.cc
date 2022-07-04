@@ -24,6 +24,7 @@
 #include "base.hh"
 
 #include <cstdlib>
+#include <string>
 
 Type::Base::~Base() {}
 
@@ -67,4 +68,27 @@ Type::Base *Type::Base::component() {
 
 Type::Base *Type::Base::deref() {
   return this;
+}
+
+// replaces from with to in str
+void replaceAll(std::string& str, const std::string& from,
+                const std::string& to) {
+  if (from.empty())
+    return;
+  size_t start_pos = 0;
+  while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
+    str.replace(start_pos, from.length(), to);
+    // In case 'to' contains 'from', like replacing 'x' with 'yx'
+    start_pos += to.length();
+  }
+}
+
+// graphViz compatible text representation of datatype
+void Type::Base::to_dot(std::ostream &out) {
+  std::ostringstream dtype_stream;
+  this->put(dtype_stream);
+  std::string dtype = dtype_stream.str();
+  replaceAll(dtype, std::string("<"), std::string("&lt;"));
+  replaceAll(dtype, std::string(">"), std::string("&gt;"));
+  out << dtype;
 }

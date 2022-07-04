@@ -128,10 +128,13 @@ static void parse_options(int argc, char **argv, Options *rec) {
       "Mode of specialization: 0 force block mode, 1 force stepwise mode. This"
       " is automatically set to best option if not specified.")
     ("plot-grammar", po::value<int>(),
-      "generates a graphviz dot-file from the selected (and potentially "
-      "modified) grammar.\n Valid values are 0(no plot), 1(simple plot), "
-      "2(plot with indices). Default is 0. \n"
-      "(Use 'dot -Tpdf out.dot' to generate a PDF.)\n default file is out.dot");
+      "generates a Graphviz dot-file from the selected (and potentially "
+      "modified) grammar.\nChoose a level (int) of detail:\n"
+      "  0 (default) = no output at all\n"
+      "  1 = grammar\n"
+      "  2 = add indices\n"
+      "  3 = add data types.\n"
+      "(Use 'dot -Tpdf out.dot' to generate a PDF.)\nDefault file is out.dot");
   po::options_description hidden("");
   hidden.add_options()
     ("backtrack", "deprecated for --backtrace")

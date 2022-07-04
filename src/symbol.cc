@@ -1627,14 +1627,25 @@ bool Symbol::Terminal::isPredefinedTerminalParser() {
 unsigned int Symbol::Base::to_dot(unsigned int *nodeID, std::ostream &out,
         bool is_rhs, Symbol::NT *axiom, int plot_grammar) {
   unsigned int thisID = (unsigned int)((*nodeID)++);
-  out << "node_" << thisID << " [ label=<<table border='0'><tr>";
+  out << "    node_" << thisID << " [ label=<<table border='0'><tr>";
   if (plot_grammar > 1) {
-      to_dot_indices(this->left_indices, out);
-      out << "<td>" << *this->name << "</td>";
-      to_dot_indices(this->right_indices, out);
-      out << "</tr></table>>";
+    to_dot_indices(this->left_indices, out);
+    out << "<td>" << *this->name;
+    if (plot_grammar > 2) {
+      // if we want to also print out datatypes
+      out << "<br/><font color='orange'>";
+      if (this->datatype == NULL) {
+        out << "NULL";
+      } else {
+        this->datatype->to_dot(out);
+      }
+      out << "</font>";
+    }
+    out << "</td>";
+    to_dot_indices(this->right_indices, out);
+    out << "</tr></table>>";
   } else {
-      out << "<td>" << *this->name << "</td></tr></table>>";
+    out << "<td>" << *this->name << "</td></tr></table>>";
   }
   return thisID;
 }
@@ -1642,19 +1653,19 @@ unsigned int Symbol::Terminal::to_dot(unsigned int *nodeID, std::ostream &out,
                                       bool is_rhs, Symbol::NT *axiom,
                                       int plot_grammar) {
   unsigned int thisID = Symbol::Base::to_dot(nodeID, out, is_rhs, axiom,
-          plot_grammar);
+    plot_grammar);
   out << ", color=\"blue\", fontcolor=\"blue\" ];\n";
   return thisID;
 }
 unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
                                 bool is_rhs, Symbol::NT *axiom,
                                 int plot_grammar) {
-  unsigned int thisID = Symbol::Base::to_dot(nodeID, out, is_rhs, axiom,
-           plot_grammar);
-  unsigned int pre_ID = thisID;
-  unsigned int choiceID;
-  unsigned int depth = 1;
+  unsigned int thisID = Symbol::Base::to_dot(
+    nodeID, out, is_rhs, axiom, plot_grammar);
+  unsigned int anchorID = 0;
+  unsigned int max_depth = 1;
   unsigned int *res = (unsigned int *) malloc(2 * sizeof(int));
+  // with "rank" we collect nodes that must be drawn topmost in a cluster
   std::string rank = "";
   out << ", color=\"black\"";
   if (!is_rhs) {
@@ -1668,72 +1679,90 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
     }
     out << " ];\n";
 
+    unsigned int sepNodeID;
+    if (this->alts.size() > 0) {
+      sepNodeID = (unsigned int)((*nodeID)++);
+      // add an invisible edge from lhs NT to --> node
+      out << "    node_" << thisID << " -> node_" << sepNodeID
+          << " [ style=invis, weight=99 ];\n";
+      // adding a separator node to draw the --> arrow from lhs NT
+      // name to alternatives
+      out << "    node_" << sepNodeID << " [ label=<<table border='0'><tr>"
+          << "<td><font point-size='30'>&rarr;</font></td></tr></table>>,"
+          << " shape=plaintext ];\n";
+      // add an invisible edge from the --> node to the first
+      // alternative production
+      out << "    node_" << sepNodeID << " -> node_" << *nodeID
+          << " [ style=invis ];\n";
+      rank += "node_" + std::to_string(sepNodeID) + " ";
+    }
     for (std::list<Alt::Base*>::const_iterator alt = this->alts.begin();
          alt != this->alts.end(); ++alt) {
-      unsigned int d = 1;
-      res = (*alt)->to_dot(nodeID, out, plot_grammar, d);
+      // drawing the alternative
+      res = (*alt)->to_dot(nodeID, out, plot_grammar);
       unsigned int childID = res[0];
-      d = res[1];
-      if (d > depth) {
-          depth = d;
+      if (res[1] > max_depth) {
+        max_depth = res[1];
       }
-      if (pre_ID != thisID) {
-          out << "node_" << pre_ID << "_" << childID << "[ label=<<table "
-                  "border='0'><tr><td><font point-size='30'>|</font></td>"
-                  "</tr></table>>, shape=plaintext];\n";
-          out << "node_" << pre_ID << " -> node_" << pre_ID << "_" << childID <<
-                      "[style= invis];\n";
-          out << "node_" << pre_ID << "_" << childID << " -> node_" <<
-                  childID << "[style= invis];\n";
-      } else {
-          out << "node_"  << pre_ID << "_" << childID << "[ label=<<table "
-                  "border='0'><tr><td><font point-size='30'>&rarr;</font>"
-                  "</td></tr></table>>, shape=plaintext];\n";
-          out << "node_" << pre_ID << " -> node_" << pre_ID << "_" <<
-                  childID << "[style= invis, weight=99];\n";
-          out << "node_" << pre_ID << "_" << childID << " -> node_" <<
-                  childID << "[style= invis];\n";
+
+      rank += "node_" + std::to_string(childID) + " ";
+      if (std::next(alt) != this->alts.end()) {
+        // add a separator node to draw a | symbol between every
+        // two alternatives. This is similar to the --> node, i.e. with
+        // incoming and outgoing invisible edges
+        sepNodeID = (unsigned int)((*nodeID)++);
+        out << "    node_" << childID << " -> node_" << sepNodeID
+            << " [ style=invis ];\n";
+        out << "    node_" << sepNodeID << " [ label=<<table border='0'>"
+            << "<tr><td><font point-size='30'>|</font></td></tr></table>>"
+            << ", shape=plaintext ];\n";
+        out << "    node_" << sepNodeID << " -> node_" << *nodeID
+            << " [ style=invis ];\n";
+        rank += "node_" + std::to_string(sepNodeID) + " ";
       }
-      rank =  rank + "node_" + std::to_string(pre_ID) + "_" +
-              std::to_string(childID) + " " + "node_" +
-              std::to_string(childID) + " ";
-      pre_ID = childID;
     }
 
+    // depth of the lhsNT to which other NT boxes will be oriented
+    unsigned int lhsNT_depth = 1;
+
+    // plot evaluation function
+    unsigned int choiceID = thisID;
     if (this->eval_fn != NULL) {
-          choiceID = (unsigned int)((*nodeID)++);
-          out << "node_" << choiceID << " [ label=" << *this->eval_fn
-              << ", fontcolor=\"purple\" , shape=none ];\n";
-          out << "node_" << thisID << " -> node_" << choiceID
-              << " [ arrowhead=none, color=\"purple\" , weight=99];\n";
+      choiceID = (unsigned int)((*nodeID)++);
+      out << "    node_" << choiceID << " [ label=<" << *this->eval_fn;
+      if (plot_grammar > 2) {
+        // if we want to also print out datatypes
+        out << "<br/><font color='orange'>";
+        if (this->eval_decl == NULL) {
+          out << "NULL";
         } else {
-          choiceID = (unsigned int)((*nodeID)++);
-          out << "node_" << choiceID << " [ label=h_" << thisID
-              << ", fontcolor=\"purple\" , shape=none , style=invis];\n";
-          out << "node_" << thisID << " -> node_" << choiceID
-              << " [ arrowhead=none, color=\"purple\" , style=invis, "
-                      "weight=99];\n";
+          this->eval_decl->return_type->to_dot(out);
         }
-
-    for ( unsigned int i = 1; i < depth; i++ ) {
-        unsigned int childID = (unsigned int)((*nodeID)++);
-        if (plot_grammar > 1) {
-            out << "node_" << childID << "[label=<<table border='0'><tr>";
-            to_dot_indices(this->left_indices, out);
-            out << "<td>" << *this->name << "</td>";
-            to_dot_indices(this->right_indices, out);
-            out << "</tr></table>>, shape=\"box\", style=invis];\n";
-        } else {
-            out << "node_" << childID << "[label = " << *this->name <<
-                    ", shape=\"box\", style=invis];\n";
-        }
-        out << "node_" << choiceID << " -> " << "node_" << childID <<
-               "[weight = 99, style = invis];\n";;
-        choiceID = childID;
+        out << "</font>";
+      }
+      out << ">, fontcolor=\"purple\", shape=none ];\n";
+      out << "    node_" << thisID << " -> node_" << choiceID
+          << " [ arrowhead=none, color=\"purple\", weight=99 ];\n";
+      // choice function will be located on depth+1, i.e. one less
+      // invisible fake node necessary
+      lhsNT_depth++;
     }
-    out << "{ rank=same node_" << thisID << " " << rank << "}\n";
+
+    // in order to align each NT vertically below each other, we have to inject
+    // invisible nodes below the lhs NT (-1 if choice function has been added)
+    // up to the deepest level for any rhs production rule
+    anchorID = choiceID;
+    for (unsigned int depth = lhsNT_depth; depth < max_depth; depth++) {
+      out << "    node_" << anchorID << " -> node_" << *nodeID
+          << " [ style=invis, weight=99 ];\n";
+      anchorID = (unsigned int)((*nodeID)++);
+      out << "    node_" << anchorID << " [ style=invis ];\n";
+    }
+
+    out << "    { rank=same node_" << thisID << " " << rank << "}\n";
   }
+  // if is_rhs = True, name will be drawn by alt::Base
   free(res);
-  return thisID;
+  return anchorID;
 }
 // END functions produce graphViz code to represent the grammar
