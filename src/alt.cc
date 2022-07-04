@@ -2960,8 +2960,12 @@ void to_dot_indices(std::vector<Expr::Base*> indices, std::ostream &out) {
   out << "<td><font point-size='8' color='#555555'>";
   for (std::vector<Expr::Base*>::const_iterator track = indices.begin();
        track != indices.end(); ++track) {
-    assert(*track != NULL);
-    (*track)->put(out);
+    // assert(*track != NULL);
+    if (*track == NULL) {
+      out << "NULL";
+    } else {
+      (*track)->put(out);
+    }
     if (std::next(track) != indices.end()) {
       out << "<br/>";
     }
@@ -3092,16 +3096,25 @@ unsigned int* Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out,
         }
       }
     }
-
-    out << "</td>";
   }
   if (link) {
-    out << "<td>" << *link->name << "</td>";
+    out << "<td>" << *link->name;
   }
   Alt::Block *block = dynamic_cast<Alt::Block*>(this);
   if (block) {
-    out << "<td>a block</td>";
+    out << "<td>a block";
   }
+  if (plot_grammar > 2) {
+    // if we want to also print out datatypes
+    out << "<br/><font color='orange'>";
+    if (this->datatype == NULL) {
+      out << "NULL";
+    } else {
+      this->datatype->to_dot(out);
+    }
+    out << "</font>";
+  }
+  out << "</td>";
   if (plot_grammar > 1) {
     if (link && (link->is_explicit() == true)) {
       // indices have been given via index hack in source file:

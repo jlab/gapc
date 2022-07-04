@@ -1630,7 +1630,18 @@ unsigned int Symbol::Base::to_dot(unsigned int *nodeID, std::ostream &out,
   out << "    node_" << thisID << " [ label=<<table border='0'><tr>";
   if (plot_grammar > 1) {
     to_dot_indices(this->left_indices, out);
-    out << "<td>" << *this->name << "</td>";
+    out << "<td>" << *this->name;
+    if (plot_grammar > 2) {
+      // if we want to also print out datatypes
+      out << "<br/><font color='orange'>";
+      if (this->datatype == NULL) {
+        out << "NULL";
+      } else {
+        this->datatype->to_dot(out);
+      }
+      out << "</font>";
+    }
+    out << "</td>";
     to_dot_indices(this->right_indices, out);
     out << "</tr></table>>";
   } else {
@@ -1718,8 +1729,18 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
     unsigned int choiceID = thisID;
     if (this->eval_fn != NULL) {
       choiceID = (unsigned int)((*nodeID)++);
-      out << "    node_" << choiceID << " [ label=" << *this->eval_fn
-          << ", fontcolor=\"purple\", shape=none ];\n";
+      out << "    node_" << choiceID << " [ label=<" << *this->eval_fn
+      if (true) {
+        // if we want to also print out datatypes
+        out << "<br/><font color='orange'>";
+        if (this->eval_decl == NULL) {
+          out << "NULL";
+        } else {
+          this->eval_decl->return_type->to_dot(out);
+        }
+        out << "</font>";
+      }
+      out << ">, fontcolor=\"purple\" , shape=none ];\n";
       out << "    node_" << thisID << " -> node_" << choiceID
           << " [ arrowhead=none, color=\"purple\", weight=99 ];\n";
       // choice function will be located on depth+1, i.e. one less
