@@ -3169,7 +3169,7 @@ unsigned int* Alt::Simple::to_dot(unsigned int *nodeID, std::ostream &out,
     }
   }
   if (res[1] < max_depth+1) {
-	  res[1] = max_depth+1;
+    res[1] = max_depth+1;
   }
   return res;
 }

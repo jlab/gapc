@@ -1672,11 +1672,17 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
     if (this->alts.size() > 0) {
       sepNodeID = (unsigned int)((*nodeID)++);
       // add an invisible edge from lhs NT to --> node
-	  out << "    node_" << thisID << " -> node_" << sepNodeID << " [ style=invis, weight=99 ];\n";
-	  // adding a separator node to draw the --> arrow from lhs NT name to alternatives
-      out << "    node_" << sepNodeID << " [ label=<<table border='0'><tr><td><font point-size='30'>&rarr;</font></td></tr></table>>, shape=plaintext ];\n";
-      // add an invisible edge from the --> node to the first alternative production
-      out << "    node_" << sepNodeID << " -> node_" << *nodeID << " [ style=invis ];\n";
+      out << "    node_" << thisID << " -> node_" << sepNodeID
+          << " [ style=invis, weight=99 ];\n";
+      // adding a separator node to draw the --> arrow from lhs NT
+      // name to alternatives
+      out << "    node_" << sepNodeID << " [ label=<<table border='0'><tr>"
+          << "<td><font point-size='30'>&rarr;</font></td></tr></table>>,"
+          << " shape=plaintext ];\n";
+      // add an invisible edge from the --> node to the first
+      // alternative production
+      out << "    node_" << sepNodeID << " -> node_" << *nodeID
+          << " [ style=invis ];\n";
       rank += "node_" + std::to_string(sepNodeID) + " ";
     }
     for (std::list<Alt::Base*>::const_iterator alt = this->alts.begin();
@@ -1690,13 +1696,18 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
 
       rank += "node_" + std::to_string(childID) + " ";
       if (std::next(alt) != this->alts.end()) {
-    	// add a separator node to draw a | symbol between every two alternatives
-    	// This is similar to the --> node, i.e. with incoming and outgoing invisible edges
-    	sepNodeID = (unsigned int)((*nodeID)++);
-    	out << "    node_" << childID << " -> node_" << sepNodeID << " [ style=invis ];\n";
-    	out << "    node_" << sepNodeID << " [ label=<<table border='0'><tr><td><font point-size='30'>|</font></td></tr></table>>, shape=plaintext ];\n";
-    	out << "    node_" << sepNodeID << " -> node_" << *nodeID << " [ style=invis ];\n";
-    	rank += "node_" + std::to_string(sepNodeID) + " ";
+        // add a separator node to draw a | symbol between every
+        // two alternatives. This is similar to the --> node, i.e. with
+        // incoming and outgoing invisible edges
+        sepNodeID = (unsigned int)((*nodeID)++);
+        out << "    node_" << childID << " -> node_" << sepNodeID
+            << " [ style=invis ];\n";
+        out << "    node_" << sepNodeID << " [ label=<<table border='0'>"
+            << "<tr><td><font point-size='30'>|</font></td></tr></table>>"
+            << ", shape=plaintext ];\n";
+        out << "    node_" << sepNodeID << " -> node_" << *nodeID
+            << " [ style=invis ];\n";
+        rank += "node_" + std::to_string(sepNodeID) + " ";
       }
     }
 
@@ -1707,9 +1718,12 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
     unsigned int choiceID = thisID;
     if (this->eval_fn != NULL) {
       choiceID = (unsigned int)((*nodeID)++);
-      out << "    node_" << choiceID << " [ label=" << *this->eval_fn << ", fontcolor=\"purple\", shape=none ];\n";
-      out << "    node_" << thisID << " -> node_" << choiceID << " [ arrowhead=none, color=\"purple\", weight=99 ];\n";
-      // choice function will be located on depth+1, i.e. one less invisible fake node necessary
+      out << "    node_" << choiceID << " [ label=" << *this->eval_fn
+          << ", fontcolor=\"purple\", shape=none ];\n";
+      out << "    node_" << thisID << " -> node_" << choiceID
+          << " [ arrowhead=none, color=\"purple\", weight=99 ];\n";
+      // choice function will be located on depth+1, i.e. one less
+      // invisible fake node necessary
       lhsNT_depth++;
     }
 
@@ -1718,7 +1732,8 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
     // up to the deepest level for any rhs production rule
     anchorID = choiceID;
     for (unsigned int depth = lhsNT_depth; depth < max_depth; depth++) {
-      out << "    node_" << anchorID << " -> node_" << *nodeID << " [ style=invis, weight=99 ];\n";
+      out << "    node_" << anchorID << " -> node_" << *nodeID
+          << " [ style=invis, weight=99 ];\n";
       anchorID = (unsigned int)((*nodeID)++);
       out << "    node_" << anchorID << " [ style=invis ];\n";
     }
