@@ -2990,9 +2990,10 @@ void to_dot_filternameargs(Filter *filter, std::ostream &out) {
     }
   }
 }
-void Alt::Base::to_dot_semanticfilters(unsigned int *nodeID,
+unsigned int Alt::Base::to_dot_semanticfilters(unsigned int *nodeID,
     unsigned int thisID, std::ostream &out,
     std::vector<unsigned int> *childIDs) {
+  unsigned int max_depth = 0;
   // add syntactic filters
   for (std::list<Filter*>::const_iterator filter = this->filters.begin();
        filter != this->filters.end(); ++filter) {
@@ -3010,6 +3011,7 @@ void Alt::Base::to_dot_semanticfilters(unsigned int *nodeID,
       out << "    node_" << thisID << " -> node_" << childID
           << " [ arrowhead=none, color=\"magenta\" ];\n";
     }
+    max_depth = 1;
   }
   // Multiple filter can be added to each track.
   // Unfortunately, filters are stored in a list per track, containing
@@ -3046,10 +3048,13 @@ void Alt::Base::to_dot_semanticfilters(unsigned int *nodeID,
     out << "</table>>, fontcolor=\"magenta\", shape=none ];\n";
     out << "node_" << thisID << " -> node_" << childID
         << " [ arrowhead=none, color=\"magenta\" ];\n";
+    max_depth = 1;
   }
+  return max_depth;
 }
 unsigned int* Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out,
-         int plot_grammar, int depth) {
+         int plot_grammar) {
+  unsigned int max_depth = 1;
   unsigned int thisID = (unsigned int)((*nodeID)++);
   out << "    node_" << thisID << " [ label=<<table border='0'><tr>";
   Alt::Link *link = dynamic_cast<Alt::Link*>(this);
@@ -3133,31 +3138,29 @@ unsigned int* Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out,
   out << "];\n";
 
   // add syntactic filters
-  to_dot_semanticfilters(nodeID, thisID, out);
+  max_depth += to_dot_semanticfilters(nodeID, thisID, out);
 
   unsigned int* res = (unsigned int*) malloc(2* sizeof(unsigned int*));
   res[0] = thisID;
-  res[1] = depth;
+  res[1] = max_depth;
   return res;
 }
 unsigned int* Alt::Simple::to_dot(unsigned int *nodeID, std::ostream &out,
-         int plot_grammar, int depth) {
-  unsigned int* res = Alt::Base::to_dot(nodeID, out, plot_grammar, depth);
+         int plot_grammar) {
+  unsigned int* res = Alt::Base::to_dot(nodeID, out, plot_grammar);
   unsigned int thisID = res[0];
-  depth = res[1];
-  depth++;
-  unsigned int d = depth;
+  unsigned int max_depth = 0;
   for (std::list<Fn_Arg::Base*>::const_iterator arg = this->args.begin();
        arg != this->args.end(); ++arg) {
     Fn_Arg::Alt *argalt = dynamic_cast<Fn_Arg::Alt*>(*arg);
     if (argalt) {
       unsigned int* childID = argalt->alt_ref()->to_dot(nodeID, out,
-              plot_grammar, depth);
-      if (childID[1] > d) {
-          d = childID[1];
-      }
+              plot_grammar);
       out << "    node_" << thisID << " -> node_" << childID[0]
           << " [ arrowhead=none ";
+      if (childID[1] > max_depth) {
+        max_depth = childID[1];
+      }
       Alt::Multi *multi = dynamic_cast<Alt::Multi*>(argalt->alt_ref());
       if (multi) {
         out << ", lhead=cluster_node_" << (childID[0]-1) << " ";
@@ -3165,50 +3168,47 @@ unsigned int* Alt::Simple::to_dot(unsigned int *nodeID, std::ostream &out,
       out << "];\n";
     }
   }
-  depth = d;
-  res[1] = depth;
+  if (res[1] < max_depth+1) {
+	  res[1] = max_depth+1;
+  }
   return res;
 }
 unsigned int* Alt::Link::to_dot(unsigned int *nodeID, std::ostream &out,
-        int plot_grammar, int depth) {
-  return Alt::Base::to_dot(nodeID, out, plot_grammar, depth);
+        int plot_grammar) {
+  return Alt::Base::to_dot(nodeID, out, plot_grammar);
 }
 unsigned int* Alt::Block::to_dot(unsigned int *nodeID, std::ostream &out,
-        int plot_grammar, int depth) {
-  unsigned int* res = Alt::Base::to_dot(nodeID, out, plot_grammar, depth);
+        int plot_grammar) {
+  unsigned int* res = Alt::Base::to_dot(nodeID, out, plot_grammar);
   unsigned int thisID = res[0];
-  depth = res[1];
-  depth++;
-  unsigned int d = depth;
+  unsigned int max_depth = 0;
+  if (res[1] > max_depth) {
+    max_depth = res[1];
+  }
   for (std::list<Alt::Base*>::const_iterator alt = this->alts.begin();
        alt != this->alts.end(); ++alt) {
-    d = depth;
-    unsigned int* res2 = (*alt)->to_dot(nodeID, out, plot_grammar, d);
-    if (res2[1] > d) {
-        d = res2[1];
+    unsigned int* res2 = (*alt)->to_dot(nodeID, out, plot_grammar);
+    if (res2[1]+1 > max_depth) {
+        max_depth = res2[1]+1;
     }
     unsigned int childID = res2[0];
     out << "    node_" << thisID << " -> node_" << childID
         << " [ ];\n";
   }
-  depth = d;
-  res[1] = depth;
+  res[1] = max_depth;
   return res;
 }
 unsigned int* Alt::Multi::to_dot(unsigned int *nodeID, std::ostream &out,
-        int plot_grammar, int depth) {
+        int plot_grammar) {
   unsigned int thisID = (unsigned int)((*nodeID)++);
   out << "subgraph cluster_node_" << thisID << " {\n";
   unsigned int lastID = 0;
-  depth++;
-  unsigned int d = depth;
+  unsigned int max_depth = 0;
   std::vector<unsigned int> *childIDs = new std::vector<unsigned int>();
   for (std::list<Alt::Base*>::const_iterator alt = this->list.begin();
        alt != this->list.end(); ++alt) {
-    unsigned int* childID = (*alt)->to_dot(nodeID, out, plot_grammar, depth);
-    if (childID[1] > d) {
-        d = childID[1];
-    }
+    unsigned int* childID = (*alt)->to_dot(nodeID, out, plot_grammar);
+    max_depth += childID[1];
     childIDs->push_back(childID[0]);
     if (lastID > 0) {
       out << "    node_" << lastID << " -> node_" << childID[0]
@@ -3216,14 +3216,13 @@ unsigned int* Alt::Multi::to_dot(unsigned int *nodeID, std::ostream &out,
     }
     lastID = childID[0];
   }
-  depth = d;
   // add syntactic filter and draw an edge to every track component
-  to_dot_semanticfilters(nodeID, thisID, out, childIDs);
+  max_depth += to_dot_semanticfilters(nodeID, thisID, out, childIDs);
   out << "};\n";
 
   unsigned int* res = (unsigned int*) malloc(2*sizeof(unsigned int*));
   res[0] = thisID+1;
-  res[1] = depth;
+  res[1] = max_depth;
 
   // return not the cluster ID but the id of the first element
   return res;
