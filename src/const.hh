@@ -200,6 +200,7 @@ class String : public Base {
 
 
   void put(std::ostream &s);
+  void put_noquote(std::ostream &s);
 };
 
 
