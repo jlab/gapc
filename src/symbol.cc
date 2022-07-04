@@ -1662,7 +1662,7 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
                                 int plot_grammar) {
   unsigned int thisID = Symbol::Base::to_dot(
     nodeID, out, is_rhs, axiom, plot_grammar);
-  unsigned int anchorID;
+  unsigned int anchorID = 0;
   unsigned int max_depth = 1;
   unsigned int *res = (unsigned int *) malloc(2 * sizeof(int));
   // with "rank" we collect nodes that must be drawn topmost in a cluster
@@ -1729,8 +1729,8 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
     unsigned int choiceID = thisID;
     if (this->eval_fn != NULL) {
       choiceID = (unsigned int)((*nodeID)++);
-      out << "    node_" << choiceID << " [ label=<" << *this->eval_fn
-      if (true) {
+      out << "    node_" << choiceID << " [ label=<" << *this->eval_fn;
+      if (plot_grammar > 2) {
         // if we want to also print out datatypes
         out << "<br/><font color='orange'>";
         if (this->eval_decl == NULL) {
@@ -1740,7 +1740,7 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
         }
         out << "</font>";
       }
-      out << ">, fontcolor=\"purple\" , shape=none ];\n";
+      out << ">, fontcolor=\"purple\", shape=none ];\n";
       out << "    node_" << thisID << " -> node_" << choiceID
           << " [ arrowhead=none, color=\"purple\", weight=99 ];\n";
       // choice function will be located on depth+1, i.e. one less
