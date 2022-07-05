@@ -331,9 +331,11 @@ class Base {
   virtual void set_ntparas(const Loc &loc, std::list<Expr::Base*> *l);
 
   bool choice_set();
-  void to_dot_semanticfilters(unsigned int *nodeID, unsigned int thisID,
+  unsigned int to_dot_semanticfilters(unsigned int *nodeID, unsigned int thisID,
     std::ostream &out, std::vector<unsigned int> *childIDs = NULL);
-  virtual unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
+
+  virtual unsigned int* to_dot(unsigned int *nodeID, std::ostream &out,
+    int plot_level);
 
   // traverses the alternative (=rhs of a production) and collects pointers
   // to all referenced non-terminals e.g.
@@ -579,7 +581,8 @@ class Simple : public Base {
   void set_partof_outside(bool is_outside);
   bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace,
     hashtable<std::string, unsigned int> &skip_occurences);
-  unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
+  unsigned int* to_dot(unsigned int *nodeID, std::ostream &out,
+          int plot_level);
   Alt::Base* find_block();
   Alt::Base *find_block_parent(const Alt::Base &block);
 
@@ -718,7 +721,8 @@ class Link : public Base {
   void set_partof_outside(bool is_outside);
   bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace,
     hashtable<std::string, unsigned int> &skip_occurences);
-  unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
+  unsigned int* to_dot(unsigned int *nodeID, std::ostream &out,
+          int plot_level);
   void init_outside_guards();
   Alt::Base* find_block();
   Alt::Base *find_block_parent(const Alt::Base &block);
@@ -802,7 +806,8 @@ class Block : public Base {
   void set_partof_outside(bool is_outside);
   bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace,
     hashtable<std::string, unsigned int> &skip_occurences);
-  unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
+  unsigned int* to_dot(unsigned int *nodeID, std::ostream &out,
+          int plot_level);
   Alt::Base* find_block();
   Alt::Base *find_block_parent(const Alt::Base &block);
 };
@@ -889,7 +894,8 @@ class Multi : public Base {
   void set_partof_outside(bool is_outside);
   bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace,
     hashtable<std::string, unsigned int> &skip_occurences);
-  unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
+  unsigned int* to_dot(unsigned int *nodeID, std::ostream &out,
+          int plot_level);
   Alt::Base* find_block();
   Alt::Base *find_block_parent(const Alt::Base &block);
 };

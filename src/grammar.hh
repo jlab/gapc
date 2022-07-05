@@ -222,7 +222,7 @@ class Grammar {
   void inject_outside_nts(std::vector<std::string> outside_nt_list);
   // same as above, without checking user provided NT list
   void inject_outside_nts();
-  unsigned int to_dot(unsigned int *nodeID, std::ostream &out);
+  unsigned int to_dot(unsigned int *nodeID, std::ostream &out, int plot_level);
 
   // blocks allow alternatives for sub-productions. This function shell free
   // a grammar of Alt::Block by explicitly adding alternatives as top level

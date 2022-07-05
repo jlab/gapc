@@ -3140,14 +3140,15 @@ void to_dot_filternameargs(Filter *filter, std::ostream &out) {
     }
   }
 }
-void Alt::Base::to_dot_semanticfilters(unsigned int *nodeID,
+unsigned int Alt::Base::to_dot_semanticfilters(unsigned int *nodeID,
     unsigned int thisID, std::ostream &out,
     std::vector<unsigned int> *childIDs) {
+  unsigned int max_depth = 0;
   // add syntactic filters
   for (std::list<Filter*>::const_iterator filter = this->filters.begin();
        filter != this->filters.end(); ++filter) {
     unsigned int childID = (unsigned int)((*nodeID)++);
-    out << "node_" << childID << " [ label=\"";
+    out << "    node_" << childID << " [ label=\"";
     to_dot_filternameargs(*filter, out);
     out << "\" , fontcolor=\"magenta\" , shape=none ];\n";
     if (childIDs) {
@@ -3157,9 +3158,10 @@ void Alt::Base::to_dot_semanticfilters(unsigned int *nodeID,
             << " [ arrowhead=none, color=\"magenta\" ];\n";
       }
     } else {
-      out << "node_" << thisID << " -> node_" << childID
+      out << "    node_" << thisID << " -> node_" << childID
           << " [ arrowhead=none, color=\"magenta\" ];\n";
     }
+    max_depth = 1;
   }
   // Multiple filter can be added to each track.
   // Unfortunately, filters are stored in a list per track, containing
@@ -3178,7 +3180,7 @@ void Alt::Base::to_dot_semanticfilters(unsigned int *nodeID,
   for (unsigned int filterpos = 0; filterpos < max_multifilter_number;
        ++filterpos) {
     unsigned int childID = (unsigned int)((*nodeID)++);
-    out << "node_" << childID << " [ label=<<table border='0'>";
+    out << "    node_" << childID << " [ label=<<table border='0'>";
     for (std::vector<std::list<Filter*> >::iterator
          i = this->multi_filter.begin();
          i != this->multi_filter.end(); ++i) {
@@ -3196,17 +3198,23 @@ void Alt::Base::to_dot_semanticfilters(unsigned int *nodeID,
     out << "</table>>, fontcolor=\"magenta\", shape=none ];\n";
     out << "node_" << thisID << " -> node_" << childID
         << " [ arrowhead=none, color=\"magenta\" ];\n";
+    max_depth = 1;
   }
+  return max_depth;
 }
-unsigned int Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out) {
+unsigned int* Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out,
+         int plot_grammar) {
+  unsigned int max_depth = 1;
   unsigned int thisID = (unsigned int)((*nodeID)++);
-  out << "node_" << thisID << " [ label=<<table border='0'><tr>";
+  out << "    node_" << thisID << " [ label=<<table border='0'><tr>";
   Alt::Link *link = dynamic_cast<Alt::Link*>(this);
-  if (link && (link->is_explicit() == true)) {
-    // indices have been given via index hack in source file:
-    link->to_dot_overlayindices(out, true);
-  } else {
-    to_dot_indices(this->left_indices, out);
+  if (plot_grammar > 1) {
+    if (link && (link->is_explicit() == true)) {
+      // indices have been given via index hack in source file:
+      link->to_dot_overlayindices(out, true);
+    } else {
+      to_dot_indices(this->left_indices, out);
+    }
   }
   Alt::Simple *simple = dynamic_cast<Alt::Simple*>(this);
   if (simple) {
@@ -3242,7 +3250,7 @@ unsigned int Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out) {
   if (block) {
     out << "<td>a block";
   }
-  if (true) {
+  if (plot_grammar > 2) {
     // if we want to also print out datatypes
     out << "<br/><font color='orange'>";
     if (this->datatype == NULL) {
@@ -3253,11 +3261,13 @@ unsigned int Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out) {
     out << "</font>";
   }
   out << "</td>";
-  if (link && (link->is_explicit() == true)) {
-    // indices have been given via index hack in source file:
-    link->to_dot_overlayindices(out, false);
-  } else {
-    to_dot_indices(this->right_indices, out);
+  if (plot_grammar > 1) {
+    if (link && (link->is_explicit() == true)) {
+      // indices have been given via index hack in source file:
+      link->to_dot_overlayindices(out, false);
+    } else {
+      to_dot_indices(this->left_indices, out);
+    }
   }
   out << "</tr></table>>, color=\"";
   if (simple) {
@@ -3287,63 +3297,94 @@ unsigned int Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out) {
   out << "];\n";
 
   // add syntactic filters
-  to_dot_semanticfilters(nodeID, thisID, out);
+  max_depth += to_dot_semanticfilters(nodeID, thisID, out);
 
-  return thisID;
+  unsigned int* res = (unsigned int*) malloc(2* sizeof(unsigned int*));
+  res[0] = thisID;
+  res[1] = max_depth;
+  return res;
 }
-unsigned int Alt::Simple::to_dot(unsigned int *nodeID, std::ostream &out) {
-  unsigned int thisID = Alt::Base::to_dot(nodeID, out);
+unsigned int* Alt::Simple::to_dot(unsigned int *nodeID, std::ostream &out,
+         int plot_grammar) {
+  unsigned int* res = Alt::Base::to_dot(nodeID, out, plot_grammar);
+  unsigned int thisID = res[0];
+  unsigned int max_depth = 0;
   for (std::list<Fn_Arg::Base*>::const_iterator arg = this->args.begin();
        arg != this->args.end(); ++arg) {
     Fn_Arg::Alt *argalt = dynamic_cast<Fn_Arg::Alt*>(*arg);
     if (argalt) {
-      unsigned int childID = argalt->alt_ref()->to_dot(nodeID, out);
-      out << "node_" << thisID << " -> node_" << childID
+      unsigned int* childID = argalt->alt_ref()->to_dot(nodeID, out,
+              plot_grammar);
+      out << "    node_" << thisID << " -> node_" << childID[0]
           << " [ arrowhead=none ";
+      if (childID[1] > max_depth) {
+        max_depth = childID[1];
+      }
       Alt::Multi *multi = dynamic_cast<Alt::Multi*>(argalt->alt_ref());
       if (multi) {
-        out << ", lhead=cluster_node_" << (childID-1) << " ";
+        out << ", lhead=cluster_node_" << (childID[0]-1) << " ";
       }
       out << "];\n";
     }
   }
-  return thisID;
+  if (res[1] < max_depth+1) {
+    res[1] = max_depth+1;
+  }
+  return res;
 }
-unsigned int Alt::Link::to_dot(unsigned int *nodeID, std::ostream &out) {
-  return Alt::Base::to_dot(nodeID, out);
+unsigned int* Alt::Link::to_dot(unsigned int *nodeID, std::ostream &out,
+        int plot_grammar) {
+  return Alt::Base::to_dot(nodeID, out, plot_grammar);
 }
-unsigned int Alt::Block::to_dot(unsigned int *nodeID, std::ostream &out) {
-  unsigned int thisID = Alt::Base::to_dot(nodeID, out);
-
+unsigned int* Alt::Block::to_dot(unsigned int *nodeID, std::ostream &out,
+        int plot_grammar) {
+  unsigned int* res = Alt::Base::to_dot(nodeID, out, plot_grammar);
+  unsigned int thisID = res[0];
+  unsigned int max_depth = 0;
+  if (res[1] > max_depth) {
+    max_depth = res[1];
+  }
   for (std::list<Alt::Base*>::const_iterator alt = this->alts.begin();
        alt != this->alts.end(); ++alt) {
-    unsigned int childID = (*alt)->to_dot(nodeID, out);
-    out << "node_" << thisID << " -> node_" << childID
+    unsigned int* res2 = (*alt)->to_dot(nodeID, out, plot_grammar);
+    if (res2[1]+1 > max_depth) {
+        max_depth = res2[1]+1;
+    }
+    unsigned int childID = res2[0];
+    out << "    node_" << thisID << " -> node_" << childID
         << " [ ];\n";
   }
-
-  return thisID;
+  res[1] = max_depth;
+  return res;
 }
-unsigned int Alt::Multi::to_dot(unsigned int *nodeID, std::ostream &out) {
+unsigned int* Alt::Multi::to_dot(unsigned int *nodeID, std::ostream &out,
+        int plot_grammar) {
   unsigned int thisID = (unsigned int)((*nodeID)++);
   out << "subgraph cluster_node_" << thisID << " {\n";
   unsigned int lastID = 0;
+  unsigned int max_depth = 0;
   std::vector<unsigned int> *childIDs = new std::vector<unsigned int>();
   for (std::list<Alt::Base*>::const_iterator alt = this->list.begin();
        alt != this->list.end(); ++alt) {
-    unsigned int childID = (*alt)->to_dot(nodeID, out);
-    childIDs->push_back(childID);
+    unsigned int* childID = (*alt)->to_dot(nodeID, out, plot_grammar);
+    max_depth += childID[1];
+    childIDs->push_back(childID[0]);
     if (lastID > 0) {
-      out << "node_" << lastID << " -> node_" << childID
+      out << "    node_" << lastID << " -> node_" << childID[0]
           << " [ style=\"invis\" ];\n";
     }
-    lastID = childID;
+    lastID = childID[0];
   }
   // add syntactic filter and draw an edge to every track component
-  to_dot_semanticfilters(nodeID, thisID, out, childIDs);
+  max_depth += to_dot_semanticfilters(nodeID, thisID, out, childIDs);
   out << "};\n";
+
+  unsigned int* res = (unsigned int*) malloc(2*sizeof(unsigned int*));
+  res[0] = thisID+1;
+  res[1] = max_depth;
+
   // return not the cluster ID but the id of the first element
-  return thisID+1;
+  return res;
 }
 // END functions produce graphViz code to represent the grammar
 

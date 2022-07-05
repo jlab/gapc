@@ -1,3 +1,45 @@
+bellmansgapc (2022.07.04-0ubuntu0ppa1~bionic1) bionic; urgency=medium
+
+   * the new command line parameter "plot-grammar" allows to generate an additional output file (default is out.dot) that contains GraphViz code that renders the chosen grammar in user defined level of detail (1 to 3).
+     * Thanks to Jasmin Walter for major code contributions! 
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Mon, 4 July 2022 23:00:00 +0200
+
+bellmansgapc (2022.07.04-0ubuntu0ppa1~focal1) focal; urgency=medium
+
+   * the new command line parameter "plot-grammar" allows to generate an additional output file (default is out.dot) that contains GraphViz code that renders the chosen grammar in user defined level of detail (1 to 3).
+     * Thanks to Jasmin Walter for major code contributions! 
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Mon, 4 July 2022 23:00:00 +0200
+
+bellmansgapc (2022.07.04-0ubuntu0ppa1~hirsute1) hirsute; urgency=medium
+
+   * the new command line parameter "plot-grammar" allows to generate an additional output file (default is out.dot) that contains GraphViz code that renders the chosen grammar in user defined level of detail (1 to 3).
+     * Thanks to Jasmin Walter for major code contributions! 
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Mon, 4 July 2022 23:00:00 +0200
+
+bellmansgapc (2022.07.04-0ubuntu0ppa1~impish1) impish; urgency=medium
+
+   * the new command line parameter "plot-grammar" allows to generate an additional output file (default is out.dot) that contains GraphViz code that renders the chosen grammar in user defined level of detail (1 to 3).
+     * Thanks to Jasmin Walter for major code contributions! 
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Mon, 4 July 2022 23:00:00 +0200
+
+bellmansgapc (2022.07.04-0ubuntu0ppa1~jammy1) jammy; urgency=medium
+
+   * the new command line parameter "plot-grammar" allows to generate an additional output file (default is out.dot) that contains GraphViz code that renders the chosen grammar in user defined level of detail (1 to 3).
+     * Thanks to Jasmin Walter for major code contributions! 
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Mon, 4 July 2022 23:00:00 +0200
+
+bellmansgapc (2022.07.04-0ubuntu0ppa1~xenial1) xenial; urgency=medium
+
+   * the new command line parameter "plot-grammar" allows to generate an additional output file (default is out.dot) that contains GraphViz code that renders the chosen grammar in user defined level of detail (1 to 3).
+     * Thanks to Jasmin Walter for major code contributions! 
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Mon, 4 July 2022 23:00:00 +0200
+
 bellmansgapc (2021.05.18-0ubuntu0ppa1~impish1) impish; urgency=medium
 
    * enabled ROPE terminal parser argument, like ROPE("stefan")
