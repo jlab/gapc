@@ -82,7 +82,7 @@ int main(int argc, char **argv) {
   grammar->dep_analysis();
 
   unsigned int nodeID = 1;
-  grammar->to_dot(&nodeID, std::cout);
+  grammar->to_dot(&nodeID, std::cout, 99);
 
   return 0;
 }
