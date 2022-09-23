@@ -46,6 +46,7 @@
 
 #include "type/backtrace.hh"
 #include "alt.hh"
+#include "statement/table_decl.hh"
 
 
 Symbol::Base::Base(std::string *n, Type t, const Loc &l)
@@ -864,7 +865,8 @@ void Symbol::NT::set_ret_decl_rhs(Code::Mode mode) {
     return;
   }
 
-  for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
+  unsigned int alt_index = 0;
+  for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i, ++alt_index) {
     if (!(*i)->data_type()->simple()->is(::Type::LIST)) {
       Expr::Fn_Call *e = new Expr::Fn_Call(Expr::Fn_Call::NOT_EMPTY);
       e->add_arg(*(*i)->ret_decl);
@@ -906,6 +908,18 @@ void Symbol::NT::set_ret_decl_rhs(Code::Mode mode) {
            fn->add_arg(*(*i)->ret_decl);
 
            cond->then.push_back(fn);
+
+          /* ==== for differential backtracking ====
+           * whenever a candidate is added to the list, i.e. pushed to answers,
+           * we want to track these incoming contributions via the additional
+           * function "track" of the table
+           */
+           assert(this->table_decl);
+           Statement::Fn_Call *fn_track = new Statement::Fn_Call("track");
+           fn_track->add(*this->table_decl);
+           fn_track->add_arg(*(*i)->ret_decl);
+           fn_track->add_arg(new std::string(std::to_string(alt_index)));
+           cond->then.push_back(fn_track);
       }
 
       post_alt_stmts.push_back(cond);
@@ -1194,8 +1208,8 @@ void Symbol::NT::codegen(AST &ast) {
     score_code = code_.back();
   }
   code_.clear();
-  set_ret_decl_rhs(ast.code_mode());
   init_table_decl(ast);
+  set_ret_decl_rhs(ast.code_mode());
   init_zero_decl();
   ::Type::Base *dt = datatype;
   if (tabulated) {
