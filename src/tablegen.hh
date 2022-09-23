@@ -83,7 +83,7 @@ class Tablegen {
 
     Fn_Def *gen_is_tab();
     Fn_Def *gen_untab();
-    Fn_Def *gen_tab();
+    Fn_Def *gen_tab(bool for_tracking = false);
     Fn_Def *gen_get_tab();
     Fn_Def *gen_size();
 
