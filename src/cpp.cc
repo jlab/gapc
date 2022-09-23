@@ -1128,7 +1128,18 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
 
   stream << indent() << ptype << " newsize = size(";
   stream << ");" << endl;
-  stream << indent() << "array.resize(newsize);" << endl;
+
+  /* ==== for differential backtracking ====
+   * We not only need to store the forward results, but also track the
+   * incoming contributions per alternative production rule.
+   * Furthermore, in the backward pass, we want to store its result
+   * as well. Thus, we need larger storage, namely:
+   * newsize * (1 + num_alternatives + 1)
+   */
+  stream << indent() << "unsigned int num_alternatives = "
+		 << t.nt().alts.size() << ";" << endl;
+  stream << indent() << "array.resize(newsize * (1 + num_alternatives + 1));"
+		 << endl;
   if (!cyk) {
     stream << indent() << "tabulated.clear();" << endl;
     stream << indent() << "tabulated.resize(newsize);" << endl;
@@ -1154,7 +1165,12 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
 
   stream << t.fn_get_tab() << endl;
 
-  stream << t.fn_tab();
+  stream << t.fn_tab() << endl;
+
+  /* ==== for differential backtracking ====
+   * create a function that tracks incoming contributions
+   */
+  stream << t.fn_track();
 
   dec_indent();
   stream << indent() << "};" << endl;
