@@ -369,6 +369,10 @@ Statement::Table_Decl *Tablegen::create(Symbol::NT &nt,
   offset(nt.track_pos(), nt.tables().begin(), nt.tables().end());
   Fn_Def *fn_tab = gen_tab();
 
+  ret_zero = new Statement::Return();
+  offset(nt.track_pos(), nt.tables().begin(), nt.tables().end());
+  Fn_Def *fn_track = gen_tab(true);
+
   ret_zero = new Statement::Return(new Expr::Vacc(new std::string("zero")));
   offset(nt.track_pos(), nt.tables().begin(), nt.tables().end());
   Fn_Def *fn_get_tab = gen_get_tab();
@@ -376,7 +380,7 @@ Statement::Table_Decl *Tablegen::create(Symbol::NT &nt,
   Fn_Def *fn_size = gen_size();
 
   Statement::Table_Decl *td = new Statement::Table_Decl(nt, dtype, name, cyk,
-      fn_is_tab, fn_tab, fn_get_tab, fn_size,
+      fn_is_tab, fn_tab, fn_track, fn_get_tab, fn_size,
       ns);
   td->set_fn_untab(fn_untab);
   return td;
@@ -428,13 +432,21 @@ Fn_Def *Tablegen::gen_untab() {
   return f;
 }
 
-Fn_Def *Tablegen::gen_tab() {
-  Fn_Def *f = new Fn_Def(new Type::RealVoid(), new std::string("set"));
+Fn_Def *Tablegen::gen_tab(bool for_tracking) {
+  std::list<Statement::Base*> c;
+
+  std::string *fn_name = new std::string("set");
+  if (for_tracking) {
+	fn_name = new std::string("track");
+  }
+  Fn_Def *f = new Fn_Def(new Type::RealVoid(), fn_name);
   f->add_paras(paras);
   // FIXME const & in dtype -> see cpp.cc in_fn_head
   f->add_para(dtype, new std::string("e"));
 
-  std::list<Statement::Base*> c;
+  if (for_tracking) {
+    f->add_para(new Type::Size(), new std::string("pos_alternative"));
+  }
 
   c.insert(c.end(), code.begin(), code.end());
 
@@ -464,12 +476,32 @@ Fn_Def *Tablegen::gen_tab() {
   a->add_arg(new Expr::Less(off, new Expr::Fn_Call(new std::string("size"))));
   c.push_back(a);
 
+  Expr::Base *vector_index = off;
+  if (for_tracking) {
+	/* We need to shift the actual vector position:
+	 * Assume forward computation needs 25 cells, we now additionally want to
+	 * store incoming contributions. Their number is the number of alternative
+	 * production rules, say Nil, Ins, Del, Rep. We assign a "pos"ition to
+	 * those alternatives, i.e. an additional parameter for the function track.
+	 * Then, the storage layout is:
+	 *  - 25 cells for foward computation
+	 *  - 25 cells for Nil
+	 *  - 25 cells for Ins
+	 *  - 25 cells for Del
+	 *  - 25 cells for Rep
+	 *  - 25 cells for backward pass results
+	 */
+    vector_index = (new Expr::Times((new Expr::Const(1))->plus(new Expr::Vacc(
+      new std::string("pos_alternative"))), new Expr::Fn_Call(
+        new std::string("size"))))->plus(vector_index);
+  }
+
   Statement::Var_Assign *x = new Statement::Var_Assign(
-      new Var_Acc::Array(new Var_Acc::Plain(new std::string("array")), off),
+      new Var_Acc::Array(new Var_Acc::Plain(new std::string("array")), vector_index),
       new Expr::Vacc(new std::string("e")));
   c.push_back(x);
 
-  if (!cyk_) {
+  if (!cyk_ && !for_tracking) {
     Statement::Var_Assign *y = new Statement::Var_Assign(
         new Var_Acc::Array(
           new Var_Acc::Plain(new std::string("tabulated")), off),
