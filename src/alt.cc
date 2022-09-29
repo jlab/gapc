@@ -3438,11 +3438,7 @@ void Alt::Simple::set_partof_outside(bool is_outside) {
 }
 void Alt::Link::set_partof_outside(bool is_outside) {
   if (this->nt) {
-    if (this->nt->is(Symbol::NONTERMINAL)) {
-      // end recursion on non-terminal call
-    } else if (this->nt->is(Symbol::TERMINAL)) {
-      this->is_partof_outside = is_outside;
-    }
+    this->is_partof_outside = is_outside;
   } else {
     throw LogError("Link is something else");
   }
