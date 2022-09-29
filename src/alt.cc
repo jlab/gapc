@@ -3120,7 +3120,7 @@ unsigned int* Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out,
       // indices have been given via index hack in source file:
       link->to_dot_overlayindices(out, false);
     } else {
-      to_dot_indices(this->left_indices, out);
+      to_dot_indices(this->right_indices, out);
     }
   }
   out << "</tr></table>>, color=\"";
