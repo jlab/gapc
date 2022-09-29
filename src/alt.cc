@@ -3563,7 +3563,7 @@ Expr::Base *Alt::Simple::get_next_var_right2left(Expr::Base *left_index,
   }
 
   if (ys_lefts->low() == ys_lefts->high()) {
-    return innermost_left_index->plus(ys_lefts->low());
+    return innermost_left_index->minus(ys_lefts->low());
   }
 
   // variable yield size
