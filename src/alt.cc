@@ -3674,6 +3674,21 @@ void Alt::Base::init_indices_outside(Expr::Base *left, Expr::Base *right,
 void Alt::Simple::init_indices_outside(Expr::Base *left, Expr::Base *right,
     unsigned int &k, size_t track, Expr::Base *center_left,
     Expr::Base *center_right, bool is_right_of_outside_nt) {
+
+  if (this->is_terminal_) {
+    // a parameterized Terminal like ROPE("manfred") is of type Alt::Simple
+    // and will therefore be called here, while ROPE without a parameter
+    // would be of type Alt::Link
+    Alt::Base::init_indices_outside(left, right, k, track, center_left,
+                                    center_right, is_right_of_outside_nt);
+    // store original left/right for e.g.
+    // correct initialization of IF guards; see function init_guards()
+    this->left_inside_indices.resize(this->left_indices.size());
+    this->right_inside_indices.resize(this->right_indices.size());
+    this->left_inside_indices[track] = left;
+    this->right_inside_indices[track] = right;
+    return;
+  }
   // if this alternative is called from an outside non-terminal, but does
   // not contain another outside non-terminal, e.g. hl(BASE, REGION, BASE)
   // we can default to inside indices generation!

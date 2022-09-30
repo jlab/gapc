@@ -484,3 +484,6 @@ check_new_old_eq tmhmm_debug.gap unused count "AA" outside_report
 # example with multiple tracks for outside report function
 check_new_old_eq_twotrack alignments.gap unused count "AAAA" outside_2track "BBB"
 check_new_old_eq_twotrack alignments.gap unused sim_enum "AA" outside_undefvar "B"
+
+# example with parameterized terminals e.g. ROPE("manfred")
+check_new_old_eq elmamun.gap unused count "1+2*3" outside_elm
