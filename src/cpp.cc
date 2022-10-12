@@ -2899,7 +2899,9 @@ void Printer::Cpp::print(const Statement::Backtrace_NT_Decl &d) {
   stream << indent() << "proxy = backtrack();" << endl;
   stream << indent() << "return proxy->eval();" << endl;
   dec_indent();
-  stream << indent() << "}" << endl << endl;
+  stream << indent() << "}" << endl;
+  dec_indent();
+  stream << indent() << "};" << endl << endl;
   // stream << "bool is_proxy() const { return true; }" << endl;
 }
 
