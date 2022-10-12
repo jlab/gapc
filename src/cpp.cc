@@ -2604,10 +2604,13 @@ void Printer::Cpp::global_constants(const AST &ast) {
 }
 
 void Printer::Cpp::print(const Statement::Backtrace_Decl &d) {
+  const std::list<Statement::Var_Decl*> &paras = d.paras();
+  const std::list<Para_Decl::Base*> &p = d.ntparas();
+
   in_class = true;
 
-  stream << "template <typename Value, typename pos_int>" << endl
-    << "struct " << d.name() << " : ";
+  stream << indent() << "template <typename Value, typename pos_int>" << endl;
+  stream << indent() << "struct " << d.name() << " : ";
 
   if (d.derive_bt_score()) {
     stream << "Backtrace_Score<" << d.score_type() << ", Value, pos_int>";
@@ -2618,8 +2621,6 @@ void Printer::Cpp::print(const Statement::Backtrace_Decl &d) {
   stream << " {" << endl;
   inc_indent();
 
-  const std::list<Para_Decl::Base*> &p = d.ntparas();
-  const std::list<Statement::Var_Decl*> &paras = d.paras();
   for (std::list<Statement::Var_Decl*>::const_iterator i = paras.begin();
        i != paras.end(); ++i) {
     stream << **i << endl;
