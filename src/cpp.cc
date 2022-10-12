@@ -2677,9 +2677,11 @@ void Printer::Cpp::print(const Statement::Backtrace_Decl &d) {
   stream << indent() << '}' << endl << endl;
 
 
-  stream << indent() << "intrusive_ptr<Backtrace<Value, pos_int> > backtrack() {" << endl;
+  stream << indent() << "intrusive_ptr<Backtrace<Value, pos_int> > "
+         << "backtrack() {" << endl;
   inc_indent();
-  stream << indent() << "return intrusive_ptr<Backtrace<Value, pos_int> >(this);" << endl;
+  stream << indent() << "return intrusive_ptr<Backtrace<Value, pos_int> >"
+         << "(this);" << endl;
   dec_indent();
   stream << indent() << "}" << endl << endl;
 
@@ -2814,8 +2816,10 @@ void Printer::Cpp::print(const Statement::Backtrace_NT_Decl &d) {
 
   std::string name;
   name = "Backtrace_nt_" + d.name();
-  stream << indent() << "template <typename Klass, typename Value, typename pos_int>" << endl;
-  stream << indent() << "struct " << name << " : public Backtrace<Value, pos_int> {" << endl;
+  stream << indent() << "template <typename Klass, typename Value, "
+         << "typename pos_int>" << endl;
+  stream << indent() << "struct " << name << " : public Backtrace<Value, "
+         << "pos_int> {" << endl;
   inc_indent();
   stream << indent() << "Klass *klass;" << endl;
 
@@ -2831,7 +2835,8 @@ void Printer::Cpp::print(const Statement::Backtrace_NT_Decl &d) {
   }
   stream << endl;
 
-  stream << indent() << "intrusive_ptr<Backtrace<Value, pos_int> > proxy;" << endl << endl;
+  stream << indent() << "intrusive_ptr<Backtrace<Value, pos_int> > proxy;"
+         << endl << endl;
   stream << indent() << name << "(Klass *klass_";
 
   for (std::list<std::string>::const_iterator i = l.begin();
