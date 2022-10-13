@@ -2857,10 +2857,13 @@ void Printer::Cpp::global_constants(const AST &ast) {
 }
 
 void Printer::Cpp::print(const Statement::Backtrace_Decl &d) {
+  const std::list<Para_Decl::Base*> &p = d.ntparas();
+  const std::list<Statement::Var_Decl*> &paras = d.paras();
+
   in_class = true;
 
-  stream << "template <typename Value, typename pos_int>" << endl
-    << "struct " << d.name() << " : ";
+  stream << indent() << "template <typename Value, typename pos_int>" << endl;
+  stream << indent() << "struct " << d.name() << " : ";
 
   if (d.derive_bt_score()) {
     stream << "Backtrace_Score<" << d.score_type() << ", Value, pos_int>";
@@ -2871,8 +2874,6 @@ void Printer::Cpp::print(const Statement::Backtrace_Decl &d) {
   stream << " {" << endl;
   inc_indent();
 
-  const std::list<Para_Decl::Base*> &p = d.ntparas();
-  const std::list<Statement::Var_Decl*> &paras = d.paras();
   for (std::list<Statement::Var_Decl*>::const_iterator i = paras.begin();
        i != paras.end(); ++i) {
     stream << **i << endl;
@@ -2883,7 +2884,7 @@ void Printer::Cpp::print(const Statement::Backtrace_Decl &d) {
     stream << ";\n";
   }
   stream << endl;
-  stream << d.name() << "(";
+  stream << indent() << d.name() << "(";
   std::list<Statement::Var_Decl*>::const_iterator i = paras.begin();
   if (i != paras.end()) {
     stream << *(*i)->type << ' ' << (*(*i)->name + "_");
@@ -2898,7 +2899,7 @@ void Printer::Cpp::print(const Statement::Backtrace_Decl &d) {
     assert(s);
     stream << ", " << *s->type() << ' ' << *s->name() << '_';
   }
-  stream << ")" << endl << " : ";
+  stream << ")" << " : ";
   i = paras.begin();
   if (i != paras.end()) {
     stream << *(*i)->name << '(' << (*(*i)->name + "_") << ')';
@@ -2913,30 +2914,38 @@ void Printer::Cpp::print(const Statement::Backtrace_Decl &d) {
     assert(s);
     stream << ", " << *s->name() << '(' << *s->name() << "_)";
   }
-  stream << endl << "{}" << endl << endl;
+  stream << " {" << endl;
+  stream << indent() << "}" << endl << endl;
 
-  stream << "~" << d.name() << "()" << endl << '{' << endl;
+  stream << indent() << "~" << d.name() << "() {" << endl;
+  inc_indent();
   for (std::list<Statement::Var_Decl*>::const_iterator i = paras.begin();
        i != paras.end(); ++i) {
     Statement::Var_Decl *v = *i;
     if (v->type->is(Type::BACKTRACE)) {
-      stream << "erase(" << *v->name << ");" << endl;
+      stream << indent() << "erase(" << *v->name << ");" << endl;
     }
   }
-  stream << '}' << endl << endl;
+  dec_indent();
+  stream << indent() << '}' << endl << endl;
 
 
-  stream << indent() << "intrusive_ptr<Backtrace<Value, pos_int> > backtrack()"
-    << endl << "{ return intrusive_ptr<Backtrace<Value, pos_int> >(this); }"
-    << endl << endl;
+  stream << indent() << "intrusive_ptr<Backtrace<Value, pos_int> > "
+         << "backtrack() {" << endl;
+  inc_indent();
+  stream << indent() << "return intrusive_ptr<Backtrace<Value, pos_int> >"
+         << "(this);" << endl;
+  dec_indent();
+  stream << indent() << "}" << endl << endl;
+
   const std::list<Fn_Def*> &l = d.algebra_code_deps();
   for (std::list<Fn_Def*>::const_iterator i = l.begin(); i != l.end(); ++i) {
     stream << **i << endl;
   }
   stream << d.algebra_code() << endl;
-  stream << d.eval_code() << endl;
+  stream << d.eval_code();
   dec_indent();
-  stream << "};" << endl;
+  stream << indent() << "};" << endl << endl;
   in_class = false;
 }
 
@@ -3060,9 +3069,10 @@ void Printer::Cpp::print(const Statement::Backtrace_NT_Decl &d) {
 
   std::string name;
   name = "Backtrace_nt_" + d.name();
-  stream << "template <typename Klass, typename Value, typename pos_int>"
-    << endl
-    << "struct " << name << " : public Backtrace<Value, pos_int> {" << endl;
+  stream << indent() << "template <typename Klass, typename Value, "
+         << "typename pos_int>" << endl;
+  stream << indent() << "struct " << name << " : public Backtrace<Value, "
+         << "pos_int> {" << endl;
   inc_indent();
   stream << indent() << "Klass *klass;" << endl;
 
@@ -3078,7 +3088,8 @@ void Printer::Cpp::print(const Statement::Backtrace_NT_Decl &d) {
   }
   stream << endl;
 
-  stream << "intrusive_ptr<Backtrace<Value, pos_int> > proxy;" << endl << endl;
+  stream << indent() << "intrusive_ptr<Backtrace<Value, pos_int> > proxy;"
+         << endl << endl;
   stream << indent() << name << "(Klass *klass_";
 
   for (std::list<std::string>::const_iterator i = l.begin();
@@ -3105,11 +3116,15 @@ void Printer::Cpp::print(const Statement::Backtrace_NT_Decl &d) {
     stream << ", " << *s->name() << '(' << *s->name() << "_)";
   }
 
-  stream << ", proxy(0) {}" << endl;
-  stream << "~" << name << "() { erase(proxy); }" << endl;
+  stream << ", proxy(0) {" << endl;
+  stream << indent() << "}" << endl << endl;
+  stream << indent() << "~" << name << "() {" << endl;
+  inc_indent();
+  stream << indent() << "erase(proxy);" << endl;
+  dec_indent();
+  stream << indent() << "}" << endl << endl;
   stream << indent()
-    << "intrusive_ptr<Backtrace<Value, pos_int> > backtrack()" << endl
-    << indent() << '{' << endl;
+    << "intrusive_ptr<Backtrace<Value, pos_int> > backtrack() {" << endl;
   inc_indent();
   stream << indent() << "return klass->bt_nt_" << d.name() << "(";
 
@@ -3132,12 +3147,15 @@ void Printer::Cpp::print(const Statement::Backtrace_NT_Decl &d) {
   dec_indent();
   stream << indent() << '}' << endl << endl;
   // stream << "Eval_List<Value>* eval() { assert(false); }" << endl;
-  stream << "intrusive_ptr<Eval_List<Value> > eval() { "
-    << "proxy = backtrack(); return proxy->eval();"
-    << " }";
-  // stream << "bool is_proxy() const { return true; }" << endl;
+  stream << indent() << "intrusive_ptr<Eval_List<Value> > eval() {" << endl;
+  inc_indent();
+  stream << indent() << "proxy = backtrack();" << endl;
+  stream << indent() << "return proxy->eval();" << endl;
   dec_indent();
-  stream << "};" << endl << endl;
+  stream << indent() << "}" << endl;
+  dec_indent();
+  stream << indent() << "};" << endl << endl;
+  // stream << "bool is_proxy() const { return true; }" << endl;
 }
 
 
