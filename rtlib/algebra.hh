@@ -152,6 +152,9 @@ typename std::iterator_traits<Itr>::value_type expsum(Itr begin, Itr end) {
     assert(!isEmpty(*begin));
     n += exp(*begin);
   }
+  assert((n > 0 && "Your algebra produces (partial) candidates with negative "
+                   "score, which cannot be logarithmized. Avoid h=expsum or "
+                   "ensure all positive values!"));
   return log(n);
 }
 
