@@ -57,7 +57,8 @@ struct Options {
       pareto(0), multiDimPareto(false), cutoff(65),
       float_acc(0),
       specialization(0), step_option(0),
-      plot_grammar(0), plotgrammar_stream_(NULL) {
+      plot_grammar(0), plotgrammar_stream_(NULL),
+      derivative(0) {
   }
 
 
@@ -206,6 +207,14 @@ struct Options {
                           std::ios_base::failbit | std::ios_base::eofbit);
     return *plotgrammar_stream_;
   }
+
+  /* a flag to compute first derivatives using inside/outside AKA forward/
+   * backward AKA backpropagation schema. By default, set to 0, i.e. no
+   * derivative computation. Set to 1, will generate code for computation
+   * of first derivative. In the future, set to 2 shall generate additional
+   * code for second derivative computation.
+   */
+  int derivative;
 
   bool check();
 };

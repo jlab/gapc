@@ -139,7 +139,12 @@ static void parse_options(int argc, char **argv, Options *rec) {
       "  1 = grammar\n"
       "  2 = add indices\n"
       "  3 = add data types.\n"
-      "(Use 'dot -Tpdf out.dot' to generate a PDF.)\nDefault file is out.dot");
+      "(Use 'dot -Tpdf out.dot' to generate a PDF.)\nDefault file is out.dot")
+    ("derivative", po::value<int>(),
+      "Using backpropagation schema, generate code to compute first "
+      "derivative via forward and backward pass (internally requires outside"
+      " code generation AND tabulation of all non-terminals).  0 (default) = "
+      "deactivated\n  1 = first derivative");
   po::options_description hidden("");
   hidden.add_options()
     ("backtrack", "deprecated for --backtrace")
@@ -273,6 +278,15 @@ static void parse_options(int argc, char **argv, Options *rec) {
     rec->plot_grammar_file = basename(rec->out_file) + ".dot";
   }
 
+  if (vm.count("derivative")) {
+    rec->derivative = vm["derivative"].as<int>();
+
+    // also activate outside generation
+    rec->outside_nt_list = {"ALL"};
+
+    // and tabulate all NTs (for now)
+    rec->tab_everything = true;
+  }
 
   bool r = rec->check();
   if (!r) {
