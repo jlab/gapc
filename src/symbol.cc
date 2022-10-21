@@ -779,9 +779,10 @@ Statement::Base *Symbol::NT::build_return_empty(const Code::Mode &mode) {
 }
 
 void Symbol::NT::init_guards(Code::Mode mode) {
+  std::list<Expr::Base*> cond_list = {};
+
   guards.clear();
 
-  std::list<Expr::Base*> cond_list;
   // else, guards are generated in tablegen.cc
   if (!tabulated || mode == Code::Mode::CYK)
     gen_ys_guards(cond_list);
@@ -1206,7 +1207,9 @@ struct SetADPDisabled : public Visitor {
 
 void Symbol::NT::codegen(AST &ast) {
   // moving this uninizialized list to the front of the method to avoid issues with gdb within eclipse: https://www.eclipse.org/forums/index.php/t/1109346/
-  std::list<Statement::Base*> stmts;
+  std::list<Statement::Base*> stmts = {};
+  Fn_Def *score_code = 0;
+  Fn_Def *f = 0;
 
   // disable specialisation if needed in backtrace mode
   SetADPDisabled v = SetADPDisabled(ast.code_mode() == Code::Mode::BACKTRACK &&
@@ -1216,7 +1219,6 @@ void Symbol::NT::codegen(AST &ast) {
       (*i)->traverse(v);
   }
 
-  Fn_Def *score_code = 0;
   if (!code_.empty()) {
     score_code = code_.back();
   }
@@ -1228,7 +1230,6 @@ void Symbol::NT::codegen(AST &ast) {
   if (tabulated) {
     dt = new ::Type::Referencable(datatype);
   }
-  Fn_Def *f = 0;
   if (ast.cyk() && tabulated && ast.code_mode() != Code::Mode::BACKTRACK) {
     add_cyk_stub(ast);
     f = new Fn_Def(new ::Type::RealVoid(),
