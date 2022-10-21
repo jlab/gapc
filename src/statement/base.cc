@@ -37,6 +37,24 @@ std::ostream &operator<<(std::ostream &s, const Statement::Base &b) {
   return s;
 }
 
+/* this function shall only be used for debugging purposes, it can print a
+ * list of statements to a stream */
+std::ostream &operator<<(std::ostream &s,
+                         const std::list<Statement::Base*> &stmts) {
+  Printer::CC cc(s);
+  if (stmts.size() == 0) {
+    s << "empty statement list!\n";
+  }
+  unsigned int counter = 1;
+  for (std::list<Statement::Base*>::const_iterator b = stmts.begin();
+       b != stmts.end(); ++b, ++counter) {
+    s << "=== start statement " << counter << "/" << stmts.size() << " ====\n";
+    (*b)->print(cc);
+    s << "\n--- end statement " << counter << "/" << stmts.size() << " ----\n";
+  }
+  return s;
+}
+
 namespace Statement {
 
 iterator begin(std::list<Statement::Base*> &l) {
