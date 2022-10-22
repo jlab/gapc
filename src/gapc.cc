@@ -366,6 +366,10 @@ class Main {
     driver.ast.select_grammar(opts.instance);
     driver.parse_product(opts.product);
 
+    // lets the AST know if code for derivative computation has
+    // to be injected
+    driver.ast.inject_derivatives = opts.derivative > 0;
+
     if (driver.is_failing()) {
       throw LogError("Seen parse errors.");
     }

@@ -2788,6 +2788,10 @@ void Printer::Cpp::imports(const AST &ast) {
     return;
   }
 
+  if (ast.inject_derivatives) {
+    stream << "#include \"rtlib/traces.hh\"" << endl;
+  }
+
   if (ast.code_mode() != Code::Mode::SUBOPT) {
     stream << "#include \"rtlib/subopt.hh\"" << endl;
   }
