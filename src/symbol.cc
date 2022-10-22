@@ -1258,6 +1258,12 @@ void Symbol::NT::codegen(AST &ast) {
   }
 
   stmts.push_back(ret_decl);
+  if (ast.inject_derivatives) {
+    if (!this->is_partof_outside) {
+      stmts.push_back(new Statement::Var_Decl(new ::Type::External(
+        new std::string("NTtraces")), "candidates"));
+    }
+  }
   stmts.push_back(new Statement::Fn_Call(
     Statement::Fn_Call::EMPTY, *ret_decl));
   std::list<Statement::Base*>::iterator j = post_alt_stmts.begin();

@@ -692,7 +692,7 @@ class Link : public Base {
   void multi_collect_factors(Runtime::Poly &p);
   void multi_init_calls(const Runtime::Poly &p, size_t base_tracks);
 
- private:
+ public:
   void add_args(Expr::Fn_Call *fn);
 
  private:

@@ -1505,6 +1505,60 @@ void Alt::Simple::init_body(AST &ast) {
       stmts->push_back(c);
     }
   }
+
+  if (ast.inject_derivatives) {
+    if (!this->is_partof_outside) {
+      // test if this alternative uses sub-solutions from other non-terminals
+      std::list<Statement::Base*> *stmts_record = \
+      new std::list<Statement::Base*>();
+      // bool calls_other_nts = false;
+      for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
+           i != args.end(); ++i) {
+        if ((*i)->is(Fn_Arg::ALT) && ((*i)->alt_ref()->is(Alt::LINK))) {
+          Alt::Link *alt = dynamic_cast<Alt::Link*>((*i)->alt_ref());
+          if (alt->nt->is(Symbol::NONTERMINAL)) {
+            // calls_other_nts = true;
+
+            Expr::Fn_Call *mkidx = new Expr::Fn_Call(
+              new std::string("make_index"));
+            alt->add_args(mkidx);
+            // add number of index arguments for elipsis mechanism
+            mkidx->add_arg(new Expr::Const(2), true);
+
+            Statement::Fn_Call *fn_add = new Statement::Fn_Call(
+              "add_sub_component");
+            fn_add->add_arg(new std::string("cand"));
+            fn_add->is_obj = Bool(true);
+            fn_add->add_arg(new Expr::Const("formula"));
+            fn_add->add_arg(mkidx);
+
+            stmts_record->push_back(fn_add);
+          }
+        }
+      }
+      if (stmts_record->size() > 0) {
+        // TODO(sjanssen): should I use build-in functions? Also für push_back
+        Statement::Fn_Call *x = new Statement::Fn_Call("set_value");
+        x->add_arg(new std::string("cand"));
+        x->is_obj = Bool(true);
+        // TODO(sjanssen): find proper way to obtain "ans" name
+        x->add_arg(new std::string("ans"));
+        stmts_record->push_front(x);
+
+        Statement::Var_Decl *candidate = new Statement::Var_Decl(
+          new ::Type::External(new std::string("candidate")), "cand");
+        stmts_record->push_front(candidate);
+
+        Statement::Fn_Call *fn_push = new Statement::Fn_Call("push_back");
+        fn_push->add_arg(new std::string("candidates"));
+        fn_push->is_obj = Bool(true);
+        fn_push->add_arg(new std::string("cand"));
+        stmts_record->push_back(fn_push);
+
+        stmts->insert(stmts->end(), stmts_record->begin(), stmts_record->end());
+      }
+    }
+  }
 }
 
 void Alt::Link::init_outside_guards() {

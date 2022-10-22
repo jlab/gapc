@@ -84,6 +84,14 @@ class candidate {
     this->value = value;
   }
 
+  candidate() {
+    this->value = 0.0;
+  }
+
+  void set_value(double value) {
+    this->value = value;
+  }
+
   void add_sub_component(std::string otherNT,
                          std::vector<unsigned int> *indices) {
     sub_components.push_back({otherNT, *indices, NULL});
