@@ -236,9 +236,13 @@ void Expr::Fn_Call::add_arg(std::string *n) {
   exprs.push_back(e);
 }
 
-void Expr::Fn_Call::add_arg(Expr::Base *e) {
+void Expr::Fn_Call::add_arg(Expr::Base *e, bool as_first) {
   assert(e);
-  exprs.push_back(e);
+  if (as_first) {
+    exprs.push_front(e);
+  } else {
+    exprs.push_back(e);
+  }
 }
 
 void Expr::Fn_Call::add_arg(Var_Acc::Base *e) {
