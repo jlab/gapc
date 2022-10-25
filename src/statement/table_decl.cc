@@ -36,6 +36,8 @@ Table_Decl::Table_Decl(
         bool c,
         Fn_Def *fn_is_tab,
         Fn_Def *fn_tab,
+        Fn_Def *fn_set_traces,
+        Fn_Def *fn_get_traces,
         Fn_Def *fn_get_tab,
         Fn_Def *fn_size,
         const std::list<Statement::Var_Decl*> &ns
@@ -48,6 +50,8 @@ Table_Decl::Table_Decl(
   fn_is_tab_(fn_is_tab),
   fn_untab_(0),
   fn_tab_(fn_tab),
+  fn_set_traces_(fn_set_traces),
+  fn_get_traces_(fn_get_traces),
   fn_get_tab_(fn_get_tab),
   fn_size_(fn_size),
   ns_(ns) {
