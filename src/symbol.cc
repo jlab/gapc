@@ -985,7 +985,7 @@ void Symbol::NT::marker_code(const Code::Mode &mode,
   ret_stmts.push_back(c);
 }
 
-void Symbol::NT::init_ret_stmts(Code::Mode mode) {
+void Symbol::NT::init_ret_stmts(Code::Mode mode, AST &ast) {
   assert(table_decl);
   ret_stmts.clear();
   Expr::Vacc *ret = NULL;
@@ -1022,6 +1022,14 @@ void Symbol::NT::init_ret_stmts(Code::Mode mode) {
     tabfn->add(*table_decl);
     tabfn->add_arg(ret);
     ret_stmts.push_back(tabfn);
+
+    if (ast.inject_derivatives && !this->is_partof_outside) {
+      Statement::Fn_Call *tracefn = new Statement::Fn_Call("set_traces");
+      tracefn->add(*table_decl);
+      tracefn->add_arg(new std::string("candidates"));
+      tracefn->add_arg(ret);
+      ret_stmts.push_back(tracefn);
+    }
 
     Expr::Fn_Call *get_tab = new Expr::Fn_Call(Expr::Fn_Call::GET_TABULATED);
     get_tab->add(*table_decl);
@@ -1081,7 +1089,8 @@ void Symbol::NT::init_table_decl(const AST &ast) {
 
   Tablegen tg;
   tg.set_window_mode(ast.window_mode);
-  table_decl = tg.create(*this, t, ast.code_mode() == Code::Mode::CYK);
+  table_decl = tg.create(*this, t, ast.code_mode() == Code::Mode::CYK,
+                         ast.inject_derivatives && !this->is_partof_outside);
 }
 
 #include <boost/algorithm/string/replace.hpp>
@@ -1271,7 +1280,7 @@ void Symbol::NT::codegen(AST &ast) {
        // << alts.size() << std::endl;
   for (std::list<Alt::Base*>::iterator i = alts.begin();
        i != alts.end() && j != post_alt_stmts.end(); ++i, ++j) {
-    (*i)->codegen(ast);
+    (*i)->codegen(ast, *this);
     stmts.insert(stmts.end(), (*i)->statements.begin(), (*i)->statements.end());
     if (*j) {
       stmts.push_back(*j);
@@ -1309,7 +1318,7 @@ void Symbol::NT::codegen(AST &ast) {
       stmts.push_back(join);
   }
 
-  init_ret_stmts(ast.code_mode());
+  init_ret_stmts(ast.code_mode(), ast);
   stmts.insert(stmts.end(), ret_stmts.begin(), ret_stmts.end());
   f->stmts = stmts;
 
