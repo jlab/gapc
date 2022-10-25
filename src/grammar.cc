@@ -1057,7 +1057,6 @@ void Grammar::inject_outside_nts() {
   Grammar::inject_outside_nts(outside_nt_list);
 }
 void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
-  std::string OUTSIDE_NT_PREFIX = "outside_";
   hashtable<std::string, Symbol::Base*> outside_NTs;
   std::set<Symbol::NT*> outside_nts = std::set<Symbol::NT*>();
 
