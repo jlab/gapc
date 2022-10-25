@@ -1487,6 +1487,7 @@ void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
 
   fn_call->add(ntparas);
 
+  std::string *result_name = NULL;
   if (has_moving_k() || has_arg_list()) {
     Statement::Var_Decl *vdecl = new Statement::Var_Decl(
       decl->return_type, new std::string("ans"));
@@ -1531,6 +1532,7 @@ void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
     fn->add_arg(*ret_decl);
     fn->add_arg(*vdecl);
     stmts->push_back(vdecl);
+    result_name = vdecl->name;
     Expr::Base *suchthat = suchthat_code(*vdecl);
     if (suchthat) {
       Statement::If *c = new Statement::If(suchthat);
@@ -1545,6 +1547,7 @@ void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
     pre_decl.push_back(ret_decl);
     ass->rhs = fn_call;
     stmts->push_back(ass);
+    result_name = ret_decl->name;
     Expr::Base *suchthat = suchthat_code(*ret_decl);
     if (suchthat) {
       Statement::If *c = new Statement::If(suchthat);
@@ -1591,8 +1594,8 @@ void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
         Statement::Fn_Call *x = new Statement::Fn_Call("set_value");
         x->add_arg(new std::string("cand"));
         x->is_obj = Bool(true);
-        // TODO(sjanssen): find proper way to obtain "ans" name
-        x->add_arg(new std::string("ans"));
+        assert(result_name);
+        x->add_arg(result_name);
         stmts_record->push_front(x);
 
         Statement::Var_Decl *candidate = new Statement::Var_Decl(
