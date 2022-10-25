@@ -252,7 +252,7 @@ class Base {
 
  public:
   std::list<Statement::Base*> statements;
-  virtual void codegen(AST &ast) = 0;
+  virtual void codegen(AST &ast, Symbol::NT &calling_nt) = 0;
   void init_filter_guards(AST &ast);
 
   virtual void print_dot_edge(std::ostream &out, Symbol::NT &nt) = 0;
@@ -466,7 +466,7 @@ class Simple : public Base {
   void add_clear_code(
     std::list<Statement::Base*> &stmts, const Fn_Arg::Base &b);
   std::list<Statement::Base*> *reorder_args_cg(
-    AST &ast, std::list<Statement::Base*> &l);
+    AST &ast, std::list<Statement::Base*> &l, Symbol::NT &calling_nt);
 
 
   void add_overlay_code(
@@ -507,9 +507,9 @@ class Simple : public Base {
 
   void init_foreach();
   bool has_arg_list();
-  void init_body(AST &ast);
+  void init_body(AST &ast, Symbol::NT &calling_nt);
   void init_guards();
-  void codegen(AST &ast);
+  void codegen(AST &ast, Symbol::NT &calling_nt);
 
   void print_dot_edge(std::ostream &out, Symbol::NT &nt);
 
@@ -672,7 +672,7 @@ class Link : public Base {
 
   // void init_ret_decl(unsigned int i);
 
-  void codegen(AST &ast);
+  void codegen(AST &ast, Symbol::NT &calling_nt);
 
   void print_dot_edge(std::ostream &out, Symbol::NT &nt);
 
@@ -785,7 +785,7 @@ class Block : public Base {
     Expr::Base *center_left, Expr::Base *center_right,
     bool is_right_of_outside_nt = false);
 
-  void codegen(AST &ast);
+  void codegen(AST &ast, Symbol::NT &calling_nt);
 
   void print_dot_edge(std::ostream &out, Symbol::NT &nt);
 
@@ -870,7 +870,7 @@ class Multi : public Base {
     Expr::Base *center_left, Expr::Base *center_right,
     bool is_right_of_outside_nt = false);
 
-  void codegen(AST &ast);
+  void codegen(AST &ast, Symbol::NT &calling_nt);
   void print_dot_edge(std::ostream &out, Symbol::NT &nt);
   void print(std::ostream &s);
 
