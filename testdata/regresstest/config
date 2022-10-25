@@ -491,3 +491,5 @@ check_new_old_eq elmamun.gap unused count "1+2*3" outside_elm
 # tests for derivative computation
 GAPC="../../../gapc --derivative 1"
 check_new_old_eq elmamun_derivatives.gap unused firstD "1+2*3*4+5" firstderiv
+check_new_old_eq_twotrack alignments.gap unused firstD "aaaa" firstderiv "bbbb"
+check_new_old_eq_twotrack alignments.gap unused firstD "frzeitei" nwjamiederiv "zeit"
