@@ -1554,7 +1554,8 @@ void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
     Statement::Var_Assign *ass = new Statement::Var_Assign(*ret_decl);
     pre_decl.clear();
     pre_decl.push_back(ret_decl);
-    if (ast.inject_derivatives && calling_nt.is_partof_outside) {
+    if (ast.inject_derivatives && calling_nt.is_partof_outside &&
+        outside_fn_arg) {
       ass->rhs = inject_derivative_body(ast, calling_nt, outside_fn_arg,
                                         outside_arg);
     } else {
