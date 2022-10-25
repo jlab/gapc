@@ -21,6 +21,7 @@
 
 }}} */
 
+
 #ifndef RTLIB_TRACES_HH_
 #define RTLIB_TRACES_HH_
 
@@ -39,6 +40,7 @@ typedef std::tuple<double, std::vector<Trace> > NTtrace;
 /* collection of all traces of an NT in forward pass, together with their
  * values. This later normalized into edge weights. */
 // typedef std::vector<NTtrace> NTtraces;
+
 
 /* create a vector of index components (one or multitrack, linear or quadratic
  * tables) for a variable number of components therefore, the first argument
@@ -101,19 +103,59 @@ class candidate {
     return &sub_components;
   }
 
-  double get_value() {
+  double get_value() const {
     return value;
+  }
+
+  std::vector<Trace> get_normalized_candidate(double eval) const {
+    std::vector<Trace> res;
+    for (std::vector<Trace>::const_iterator part = this->sub_components.begin();
+         part != this->sub_components.end(); ++part) {
+      res.push_back({std::get<0>(*part), std::get<1>(*part),
+                     this->get_value() / eval});
+    }
+    return res;
   }
 //  void empty() {
 //    empty(this->value);
 //  }
 };
+typedef std::vector<candidate> NTtraces;
+
+// once all use of sub-solutions for candidates is finished, we need to
+// normalize their contributions
+inline
+std::vector<Trace> normalize_traces(std::vector<Trace> *tabulated,
+                                    const std::vector<candidate> &candidates,
+                                    double eval) {
+  std::vector<std::tuple<std::string, std::vector<unsigned int>, double > > res;
+  for (std::vector<candidate>::const_iterator i = candidates.begin();
+       i != candidates.end(); ++i) {
+    std::vector<Trace> comp = (*i).get_normalized_candidate(eval);
+    res.insert(res.end(), comp.begin(), comp.end());
+  }
+  return res;
+}
+
+inline
+double get_trace_weights(const std::vector<Trace> &traces,
+                         const std::vector<unsigned int> &to_indices,
+                         double e) {
+  double res = 0.0;
+  for (std::vector<Trace>::const_iterator trace = traces.begin();
+       trace != traces.end(); ++trace) {
+    if (is_same_index(std::get<1>(*trace), to_indices)) {
+      res += e * std::get<2>(*trace);
+    }
+  }
+
+  return res;
+}
 
 // template<typename answer>
 // using NTtraces = typename std::vector<candidate<answer> >::NTtraces;
 /* collection of all traces of an NT in forward pass, together with their
  * values. This later normalized into edge weights. */
-typedef std::vector<candidate> NTtraces;
 /* collection of all traces of an NT in forward pass, together with their
  * values. This later normalized into edge weights. */
 // typedef std::vector<candidate<double> > NTtraces;
