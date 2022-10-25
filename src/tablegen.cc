@@ -370,11 +370,11 @@ Statement::Table_Decl *Tablegen::create(Symbol::NT &nt,
   Fn_Def *fn_tab = gen_tab();
 
   Fn_Def *fn_set_traces = gen_set_traces();
-  Fn_Def *fn_get_traces = gen_get_traces();
 
   ret_zero = new Statement::Return(new Expr::Vacc(new std::string("zero")));
   offset(nt.track_pos(), nt.tables().begin(), nt.tables().end());
   Fn_Def *fn_get_tab = gen_get_tab();
+  Fn_Def *fn_get_traces = gen_get_traces();
 
   Fn_Def *fn_size = gen_size();
 
@@ -529,6 +529,8 @@ Fn_Def *Tablegen::gen_set_traces() {
 }
 
 Fn_Def *Tablegen::gen_get_traces() {
+  std::list<Statement::Base*> c;
+
   Fn_Def *f = new Fn_Def(dtype, new std::string("get_traces"));
   f->add_paras(paras);
   ::Type::External *idx = new ::Type::External(new std::string(
@@ -537,8 +539,6 @@ Fn_Def *Tablegen::gen_get_traces() {
 
   // FIXME const & in dtype -> see cpp.cc in_fn_head
   f->add_para(dtype, new std::string("e"));
-
-  std::list<Statement::Base*> c;
 
   c.insert(c.end(), code.begin(), code.end());
 
@@ -581,10 +581,10 @@ Fn_Def *Tablegen::gen_get_traces() {
 }
 
 Fn_Def *Tablegen::gen_get_tab() {
+  std::list<Statement::Base*> c;
+
   Fn_Def *f = new Fn_Def(new Type::Referencable(dtype), new std::string("get"));
   f->add_paras(paras);
-
-  std::list<Statement::Base*> c;
 
   if (cond) {
     Statement::If *i = new Statement::If(cond, ret_zero);
