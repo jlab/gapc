@@ -508,6 +508,8 @@ class Simple : public Base {
   void init_foreach();
   bool has_arg_list();
   void init_body(AST &ast, Symbol::NT &calling_nt);
+  Expr::Fn_Call *inject_derivative_body(AST &ast, Symbol::NT &calling_nt,
+    Fn_Arg::Base *outside_fn_arg, Expr::Vacc *outside_arg);
   void init_guards();
   void codegen(AST &ast, Symbol::NT &calling_nt);
 

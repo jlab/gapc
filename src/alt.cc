@@ -1423,6 +1423,43 @@ void Alt::Base::add_seqs(Expr::Fn_Call *fn_call, const AST &ast) const {
   }
 }
 
+Expr::Fn_Call *Alt::Simple::inject_derivative_body(AST &ast,
+  Symbol::NT &calling_nt, Fn_Arg::Base *outside_fn_arg,
+  Expr::Vacc *outside_arg) {
+  assert(outside_fn_arg);
+  Expr::Fn_Call *fn_call = new Expr::Fn_Call(new std::string("get_traces"));
+  fn_call->exprs.clear();
+
+  fn_call->add_arg(new std::string((*calling_nt.name).substr(
+    sizeof(OUTSIDE_NT_PREFIX)-1, (*calling_nt.name).length()) + "_table"));
+  fn_call->is_obj = Bool(true);
+
+  // abuse mkidx to obtain indices from outside-NT call, i.e. not really
+  // calling make_index
+  Expr::Fn_Call *mkidx = new Expr::Fn_Call(new std::string("*make_index"));
+  dynamic_cast<Alt::Link*>(outside_fn_arg->alt_ref())->add_args(mkidx);
+  fn_call->exprs.insert(fn_call->exprs.end(),
+                        mkidx->exprs.begin(), mkidx->exprs.end());
+
+  // index of the calling non-terminal
+  mkidx->exprs.clear();
+  Fn_Def *x = new Fn_Def();
+  x->add_para(calling_nt);
+  for (std::list<Para_Decl::Base*>::const_iterator i = x->paras.begin();
+       i != x->paras.end(); ++i) {
+    Para_Decl::Simple *s = dynamic_cast<Para_Decl::Simple*>(*i);
+    if (s) {
+      mkidx->add_arg((*s).name());
+    }
+  }
+  mkidx->add_arg(new Expr::Const(static_cast<int>(mkidx->exprs.size())), true);
+  fn_call->exprs.push_back(mkidx);
+
+  // result of outside non terminal, e.g. a_0
+  fn_call->exprs.push_back(outside_arg);
+
+  return fn_call;
+}
 
 void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
   body_stmts.clear();
@@ -1494,39 +1531,11 @@ void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
     pre_decl.clear();
     pre_decl.push_back(vdecl);
     if (ast.inject_derivatives && this->get_is_partof_outside()) {
-      assert(outside_fn_arg);
-      fn_call = new Expr::Fn_Call(new std::string("get_traces"));
-      fn_call->exprs.clear();
-
-      fn_call->add_arg(new std::string("formula_table"));
-      fn_call->is_obj = Bool(true);
-
-      // abuse mkidx to obtain indices from outside-NT call, i.e. not really
-      // calling make_index
-      Expr::Fn_Call *mkidx = new Expr::Fn_Call(new std::string("*make_index"));
-      dynamic_cast<Alt::Link*>(outside_fn_arg->alt_ref())->add_args(mkidx);
-      fn_call->exprs.insert(fn_call->exprs.end(),
-                            mkidx->exprs.begin(), mkidx->exprs.end());
-
-      // index of the calling non-terminal
-      mkidx->exprs.clear();
-      Fn_Def *x = new Fn_Def();
-      x->add_para(calling_nt);
-      for (std::list<Para_Decl::Base*>::const_iterator i = x->paras.begin();
-           i != x->paras.end(); ++i) {
-        Para_Decl::Simple *s = dynamic_cast<Para_Decl::Simple*>(*i);
-        if (s) {
-          mkidx->add_arg((*s).name());
-        }
-      }
-      mkidx->add_arg(new Expr::Const(static_cast<int>(mkidx->exprs.size())),
-                     true);
-      fn_call->exprs.push_back(mkidx);
-
-      // result of outside non terminal, e.g. a_0
-      fn_call->exprs.push_back(outside_arg);
+      vdecl->rhs = inject_derivative_body(ast, calling_nt, outside_fn_arg,
+                                          outside_arg);
+    } else {
+      vdecl->rhs = fn_call;
     }
-    vdecl->rhs = fn_call;
     Statement::Fn_Call *fn = new Statement::Fn_Call(
       Statement::Fn_Call::PUSH_BACK);
     fn->add_arg(*ret_decl);
@@ -1545,7 +1554,12 @@ void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
     Statement::Var_Assign *ass = new Statement::Var_Assign(*ret_decl);
     pre_decl.clear();
     pre_decl.push_back(ret_decl);
-    ass->rhs = fn_call;
+    if (ast.inject_derivatives && calling_nt.is_partof_outside) {
+      ass->rhs = inject_derivative_body(ast, calling_nt, outside_fn_arg,
+                                        outside_arg);
+    } else {
+      ass->rhs = fn_call;
+    }
     stmts->push_back(ass);
     result_name = ret_decl->name;
     Expr::Base *suchthat = suchthat_code(*ret_decl);
