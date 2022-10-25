@@ -1082,6 +1082,10 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   print_most_decl(t.nt());
 
   stream << indent() << "std::vector<" << dtype << "> array;" << endl;
+  if (t.for_derivatives) {
+    stream << indent() << "std::vector<std::vector<std::tuple<std::string, "
+           << "std::vector<unsigned int>, " << dtype << "> > > traces;" << endl;
+  }
   if  (!cyk) {
     stream << indent() << "std::vector<bool> tabulated;" << endl;
   }
@@ -1129,6 +1133,9 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   stream << indent() << ptype << " newsize = size(";
   stream << ");" << endl;
   stream << indent() << "array.resize(newsize);" << endl;
+  if (t.for_derivatives) {
+    stream << indent() << "traces.resize(newsize);" << endl;
+  }
   if (!cyk) {
     stream << indent() << "tabulated.clear();" << endl;
     stream << indent() << "tabulated.resize(newsize);" << endl;
@@ -1155,6 +1162,11 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   stream << t.fn_get_tab() << endl;
 
   stream << t.fn_tab();
+
+  if (t.for_derivatives) {
+    stream << endl << t.fn_set_traces();
+    stream << endl << t.fn_get_traces();
+  }
 
   dec_indent();
   stream << indent() << "};" << endl;
@@ -1686,6 +1698,9 @@ void Printer::Cpp::header(const AST &ast) {
     }
     if ((*ast.grammar()).is_outside()) {
       stream << "#define OUTSIDE\n";
+      if (ast.inject_derivatives) {
+        stream << "#define DERIVATIVES\n";
+      }
     }
     includes();
     print_subseq_typedef(ast);
@@ -2300,6 +2315,132 @@ void Printer::Cpp::print_insideoutside_report_fn(
       dynamic_cast<Symbol::NT*>((*outside_ntpair).second);
     print_insideoutside(nt_outside);
   }
+  dec_indent();
+  stream << indent() << "}" << endl << endl;
+}
+
+void Printer::Cpp::print_derivative(Symbol::NT *nt) {
+  stream << indent() << "std::cout << \"first derivatives for non-terminal \\\""
+         << (*nt->name).substr(sizeof(OUTSIDE_NT_PREFIX)-1,
+                               (*nt->name).length())
+         << "\\\":\\n\";" << endl;
+  // aggregated level (=dim + tracks) of nested loops
+  unsigned int nesting = 0;
+  std::vector<std::string> *args = new std::vector<std::string>();
+  // opening for loops
+  for (size_t track = 0; track < nt->tracks(); ++track) {
+    unsigned int dim = 2;
+    if (nt->tables()[track].delete_left_index()) {
+      dim--;
+    }
+    if (nt->tables()[track].delete_right_index()) {
+      dim--;
+    }
+    if (dim >= 1) {
+      stream << indent() << "for (unsigned int t_" << track << "_i = t_"
+             << track << "_left_most; t_" << track << "_i <= t_" << track
+             << "_right_most; ++t_" << track << "_i) {" << endl;
+      inc_indent();
+      args->push_back("t_" + std::to_string(track) + "_i");
+    }
+    if (dim >= 2) {
+      stream << indent() << "// properly indent following results as"
+             << " an upper right triangle" << endl;
+      stream << indent() << "for (unsigned int t_" << track << "_j = t_"
+             << track << "_left_most; t_" << track << "_j < t_" << track
+             << "_i; ++t_" << track << "_j) {" << endl;
+      inc_indent();
+      stream << indent() << "std::cout << \"\\t\";" << endl;
+      dec_indent();
+      stream << indent() << "}" << endl;
+      stream << indent() << "for (unsigned int t_" << track << "_j = t_"
+             << track << "_i; t_" << track << "_j <= t_" << track
+             << "_right_most; ++t_" << track << "_j) {" << endl;
+      inc_indent();
+      args->push_back("t_" + std::to_string(track) + "_j");
+    }
+    nesting += dim;
+  }
+
+  // loop body
+  std::list<Fn_Def*> &l = nt->code_list();
+  std::stringstream list_args;
+  std::stringstream list_args_print;
+  bool first = true;
+  for (std::vector<std::string>::const_iterator a = args->begin();
+       a != args->end(); ++a) {
+    if (!first) {
+      list_args << ", ";
+      list_args_print << " << \",\"";
+    }
+    first = false;
+    list_args << *a;
+    list_args_print << " << " << *a;
+  }
+  for (std::list<Fn_Def*>::iterator i = l.begin(); i != l.end(); ++i) {
+    std::string res = "res_" + *(nt->name);
+    stream << indent() << *((*i)->return_type) << " " << res << " = nt_"
+           << *nt->name << "(" << list_args.str() << ");\n"
+           << indent() << "std::cout << " << res << ";" << endl;
+    // only for first return statement
+    break;
+  }
+
+  // close loops
+  for (unsigned int d = 0; d < nesting; ++d) {
+    if (d > 0) {
+      stream << indent() << "std::cout << \"\\n\";" << endl;
+    } else {
+      stream << indent() << "std::cout << \"\\t\";" << endl;
+    }
+    dec_indent();
+    stream << indent() << "}" << endl;
+  }
+}
+void Printer::Cpp::print_run_derivative_fn(const AST &ast) {
+  stream << indent() << "void report_derivative(std::ostream &out) {"
+         << endl;
+  inc_indent();
+
+  stream << indent() << "// execute forward pass" << endl;
+  Symbol::NT *inside_axiom = dynamic_cast<Symbol::NT*>(
+    ast.grammar()->NTs[*ast.grammar()->axiom_name_inside]);
+  assert(inside_axiom);
+  stream << indent() << "nt_" << *inside_axiom->name << '(';
+    bool first = true;
+    size_t track = 0;
+    const std::vector<Table> &tables = inside_axiom->tables();
+    for (std::vector<Table>::const_iterator i = tables.begin();
+         i != tables.end(); ++i, ++track) {
+      Table t = *i;
+      if (!t.delete_left_index()) {
+        if (!first) {
+          stream << ", ";
+        }
+        first = false;
+        stream << "t_" << track << "_left_most";
+      }
+      if (!t.delete_right_index()) {
+        if (!first) {
+          stream << ", ";
+        }
+        first = false;
+        stream << "t_" << track << "_right_most";
+      }
+    }
+    stream << ");" << endl << endl;
+
+  stream << indent() << "// execute backward pass" << endl;
+  for (hashtable<std::string, Symbol::Base*>::iterator
+       i = (*ast.grammar()).NTs.begin();
+       i != (*ast.grammar()).NTs.end(); ++i) {
+    Symbol::NT *nt = dynamic_cast<Symbol::NT*>((*i).second);
+    if (nt && nt->is_partof_outside) {
+      print_derivative(nt);
+    }
+  }
+
+
   dec_indent();
   stream << indent() << "}" << endl << endl;
 }
