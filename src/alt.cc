@@ -1424,7 +1424,7 @@ void Alt::Base::add_seqs(Expr::Fn_Call *fn_call, const AST &ast) const {
 }
 
 
-void Alt::Simple::init_body(AST &ast) {
+void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
   body_stmts.clear();
 
   std::list<Statement::Base*> *stmts = &body_stmts;
@@ -1446,6 +1446,10 @@ void Alt::Simple::init_body(AST &ast) {
     fn_call->add(left_indices, right_indices);
   }
 
+  // record which of the arguments holds the single link to an outside NT
+  // used for derivative computation
+  Fn_Arg::Base *outside_fn_arg = NULL;
+  Expr::Vacc *outside_arg = NULL;
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end();
        ++i) {
     if ((*i)->is(Fn_Arg::CONST)) {
@@ -1454,6 +1458,15 @@ void Alt::Simple::init_body(AST &ast) {
       assert(!c->ret_decls().empty());
       fn_call->exprs.push_back(c->ret_decls().front()->rhs);
       continue;
+    }
+    if (this->get_is_partof_outside() && ast.inject_derivatives) {
+      Fn_Arg::Alt *fn_alt = dynamic_cast<Fn_Arg::Alt*>(*i);
+      if (fn_alt) {
+        Alt::Link *alt_link = dynamic_cast<Alt::Link*>((*fn_alt).alt_ref());
+        if (alt_link && alt_link->nt->is_partof_outside) {
+          outside_fn_arg = *i;
+        }
+      }
     }
     std::vector<Statement::Var_Decl*>::const_iterator k =
       (*i)->ret_decls().begin();
@@ -1464,6 +1477,9 @@ void Alt::Simple::init_body(AST &ast) {
         arg = new Expr::Vacc(**j);
       } else {
         arg = new Expr::Vacc(**k);
+      }
+      if (outside_fn_arg && !outside_arg) {
+        outside_arg = arg;
       }
       fn_call->exprs.push_back(arg);
     }
@@ -1476,6 +1492,39 @@ void Alt::Simple::init_body(AST &ast) {
       decl->return_type, new std::string("ans"));
     pre_decl.clear();
     pre_decl.push_back(vdecl);
+    if (ast.inject_derivatives && this->get_is_partof_outside()) {
+      assert(outside_fn_arg);
+      fn_call = new Expr::Fn_Call(new std::string("get_traces"));
+      fn_call->exprs.clear();
+
+      fn_call->add_arg(new std::string("formula_table"));
+      fn_call->is_obj = Bool(true);
+
+      // abuse mkidx to obtain indices from outside-NT call, i.e. not really
+      // calling make_index
+      Expr::Fn_Call *mkidx = new Expr::Fn_Call(new std::string("*make_index"));
+      dynamic_cast<Alt::Link*>(outside_fn_arg->alt_ref())->add_args(mkidx);
+      fn_call->exprs.insert(fn_call->exprs.end(),
+                            mkidx->exprs.begin(), mkidx->exprs.end());
+
+      // index of the calling non-terminal
+      mkidx->exprs.clear();
+      Fn_Def *x = new Fn_Def();
+      x->add_para(calling_nt);
+      for (std::list<Para_Decl::Base*>::const_iterator i = x->paras.begin();
+           i != x->paras.end(); ++i) {
+        Para_Decl::Simple *s = dynamic_cast<Para_Decl::Simple*>(*i);
+        if (s) {
+          mkidx->add_arg((*s).name());
+        }
+      }
+      mkidx->add_arg(new Expr::Const(static_cast<int>(mkidx->exprs.size())),
+                     true);
+      fn_call->exprs.push_back(mkidx);
+
+      // result of outside non terminal, e.g. a_0
+      fn_call->exprs.push_back(outside_arg);
+    }
     vdecl->rhs = fn_call;
     Statement::Fn_Call *fn = new Statement::Fn_Call(
       Statement::Fn_Call::PUSH_BACK);
@@ -1523,7 +1572,8 @@ void Alt::Simple::init_body(AST &ast) {
               new std::string("make_index"));
             alt->add_args(mkidx);
             // add number of index arguments for elipsis mechanism
-            mkidx->add_arg(new Expr::Const(2), true);
+            mkidx->add_arg(new Expr::Const(
+              static_cast<int>(mkidx->exprs.size())), true);
 
             Statement::Fn_Call *fn_add = new Statement::Fn_Call(
               "add_sub_component");
@@ -1727,10 +1777,11 @@ void Alt::Simple::add_clear_code(
 
 
 std::list<Statement::Base*> *Alt::Simple::reorder_args_cg(
-  AST &ast, std::list<Statement::Base*> &x) {
+  AST &ast, std::list<Statement::Base*> &x,
+  Symbol::NT &calling_nt) {
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
        i != args.end(); ++i) {
-    (*i)->codegen(ast);
+    (*i)->codegen(ast, calling_nt);
   }
   return add_arg_code(ast, x);
 }
@@ -2005,7 +2056,7 @@ std::list<Statement::Base*> *Alt::Simple::add_guards(
   return stmts;
 }
 
-void Alt::Simple::codegen(AST &ast) {
+void Alt::Simple::codegen(AST &ast, Symbol::NT &calling_nt) {
   // std::cout << "-----------Simple IN" << std::endl;
 
   bool nullary = false;
@@ -2116,7 +2167,8 @@ void Alt::Simple::codegen(AST &ast) {
 
   stmts = insert_index_stmts(stmts);
 
-  std::list<Statement::Base*> *inner_guards_body = reorder_args_cg(ast, *stmts);
+  std::list<Statement::Base*> *inner_guards_body = reorder_args_cg(
+    ast, *stmts, calling_nt);
   pre_stmts.clear();
   pre_cond.clear();
   pre_cond.push_back(add_arg_code(ast, pre_stmts));
@@ -2129,7 +2181,7 @@ void Alt::Simple::codegen(AST &ast) {
       foreach_loops.begin(), foreach_loops.end());
     loop_body = &f->statements;
   }
-  init_body(ast);
+  init_body(ast, calling_nt);
   if (!disabled_spec && !nullary && answer_list &&
      adp_specialization != ADP_Mode::STANDARD) {
       std::list<Statement::Base*> *app_stmts;
@@ -2211,7 +2263,7 @@ void Alt::Link::add_args(Expr::Fn_Call *fn) {
 }
 
 
-void Alt::Link::codegen(AST &ast) {
+void Alt::Link::codegen(AST &ast, Symbol::NT &calling_nt) {
   // std::cout << "link " << *name << std::endl;
 
   statements.clear();
@@ -2282,7 +2334,7 @@ void Alt::Link::codegen(AST &ast) {
 }
 
 
-void Alt::Block::codegen(AST &ast) {
+void Alt::Block::codegen(AST &ast, Symbol::NT &calling_nt) {
   // std::cout << "-----------------Block " << std::endl;
   statements.clear();
   push_back_ret_decl();
@@ -2311,7 +2363,7 @@ void Alt::Block::codegen(AST &ast) {
       }
     }
 
-    (*i)->codegen(ast);
+    (*i)->codegen(ast, calling_nt);
     stmts->insert(
       stmts->end(), (*i)->statements.begin(), (*i)->statements.end());
 
@@ -2591,7 +2643,7 @@ Multi::Multi(const std::list<Alt::Base*> &t, const Loc &l) :
 }
 
 
-void Multi::codegen(AST &ast) {
+void Multi::codegen(AST &ast, Symbol::NT &calling_nt) {
   statements.clear();
   assert(ret_decls_.size() == list.size());
 
@@ -2616,7 +2668,7 @@ void Multi::codegen(AST &ast) {
   std::list<Statement::Var_Decl*>::iterator j = ret_decls_.begin();
   for (std::list<Alt::Base*>::iterator i = list.begin();
        i != list.end(); ++i, ++j) {
-    (*i)->codegen(ast);
+    (*i)->codegen(ast, calling_nt);
     stmts->insert(
       stmts->end(), (*i)->statements.begin(), (*i)->statements.end());
     assert(!(*j)->rhs);
