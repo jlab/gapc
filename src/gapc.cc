@@ -654,7 +654,11 @@ class Main {
     hh.end_fwd_decls();
     hh.header_footer(driver.ast);
     if (grammar->is_outside()) {
-      hh.print_insideoutside_report_fn(opts.outside_nt_list, driver.ast);
+      if (driver.ast.inject_derivatives) {
+        hh.print_run_derivative_fn(driver.ast);
+      } else {
+        hh.print_insideoutside_report_fn(opts.outside_nt_list, driver.ast);
+      }
     }
 
     // Write out the C++ implementation file of the
