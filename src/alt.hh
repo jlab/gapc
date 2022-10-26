@@ -252,6 +252,8 @@ class Base {
 
  public:
   std::list<Statement::Base*> statements;
+  // these statements are used to record the use of sub-solutions
+  std::list<Statement::Base*> derivative_statements;
   virtual void codegen(AST &ast, Symbol::NT &calling_nt) = 0;
   void init_filter_guards(AST &ast);
 
@@ -508,6 +510,7 @@ class Simple : public Base {
   void init_foreach();
   bool has_arg_list();
   void init_body(AST &ast, Symbol::NT &calling_nt);
+  void init_derivative_recording(AST &ast, std::string *result_name);
   Expr::Fn_Call *inject_derivative_body(AST &ast, Symbol::NT &calling_nt,
     Fn_Arg::Base *outside_fn_arg, Expr::Vacc *outside_arg);
   void init_guards();

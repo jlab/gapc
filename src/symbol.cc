@@ -1285,6 +1285,24 @@ void Symbol::NT::codegen(AST &ast) {
     if (*j) {
       stmts.push_back(*j);
 
+      /* if derivatives require tracing of sub-solutions, but the alternative
+         result is pushed to the candidate list below its body, we have to make
+         sure that according code is put after the push_back statement */
+      if (((*i)->derivative_statements.size() > 0) && (*j)->is(Statement::IF)) {
+        Statement::If *stmts_if = dynamic_cast<Statement::If*>(*j);
+        if (stmts_if) {
+          Statement::Fn_Call *stmts_then = dynamic_cast<Statement::Fn_Call*>(
+            *(stmts_if->then.begin()));
+          if (stmts_then && stmts_then->is(Statement::FN_CALL) &&
+              (stmts_then->builtin == Statement::Fn_Call::PUSH_BACK)) {
+            stmts_if->then.insert(stmts_if->then.end(),
+                                  (*i)->derivative_statements.begin(),
+                                  (*i)->derivative_statements.end());
+            (*i)->derivative_statements.clear();
+          }
+        }
+      }
+
       // this is a little shoed in, but set_ret_decl_rhs would need a
       // full rewrite otherwise
       if ((ast.code_mode() != Code::Mode::BACKTRACK || !tabulated) &&

@@ -1524,7 +1524,6 @@ void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
 
   fn_call->add(ntparas);
 
-  std::string *result_name = NULL;
   if (has_moving_k() || has_arg_list()) {
     Statement::Var_Decl *vdecl = new Statement::Var_Decl(
       decl->return_type, new std::string("ans"));
@@ -1541,15 +1540,21 @@ void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
     fn->add_arg(*ret_decl);
     fn->add_arg(*vdecl);
     stmts->push_back(vdecl);
-    result_name = vdecl->name;
+    init_derivative_recording(ast, vdecl->name);
     Expr::Base *suchthat = suchthat_code(*vdecl);
     if (suchthat) {
       Statement::If *c = new Statement::If(suchthat);
       c->then.push_back(fn);
+      c->then.insert(c->then.end(), this->derivative_statements.begin(),
+                     this->derivative_statements.end());
       stmts->push_back(c);
     } else {
       stmts->push_back(fn);
+      stmts->insert(stmts->end(), this->derivative_statements.begin(),
+                    this->derivative_statements.end());
     }
+    // clear this list, as it has just been added to the statements
+    this->derivative_statements.clear();
   } else {
     Statement::Var_Assign *ass = new Statement::Var_Assign(*ret_decl);
     pre_decl.clear();
@@ -1561,8 +1566,9 @@ void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
     } else {
       ass->rhs = fn_call;
     }
+    // derviative statements will later be added in Symbol::NT::codegen
+    init_derivative_recording(ast, ret_decl->name);
     stmts->push_back(ass);
-    result_name = ret_decl->name;
     Expr::Base *suchthat = suchthat_code(*ret_decl);
     if (suchthat) {
       Statement::If *c = new Statement::If(suchthat);
@@ -1572,7 +1578,9 @@ void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
       stmts->push_back(c);
     }
   }
+}
 
+void Alt::Simple::init_derivative_recording(AST &ast, std::string *result_name) {
   if (ast.inject_derivatives) {
     if (!this->is_partof_outside) {
       // test if this alternative uses sub-solutions from other non-terminals
@@ -1597,7 +1605,7 @@ void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
               "add_sub_component");
             fn_add->add_arg(new std::string("cand"));
             fn_add->is_obj = Bool(true);
-            fn_add->add_arg(new Expr::Const("formula"));
+            fn_add->add_arg(new Expr::Const(*alt->nt->name));
             fn_add->add_arg(mkidx);
 
             stmts_record->push_back(fn_add);
@@ -1605,7 +1613,7 @@ void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
         }
       }
       if (stmts_record->size() > 0) {
-        // TODO(sjanssen): should I use build-in functions? Also für push_back
+        // TODO(sjanssen): should I use build-in functions? Also for push_back
         Statement::Fn_Call *x = new Statement::Fn_Call("set_value");
         x->add_arg(new std::string("cand"));
         x->is_obj = Bool(true);
@@ -1623,7 +1631,9 @@ void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
         fn_push->add_arg(new std::string("cand"));
         stmts_record->push_back(fn_push);
 
-        stmts->insert(stmts->end(), stmts_record->begin(), stmts_record->end());
+        this->derivative_statements.insert(this->derivative_statements.end(),
+                                           stmts_record->begin(),
+                                           stmts_record->end());
       }
     }
   }
