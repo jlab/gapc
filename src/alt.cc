@@ -1580,7 +1580,8 @@ void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
   }
 }
 
-void Alt::Simple::init_derivative_recording(AST &ast, std::string *result_name) {
+void Alt::Simple::init_derivative_recording(
+  AST &ast, std::string *result_name) {
   if (ast.inject_derivatives) {
     if (!this->is_partof_outside) {
       // test if this alternative uses sub-solutions from other non-terminals
