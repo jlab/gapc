@@ -1288,6 +1288,8 @@ void Symbol::NT::codegen(AST &ast) {
       /* if derivatives require tracing of sub-solutions, but the alternative
          result is pushed to the candidate list below its body, we have to make
          sure that according code is put after the push_back statement */
+      // TODO(sjanssen): can we find better way to make these statements part
+      // of the return declaration?
       if (((*i)->derivative_statements.size() > 0) && (*j)->is(Statement::IF)) {
         Statement::If *stmts_if = dynamic_cast<Statement::If*>(*j);
         if (stmts_if) {
