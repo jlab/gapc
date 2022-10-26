@@ -555,7 +555,8 @@ Fn_Def *Tablegen::gen_get_traces() {
   // return zero IF inside answer is zero, i.e. not tabulated
   Expr::Vacc *acc_tab = new Expr::Vacc(new Var_Acc::Array(
     new Var_Acc::Plain(new std::string("tabulated")), off));
-  Statement::If *test = new Statement::If(new Expr::Not(acc_tab), this->ret_zero);
+  Statement::If *test = new Statement::If(new Expr::Not(acc_tab),
+                                          this->ret_zero);
   c.push_back(test);
 
   if (!cyk_) {
