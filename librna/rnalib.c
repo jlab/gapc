@@ -1170,13 +1170,17 @@ static rsize getNext(const char *s, rsize pos, rsize steps,
   if (!init) {
     seqLen = strlen(s);
     triu = (seqLen * (seqLen + 1)) / 2 + 1;
-    lookup = (rsize*) malloc(maxRows * triu * 3 * sizeof(rsize));
+    unsigned long size = maxRows * triu * 3;
+    lookup = calloc(size, sizeof(rsize));
+    init = true;
   }
 
   unsigned long index = triu * steps * currRow + pos * seqLen +
                         rightBorder - ((pos * (pos + 1)) / 2);
-  if (lookup[index])
+  
+  if (lookup[index]) {
     return lookup[index];
+  }
 
   do {
     if (s[x] != GAP_BASE)
@@ -1209,13 +1213,17 @@ static rsize getPrev(const char *s, rsize pos, rsize steps, rsize leftBorder,
   if (!init) {
     seqLen = strlen(s);
     triu = (seqLen * (seqLen + 1)) / 2 + 1;
-    lookup = (rsize*) malloc(maxRows * triu * 3 * sizeof(rsize));
+    unsigned long size = maxRows * triu * 3;
+    lookup = calloc(size, sizeof(rsize));
+    init = true;
   }
 
   unsigned long index = triu * steps * currRow + leftBorder * seqLen +
                         pos - ((leftBorder * (leftBorder + 1)) / 2);
-  if (lookup[index])
+
+  if (lookup[index]) {
     return lookup[index];
+  }
 
   do {
     if (s[x] != GAP_BASE)
