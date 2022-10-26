@@ -141,16 +141,6 @@ algebra alg_countmanual implements sig_alignments(alphabet=char, answer=int) {
   }
 }
 
-
-// pair-wise global alignment
-grammar gra_needlemanwunsch uses sig_alignments(axiom=A) {
-  A = Ins(<CHAR, EMPTY>, <LOC, EMPTY>, A)
-    | Del(<EMPTY, CHAR>, <EMPTY, LOC>, A)
-    | Ers(<CHAR, CHAR>, <LOC, LOC>, A)
-    | Sto(<EMPTY, EMPTY>)
-    # h;
-}
-
 // pair-wise global alignment with affine gap costs
 grammar gra_gotoh uses sig_alignments(axiom=A) {
   A = Ins(<CHAR, EMPTY>, <LOC, EMPTY>, xIns)
@@ -166,6 +156,15 @@ grammar gra_gotoh uses sig_alignments(axiom=A) {
   xDel = Delx(<EMPTY, CHAR>, <EMPTY, LOC>, xDel)
        | A
        # h;
+}
+
+// pair-wise global alignment
+grammar gra_needlemanwunsch uses sig_alignments(axiom=A) {
+  A = Ins(<CHAR, EMPTY>, <LOC, EMPTY>, A)
+    | Del(<EMPTY, CHAR>, <EMPTY, LOC>, A)
+    | Ers(<CHAR, CHAR>, <LOC, LOC>, A)
+    | Sto(<EMPTY, EMPTY>)
+    # h;
 }
 
 instance count = gra_needlemanwunsch(alg_count);
