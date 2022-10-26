@@ -151,7 +151,24 @@ grammar gra_needlemanwunsch uses sig_alignments(axiom=A) {
     # h;
 }
 
+// pair-wise global alignment with affine gap costs
+grammar gra_gotoh uses sig_alignments(axiom=A) {
+  A = Ins(<CHAR, EMPTY>, <LOC, EMPTY>, xIns)
+    | Del(<EMPTY, CHAR>, <EMPTY, LOC>, xDel)
+    | Ers(<CHAR, CHAR>, <LOC, LOC>, A)
+    | Sto(<EMPTY, EMPTY>)
+    # h;
+
+  xIns = Insx(<CHAR, EMPTY>, <LOC, EMPTY>, xIns)
+       | A
+       # h;
+
+  xDel = Delx(<EMPTY, CHAR>, <EMPTY, LOC>, xDel)
+       | A
+       # h;
+}
 
 instance count = gra_needlemanwunsch(alg_count);
 instance sim_enum = gra_needlemanwunsch(alg_similarity * alg_enum);
 instance firstD = gra_needlemanwunsch(alg_score);
+instance firstD_gotoh = gra_gotoh(alg_score);
