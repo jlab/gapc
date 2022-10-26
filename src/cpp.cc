@@ -2396,6 +2396,9 @@ void Printer::Cpp::print_derivative(Symbol::NT *nt) {
     dec_indent();
     stream << indent() << "}" << endl;
   }
+  if (nesting == 1) {
+    stream << indent() << "std::cout << \"\\n\";" << endl;
+  }
 }
 void Printer::Cpp::print_run_derivative_fn(const AST &ast) {
   stream << indent() << "void report_derivative(std::ostream &out) {"
