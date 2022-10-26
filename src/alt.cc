@@ -1423,21 +1423,23 @@ void Alt::Base::add_seqs(Expr::Fn_Call *fn_call, const AST &ast) const {
   }
 }
 
-Expr::Fn_Call *Alt::Simple::inject_derivative_body(AST &ast,
-  Symbol::NT &calling_nt, Fn_Arg::Base *outside_fn_arg,
-  Expr::Vacc *outside_arg) {
+// TODO(sjanssen): rename outside_fn_arg to reflect actual datatype
+Expr::Fn_Call *Alt::Base::inject_derivative_body(AST &ast,
+  Symbol::NT &calling_nt, Alt::Base *outside_fn_arg,
+  Expr::Base *outside_arg) {
   assert(outside_fn_arg);
+  Alt::Link *outside_alt = dynamic_cast<Alt::Link*>(outside_fn_arg);
   Expr::Fn_Call *fn_call = new Expr::Fn_Call(new std::string("get_traces"));
   fn_call->exprs.clear();
 
-  fn_call->add_arg(new std::string((*calling_nt.name).substr(
-    sizeof(OUTSIDE_NT_PREFIX)-1, (*calling_nt.name).length()) + "_table"));
+  fn_call->add_arg(new std::string((*outside_alt->name).substr(
+    sizeof(OUTSIDE_NT_PREFIX)-1, (*outside_alt->name).length()) + "_table"));
   fn_call->is_obj = Bool(true);
 
   // abuse mkidx to obtain indices from outside-NT call, i.e. not really
   // calling make_index
   Expr::Fn_Call *mkidx = new Expr::Fn_Call(new std::string("*make_index"));
-  dynamic_cast<Alt::Link*>(outside_fn_arg->alt_ref())->add_args(mkidx);
+  outside_alt->add_args(mkidx);
   fn_call->exprs.insert(fn_call->exprs.end(),
                         mkidx->exprs.begin(), mkidx->exprs.end());
 
@@ -1530,7 +1532,8 @@ void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
     pre_decl.clear();
     pre_decl.push_back(vdecl);
     if (ast.inject_derivatives && this->get_is_partof_outside()) {
-      vdecl->rhs = inject_derivative_body(ast, calling_nt, outside_fn_arg,
+      vdecl->rhs = inject_derivative_body(ast, calling_nt,
+                                          outside_fn_arg->alt_ref(),
                                           outside_arg);
     } else {
       vdecl->rhs = fn_call;
@@ -1561,7 +1564,8 @@ void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
     pre_decl.push_back(ret_decl);
     if (ast.inject_derivatives && calling_nt.is_partof_outside &&
         outside_fn_arg) {
-      ass->rhs = inject_derivative_body(ast, calling_nt, outside_fn_arg,
+      ass->rhs = inject_derivative_body(ast, calling_nt,
+                                        outside_fn_arg->alt_ref(),
                                         outside_arg);
     } else {
       ass->rhs = fn_call;
@@ -1580,7 +1584,7 @@ void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
   }
 }
 
-void Alt::Simple::init_derivative_recording(
+void Alt::Base::init_derivative_recording(
   AST &ast, std::string *result_name) {
   if (ast.inject_derivatives) {
     if (!this->is_partof_outside) {
@@ -1588,30 +1592,53 @@ void Alt::Simple::init_derivative_recording(
       std::list<Statement::Base*> *stmts_record = \
       new std::list<Statement::Base*>();
       // bool calls_other_nts = false;
-      for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
-           i != args.end(); ++i) {
-        if ((*i)->is(Fn_Arg::ALT) && ((*i)->alt_ref()->is(Alt::LINK))) {
-          Alt::Link *alt = dynamic_cast<Alt::Link*>((*i)->alt_ref());
-          if (alt->nt->is(Symbol::NONTERMINAL)) {
-            // calls_other_nts = true;
+      // TODO(sjanssen): maybe split init_derivative_recording into Base Simple
+      // Link instead of testing for types here?
+      if (this->is(Alt::SIMPLE)) {
+        for (std::list<Fn_Arg::Base*>::iterator i =
+             dynamic_cast<Alt::Simple*>(this)->args.begin();
+             i != dynamic_cast<Alt::Simple*>(this)->args.end(); ++i) {
+          if ((*i)->is(Fn_Arg::ALT) && ((*i)->alt_ref()->is(Alt::LINK))) {
+            Alt::Link *alt = dynamic_cast<Alt::Link*>((*i)->alt_ref());
+            if (alt->nt->is(Symbol::NONTERMINAL)) {
+              // calls_other_nts = true;
 
-            Expr::Fn_Call *mkidx = new Expr::Fn_Call(
-              new std::string("make_index"));
-            alt->add_args(mkidx);
-            // add number of index arguments for elipsis mechanism
-            mkidx->add_arg(new Expr::Const(
-              static_cast<int>(mkidx->exprs.size())), true);
+              Expr::Fn_Call *mkidx = new Expr::Fn_Call(
+                new std::string("make_index"));
+              alt->add_args(mkidx);
+              // add number of index arguments for elipsis mechanism
+              mkidx->add_arg(new Expr::Const(
+                static_cast<int>(mkidx->exprs.size())), true);
 
-            Statement::Fn_Call *fn_add = new Statement::Fn_Call(
-              "add_sub_component");
-            fn_add->add_arg(new std::string("cand"));
-            fn_add->is_obj = Bool(true);
-            fn_add->add_arg(new Expr::Const(*alt->nt->name));
-            fn_add->add_arg(mkidx);
+              Statement::Fn_Call *fn_add = new Statement::Fn_Call(
+                "add_sub_component");
+              fn_add->add_arg(new std::string("cand"));
+              fn_add->is_obj = Bool(true);
+              fn_add->add_arg(new Expr::Const(*alt->nt->name));
+              fn_add->add_arg(mkidx);
 
-            stmts_record->push_back(fn_add);
+              stmts_record->push_back(fn_add);
+            }
           }
         }
+      }
+      if (this->is(Alt::LINK)) {
+        Alt::Link *alt = dynamic_cast<Alt::Link*>(this);
+        Expr::Fn_Call *mkidx = new Expr::Fn_Call(
+          new std::string("make_index"));
+        alt->add_args(mkidx);
+        // add number of index arguments for elipsis mechanism
+        mkidx->add_arg(new Expr::Const(
+        static_cast<int>(mkidx->exprs.size())), true);
+
+        Statement::Fn_Call *fn_add = new Statement::Fn_Call(
+        "add_sub_component");
+        fn_add->add_arg(new std::string("cand"));
+        fn_add->is_obj = Bool(true);
+        fn_add->add_arg(new Expr::Const(*alt->nt->name));
+        fn_add->add_arg(mkidx);
+
+        stmts_record->push_back(fn_add);
       }
       if (stmts_record->size() > 0) {
         // TODO(sjanssen): should I use build-in functions? Also for push_back
@@ -2297,7 +2324,6 @@ void Alt::Link::codegen(AST &ast, Symbol::NT &calling_nt) {
 
   statements.clear();
   push_back_ret_decl();
-
   std::string *s = NULL;
   if (nt->is(Symbol::TERMINAL)) {
     s = name;
@@ -2343,7 +2369,15 @@ void Alt::Link::codegen(AST &ast, Symbol::NT &calling_nt) {
     statements.push_back(filter_guards);
     filter_guards->then.push_back(v);
   } else {
-    ret_decl->rhs = fn;
+    if (nt->is(Symbol::NONTERMINAL) && this->top_level && ast.inject_derivatives
+        && calling_nt.is_partof_outside) {
+      ret_decl->rhs = inject_derivative_body(ast, calling_nt, this, fn);
+    } else {
+      ret_decl->rhs = fn;
+    }
+    if (nt->is(Symbol::NONTERMINAL) && this->top_level) {
+      init_derivative_recording(ast, ret_decl->name);
+    }
   }
   Expr::Base *suchthat = suchthat_code(*ret_decl);
   if (suchthat) {

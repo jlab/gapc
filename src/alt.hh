@@ -374,6 +374,10 @@ class Base {
   // blocks)
   virtual Alt::Base *find_block_parent(const Alt::Base &block);
   bool inside_end = false;
+
+  void init_derivative_recording(AST &ast, std::string *result_name);
+  Expr::Fn_Call *inject_derivative_body(AST &ast, Symbol::NT &calling_nt,
+    Alt::Base *outside_fn_arg, Expr::Base *outside_arg);
 };
 
 
@@ -510,9 +514,6 @@ class Simple : public Base {
   void init_foreach();
   bool has_arg_list();
   void init_body(AST &ast, Symbol::NT &calling_nt);
-  void init_derivative_recording(AST &ast, std::string *result_name);
-  Expr::Fn_Call *inject_derivative_body(AST &ast, Symbol::NT &calling_nt,
-    Fn_Arg::Base *outside_fn_arg, Expr::Vacc *outside_arg);
   void init_guards();
   void codegen(AST &ast, Symbol::NT &calling_nt);
 
