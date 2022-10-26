@@ -1293,7 +1293,7 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
   } else {
     // otherwise, we need to add another left hand side non-terminal
     // which points to multiple non-terminals WITHOUT making a choice
-    std::string *nt_axiom_name = new std::string("outside_axioms");
+    std::string *nt_axiom_name = new std::string(OUTSIDE_AXIOMS);
     Symbol::NT *nt_axiom = new Symbol::NT(nt_axiom_name, Loc());
     // carry over tracks from original inside axiom
     nt_axiom->set_tracks(this->axiom->tracks(), this->axiom->track_pos());

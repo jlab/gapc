@@ -1023,7 +1023,8 @@ void Symbol::NT::init_ret_stmts(Code::Mode mode, AST &ast) {
     tabfn->add_arg(ret);
     ret_stmts.push_back(tabfn);
 
-    if (ast.inject_derivatives && !this->is_partof_outside) {
+    if (ast.inject_derivatives && !this->is_partof_outside
+        && *this->name != OUTSIDE_AXIOMS) {
       Statement::Fn_Call *tracefn = new Statement::Fn_Call("set_traces");
       tracefn->add(*table_decl);
       tracefn->add_arg(new std::string("candidates"));

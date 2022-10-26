@@ -47,6 +47,7 @@ class AST;
 class Algebra;
 
 const char OUTSIDE_NT_PREFIX[] = "outside_";
+const char OUTSIDE_AXIOMS[] = "outside_axioms";
 
 class Grammar {
  private:

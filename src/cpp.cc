@@ -1163,7 +1163,7 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
 
   stream << t.fn_tab();
 
-  if (t.for_derivatives) {
+  if (t.for_derivatives && *t.nt().name != OUTSIDE_AXIOMS) {
     stream << endl << t.fn_set_traces();
     stream << endl << t.fn_get_traces();
   }
