@@ -1531,7 +1531,8 @@ void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
       decl->return_type, new std::string("ans"));
     pre_decl.clear();
     pre_decl.push_back(vdecl);
-    if (ast.inject_derivatives && this->get_is_partof_outside()) {
+    if (ast.inject_derivatives && this->get_is_partof_outside() &&
+        outside_fn_arg) {
       vdecl->rhs = inject_derivative_body(ast, calling_nt,
                                           outside_fn_arg->alt_ref(),
                                           outside_arg);
