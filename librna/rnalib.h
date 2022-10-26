@@ -20,9 +20,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 }}} */
-
 #ifndef LIBRNA_RNALIB_H_
 #define LIBRNA_RNALIB_H_
+
+#define LOOKUP
 
 // Sun CC (C++ compiler) really makes an effort to educate the user that parts
 // of C99 are not standarized in the last C++ specification
@@ -55,20 +56,10 @@ bool test_macrostate_mme_assumption();
 
 int termau_energy(const char *s, rsize i, rsize j);
 int duplex_energy(void);
-int hl_energy(const char *s, rsize i, rsize j);
-int hl_energy_stem(const char *s, rsize i, rsize j);
-int il_energy(const char *s, rsize i, rsize j, rsize k, rsize l);
-int bl_energy(const char *s, rsize bl, rsize i, rsize j, rsize br,
-              rsize Xright);
-int br_energy(const char *s, rsize bl, rsize i, rsize j, rsize br, rsize Xleft);
+
 int sr_energy(const char *s, rsize i, rsize j);
 int sr_pk_energy(char a, char b, char c, char d);
-int dl_energy(const char *s, rsize i, rsize j);
-int dr_energy(const char *s, rsize i, rsize j, rsize n);
-int dli_energy(const char *s, rsize i, rsize j);
-int dri_energy(const char *s, rsize i, rsize j);
-int ext_mismatch_energy(const char *s, rsize i, rsize j, rsize n);
-int ml_mismatch_energy(const char *s, rsize i, rsize j);
+
 int ml_energy(void);
 int ul_energy(void);
 int sbase_energy(void);
@@ -91,12 +82,62 @@ int bp_index(char x, char y);
 /* the below 8 functions are exposed to recreate energy computation of the
    original RNAhybrid, i.e. Haskell and ADPc */
 int bl_ent(rsize l);
+
+int il_asym(rsize sl, rsize sr);
+int il_ent(rsize l);
+
+#ifndef LOOKUP
+int hl_energy(const char *s, rsize i, rsize j);
+int hl_energy_stem(const char *s, rsize i, rsize j);
+int il_energy(const char *s, rsize i, rsize j, rsize k, rsize l);
+int bl_energy(const char *s, rsize bl, rsize i, rsize j, rsize br,
+              rsize Xright);
+int br_energy(const char *s, rsize bl, rsize i, rsize j, rsize br, rsize Xleft);
+int dl_energy(const char *s, rsize i, rsize j);
+int dr_energy(const char *s, rsize i, rsize j, rsize n);
+int dli_energy(const char *s, rsize i, rsize j);
+int dri_energy(const char *s, rsize i, rsize j);
+int ext_mismatch_energy(const char *s, rsize i, rsize j, rsize n);
+int ml_mismatch_energy(const char *s, rsize i, rsize j);
+
 int il11_energy(const char *s, rsize i, rsize k, rsize l, rsize j);
 int il12_energy(const char *s, rsize i, rsize k, rsize l, rsize j);
 int il21_energy(const char *s, rsize i, rsize k, rsize l, rsize j);
 int il22_energy(const char *s, rsize i, rsize k, rsize l, rsize j);
-int il_ent(rsize l);
 int il_stack(const char *s, rsize i, rsize k, rsize l, rsize j);
-int il_asym(rsize sl, rsize sr);
+
+
+#else
+int il11_energy(const char *s, rsize i, rsize k, rsize l, rsize j,
+                unsigned currRow, unsigned maxRows);
+int il12_energy(const char *s, rsize i, rsize k, rsize l, rsize j,
+                unsigned currRow, unsigned maxRows);
+int il21_energy(const char *s, rsize i, rsize k, rsize l, rsize j,
+                unsigned currRow, unsigned maxRows);
+int il22_energy(const char *s, rsize i, rsize k, rsize l, rsize j,
+                unsigned currRow, unsigned maxRows);
+int hl_energy(const char *s, rsize i, rsize j,
+              unsigned currRow, unsigned maxRows);
+int hl_energy_stem(const char *s, rsize i, rsize j,
+                   unsigned currRow, unsigned maxRows);
+int il_energy(const char *s, rsize i, rsize j, rsize k, rsize l,
+              unsigned currRow, unsigned maxRows);
+int bl_energy(const char *s, rsize bl, rsize i, rsize j, rsize br,
+              rsize Xright, unsigned currRow, unsigned maxRows);
+int br_energy(const char *s, rsize bl, rsize i, rsize j, rsize br, rsize Xleft,
+              unsigned currRow, unsigned maxRows);
+int dl_energy(const char *s, rsize i, rsize j,
+              unsigned currRow, unsigned maxRows);
+int dr_energy(const char *s, rsize i, rsize j, rsize n,
+              unsigned currRow, unsigned maxRows);
+int dli_energy(const char *s, rsize i, rsize j,
+               unsigned currRow, unsigned maxRows);
+int dri_energy(const char *s, rsize i, rsize j,
+               unsigned currRow, unsigned maxRows);
+int ext_mismatch_energy(const char *s, rsize i, rsize j, rsize n,
+                        unsigned currRow, unsigned maxRows);
+int ml_mismatch_energy(const char *s, rsize i, rsize j,
+                       unsigned currRow, unsigned maxRows);
+#endif
 
 #endif  // LIBRNA_RNALIB_H_
