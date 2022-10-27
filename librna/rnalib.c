@@ -1158,7 +1158,7 @@ static rsize getNext(const char *s, rsize pos, rsize steps,
                      rsize rightBorder, unsigned currRow, unsigned maxRows) {
   assert(steps > 0);
   rsize nongaps = 0;
-  rsize x = pos+1;
+  rsize x = pos + 1;
   if (x >= rightBorder)
     return rightBorder;
 
@@ -1175,8 +1175,8 @@ static rsize getNext(const char *s, rsize pos, rsize steps,
     init = true;
   }
 
-  unsigned long index = triu * steps * currRow + pos * seqLen +
-                        rightBorder - ((pos * (pos + 1)) / 2);
+  unsigned long index = (steps - 1) * triu * maxRows + triu * currRow +
+                        pos * seqLen + rightBorder - ((pos * (pos + 1)) / 2);
   
   if (lookup[index]) {
     return lookup[index];
@@ -1185,8 +1185,10 @@ static rsize getNext(const char *s, rsize pos, rsize steps,
   do {
     if (s[x] != GAP_BASE)
       ++nongaps;
-    if (s[x] == SEPARATOR_BASE)
-      return x-1;
+    if (s[x] == SEPARATOR_BASE) {
+      lookup[index] = x - 1;
+      return x - 1;
+    }
   } while (nongaps < steps && ++x < rightBorder);
   
   lookup[index] = x;
@@ -1198,7 +1200,7 @@ static rsize getPrev(const char *s, rsize pos, rsize steps, rsize leftBorder,
                      unsigned currRow, unsigned maxRows) {
   assert(pos >= 0);
   assert(steps > 0);
-  rsize x = pos-1;
+  rsize x = pos - 1;
 
   if ((pos <= leftBorder) || (x <= leftBorder))
     return leftBorder;
@@ -1218,8 +1220,8 @@ static rsize getPrev(const char *s, rsize pos, rsize steps, rsize leftBorder,
     init = true;
   }
 
-  unsigned long index = triu * steps * currRow + leftBorder * seqLen +
-                        pos - ((leftBorder * (leftBorder + 1)) / 2);
+  unsigned long index = triu * (steps - 1) * maxRows + currRow * triu +
+                        leftBorder * seqLen + pos - ((leftBorder * (leftBorder + 1)) / 2);
 
   if (lookup[index]) {
     return lookup[index];
@@ -1228,8 +1230,10 @@ static rsize getPrev(const char *s, rsize pos, rsize steps, rsize leftBorder,
   do {
     if (s[x] != GAP_BASE)
       ++nongaps;
-    if (s[x] == SEPARATOR_BASE)
-      return x+1;
+    if (s[x] == SEPARATOR_BASE) {
+      lookup[index] = x + 1;
+      return x + 1;
+    }
   } while (nongaps < steps && --x > leftBorder);
 
   lookup[index] = x;
