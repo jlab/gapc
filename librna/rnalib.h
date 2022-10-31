@@ -116,6 +116,8 @@ int il21_energy(const char *s, rsize i, rsize k, rsize l, rsize j,
                 unsigned currRow, unsigned maxRows);
 int il22_energy(const char *s, rsize i, rsize k, rsize l, rsize j,
                 unsigned currRow, unsigned maxRows);
+int il_stack(const char *s, rsize i, rsize k, rsize l, rsize j,
+             unsigned currRow, unsigned maxRows);
 int hl_energy(const char *s, rsize i, rsize j,
               unsigned currRow, unsigned maxRows);
 int hl_energy_stem(const char *s, rsize i, rsize j,
@@ -138,6 +140,7 @@ int ext_mismatch_energy(const char *s, rsize i, rsize j, rsize n,
                         unsigned currRow, unsigned maxRows);
 int ml_mismatch_energy(const char *s, rsize i, rsize j,
                        unsigned currRow, unsigned maxRows);
+
 #endif
 
 #endif  // LIBRNA_RNALIB_H_

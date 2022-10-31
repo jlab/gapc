@@ -1166,7 +1166,7 @@ static rsize getNext(const char *s, rsize pos, rsize steps,
   static rsize *lookup;
   static unsigned seqLen;
   static unsigned triu;
-
+  
   if (!init) {
     seqLen = strlen(s);
     triu = (seqLen * (seqLen + 1)) / 2 + 1;
@@ -1325,19 +1325,6 @@ int hl_energy(const char *s, rsize i, rsize j,
   abort();
 }
 
-int il_stack(const char *s, rsize i, rsize k, rsize l, rsize j,
-             unsigned currRow, unsigned maxRows) {
-  int out_closingBP = bp_index(s[i], s[j]);
-  char out_lbase = s[getNext(s, i, 1, j-1, currRow, maxRows)];
-  char out_rbase = s[getPrev(s, j, 1, i+1, currRow, maxRows)];
-  // Note, basepair and stacking bases are reversed to preserver 5'-3' order
-  int in_closingBP = bp_index(s[l], s[k]);
-  char in_lbase = s[getNext(s, l, 1, j-1, currRow, maxRows)];
-  char in_rbase = s[getPrev(s, k, 1, i+1, currRow, maxRows)];
-  return P->mismatchI[out_closingBP][out_lbase][out_rbase] +
-         P->mismatchI[in_closingBP][in_lbase][in_rbase];
-}
-
 int il11_energy(const char *s, rsize i, rsize k, rsize l, rsize j,
                 unsigned currRow, unsigned maxRows) {
   int closingBP = bp_index(s[i], s[j]);
@@ -1386,6 +1373,19 @@ int il22_energy(const char *s, rsize i, rsize k, rsize l, rsize j,
   char rbase = s[getPrev(s, j, 2, l, currRow, maxRows)];
   char rrbase = s[getPrev(s, j, 1, l, currRow, maxRows)];
   return P->int22[closingBP][enclosedBP][lbase][llbase][rbase][rrbase];
+}
+
+int il_stack(const char *s, rsize i, rsize k, rsize l, rsize j,
+             unsigned currRow, unsigned maxRows) {
+  int out_closingBP = bp_index(s[i], s[j]);
+  char out_lbase = s[getNext(s, i, 1, j-1, currRow, maxRows)];
+  char out_rbase = s[getPrev(s, j, 1, i+1, currRow, maxRows)];
+  // Note, basepair and stacking bases are reversed to preserver 5'-3' order
+  int in_closingBP = bp_index(s[l], s[k]);
+  char in_lbase = s[getNext(s, l, 1, j-1, currRow, maxRows)];
+  char in_rbase = s[getPrev(s, k, 1, i+1, currRow, maxRows)];
+  return P->mismatchI[out_closingBP][out_lbase][out_rbase] +
+         P->mismatchI[in_closingBP][in_lbase][in_rbase];
 }
 
 int il_energy(const char *s, rsize i, rsize k, rsize l, rsize j,
