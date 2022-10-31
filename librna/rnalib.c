@@ -501,7 +501,7 @@ static rsize getPrev(const char *s, rsize pos, rsize steps, rsize leftBorder) {
 
   if ((pos <= leftBorder) || (x <= leftBorder))
     return leftBorder;
-  
+
   rsize nongaps = 0;
 
   do {
@@ -1157,16 +1157,18 @@ int ml_mismatch_energy(const char *s, rsize i, rsize j) {
 static rsize getNext(const char *s, rsize pos, rsize steps,
                      rsize rightBorder, unsigned currRow, unsigned maxRows) {
   assert(steps > 0);
-  rsize nongaps = 0;
+
   rsize x = pos + 1;
   if (x >= rightBorder)
     return rightBorder;
+
+  rsize nongaps = 0;
 
   static bool init = false;
   static rsize *lookup;
   static unsigned seqLen;
   static unsigned triu;
-  
+
   if (!init) {
     seqLen = strlen(s);
     triu = (seqLen * (seqLen + 1)) / 2 + 1;
@@ -1176,8 +1178,9 @@ static rsize getNext(const char *s, rsize pos, rsize steps,
   }
 
   unsigned long index = (steps - 1) * triu * maxRows + triu * currRow +
-                        pos * seqLen + rightBorder - ((pos * (pos + 1)) / 2);
-  
+                        pos * seqLen + rightBorder -
+                        ((pos * (pos + 1)) / 2);
+
   if (lookup[index]) {
     return lookup[index];
   }
@@ -1190,7 +1193,7 @@ static rsize getNext(const char *s, rsize pos, rsize steps,
       return x - 1;
     }
   } while (nongaps < steps && ++x < rightBorder);
-  
+
   lookup[index] = x;
 
   return x;
@@ -1204,9 +1207,9 @@ static rsize getPrev(const char *s, rsize pos, rsize steps, rsize leftBorder,
 
   if ((pos <= leftBorder) || (x <= leftBorder))
     return leftBorder;
-  
+
   rsize nongaps = 0;
-  
+
   static bool init = false;
   static rsize *lookup;
   static unsigned seqLen;
@@ -1221,7 +1224,8 @@ static rsize getPrev(const char *s, rsize pos, rsize steps, rsize leftBorder,
   }
 
   unsigned long index = triu * (steps - 1) * maxRows + currRow * triu +
-                        leftBorder * seqLen + pos - ((leftBorder * (leftBorder + 1)) / 2);
+                        leftBorder * seqLen + pos -
+                        ((leftBorder * (leftBorder + 1)) / 2);
 
   if (lookup[index]) {
     return lookup[index];
@@ -1441,7 +1445,8 @@ int il_energy(const char *s, rsize i, rsize k, rsize l, rsize j,
     }
   }
 
-  return il_ent(sl+sr) + il_stack(s, i, k, l, j, currRow, maxRows) + il_asym(sl, sr);
+  return il_ent(sl+sr) + il_stack(s, i, k, l, j, currRow, maxRows) +
+         il_asym(sl, sr);
 }
 
 int bl_energy(const char *s, rsize i, rsize k, rsize l, rsize j,
@@ -1454,13 +1459,15 @@ int bl_energy(const char *s, rsize i, rsize k, rsize l, rsize j,
   if (size == 0) {
     int closingBP = bp_index(s[i], s[j]);
     // Note, basepair is reversed to preserver 5'-3' order
-    int enclosedBP = bp_index(s[getPrev(s, j, 1, Xright, currRow, maxRows)], s[l+1]);
+    int enclosedBP = bp_index(s[getPrev(s, j, 1, Xright, currRow, maxRows)],
+                              s[l+1]);
     return P->stack[closingBP][enclosedBP];
   }
   if (size == 1) {
     int closingBP = bp_index(s[i], s[j]);
     // Note, basepair is reversed to preserver 5'-3' order
-    int enclosedBP = bp_index(s[getPrev(s, j, 1, Xright, currRow, maxRows)], s[l+1]);
+    int enclosedBP = bp_index(s[getPrev(s, j, 1, Xright, currRow, maxRows)],
+                              s[l+1]);
     return bl_ent(size) + P->stack[closingBP][enclosedBP];
   }
   if (size > 1) {
@@ -1482,13 +1489,15 @@ int br_energy(const char *s, rsize i, rsize k, rsize l, rsize j, rsize Xleft,
   if (size == 0) {
     int closingBP = bp_index(s[i], s[j]);
     // Note, basepair is reversed to preserver 5'-3' order
-    int enclosedBP = bp_index(s[k-1], s[getNext(s, i, 1, Xleft, currRow, maxRows)]);
+    int enclosedBP = bp_index(s[k-1],
+                              s[getNext(s, i, 1, Xleft, currRow, maxRows)]);
     return P->stack[closingBP][enclosedBP];
   }
   if (size == 1) {
     int closingBP = bp_index(s[i], s[j]);
     // Note, basepair is reversed to preserver 5'-3' order
-    int enclosedBP = bp_index(s[k-1], s[getNext(s, i, 1, Xleft, currRow, maxRows)]);
+    int enclosedBP = bp_index(s[k-1],
+                              s[getNext(s, i, 1, Xleft, currRow, maxRows)]);
     return bl_ent(size) + P->stack[closingBP][enclosedBP];
   }
   if (size > 1) {

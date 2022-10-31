@@ -764,7 +764,8 @@ inline int il_energy(const Basic_Subsequence<alphabet, pos_type> &a,
   assert(a.seq->rows() == b.seq->rows());
 
   for (unsigned k = 0; k < a.seq->rows(); k++)
-    energy += il_energy(a.seq->row(k), a.i-1, a.j, b.i-1, b.j, k, a.seq->rows());
+    energy += il_energy(a.seq->row(k), a.i-1, a.j, b.i-1, b.j,
+                        k, a.seq->rows());
 
   return energy;
 }
@@ -790,7 +791,8 @@ inline int bl_energy(const Basic_Subsequence<alphabet, pos_type> &lr,
   assert(lr.seq->rows() == rb.seq->rows());
 
   for (unsigned k = 0; k < lr.seq->rows(); k++)
-    energy += bl_energy(lr.seq->row(k), lr.i-1, lr.i, lr.j-1, rb.j-1, rb.j-2, k, lr.seq->rows());
+    energy += bl_energy(lr.seq->row(k), lr.i-1, lr.i, lr.j-1, rb.j-1, rb.j-2,
+                        k, lr.seq->rows());
 
   return energy;
 }
@@ -816,7 +818,8 @@ inline int br_energy(const Basic_Subsequence<alphabet, pos_type> &lb,
   assert(lb.seq->rows() == rr.seq->rows());
 
   for (unsigned k = 0; k < lb.seq->rows(); k++)
-    energy += br_energy(lb.seq->row(k), lb.i, rr.i, rr.j-1, rr.j, lb.i+1, k, lb.seq->rows());
+    energy += br_energy(lb.seq->row(k), lb.i, rr.i, rr.j-1, rr.j, lb.i+1,
+                        k, lb.seq->rows());
 
   return energy;
 }
@@ -931,7 +934,8 @@ inline int ext_mismatch_energy(const Basic_Subsequence<alphabet, pos_type> &a,
   assert(a.seq->rows() == b.seq->rows());
 
   for (unsigned k = 0; k < a.seq->rows(); k++)
-    energy += ext_mismatch_energy(a.seq->row(k), a.i, b.j-1, a.seq->n, k, a.seq->rows());
+    energy += ext_mismatch_energy(a.seq->row(k), a.i, b.j-1, a.seq->n,
+                                  k, a.seq->rows());
 
   return energy;
 }
