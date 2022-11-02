@@ -45,6 +45,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <stdbool.h>
 
 #include "ViennaRNA/datastructures/basic.h"
 
@@ -53,6 +54,8 @@
 #include "ViennaRNA/params/basic.h"
 #include "ViennaRNA/params/io.h"
 #include "ViennaRNA/fold_vars.h"
+
+#define LOOKUP_SIZE 10000
 
 static vrna_param_t  *P = 0;
 
@@ -1073,16 +1076,41 @@ double mk_pf(double x) {
   return exp((-1.0 * x/100.0) / (GASCONST/1000 * (temperature + K0)));
 }
 
+double getScaleValue(int x) {
+  static bool init = false;
+  static const double MEAN_NRG = -0.1843;
+  static double lookup[LOOKUP_SIZE];
+  static double mean_scale;
+
+  if (!init) {
+    // precalculate the first 10000 scale values
+    mean_scale = exp(-1.0 * MEAN_NRG /
+                     (GASCONST / 1000 *
+                      (temperature + K0)));
+
+    for (int i = 0; i < LOOKUP_SIZE; i++) {
+      lookup[i] = 1.0 / pow(mean_scale, i);
+    }
+
+    init = true;
+  }
+
+  if (x < LOOKUP_SIZE) {
+    return lookup[x];
+  } else {
+    /* in the rare cases that the required scale value
+       is bigger than or equal to LOOKUP_SIZE, calculate the
+       value on the spot */
+    return 1.0 / pow(mean_scale, x);
+  }
+}
+
 /*
    returns a partition function bonus for x unpaired bases
 */
 double scale(int x) {
   /* mean energy for random sequences: 184.3*length cal */
-  double mean_nrg = -0.1843;
-  double mean_scale = exp(-1.0 * mean_nrg / (GASCONST/1000 * (
-    temperature + K0)));
-
-  return (1.0 / pow(mean_scale, x));
+  return getScaleValue(x);
 }
 
 /*
