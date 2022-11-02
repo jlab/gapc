@@ -55,6 +55,8 @@
 #include "ViennaRNA/params/io.h"
 #include "ViennaRNA/fold_vars.h"
 
+#define LOOKUP_SIZE 10000
+
 static vrna_param_t  *P = 0;
 
 
@@ -1076,28 +1078,28 @@ double mk_pf(double x) {
 
 double getScaleValue(int x) {
   static bool init = false;
-  static const double mean_nrg = -0.1843;
-  static double lookup[10000];
+  static const double MEAN_NRG = -0.1843;
+  static double lookup[LOOKUP_SIZE];
   static double mean_scale;
 
   if (!init) {
     // precalculate the first 10000 scale values
-    mean_scale = exp(-1.0 * mean_nrg /
+    mean_scale = exp(-1.0 * MEAN_NRG /
                      (GASCONST / 1000 *
                       (temperature + K0)));
 
-    for (int i = 0; i < 10000; i++) {
+    for (int i = 0; i < LOOKUP_SIZE; i++) {
       lookup[i] = 1.0 / pow(mean_scale, i);
     }
 
     init = true;
   }
 
-  if (x < 10000) {
+  if (x < LOOKUP_SIZE) {
     return lookup[x];
   } else {
     /* in the rare cases that the required scale value
-       is bigger than or equal to 10000, calculate the
+       is bigger than or equal to LOOKUP_SIZE, calculate the
        value on the spot */
     return 1.0 / pow(mean_scale, x);
   }
