@@ -45,6 +45,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <stdbool.h>
 
 #include "ViennaRNA/datastructures/basic.h"
 
@@ -1073,16 +1074,41 @@ double mk_pf(double x) {
   return exp((-1.0 * x/100.0) / (GASCONST/1000 * (temperature + K0)));
 }
 
+double getScaleValue(int x) {
+  static bool init = false;
+  static const double mean_nrg = -0.1843;
+  static double lookup[10000];
+  static double mean_scale;
+
+  if (!init) {
+    // precalculate the first 10000 scale values
+    mean_scale = exp(-1.0 * mean_nrg /
+                     (GASCONST / 1000 *
+                      (temperature + K0)));
+
+    for (int i = 0; i < 10000; i++) {
+      lookup[i] = 1.0 / pow(mean_scale, i);
+    }
+
+    init = true;
+  }
+
+  if (x < 10000) {
+    return lookup[x];
+  } else {
+    /* in the rare cases that the required scale value
+       is bigger than or equal to 10000, calculate the
+       value on the spot */
+    return 1.0 / pow(mean_scale, x);
+  }
+}
+
 /*
    returns a partition function bonus for x unpaired bases
 */
 double scale(int x) {
   /* mean energy for random sequences: 184.3*length cal */
-  double mean_nrg = -0.1843;
-  double mean_scale = exp(-1.0 * mean_nrg / (GASCONST/1000 * (
-    temperature + K0)));
-
-  return (1.0 / pow(mean_scale, x));
+  return getScaleValue(x);
 }
 
 /*
