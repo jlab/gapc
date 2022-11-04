@@ -533,6 +533,8 @@ Fn_Def *Tablegen::gen_get_traces() {
 
   Fn_Def *f = new Fn_Def(dtype, new std::string("get_traces"));
   f->add_paras(paras);
+  f->add_para(new ::Type::External(new std::string("std::string")),
+              new std::string("to_nt"));
   ::Type::External *idx = new ::Type::External(new std::string(
     "std::vector<unsigned int>"));
   f->add_para(idx, new std::string("to_indices"));
@@ -575,6 +577,7 @@ Fn_Def *Tablegen::gen_get_traces() {
     "get_trace_weights"));
   fn_norm->add_arg(new Var_Acc::Array(new Var_Acc::Plain(
     new std::string("traces")), off));
+  fn_norm->add_arg(new std::string("to_nt"));
   fn_norm->add_arg(new std::string("to_indices"));
   fn_norm->add_arg(new std::string("e"));
   r->rhs = fn_norm;

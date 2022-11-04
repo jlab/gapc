@@ -139,12 +139,15 @@ std::vector<Trace> normalize_traces(std::vector<Trace> *tabulated,
 
 inline
 double get_trace_weights(const std::vector<Trace> &traces,
+                         const std::string &to_nt,
                          const std::vector<unsigned int> &to_indices,
                          double e) {
   double res = 0.0;
   for (std::vector<Trace>::const_iterator trace = traces.begin();
        trace != traces.end(); ++trace) {
-    if (is_same_index(std::get<1>(*trace), to_indices)) {
+    // TODO(sjanssen): move both conditions into is_same_index
+    if (is_same_index(std::get<1>(*trace), to_indices) &&
+        (std::get<0>(*trace) == to_nt)) {
       res += e * std::get<2>(*trace);
     }
   }

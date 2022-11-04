@@ -1443,6 +1443,12 @@ Expr::Fn_Call *Alt::Base::inject_derivative_body(AST &ast,
   fn_call->exprs.insert(fn_call->exprs.end(),
                         mkidx->exprs.begin(), mkidx->exprs.end());
 
+  // add name of non-terminal that requests traces
+  // together with make_index, this information is used to sub-set
+  // stored traces to those that actually lead to this DP cell
+  fn_call->exprs.push_back(new Expr::Const((*calling_nt.name).substr(
+    sizeof(OUTSIDE_NT_PREFIX)-1, (*calling_nt.name).length())));
+
   // index of the calling non-terminal
   mkidx->exprs.clear();
   Fn_Def *x = new Fn_Def();
