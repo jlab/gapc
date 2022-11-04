@@ -26,6 +26,13 @@
 #include "ast.hh"
 #include "fn_def.hh"
 
-Code::Gen::Gen(AST &ast)
-  : return_type_(ast.grammar()->axiom->code()->return_type) {
+Code::Gen::Gen(AST &ast) {
+  if (ast.inject_derivatives) {
+    Symbol::NT *inside_axiom = dynamic_cast<Symbol::NT*>(
+      ast.grammar()->NTs[*ast.grammar()->axiom_name_inside]);
+    assert(inside_axiom);
+    return_type_ = inside_axiom->code()->return_type;
+  } else {
+    return_type_ = ast.grammar()->axiom->code()->return_type;
+  }
 }
