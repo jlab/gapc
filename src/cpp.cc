@@ -2405,33 +2405,8 @@ void Printer::Cpp::print_run_derivative_fn(const AST &ast) {
          << endl;
   inc_indent();
 
-  stream << indent() << "// execute forward pass" << endl;
-  Symbol::NT *inside_axiom = dynamic_cast<Symbol::NT*>(
-    ast.grammar()->NTs[*ast.grammar()->axiom_name_inside]);
-  assert(inside_axiom);
-  stream << indent() << "nt_" << *inside_axiom->name << '(';
-    bool first = true;
-    size_t track = 0;
-    const std::vector<Table> &tables = inside_axiom->tables();
-    for (std::vector<Table>::const_iterator i = tables.begin();
-         i != tables.end(); ++i, ++track) {
-      Table t = *i;
-      if (!t.delete_left_index()) {
-        if (!first) {
-          stream << ", ";
-        }
-        first = false;
-        stream << "t_" << track << "_left_most";
-      }
-      if (!t.delete_right_index()) {
-        if (!first) {
-          stream << ", ";
-        }
-        first = false;
-        stream << "t_" << track << "_right_most";
-      }
-    }
-    stream << ");" << endl << endl;
+  stream << indent() << "// forward pass has already been executed through "
+         << "obj.run(), called via XXX_main.cc" << endl;
 
   stream << indent() << "// execute backward pass" << endl;
   for (hashtable<std::string, Symbol::Base*>::iterator
@@ -2449,14 +2424,20 @@ void Printer::Cpp::print_run_derivative_fn(const AST &ast) {
 }
 
 void Printer::Cpp::print_run_fn(const AST &ast) {
-  stream << indent() << *ast.grammar()->axiom->code()->return_type;
+  Symbol::NT *axiom = ast.grammar()->axiom;
+  if (ast.inject_derivatives) {
+    axiom = dynamic_cast<Symbol::NT*>(
+      ast.grammar()->NTs[*ast.grammar()->axiom_name_inside]);
+  }
+
+  stream << indent() << *axiom->code()->return_type;
   stream << " run() {" << endl;
   inc_indent();
-  stream << indent() << "return nt_" << *ast.grammar()->axiom_name << '(';
+  stream << indent() << "return nt_" << *axiom->name << '(';
 
   bool first = true;
   size_t track = 0;
-  const std::vector<Table> &tables = ast.grammar()->axiom->tables();
+  const std::vector<Table> &tables = axiom->tables();
   for (std::vector<Table>::const_iterator i = tables.begin();
        i != tables.end(); ++i, ++track) {
     Table t = *i;
