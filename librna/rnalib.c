@@ -1067,13 +1067,48 @@ int ss_energy(rsize i, rsize j) {
   return 0;
 }
 
+double getMkpfValue(int x) {
+  /* precalculate LOOKUP_SIZE mk_pf values;
+     since input values can be negative,
+     values within the range (-HALF, HALF)
+     will be calculated (HALF = LOOKUP_SIZE / 2) */
+
+  static bool init = false;
+  static const int HALF = LOOKUP_SIZE / 2;
+  static double lookup[LOOKUP_SIZE];
+  static double divisor;
+
+  if (!init) {
+    // temperature is defined in ViennaRNA/params/basic.h
+    divisor = GASCONST / 1000 * (temperature + K0);
+
+    // calculate mk_pf values from -HALF to HALF
+    for (int i = -HALF; i < HALF; i++) {
+      lookup[i + HALF] = exp((-1.0 * i / 100.0) / divisor);
+    }
+    
+    init = true;
+  }
+
+  int index = x + HALF;
+
+  if (index > 0 && index < LOOKUP_SIZE) {
+    return lookup[index];
+  } else {
+    return exp((-1.0 * x / 100.0) / divisor);
+  }
+}
 
 /*
    scales the energy value x into a partition function value
 */
 double mk_pf(double x) {
-  // temperature is defined in ViennaRNA/params/basic.h
-  return exp((-1.0 * x/100.0) / (GASCONST/1000 * (temperature + K0)));
+  /* getMkpfValue takes an argument of type int instead of
+     type double, because the energy functions
+     (e.g. il_energy) actually return int instead of double;
+     so we let C do an implicit conversion here */
+
+  return getMkpfValue(x);
 }
 
 double getScaleValue(int x) {
