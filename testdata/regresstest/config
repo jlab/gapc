@@ -495,3 +495,4 @@ check_new_old_eq_twotrack alignments.gap unused firstD "aaaa" firstderiv "bbbb"
 check_new_old_eq_twotrack alignments.gap unused firstD "frzeitei" nwjamiederiv "zeit"
 check_new_old_eq_twotrack alignments.gap unused firstD_gotoh "freizunt" gotohderiv "frnt"
 check_new_old_eq nodangle.gap unused pfunc "GCaaaGC" nodanglederiv
+check_new_old_eq nodangle.gap unused pfunc "CCaCCaaaGGaCCaaaGGaCCaaaGGaGG" nodanglederivlong
