@@ -1067,11 +1067,11 @@ int ss_energy(rsize i, rsize j) {
   return 0;
 }
 
-double getMkpfValue(int x) {
-  /* precalculate LOOKUP_SIZE mk_pf values;
-     since input values can be negative,
-     values within the range (-HALF, HALF)
-     will be calculated (HALF = LOOKUP_SIZE / 2) */
+double get_mkpf_value(int x) {
+  /* -precalculate LOOKUP_SIZE mk_pf partition function values
+     -since input values can be negative,
+      values within the range -HALF <= x < HALF
+      will be calculated (HALF = LOOKUP_SIZE / 2) */
 
   static bool init = false;
   static const int HALF = LOOKUP_SIZE / 2;
@@ -1082,11 +1082,11 @@ double getMkpfValue(int x) {
     // temperature is defined in ViennaRNA/params/basic.h
     divisor = GASCONST / 1000 * (temperature + K0);
 
-    // calculate mk_pf values from -HALF to HALF
+    // calculate mk_pf partition function values in range -HALF <= x < HALF
     for (int i = -HALF; i < HALF; i++) {
       lookup[i + HALF] = exp((-1.0 * i / 100.0) / divisor);
     }
-    
+
     init = true;
   }
 
@@ -1095,6 +1095,9 @@ double getMkpfValue(int x) {
   if (index > 0 && index < LOOKUP_SIZE) {
     return lookup[index];
   } else {
+    /* if the input energy value isn't within the range
+       -HALF <= x < HALF (meaning the index isn't within the range
+       0 <= i < LOOKUP_SIZE), calculate the mk_pf value on the spot */
     return exp((-1.0 * x / 100.0) / divisor);
   }
 }
@@ -1103,15 +1106,10 @@ double getMkpfValue(int x) {
    scales the energy value x into a partition function value
 */
 double mk_pf(double x) {
-  /* getMkpfValue takes an argument of type int instead of
-     type double, because the energy functions
-     (e.g. il_energy) actually return int instead of double;
-     so we let C do an implicit conversion here */
-
-  return getMkpfValue(x);
+  return get_mkpf_value(x);
 }
 
-double getScaleValue(int x) {
+double get_scale_value(int x) {
   static bool init = false;
   static const double MEAN_NRG = -0.1843;
   static double lookup[LOOKUP_SIZE];
@@ -1145,7 +1143,7 @@ double getScaleValue(int x) {
 */
 double scale(int x) {
   /* mean energy for random sequences: 184.3*length cal */
-  return getScaleValue(x);
+  return get_scale_value(x);
 }
 
 /*
