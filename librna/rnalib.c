@@ -392,16 +392,41 @@ double mk_pf(double x) {
   return exp((-1.0 * x/100.0) / (GASCONST/1000 * (temperature + K0)));
 }
 
+double getScaleValue(int x) {
+  static bool init = false;
+  static const double MEAN_NRG = -0.1843;
+  static double lookup[LOOKUP_SIZE];
+  static double mean_scale;
+
+  if (!init) {
+    // precalculate the first 10000 scale values
+    mean_scale = exp(-1.0 * MEAN_NRG /
+                     (GASCONST / 1000 *
+                      (temperature + K0)));
+
+    for (int i = 0; i < LOOKUP_SIZE; i++) {
+      lookup[i] = 1.0 / pow(mean_scale, i);
+    }
+
+    init = true;
+  }
+
+  if (x < LOOKUP_SIZE) {
+    return lookup[x];
+  } else {
+    /* in the rare cases that the required scale value
+       is bigger than or equal to LOOKUP_SIZE, calculate the
+       value on the spot */
+    return 1.0 / pow(mean_scale, x);
+  }
+}
+
 /*
    returns a partition function bonus for x unpaired bases
 */
 double scale(int x) {
   /* mean energy for random sequences: 184.3*length cal */
-  double mean_nrg = -0.1843;
-  double mean_scale = exp(-1.0 * mean_nrg / (GASCONST/1000 * (
-    temperature + K0)));
-
-  return (1.0 / pow(mean_scale, x));
+  return getScaleValue(x);
 }
 
 /*
@@ -462,7 +487,7 @@ bool iupac_match(char base, char iupac_base) {
   return map_base_iupac[base][iupac_base];
 }
 
-#ifndef LOOKUP
+#ifndef GAP_LOOKUP
 
 /*
    Next downstream base is not necessarily the next character in s. There might be one or more GAPs between both. Thus getNext jumps over GAPs to the steps-next non GAP base in s. This is restricted by left and right borders "pos" and "rightBorder".
@@ -1343,41 +1368,39 @@ int il11_energy(const char *s, rsize i, rsize k, rsize l, rsize j,
   return P->int11[closingBP][enclosedBP][lbase][rbase];
 }
 
-double getScaleValue(int x) {
-  static bool init = false;
-  static const double MEAN_NRG = -0.1843;
-  static double lookup[LOOKUP_SIZE];
-  static double mean_scale;
-
-  if (!init) {
-    // precalculate the first 10000 scale values
-    mean_scale = exp(-1.0 * MEAN_NRG /
-                     (GASCONST / 1000 *
-                      (temperature + K0)));
-
-    for (int i = 0; i < LOOKUP_SIZE; i++) {
-      lookup[i] = 1.0 / pow(mean_scale, i);
-    }
-
-    init = true;
-  }
-
-  if (x < LOOKUP_SIZE) {
-    return lookup[x];
-  } else {
-    /* in the rare cases that the required scale value
-       is bigger than or equal to LOOKUP_SIZE, calculate the
-       value on the spot */
-    return 1.0 / pow(mean_scale, x);
-  }
-}
-
 /*
-   returns a partition function bonus for x unpaired bases
+   returns the energy of an internal loop with exactly one unpaired base on 5' and two unpaired bases on 3' side.
+       X     (X = some closed structure)
+     |   |
+   i+2 - j-3      (i+2 and j-3 form the embedded basepair)
+ i+1       j-2    (i+1, j-1 and j-2 are the unpaired bases in the internal loop)
+           j-1
+     i - j        (i and j form the closing basepair)
+     |   |
+     5'  3'
+   Input is
+     s = the input RNA sequence in bit encoding, i.e. N=0, A=1, C=2, G=3, U=4, GAP=5 (see /usr/include/librna/rnalib.h base_t)
+     i = the index (first base of s is 0, second 1, ...) of the 5' partner of the internal loop closing basepair
+     k = non-GAP-case: == i+2, GAP-case: 5' partner of basal X basepair. We need this to not look to much downstream for the enclosedBP, because sometimes it might be missing due to gaps, sometimes just the loop ist extended by a few gaps.
+     l = non-GAP-case: == j-3, GAP-case: 3' partner of basal X basepair. We need this to not look to much upstream for the enclosedBP, because sometimes it might be missing due to gaps, sometimes just the loop ist extended by a few gaps.
+     j = the index (first base of s is 0, second 1, ...) of the 3' partner of the internal loop closing basepair
+   int21_37 data-arrangement:
+     1. index = closingBP = code for closing basepair i-j
+     2. index = enclosedBP = code for enclosed basepair, i.e. the fist basepair of the embedded substructure, i+2 - j-3.
+     3. index = lbase = code for single 5' unpaired base of the internal loop, i+1
+     4. index = rbase = code for first (= close to the embedded substructure) 3' unpaired base of the internal loop, j-2
+     5. index = rrbase = code for second (= close to the i-j basepair) 3' unpaired base of the internal loop, j-1
 */
-double scale(int x) {
-  /* mean energy for random sequences: 184.3*length cal */
-  return getScaleValue(x);
+int il12_energy(const char *s, rsize i, rsize k, rsize l, rsize j,
+                unsigned currRow, unsigned maxRows) {
+  int closingBP = bp_index(s[i], s[j]);
+  // Note, basepair is reversed to preserver 5'-3' order
+  int enclosedBP = bp_index(s[getPrev(s, j, 3, l, currRow, maxRows)],
+                            s[getNext(s, i, 2, k, currRow, maxRows)]);
+  char lbase = s[getNext(s, i, 1, k, currRow, maxRows)];
+  char rbase = s[getPrev(s, j, 2, l, currRow, maxRows)];
+  char rrbase = s[getPrev(s, j, 1, l, currRow, maxRows)];
+  return P->int21[closingBP][enclosedBP][lbase][rbase][rrbase];
 }
 
 int il21_energy(const char *s, rsize i, rsize k, rsize l, rsize j,
