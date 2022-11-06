@@ -45,6 +45,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <stdbool.h>
 
 #include "ViennaRNA/datastructures/basic.h"
 
@@ -53,6 +54,8 @@
 #include "ViennaRNA/params/basic.h"
 #include "ViennaRNA/params/io.h"
 #include "ViennaRNA/fold_vars.h"
+
+#define LOOKUP_SIZE 10000
 
 static vrna_param_t  *P = 0;
 
@@ -1152,8 +1155,6 @@ int ml_mismatch_energy(const char *s, rsize i, rsize j) {
 
 #else
 
-#include <stdbool.h>
-
 static rsize getNext(const char *s, rsize pos, rsize steps,
                      rsize rightBorder, unsigned currRow, unsigned maxRows) {
   assert(steps > 0);
@@ -1172,12 +1173,12 @@ static rsize getNext(const char *s, rsize pos, rsize steps,
   if (!init) {
     seqLen = strlen(s);
     triu = (seqLen * (seqLen + 1)) / 2 + 1;
-    unsigned long size = maxRows * triu * 3;
+    unsigned size = maxRows * triu * 3;
     lookup = calloc(size, sizeof(rsize));
     init = true;
   }
 
-  unsigned long index = (steps - 1) * triu * maxRows + triu * currRow +
+  unsigned index = (steps - 1) * triu * maxRows + triu * currRow +
                         pos * seqLen + rightBorder -
                         ((pos * (pos + 1)) / 2);
 
@@ -1218,12 +1219,12 @@ static rsize getPrev(const char *s, rsize pos, rsize steps, rsize leftBorder,
   if (!init) {
     seqLen = strlen(s);
     triu = (seqLen * (seqLen + 1)) / 2 + 1;
-    unsigned long size = maxRows * triu * 3;
+    unsigned size = maxRows * triu * 3;
     lookup = calloc(size, sizeof(rsize));
     init = true;
   }
 
-  unsigned long index = triu * (steps - 1) * maxRows + currRow * triu +
+  unsigned index = triu * (steps - 1) * maxRows + currRow * triu +
                         leftBorder * seqLen + pos -
                         ((leftBorder * (leftBorder + 1)) / 2);
 
@@ -1342,16 +1343,41 @@ int il11_energy(const char *s, rsize i, rsize k, rsize l, rsize j,
   return P->int11[closingBP][enclosedBP][lbase][rbase];
 }
 
-int il12_energy(const char *s, rsize i, rsize k, rsize l, rsize j,
-                unsigned currRow, unsigned maxRows) {
-  int closingBP = bp_index(s[i], s[j]);
-  // Note, basepair is reversed to preserver 5'-3' order
-  int enclosedBP = bp_index(s[getPrev(s, j, 3, l, currRow, maxRows)],
-                            s[getNext(s, i, 2, k, currRow, maxRows)]);
-  char lbase = s[getNext(s, i, 1, k, currRow, maxRows)];
-  char rbase = s[getPrev(s, j, 2, l, currRow, maxRows)];
-  char rrbase = s[getPrev(s, j, 1, l, currRow, maxRows)];
-  return P->int21[closingBP][enclosedBP][lbase][rbase][rrbase];
+double getScaleValue(int x) {
+  static bool init = false;
+  static const double MEAN_NRG = -0.1843;
+  static double lookup[LOOKUP_SIZE];
+  static double mean_scale;
+
+  if (!init) {
+    // precalculate the first 10000 scale values
+    mean_scale = exp(-1.0 * MEAN_NRG /
+                     (GASCONST / 1000 *
+                      (temperature + K0)));
+
+    for (int i = 0; i < LOOKUP_SIZE; i++) {
+      lookup[i] = 1.0 / pow(mean_scale, i);
+    }
+
+    init = true;
+  }
+
+  if (x < LOOKUP_SIZE) {
+    return lookup[x];
+  } else {
+    /* in the rare cases that the required scale value
+       is bigger than or equal to LOOKUP_SIZE, calculate the
+       value on the spot */
+    return 1.0 / pow(mean_scale, x);
+  }
+}
+
+/*
+   returns a partition function bonus for x unpaired bases
+*/
+double scale(int x) {
+  /* mean energy for random sequences: 184.3*length cal */
+  return getScaleValue(x);
 }
 
 int il21_energy(const char *s, rsize i, rsize k, rsize l, rsize j,
