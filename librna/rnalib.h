@@ -23,7 +23,7 @@
 #ifndef LIBRNA_RNALIB_H_
 #define LIBRNA_RNALIB_H_
 
-//#define GAP_LOOKUP
+// #define GAP_LOOKUP
 
 // Sun CC (C++ compiler) really makes an effort to educate the user that parts
 // of C99 are not standarized in the last C++ specification
