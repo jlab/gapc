@@ -25,6 +25,9 @@
 #ifndef RTLIB_RNA_HH_
 #define RTLIB_RNA_HH_
 
+// #define LOOKUP // use a hashmap to cache energy function values
+// #define HASH_COMBINE // use boost::hash_combine for hash (else, use string)
+// #define BOOST_MAP // use boost::unordered_map over std::unordered_map
 
 extern "C" {
 #include <rnalib.h>
@@ -220,6 +223,357 @@ inline int termau_energy(const Basic_Subsequence<alphabet, pos_type> &a,
 }
 
 /*
+   similar to hl_energy, but without the stabilizing contribution of stacking
+   the outmost bases onto the closing basepairs for hairpins with unpaired loops
+   larger than 4
+*/
+template<typename alphabet, typename pos_type>
+inline int hl_energy_stem(const Basic_Subsequence<alphabet, pos_type> &a) {
+  int energy = 0;
+
+  for (unsigned k = 0; k < a.seq->rows(); k++)
+    energy += hl_energy_stem(a.seq->row(k), a.i-1, a.j);
+
+  return energy;
+}
+
+#ifdef LOOKUP
+
+#include <unordered_map>
+#include <string>
+#include "boost/unordered_map.hpp"
+#include "boost/container_hash/hash.hpp"
+/*
+   returns the energy value for a basepair closing an internal loop with some
+   bases bulged at 5' and 3' side and an arbitrary closed substructure
+   Input is
+     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the 5'
+        unpaired loop region of the internal loop
+     b) a Bellman's GAP terminal (e.g. BASE or REGION) describing the 3'
+        unpaired loop region of the internal loop
+   The positions of the bases of the closing basepair are assumed to be
+   directly left of the 5'-start of the 5' unpaired loop region and directly
+   right to the 3'-end of the 3' unpaired loop region
+   The positions of the bases of the embedded basepair are assumed to be
+   directly right of the 5'-end of the 5' unpaired loop region and directly
+   left to the 5'-start of the 3' unpaired loop region
+*/
+template<typename alphabet, typename pos_type>
+inline int il_energy(const Basic_Subsequence<alphabet, pos_type> &a,
+    const Basic_Subsequence<alphabet, pos_type> &b) {
+  int energy = 0;
+  assert(a.seq->rows() == b.seq->rows());
+
+  #ifdef HASH_COMBINE
+
+  #ifdef BOOST_MAP
+  static boost::unordered_map<std::size_t, int> lookup;
+  #else
+  static std::unordered_map<std::size_t, int> lookup;
+  #endif
+
+  std::size_t key = 0;
+  boost::hash_combine(key, a.i);
+  boost::hash_combine(key, a.j);
+  boost::hash_combine(key, b.i);
+  boost::hash_combine(key, b.j);
+
+  #else
+
+  #ifdef BOOST_MAP
+  static boost::unordered_map<std::string, int> lookup;
+  #else
+  static std::unordered_map<std::string, int> lookup;
+  #endif
+  char tmp[5];
+  int size = snprintf(tmp, sizeof(tmp), "%d%d%d%d", a.i, a.j, b.i, b.j);
+  std::string key(tmp);
+
+  #endif
+
+  if (lookup.find(key) != lookup.end()) {
+    return lookup[key];
+  }
+
+  for (unsigned k = 0; k < a.seq->rows(); k++)
+    energy += il_energy(a.seq->row(k), a.i-1, a.j, b.i-1, b.j);
+
+  lookup[key] = energy;
+
+  return energy;
+}
+
+/*
+   returns the energy value for a basepair closing an left bulge loop with some
+   bases bulged at 5' side and an arbitrary closed substructure
+   Input is
+     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the 5'
+        unpaired loop region of the left bulge
+     b) a Bellman's GAP terminal (e.g. BASE or REGION) describing the 3' base
+        of the closing basepair
+   The 5' position of the base of the closing basepair is assumed to be directly
+   left of the 5'-start of the unpaired loop region
+   The positions of the bases of the embedded basepair are assumed to be
+   directly right of the 3'-end of the unpaired loop region and directly left
+   to the 3' base of the closing basepair
+*/
+template<typename alphabet, typename pos_type>
+inline int bl_energy(const Basic_Subsequence<alphabet, pos_type> &lr,
+    const Basic_Subsequence<alphabet, pos_type> &rb) {
+  int energy = 0;
+  assert(lr.seq->rows() == rb.seq->rows());
+
+  #ifdef HASH_COMBINE
+
+  #ifdef BOOST_MAP
+  static boost::unordered_map<std::size_t, int> lookup;
+  #else
+  static std::unordered_map<std::size_t, int> lookup;
+  #endif
+
+  std::size_t key = 0;
+  boost::hash_combine(key, lr.i);
+  boost::hash_combine(key, lr.j);
+  boost::hash_combine(key, rb.i);
+  boost::hash_combine(key, rb.j);
+
+  #else
+
+  #ifdef BOOST_MAP
+  static boost::unordered_map<std::string, int> lookup;
+  #else
+  static std::unordered_map<std::string, int> lookup;
+  #endif
+  char tmp[5];
+  int size = snprintf(tmp, sizeof(tmp), "%d%d%d%d", lr.i, lr.j, rb.i, rb.j);
+  std::string key(tmp);
+
+  #endif
+
+  if (lookup.find(key) != lookup.end()) {
+    return lookup[key];
+  }
+
+  for (unsigned k = 0; k < lr.seq->rows(); k++)
+    energy += bl_energy(lr.seq->row(k), lr.i-1, lr.i, lr.j-1, rb.j-1, rb.j-2);
+
+  lookup[key] = energy;
+
+  return energy;
+}
+
+/*
+   returns the energy value for a basepair closing an right bulge loop with some
+   bases bulged at 3' side and an arbitrary closed substructure
+   Input is
+     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the 5' base
+        of the closing basepair
+     b) a Bellman's GAP terminal (e.g. BASE or REGION) describing the 6'
+        unpaired loop region of the right bulge
+   The 3' position of the base of the closing basepair is assumed to be
+   directly right of the 3'-end of the unpaired loop region
+   The positions of the bases of the embedded basepair are assumed to be
+   directly right of the 5' partner of the closing basepair and directly left
+   to the 5'-start of the unpaired loop region
+*/
+template<typename alphabet, typename pos_type>
+inline int br_energy(const Basic_Subsequence<alphabet, pos_type> &lb,
+    const Basic_Subsequence<alphabet, pos_type> &rr) {
+  int energy = 0;
+  assert(lb.seq->rows() == rr.seq->rows());
+
+  #ifdef HASH_COMBINE
+
+  #ifdef BOOST_MAP
+  static boost::unordered_map<std::size_t, int> lookup;
+  #else
+  static std::unordered_map<std::size_t, int> lookup;
+  #endif
+
+  std::size_t key = 0;
+  boost::hash_combine(key, lb.i);
+  boost::hash_combine(key, lb.j);
+  boost::hash_combine(key, rr.i);
+  boost::hash_combine(key, rr.j);
+
+  #else
+
+  #ifdef BOOST_MAP
+  static boost::unordered_map<std::string, int> lookup;
+  #else
+  static std::unordered_map<std::string, int> lookup;
+  #endif
+  char tmp[5];
+  int size = snprintf(tmp, sizeof(tmp), "%d%d%d%d", lb.i, lb.j, rr.i, rr.j);
+  std::string key(tmp);
+
+  #endif
+
+  if (lookup.find(key) != lookup.end()) {
+    return lookup[key];
+  }
+
+  for (unsigned k = 0; k < lb.seq->rows(); k++)
+    energy += br_energy(lb.seq->row(k), lb.i, rr.i, rr.j-1, rr.j, lb.i+1);
+
+  lookup[key] = energy;
+
+  return energy;
+}
+
+/*
+   returns the energy value for a basepair closing an unpaired hairpin loop
+   Input is
+     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the unpaired
+        loop region of the hairpin
+   The positions of the bases of the closing basepair are assumed to be directly
+   left of the 5'-start of the unpaired loop region and directly right to the
+   3'-end of the unpaired loop region
+*/
+template<typename alphabet, typename pos_type>
+inline int hl_energy(const Basic_Subsequence<alphabet, pos_type> &a) {
+  int energy = 0;
+
+  #ifdef HASH_COMBINE
+
+  #ifdef BOOST_MAP
+  static boost::unordered_map<std::size_t, int> lookup;
+  #else
+  static std::unordered_map<std::size_t, int> lookup;
+  #endif
+
+  std::size_t key = 0;
+  boost::hash_combine(key, a.i);
+  boost::hash_combine(key, a.j);
+
+  #else
+
+  #ifdef BOOST_MAP
+  static boost::unordered_map<std::string, int> lookup;
+  #else
+  static std::unordered_map<std::string, int> lookup;
+  #endif
+  char tmp[3];
+  int size = snprintf(tmp, sizeof(tmp), "%d%d", a.i, a.j);
+  std::string key(tmp);
+
+  #endif
+
+  if (lookup.find(key) != lookup.end()) {
+    return lookup[key];
+  }
+
+  for (unsigned k = 0; k < a.seq->rows(); k++)
+    energy += hl_energy(a.seq->row(k), a.i-1, a.j);
+
+  lookup[key] = energy;
+
+  return energy;
+}
+
+#else
+
+/*
+   returns the energy value for a basepair closing an internal loop with some
+   bases bulged at 5' and 3' side and an arbitrary closed substructure
+   Input is
+     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the 5'
+        unpaired loop region of the internal loop
+     b) a Bellman's GAP terminal (e.g. BASE or REGION) describing the 3'
+        unpaired loop region of the internal loop
+   The positions of the bases of the closing basepair are assumed to be
+   directly left of the 5'-start of the 5' unpaired loop region and directly
+   right to the 3'-end of the 3' unpaired loop region
+   The positions of the bases of the embedded basepair are assumed to be
+   directly right of the 5'-end of the 5' unpaired loop region and directly
+   left to the 5'-start of the 3' unpaired loop region
+*/
+template<typename alphabet, typename pos_type>
+inline int il_energy(const Basic_Subsequence<alphabet, pos_type> &a,
+    const Basic_Subsequence<alphabet, pos_type> &b) {
+  int energy = 0;
+  assert(a.seq->rows() == b.seq->rows());
+
+  for (unsigned k = 0; k < a.seq->rows(); k++)
+    energy += il_energy(a.seq->row(k), a.i-1, a.j, b.i-1, b.j);
+
+  return energy;
+}
+
+/*
+   returns the energy value for a basepair closing an left bulge loop with some
+   bases bulged at 5' side and an arbitrary closed substructure
+   Input is
+     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the 5'
+        unpaired loop region of the left bulge
+     b) a Bellman's GAP terminal (e.g. BASE or REGION) describing the 3' base
+        of the closing basepair
+   The 5' position of the base of the closing basepair is assumed to be directly
+   left of the 5'-start of the unpaired loop region
+   The positions of the bases of the embedded basepair are assumed to be
+   directly right of the 3'-end of the unpaired loop region and directly left
+   to the 3' base of the closing basepair
+*/
+template<typename alphabet, typename pos_type>
+inline int bl_energy(const Basic_Subsequence<alphabet, pos_type> &lr,
+    const Basic_Subsequence<alphabet, pos_type> &rb) {
+  int energy = 0;
+  assert(lr.seq->rows() == rb.seq->rows());
+
+  for (unsigned k = 0; k < lr.seq->rows(); k++)
+    energy += bl_energy(lr.seq->row(k), lr.i-1, lr.i, lr.j-1, rb.j-1, rb.j-2);
+
+  return energy;
+}
+
+/*
+   returns the energy value for a basepair closing an right bulge loop with some
+   bases bulged at 3' side and an arbitrary closed substructure
+   Input is
+     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the 5' base
+        of the closing basepair
+     b) a Bellman's GAP terminal (e.g. BASE or REGION) describing the 6'
+        unpaired loop region of the right bulge
+   The 3' position of the base of the closing basepair is assumed to be
+   directly right of the 3'-end of the unpaired loop region
+   The positions of the bases of the embedded basepair are assumed to be
+   directly right of the 5' partner of the closing basepair and directly left
+   to the 5'-start of the unpaired loop region
+*/
+template<typename alphabet, typename pos_type>
+inline int br_energy(const Basic_Subsequence<alphabet, pos_type> &lb,
+    const Basic_Subsequence<alphabet, pos_type> &rr) {
+  int energy = 0;
+  assert(lb.seq->rows() == rr.seq->rows());
+
+  for (unsigned k = 0; k < lb.seq->rows(); k++)
+    energy += br_energy(lb.seq->row(k), lb.i, rr.i, rr.j-1, rr.j, lb.i+1);
+
+  return energy;
+}
+
+/*
+   returns the energy value for a basepair closing an unpaired hairpin loop
+   Input is
+     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the unpaired
+        loop region of the hairpin
+   The positions of the bases of the closing basepair are assumed to be directly
+   left of the 5'-start of the unpaired loop region and directly right to the
+   3'-end of the unpaired loop region
+*/
+template<typename alphabet, typename pos_type>
+inline int hl_energy(const Basic_Subsequence<alphabet, pos_type> &a) {
+  int energy = 0;
+
+  for (unsigned k = 0; k < a.seq->rows(); k++)
+    energy += hl_energy(a.seq->row(k), a.i-1, a.j);
+
+  return energy;
+}
+
+#endif
+
+/*
    returns the energy value for two successive basepairs which form a stack
    Input is
      a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the 5' base
@@ -251,6 +605,144 @@ inline int sr_energy(const Basic_Subsequence<alphabet, pos_type> &a,
 template<typename alphabet, typename pos_type>
 inline int sr_pk_energy(char a, char b, char c, char d) {
   return sr_pk_energy(a, b, c, d);
+}
+
+/*
+   returns the energy value for a base directly left of a stem, which dangles
+   onto this stem from outside
+   Input is
+     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the outermost
+        5' base of stem
+     b) a Bellman's GAP terminal (e.g. BASE or REGION) describing the outermost
+        3' base of stem
+   The position of the dangling base is assumed to be directly left of the
+   outermost 5' partner of the stems basepair
+*/
+template<typename alphabet, typename pos_type>
+inline int dl_energy(const Basic_Subsequence<alphabet, pos_type> &a,
+    const Basic_Subsequence<alphabet, pos_type> &b) {
+  int energy = 0;
+  assert(a.seq->rows() == b.seq->rows());
+
+  for (unsigned k = 0; k < a.seq->rows(); k++)
+    energy += dl_energy(a.seq->row(k), a.i, b.j-1);
+
+  return energy;
+}
+
+/*
+   returns the energy value for a base directly right of a stem, which dangles
+   onto this stem from outside
+   Input is
+     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the outermost
+        5' base of stem
+     b) a Bellman's GAP terminal (e.g. BASE or REGION) describing the outermost
+        3' base of stem
+   The position of the dangling base is assumed to be directly right to the
+   outermost 3' partner of the stems basepair
+*/
+template<typename alphabet, typename pos_type>
+inline int dr_energy(const Basic_Subsequence<alphabet, pos_type> &a,
+    const Basic_Subsequence<alphabet, pos_type> &b) {
+  int energy = 0;
+  assert(a.seq->rows() == b.seq->rows());
+
+  for (unsigned k = 0; k < a.seq->rows(); k++)
+    energy += dr_energy(a.seq->row(k), a.i, b.j-1, a.seq->n);
+
+  return energy;
+}
+
+/*
+   returns the energy value for a base directly 3' of a stem, which dangles onto
+   this stem from inside
+   Input is
+     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the innermost
+        5' base of stem
+     b) a Bellman's GAP terminal (e.g. BASE or REGION) describing the innermost
+        3' base of stem
+   The position of the dangling base is assumed to be directly right of the 3'
+   partner of the innermost basepair of the stem
+*/
+template<typename alphabet, typename pos_type>
+inline int dli_energy(const Basic_Subsequence<alphabet, pos_type> &a,
+    const Basic_Subsequence<alphabet, pos_type> &b) {
+  int energy = 0;
+  assert(a.seq->rows() == b.seq->rows());
+
+  for (unsigned k = 0; k < a.seq->rows(); k++)
+    energy += dli_energy(a.seq->row(k), a.i, b.j-1);
+
+  return energy;
+}
+
+/*
+   returns the energy value for a base directly 5' of a stem, which dangles onto
+   this stem from inside
+   Input is
+     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the innermost
+        5' base of stem
+     b) a Bellman's GAP terminal (e.g. BASE or REGION) describing the innermost
+        3' base of stem
+   The position of the dangling base is assumed to be directly left of the 5'
+   partner of the innermost basepair of the stem
+*/
+template<typename alphabet, typename pos_type>
+inline int dri_energy(const Basic_Subsequence<alphabet, pos_type> &a,
+    const Basic_Subsequence<alphabet, pos_type> &b) {
+  int energy = 0;
+  assert(a.seq->rows() == b.seq->rows());
+
+  for (unsigned k = 0; k < a.seq->rows(); k++)
+    energy += dri_energy(a.seq->row(k), a.i, b.j-1);
+
+  return energy;
+}
+
+/*
+   returns the energy value for two bases directly surrounding a stem, which
+   dangles onto this stem from outside
+   Input is
+     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the outermost
+        5' base of stem
+     b) a Bellman's GAP terminal (e.g. BASE or REGION) describing the outermost
+        3' base of stem
+   The positions of the dangling bases are assumed to be directly left of the 5'
+   partner and right of the 3' partner of the outermost basepair of the stem
+*/
+template<typename alphabet, typename pos_type>
+inline int ext_mismatch_energy(const Basic_Subsequence<alphabet, pos_type> &a,
+    const Basic_Subsequence<alphabet, pos_type> &b) {
+  int energy = 0;
+  assert(a.seq->rows() == b.seq->rows());
+
+  for (unsigned k = 0; k < a.seq->rows(); k++)
+    energy += ext_mismatch_energy(a.seq->row(k), a.i, b.j-1, a.seq->n);
+
+  return energy;
+}
+
+/*
+   returns the energy value for a base directly 3' of a stem and a second base
+   directly 5' of the same stem, which both dangle onto this stem from inside
+   Input is
+     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the innermost
+        5' base of stem
+     b) a Bellman's GAP terminal (e.g. BASE or REGION) describing the innermost
+        3' base of stem
+   The positions of the dangling bases are assumed to be directly right of the
+   5' partner and left of the 3' partner of the innermost basepair of the stem
+*/
+template<typename alphabet, typename pos_type>
+inline int ml_mismatch_energy(const Basic_Subsequence<alphabet, pos_type> &a,
+    const Basic_Subsequence<alphabet, pos_type> &b) {
+  int energy = 0;
+  assert(a.seq->rows() == b.seq->rows());
+
+  for (unsigned k = 0; k < a.seq->rows(); k++)
+    energy += ml_mismatch_energy(a.seq->row(k), a.i, b.j-1);
+
+  return energy;
 }
 
 /*
@@ -453,516 +945,5 @@ class iupac_filter {
     }
 };
 
-#ifndef LOOKUP
-
-/*
-   returns the energy value for a basepair closing an unpaired hairpin loop
-   Input is
-     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the unpaired
-        loop region of the hairpin
-   The positions of the bases of the closing basepair are assumed to be directly
-   left of the 5'-start of the unpaired loop region and directly right to the
-   3'-end of the unpaired loop region
-*/
-template<typename alphabet, typename pos_type>
-inline int hl_energy(const Basic_Subsequence<alphabet, pos_type> &a) {
-  int energy = 0;
-
-  for (unsigned k = 0; k < a.seq->rows(); k++)
-    energy += hl_energy(a.seq->row(k), a.i-1, a.j);
-
-  return energy;
-}
-
-/*
-   similar to hl_energy, but without the stabilizing contribution of stacking
-   the outmost bases onto the closing basepairs for hairpins with unpaired loops
-   larger than 4
-*/
-template<typename alphabet, typename pos_type>
-inline int hl_energy_stem(const Basic_Subsequence<alphabet, pos_type> &a) {
-  int energy = 0;
-
-  for (unsigned k = 0; k < a.seq->rows(); k++)
-    energy += hl_energy_stem(a.seq->row(k), a.i-1, a.j);
-
-  return energy;
-}
-
-/*
-   returns the energy value for a basepair closing an internal loop with some
-   bases bulged at 5' and 3' side and an arbitrary closed substructure
-   Input is
-     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the 5'
-        unpaired loop region of the internal loop
-     b) a Bellman's GAP terminal (e.g. BASE or REGION) describing the 3'
-        unpaired loop region of the internal loop
-   The positions of the bases of the closing basepair are assumed to be
-   directly left of the 5'-start of the 5' unpaired loop region and directly
-   right to the 3'-end of the 3' unpaired loop region
-   The positions of the bases of the embedded basepair are assumed to be
-   directly right of the 5'-end of the 5' unpaired loop region and directly
-   left to the 5'-start of the 3' unpaired loop region
-*/
-template<typename alphabet, typename pos_type>
-inline int il_energy(const Basic_Subsequence<alphabet, pos_type> &a,
-    const Basic_Subsequence<alphabet, pos_type> &b) {
-  int energy = 0;
-  assert(a.seq->rows() == b.seq->rows());
-
-  for (unsigned k = 0; k < a.seq->rows(); k++)
-    energy += il_energy(a.seq->row(k), a.i-1, a.j, b.i-1, b.j);
-
-  return energy;
-}
-
-/*
-   returns the energy value for a basepair closing an left bulge loop with some
-   bases bulged at 5' side and an arbitrary closed substructure
-   Input is
-     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the 5'
-        unpaired loop region of the left bulge
-     b) a Bellman's GAP terminal (e.g. BASE or REGION) describing the 3' base
-        of the closing basepair
-   The 5' position of the base of the closing basepair is assumed to be directly
-   left of the 5'-start of the unpaired loop region
-   The positions of the bases of the embedded basepair are assumed to be
-   directly right of the 3'-end of the unpaired loop region and directly left
-   to the 3' base of the closing basepair
-*/
-template<typename alphabet, typename pos_type>
-inline int bl_energy(const Basic_Subsequence<alphabet, pos_type> &lr,
-    const Basic_Subsequence<alphabet, pos_type> &rb) {
-  int energy = 0;
-  assert(lr.seq->rows() == rb.seq->rows());
-
-  for (unsigned k = 0; k < lr.seq->rows(); k++)
-    energy += bl_energy(lr.seq->row(k), lr.i-1, lr.i, lr.j-1, rb.j-1, rb.j-2);
-
-  return energy;
-}
-
-/*
-   returns the energy value for a basepair closing an right bulge loop with some
-   bases bulged at 3' side and an arbitrary closed substructure
-   Input is
-     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the 5' base
-        of the closing basepair
-     b) a Bellman's GAP terminal (e.g. BASE or REGION) describing the 6'
-        unpaired loop region of the right bulge
-   The 3' position of the base of the closing basepair is assumed to be
-   directly right of the 3'-end of the unpaired loop region
-   The positions of the bases of the embedded basepair are assumed to be
-   directly right of the 5' partner of the closing basepair and directly left
-   to the 5'-start of the unpaired loop region
-*/
-template<typename alphabet, typename pos_type>
-inline int br_energy(const Basic_Subsequence<alphabet, pos_type> &lb,
-    const Basic_Subsequence<alphabet, pos_type> &rr) {
-  int energy = 0;
-  assert(lb.seq->rows() == rr.seq->rows());
-
-  for (unsigned k = 0; k < lb.seq->rows(); k++)
-    energy += br_energy(lb.seq->row(k), lb.i, rr.i, rr.j-1, rr.j, lb.i+1);
-
-  return energy;
-}
-
-/*
-   returns the energy value for a base directly left of a stem, which dangles
-   onto this stem from outside
-   Input is
-     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the outermost
-        5' base of stem
-     b) a Bellman's GAP terminal (e.g. BASE or REGION) describing the outermost
-        3' base of stem
-   The position of the dangling base is assumed to be directly left of the
-   outermost 5' partner of the stems basepair
-*/
-template<typename alphabet, typename pos_type>
-inline int dl_energy(const Basic_Subsequence<alphabet, pos_type> &a,
-    const Basic_Subsequence<alphabet, pos_type> &b) {
-  int energy = 0;
-  assert(a.seq->rows() == b.seq->rows());
-
-  for (unsigned k = 0; k < a.seq->rows(); k++)
-    energy += dl_energy(a.seq->row(k), a.i, b.j-1);
-
-  return energy;
-}
-
-/*
-   returns the energy value for a base directly right of a stem, which dangles
-   onto this stem from outside
-   Input is
-     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the outermost
-        5' base of stem
-     b) a Bellman's GAP terminal (e.g. BASE or REGION) describing the outermost
-        3' base of stem
-   The position of the dangling base is assumed to be directly right to the
-   outermost 3' partner of the stems basepair
-*/
-template<typename alphabet, typename pos_type>
-inline int dr_energy(const Basic_Subsequence<alphabet, pos_type> &a,
-    const Basic_Subsequence<alphabet, pos_type> &b) {
-  int energy = 0;
-  assert(a.seq->rows() == b.seq->rows());
-
-  for (unsigned k = 0; k < a.seq->rows(); k++)
-    energy += dr_energy(a.seq->row(k), a.i, b.j-1, a.seq->n);
-
-  return energy;
-}
-
-/*
-   returns the energy value for a base directly 3' of a stem, which dangles onto
-   this stem from inside
-   Input is
-     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the innermost
-        5' base of stem
-     b) a Bellman's GAP terminal (e.g. BASE or REGION) describing the innermost
-        3' base of stem
-   The position of the dangling base is assumed to be directly right of the 3'
-   partner of the innermost basepair of the stem
-*/
-template<typename alphabet, typename pos_type>
-inline int dli_energy(const Basic_Subsequence<alphabet, pos_type> &a,
-    const Basic_Subsequence<alphabet, pos_type> &b) {
-  int energy = 0;
-  assert(a.seq->rows() == b.seq->rows());
-
-  for (unsigned k = 0; k < a.seq->rows(); k++)
-    energy += dli_energy(a.seq->row(k), a.i, b.j-1);
-
-  return energy;
-}
-
-/*
-   returns the energy value for a base directly 5' of a stem, which dangles onto
-   this stem from inside
-   Input is
-     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the innermost
-        5' base of stem
-     b) a Bellman's GAP terminal (e.g. BASE or REGION) describing the innermost
-        3' base of stem
-   The position of the dangling base is assumed to be directly left of the 5'
-   partner of the innermost basepair of the stem
-*/
-template<typename alphabet, typename pos_type>
-inline int dri_energy(const Basic_Subsequence<alphabet, pos_type> &a,
-    const Basic_Subsequence<alphabet, pos_type> &b) {
-  int energy = 0;
-  assert(a.seq->rows() == b.seq->rows());
-
-  for (unsigned k = 0; k < a.seq->rows(); k++)
-    energy += dri_energy(a.seq->row(k), a.i, b.j-1);
-
-  return energy;
-}
-
-/*
-   returns the energy value for two bases directly surrounding a stem, which
-   dangles onto this stem from outside
-   Input is
-     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the outermost
-        5' base of stem
-     b) a Bellman's GAP terminal (e.g. BASE or REGION) describing the outermost
-        3' base of stem
-   The positions of the dangling bases are assumed to be directly left of the 5'
-   partner and right of the 3' partner of the outermost basepair of the stem
-*/
-template<typename alphabet, typename pos_type>
-inline int ext_mismatch_energy(const Basic_Subsequence<alphabet, pos_type> &a,
-    const Basic_Subsequence<alphabet, pos_type> &b) {
-  int energy = 0;
-  assert(a.seq->rows() == b.seq->rows());
-
-  for (unsigned k = 0; k < a.seq->rows(); k++)
-    energy += ext_mismatch_energy(a.seq->row(k), a.i, b.j-1, a.seq->n);
-
-  return energy;
-}
-
-/*
-   returns the energy value for a base directly 3' of a stem and a second base
-   directly 5' of the same stem, which both dangle onto this stem from inside
-   Input is
-     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the innermost
-        5' base of stem
-     b) a Bellman's GAP terminal (e.g. BASE or REGION) describing the innermost
-        3' base of stem
-   The positions of the dangling bases are assumed to be directly right of the
-   5' partner and left of the 3' partner of the innermost basepair of the stem
-*/
-template<typename alphabet, typename pos_type>
-inline int ml_mismatch_energy(const Basic_Subsequence<alphabet, pos_type> &a,
-    const Basic_Subsequence<alphabet, pos_type> &b) {
-  int energy = 0;
-  assert(a.seq->rows() == b.seq->rows());
-
-  for (unsigned k = 0; k < a.seq->rows(); k++)
-    energy += ml_mismatch_energy(a.seq->row(k), a.i, b.j-1);
-
-  return energy;
-}
-
-#else
-
-/*
-   returns the energy value for a basepair closing an unpaired hairpin loop
-   Input is
-     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the unpaired
-        loop region of the hairpin
-   The positions of the bases of the closing basepair are assumed to be directly
-   left of the 5'-start of the unpaired loop region and directly right to the
-   3'-end of the unpaired loop region
-*/
-template<typename alphabet, typename pos_type>
-inline int hl_energy(const Basic_Subsequence<alphabet, pos_type> &a) {
-  int energy = 0;
-
-  for (unsigned k = 0; k < a.seq->rows(); k++)
-    energy += hl_energy(a.seq->row(k), a.i-1, a.j, k, a.seq->rows());
-
-  return energy;
-}
-
-/*
-   similar to hl_energy, but without the stabilizing contribution of stacking
-   the outmost bases onto the closing basepairs for hairpins with unpaired loops
-   larger than 4
-*/
-template<typename alphabet, typename pos_type>
-inline int hl_energy_stem(const Basic_Subsequence<alphabet, pos_type> &a) {
-  int energy = 0;
-
-  for (unsigned k = 0; k < a.seq->rows(); k++)
-    energy += hl_energy_stem(a.seq->row(k), a.i-1, a.j, k, a.seq->rows());
-
-  return energy;
-}
-
-/*
-   returns the energy value for a basepair closing an internal loop with some
-   bases bulged at 5' and 3' side and an arbitrary closed substructure
-   Input is
-     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the 5'
-        unpaired loop region of the internal loop
-     b) a Bellman's GAP terminal (e.g. BASE or REGION) describing the 3'
-        unpaired loop region of the internal loop
-   The positions of the bases of the closing basepair are assumed to be
-   directly left of the 5'-start of the 5' unpaired loop region and directly
-   right to the 3'-end of the 3' unpaired loop region
-   The positions of the bases of the embedded basepair are assumed to be
-   directly right of the 5'-end of the 5' unpaired loop region and directly
-   left to the 5'-start of the 3' unpaired loop region
-*/
-template<typename alphabet, typename pos_type>
-inline int il_energy(const Basic_Subsequence<alphabet, pos_type> &a,
-    const Basic_Subsequence<alphabet, pos_type> &b) {
-  int energy = 0;
-  assert(a.seq->rows() == b.seq->rows());
-
-  for (unsigned k = 0; k < a.seq->rows(); k++)
-    energy += il_energy(a.seq->row(k), a.i-1, a.j, b.i-1, b.j,
-                        k, a.seq->rows());
-
-  return energy;
-}
-
-/*
-   returns the energy value for a basepair closing an left bulge loop with some
-   bases bulged at 5' side and an arbitrary closed substructure
-   Input is
-     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the 5'
-        unpaired loop region of the left bulge
-     b) a Bellman's GAP terminal (e.g. BASE or REGION) describing the 3' base
-        of the closing basepair
-   The 5' position of the base of the closing basepair is assumed to be directly
-   left of the 5'-start of the unpaired loop region
-   The positions of the bases of the embedded basepair are assumed to be
-   directly right of the 3'-end of the unpaired loop region and directly left
-   to the 3' base of the closing basepair
-*/
-template<typename alphabet, typename pos_type>
-inline int bl_energy(const Basic_Subsequence<alphabet, pos_type> &lr,
-    const Basic_Subsequence<alphabet, pos_type> &rb) {
-  int energy = 0;
-  assert(lr.seq->rows() == rb.seq->rows());
-
-  for (unsigned k = 0; k < lr.seq->rows(); k++)
-    energy += bl_energy(lr.seq->row(k), lr.i-1, lr.i, lr.j-1, rb.j-1, rb.j-2,
-                        k, lr.seq->rows());
-
-  return energy;
-}
-
-/*
-   returns the energy value for a basepair closing an right bulge loop with some
-   bases bulged at 3' side and an arbitrary closed substructure
-   Input is
-     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the 5' base
-        of the closing basepair
-     b) a Bellman's GAP terminal (e.g. BASE or REGION) describing the 6'
-        unpaired loop region of the right bulge
-   The 3' position of the base of the closing basepair is assumed to be
-   directly right of the 3'-end of the unpaired loop region
-   The positions of the bases of the embedded basepair are assumed to be
-   directly right of the 5' partner of the closing basepair and directly left
-   to the 5'-start of the unpaired loop region
-*/
-template<typename alphabet, typename pos_type>
-inline int br_energy(const Basic_Subsequence<alphabet, pos_type> &lb,
-    const Basic_Subsequence<alphabet, pos_type> &rr) {
-  int energy = 0;
-  assert(lb.seq->rows() == rr.seq->rows());
-
-  for (unsigned k = 0; k < lb.seq->rows(); k++)
-    energy += br_energy(lb.seq->row(k), lb.i, rr.i, rr.j-1, rr.j, lb.i+1,
-                        k, lb.seq->rows());
-
-  return energy;
-}
-
-/*
-   returns the energy value for a base directly left of a stem, which dangles
-   onto this stem from outside
-   Input is
-     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the outermost
-        5' base of stem
-     b) a Bellman's GAP terminal (e.g. BASE or REGION) describing the outermost
-        3' base of stem
-   The position of the dangling base is assumed to be directly left of the
-   outermost 5' partner of the stems basepair
-*/
-template<typename alphabet, typename pos_type>
-inline int dl_energy(const Basic_Subsequence<alphabet, pos_type> &a,
-    const Basic_Subsequence<alphabet, pos_type> &b) {
-  int energy = 0;
-  assert(a.seq->rows() == b.seq->rows());
-
-  for (unsigned k = 0; k < a.seq->rows(); k++)
-    energy += dl_energy(a.seq->row(k), a.i, b.j-1, k, a.seq->rows());
-
-  return energy;
-}
-
-/*
-   returns the energy value for a base directly right of a stem, which dangles
-   onto this stem from outside
-   Input is
-     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the outermost
-        5' base of stem
-     b) a Bellman's GAP terminal (e.g. BASE or REGION) describing the outermost
-        3' base of stem
-   The position of the dangling base is assumed to be directly right to the
-   outermost 3' partner of the stems basepair
-*/
-template<typename alphabet, typename pos_type>
-inline int dr_energy(const Basic_Subsequence<alphabet, pos_type> &a,
-    const Basic_Subsequence<alphabet, pos_type> &b) {
-  int energy = 0;
-  assert(a.seq->rows() == b.seq->rows());
-
-  for (unsigned k = 0; k < a.seq->rows(); k++)
-    energy += dr_energy(a.seq->row(k), a.i, b.j-1, a.seq->n, k, a.seq->rows());
-
-  return energy;
-}
-
-/*
-   returns the energy value for a base directly 3' of a stem, which dangles onto
-   this stem from inside
-   Input is
-     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the innermost
-        5' base of stem
-     b) a Bellman's GAP terminal (e.g. BASE or REGION) describing the innermost
-        3' base of stem
-   The position of the dangling base is assumed to be directly right of the 3'
-   partner of the innermost basepair of the stem
-*/
-template<typename alphabet, typename pos_type>
-inline int dli_energy(const Basic_Subsequence<alphabet, pos_type> &a,
-    const Basic_Subsequence<alphabet, pos_type> &b) {
-  int energy = 0;
-  assert(a.seq->rows() == b.seq->rows());
-
-  for (unsigned k = 0; k < a.seq->rows(); k++)
-    energy += dli_energy(a.seq->row(k), a.i, b.j-1, k, a.seq->rows());
-
-  return energy;
-}
-
-/*
-   returns the energy value for a base directly 5' of a stem, which dangles onto
-   this stem from inside
-   Input is
-     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the innermost
-        5' base of stem
-     b) a Bellman's GAP terminal (e.g. BASE or REGION) describing the innermost
-        3' base of stem
-   The position of the dangling base is assumed to be directly left of the 5'
-   partner of the innermost basepair of the stem
-*/
-template<typename alphabet, typename pos_type>
-inline int dri_energy(const Basic_Subsequence<alphabet, pos_type> &a,
-    const Basic_Subsequence<alphabet, pos_type> &b) {
-  int energy = 0;
-  assert(a.seq->rows() == b.seq->rows());
-
-  for (unsigned k = 0; k < a.seq->rows(); k++)
-    energy += dri_energy(a.seq->row(k), a.i, b.j-1, k, a.seq->rows());
-
-  return energy;
-}
-
-/*
-   returns the energy value for two bases directly surrounding a stem, which
-   dangles onto this stem from outside
-   Input is
-     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the outermost
-        5' base of stem
-     b) a Bellman's GAP terminal (e.g. BASE or REGION) describing the outermost
-        3' base of stem
-   The positions of the dangling bases are assumed to be directly left of the 5'
-   partner and right of the 3' partner of the outermost basepair of the stem
-*/
-template<typename alphabet, typename pos_type>
-inline int ext_mismatch_energy(const Basic_Subsequence<alphabet, pos_type> &a,
-    const Basic_Subsequence<alphabet, pos_type> &b) {
-  int energy = 0;
-  assert(a.seq->rows() == b.seq->rows());
-
-  for (unsigned k = 0; k < a.seq->rows(); k++)
-    energy += ext_mismatch_energy(a.seq->row(k), a.i, b.j-1, a.seq->n,
-                                  k, a.seq->rows());
-
-  return energy;
-}
-
-/*
-   returns the energy value for a base directly 3' of a stem and a second base
-   directly 5' of the same stem, which both dangle onto this stem from inside
-   Input is
-     a) a Bellman's GAP terminal (e.g. BASE or REGION) describing the innermost
-        5' base of stem
-     b) a Bellman's GAP terminal (e.g. BASE or REGION) describing the innermost
-        3' base of stem
-   The positions of the dangling bases are assumed to be directly right of the
-   5' partner and left of the 3' partner of the innermost basepair of the stem
-*/
-template<typename alphabet, typename pos_type>
-inline int ml_mismatch_energy(const Basic_Subsequence<alphabet, pos_type> &a,
-    const Basic_Subsequence<alphabet, pos_type> &b) {
-  int energy = 0;
-  assert(a.seq->rows() == b.seq->rows());
-
-  for (unsigned k = 0; k < a.seq->rows(); k++)
-    energy += ml_mismatch_energy(a.seq->row(k), a.i, b.j-1, k, a.seq->rows());
-
-  return energy;
-}
-
-#endif
 
 #endif  // RTLIB_RNA_HH_
