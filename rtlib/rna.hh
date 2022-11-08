@@ -456,7 +456,7 @@ inline int hl_energy(const Basic_Subsequence<alphabet, pos_type> &a) {
   #else
   static std::unordered_map<std::string, int> lookup;
   #endif
-  
+
   static char tmp[13];
   snprintf(tmp, sizeof(tmp), "%d%d", a.i, a.j);
   std::string key(tmp);
