@@ -1067,7 +1067,7 @@ int ss_energy(rsize i, rsize j) {
   return 0;
 }
 
-double get_mkpf_value(int x) {
+static double get_mkpf_value(double x) {
   /* -precalculate LOOKUP_SIZE mk_pf partition function values
      -since input values can be negative,
       values within the range -HALF <= x < HALF
@@ -1083,8 +1083,8 @@ double get_mkpf_value(int x) {
     divisor = GASCONST / 1000 * (temperature + K0);
 
     // calculate mk_pf partition function values in range -HALF <= x < HALF
-    for (int i = -HALF; i < HALF; i++) {
-      lookup[i + HALF] = exp((-1.0 * i / 100.0) / divisor);
+    for (int i = 0; i < LOOKUP_SIZE; i++) {
+      lookup[i] = exp((-1.0 * (i - HALF) / 100.0) / divisor);
     }
 
     init = true;
@@ -1092,7 +1092,7 @@ double get_mkpf_value(int x) {
 
   int index = x + HALF;
 
-  if (index > 0 && index < LOOKUP_SIZE) {
+  if (index >= 0 && index < LOOKUP_SIZE) {
     return lookup[index];
   } else {
     /* if the input energy value isn't within the range
@@ -1109,7 +1109,7 @@ double mk_pf(double x) {
   return get_mkpf_value(x);
 }
 
-double get_scale_value(int x) {
+static double get_scale_value(int x) {
   static bool init = false;
   static const double MEAN_NRG = -0.1843;
   static double lookup[LOOKUP_SIZE];
