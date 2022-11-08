@@ -1090,6 +1090,8 @@ static double get_mkpf_value(double x) {
     init = true;
   }
 
+  return exp((-1.0 * x / 100.0) / divisor);
+
   int index = x + HALF;
 
   if (index >= 0 && index < LOOKUP_SIZE) {
