@@ -285,8 +285,9 @@ inline int il_energy(const Basic_Subsequence<alphabet, pos_type> &a,
   #else
   static std::unordered_map<std::string, int> lookup;
   #endif
-  char tmp[5];
-  int size = snprintf(tmp, sizeof(tmp), "%d%d%d%d", a.i, a.j, b.i, b.j);
+
+  static char tmp[25];
+  snprintf(tmp, sizeof(tmp), "%d%d%d%d", a.i, a.j, b.i, b.j);
   std::string key(tmp);
 
   #endif
@@ -344,8 +345,9 @@ inline int bl_energy(const Basic_Subsequence<alphabet, pos_type> &lr,
   #else
   static std::unordered_map<std::string, int> lookup;
   #endif
-  char tmp[5];
-  int size = snprintf(tmp, sizeof(tmp), "%d%d%d%d", lr.i, lr.j, rb.i, rb.j);
+
+  static char tmp[25];
+  snprintf(tmp, sizeof(tmp), "%d%d%d%d", lr.i, lr.j, rb.i, rb.j);
   std::string key(tmp);
 
   #endif
@@ -403,8 +405,9 @@ inline int br_energy(const Basic_Subsequence<alphabet, pos_type> &lb,
   #else
   static std::unordered_map<std::string, int> lookup;
   #endif
-  char tmp[5];
-  int size = snprintf(tmp, sizeof(tmp), "%d%d%d%d", lb.i, lb.j, rr.i, rr.j);
+
+  static char tmp[25];
+  snprintf(tmp, sizeof(tmp), "%d%d%d%d", lb.i, lb.j, rr.i, rr.j);
   std::string key(tmp);
 
   #endif
@@ -453,8 +456,9 @@ inline int hl_energy(const Basic_Subsequence<alphabet, pos_type> &a) {
   #else
   static std::unordered_map<std::string, int> lookup;
   #endif
-  char tmp[3];
-  int size = snprintf(tmp, sizeof(tmp), "%d%d", a.i, a.j);
+  
+  static char tmp[13];
+  snprintf(tmp, sizeof(tmp), "%d%d", a.i, a.j);
   std::string key(tmp);
 
   #endif

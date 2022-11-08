@@ -86,7 +86,7 @@ int bl_ent(rsize l);
 int il_asym(rsize sl, rsize sr);
 int il_ent(rsize l);
 
-#ifndef LOOKUP
+#ifndef GAP_LOOKUP
 int hl_energy(const char *s, rsize i, rsize j);
 int hl_energy_stem(const char *s, rsize i, rsize j);
 int il_energy(const char *s, rsize i, rsize j, rsize k, rsize l);
