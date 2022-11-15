@@ -1067,7 +1067,7 @@ int ss_energy(rsize i, rsize j) {
   return 0;
 }
 
-static double get_mkpf_value(double x) {
+static double get_mkpf_value(double energy) {
   /* -precalculate LOOKUP_SIZE mk_pf partition function values
      -since input values can be negative,
       values within the range -HALF <= x < HALF
@@ -1077,39 +1077,41 @@ static double get_mkpf_value(double x) {
   static const int HALF = LOOKUP_SIZE / 2;
   static double lookup[LOOKUP_SIZE];
   static double divisor;
+  static int index;
 
   if (!init) {
-    // temperature is defined in ViennaRNA/params/basic.h
+    /* temperature is defined in ViennaRNA/params/basic.h
+       and can be adjusted with the -T flag at runtime */
     divisor = GASCONST / 1000 * (temperature + K0);
 
     // calculate mk_pf partition function values in range -HALF <= x < HALF
-    for (int i = 0; i < LOOKUP_SIZE; i++) {
-      lookup[i] = exp((-1.0 * (i - HALF) / 100.0) / divisor);
+    for (int i = -HALF; i < HALF; i++) {
+      lookup[i + HALF] = exp((-1.0 * i / 100.0) / divisor);
     }
 
     init = true;
   }
 
-  int index = x + HALF;
+  index = energy + HALF;
 
-  if (index >= 0 && index < LOOKUP_SIZE && trunc(x) == x) {
+  if (index >= 0 && index < LOOKUP_SIZE && trunc(energy) == energy) {
     return lookup[index];
   } else {
     /* if the input energy value isn't within the range
        -HALF <= x < HALF (meaning the index isn't within the range
        0 <= i < LOOKUP_SIZE), calculate the mk_pf value on the spot */
-    return exp((-1.0 * x / 100.0) / divisor);
+    return exp((-1.0 * energy / 100.0) / divisor);
   }
 }
 
 /*
    scales the energy value x into a partition function value
 */
-double mk_pf(double x) {
-  return get_mkpf_value(x);
+double mk_pf(double energy) {
+  return get_mkpf_value(energy);
 }
 
-static double get_scale_value(int x) {
+static double get_scale_value(int subword_size) {
   static bool init = false;
   static const double MEAN_NRG = -0.1843;
   static double lookup[LOOKUP_SIZE];
@@ -1117,6 +1119,8 @@ static double get_scale_value(int x) {
 
   if (!init) {
     // precalculate the first 10000 scale values
+
+    // temperature can be adjusted with the -T flag at runtime
     mean_scale = exp(-1.0 * MEAN_NRG /
                      (GASCONST / 1000 *
                       (temperature + K0)));
@@ -1128,22 +1132,22 @@ static double get_scale_value(int x) {
     init = true;
   }
 
-  if (x < LOOKUP_SIZE) {
-    return lookup[x];
+  if (subword_size < LOOKUP_SIZE) {
+    return lookup[subword_size];
   } else {
     /* in the rare cases that the required scale value
        is bigger than or equal to LOOKUP_SIZE, calculate the
        value on the spot */
-    return 1.0 / pow(mean_scale, x);
+    return 1.0 / pow(mean_scale, subword_size);
   }
 }
 
 /*
-   returns a partition function bonus for x unpaired bases
+   returns a partition function bonus for subword_size unpaired bases
 */
-double scale(int x) {
+double scale(int subword_size) {
   /* mean energy for random sequences: 184.3*length cal */
-  return get_scale_value(x);
+  return get_scale_value(subword_size);
 }
 
 /*
