@@ -429,12 +429,12 @@ double mk_pf(double energy) {
 
 static double get_scale_value(int subword_size) {
   // precalculate the first 10000 scale values
-  
+
   static bool init = false;
   static const double MEAN_NRG = -0.1843;
   static double lookup[LOOKUP_SIZE];
   static double mean_scale;
-  
+
   if (!init) {
     // temperature can be adjusted with the -T flag at runtime
     mean_scale = exp(-1.0 * MEAN_NRG /
