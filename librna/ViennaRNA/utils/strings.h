@@ -180,13 +180,13 @@ vrna_strcat_vprintf(char        **dest,
  *  @brief Default settings for trimming, i.e. trim leading and trailing
  *  @see vrna_strtrim()
  */
-#define VRNA_TRIM_DEFAULT       ( VRNA_TRIM_LEADING | VRNA_TRIM_TRAILING )
+#define VRNA_TRIM_DEFAULT       (VRNA_TRIM_LEADING | VRNA_TRIM_TRAILING )
 
 /**
  *  @brief Trim characters anywhere in the string
  *  @see vrna_strtrim()
  */
-#define VRNA_TRIM_ALL           ( VRNA_TRIM_DEFAULT | VRNA_TRIM_IN_BETWEEN )
+#define VRNA_TRIM_ALL           (VRNA_TRIM_DEFAULT | VRNA_TRIM_IN_BETWEEN )
 
 /**
  *  @brief Trim a string by removing (multiple) occurences of a particular character
@@ -495,4 +495,4 @@ DEPRECATED(int
 
 #endif
 
-#endif
+#endif  // VIENNA_RNA_PACKAGE_STRING_UTILS_H

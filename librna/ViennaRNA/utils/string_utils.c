@@ -36,8 +36,7 @@
 
 #ifndef HAVE_STRDUP
 char *
-strdup(const char *s)
-{
+strdup(const char *s) {
   char *dup;
 
   dup = vrna_alloc(strlen(s) + 1);
@@ -50,8 +49,7 @@ strdup(const char *s)
 
 PUBLIC char *
 vrna_strdup_printf(const char *format,
-                   ...)
-{
+                   ...) {
   char    *result;
   va_list argp;
 
@@ -65,8 +63,7 @@ vrna_strdup_printf(const char *format,
 
 PUBLIC char *
 vrna_strdup_vprintf(const char  *format,
-                    va_list     argp)
-{
+                    va_list     argp) {
   char    *result;
   int     r;
 
@@ -120,8 +117,7 @@ vrna_strdup_vprintf(const char  *format,
 PUBLIC int
 vrna_strcat_printf(char       **dest,
                    const char *format,
-                   ...)
-{
+                   ...) {
   int     r;
   va_list argp;
 
@@ -136,8 +132,7 @@ vrna_strcat_printf(char       **dest,
 PUBLIC int
 vrna_strcat_vprintf(char        **dest,
                     const char  *format,
-                    va_list     args)
-{
+                    va_list     args) {
   char    *buf;
   int     r, l1, l2;
   size_t  old_count, new_count;
@@ -164,7 +159,8 @@ vrna_strcat_vprintf(char        **dest,
   new_count = vsnprintf(NULL, 0, format, args);
 #endif
 
-  /* determine longer and shorter part of new string for INT overflow protection */
+  /* determine longer and shorter part of new string
+     for INT overflow protection */
   if (old_count > new_count) {
     l1  = old_count;
     l2  = new_count;
@@ -177,7 +173,8 @@ vrna_strcat_vprintf(char        **dest,
     buf = (char *)vrna_realloc(buf, sizeof(char) * (old_count + new_count + 1));
     if (buf == NULL) {
       r = -1;
-    } else if ((r = vsnprintf(buf + old_count, new_count + 1, format, copy)) < 0) {
+    } else if ((r = vsnprintf(buf + old_count, new_count + 1,
+                              format, copy)) < 0) {
       free(buf);
     } else {
       *dest = buf;
@@ -202,8 +199,7 @@ vrna_strcat_vprintf(char        **dest,
 
 PUBLIC char *
 vrna_random_string(int        l,
-                   const char symbols[])
-{
+                   const char symbols[]) {
   char  *r;
   int   i, rn, base;
 
@@ -223,8 +219,7 @@ vrna_random_string(int        l,
 
 PUBLIC int
 vrna_hamming_distance(const char  *s1,
-                      const char  *s2)
-{
+                      const char  *s2) {
   int h = 0;
 
   for (; *s1 && *s2; s1++, s2++)
@@ -238,8 +233,7 @@ vrna_hamming_distance(const char  *s1,
 PUBLIC int
 vrna_hamming_distance_bound(const char  *s1,
                             const char  *s2,
-                            int         boundary)
-{
+                            int         boundary) {
   int h = 0;
 
   for (; *s1 && *s2 && boundary; s1++, s2++, boundary--)
@@ -251,8 +245,7 @@ vrna_hamming_distance_bound(const char  *s1,
 
 
 PUBLIC void
-vrna_seq_toRNA(char *sequence)
-{
+vrna_seq_toRNA(char *sequence) {
   unsigned int i;
 
   if (sequence) {
@@ -268,19 +261,18 @@ vrna_seq_toRNA(char *sequence)
 
 
 PUBLIC void
-vrna_seq_toupper(char *sequence)
-{
+vrna_seq_toupper(char *sequence) {
   unsigned int i;
 
-  if (sequence)
+  if (sequence) {
     for (i = 0; sequence[i]; i++)
       sequence[i] = toupper(sequence[i]);
+  }
 }
 
 
 PUBLIC void
-vrna_seq_reverse(char *sequence)
-{
+vrna_seq_reverse(char *sequence) {
   if (sequence) {
     char *p1 = sequence;
     char *p2 = sequence + strlen(sequence) - 1;
@@ -295,8 +287,7 @@ vrna_seq_reverse(char *sequence)
 
 
 PUBLIC char *
-vrna_DNA_complement(const char *sequence)
-{
+vrna_DNA_complement(const char *sequence) {
   char    *complement, *ptr;
   size_t  n;
 
@@ -359,8 +350,7 @@ vrna_DNA_complement(const char *sequence)
 
 PUBLIC char *
 vrna_cut_point_insert(const char  *string,
-                      int         cp)
-{
+                      int         cp) {
   char  *ctmp;
   int   len;
 
@@ -383,8 +373,7 @@ vrna_cut_point_insert(const char  *string,
 
 PUBLIC char *
 vrna_cut_point_remove(const char  *string,
-                      int         *cp)
-{
+                      int         *cp) {
   char          *pos, *copy = NULL;
   unsigned int  len;
 
@@ -414,8 +403,7 @@ PUBLIC unsigned int
 vrna_strtrim(char         *string,
              const char   *delimiters,
              unsigned int keep,
-             unsigned int options)
-{
+             unsigned int options) {
   char          delim_ws[7] = {
     32, 9, 10, 11, 12, 13, 0
   };
@@ -545,8 +533,7 @@ vrna_strtrim(char         *string,
 
 PUBLIC char **
 vrna_strsplit(const char  *string,
-              const char  *delimiter)
-{
+              const char  *delimiter) {
   char          delim[2], *ptr, *ptr2, *token, *save, **split;
   unsigned int  n;
 
@@ -597,8 +584,7 @@ vrna_strsplit(const char  *string,
 
 PUBLIC char *
 vrna_strjoin(const char **strings,
-             const char *delimiter)
-{
+             const char *delimiter) {
   char    *s = NULL;
   size_t  n, offset, *lengths, mem_strings, total_length;
 
@@ -610,7 +596,8 @@ vrna_strjoin(const char **strings,
     for (n = 0; strings[n]; n++) {
       if (n == mem_strings) {
         mem_strings += 32;
-        lengths      = (size_t *)vrna_realloc(lengths, sizeof(size_t) * mem_strings);
+        lengths      = (size_t *)vrna_realloc(lengths,
+                                              sizeof(size_t) * mem_strings);
       }
 
       lengths[n]    = strlen(strings[n]);
@@ -647,16 +634,16 @@ PUBLIC char *
 vrna_strsplice(const char   *string,
                const char   *delimiter,
                unsigned int **positions,
-               unsigned int options)
-{
+               unsigned int options) {
   char *result = NULL;
-  
+
   if (string) {
     if (delimiter) {
-      if (options & VRNA_STRSPLICE_IN){
+      if (options & VRNA_STRSPLICE_IN) {
         if (positions) {
-          /* count how many more characters we require for the fully spliced string */
-          for (size_t n = 0; positions[n] != 0; n++);
+          /* count how many more characters we require
+             for the fully spliced string */
+          for (size_t n = 0; positions[n] != 0; n++) {}
 
           size_t dl = strlen(delimiter);
           size_t l  = strlen(string);
@@ -681,7 +668,6 @@ vrna_strsplice(const char   *string,
           result = strdup(string);
         }
       } else if (options & VRNA_STRSPLICE_OUT) {
-        
       }
     } else {
       /* no delimiter specified, so we don't need to do anything */
@@ -701,8 +687,7 @@ vrna_strsplice(const char   *string,
 
 
 PUBLIC char *
-vrna_seq_ungapped(const char *seq)
-{
+vrna_seq_ungapped(const char *seq) {
   char  *tmp_sequence, *b;
   int   i;
 
@@ -721,7 +706,8 @@ vrna_seq_ungapped(const char *seq)
       i++;
     } while (*(++b));
 
-    tmp_sequence    = (char *)vrna_realloc(tmp_sequence, (i + 1) * sizeof(char));
+    tmp_sequence    = (char *)vrna_realloc(tmp_sequence,
+                                           (i + 1) * sizeof(char));
     tmp_sequence[i] = '\0';
   }
 
@@ -738,31 +724,27 @@ vrna_seq_ungapped(const char *seq)
  */
 
 PUBLIC void
-str_uppercase(char *sequence)
-{
+str_uppercase(char *sequence) {
   vrna_seq_toupper(sequence);
 }
 
 
 PUBLIC void
-str_DNA2RNA(char *sequence)
-{
+str_DNA2RNA(char *sequence) {
   vrna_seq_toRNA(sequence);
 }
 
 
 PUBLIC char *
 random_string(int         l,
-              const char  symbols[])
-{
+              const char  symbols[]) {
   return vrna_random_string(l, symbols);
 }
 
 
 PUBLIC int
 hamming(const char  *s1,
-        const char  *s2)
-{
+        const char  *s2) {
   return vrna_hamming_distance(s1, s2);
 }
 
@@ -770,8 +752,7 @@ hamming(const char  *s1,
 PUBLIC int
 hamming_bound(const char  *s1,
               const char  *s2,
-              int         boundary)
-{
+              int         boundary) {
   return vrna_hamming_distance_bound(s1, s2, boundary);
 }
 
