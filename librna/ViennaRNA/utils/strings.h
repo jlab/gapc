@@ -228,14 +228,14 @@ vrna_strcat_vprintf(char        **dest,
  *  @see  VRNA_TRIM_LEADING, VRNA_TRIM_TRAILING, VRNA_TRIM_IN_BETWEEN,
  *        VRNA_TRIM_SUBST_BY_FIRST, VRNA_TRIM_DEFAULT, VRNA_TRIM_ALL
  *
- *  @param  string      The '\0'-terminated input string to trim
+ *  @param  str         The '\0'-terminated input string to trim
  *  @param  delimiters  The delimiter characters as 0-terminated char array (or @em NULL)
  *  @param  keep        The maximum number of consecutive occurences of the delimiter in the output string
  *  @param  options     The option bit vector specifying the mode of operation
  *  @return             The number of delimiters removed from the string
  */
 unsigned int
-vrna_strtrim(char         *string,
+vrna_strtrim(char         *str,
              const char   *delimiters,
              unsigned int keep,
              unsigned int options);
@@ -283,12 +283,12 @@ vrna_strtrim(char         *string,
  *
  *  @see vrna_strtrim()
  *
- *  @param  string    The input string that should be split into elements
+ *  @param  str       The input string that should be split into elements
  *  @param  delimiter The delimiting character. If @c NULL, the delimiter is @c "&"
  *  @return           A @c NULL terminated list of the elements in the string
  */
 char **
-vrna_strsplit(const char  *string,
+vrna_strsplit(const char  *str,
               const char  *delimiter);
 
 
@@ -414,12 +414,12 @@ vrna_seq_ungapped(const char *sequence);
  *  returns a copy of the provided string. Otherwise, the cut-point character
  *  is set at the corresponding position
  *
- *  @param  string    The original string
+ *  @param  str       The original string
  *  @param  cp        The cut-point position
  *  @return           A copy of the provided string including the cut-point character
  */
 char *
-vrna_cut_point_insert(const char  *string,
+vrna_cut_point_insert(const char  *str,
                       int         cp);
 
 
@@ -431,12 +431,12 @@ vrna_cut_point_insert(const char  *string,
  *  found in the input, the integer variable is set to -1. The function returns
  *  a copy of the input string with the '&' being sliced out.
  *
- *  @param  string  The original string
+ *  @param  str     The original string
  *  @param  cp      The cut-point position
  *  @return         A copy of the input string with the '&' being sliced out
  */
 char *
-vrna_cut_point_remove(const char  *string,
+vrna_cut_point_remove(const char  *str,
                       int         *cp);
 
 
