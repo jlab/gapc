@@ -278,6 +278,85 @@ vrna_seq_toupper(char *sequence)
 }
 
 
+PUBLIC void
+vrna_seq_reverse(char *sequence)
+{
+  if (sequence) {
+    char *p1 = sequence;
+    char *p2 = sequence + strlen(sequence) - 1;
+
+    while (p1 < p2) {
+      char tmp = *p1;
+      *p1++ = *p2;
+      *p2-- = tmp;
+    }
+  }
+}
+
+
+PUBLIC char *
+vrna_DNA_complement(const char *sequence)
+{
+  char    *complement, *ptr;
+  size_t  n;
+
+  complement = NULL;
+
+  if (sequence) {
+    n           = strlen(sequence);
+    complement  = (char *)vrna_alloc(sizeof(char) * (n + 1));
+    /* copy the input string */
+    complement  = memcpy(complement, sequence, sizeof(char) * n);
+
+    /* complement characters */
+    for (ptr = complement; *ptr; ptr++) {
+      switch (*ptr) {
+        case 'A':
+          *ptr = 'T';
+          break;
+
+        case 'a':
+          *ptr = 't';
+          break;
+
+        case 'C':
+          *ptr = 'G';
+          break;
+
+        case 'c':
+          *ptr = 'g';
+          break;
+
+        case 'G':
+          *ptr = 'C';
+          break;
+
+        case 'g':
+          *ptr = 'c';
+          break;
+
+        case 'T': /* fall through */
+        case 'U':
+          *ptr = 'A';
+          break;
+
+        case 't': /* fall through */
+        case 'u':
+          *ptr = 'a';
+          break;
+
+        default:
+          break;
+      }
+    }
+
+    complement[n] = '\0';
+  }
+
+  return complement;
+}
+
+
 PUBLIC char *
 vrna_cut_point_insert(const char  *string,
                       int         cp)
@@ -306,14 +385,14 @@ PUBLIC char *
 vrna_cut_point_remove(const char  *string,
                       int         *cp)
 {
-  char *pos, *copy = NULL;
-  unsigned int len;
+  char          *pos, *copy = NULL;
+  unsigned int  len;
 
   *cp = -1;
 
   if (string) {
-    len = strlen(string);
-    copy = strdup(string);
+    len   = strlen(string);
+    copy  = strdup(string);
     if ((pos = strchr(copy, '&'))) {
       *cp = (int)(pos - copy) + 1;
       if (*cp >= len)
@@ -328,6 +407,139 @@ vrna_cut_point_remove(const char  *string,
   }
 
   return copy;
+}
+
+
+PUBLIC unsigned int
+vrna_strtrim(char         *string,
+             const char   *delimiters,
+             unsigned int keep,
+             unsigned int options)
+{
+  char          delim_ws[7] = {
+    32, 9, 10, 11, 12, 13, 0
+  };
+  const char    *delim, *ptrd;
+  char          *str_end, *ptr, *ptr_out, *ptr_start, *ptr_end;
+  unsigned int  ret, hits;
+
+  ret = 0;
+
+  if (string) {
+    if ((delimiters) &&
+        (*delimiters))
+      delim = delimiters;
+    else
+      delim = &(delim_ws[0]);
+
+    /* find first non-delimiter position */
+    for (ptr_start = string; *ptr_start != '\0'; ptr_start++) {
+      /* check whether we've found a delimiter */
+      for (ptrd = delim; *ptrd != '\0'; ptrd++)
+        if (*ptrd == *ptr_start)
+          break;
+
+      /* abort if we didn't find any of the delimiter characters */
+      if (*ptrd == '\0')
+        break;
+    }
+
+    /* find last non-delimiter position */
+    for (ptr_end = ptr = ptr_start; *ptr != '\0'; ptr++) {
+      for (ptrd = delim; *ptrd != '\0'; ptrd++)
+        if (*ptrd == *ptr)
+          break;
+
+      if (*ptrd == '\0')
+        ptr_end = ptr;
+    }
+
+    ptr_end++;
+
+    str_end = ptr_out = ptr;
+
+    if (options & VRNA_TRIM_LEADING) {
+      ptr = ptr_start -
+            sizeof(char) * keep;
+
+      if (ptr < string)
+        ptr = string;
+
+      /* adjust start and end pointer positions */
+      ptr_start -= ptr - string;
+      ptr_end   -= ptr - string;
+
+      /* actually remove leading delimiters */
+      for (ptr_out = string; ptr < ptr_start; ptr++)
+        if (options & VRNA_TRIM_SUBST_BY_FIRST)
+          *(ptr_out++) = delim[0];
+        else
+          *(ptr_out++) = *ptr;
+
+      for (; *ptr != '\0'; ptr++)
+        *(ptr_out++) = *ptr;
+
+      *ptr_out = '\0';
+    }
+
+    if (options & VRNA_TRIM_IN_BETWEEN) {
+      hits = 0;
+
+      /* remove in-between delimiters */
+      for (ptr_out = ptr = ptr_start; ptr < ptr_end; ptr++) {
+        for (ptrd = delim; *ptrd != '\0'; ptrd++)
+          if (*ptrd == *ptr)
+            break;
+
+        /* did we find a delimiter? */
+        if (*ptrd != '\0') {
+          if (hits++ < keep) {
+            if (options & VRNA_TRIM_SUBST_BY_FIRST)
+              *ptr_out = delim[0];
+            else
+              *ptr_out = *ptr;
+
+            ptr_out++;
+          }
+        } else {
+          hits      = 0;
+          *ptr_out  = *ptr;
+          ptr_out++;
+        }
+      }
+
+      /* adjust end pointer position */
+      ptr_end -= ptr - ptr_out;
+
+      /* shift trailing part to correct position */
+      for (; *ptr != '\0'; ptr++)
+        *(ptr_out++) = *ptr;
+
+      *ptr_out = '\0';
+    }
+
+    if (options & VRNA_TRIM_TRAILING) {
+      hits = 0;
+
+      /* seek to end */
+      for (ptr_out = ptr = ptr_end; *ptr != '\0'; ptr++) {
+        if (hits++ < keep) {
+          if (options & VRNA_TRIM_SUBST_BY_FIRST)
+            *ptr_out = delim[0];
+          else
+            *ptr_out = *ptr;
+
+          ptr_out++;
+        }
+      }
+
+      *ptr_out = '\0';
+    }
+
+    return (str_end - ptr_out) / sizeof(char);
+  }
+
+  return ret;
 }
 
 
@@ -387,8 +599,8 @@ PUBLIC char *
 vrna_strjoin(const char **strings,
              const char *delimiter)
 {
-  char        *s = NULL;
-  size_t      n, offset, *lengths, num_strings, mem_strings, total_length;
+  char    *s = NULL;
+  size_t  n, offset, *lengths, mem_strings, total_length;
 
   if (strings) {
     total_length  = 0;
@@ -396,13 +608,13 @@ vrna_strjoin(const char **strings,
     lengths       = (size_t *)vrna_alloc(sizeof(size_t) * mem_strings);
 
     for (n = 0; strings[n]; n++) {
-      lengths[n]    = strlen(strings[n]);
-      total_length += lengths[n];
-
       if (n == mem_strings) {
         mem_strings += 32;
         lengths      = (size_t *)vrna_realloc(lengths, sizeof(size_t) * mem_strings);
       }
+
+      lengths[n]    = strlen(strings[n]);
+      total_length += lengths[n];
     }
 
     if ((delimiter) && (*delimiter))
@@ -487,6 +699,7 @@ vrna_strsplice(const char   *string,
 
 #endif
 
+
 PUBLIC char *
 vrna_seq_ungapped(const char *seq)
 {
@@ -518,9 +731,11 @@ vrna_seq_ungapped(const char *seq)
 
 #ifndef VRNA_DISABLE_BACKWARD_COMPATIBILITY
 
-/*###########################################*/
-/*# deprecated functions below              #*/
-/*###########################################*/
+/*
+ * ###########################################
+ * # deprecated functions below              #
+ * ###########################################
+ */
 
 PUBLIC void
 str_uppercase(char *sequence)

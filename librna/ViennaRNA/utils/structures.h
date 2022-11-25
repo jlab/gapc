@@ -13,10 +13,6 @@
 # define DEPRECATED(func, msg) func
 #endif
 
-#include <stdio.h>
-
-#include <ViennaRNA/datastructures/basic.h>
-
 /**
  *  @file     ViennaRNA/utils/structures.h
  *  @ingroup  struct_utils
@@ -47,6 +43,26 @@ typedef struct vrna_elem_prob_s vrna_ep_t;
 /**
  *  @addtogroup struct_utils_dot_bracket
  *  @{
+ *  @brief  The Dot-Bracket notation as introduced already in the early times of the ViennaRNA Package
+ *          denotes base pairs by matching pairs of parenthesis `()` and unpaired nucleotides by dots `.`.
+ *
+ *  As a simple example, consider a helix of size 4 enclosing a hairpin of size 4. In dot-bracket
+ *  notation, this is annotated as
+ *
+ *  `((((....))))`
+ *
+ *  <b>Extended Dot-Bracket Notation</b>
+ *
+ *  A more generalized version of the original Dot-Bracket notation may use additional pairs
+ *  of brackets, such as <tt><></tt>, <tt>{}</tt>, and <tt>[]</tt>, and matching pairs of
+ *  uppercase/lowercase letters. This allows for anotating pseudo-knots, since different
+ *  pairs of brackets are not required to be nested.
+ *
+ *  The follwing annotations of a simple structure with two crossing helices of size 4 are equivalent:
+ *
+ *  `<<<<[[[[....>>>>]]]]`<br>
+ *  `((((AAAA....))))aaaa`<br>
+ *  `AAAA{{{{....aaaa}}}}`
  */
 
 /**
@@ -120,6 +136,10 @@ typedef struct vrna_elem_prob_s vrna_ep_t;
    VRNA_BRACKETS_SQR | \
    VRNA_BRACKETS_ALPHA)
 
+
+#include <stdio.h>
+
+#include <ViennaRNA/datastructures/basic.h>
 
 /**
  *  @brief Pack secondary secondary structure, 5:1 compression using base 3 encoding
@@ -199,26 +219,22 @@ vrna_db_flatten_to(char         *string,
 /**
  *  @brief Convert a pair table into dot-parenthesis notation
  *
+ *  This function also converts pair table formatted structures that contain
+ *  pseudoknots. Non-nested base pairs result in additional pairs of
+ *  parenthesis and brackets within the resulting dot-parenthesis string.
+ *  The following pairs are awailable: (), []. {}. <>, as well as pairs of
+ *  matching upper-/lower-case characters from the alphabet A-Z.
+ *
+ *  @note In cases where the level of non-nested base pairs exceeds the
+ *  maximum number of 30 different base pair indicators (4 parenthesis/brackets,
+ *  26 matching characters), a warning is printed and the remaining base pairs
+ *  are left out from the conversion.
+ *
  *  @param pt The pair table to be copied
  *  @return   A char pointer to the dot-bracket string
  */
 char *
-vrna_db_from_ptable(short *pt);
-
-
-/**
- *  @brief  Convert a WUSS annotation string to dot-bracket format
- *
- *  @note This function flattens all brackets, and treats pseudo-knots annotated
- *        by matching pairs of upper/lowercase letters as unpaired nucleotides
- *
- *  @see @ref wuss-notation
- *
- *  @param  wuss  The input string in WUSS notation
- *  @return       A dot-bracket notation of the input secondary structure
- */
-char *
-vrna_db_from_WUSS(const char *wuss);
+vrna_db_from_ptable(const short *pt);
 
 
 /**
@@ -318,12 +334,12 @@ vrna_ptable(const char *structure);
  *       #VRNA_BRACKETS_RND, #VRNA_BRACKETS_ANG, #VRNA_BRACKETS_CLY, #VRNA_BRACKETS_SQR,
  *       VRNA_BRACKETS_ALPHA, #VRNA_BRACKETS_DEFAULT, #VRNA_BRACKETS_ANY
  *
- *  @param  string    Secondary structure in @ref dot-bracket-ext-notation
+ *  @param  structure Secondary structure in @ref dot-bracket-ext-notation
  *  @param  options   A bitmask to specify which brackets are recognized during conversion to pair table
  *  @return           A pointer to a new pair table of the provided secondary structure
  */
 short *
-vrna_ptable_from_string(const char    *string,
+vrna_ptable_from_string(const char    *structure,
                         unsigned int  options);
 
 
@@ -336,7 +352,7 @@ vrna_ptable_from_string(const char    *string,
  *  In contrast to vrna_ptable() this function also recognizes the base pairs
  *  denoted by '[' and ']' brackets. Thus, this function behaves like
  *  @code{.c}
- *  vrna_ptable_from_string(structure, #VRNA_BRACKET_RND | VRNA_BRACKETS_SQR)
+ *  vrna_ptable_from_string(structure, #VRNA_BRACKETS_RND | VRNA_BRACKETS_SQR)
  *  @endcode
  *
  *  @see    vrna_ptable_from_string()
@@ -397,6 +413,7 @@ short *
 vrna_pt_pk_remove(const short   *ptable,
                   unsigned int  options);
 
+
 /* End pair table interface */
 /**@}*/
 
@@ -440,6 +457,18 @@ vrna_pt_pk_remove(const short   *ptable,
  *  @brief  A Base Pair stack element
  */
 #define VRNA_PLIST_TYPE_STACK         5
+
+
+/**
+ *  @brief  An unpaired base
+ */
+#define VRNA_PLIST_TYPE_UNPAIRED      6
+
+
+/**
+ *  @brief  One pair of a base triplet
+ */
+#define VRNA_PLIST_TYPE_TRIPLE        7
 
 
 /**
@@ -501,6 +530,151 @@ vrna_ep_t *vrna_plist_from_probs(vrna_fold_compound_t *vc,
 
 
 /**
+ *  @addtogroup struct_utils_wuss
+ *  @{
+ *  @brief  The WUSS notation, as frequently used for consensus secondary structures in @ref msa-formats-stockholm.
+ *
+ *  This notation allows for a fine-grained annotation of base pairs and unpaired nucleotides, including pseudo-knots.
+ *  Below, you'll find a list of secondary structure elements and their corresponding WUSS annotation
+ *  (See also the infernal user guide at http://eddylab.org/infernal/Userguide.pdf)
+ *  @parblock
+ *  - <b>Base pairs</b><br>
+ *    Nested base pairs are annotated by matching pairs of the symbols `<>`,
+ *    `()`, `{}`, and `[]`. Each of the matching pairs
+ *    of parenthesis have their special meaning, however, when used as input in our programs,
+ *    e.g. structure constraint, these details are usually ignored. Furthermore, base pairs
+ *    that constitute as pseudo-knot are denoted by letters from the latin alphabet and are,
+ *    if not denoted otherwise, ignored entirely in our programs.
+ *
+ *  - <b>Hairpin loops</b><br>
+ *    Unpaired nucleotides that constitute the hairpin loop are indicated by underscores, `_`.
+ *
+ *    Example: `<<<<<_____>>>>>`
+ *
+ *  - <b>Bulges and interior loops</b><br>
+ *    Residues that constitute a bulge or interior loop are denoted by dashes, `-`.
+ *
+ *    Example: `(((--<<_____>>-)))`
+ *
+ *  - <b>Multibranch loops</b><br>
+ *    Unpaired nucleotides in multibranch loops are indicated by commas `,`.
+ *  
+ *    Example: `(((,,<<_____>>,<<____>>)))`
+ *
+ *  - <b>External residues</b><br>
+ *    Single stranded nucleotides in the exterior loop, i.e. not enclosed by any other pair are
+ *    denoted by colons, `:`.
+ *
+ *    Example: `<<<____>>>:::`
+ *
+ *  - <b>Insertions</b><br>
+ *    In cases where an alignment represents the consensus with a known structure, insertions relative
+ *    to the known structure are denoted by periods, `.`. Regions where local structural
+ *    alignment was invoked, leaving regions of both target and query sequence unaligned, are indicated
+ *    by tildes, `~`.
+ *    @note These symbols only appear in alignments of a known (query) structure annotation to a target
+ *    sequence of unknown structure.
+ *
+ *  - <b>Pseudo-knots</b><br>
+ *    The WUSS notation allows for annotation of pseudo-knots using pairs of upper-case/lower-case letters.
+ *    @note Our programs and library functions usually ignore pseudo-knots entirely treating them as
+ *    unpaired nucleotides, if not stated otherwise.
+ *
+ *    Example:  `<<<_AAA___>>>aaa`
+ *  @endparblock
+ */
+
+/**
+ *  @brief  Convert a WUSS annotation string to dot-bracket format
+ *
+ *  @note This function flattens all brackets, and treats pseudo-knots annotated
+ *        by matching pairs of upper/lowercase letters as unpaired nucleotides
+ *
+ *  @param  wuss  The input string in WUSS notation
+ *  @return       A dot-bracket notation of the input secondary structure
+ */
+char *
+vrna_db_from_WUSS(const char *wuss);
+
+
+/* End WUSS notation interface */
+/**@}*/
+
+
+/**
+ *  @addtogroup struct_utils_abstract_shapes
+ *  @{
+ *  @brief  Abstract Shapes, introduced by Giegerich et al. in (2004) @cite giegerich:2004,
+ *          collapse the secondary structure while retaining the nestedness of helices and
+ *          hairpin loops.
+ *
+ *  The abstract shapes representation abstracts the structure from individual base pairs
+ *  and their corresponding location in the sequence, while retaining the inherent nestedness
+ *  of helices and hairpin loops.
+ *
+ *  Below is a description of what is included in the abstract shapes abstraction for each
+ *  respective level together with an example structure:
+ *
+ *      CGUCUUAAACUCAUCACCGUGUGGAGCUGCGACCCUUCCCUAGAUUCGAAGACGAG
+ *      ((((((...(((..(((...))))))...(((..((.....))..)))))))))..
+ *
+ *  ______
+ *
+ *  Shape Level | Description                     |   Result
+ *  ----------- | ------------------------------- | --------
+ *  1           | Most accurate - all loops and all unpaired | `[_[_[]]_[_[]_]]_`
+ *  2           | Nesting pattern for all loop types and unpaired regions in external loop and multiloop | `[[_[]][_[]_]]`
+ *  3           | Nesting pattern for all loop types but no unpaired regions | `[[[]][[]]]`
+ *  4           | Helix nesting pattern in external loop and multiloop | `[[][[]]]`
+ *  5           | Most abstract - helix nesting pattern and no unpaired regions | `[[][]]`
+ *
+ *  @note   Our implementations also provide the special Shape Level 0, which does not
+ *          collapse any structural features but simply convert base pairs and unpaired
+ *          nucleotides into their corresponding set of symbols for abstract shapes.
+ */
+
+/**
+ *  @brief  Convert a secondary structure in dot-bracket notation to its abstract shapes representation
+ *
+ *  This function converts a secondary structure into its abstract shapes representation as
+ *  presented by Giegerich et al. 2004 @cite giegerich:2004.
+ *
+ *  @see vrna_abstract_shapes_pt()
+ *
+ *  @param  structure A secondary structure in dot-bracket notation
+ *  @param  level     The abstraction level (integer in the range of 0 to 5)
+ *  @return           The secondary structure in abstract shapes notation
+ */
+char *
+vrna_abstract_shapes(const char    *structure,
+                     unsigned int  level);
+
+
+/**
+ *  @brief  Convert a secondary structure to its abstract shapes representation
+ *
+ *  This function converts a secondary structure into its abstract shapes representation as
+ *  presented by Giegerich et al. 2004 @cite giegerich:2004. This function is equivalent to
+ *  vrna_db_to_shapes(), but requires a pair table input instead of a dot-bracket structure.
+ *
+ *  @note   The length of the structure must be present at @p pt[0]!
+ *
+ *  @see vrna_abstract_shapes()
+ *
+ *  @param  pt      A secondary structure in pair table format
+ *  @param  level   The abstraction level (integer in the range of 0 to 5)
+ *  @return         The secondary structure in abstract shapes notation
+ */
+char *
+vrna_abstract_shapes_pt(const short  *pt,
+                        unsigned int level);
+
+
+/* End abstract shapes interface */
+/**@}*/
+
+
+/**
  *  @addtogroup struct_utils_helix_list
  *  @{
  */
@@ -547,11 +721,36 @@ vrna_loopidx_from_ptable(const short *pt);
 
 
 /**
+ *  @addtogroup struct_utils_metrics
+ *  @{
+ */
+
+/**
+ *  @brief Compute the "base pair" distance between two pair tables pt1 and pt2 of secondary structures.
+ *
+ *  The pair tables should have the same length.
+ *  dist = number of base pairs in one structure but not in the other
+ *  same as edit distance with open-pair close-pair as move-set
+ *
+ *  @see vrna_bp_distance()
+ *
+ *  @param pt1   First structure in dot-bracket notation
+ *  @param pt2   Second structure in dot-bracket notation
+ *  @return       The base pair distance between pt1 and pt2
+ */
+int
+vrna_bp_distance_pt(const short *pt1,
+                    const short *pt2);
+
+/**
  *  @brief Compute the "base pair" distance between two secondary structures s1 and s2.
  *
+ *  This is a wrapper around @b vrna_bp_distance_pt().
  *  The sequences should have the same length.
  *  dist = number of base pairs in one structure but not in the other
  *  same as edit distance with open-pair close-pair as move-set
+ *
+ *  @see vrna_bp_distance_pt()
  *
  *  @param str1   First structure in dot-bracket notation
  *  @param str2   Second structure in dot-bracket notation
@@ -567,6 +766,9 @@ vrna_dist_mountain(const char   *str1,
                    const char   *str2,
                    unsigned int p);
 
+
+/* End metrics interface */
+/**@}*/
 
 /**
  *  @brief Make a reference base pair count matrix
@@ -632,13 +834,82 @@ vrna_letter_structure(char            *structure,
 /**
  *  @addtogroup struct_utils_tree
  *  @{
- *  Secondary structures can be readily represented as trees, where internal
+ *  @brief Secondary structures can be readily represented as trees, where internal
  *  nodes represent base pairs, and leaves represent unpaired nucleotides.
  *  The dot-bracket structure string already is a tree represented by a string
  *  of parenthesis (base pairs) and dots for the leaf nodes (unpaired nucleotides).
  *
- *  See @ref sec_structure_representations_tree for a detailed description on
- *  tree representation of secondary structures.
+ *  Alternatively, one may find representations with two types of node labels,
+ *  `P` for paired and `U` for unpaired; a dot is then replaced by `(U)`, and
+ *  each closed bracket is assigned an additional identifier `P`.
+ *  We call this the expanded notation. In @cite fontana:1993b a condensed
+ *  representation of the secondary structure is proposed, the so-called
+ *  homeomorphically irreducible tree (HIT) representation. Here a stack is
+ *  represented as a single pair of matching brackets labeled `P` and
+ *  weighted by the number of base pairs.  Correspondingly, a contiguous
+ *  strain of unpaired bases is shown as one pair of matching brackets
+ *  labeled `U` and weighted by its length.  Generally any string consisting
+ *  of matching brackets and identifiers is equivalent to a plane tree with
+ *  as many different types of nodes as there are identifiers.
+ *  
+ *  Bruce Shapiro proposed a coarse grained representation @cite shapiro:1988,
+ *  which, does not retain the full information of the secondary structure. He
+ *  represents the different structure elements by single matching brackets
+ *  and labels them as
+ *  
+ *  - `H`  (hairpin loop),
+ *  - `I`  (interior loop),
+ *  - `B`  (bulge),
+ *  - `M`  (multi-loop), and
+ *  - `S`  (stack).
+ *  
+ *  We extend his alphabet by an extra letter for external elements `E`.
+ *  Again these identifiers may be followed by a weight corresponding to the
+ *  number of unpaired bases or base pairs in the structure element.  All tree
+ *  representations (except for the dot-bracket form) can be encapsulated into
+ *  a virtual root (labeled `R`).
+ *  
+ *  The following example illustrates the different linear tree representations
+ *  used by the package:
+ *  
+ *  Consider the secondary structure represented by the dot-bracket string (full tree)
+ *  `.((..(((...)))..((..)))).` which is the most convenient
+ *  condensed notation used by our programs and library functions.
+ *  
+ *  Then, the following tree representations are equivalent:
+ *  
+ *  - Expanded tree:<br>
+ *    `((U)(((U)(U)((((U)(U)(U)P)P)P)(U)(U)(((U)(U)P)P)P)P)(U)R)`
+ *  - HIT representation (Fontana et al. 1993 @cite fontana:1993b):<br>
+ *    `((U1)((U2)((U3)P3)(U2)((U2)P2)P2)(U1)R)`
+ *  - Coarse Grained Tree Representation (Shapiro 1988 @cite shapiro:1988):
+ *    + Short (with root node `R`, without stem nodes `S`):<br>
+ *      `((H)((H)M)R)`
+ *    + Full (with root node `R`):<br>
+ *      `(((((H)S)((H)S)M)S)R)`
+ *    + Extended (with root node `R`, with external nodes `E`):<br>
+ *      `((((((H)S)((H)S)M)S)E)R)`
+ *    + Weighted (with root node `R`, with external nodes `E`):<br>
+ *      `((((((H3)S3)((H2)S2)M4)S2)E2)R)`
+ *
+ *  The Expanded tree is rather clumsy and mostly included for the sake of
+ *  completeness. The different versions of Coarse Grained Tree Representations
+ *  are variatios of Shapiro's linear tree notation.
+ *  
+ *  For the output of aligned structures from string editing, different
+ *  representations are needed, where we put the label on both sides.
+ *  The above examples for tree representations would then look like:
+ *  
+ *  @verbatim
+ *  a) (UU)(P(P(P(P(UU)(UU)(P(P(P(UU)(UU)(UU)P)P)P)(UU)(UU)(P(P(UU)(U...
+ *  b) (UU)(P2(P2(U2U2)(P2(U3U3)P3)(U2U2)(P2(U2U2)P2)P2)(UU)P2)(UU)
+ *  c) (B(M(HH)(HH)M)B)
+ *     (S(B(S(M(S(HH)S)(S(HH)S)M)S)B)S)
+ *     (E(S(B(S(M(S(HH)S)(S(HH)S)M)S)B)S)E)
+ *  d) (R(E2(S2(B1(S2(M4(S3(H3)S3)((H2)S2)M4)S2)B1)S2)E2)R)
+ *  @endverbatim
+ *
+ *  Aligned structures additionally contain the gap character `_`.
  */
 
 /**
