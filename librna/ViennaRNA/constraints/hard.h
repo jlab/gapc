@@ -224,14 +224,14 @@ typedef unsigned char (vrna_callback_hc_evaluate)(int           i,
  */
 #define VRNA_CONSTRAINT_DB_DEFAULT \
   (VRNA_CONSTRAINT_DB \
-   | VRNA_CONSTRAINT_DB_PIPE \
-   | VRNA_CONSTRAINT_DB_DOT \
-   | VRNA_CONSTRAINT_DB_X \
-   | VRNA_CONSTRAINT_DB_ANG_BRACK \
-   | VRNA_CONSTRAINT_DB_RND_BRACK \
-   | VRNA_CONSTRAINT_DB_INTRAMOL \
-   | VRNA_CONSTRAINT_DB_INTERMOL \
-   | VRNA_CONSTRAINT_DB_GQUAD \
+  | VRNA_CONSTRAINT_DB_PIPE \
+  | VRNA_CONSTRAINT_DB_DOT \
+  | VRNA_CONSTRAINT_DB_X \
+  | VRNA_CONSTRAINT_DB_ANG_BRACK \
+  | VRNA_CONSTRAINT_DB_RND_BRACK \
+  | VRNA_CONSTRAINT_DB_INTRAMOL \
+  | VRNA_CONSTRAINT_DB_INTERMOL \
+  | VRNA_CONSTRAINT_DB_GQUAD \
   )
 
 /**
@@ -301,16 +301,18 @@ typedef unsigned char (vrna_callback_hc_evaluate)(int           i,
 /**
  *  @brief  Constraint context flag indicating base pairs that close any loop
  */
-#define VRNA_CONSTRAINT_CONTEXT_CLOSING_LOOPS (unsigned char)(VRNA_CONSTRAINT_CONTEXT_EXT_LOOP | \
-                                                              VRNA_CONSTRAINT_CONTEXT_HP_LOOP | \
-                                                              VRNA_CONSTRAINT_CONTEXT_INT_LOOP | \
-                                                              VRNA_CONSTRAINT_CONTEXT_MB_LOOP)
+#define VRNA_CONSTRAINT_CONTEXT_CLOSING_LOOPS \
+        (unsigned char)(VRNA_CONSTRAINT_CONTEXT_EXT_LOOP | \
+                        VRNA_CONSTRAINT_CONTEXT_HP_LOOP | \
+                        VRNA_CONSTRAINT_CONTEXT_INT_LOOP | \
+                        VRNA_CONSTRAINT_CONTEXT_MB_LOOP)
 
 /**
  *  @brief  Constraint context flag indicating base pairs enclosed by any loop
  */
-#define VRNA_CONSTRAINT_CONTEXT_ENCLOSED_LOOPS  (unsigned char)(VRNA_CONSTRAINT_CONTEXT_INT_LOOP_ENC | \
-                                                                VRNA_CONSTRAINT_CONTEXT_MB_LOOP_ENC)
+#define VRNA_CONSTRAINT_CONTEXT_ENCLOSED_LOOPS \
+        (unsigned char)(VRNA_CONSTRAINT_CONTEXT_INT_LOOP_ENC | \
+                        VRNA_CONSTRAINT_CONTEXT_MB_LOOP_ENC)
 
 /**
  * @brief  Constraint context flag indicating any loop context
@@ -318,8 +320,9 @@ typedef unsigned char (vrna_callback_hc_evaluate)(int           i,
  *  @ingroup  hard_constraints
  *
  */
-#define VRNA_CONSTRAINT_CONTEXT_ALL_LOOPS     (unsigned char)(VRNA_CONSTRAINT_CONTEXT_CLOSING_LOOPS | \
-                                                              VRNA_CONSTRAINT_CONTEXT_ENCLOSED_LOOPS)
+#define VRNA_CONSTRAINT_CONTEXT_ALL_LOOPS \
+        (unsigned char)(VRNA_CONSTRAINT_CONTEXT_CLOSING_LOOPS | \
+                        VRNA_CONSTRAINT_CONTEXT_ENCLOSED_LOOPS)
 
 
 #define VRNA_CONSTRAINT_WINDOW_UPDATE_5       1U
@@ -333,11 +336,14 @@ typedef unsigned char (vrna_callback_hc_evaluate)(int           i,
  *  handle hard constraints internally. This enum is used to distinguish both types.
  */
 typedef enum {
-  VRNA_HC_DEFAULT,  /**<  @brief  Default Hard Constraints */
-  VRNA_HC_WINDOW    /**<  @brief  Hard Constraints suitable for local structure prediction using
-                     *    window approach.
-                     *    @see    vrna_mfe_window(), vrna_mfe_window_zscore(), pfl_fold()
-                     */
+  /**<  @brief  Default Hard Constraints */
+  VRNA_HC_DEFAULT,
+
+  /**<  @brief  Hard Constraints suitable for local structure prediction using
+   *    window approach.
+   *    @see    vrna_mfe_window(), vrna_mfe_window_zscore(), pfl_fold()
+  */
+  VRNA_HC_WINDOW
 } vrna_hc_type_e;
 
 
@@ -387,38 +393,48 @@ struct vrna_hc_s {
   };
 #endif
 
-  int                         *up_ext;    /**<  @brief  A linear array that holds the number of allowed
-                                           *            unpaired nucleotides in an exterior loop
-                                           */
-  int                         *up_hp;     /**<  @brief  A linear array that holds the number of allowed
-                                           *            unpaired nucleotides in a hairpin loop
-                                           */
-  int                         *up_int;    /**<  @brief  A linear array that holds the number of allowed
-                                           *            unpaired nucleotides in an interior loop
-                                           */
-  int                         *up_ml;     /**<  @brief  A linear array that holds the number of allowed
-                                           *            unpaired nucleotides in a multi branched loop
-                                           */
+  /**<  @brief  A linear array that holds the number of allowed
+   *            unpaired nucleotides in an exterior loop
+   */
+  int                         *up_ext;
 
-  vrna_callback_hc_evaluate   *f;         /**<  @brief  A function pointer that returns whether or
-                                           *            not a certain decomposition may be evaluated
-                                           */
+  /**<  @brief  A linear array that holds the number of allowed
+   *            unpaired nucleotides in a hairpin loop
+   */
+  int                         *up_hp;
 
-  void                        *data;      /**<  @brief  A pointer to some structure where the user
-                                           *            may store necessary data to evaluate its
-                                           *            generic hard constraint function
-                                           */
+  /**<  @brief  A linear array that holds the number of allowed
+   *            unpaired nucleotides in an interior loop
+   */
+  int                         *up_int;
 
-  vrna_callback_free_auxdata  *free_data; /**<  @brief  A pointer to a function to free memory
-                                           *            occupied by auxiliary data
-                                           *
-                                           *    The function this pointer is pointing to will be
-                                           *    called upon destruction of the #vrna_hc_s, and
-                                           *    provided with the vrna_hc_s.data pointer that
-                                           *    may hold auxiliary data. Hence, to avoid leaking
-                                           *    memory, the user may use this pointer to free
-                                           *    memory occupied by auxiliary data.
-                                           */
+  /**<  @brief  A linear array that holds the number of allowed
+   *            unpaired nucleotides in a multi branched loop
+   */
+  int                         *up_ml;
+
+  /**<  @brief  A function pointer that returns whether or
+   *            not a certain decomposition may be evaluated
+   */
+  vrna_callback_hc_evaluate   *f;
+
+  /**<  @brief  A pointer to some structure where the user
+   *            may store necessary data to evaluate its
+   *            generic hard constraint function
+   */
+  void                        *data;
+
+ /**<  @brief  A pointer to a function to free memory
+  *            occupied by auxiliary data
+  *
+  *    The function this pointer is pointing to will be
+  *    called upon destruction of the #vrna_hc_s, and
+  *    provided with the vrna_hc_s.data pointer that
+  *    may hold auxiliary data. Hence, to avoid leaking
+  *    memory, the user may use this pointer to free
+  *    memory occupied by auxiliary data.
+  */
+  vrna_callback_free_auxdata  *free_data;
 
   vrna_hc_depot_t             *depot;
 };
@@ -702,4 +718,4 @@ DEPRECATED(void constrain_ptypes(const char   *constraint,
 
 #endif
 
-#endif
+#endif  // VIENNA_RNA_PACKAGE_CONSTRAINTS_HARD_H

@@ -16,28 +16,35 @@
  *
  */
 
-/** @brief Typename for the Minimum Free Energy (MFE) DP matrices data structure #vrna_mx_mfe_s */
+/** @brief Typename for the Minimum Free Energy (MFE)
+ *         DP matrices data structure #vrna_mx_mfe_s */
 typedef struct  vrna_mx_mfe_s vrna_mx_mfe_t;
-/** @brief Typename for the Partition Function (PF) DP matrices data structure #vrna_mx_pf_s */
+/** @brief Typename for the Partition Function (PF)
+ *         DP matrices data structure #vrna_mx_pf_s */
 typedef struct  vrna_mx_pf_s vrna_mx_pf_t;
 
 #include <ViennaRNA/datastructures/basic.h>
 #include <ViennaRNA/fold_compound.h>
 
 /**
- *  @brief  An enumerator that is used to specify the type of a polymorphic Dynamic Programming (DP)
- *  matrix data structure
+ *  @brief  An enumerator that is used to specify the type
+ *          of a polymorphic Dynamic Programming (DP)
+ *          matrix data structure
  *  @see #vrna_mx_mfe_t, #vrna_mx_pf_t
  */
 typedef enum {
   VRNA_MX_DEFAULT,  /**<  @brief  Default DP matrices */
-  VRNA_MX_WINDOW,   /**<  @brief  DP matrices suitable for local structure prediction using
-                     *    window approach.
-                     *    @see    vrna_mfe_window(), vrna_mfe_window_zscore(), pfl_fold()
-                     */
-  VRNA_MX_2DFOLD    /**<  @brief  DP matrices suitable for distance class partitioned structure prediction
-                     *    @see  vrna_mfe_TwoD(), vrna_pf_TwoD()
-                     */
+
+  /**<  @brief  DP matrices suitable for local structure prediction using
+   *            window approach.
+   *    @see    vrna_mfe_window(), vrna_mfe_window_zscore(), pfl_fold()
+   */
+  VRNA_MX_WINDOW,
+
+  /**<  @brief  DP matrices suitable for distance class partitioned structure prediction
+   *    @see  vrna_mfe_TwoD(), vrna_pf_TwoD()
+   */
+  VRNA_MX_2DFOLD
 } vrna_mx_type_e;
 
 /**
@@ -48,7 +55,11 @@ struct vrna_mx_mfe_s {
    *  @{
    */
   const vrna_mx_type_e  type;     /**< Type of the DP matrices */
-  unsigned int          length;   /**<  @brief  Length of the sequence, therefore an indicator of the size of the DP matrices */
+
+  /**<  @brief  Length of the sequence, therefore an indicator
+   *            of the size of the DP matrices
+   */
+  unsigned int          length;
   unsigned int          strands;  /**< Number of strands */
   /**
    *  @}
@@ -67,16 +78,34 @@ struct vrna_mx_mfe_s {
   int *c;           /**<  @brief  Energy array, given that i-j pair */
   int *f5;          /**<  @brief  Energy of 5' end */
   int *f3;          /**<  @brief  Energy of 3' end */
-  int **fms5;       /**<  @brief  Energy for connected interstrand configurations */
-  int **fms3;       /**<  @brief  nergy for connected interstrand configurations */
-  int *fML;         /**<  @brief  Multi-loop auxiliary energy array */
-  int *fM1;         /**<  @brief  Second ML array, only for unique multibrnach loop decomposition */
-  int *fM2;         /**<  @brief  Energy for a multibranch loop region with exactly two stems, extending to 3' end */
+
+  /**<  @brief  Energy for connected interstrand configurations */
+  int **fms5;
+
+  /**<  @brief  nergy for connected interstrand configurations */
+  int **fms3;
+
+  /**<  @brief  Multi-loop auxiliary energy array */
+  int *fML;
+
+   /**<  @brief  Second ML array,
+    *           only for unique multibrnach loop decomposition */
+  int *fM1;
+
+  /**<  @brief  Energy for a multibranch loop region with exactly
+   *            two stems, extending to 3' end */
+  int *fM2;
   int *ggg;         /**<  @brief  Energies of g-quadruplexes */
   int Fc;           /**<  @brief  Minimum Free Energy of entire circular RNA */
-  int FcH;          /**<  @brief  Minimum Free Energy of hairpin loop cases in circular RNA */
-  int FcI;          /**<  @brief  Minimum Free Energy of internal loop cases in circular RNA */
-  int FcM;          /**<  @brief  Minimum Free Energy of multibranch loop cases in circular RNA */
+
+  /**<  @brief  Minimum Free Energy of hairpin loop cases in circular RNA */
+  int FcH;
+
+  /**<  @brief  Minimum Free Energy of internal loop cases in circular RNA */
+  int FcI;
+
+  /**<  @brief  Minimum Free Energy of multibranch loop cases in circular RNA */
+  int FcM;
   /**
    * @}
    */
@@ -169,7 +198,8 @@ struct {
   int           k_min_FcM;
   int           k_max_FcM;
 
-  /* auxilary arrays for remaining set of coarse graining (k,l) > (k_max, l_max) */
+  /* auxilary arrays for remaining set of coarse graining
+     (k,l) > (k_max, l_max) */
   int           *E_F5_rem;
   int           *E_F3_rem;
   int           *E_C_rem;
@@ -207,10 +237,18 @@ struct vrna_mx_pf_s {
   /** @name Common fields for DP matrices
    *  @{
    */
-  const vrna_mx_type_e  type;       /**< Type of the DP matrices */
-  unsigned int          length;     /**< Size of the DP matrices (i.e. sequence length) */
-  FLT_OR_DBL            *scale;     /**< Boltzmann factor scaling */
-  FLT_OR_DBL            *expMLbase; /**< Boltzmann factors for unpaired bases in multibranch loop */
+
+  /**< Type of the DP matrices */
+  const vrna_mx_type_e  type;
+
+  /**< Size of the DP matrices (i.e. sequence length) */
+  unsigned int          length;
+
+  /**< Boltzmann factor scaling */
+  FLT_OR_DBL            *scale;
+
+  /**< Boltzmann factors for unpaired bases in multibranch loop */
+  FLT_OR_DBL            *expMLbase;
 
   /**
    *  @}
@@ -336,7 +374,8 @@ struct {
   int k_min_Q_cM;
   int k_max_Q_cM;
 
-  /* auxilary arrays for remaining set of coarse graining (k,l) > (k_max, l_max) */
+  /* auxilary arrays for remaining set of coarse graining
+     (k,l) > (k_max, l_max) */
   FLT_OR_DBL *Q_rem;
   FLT_OR_DBL *Q_B_rem;
   FLT_OR_DBL *Q_M_rem;
@@ -436,4 +475,4 @@ vrna_mx_pf_free(vrna_fold_compound_t *vc);
  *  @}
  */
 
-#endif
+#endif  // VIENNA_RNA_PACKAGE_DP_MATRICES_H

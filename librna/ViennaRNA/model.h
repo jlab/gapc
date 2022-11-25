@@ -924,4 +924,4 @@ option_string(void);
  * @}
  */
 
-#endif
+#endif  // VIENNA_RNA_PACKAGE_MODEL_H

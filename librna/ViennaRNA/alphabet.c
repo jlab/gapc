@@ -58,9 +58,11 @@ PRIVATE const char Law_and_Order[] = "_ACGUTXKI";
  # PRIVATE FUNCTION DECLARATIONS #
  #################################
  */
+
+/* provides backward compatibility for old ptypes array in pf computations */
 PRIVATE char *
 wrap_get_ptypes(const short *S,
-                vrna_md_t   *md);                               /* provides backward compatibility for old ptypes array in pf computations */
+                vrna_md_t   *md);
 
 
 /*
@@ -69,8 +71,7 @@ wrap_get_ptypes(const short *S,
  #################################
  */
 PUBLIC unsigned int
-vrna_sequence_length_max(unsigned int options)
-{
+vrna_sequence_length_max(unsigned int options) {
   if (options & VRNA_OPTION_WINDOW)
     return (unsigned int)INT_MAX;
 
@@ -89,8 +90,7 @@ vrna_sequence_length_max(unsigned int options)
 
 PUBLIC int
 vrna_nucleotide_IUPAC_identity(char nt,
-                               char mask)
-{
+                               char mask) {
   char n1, n2, *p;
 
   p   = NULL;
@@ -157,8 +157,7 @@ vrna_nucleotide_IUPAC_identity(char nt,
 
 PUBLIC void
 vrna_ptypes_prepare(vrna_fold_compound_t  *fc,
-                    unsigned int          options)
-{
+                    unsigned int          options) {
   if (!fc)
     return;
 
@@ -166,8 +165,9 @@ vrna_ptypes_prepare(vrna_fold_compound_t  *fc,
     switch (fc->type) {
       case VRNA_FC_TYPE_SINGLE:
         if (options & VRNA_OPTION_WINDOW) {
-          fc->ptype_local =
-            (char **)vrna_realloc(fc->ptype_local, sizeof(char *) * (fc->length + 1));
+          fc->ptype_local = (char **)vrna_realloc(fc->ptype_local,
+                                                  sizeof(char *) *
+                                                  (fc->length + 1));
         } else {
           if (!fc->ptype) {
             /* temporary hack for multi-strand case */
@@ -198,8 +198,9 @@ vrna_ptypes_prepare(vrna_fold_compound_t  *fc,
     switch (fc->type) {
       case VRNA_FC_TYPE_SINGLE:
         if (options & VRNA_OPTION_WINDOW) {
-          fc->ptype_local =
-            (char **)vrna_realloc(fc->ptype_local, sizeof(char *) * (fc->length + 1));
+          fc->ptype_local = (char **)vrna_realloc(fc->ptype_local,
+                                                  sizeof(char *) *
+                                                  (fc->length + 1));
         } else {
           if (!fc->ptype) {
             /* temporary hack for multi-strand case */
@@ -210,7 +211,8 @@ vrna_ptypes_prepare(vrna_fold_compound_t  *fc,
                                       &(fc->exp_params->model_details));
               fc->exp_params->model_details.min_loop_size = min_loop_size;
             } else {
-              fc->ptype = vrna_ptypes(fc->sequence_encoding2, &(fc->exp_params->model_details));
+              fc->ptype = vrna_ptypes(fc->sequence_encoding2,
+                                      &(fc->exp_params->model_details));
             }
           }
 #ifndef VRNA_DISABLE_BACKWARD_COMPATIBILITY
@@ -237,8 +239,7 @@ vrna_ptypes_prepare(vrna_fold_compound_t  *fc,
 
 PUBLIC char *
 vrna_ptypes(const short *S,
-            vrna_md_t   *md)
-{
+            vrna_md_t   *md) {
   char  *ptype;
   int   n, i, j, k, l, *idx;
   int   min_loop_size = md->min_loop_size;
@@ -246,8 +247,9 @@ vrna_ptypes(const short *S,
   n = S[0];
 
   if ((unsigned int)n > vrna_sequence_length_max(VRNA_OPTION_DEFAULT)) {
-    vrna_message_warning("vrna_ptypes@alphabet.c: sequence length of %d exceeds addressable range",
-                         n);
+    vrna_message_warning
+    ("vrna_ptypes@alphabet.c: sequence length of %d exceeds addressable range",
+     n);
     return NULL;
   }
 
@@ -284,8 +286,7 @@ vrna_ptypes(const short *S,
 
 PUBLIC short *
 vrna_seq_encode(const char  *sequence,
-                vrna_md_t   *md)
-{
+                vrna_md_t   *md) {
   unsigned int  i, l;
   short         *S = NULL;
 
@@ -307,8 +308,7 @@ vrna_seq_encode(const char  *sequence,
 
 PUBLIC short *
 vrna_seq_encode_simple(const char *sequence,
-                       vrna_md_t  *md)
-{
+                       vrna_md_t  *md) {
   unsigned int  i, l;
   short         *S = NULL;
 
@@ -329,9 +329,9 @@ vrna_seq_encode_simple(const char *sequence,
 
 PUBLIC int
 vrna_nucleotide_encode(char       c,
-                       vrna_md_t  *md)
-{
-  /* return numerical representation of nucleotide used e.g. in vrna_md_t.pair[][] */
+                       vrna_md_t  *md) {
+  /* return numerical representation of nucleotide used
+     e.g. in vrna_md_t.pair[][] */
   int code = -1;
 
   c = toupper(c);
@@ -361,8 +361,7 @@ vrna_nucleotide_encode(char       c,
 
 PUBLIC char
 vrna_nucleotide_decode(int        enc,
-                       vrna_md_t  *md)
-{
+                       vrna_md_t  *md) {
   if (md) {
     if (md->energy_set > 0)
       return (char)enc + 'A' - 1;
@@ -381,8 +380,7 @@ vrna_aln_encode(const char    *sequence,
                 short         **s3_p,
                 char          **ss_p,
                 unsigned int  **as_p,
-                vrna_md_t     *md)
-{
+                vrna_md_t     *md) {
   unsigned int i, l, p;
 
   l = strlen(sequence);
@@ -469,8 +467,7 @@ vrna_aln_encode(const char    *sequence,
 PUBLIC unsigned int
 vrna_get_ptype_md(int       i,
                   int       j,
-                  vrna_md_t *md)
-{
+                  vrna_md_t *md) {
   unsigned int tt = (unsigned int)md->pair[i][j];
 
   return (tt == 0) ? 7 : tt;
@@ -479,8 +476,7 @@ vrna_get_ptype_md(int       i,
 
 PUBLIC unsigned int
 vrna_get_ptype(int  ij,
-               char *ptype)
-{
+               char *ptype) {
   unsigned int tt = (unsigned int)ptype[ij];
 
   return (tt == 0) ? 7 : tt;
@@ -490,8 +486,7 @@ vrna_get_ptype(int  ij,
 PUBLIC unsigned int
 vrna_get_ptype_window(int   i,
                       int   j,
-                      char  **ptype)
-{
+                      char  **ptype) {
   unsigned int tt = (unsigned int)ptype[i][j - i];
 
   return (tt == 0) ? 7 : tt;
@@ -500,8 +495,7 @@ vrna_get_ptype_window(int   i,
 
 PRIVATE char *
 wrap_get_ptypes(const short *S,
-                vrna_md_t   *md)
-{
+                vrna_md_t   *md) {
   char  *ptype;
   int   n, i, j, k, l, *idx;
 
@@ -549,12 +543,12 @@ wrap_get_ptypes(const short *S,
 PUBLIC char *
 get_ptypes(const short  *S,
            vrna_md_t    *md,
-           unsigned int idx_type)
-{
+           unsigned int idx_type) {
   if (S) {
     if ((unsigned int)S[0] > vrna_sequence_length_max(VRNA_OPTION_DEFAULT)) {
-      vrna_message_warning("get_ptypes@alphabet.c: sequence length of %d exceeds addressable range",
-                           (int)S[0]);
+      vrna_message_warning
+      ("get_ptypes@alphabet.c: sequence length of %d exceeds addressable range",
+       (int)S[0]);
       return NULL;
     }
 

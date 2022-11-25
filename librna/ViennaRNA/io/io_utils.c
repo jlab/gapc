@@ -67,8 +67,7 @@ is_absolute_path(const char *p);
  */
 PUBLIC void
 vrna_file_copy(FILE *from,
-               FILE *to)
-{
+               FILE *to) {
   int c;
 
   while ((c = getc(from)) != EOF)
@@ -77,8 +76,7 @@ vrna_file_copy(FILE *from,
 
 
 PUBLIC char *
-vrna_read_line(FILE *fp)
-{
+vrna_read_line(FILE *fp) {
   /* reads lines of arbitrary length from fp */
 
   char  s[512], *line, *cp;
@@ -113,8 +111,7 @@ vrna_read_line(FILE *fp)
 
 
 PUBLIC int
-vrna_mkdir_p(const char *path)
-{
+vrna_mkdir_p(const char *path) {
   struct stat sb;
   char        *slash, *ptr;
   int         done = 0;
@@ -146,7 +143,8 @@ vrna_mkdir_p(const char *path)
         return -1;
       }
     } else if (!S_ISDIR(sb.st_mode)) {
-      vrna_message_warning("File exists but is not a directory %s: %s", ptr, strerror(ENOTDIR));
+      vrna_message_warning("File exists but is not a directory %s: %s",
+                           ptr, strerror(ENOTDIR));
       free(ptr);
       return -1;
     }
@@ -160,8 +158,7 @@ vrna_mkdir_p(const char *path)
 
 
 PUBLIC char *
-vrna_basename(const char *path)
-{
+vrna_basename(const char *path) {
   char *name, *ptr;
 
   name = NULL;
@@ -180,8 +177,7 @@ vrna_basename(const char *path)
 
 
 PUBLIC char *
-vrna_dirname(const char *path)
-{
+vrna_dirname(const char *path) {
   char  *name, *p, *ptr;
   int   pos;
 
@@ -196,9 +192,19 @@ vrna_dirname(const char *path)
     pos = (int)strlen(ptr);
     p   = ptr + pos;
 
-    do  /* remove part after last separator */
+    /* remove part after last separator */
+    do {
       *p = '\0';
+    }
     while ((--p > ptr) && (*p != DIRSEPC));
+
+    /* cpplint thinks do..while loops are while loops w/ empty body
+       either rewrite do..while loop above like while loop below
+       or filter out this error when linting */
+    // while (1) {
+    //   *p = '\0';
+    //   if (!((--p > ptr) && (*p != DIRSEPC))) break;
+    // }
 
     if (p > ptr)
       name = ptr;
@@ -210,8 +216,7 @@ vrna_dirname(const char *path)
 
 PUBLIC char *
 vrna_filename_sanitize(const char *name,
-                       const char *replacement)
-{
+                       const char *replacement) {
   if (name) {
     const char    *ptr, *start, *illegal_chars;
     char          *sanitized_name;
@@ -238,7 +243,8 @@ vrna_filename_sanitize(const char *name,
     }
 
     /* resize the output string to actual requirements */
-    sanitized_name    = (char *)vrna_realloc(sanitized_name, sizeof(char) * (i + 1));
+    sanitized_name    = (char *)vrna_realloc(sanitized_name,
+                                             sizeof(char) * (i + 1));
     sanitized_name[i] = '\0';
 
     /* check for reserved unix file names */
@@ -252,13 +258,15 @@ vrna_filename_sanitize(const char *name,
     if (n > 255) {
       char *suff = NULL;
       /* try to leave file suffix, i.e. everything after last dot '.', intact */
-      if ((suff = strrchr(sanitized_name, '.')) && (sanitized_name + n - suff < 255)) {
+      if ((suff = strrchr(sanitized_name, '.'))
+          && (sanitized_name + n - suff < 255)) {
         unsigned int n_suff = sanitized_name + n - suff;
         memmove(sanitized_name + (255 - n_suff), sanitized_name + n - n_suff,
                 sizeof(char) * n_suff);
       }
 
-      sanitized_name      = (char *)vrna_realloc(sanitized_name, sizeof(char) * 256);
+      sanitized_name      = (char *)vrna_realloc(sanitized_name,
+                                                 sizeof(char) * 256);
       sanitized_name[255] = '\0';
     }
 
@@ -271,8 +279,7 @@ vrna_filename_sanitize(const char *name,
 
 
 PUBLIC int
-vrna_file_exists(const char *filename)
-{
+vrna_file_exists(const char *filename) {
   int           r = 0;
 
 #ifdef _WIN32
@@ -288,8 +295,7 @@ vrna_file_exists(const char *filename)
 
 #ifdef _WIN32
 PRIVATE int
-is_drive_char(const char c)
-{
+is_drive_char(const char c) {
   if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
     return 1;
 
@@ -301,8 +307,7 @@ is_drive_char(const char c)
 
 
 PRIVATE int
-is_absolute_path(const char *p)
-{
+is_absolute_path(const char *p) {
   if (*p == DIRSEPC)
     return 1;
 
