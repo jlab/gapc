@@ -1,5 +1,5 @@
-#ifndef VIENNA_RNA_PACKAGE_FOLD_COMPOUND_H
-#define VIENNA_RNA_PACKAGE_FOLD_COMPOUND_H
+#ifndef LIBRNA_VIENNARNA_FOLD_COMPOUND_H_
+#define LIBRNA_VIENNARNA_FOLD_COMPOUND_H_
 
 #ifdef VRNA_WARN_DEPRECATED
 # if defined(__clang__)
@@ -687,4 +687,4 @@ vrna_fold_compound_add_callback(vrna_fold_compound_t            *fc,
  *  @}
  */
 
-#endif  // VIENNA_RNA_PACKAGE_FOLD_COMPOUND_H
+#endif  // LIBRNA_VIENNARNA_FOLD_COMPOUND_H_

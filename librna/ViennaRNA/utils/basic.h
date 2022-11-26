@@ -1,5 +1,5 @@
-#ifndef VIENNA_RNA_PACKAGE_UTILS_H
-#define VIENNA_RNA_PACKAGE_UTILS_H
+#ifndef LIBRNA_VIENNARNA_UTILS_BASIC_H_
+#define LIBRNA_VIENNARNA_UTILS_BASIC_H_
 
 #ifdef VRNA_WARN_DEPRECATED
 # if defined(__clang__)
@@ -535,4 +535,4 @@ DEPRECATED(char *time_stamp(void), "Use vrna_time_stamp() instead");
 
 #endif
 
-#endif  // VIENNA_RNA_PACKAGE_UTILS_H
+#endif  // LIBRNA_VIENNARNA_UTILS_BASIC_H_

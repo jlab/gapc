@@ -1,5 +1,5 @@
-#ifndef VIENNA_RNA_PACKAGE_DP_MATRICES_H
-#define VIENNA_RNA_PACKAGE_DP_MATRICES_H
+#ifndef LIBRNA_VIENNARNA_DP_MATRICES_H_
+#define LIBRNA_VIENNARNA_DP_MATRICES_H_
 
 /**
  *  @file     dp_matrices.h
@@ -475,4 +475,4 @@ vrna_mx_pf_free(vrna_fold_compound_t *vc);
  *  @}
  */
 
-#endif  // VIENNA_RNA_PACKAGE_DP_MATRICES_H
+#endif  // LIBRNA_VIENNARNA_DP_MATRICES_H_

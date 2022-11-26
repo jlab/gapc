@@ -1,5 +1,5 @@
-#ifndef VIENNA_RNA_PACKAGE_MODEL_H
-#define VIENNA_RNA_PACKAGE_MODEL_H
+#ifndef LIBRNA_VIENNARNA_MODEL_H_
+#define LIBRNA_VIENNARNA_MODEL_H_
 
 /**
  *  @file     model.h
@@ -990,4 +990,4 @@ option_string(void);
  * @}
  */
 
-#endif  // VIENNA_RNA_PACKAGE_MODEL_H
+#endif  // LIBRNA_VIENNARNA_MODEL_H_

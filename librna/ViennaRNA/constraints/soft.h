@@ -1,5 +1,5 @@
-#ifndef VIENNA_RNA_PACKAGE_CONSTRAINTS_SOFT_H
-#define VIENNA_RNA_PACKAGE_CONSTRAINTS_SOFT_H
+#ifndef LIBRNA_VIENNARNA_CONSTRAINTS_SOFT_H_
+#define LIBRNA_VIENNARNA_CONSTRAINTS_SOFT_H_
 
 /**
  *  @file     constraints/soft.h
@@ -530,4 +530,4 @@ vrna_sc_add_exp_f_comparative(vrna_fold_compound_t        *vc,
                               vrna_callback_sc_exp_energy **exp_f);
 
 
-#endif  // VIENNA_RNA_PACKAGE_CONSTRAINTS_SOFT_H
+#endif  // LIBRNA_VIENNARNA_CONSTRAINTS_SOFT_H_
