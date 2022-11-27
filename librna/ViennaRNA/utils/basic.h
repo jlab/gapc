@@ -1,5 +1,5 @@
-#ifndef LIBRNA_VIENNARNA_UTILS_BASIC_H_
-#define LIBRNA_VIENNARNA_UTILS_BASIC_H_
+#ifndef VIENNA_RNA_PACKAGE_UTILS_H
+#define VIENNA_RNA_PACKAGE_UTILS_H
 
 #ifdef VRNA_WARN_DEPRECATED
 # if defined(__clang__)
@@ -239,12 +239,12 @@ vrna_time_stamp(void);
  *  was given. Possible return values are:\n
  *  #VRNA_INPUT_FASTA_HEADER, #VRNA_INPUT_ERROR, #VRNA_INPUT_MISC, #VRNA_INPUT_QUIT
  *
- *  @param str      A pointer to the character array that contains the line read
+ *  @param string   A pointer to the character array that contains the line read
  *  @param options  A collection of options for switching the functions behavior
  *  @return         A flag with information about what has been read
  */
 unsigned int
-get_input_line(char         **str,
+get_input_line(char         **string,
                unsigned int options);
 
 
@@ -424,11 +424,9 @@ vrna_message_input_msa(const char *s);
 
 #ifndef VRNA_DISABLE_BACKWARD_COMPATIBILITY
 
-DEPRECATED(int *get_indx(unsigned int length),
-           "Use vrna_idx_col_wise() instead");
+DEPRECATED(int *get_indx(unsigned int length), "Use vrna_idx_col_wise() instead");
 
-DEPRECATED(int *get_iindx(unsigned int length),
-           "Use vrna_idx_row_wise() instead");
+DEPRECATED(int *get_iindx(unsigned int length), "Use vrna_idx_row_wise() instead");
 
 /**
  *  @brief Read a line of arbitrary length from a stream
@@ -450,8 +448,7 @@ DEPRECATED(char *get_line(FILE *fp), "Use vrna_read_line() instead");
  *  There will also be a ruler (scale line) printed that helps orientation of the sequence positions
  *  @deprecated Use vrna_message_input_seq_simple() instead!
  */
-DEPRECATED(void print_tty_input_seq(void),
-           "Use vrna_message_input_seq_simple() instead");
+DEPRECATED(void print_tty_input_seq(void), "Use vrna_message_input_seq_simple() instead");
 
 /**
  *  @brief Print a line with a user defined string and a ruler to stdout.
@@ -461,8 +458,7 @@ DEPRECATED(void print_tty_input_seq(void),
  *
  *  @deprecated Use vrna_message_input_seq() instead!
  */
-DEPRECATED(void print_tty_input_seq_str(const char *s),
-           "Use vrna_message_input_seq() instead");
+DEPRECATED(void print_tty_input_seq_str(const char *s), "Use vrna_message_input_seq() instead");
 
 /**
  *  @brief Print a warning message
@@ -471,16 +467,14 @@ DEPRECATED(void print_tty_input_seq_str(const char *s),
  *
  *  @deprecated Use vrna_message_warning() instead!
  */
-DEPRECATED(void warn_user(const char message[]),
-           "Use vrna_message_warning() instead");
+DEPRECATED(void warn_user(const char message[]), "Use vrna_message_warning() instead");
 
 /**
  *  @brief Die with an error message
  *
  *  @deprecated Use vrna_message_error() instead!
  */
-DEPRECATED(void nrerror(const char message[]),
-           "Use vrna_message_error() instead()");
+DEPRECATED(void nrerror(const char message[]), "Use vrna_message_error() instead()");
 
 /**
  *  @brief Allocate space safely
@@ -535,4 +529,4 @@ DEPRECATED(char *time_stamp(void), "Use vrna_time_stamp() instead");
 
 #endif
 
-#endif  // LIBRNA_VIENNARNA_UTILS_BASIC_H_
+#endif

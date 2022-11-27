@@ -69,13 +69,10 @@ int             logML           = VRNA_MODEL_DEFAULT_LOG_ML;
 
 /* below are some more deprecated global symbols we need to get rid off */
 
-/* interior loops of size 2 get energy 0.8Kcal and
- * no mismatches (no longer used) */
-int             james_rule        = 1;
-
-/* TODO: compile ribosums into program
- * Warning: this variable will vanish */
-char            *RibosumFile      = NULL;
+int             james_rule        = 1;    /* interior loops of size 2 get energy 0.8Kcal and
+                                           * no mismatches (no longer used) */
+char            *RibosumFile      = NULL; /* TODO: compile ribosums into program
+                                           * Warning: this variable will vanish */
 int             csv               = 0;    /*generate comma seperated output*/
 vrna_bp_stack_t *base_pair        = NULL;
 FLT_OR_DBL      *pr               = NULL; /* base pairing prob. matrix */
@@ -182,7 +179,8 @@ prepare_default_pairs(vrna_md_t *md);
  */
 PUBLIC vrna_md_t *
 vrna_md_copy(vrna_md_t        *md_to,
-             const vrna_md_t  *md_from) {
+             const vrna_md_t  *md_from)
+{
   int       i;
   vrna_md_t *md;
 
@@ -219,14 +217,16 @@ vrna_md_copy(vrna_md_t        *md_to,
 
 
 PUBLIC void
-vrna_md_set_default(vrna_md_t *md) {
+vrna_md_set_default(vrna_md_t *md)
+{
   if (md) /* copy defaults */
     vrna_md_copy(md, &defaults);
 }
 
 
 PUBLIC char *
-vrna_md_option_string(vrna_md_t *md) {
+vrna_md_option_string(vrna_md_t *md)
+{
   static char options[255];
 
   *options = '\0';
@@ -257,7 +257,8 @@ vrna_md_option_string(vrna_md_t *md) {
 
 PRIVATE void
 copy_nonstandards(vrna_md_t   *md,
-                  const char  *ns) {
+                  const char  *ns)
+{
   unsigned int n = strlen(ns);
 
   if (n < 64) {
@@ -269,7 +270,8 @@ copy_nonstandards(vrna_md_t   *md,
 
 PUBLIC void
 vrna_md_set_nonstandards(vrna_md_t  *md,
-                         const char *ns_bases) {
+                         const char *ns_bases)
+{
   const char    *c;
   unsigned int  n;
   int           i, sym;
@@ -306,8 +308,7 @@ vrna_md_set_nonstandards(vrna_md_t  *md,
         memcpy(nonstandards, &(md->nonstandards[0]), 33 * sizeof(char));
 #endif
       } else {
-        vrna_message_warning
-        ("vrna_md_set_nonstandards: list too long, dropping nonstandards!");
+        vrna_message_warning("vrna_md_set_nonstandards: list too long, dropping nonstandards!");
       }
     } else {
       /* remove nonstandards */
@@ -325,7 +326,8 @@ vrna_md_set_nonstandards(vrna_md_t  *md,
 
 
 PUBLIC void
-vrna_md_defaults_reset(vrna_md_t *md_p) {
+vrna_md_defaults_reset(vrna_md_t *md_p)
+{
   /* first, reset to factory defaults */
   defaults.dangles          = VRNA_MODEL_DEFAULT_DANGLES;
   defaults.special_hp       = VRNA_MODEL_DEFAULT_SPECIAL_HP;
@@ -419,7 +421,8 @@ vrna_md_defaults_reset(vrna_md_t *md_p) {
 /* below are the setter functions for global default settings */
 
 PUBLIC void
-vrna_md_defaults_temperature(double T) {
+vrna_md_defaults_temperature(double T)
+{
   if (T >= -K0) {
     defaults.temperature = T;
 #ifndef VRNA_DISABLE_BACKWARD_COMPATIBILITY
@@ -427,44 +430,49 @@ vrna_md_defaults_temperature(double T) {
 #endif
   } else {
     vrna_message_warning(
-    "vrna_md_defaults_temperature@model.c: Temperature out of range, "
-    "T must be above absolute zero. Not changing anything!");
+      "vrna_md_defaults_temperature@model.c: Temperature out of range, T must be above absolute zero. Not changing anything!");
   }
 }
 
 
 PUBLIC double
-vrna_md_defaults_temperature_get(void) {
+vrna_md_defaults_temperature_get(void)
+{
   return defaults.temperature;
 }
 
 
 PUBLIC void
-vrna_md_defaults_betaScale(double b) {
+vrna_md_defaults_betaScale(double b)
+{
   defaults.betaScale = b;
 }
 
 
 PUBLIC double
-vrna_md_defaults_betaScale_get(void) {
+vrna_md_defaults_betaScale_get(void)
+{
   return defaults.betaScale;
 }
 
 
 PUBLIC void
-vrna_md_defaults_pf_smooth(int s) {
+vrna_md_defaults_pf_smooth(int s)
+{
   defaults.pf_smooth = s;
 }
 
 
 PUBLIC int
-vrna_md_defaults_pf_smooth_get(void) {
+vrna_md_defaults_pf_smooth_get(void)
+{
   return defaults.pf_smooth;
 }
 
 
 PUBLIC void
-vrna_md_defaults_dangles(int d) {
+vrna_md_defaults_dangles(int d)
+{
   if ((d >= 0) && (d <= 3)) {
     defaults.dangles = d;
 #ifndef VRNA_DISABLE_BACKWARD_COMPATIBILITY
@@ -472,20 +480,21 @@ vrna_md_defaults_dangles(int d) {
 #endif
   } else {
     vrna_message_warning(
-      "vrna_md_defaults_dangles@model.c: Dangles out of range, "
-      "must be (0 <= d <= 3). Not changing anything!");
+      "vrna_md_defaults_dangles@model.c: Dangles out of range, must be (0 <= d <= 3). Not changing anything!");
   }
 }
 
 
 PUBLIC int
-vrna_md_defaults_dangles_get(void) {
+vrna_md_defaults_dangles_get(void)
+{
   return defaults.dangles;
 }
 
 
 PUBLIC void
-vrna_md_defaults_special_hp(int flag) {
+vrna_md_defaults_special_hp(int flag)
+{
   defaults.special_hp = flag ? 1 : 0;
 #ifndef VRNA_DISABLE_BACKWARD_COMPATIBILITY
   tetra_loop = defaults.special_hp;
@@ -494,13 +503,15 @@ vrna_md_defaults_special_hp(int flag) {
 
 
 PUBLIC int
-vrna_md_defaults_special_hp_get(void) {
+vrna_md_defaults_special_hp_get(void)
+{
   return defaults.special_hp;
 }
 
 
 PUBLIC void
-vrna_md_defaults_noLP(int flag) {
+vrna_md_defaults_noLP(int flag)
+{
   defaults.noLP = flag ? 1 : 0;
 #ifndef VRNA_DISABLE_BACKWARD_COMPATIBILITY
   noLonelyPairs = defaults.noLP;
@@ -509,13 +520,15 @@ vrna_md_defaults_noLP(int flag) {
 
 
 PUBLIC int
-vrna_md_defaults_noLP_get(void) {
+vrna_md_defaults_noLP_get(void)
+{
   return defaults.noLP;
 }
 
 
 PUBLIC void
-vrna_md_defaults_noGU(int flag) {
+vrna_md_defaults_noGU(int flag)
+{
   defaults.noGU = flag ? 1 : 0;
 #ifndef VRNA_DISABLE_BACKWARD_COMPATIBILITY
   noGU = defaults.noGU;
@@ -526,13 +539,15 @@ vrna_md_defaults_noGU(int flag) {
 
 
 PUBLIC int
-vrna_md_defaults_noGU_get(void) {
+vrna_md_defaults_noGU_get(void)
+{
   return defaults.noGU;
 }
 
 
 PUBLIC void
-vrna_md_defaults_noGUclosure(int flag) {
+vrna_md_defaults_noGUclosure(int flag)
+{
   defaults.noGUclosure = flag ? 1 : 0;
 #ifndef VRNA_DISABLE_BACKWARD_COMPATIBILITY
   no_closingGU = defaults.noGUclosure;
@@ -541,13 +556,15 @@ vrna_md_defaults_noGUclosure(int flag) {
 
 
 PUBLIC int
-vrna_md_defaults_noGUclosure_get(void) {
+vrna_md_defaults_noGUclosure_get(void)
+{
   return defaults.noGUclosure;
 }
 
 
 PUBLIC void
-vrna_md_defaults_logML(int flag) {
+vrna_md_defaults_logML(int flag)
+{
   defaults.logML = flag ? 1 : 0;
 #ifndef VRNA_DISABLE_BACKWARD_COMPATIBILITY
   logML = defaults.logML;
@@ -556,13 +573,15 @@ vrna_md_defaults_logML(int flag) {
 
 
 PUBLIC int
-vrna_md_defaults_logML_get(void) {
+vrna_md_defaults_logML_get(void)
+{
   return defaults.logML;
 }
 
 
 PUBLIC void
-vrna_md_defaults_circ(int flag) {
+vrna_md_defaults_circ(int flag)
+{
   defaults.circ = flag ? 1 : 0;
 #ifndef VRNA_DISABLE_BACKWARD_COMPATIBILITY
   circ = defaults.circ;
@@ -571,13 +590,15 @@ vrna_md_defaults_circ(int flag) {
 
 
 PUBLIC int
-vrna_md_defaults_circ_get(void) {
+vrna_md_defaults_circ_get(void)
+{
   return defaults.circ;
 }
 
 
 PUBLIC void
-vrna_md_defaults_gquad(int flag) {
+vrna_md_defaults_gquad(int flag)
+{
   defaults.gquad = flag ? 1 : 0;
 #ifndef VRNA_DISABLE_BACKWARD_COMPATIBILITY
   gquad = defaults.gquad;
@@ -586,13 +607,15 @@ vrna_md_defaults_gquad(int flag) {
 
 
 PUBLIC int
-vrna_md_defaults_gquad_get(void) {
+vrna_md_defaults_gquad_get(void)
+{
   return defaults.gquad;
 }
 
 
 PUBLIC void
-vrna_md_defaults_uniq_ML(int flag) {
+vrna_md_defaults_uniq_ML(int flag)
+{
   defaults.uniq_ML = flag ? 1 : 0;
 #ifndef VRNA_DISABLE_BACKWARD_COMPATIBILITY
   uniq_ML = defaults.uniq_ML;
@@ -601,13 +624,15 @@ vrna_md_defaults_uniq_ML(int flag) {
 
 
 PUBLIC int
-vrna_md_defaults_uniq_ML_get(void) {
+vrna_md_defaults_uniq_ML_get(void)
+{
   return defaults.uniq_ML;
 }
 
 
 PUBLIC void
-vrna_md_defaults_energy_set(int e) {
+vrna_md_defaults_energy_set(int e)
+{
   if ((e >= 0) && (e <= 3)) {
     defaults.energy_set = e;
 #ifndef VRNA_DISABLE_BACKWARD_COMPATIBILITY
@@ -617,33 +642,35 @@ vrna_md_defaults_energy_set(int e) {
     vrna_md_update(&defaults);
   } else {
     vrna_message_warning(
-      "vrna_md_defaults_energy_set@model.c: "
-      "Energy Set out of range, must be (0 <= e <= 3). "
-      "Not changing anything!");
+      "vrna_md_defaults_energy_set@model.c: Energy Set out of range, must be (0 <= e <= 3). Not changing anything!");
   }
 }
 
 
 PUBLIC int
-vrna_md_defaults_energy_set_get(void) {
+vrna_md_defaults_energy_set_get(void)
+{
   return defaults.energy_set;
 }
 
 
 PUBLIC void
-vrna_md_defaults_backtrack(int flag) {
+vrna_md_defaults_backtrack(int flag)
+{
   defaults.backtrack = flag ? 1 : 0;
 }
 
 
 PUBLIC int
-vrna_md_defaults_backtrack_get(void) {
+vrna_md_defaults_backtrack_get(void)
+{
   return defaults.backtrack;
 }
 
 
 PUBLIC void
-vrna_md_defaults_backtrack_type(char t) {
+vrna_md_defaults_backtrack_type(char t)
+{
   switch (t) {
     case 'M': /* fall through */
     case 'C': /* fall through */
@@ -655,21 +682,21 @@ vrna_md_defaults_backtrack_type(char t) {
       break;
     default:
       vrna_message_warning(
-        "vrna_md_defaults_backtrack_type@model.c: "
-        "Backtrack type must be any of 'F', 'C', or 'M'. "
-        "Not changing anything!");
+        "vrna_md_defaults_backtrack_type@model.c: Backtrack type must be any of 'F', 'C', or 'M'. Not changing anything!");
   }
 }
 
 
 PUBLIC char
-vrna_md_defaults_backtrack_type_get(void) {
+vrna_md_defaults_backtrack_type_get(void)
+{
   return defaults.backtrack_type;
 }
 
 
 PUBLIC void
-vrna_md_defaults_compute_bpp(int flag) {
+vrna_md_defaults_compute_bpp(int flag)
+{
   if ((flag >= 0) && (flag <= 2)) {
     defaults.compute_bpp = flag;
 #ifndef VRNA_DISABLE_BACKWARD_COMPATIBILITY
@@ -682,13 +709,15 @@ vrna_md_defaults_compute_bpp(int flag) {
 
 
 PUBLIC int
-vrna_md_defaults_compute_bpp_get(void) {
+vrna_md_defaults_compute_bpp_get(void)
+{
   return defaults.compute_bpp;
 }
 
 
 PUBLIC void
-vrna_md_defaults_max_bp_span(int span) {
+vrna_md_defaults_max_bp_span(int span)
+{
   defaults.max_bp_span = (span <= 0) ? -1 : span;
 #ifndef VRNA_DISABLE_BACKWARD_COMPATIBILITY
   max_bp_span = defaults.max_bp_span;
@@ -697,37 +726,43 @@ vrna_md_defaults_max_bp_span(int span) {
 
 
 PUBLIC int
-vrna_md_defaults_max_bp_span_get(void) {
+vrna_md_defaults_max_bp_span_get(void)
+{
   return defaults.max_bp_span;
 }
 
 
 PUBLIC void
-vrna_md_defaults_min_loop_size(int size) {
+vrna_md_defaults_min_loop_size(int size)
+{
   defaults.min_loop_size = (size < 0) ? 0 : size;
 }
 
 
 PUBLIC int
-vrna_md_defaults_min_loop_size_get(void) {
+vrna_md_defaults_min_loop_size_get(void)
+{
   return defaults.min_loop_size;
 }
 
 
 PUBLIC void
-vrna_md_defaults_window_size(int size) {
+vrna_md_defaults_window_size(int size)
+{
   defaults.window_size = (size <= 0) ? -1 : size;
 }
 
 
 PUBLIC int
-vrna_md_defaults_window_size_get(void) {
+vrna_md_defaults_window_size_get(void)
+{
   return defaults.window_size;
 }
 
 
 PUBLIC void
-vrna_md_defaults_oldAliEn(int flag) {
+vrna_md_defaults_oldAliEn(int flag)
+{
   defaults.oldAliEn = flag ? 1 : 0;
 #ifndef VRNA_DISABLE_BACKWARD_COMPATIBILITY
   oldAliEn = defaults.oldAliEn;
@@ -736,13 +771,15 @@ vrna_md_defaults_oldAliEn(int flag) {
 
 
 PUBLIC int
-vrna_md_defaults_oldAliEn_get(void) {
+vrna_md_defaults_oldAliEn_get(void)
+{
   return defaults.oldAliEn;
 }
 
 
 PUBLIC void
-vrna_md_defaults_ribo(int flag) {
+vrna_md_defaults_ribo(int flag)
+{
   defaults.ribo = flag ? 1 : 0;
 #ifndef VRNA_DISABLE_BACKWARD_COMPATIBILITY
   ribo = defaults.ribo;
@@ -751,13 +788,15 @@ vrna_md_defaults_ribo(int flag) {
 
 
 PUBLIC int
-vrna_md_defaults_ribo_get(void) {
+vrna_md_defaults_ribo_get(void)
+{
   return defaults.ribo;
 }
 
 
 PUBLIC void
-vrna_md_defaults_cv_fact(double factor) {
+vrna_md_defaults_cv_fact(double factor)
+{
   defaults.cv_fact = factor;
 #ifndef VRNA_DISABLE_BACKWARD_COMPATIBILITY
   cv_fact = factor;
@@ -766,13 +805,15 @@ vrna_md_defaults_cv_fact(double factor) {
 
 
 PUBLIC double
-vrna_md_defaults_cv_fact_get(void) {
+vrna_md_defaults_cv_fact_get(void)
+{
   return defaults.cv_fact;
 }
 
 
 PUBLIC void
-vrna_md_defaults_nc_fact(double factor) {
+vrna_md_defaults_nc_fact(double factor)
+{
   defaults.nc_fact = factor;
 #ifndef VRNA_DISABLE_BACKWARD_COMPATIBILITY
   nc_fact = factor;
@@ -781,25 +822,29 @@ vrna_md_defaults_nc_fact(double factor) {
 
 
 PUBLIC double
-vrna_md_defaults_nc_fact_get(void) {
+vrna_md_defaults_nc_fact_get(void)
+{
   return defaults.nc_fact;
 }
 
 
 PUBLIC void
-vrna_md_defaults_sfact(double factor) {
+vrna_md_defaults_sfact(double factor)
+{
   defaults.sfact = factor;
 }
 
 
 PUBLIC double
-vrna_md_defaults_sfact_get(void) {
+vrna_md_defaults_sfact_get(void)
+{
   return defaults.sfact;
 }
 
 
 PUBLIC void
-vrna_md_update(vrna_md_t *md) {
+vrna_md_update(vrna_md_t *md)
+{
   if (md)
     fill_pair_matrices(md);
 }
@@ -813,7 +858,8 @@ vrna_md_update(vrna_md_t *md) {
  *  - nonstandards
  */
 PRIVATE void
-fill_pair_matrices(vrna_md_t *md) {
+fill_pair_matrices(vrna_md_t *md)
+{
   int i, j;
 
   /* nullify everything */
@@ -905,7 +951,8 @@ fill_pair_matrices(vrna_md_t *md) {
 
 
 PRIVATE void
-prepare_default_pairs(vrna_md_t *md) {
+prepare_default_pairs(vrna_md_t *md)
+{
   unsigned int i, j;
 
   for (i = 0; i < 5; i++)
@@ -940,7 +987,8 @@ prepare_default_pairs(vrna_md_t *md) {
  */
 
 PUBLIC void
-set_model_details(vrna_md_t *md) {
+set_model_details(vrna_md_t *md)
+{
   if (md) {
     /* make sure there are no uninitialized data fields */
     memset(md, 0, sizeof(vrna_md_t));
@@ -980,7 +1028,8 @@ set_model_details(vrna_md_t *md) {
 
 
 PUBLIC char *
-option_string(void) {
+option_string(void)
+{
   vrna_md_t md;
 
   set_model_details(&md);

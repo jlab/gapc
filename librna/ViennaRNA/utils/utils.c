@@ -23,8 +23,7 @@
 /* for getpid() we need some distinction between UNIX and Win systems */
 #ifdef _WIN32
 #include <windows.h>
-/* rename windows specific getpid function */
-#define getpid() GetCurrentProcessId()
+#define getpid() GetCurrentProcessId() /* rename windows specific getpid function */
 #else
 #include <unistd.h>
 #endif
@@ -81,7 +80,8 @@ rj_mix(uint32_t a,
 /* include the following two functions only if not including <dmalloc.h> */
 
 PUBLIC void *
-vrna_alloc(unsigned size) {
+vrna_alloc(unsigned size)
+{
   void *pointer;
 
   if ((pointer = (void *)calloc(1, (size_t)size)) == NULL) {
@@ -102,7 +102,8 @@ vrna_alloc(unsigned size) {
 
 PUBLIC void *
 vrna_realloc(void     *p,
-             unsigned size) {
+             unsigned size)
+{
   if (p == NULL)
     return vrna_alloc(size);
 
@@ -129,7 +130,8 @@ vrna_realloc(void     *p,
 
 PUBLIC void
 vrna_message_error(const char *format,
-                   ...) {
+                   ...)
+{
   va_list args;
 
   va_start(args, format);
@@ -140,11 +142,11 @@ vrna_message_error(const char *format,
 
 PUBLIC void
 vrna_message_verror(const char  *format,
-                    va_list     args) {
+                    va_list     args)
+{
 #ifndef VRNA_WITHOUT_TTY_COLORS
   if (isatty(fileno(stderr))) {
-    fprintf(stderr,
-           ANSI_COLOR_RED_B "ERROR: " ANSI_COLOR_RESET ANSI_COLOR_BRIGHT);
+    fprintf(stderr, ANSI_COLOR_RED_B "ERROR: " ANSI_COLOR_RESET ANSI_COLOR_BRIGHT);
     vfprintf(stderr, format, args);
     fprintf(stderr, ANSI_COLOR_RESET "\n");
   } else {
@@ -166,7 +168,8 @@ vrna_message_verror(const char  *format,
 
 PUBLIC void
 vrna_message_warning(const char *format,
-                     ...) {
+                     ...)
+{
   va_list args;
 
   va_start(args, format);
@@ -177,12 +180,11 @@ vrna_message_warning(const char *format,
 
 PUBLIC void
 vrna_message_vwarning(const char  *format,
-                      va_list     args) {
+                      va_list     args)
+{
 #ifndef VRNA_WITHOUT_TTY_COLORS
   if (isatty(fileno(stderr))) {
-    fprintf
-    (stderr,
-     ANSI_COLOR_MAGENTA_B "WARNING: " ANSI_COLOR_RESET ANSI_COLOR_BRIGHT);
+    fprintf(stderr, ANSI_COLOR_MAGENTA_B "WARNING: " ANSI_COLOR_RESET ANSI_COLOR_BRIGHT);
     vfprintf(stderr, format, args);
     fprintf(stderr, ANSI_COLOR_RESET "\n");
   } else {
@@ -201,7 +203,8 @@ vrna_message_vwarning(const char  *format,
 PUBLIC void
 vrna_message_info(FILE        *fp,
                   const char  *format,
-                  ...) {
+                  ...)
+{
   va_list args;
 
   va_start(args, format);
@@ -213,7 +216,8 @@ vrna_message_info(FILE        *fp,
 PUBLIC void
 vrna_message_vinfo(FILE       *fp,
                    const char *format,
-                   va_list    args) {
+                   va_list    args)
+{
   if (!fp)
     fp = stdout;
 
@@ -236,7 +240,8 @@ vrna_message_vinfo(FILE       *fp,
 
 /*------------------------------------------------------------------------*/
 PUBLIC void
-vrna_init_rand(void) {
+vrna_init_rand(void)
+{
   vrna_init_rand_seed((unsigned int)rj_mix(clock(),
                                            time(NULL),
                                            getpid()));
@@ -244,7 +249,8 @@ vrna_init_rand(void) {
 
 
 PUBLIC void
-vrna_init_rand_seed(unsigned int seed) {
+vrna_init_rand_seed(unsigned int seed)
+{
 #ifdef HAVE_ERAND48
   uint32_t s = (uint32_t)seed;
 
@@ -264,7 +270,8 @@ vrna_init_rand_seed(unsigned int seed) {
  * 48 bit arithmetic
  */
 PUBLIC double
-vrna_urn(void) {
+vrna_urn(void)
+{
 #ifdef HAVE_ERAND48
   extern double
   erand48(unsigned short[]);
@@ -281,7 +288,8 @@ vrna_urn(void) {
 
 PUBLIC int
 vrna_int_urn(int  from,
-             int  to) {
+             int  to)
+{
   return ((int)(vrna_urn() * (to - from + 1))) + from;
 }
 
@@ -291,7 +299,8 @@ vrna_int_urn(int  from,
 /*-----------------------------------------------------------------*/
 
 PUBLIC char *
-vrna_time_stamp(void) {
+vrna_time_stamp(void)
+{
   time_t cal_time;
 
   cal_time = time(NULL);
@@ -303,7 +312,8 @@ vrna_time_stamp(void) {
 
 PUBLIC unsigned int
 get_input_line(char         **string,
-               unsigned int option) {
+               unsigned int option)
+{
   char  *line;
   int   i, l, r;
 
@@ -377,13 +387,15 @@ get_input_line(char         **string,
 
 
 PUBLIC void
-vrna_message_input_seq_simple(void) {
+vrna_message_input_seq_simple(void)
+{
   vrna_message_input_seq("Input string (upper or lower case)");
 }
 
 
 PUBLIC void
-vrna_message_input_seq(const char *s) {
+vrna_message_input_seq(const char *s)
+{
 #ifndef VRNA_WITHOUT_TTY_COLORS
   if (isatty(fileno(stdout))) {
     printf("\n" ANSI_COLOR_CYAN "%s; @ to quit" ANSI_COLOR_RESET "\n", s);
@@ -401,7 +413,8 @@ vrna_message_input_seq(const char *s) {
 }
 
 PUBLIC void
-vrna_message_input_msa(const char *s) {
+vrna_message_input_msa(const char *s)
+{
 #ifndef VRNA_WITHOUT_TTY_COLORS
   if (isatty(fileno(stdout))) {
     printf("\n" ANSI_COLOR_CYAN "%s; Ctrl-c to quit" ANSI_COLOR_RESET "\n", s);
@@ -419,7 +432,8 @@ vrna_message_input_msa(const char *s) {
 }
 
 PUBLIC int *
-vrna_idx_row_wise(unsigned int length) {
+vrna_idx_row_wise(unsigned int length)
+{
   int i;
   int *idx = (int *)vrna_alloc(sizeof(int) * (length + 1));
 
@@ -430,7 +444,8 @@ vrna_idx_row_wise(unsigned int length) {
 
 
 PUBLIC int *
-vrna_idx_col_wise(unsigned int length) {
+vrna_idx_col_wise(unsigned int length)
+{
   unsigned int  i;
   int           *idx = (int *)vrna_alloc(sizeof(int) * (length + 1));
 
@@ -448,7 +463,8 @@ vrna_idx_col_wise(unsigned int length) {
 PRIVATE uint32_t
 rj_mix(uint32_t a,
        uint32_t b,
-       uint32_t c) {
+       uint32_t c)
+{
   /*
    * This is Robert Jenkins' 96 bit Mix function
    *
@@ -528,43 +544,50 @@ rj_mix(uint32_t a,
  */
 
 PUBLIC int *
-get_iindx(unsigned int length) {
+get_iindx(unsigned int length)
+{
   return vrna_idx_row_wise(length);
 }
 
 
 PUBLIC int *
-get_indx(unsigned int length) {
+get_indx(unsigned int length)
+{
   return vrna_idx_col_wise(length);
 }
 
 
 PUBLIC void
-print_tty_input_seq(void) {
+print_tty_input_seq(void)
+{
   vrna_message_input_seq_simple();
 }
 
 
 PUBLIC void
-print_tty_input_seq_str(const char *s) {
+print_tty_input_seq_str(const char *s)
+{
   vrna_message_input_seq(s);
 }
 
 
 PUBLIC void
-warn_user(const char message[]) {
+warn_user(const char message[])
+{
   vrna_message_warning(message);
 }
 
 
 PUBLIC void
-nrerror(const char message[]) {
+nrerror(const char message[])
+{
   vrna_message_error(message);
 }
 
 
 PUBLIC void *
-space(unsigned size) {
+space(unsigned size)
+{
   return vrna_alloc(size);
 }
 
@@ -573,45 +596,52 @@ space(unsigned size) {
 /* dmalloc.h #define's vrna_realloc */
 PUBLIC void *
 xrealloc(void     *p,
-         unsigned size) {
+         unsigned size)
+{
   return vrna_realloc(p, size);
 }
 
 
 PUBLIC void
-init_rand(void) {
+init_rand(void)
+{
   vrna_init_rand();
 }
 
 
 PUBLIC double
-urn(void) {
+urn(void)
+{
   return vrna_urn();
 }
 
 
 PUBLIC int
 int_urn(int from,
-        int to) {
+        int to)
+{
   return vrna_int_urn(from, to);
 }
 
 
 PUBLIC void
 filecopy(FILE *from,
-         FILE *to) {
+         FILE *to)
+{
   vrna_file_copy(from, to);
 }
 
 
 PUBLIC char *
-time_stamp(void) {
+time_stamp(void)
+{
   return vrna_time_stamp();
 }
 
 
 PUBLIC char *
-get_line(FILE *fp) {
+get_line(FILE *fp)
+{
   /* reads lines of arbitrary length from fp */
 
   return vrna_read_line(fp);

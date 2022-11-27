@@ -1,5 +1,5 @@
-#ifndef LIBRNA_VIENNARNA_UTILS_STRUCTURES_H_
-#define LIBRNA_VIENNARNA_UTILS_STRUCTURES_H_
+#ifndef VIENNA_RNA_PACKAGE_STRUCT_UTILS_H
+#define VIENNA_RNA_PACKAGE_STRUCT_UTILS_H
 
 #ifdef VRNA_WARN_DEPRECATED
 # if defined(__clang__)
@@ -118,9 +118,9 @@ typedef struct vrna_elem_prob_s vrna_ep_t;
  */
 #define VRNA_BRACKETS_DEFAULT  \
   (VRNA_BRACKETS_RND | \
-  VRNA_BRACKETS_CLY | \
-  VRNA_BRACKETS_ANG | \
-  VRNA_BRACKETS_SQR)
+   VRNA_BRACKETS_CLY | \
+   VRNA_BRACKETS_ANG | \
+   VRNA_BRACKETS_SQR)
 
 
 /**
@@ -131,10 +131,10 @@ typedef struct vrna_elem_prob_s vrna_ep_t;
  */
 #define VRNA_BRACKETS_ANY \
   (VRNA_BRACKETS_RND | \
-  VRNA_BRACKETS_CLY | \
-  VRNA_BRACKETS_ANG | \
-  VRNA_BRACKETS_SQR | \
-  VRNA_BRACKETS_ALPHA)
+   VRNA_BRACKETS_CLY | \
+   VRNA_BRACKETS_ANG | \
+   VRNA_BRACKETS_SQR | \
+   VRNA_BRACKETS_ALPHA)
 
 
 #include <stdio.h>
@@ -206,12 +206,12 @@ vrna_db_flatten(char          *structure,
  *       #VRNA_BRACKETS_RND, #VRNA_BRACKETS_ANG, #VRNA_BRACKETS_CLY, #VRNA_BRACKETS_SQR,
  *       #VRNA_BRACKETS_DEFAULT
  *
- *  @param  st          The structure string where brackets are flattened in-place
+ *  @param  string      The structure string where brackets are flattened in-place
  *  @param  target      The new pair characters the string will be flattened to
  *  @param  options     A bitmask to specify which types of brackets should be flattened out
  */
 void
-vrna_db_flatten_to(char         *str,
+vrna_db_flatten_to(char         *string,
                    const char   target[3],
                    unsigned int options);
 
@@ -480,19 +480,10 @@ vrna_pt_pk_remove(const short   *ptable,
  *  #VRNA_PLIST_TYPE_UD_MOTIF, #VRNA_PLIST_TYPE_STACK
  */
 struct vrna_elem_prob_s {
-  /**<  @brief  Start position (usually 5' nucleotide that starts
-   *            the element, e.g. base pair) */
-  int   i;
-
-  /**<  @brief  End position (usually 3' nucleotide that ends
-   *            the element, e.g. base pair) */
-  int   j;
-
-  /**<  @brief  Probability of the element */
-  float p;
-
-  /**<  @brief  Type of the element */
-  int   type;
+  int   i;    /**<  @brief  Start position (usually 5' nucleotide that starts the element, e.g. base pair) */
+  int   j;    /**<  @brief  End position (usually 3' nucleotide that ends the element, e.g. base pair) */
+  float p;    /**<  @brief  Probability of the element */
+  int   type; /**<  @brief  Type of the element */
 };
 
 /**
@@ -1267,4 +1258,4 @@ DEPRECATED(char    bppm_symbol(const float *x),
  * @}
  */
 
-#endif  // LIBRNA_VIENNARNA_UTILS_STRUCTURES_H_
+#endif

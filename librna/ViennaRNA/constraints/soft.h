@@ -1,5 +1,5 @@
-#ifndef LIBRNA_VIENNARNA_CONSTRAINTS_SOFT_H_
-#define LIBRNA_VIENNARNA_CONSTRAINTS_SOFT_H_
+#ifndef VIENNA_RNA_PACKAGE_CONSTRAINTS_SOFT_H
+#define VIENNA_RNA_PACKAGE_CONSTRAINTS_SOFT_H
 
 /**
  *  @file     constraints/soft.h
@@ -145,14 +145,11 @@ typedef vrna_basepair_t *(vrna_callback_sc_backtrack)(int           i,
  *  @brief  The type of a soft constraint
  */
 typedef enum {
-  /**<  @brief  Default Soft Constraints */
-  VRNA_SC_DEFAULT,
-
-  /**<  @brief  Soft Constraints suitable for local structure prediction using
-   *    window approach.
-   *    @see    vrna_mfe_window(), vrna_mfe_window_zscore(), pfl_fold()
-   */
-  VRNA_SC_WINDOW
+  VRNA_SC_DEFAULT,  /**<  @brief  Default Soft Constraints */
+  VRNA_SC_WINDOW    /**<  @brief  Soft Constraints suitable for local structure prediction using
+                     *    window approach.
+                     *    @see    vrna_mfe_window(), vrna_mfe_window_zscore(), pfl_fold()
+                     */
 } vrna_sc_type_e;
 
 
@@ -177,92 +174,57 @@ struct vrna_sc_s {
 
   unsigned char         state;
 
-  /**<  @brief Energy contribution for stretches of unpaired nucleotides */
-  int                   **energy_up;
+  int                   **energy_up;      /**<  @brief Energy contribution for stretches of unpaired nucleotides */
+  FLT_OR_DBL            **exp_energy_up;  /**<  @brief Boltzmann Factors of the energy contributions for unpaired sequence stretches */
 
-  /**<  @brief Boltzmann Factors of the energy contributions
-   *           for unpaired sequence stretches
-   */
-  FLT_OR_DBL            **exp_energy_up;
-
-  /**<  @brief  Storage container for energy contributions
-   *            per unpaired nucleotide
-   */
-  int                   *up_storage;
-
-  /**<  @brief  Storage container for energy contributions per base pair */
-  vrna_sc_bp_storage_t  **bp_storage;
+  int                   *up_storage;      /**<  @brief  Storage container for energy contributions per unpaired nucleotide */
+  vrna_sc_bp_storage_t  **bp_storage;     /**<  @brief  Storage container for energy contributions per base pair */
 
 #ifndef VRNA_DISABLE_C11_FEATURES
   /* C11 support for unnamed unions/structs */
   union {
     struct {
 #endif
-      /**<  @brief Energy contribution for base pairs */
-      int *energy_bp;
-
-      /**<  @brief Boltzmann Factors of the energy
-       *           contribution for base pairs
-       */
-      FLT_OR_DBL *exp_energy_bp;
+      int *energy_bp;                           /**<  @brief Energy contribution for base pairs */
+      FLT_OR_DBL *exp_energy_bp;                /**<  @brief Boltzmann Factors of the energy contribution for base pairs */
 #ifndef VRNA_DISABLE_C11_FEATURES
   /* C11 support for unnamed unions/structs */
     };
     struct {
 #endif
-      /**<  @brief Energy contribution for base pairs
-       *           (sliding window approach)
-       */
-      int         **energy_bp_local;
-
-      /**<  @brief Boltzmann Factors of the energy
-       *           contribution for base pairs
-       *           (sliding window approach)
-       */
-      FLT_OR_DBL  **exp_energy_bp_local;
+      int         **energy_bp_local;                    /**<  @brief Energy contribution for base pairs (sliding window approach) */
+      FLT_OR_DBL  **exp_energy_bp_local;                /**<  @brief Boltzmann Factors of the energy contribution for base pairs (sliding window approach) */
 #ifndef VRNA_DISABLE_C11_FEATURES
   /* C11 support for unnamed unions/structs */
     };
   };
 #endif
 
-  /**<  @brief Pseudo Energy contribution
-   *           per base pair involved in a stack
-   */
-  int                         *energy_stack;
-
-  /**<  @brief Boltzmann weighted pseudo energy contribution
-   *           per nucleotide involved in a stack
-   */
-  FLT_OR_DBL                  *exp_energy_stack;
+  int                         *energy_stack;      /**<  @brief Pseudo Energy contribution per base pair involved in a stack */
+  FLT_OR_DBL                  *exp_energy_stack;  /**<  @brief Boltzmann weighted pseudo energy contribution per nucleotide involved in a stack */
 
   /* generic soft contraints below */
+  vrna_callback_sc_energy     *f;     /**<  @brief  A function pointer used for pseudo
+                                       *            energy contribution in MFE calculations
+                                       *    @see    vrna_sc_add_f()
+                                       */
 
-  /**<  @brief  A function pointer used for pseudo
-   *            energy contribution in MFE calculations
-   *    @see    vrna_sc_add_f()
-  */
-  vrna_callback_sc_energy     *f;
+  vrna_callback_sc_backtrack  *bt;    /**<  @brief  A function pointer used to obtain backtraced
+                                       *            base pairs in loop regions that were altered
+                                       *            by soft constrained pseudo energy contributions
+                                       *    @see    vrna_sc_add_bt()
+                                       */
 
-  /**<  @brief  A function pointer used to obtain backtraced
-   *            base pairs in loop regions that were altered
-   *            by soft constrained pseudo energy contributions
-   *    @see    vrna_sc_add_bt()
-   */
-  vrna_callback_sc_backtrack  *bt;
+  vrna_callback_sc_exp_energy *exp_f; /**<  @brief  A function pointer used for pseudo energy
+                                       *            contribution boltzmann factors in PF
+                                       *            calculations
+                                       *    @see    vrna_sc_add_exp_f()
+                                       */
 
-  /**<  @brief  A function pointer used for pseudo energy
-   *            contribution boltzmann factors in PF
-   *            calculations
-   *    @see    vrna_sc_add_exp_f()
-  */
-  vrna_callback_sc_exp_energy *exp_f;
-
-  /**<  @brief  A pointer to the data object provided for
-   *            for pseudo energy contribution functions of the
-   *            generic soft constraints feature
-   */
-  void                        *data;
+  void                        *data;  /**<  @brief  A pointer to the data object provided for
+                                       *            for pseudo energy contribution functions of the
+                                       *            generic soft constraints feature
+                                       */
   vrna_callback_free_auxdata  *free_data;
 };
 
@@ -530,4 +492,4 @@ vrna_sc_add_exp_f_comparative(vrna_fold_compound_t        *vc,
                               vrna_callback_sc_exp_energy **exp_f);
 
 
-#endif  // LIBRNA_VIENNARNA_CONSTRAINTS_SOFT_H_
+#endif

@@ -1,5 +1,5 @@
-#ifndef LIBRNA_VIENNARNA_FOLD_COMPOUND_H_
-#define LIBRNA_VIENNARNA_FOLD_COMPOUND_H_
+#ifndef VIENNA_RNA_PACKAGE_FOLD_COMPOUND_H
+#define VIENNA_RNA_PACKAGE_FOLD_COMPOUND_H
 
 #ifdef VRNA_WARN_DEPRECATED
 # if defined(__clang__)
@@ -128,12 +128,8 @@ typedef void (vrna_callback_recursion_status)(unsigned char status,
  *  @brief  An enumerator that is used to specify the type of a #vrna_fold_compound_t
  */
 typedef enum {
-  /**< Type is suitable for single, and hybridizing sequences */
-  VRNA_FC_TYPE_SINGLE,
-
-  /**< Type is suitable for sequence alignments
-   * (consensus structure prediction) */
-  VRNA_FC_TYPE_COMPARATIVE
+  VRNA_FC_TYPE_SINGLE,      /**< Type is suitable for single, and hybridizing sequences */
+  VRNA_FC_TYPE_COMPARATIVE  /**< Type is suitable for sequence alignments (consensus structure prediction) */
 } vrna_fc_type_e;
 
 
@@ -146,8 +142,7 @@ typedef enum {
  *  @warning  Reading/Writing from/to attributes that are not within the scope of the current type usually result
  *  in undefined behavior!
  *
- *  @see  #vrna_fold_compound_t.type, vrna_fold_compound(),
- *        vrna_fold_compound_comparative(), vrna_fold_compound_free(),
+ *  @see  #vrna_fold_compound_t.type, vrna_fold_compound(), vrna_fold_compound_comparative(), vrna_fold_compound_free(),
  *        #VRNA_FC_TYPE_SINGLE, #VRNA_FC_TYPE_COMPARATIVE
  */
 struct vrna_fc_s {
@@ -155,72 +150,38 @@ struct vrna_fc_s {
    *  @name Common data fields
    *  @{
    */
-
-  /**<  @brief  The type of the #vrna_fold_compound_t.
-   * @details Currently possible values are #VRNA_FC_TYPE_SINGLE,
-   * and #VRNA_FC_TYPE_COMPARATIVE
-   * @warning Do not edit this attribute, it will be automagically set by
-   *      the corresponding get() methods for the #vrna_fold_compound_t.
-   *      The value specified in this attribute dictates the set of other
-   *      attributes to use within this data structure.
-   */
-  const vrna_fc_type_e type;
-
-  /**<  @brief  The length of the sequence (or sequence alignment) */
-  unsigned int      length;
+  const vrna_fc_type_e type;        /**<  @brief  The type of the #vrna_fold_compound_t.
+                                     * @details Currently possible values are #VRNA_FC_TYPE_SINGLE, and #VRNA_FC_TYPE_COMPARATIVE
+                                     * @warning Do not edit this attribute, it will be automagically set by
+                                     *      the corresponding get() methods for the #vrna_fold_compound_t.
+                                     *      The value specified in this attribute dictates the set of other
+                                     *      attributes to use within this data structure.
+                                     */
+  unsigned int      length;         /**<  @brief  The length of the sequence (or sequence alignment) */
 #ifndef VRNA_DISABLE_BACKWARD_COMPATIBILITY
   DEPRECATED(int cutpoint,
              "Use strand_* members instead");
-              /**<  @brief  The position of the (cofold) cutpoint
-               *            within the provided sequence.
-               * If there is no cutpoint, this field will be set to -1
-               */
+                                    /**<  @brief  The position of the (cofold) cutpoint within the provided sequence.
+                                     * If there is no cutpoint, this field will be set to -1
+                                     */
 #endif
+  unsigned int      *strand_number; /**<  @brief  The strand number a particular nucleotide is associated with */
+  unsigned int      *strand_order;  /**<  @brief  The strand order, i.e. permutation of current concatenated sequence */
+  unsigned int      *strand_order_uniq; /**<  @brief  The strand order array where identical sequences have the same ID */
+  unsigned int      *strand_start;  /**<  @brief  The start position of a particular strand within the current concatenated sequence */
+  unsigned int      *strand_end;    /**<  @brief  The end (last) position of a particular strand within the current concatenated sequence */
 
-/**<  @brief  The strand number a particular nucleotide is associated with */
-  unsigned int      *strand_number;
+  unsigned int      strands;        /**<  @brief  Number of interacting strands */
+  vrna_seq_t        *nucleotides;   /**<  @brief  Set of nucleotide sequences */
+  vrna_msa_t        *alignment;     /**<  @brief  Set of alignments */
 
-  /**<  @brief  The strand order, i.e. permutation of
-   *            current concatenated sequence
-   */
-  unsigned int      *strand_order;
-
-  /**<  @brief  The strand order array where identical
-   *            sequences have the same ID */
-  unsigned int      *strand_order_uniq;
-
-  /**<  @brief  The start position of a particular strand
-   *            within the current concatenated sequence */
-  unsigned int      *strand_start;
-
-   /**<  @brief  The end (last) position of a particular
-    *            strand within the current concatenated sequence */
-  unsigned int      *strand_end;
-
-
-  /**<  @brief  Number of interacting strands */
-  unsigned int      strands;
-
-  /**<  @brief  Set of nucleotide sequences */
-  vrna_seq_t        *nucleotides;
-
-  /**<  @brief  Set of alignments */
-  vrna_msa_t        *alignment;
-
- /**<  @brief  The hard constraints data structure
-  *            used for structure prediction */
-  vrna_hc_t         *hc;
+  vrna_hc_t         *hc;            /**<  @brief  The hard constraints data structure used for structure prediction */
 
   vrna_mx_mfe_t     *matrices;      /**<  @brief  The MFE DP matrices */
   vrna_mx_pf_t      *exp_matrices;  /**<  @brief  The PF DP matrices  */
 
-  /**<  @brief  The precomputed free energy contributions
-   *            for each type of loop */
-  vrna_param_t      *params;
-
-  /**<  @brief  The precomputed free energy contributions as
-   *            Boltzmann factors  */
-  vrna_exp_param_t  *exp_params;
+  vrna_param_t      *params;        /**<  @brief  The precomputed free energy contributions for each type of loop */
+  vrna_exp_param_t  *exp_params;    /**<  @brief  The precomputed free energy contributions as Boltzmann factors  */
 
   int               *iindx;         /**<  @brief  DP matrix accessor  */
   int               *jindx;         /**<  @brief  DP matrix accessor  */
@@ -231,24 +192,18 @@ struct vrna_fc_s {
    *  @name User-defined data fields
    *  @{
    */
+  vrna_callback_recursion_status  *stat_cb;       /**<  @brief  Recursion status callback (usually called just before, and
+                                                   *            after recursive computations in the library
+                                                   *    @see    vrna_callback_recursion_status(), vrna_fold_compound_add_callback()
+                                                   */
 
-  /**<  @brief  Recursion status callback (usually called just before, and
-   *            after recursive computations in the library
-   *    @see    vrna_callback_recursion_status(),
-   *            vrna_fold_compound_add_callback()
-   */
-  vrna_callback_recursion_status  *stat_cb;
+  void                            *auxdata;       /**<  @brief  A pointer to auxiliary, user-defined data
+                                                   *    @see vrna_fold_compound_add_auxdata(), #vrna_fold_compound_t.free_auxdata
+                                                   */
 
-  /**<  @brief  A pointer to auxiliary, user-defined data
-   *    @see vrna_fold_compound_add_auxdata(), #vrna_fold_compound_t.free_auxdata
-   */
-  void                            *auxdata;
-
-  /**<  @brief A callback to free auxiliary user data
-   *           whenever the fold_compound itself is free'd
-   *    @see  #vrna_fold_compound_t.auxdata, vrna_callback_free_auxdata()
-   */
-  vrna_callback_free_auxdata      *free_auxdata;
+  vrna_callback_free_auxdata      *free_auxdata;  /**<  @brief A callback to free auxiliary user data whenever the fold_compound itself is free'd
+                                                   *    @see  #vrna_fold_compound_t.auxdata, vrna_callback_free_auxdata()
+                                                   */
 
   /**
    *  @}
@@ -257,22 +212,14 @@ struct vrna_fc_s {
    *  @{
    */
 
-  /* data structure to adjust additional structural domains,
-     such as G-quadruplexes */
+  /* data structure to adjust additional structural domains, such as G-quadruplexes */
+  vrna_sd_t     *domains_struc;             /**<  @brief  Additional structured domains */
 
-  /**<  @brief  Additional structured domains */
-  vrna_sd_t     *domains_struc;
-
-  /* data structure to adjust additional contributions to unpaired stretches,
-     e.g. due to protein binding */
-
-  /**<  @brief  Additional unstructured domains */
-  vrna_ud_t     *domains_up;
+  /* data structure to adjust additional contributions to unpaired stretches, e.g. due to protein binding */
+  vrna_ud_t     *domains_up;                /**<  @brief  Additional unstructured domains */
 
   /* auxiliary (user-defined) extension to the folding grammar */
-
-  /**<  @brief  Additional decomposition grammar rules */
-  vrna_gr_aux_t *aux_grammar;
+  vrna_gr_aux_t *aux_grammar;               /**<  @brief  Additional decomposition grammar rules */
 
   /**
    *  @}
@@ -288,44 +235,36 @@ struct vrna_fc_s {
    *  @name Data fields available for single/hybrid structure prediction
    *  @{
    */
-
-      /**<  @brief  The input sequence string
-      *    @warning   Only available if @verbatim type==VRNA_FC_TYPE_SINGLE @endverbatim
-      */
-      char *sequence;
-
-      /**<  @brief  Numerical encoding of the input sequence
-       *    @see    vrna_sequence_encode()
-       *    @warning   Only available if @verbatim type==VRNA_FC_TYPE_SINGLE @endverbatim
-       */
-      short *sequence_encoding;
+      char *sequence;                   /**<  @brief  The input sequence string
+                                         *    @warning   Only available if @verbatim type==VRNA_FC_TYPE_SINGLE @endverbatim
+                                         */
+      short *sequence_encoding;         /**<  @brief  Numerical encoding of the input sequence
+                                         *    @see    vrna_sequence_encode()
+                                         *    @warning   Only available if @verbatim type==VRNA_FC_TYPE_SINGLE @endverbatim
+                                         */
       short *encoding5;
       short *encoding3;
 
       short *sequence_encoding2;
 
-      /**<  @brief  Pair type array
-       *
-       *    Contains the numerical encoding of the pair type for each pair (i,j) used
-       *    in MFE, Partition function and Evaluation computations.
-       *    @note This array is always indexed via jindx, in contrast to previously
-       *    different indexing between mfe and pf variants!
-       *    @warning   Only available if @verbatim type==VRNA_FC_TYPE_SINGLE @endverbatim
-       *    @see    vrna_idx_col_wise(), vrna_ptypes()
-       */
-      char *ptype;
 
-      /**<  @brief  ptype array indexed via iindx
-       *    @deprecated  This attribute will vanish in the future!
-       *    It's meant for backward compatibility only!
-       *    @warning   Only available if @verbatim type==VRNA_FC_TYPE_SINGLE @endverbatim
-       */
-      char *ptype_pf_compat;
-
-      /**<  @brief  The soft constraints for usage in structure prediction and evaluation
-       *    @warning   Only available if @verbatim type==VRNA_FC_TYPE_SINGLE @endverbatim
-       */
-      vrna_sc_t *sc;
+      char *ptype;                      /**<  @brief  Pair type array
+                                         *
+                                         *    Contains the numerical encoding of the pair type for each pair (i,j) used
+                                         *    in MFE, Partition function and Evaluation computations.
+                                         *    @note This array is always indexed via jindx, in contrast to previously
+                                         *    different indexing between mfe and pf variants!
+                                         *    @warning   Only available if @verbatim type==VRNA_FC_TYPE_SINGLE @endverbatim
+                                         *    @see    vrna_idx_col_wise(), vrna_ptypes()
+                                         */
+      char *ptype_pf_compat;            /**<  @brief  ptype array indexed via iindx
+                                         *    @deprecated  This attribute will vanish in the future!
+                                         *    It's meant for backward compatibility only!
+                                         *    @warning   Only available if @verbatim type==VRNA_FC_TYPE_SINGLE @endverbatim
+                                         */
+      vrna_sc_t *sc;                    /**<  @brief  The soft constraints for usage in structure prediction and evaluation
+                                         *    @warning   Only available if @verbatim type==VRNA_FC_TYPE_SINGLE @endverbatim
+                                         */
 
   /**
    *  @}
@@ -341,67 +280,44 @@ struct {
    *  @name Data fields for consensus structure prediction
    *  @{
    */
-
-      /**<  @brief  The aligned sequences
-       *    @note   The end of the alignment is indicated by a NULL pointer in the second dimension
-       *    @warning   Only available if @verbatim type==VRNA_FC_TYPE_COMPARATIVE @endverbatim
-       */
-      char          **sequences;
-
-      /**<  @brief  The number of sequences in the alignment
-       *    @warning   Only available if @verbatim type==VRNA_FC_TYPE_COMPARATIVE @endverbatim
-       */
-      unsigned int  n_seq;
-
-      /**<  @brief  The consensus sequence of the aligned sequences
-       *    @warning   Only available if @verbatim type==VRNA_FC_TYPE_COMPARATIVE @endverbatim
-       */
-      char          *cons_seq;
-
-      /**<  @brief  Numerical encoding of the consensus sequence
-       *    @warning   Only available if @verbatim type==VRNA_FC_TYPE_COMPARATIVE @endverbatim
-       */
-      short         *S_cons;
-
-      /**<  @brief  Numerical encoding of the sequences in the alignment
-       *    @warning   Only available if @verbatim type==VRNA_FC_TYPE_COMPARATIVE @endverbatim
-       */
-      short         **S;
-
-      /**<  @brief    S5[s][i] holds next base 5' of i in sequence s
-       *    @warning  Only available if @verbatim type==VRNA_FC_TYPE_COMPARATIVE @endverbatim
-       */
-      short         **S5;
-
-      /**<  @brief    Sl[s][i] holds next base 3' of i in sequence s
-       *    @warning  Only available if @verbatim type==VRNA_FC_TYPE_COMPARATIVE @endverbatim
-       */
-      short         **S3;
-
-      char          **Ss;
-      unsigned int  **a2s;
-
-       /**<  @brief  Precomputed array of pair types expressed as pairing scores
-        *    @warning   Only available if @verbatim type==VRNA_FC_TYPE_COMPARATIVE @endverbatim
-        */
-      int           *pscore;
-
-      /**<  @brief  Precomputed array of pair types expressed as pairing scores
-       *    @warning   Only available if @verbatim type==VRNA_FC_TYPE_COMPARATIVE @endverbatim
-       */
-      int           **pscore_local;
-
-      /**<  @brief  Precomputed array of pair types expressed as pairing scores indexed via iindx
-       *    @deprecated  This attribute will vanish in the future!
-       *    @warning   Only available if @verbatim type==VRNA_FC_TYPE_COMPARATIVE @endverbatim
-       */
-      short         *pscore_pf_compat;
-
-      /**<  @brief  A set of soft constraints (for each sequence in the alignment)
-       *    @warning   Only available if @verbatim type==VRNA_FC_TYPE_COMPARATIVE @endverbatim
-       */
-      vrna_sc_t     **scs;
-      int           oldAliEn;
+      char          **sequences;        /**<  @brief  The aligned sequences
+                                         *    @note   The end of the alignment is indicated by a NULL pointer in the second dimension
+                                         *    @warning   Only available if @verbatim type==VRNA_FC_TYPE_COMPARATIVE @endverbatim
+                                         */
+      unsigned int  n_seq;              /**<  @brief  The number of sequences in the alignment
+                                         *    @warning   Only available if @verbatim type==VRNA_FC_TYPE_COMPARATIVE @endverbatim
+                                         */
+      char          *cons_seq;          /**<  @brief  The consensus sequence of the aligned sequences
+                                         *    @warning   Only available if @verbatim type==VRNA_FC_TYPE_COMPARATIVE @endverbatim
+                                         */
+      short         *S_cons;            /**<  @brief  Numerical encoding of the consensus sequence
+                                         *    @warning   Only available if @verbatim type==VRNA_FC_TYPE_COMPARATIVE @endverbatim
+                                         */
+      short         **S;                /**<  @brief  Numerical encoding of the sequences in the alignment
+                                         *    @warning   Only available if @verbatim type==VRNA_FC_TYPE_COMPARATIVE @endverbatim
+                                         */
+      short         **S5;               /**<  @brief    S5[s][i] holds next base 5' of i in sequence s
+                                         *    @warning  Only available if @verbatim type==VRNA_FC_TYPE_COMPARATIVE @endverbatim
+                                         */
+      short         **S3;               /**<  @brief    Sl[s][i] holds next base 3' of i in sequence s
+                                         *    @warning  Only available if @verbatim type==VRNA_FC_TYPE_COMPARATIVE @endverbatim
+                                         */
+  char          **Ss;
+  unsigned int  **a2s;
+      int           *pscore;              /**<  @brief  Precomputed array of pair types expressed as pairing scores
+                                           *    @warning   Only available if @verbatim type==VRNA_FC_TYPE_COMPARATIVE @endverbatim
+                                           */
+      int           **pscore_local;       /**<  @brief  Precomputed array of pair types expressed as pairing scores
+                                           *    @warning   Only available if @verbatim type==VRNA_FC_TYPE_COMPARATIVE @endverbatim
+                                           */
+      short         *pscore_pf_compat;    /**<  @brief  Precomputed array of pair types expressed as pairing scores indexed via iindx
+                                           *    @deprecated  This attribute will vanish in the future!
+                                           *    @warning   Only available if @verbatim type==VRNA_FC_TYPE_COMPARATIVE @endverbatim
+                                           */
+      vrna_sc_t     **scs;                /**<  @brief  A set of soft constraints (for each sequence in the alignment)
+                                           *    @warning   Only available if @verbatim type==VRNA_FC_TYPE_COMPARATIVE @endverbatim
+                                           */
+  int           oldAliEn;
 
   /**
    *  @}
@@ -417,36 +333,17 @@ struct {
    *  These data fields are typically populated with meaningful data only if used in the context of Distance Class Partitioning
    *  @{
    */
+  unsigned int  maxD1;            /**<  @brief  Maximum allowed base pair distance to first reference */
+  unsigned int  maxD2;            /**<  @brief  Maximum allowed base pair distance to second reference */
+  short         *reference_pt1;   /**<  @brief  A pairtable of the first reference structure */
+  short         *reference_pt2;   /**<  @brief  A pairtable of the second reference structure */
 
-  /**<  @brief  Maximum allowed base pair distance to first reference */
-  unsigned int  maxD1;
+  unsigned int  *referenceBPs1;   /**<  @brief  Matrix containing number of basepairs of reference structure1 in interval [i,j] */
+  unsigned int  *referenceBPs2;   /**<  @brief  Matrix containing number of basepairs of reference structure2 in interval [i,j] */
+  unsigned int  *bpdist;          /**<  @brief  Matrix containing base pair distance of reference structure 1 and 2 on interval [i,j] */
 
-  /**<  @brief  Maximum allowed base pair distance to second reference */
-  unsigned int  maxD2;
-
-  /**<  @brief  A pairtable of the first reference structure */
-  short         *reference_pt1;
-
-  /**<  @brief  A pairtable of the second reference structure */
-  short         *reference_pt2;
-
-  /**<  @brief  Matrix containing number of basepairs of
-   *            reference structure1 in interval [i,j] */
-  unsigned int  *referenceBPs1;
-
-  /**<  @brief  Matrix containing number of basepairs of
-   *            reference structure2 in interval [i,j] */
-  unsigned int  *referenceBPs2;
-
-  /**<  @brief  Matrix containing base pair distance of
-   *            reference structure 1 and 2 on interval [i,j] */
-  unsigned int  *bpdist;
-
-  /**<  @brief  Maximum matching matrix, reference struct 1 disallowed */
-  unsigned int  *mm1;
-
-  /**<  @brief  Maximum matching matrix, reference struct 2 disallowed */
-  unsigned int  *mm2;
+  unsigned int  *mm1;             /**<  @brief  Maximum matching matrix, reference struct 1 disallowed */
+  unsigned int  *mm2;             /**<  @brief  Maximum matching matrix, reference struct 2 disallowed */
 
   /**
    *  @}
@@ -458,15 +355,10 @@ struct {
    *  These data fields are typically populated with meaningful data only if used in the context of local folding
    *  @{
    */
-
-  /**<  @brief  window size for local folding sliding window approach */
-  int   window_size;
-
-  /**<  @brief  Pair type array (for local folding) */
-  char  **ptype_local;
+  int   window_size;              /**<  @brief  window size for local folding sliding window approach */
+  char  **ptype_local;            /**<  @brief  Pair type array (for local folding) */
 #ifdef VRNA_WITH_SVM
-  /**<  @brief  Data structure with settings for z-score computations */
-  vrna_zsc_dat_t  zscore_data;
+  vrna_zsc_dat_t  zscore_data;    /**<  @brief  Data structure with settings for z-score computations */
 #endif
 
   /**
@@ -475,8 +367,7 @@ struct {
 };
 
 
-/* the definitions below should be used for functions that return/receive/destroy
-   fold compound data structures */
+/* the definitions below should be used for functions that return/receive/destroy fold compound data structures */
 
 /**
  *  @brief  Option flag to specify default settings/requirements
@@ -687,4 +578,4 @@ vrna_fold_compound_add_callback(vrna_fold_compound_t            *fc,
  *  @}
  */
 
-#endif  // LIBRNA_VIENNARNA_FOLD_COMPOUND_H_
+#endif

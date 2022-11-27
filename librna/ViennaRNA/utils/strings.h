@@ -1,5 +1,5 @@
-#ifndef LIBRNA_VIENNARNA_UTILS_STRINGS_H_
-#define LIBRNA_VIENNARNA_UTILS_STRINGS_H_
+#ifndef VIENNA_RNA_PACKAGE_STRING_UTILS_H
+#define VIENNA_RNA_PACKAGE_STRING_UTILS_H
 
 #ifdef VRNA_WARN_DEPRECATED
 # if defined(__clang__)
@@ -180,13 +180,13 @@ vrna_strcat_vprintf(char        **dest,
  *  @brief Default settings for trimming, i.e. trim leading and trailing
  *  @see vrna_strtrim()
  */
-#define VRNA_TRIM_DEFAULT       (VRNA_TRIM_LEADING | VRNA_TRIM_TRAILING )
+#define VRNA_TRIM_DEFAULT       ( VRNA_TRIM_LEADING | VRNA_TRIM_TRAILING )
 
 /**
  *  @brief Trim characters anywhere in the string
  *  @see vrna_strtrim()
  */
-#define VRNA_TRIM_ALL           (VRNA_TRIM_DEFAULT | VRNA_TRIM_IN_BETWEEN )
+#define VRNA_TRIM_ALL           ( VRNA_TRIM_DEFAULT | VRNA_TRIM_IN_BETWEEN )
 
 /**
  *  @brief Trim a string by removing (multiple) occurences of a particular character
@@ -228,14 +228,14 @@ vrna_strcat_vprintf(char        **dest,
  *  @see  VRNA_TRIM_LEADING, VRNA_TRIM_TRAILING, VRNA_TRIM_IN_BETWEEN,
  *        VRNA_TRIM_SUBST_BY_FIRST, VRNA_TRIM_DEFAULT, VRNA_TRIM_ALL
  *
- *  @param  str         The '\0'-terminated input string to trim
+ *  @param  string      The '\0'-terminated input string to trim
  *  @param  delimiters  The delimiter characters as 0-terminated char array (or @em NULL)
  *  @param  keep        The maximum number of consecutive occurences of the delimiter in the output string
  *  @param  options     The option bit vector specifying the mode of operation
  *  @return             The number of delimiters removed from the string
  */
 unsigned int
-vrna_strtrim(char         *str,
+vrna_strtrim(char         *string,
              const char   *delimiters,
              unsigned int keep,
              unsigned int options);
@@ -283,12 +283,12 @@ vrna_strtrim(char         *str,
  *
  *  @see vrna_strtrim()
  *
- *  @param  str       The input string that should be split into elements
+ *  @param  string    The input string that should be split into elements
  *  @param  delimiter The delimiting character. If @c NULL, the delimiter is @c "&"
  *  @return           A @c NULL terminated list of the elements in the string
  */
 char **
-vrna_strsplit(const char  *str,
+vrna_strsplit(const char  *string,
               const char  *delimiter);
 
 
@@ -414,12 +414,12 @@ vrna_seq_ungapped(const char *sequence);
  *  returns a copy of the provided string. Otherwise, the cut-point character
  *  is set at the corresponding position
  *
- *  @param  str       The original string
+ *  @param  string    The original string
  *  @param  cp        The cut-point position
  *  @return           A copy of the provided string including the cut-point character
  */
 char *
-vrna_cut_point_insert(const char  *str,
+vrna_cut_point_insert(const char  *string,
                       int         cp);
 
 
@@ -431,12 +431,12 @@ vrna_cut_point_insert(const char  *str,
  *  found in the input, the integer variable is set to -1. The function returns
  *  a copy of the input string with the '&' being sliced out.
  *
- *  @param  str     The original string
+ *  @param  string  The original string
  *  @param  cp      The cut-point position
  *  @return         A copy of the input string with the '&' being sliced out
  */
 char *
-vrna_cut_point_remove(const char  *str,
+vrna_cut_point_remove(const char  *string,
                       int         *cp);
 
 
@@ -495,4 +495,4 @@ DEPRECATED(int
 
 #endif
 
-#endif  // LIBRNA_VIENNARNA_UTILS_STRINGS_H_
+#endif
