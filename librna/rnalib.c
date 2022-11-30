@@ -29,6 +29,7 @@
    modified on 28.10.2011 to support gaps in sequences, which is necessary to fold alignments. Basic concept: the common structure is given by the usual grammar, but base- and/or stackpairing is only possible if x% of sequences at this positions can form pairs. Thus pairs with gaps or gap-gap-pairs are possible for single sequences; loops can contain gaps and thus e.g. an internal loop might become a bulge loop or even a stack.
    modified on 24.11.2011 to merge 2004 and 1999 versions into one file
    modified on 13.04.2012 to use the same trick as the Vienna-Package to just once rescale energie values to given temperature
+   modified on 30.10.2022 to support the lastest Vienna-Package release (v2.5.1, 06/2022). No modifications of the source code of this library were necessary for this update.
 
    more information about the nearest neighbor energy model can be found in
     - David Mathews "Nearest Neighbor Database Homepage": http://rna.urmc.rochester.edu/NNDB/
