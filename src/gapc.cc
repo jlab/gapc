@@ -773,8 +773,10 @@ class Main {
 
       back(r.second, r.first);
     } else if (opts.derivative > 1) {
-      // split algebra product "left * right" into two instances for first and second derivative
-      std::pair<Instance*, Instance*> bothD = driver.ast.split_instance_for_derivatives(opts.instance);
+      // split algebra product "left * right" into two instances for first
+      // and second derivative
+      std::pair<Instance*, Instance*> bothD =
+        driver.ast.split_instance_for_derivatives(opts.instance);
 
       // store user provided file name pattern for .hh and .cc
       std::string orig_header_file = opts.header_file;
@@ -802,10 +804,10 @@ class Main {
       driver.ast.current_derivative = 2;
 
       // prepend "_derivative2" to generated .hh and .cc file
-	  opts.header_file = basename(orig_header_file) + "_derivative" +
-				  std::to_string(driver.ast.current_derivative) + ".hh";
-	  opts.out_file = basename(orig_out_file) + "_derivative" +
-				  std::to_string(driver.ast.current_derivative) + ".cc";
+      opts.header_file = basename(orig_header_file) + "_derivative" +
+                         std::to_string(driver.ast.current_derivative) + ".hh";
+      opts.out_file = basename(orig_out_file) + "_derivative" +
+                      std::to_string(driver.ast.current_derivative) + ".cc";
 
       back(bothD.second);
 
