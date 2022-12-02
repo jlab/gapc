@@ -130,7 +130,6 @@ class candidate {
     std::vector<Trace> res;
     for (std::vector<Trace>::const_iterator part = this->sub_components.begin();
          part != this->sub_components.end(); ++part) {
-      //std::cerr << this->get_q() - (eval * this->get_value()) << "\n";
       res.push_back({std::get<0>(*part), std::get<1>(*part),
                      this->get_q() - (eval * this->get_value())});
     }
