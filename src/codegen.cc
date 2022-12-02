@@ -27,7 +27,7 @@
 #include "fn_def.hh"
 
 Code::Gen::Gen(AST &ast) {
-  if (ast.inject_derivatives) {
+  if (ast.current_derivative > 0) {
     Symbol::NT *inside_axiom = dynamic_cast<Symbol::NT*>(
       ast.grammar()->NTs[*ast.grammar()->axiom_name_inside]);
     assert(inside_axiom);
