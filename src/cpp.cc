@@ -1711,8 +1711,10 @@ void Printer::Cpp::header(const AST &ast) {
     }
     if ((*ast.grammar()).is_outside()) {
       stream << "#define OUTSIDE\n";
-      if (ast.current_derivative > 0) {
+      if (ast.current_derivative == 1) {
         stream << "#define DERIVATIVES\n";
+      } else if (ast.current_derivative == 2) {
+        stream << "#define SECOND_DERIVATIVE\n";
       }
     }
     includes();
@@ -2834,17 +2836,21 @@ void Printer::Cpp::close_class() {
 
 
 void Printer::Cpp::typedefs(Code::Gen &code, unsigned int current_derivative) {
+  stream << "#ifndef NO_GAPC_TYPEDEFS" << endl;
+  stream << indent() << "namespace gapc {" << endl;
+  inc_indent();
+  stream << indent() << "typedef " << class_name << " class_name";
+  if (current_derivative >= 2) {
+    stream << "_D2";
+  }
+  stream << ";" << endl;
   if (current_derivative <= 1) {
-    stream << "#ifndef NO_GAPC_TYPEDEFS" << endl;
-    stream << indent() << "namespace gapc {" << endl;
-    inc_indent();
-    stream << indent() << "typedef " << class_name << " class_name;" << endl;
     stream << indent() << "typedef " << *code.return_type()
            << " return_type;" << endl;
-    dec_indent();
-    stream << indent() << '}' << endl;
-    stream << "#endif" << endl;
   }
+  dec_indent();
+  stream << indent() << '}' << endl;
+  stream << "#endif" << endl;
   stream << endl;
   stream << "#endif" << endl;
 }
@@ -2911,7 +2917,7 @@ void Printer::Cpp::makefile(const Options &opts, const AST &ast) {
   std::string base = opts.class_name;  // basename(opts.out_file);
   std::string out_file = "";
   if (ast.requested_derivative > 0) {
-    for (unsigned int i = 1; i < ast.requested_derivative; ++i) {
+    for (unsigned int i = 1; i <= ast.requested_derivative; ++i) {
       out_file += basename(remove_dir(opts.out_file)) + \
                   "_derivative" + std::to_string(i) + ".cc ";
     }
