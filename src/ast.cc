@@ -774,7 +774,8 @@ std::pair<Instance*, Instance*> AST::split_classified(const std::string &n) {
   return std::make_pair(score, i);
 }
 
-std::pair<Instance*, Instance*> AST::split_instance_for_derivatives(const std::string &n) {
+std::pair<Instance*, Instance*> AST::split_instance_for_derivatives(
+  const std::string &n) {
   Instance *i = instance(n);
   if (!i) {
     throw LogError("Instance does not exist.");
@@ -784,20 +785,26 @@ std::pair<Instance*, Instance*> AST::split_instance_for_derivatives(const std::s
     throw LogError("Algebra product is not of type times, i.e. '*'!");
   }
   if (!i->product->left()->is(Product::SINGLE)) {
-    throw LogError("Left algebra is no single algebra, but an algebra product!");
+    throw LogError(
+      "Left algebra is no single algebra, but an algebra product!");
   }
   if (!i->product->right()->is(Product::SINGLE)) {
-    throw LogError("Right algebra is no single algebra, but an algebra product!");
+    throw LogError(
+      "Right algebra is no single algebra, but an algebra product!");
   }
 
-  Instance *inst_firstD = new Instance(new std::string("first derivative"), i->product->left(), grammar());
+  Instance *inst_firstD = new Instance(
+    new std::string("first derivative"), i->product->left(), grammar());
   if (!inst_firstD->product->algebra()->is_compatible(Mode::SYNOPTIC)) {
-    throw LogError("Left algebra is not synoptic, e.g. choice function is not sum.");
+    throw LogError(
+      "Left algebra is not synoptic, e.g. choice function is not sum.");
   }
   check_instances(inst_firstD);
-  Instance *inst_secondD = new Instance(new std::string("second derivative"), i->product->right(), grammar());
+  Instance *inst_secondD = new Instance(
+    new std::string("second derivative"), i->product->right(), grammar());
   if (!inst_secondD->product->algebra()->is_compatible(Mode::SYNOPTIC)) {
-    throw LogError("Right algebra is not synoptic, e.g. choice function is not sum.");
+    throw LogError(
+      "Right algebra is not synoptic, e.g. choice function is not sum.");
   }
   check_instances(inst_secondD);
 
