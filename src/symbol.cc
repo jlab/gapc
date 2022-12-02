@@ -1023,7 +1023,7 @@ void Symbol::NT::init_ret_stmts(Code::Mode mode, AST &ast) {
     tabfn->add_arg(ret);
     ret_stmts.push_back(tabfn);
 
-    if (ast.inject_derivatives && !this->is_partof_outside
+    if ((ast.current_derivative > 0) && !this->is_partof_outside
         && *this->name != OUTSIDE_AXIOMS) {
       Statement::Fn_Call *tracefn = new Statement::Fn_Call("set_traces");
       tracefn->add(*table_decl);
@@ -1090,8 +1090,10 @@ void Symbol::NT::init_table_decl(const AST &ast) {
 
   Tablegen tg;
   tg.set_window_mode(ast.window_mode);
-  table_decl = tg.create(*this, t, ast.code_mode() == Code::Mode::CYK,
-                         ast.inject_derivatives && !this->is_partof_outside);
+  table_decl = tg.create(
+    *this, t, ast.code_mode() == Code::Mode::CYK,
+	this->is_partof_outside ? 0 : ast.current_derivative
+  );
 }
 
 #include <boost/algorithm/string/replace.hpp>
@@ -1268,7 +1270,7 @@ void Symbol::NT::codegen(AST &ast) {
   }
 
   stmts.push_back(ret_decl);
-  if (ast.inject_derivatives) {
+  if (ast.current_derivative > 0) {
     if (!this->is_partof_outside) {
       stmts.push_back(new Statement::Var_Decl(new ::Type::External(
         new std::string("NTtraces")), "candidates"));
