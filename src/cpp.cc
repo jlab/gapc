@@ -1588,7 +1588,8 @@ void Printer::Cpp::print_init_fn(const AST &ast) {
   stream << indent() << "void init(";
   stream << "const gapc::Opts &opts";
   for (unsigned int i = 1; i < ast.current_derivative; ++i) {
-	stream << ", " << get_class_name_lower_derivative(ast.current_derivative, i) << " *derivative" << std::to_string(i);
+    stream << ", " << get_class_name_lower_derivative(ast.current_derivative, i)
+           << " *derivative" << std::to_string(i);
   }
   stream << ") {" << endl;
 
@@ -1613,10 +1614,11 @@ void Printer::Cpp::print_init_fn(const AST &ast) {
   }
 
   if (ast.requested_derivative > 0) {
-	stream << endl;
+    stream << endl;
   }
   for (unsigned int i = 1; i < ast.current_derivative; ++i) {
-  	stream << indent() << "this->derivative" << std::to_string(i) << " = derivative" << std::to_string(i) << ";" << endl;
+    stream << indent() << "this->derivative" << std::to_string(i)
+           << " = derivative" << std::to_string(i) << ";" << endl;
   }
 
   dec_indent();
@@ -1739,7 +1741,9 @@ void Printer::Cpp::header(const AST &ast) {
 
   /* create pointer to lower derivative results */
   for (unsigned int i = 1; i < ast.current_derivative; ++i) {
-	stream << indent() << get_class_name_lower_derivative(ast.current_derivative, i) << " *derivative" << i << ";" << endl;
+    stream << indent()
+           << get_class_name_lower_derivative(ast.current_derivative, i)
+           << " *derivative" << i << ";" << endl;
   }
 
   stream << endl;
@@ -1753,10 +1757,11 @@ void Printer::Cpp::header(const AST &ast) {
   print_window_inc_fn(ast);
   dec_indent();
   stream << indent();
-  if ((ast.current_derivative > 0) && (ast.current_derivative < ast.requested_derivative)) {
-	// let higher derivatives access lower DP results, e.g. second needs first
-	// however, last derivative can stay private
-	stream << " public:";
+  if ((ast.current_derivative > 0) &&
+      (ast.current_derivative < ast.requested_derivative)) {
+    // let higher derivatives access lower DP results, e.g. second needs first
+    // however, last derivative can stay private
+    stream << " public:";
   } else {
     stream << " private:";
   }
@@ -2347,7 +2352,7 @@ void Printer::Cpp::print_insideoutside_report_fn(
 
 void Printer::Cpp::print_derivative(Symbol::NT *nt) {
   stream << indent() << "std::cout << \"" << ast->current_derivative
-		 << ". derivatives for non-terminal \\\""
+         << ". derivatives for non-terminal \\\""
          << (*nt->name).substr(sizeof(OUTSIDE_NT_PREFIX)-1,
                                (*nt->name).length())
          << "\\\":\\n\";" << endl;
@@ -2906,9 +2911,10 @@ void Printer::Cpp::makefile(const Options &opts, const AST &ast) {
   std::string base = opts.class_name;  // basename(opts.out_file);
   std::string out_file = "";
   if (ast.requested_derivative > 0) {
-	for (unsigned int i = 1; i < ast.requested_derivative; ++i) {
-	  out_file += basename(remove_dir(opts.out_file)) + "_derivative" + std::to_string(i) + ".cc ";
-	}
+    for (unsigned int i = 1; i < ast.requested_derivative; ++i) {
+      out_file += basename(remove_dir(opts.out_file)) + \
+                  "_derivative" + std::to_string(i) + ".cc ";
+    }
   } else {
     out_file = remove_dir(opts.out_file);
   }
@@ -2932,9 +2938,10 @@ void Printer::Cpp::makefile(const Options &opts, const AST &ast) {
     << base << "_main.cc : $(RTLIB)/generic_main.cc " << out_file << endl
     << "\techo '#include ";
   if (ast.requested_derivative > 0) {
-	for (unsigned int i = 1; i < ast.requested_derivative; ++i) {
-	  stream << "\"" << basename(remove_dir(opts.out_file)) << "_derivative" << std::to_string(i) << ".hh\"";
-	}
+    for (unsigned int i = 1; i < ast.requested_derivative; ++i) {
+      stream << "\"" << basename(remove_dir(opts.out_file)) << "_derivative"
+             << std::to_string(i) << ".hh\"";
+    }
   } else {
     stream << "\"" << header_file << "\"";
   }
@@ -3016,7 +3023,9 @@ void Printer::Cpp::imports(const AST &ast) {
 
   /* include code of lower derivatives */
   for (unsigned int i = 1; i < ast.current_derivative; ++i) {
-    stream << indent() << "#include \"" << get_class_name_lower_derivative(ast.current_derivative, i) <<  ".hh\"" << endl;
+    stream << indent() << "#include \""
+           << get_class_name_lower_derivative(ast.current_derivative, i)
+           <<  ".hh\"" << endl;
   }
 
   stream << endl;

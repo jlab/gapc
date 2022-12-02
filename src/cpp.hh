@@ -161,16 +161,20 @@ class Cpp : public Base {
     std::string class_name;
 
  public:
-    void set_class_name(std::string class_name, unsigned int current_derivative=0) {
+    void set_class_name(std::string class_name,
+                        unsigned int current_derivative = 0) {
       this->class_name = class_name;
       if (current_derivative > 0) {
-        this->class_name = this->class_name + "_derivative" + std::to_string(current_derivative);
+        this->class_name = this->class_name + "_derivative" + \
+          std::to_string(current_derivative);
       }
     }
-    std::string get_class_name_lower_derivative(unsigned int current_derivative, unsigned int derivative) {
+    std::string get_class_name_lower_derivative(
+      unsigned int current_derivative, unsigned int derivative) {
       assert(current_derivative > 0);
       assert(derivative < 10);
-      return class_name.substr(0, class_name.size()-1) + std::to_string(derivative);
+      return class_name.substr(0, class_name.size()-1) + \
+             std::to_string(derivative);
     }
     bool in_class;
     Cpp()
