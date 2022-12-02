@@ -368,7 +368,8 @@ class Main {
 
     // lets the AST know if code for derivative computation has
     // to be injected
-    driver.ast.inject_derivatives = opts.derivative > 0;
+    driver.ast.requested_derivative = opts.derivative;
+    driver.ast.current_derivative = opts.derivative > 0 ? 1 : 0;
 
     if (driver.is_failing()) {
       throw LogError("Seen parse errors.");
@@ -624,7 +625,8 @@ class Main {
     // dot-file for the grammar. This is handy if gapc modifies the original
     // grammar from the source file.
     // activate with command line argument --plot-grammar
-    if (opts.plot_grammar > 0) {
+    // (if derivatives are requested: only plot in first iteration)
+    if (opts.plot_grammar > 0 && driver.ast.current_derivative <= 1) {
       unsigned int nodeID = 1;
       grammar->to_dot(&nodeID, opts.plotgrammar_stream(), opts.plot_grammar);
       Log::instance()->normalMessage(
@@ -645,16 +647,19 @@ class Main {
     // also writes some lines to the header file.
     Printer::Cpp hh(driver.ast, opts.h_stream());
     hh.set_argv(argv, argc);
-    hh.class_name = opts.class_name;
+    hh.set_class_name(opts.class_name, driver.ast.current_derivative);
     hh.header(driver.ast);
     hh.begin_fwd_decls();
     driver.ast.print_code(hh);
+    /* TODO(sjanssen): is there a nice way to add this code generating
+       statement only to the header file? */
+    opts.h_stream() << " private:";
     instance->print_code(hh);
     hh.footer(driver.ast);
     hh.end_fwd_decls();
     hh.header_footer(driver.ast);
     if (grammar->is_outside()) {
-      if (driver.ast.inject_derivatives) {
+      if (driver.ast.current_derivative > 0) {
         hh.print_run_derivative_fn(driver.ast);
       } else {
         hh.print_insideoutside_report_fn(opts.outside_nt_list, driver.ast);
@@ -665,7 +670,7 @@ class Main {
     // compile-result.
     Printer::Cpp cc(driver.ast, opts.stream());
     cc.set_argv(argv, argc);
-    cc.class_name = opts.class_name;
+    cc.set_class_name(opts.class_name, driver.ast.current_derivative);
     cc.set_files(opts.in_file, opts.out_file);
     cc.prelude(opts, driver.ast);
     cc.imports(driver.ast);
@@ -711,8 +716,8 @@ class Main {
    */
   void finish() {
     Printer::Cpp hh(driver.ast, opts.h_stream());
-    hh.class_name = opts.class_name;
-    hh.typedefs(code_);
+    hh.set_class_name(opts.class_name, driver.ast.current_derivative);
+    hh.typedefs(code_, driver.ast.current_derivative);
   }
 
 
@@ -721,10 +726,10 @@ class Main {
    * to compile the result of this gapc compiler.
    * Precondition: the AST must have been created and configured.
    */
-  void makefile() {
+  void makefile(const AST &ast) {
     Printer::Cpp mm(driver.ast, opts.m_stream());
     mm.set_argv(argv, argc);
-    mm.makefile(opts);
+    mm.makefile(opts, ast);
   }
 
  public:
@@ -741,7 +746,7 @@ class Main {
    * This is the entry point where the software starts.
    */
   void runKernal() {
-    makefile();
+    makefile(driver.ast);
 
     conv_classified_product(&opts);
 
@@ -767,6 +772,46 @@ class Main {
       driver.ast.set_code_mode(mode);
 
       back(r.second, r.first);
+    } else if (opts.derivative > 1) {
+      // split algebra product "left * right" into two instances for first and second derivative
+      std::pair<Instance*, Instance*> bothD = driver.ast.split_instance_for_derivatives(opts.instance);
+
+      // store user provided file name pattern for .hh and .cc
+      std::string orig_header_file = opts.header_file;
+      std::string orig_out_file = opts.out_file;
+
+      driver.ast.current_derivative = 1;
+
+      // prepend "_derivative1" to generated .hh and .cc file
+      opts.header_file = basename(orig_header_file) + "_derivative" +
+        std::to_string(driver.ast.current_derivative) + ".hh";
+      opts.out_file = basename(orig_out_file) + "_derivative" +
+        std::to_string(driver.ast.current_derivative) + ".cc";
+
+      // start generating code for first derivative
+      back(bothD.first);
+      finish();
+      // finish and close *.hh and *.cc for first derivative
+      delete opts.h_stream_;
+      opts.h_stream_ = NULL;
+      delete opts.out;
+      opts.out = NULL;
+
+
+      // start generating code for second derivative
+      driver.ast.current_derivative = 2;
+
+      // prepend "_derivative2" to generated .hh and .cc file
+	  opts.header_file = basename(orig_header_file) + "_derivative" +
+				  std::to_string(driver.ast.current_derivative) + ".hh";
+	  opts.out_file = basename(orig_out_file) + "_derivative" +
+				  std::to_string(driver.ast.current_derivative) + ".cc";
+
+      back(bothD.second);
+
+      // revert opts filenames
+      opts.header_file = orig_header_file;
+      opts.out_file = orig_out_file;
     } else {
       back();
     }
