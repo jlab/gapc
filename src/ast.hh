@@ -261,6 +261,8 @@ class AST {
  public:
   Instance *split_instance_for_backtrack(std::string &n);
   std::pair<Instance*, Instance*> split_classified(const std::string &n);
+  std::pair<Instance*, Instance*> split_instance_for_derivatives(
+    const std::string &n);
   void backtrack_gen(Backtrack_Base &bt);
 
   void warn_unused_fns(Instance &i);
@@ -295,7 +297,18 @@ class AST {
       return backtrack_product;
   }
 
-  bool inject_derivatives = false;
+  // tracks which derivative is currently being generated (first or second)
+  unsigned int current_derivative = 0;
+
+  /* the derivative requested by the user.
+   * 0 = default, i.e. no derivative generation
+   * 1 = generate code to compute first derivative (Jacobians),
+   *     e.g. base pair probabilities, forward-backward, ...
+   * 2 = generate code to compute second derivative (Hessians),
+   *     e.g. for machine learning, which also required generation
+   *     of first derivatives
+   */
+  unsigned int requested_derivative = 0;
 };
 
 #endif  // SRC_AST_HH_
