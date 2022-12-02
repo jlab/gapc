@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
   }
   gapc::class_name obj;
 #ifdef SECOND_DERIVATIVE
-  out_derivative2 obj_D2;
+  gapc::class_name_D2 obj_D2;
 #endif
 
   try {
