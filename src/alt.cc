@@ -1469,87 +1469,99 @@ Expr::Base *Alt::Base::inject_derivative_body(AST &ast,
     fn_call->exprs.push_back(outside_arg);
   } else if (ast.current_derivative == 2) {
     // results of adjoint backward
-    Expr::Fn_Call *fn_e2 = dynamic_cast<Expr::Fn_Call*>(outside_fn_arg->ret_decl->rhs);
+    Expr::Fn_Call *fn_e2 = dynamic_cast<Expr::Fn_Call*>(
+      outside_fn_arg->ret_decl->rhs);
 
     // results of backward
     Expr::Fn_Call *fn_e1 = new Expr::Fn_Call(new std::string(
       "derivative" + std::to_string(ast.current_derivative-1) + "->" +
-      *(fn_e2->name))
-    );
+      *(fn_e2->name)));
     fn_e1->add(fn_e2->exprs);
 
     Expr::Fn_Call *fn_q1 = new Expr::Fn_Call(new std::string(*(fn_call->name)));
     fn_q1->add_arg(new std::string(
       "derivative" + std::to_string(ast.current_derivative-1) + "->" +
-	  (*outside_alt->name).substr(sizeof(OUTSIDE_NT_PREFIX)-1, (*outside_alt->name).length()) + "_table"
-	));
+      (*outside_alt->name).substr(
+        sizeof(OUTSIDE_NT_PREFIX)-1,
+        (*outside_alt->name).length()) + "_table"));
     fn_q1->is_obj = Bool(true);
-    fn_q1->exprs.insert(fn_q1->exprs.end(), std::next(fn_call->exprs.begin()), fn_call->exprs.end());
+    fn_q1->exprs.insert(
+      fn_q1->exprs.end(),
+      std::next(fn_call->exprs.begin()),
+      fn_call->exprs.end());
     fn_q1->add_arg(outside_fn_arg->ret_decl->name);
 
-	fn_call->exprs.push_back(fn_e1);
-	return new Expr::Plus(fn_call, fn_q1);
+    fn_call->exprs.push_back(fn_e1);
+    return new Expr::Plus(fn_call, fn_q1);
   }
 
   return fn_call;
 }
 
 
-// iterates through the arguments of an alternative and adds one statement per NT called to obtain derivative edge weight
-std::list<Statement::Base*> *Alt::Simple::derivative_collect_traces(AST &ast, Symbol::NT &calling_nt) {
+/* iterates through the arguments of an alternative and adds one statement per
+   NT called to obtain derivative edge weight */
+std::list<Statement::Base*> *Alt::Simple::derivative_collect_traces(
+  AST &ast, Symbol::NT &calling_nt) {
   std::list<Statement::Base*> *stmts = new std::list<Statement::Base*>();
 
-  for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end(); ++i) {
-	if ((*i)->is(Fn_Arg::CONST)) {
-	  continue;
-	}
-	Fn_Arg::Alt *fn_alt = dynamic_cast<Fn_Arg::Alt*>(*i);
-	if (fn_alt) {
-	  Alt::Link *alt_link = dynamic_cast<Alt::Link*>((*fn_alt).alt_ref());
-	  if (alt_link) {
-		Symbol::NT *alt_nt = dynamic_cast<Symbol::NT*>(alt_link->nt);
-		if (alt_nt) {
-		  Expr::Fn_Call *fn_call = new Expr::Fn_Call(new std::string("get_traces"));
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
+       i != args.end(); ++i) {
+    if ((*i)->is(Fn_Arg::CONST)) {
+      continue;
+    }
+    Fn_Arg::Alt *fn_alt = dynamic_cast<Fn_Arg::Alt*>(*i);
+    if (fn_alt) {
+      Alt::Link *alt_link = dynamic_cast<Alt::Link*>((*fn_alt).alt_ref());
+      if (alt_link) {
+        Symbol::NT *alt_nt = dynamic_cast<Symbol::NT*>(alt_link->nt);
+        if (alt_nt) {
+          Expr::Fn_Call *fn_call = new Expr::Fn_Call(
+            new std::string("get_traces"));
 
-		  // access lower derivative table
-		  fn_call->add_arg(new std::string(
-			"derivative" +
-			std::to_string(ast.current_derivative-1) +
-			"->" + alt_nt->table_decl->name()));
-		  fn_call->is_obj = Bool(true);
+          // access lower derivative table
+          fn_call->add_arg(new std::string(
+            "derivative" +
+            std::to_string(ast.current_derivative-1) +
+            "->" + alt_nt->table_decl->name()));
+          fn_call->is_obj = Bool(true);
 
-		  // index of the calling non-terminal
-		  Fn_Def *x = new Fn_Def();
-		  x->add_para(calling_nt);
-		  for (std::list<Para_Decl::Base*>::const_iterator i = x->paras.begin();
-		       i != x->paras.end(); ++i) {
-		    Para_Decl::Simple *s = dynamic_cast<Para_Decl::Simple*>(*i);
-		    if (s) {
-		      fn_call->add_arg((*s).name());
-		    }
-		  }
+          // index of the calling non-terminal
+          Fn_Def *x = new Fn_Def();
+          x->add_para(calling_nt);
+          for (std::list<Para_Decl::Base*>::const_iterator i = x->paras.begin();
+               i != x->paras.end(); ++i) {
+            Para_Decl::Simple *s = dynamic_cast<Para_Decl::Simple*>(*i);
+            if (s) {
+              fn_call->add_arg((*s).name());
+            }
+          }
 
-		  // add name of non-terminal that requests traces
-		  // together with make_index, this information is used to sub-set
-		  // stored traces to those that actually lead to this DP cell
-		  fn_call->exprs.push_back(new Expr::Const(*alt_nt->name));
+          // add name of non-terminal that requests traces
+          // together with make_index, this information is used to sub-set
+          // stored traces to those that actually lead to this DP cell
+          fn_call->exprs.push_back(new Expr::Const(*alt_nt->name));
 
-		  // calling make_index
-		  Expr::Fn_Call *mkidx = new Expr::Fn_Call(new std::string("*make_index"));
-		  alt_link->add_args(mkidx);
-		  mkidx->add_arg(new Expr::Const(static_cast<int>(mkidx->exprs.size())), true);
-		  fn_call->exprs.push_back(mkidx);
+          // calling make_index
+          Expr::Fn_Call *mkidx = new Expr::Fn_Call(
+            new std::string("*make_index"));
+          alt_link->add_args(mkidx);
+          mkidx->add_arg(new Expr::Const(static_cast<int>(mkidx->exprs.size())),
+                         true);
+          fn_call->exprs.push_back(mkidx);
 
-		  fn_call->exprs.push_back(new Expr::Const(1.0));
+          fn_call->exprs.push_back(new Expr::Const(1.0));
 
-
-		  Statement::Var_Decl *q = new Statement::Var_Decl(decl->return_type, new std::string("edgeweight_" + *ret_decl->name));
-		  q->rhs = fn_call;
-		  Statement::Var_Assign *stmt_ass = new Statement::Var_Assign(*q, new Expr::Times(new Expr::Vacc(*q), fn_call));
-		  stmts->push_back(stmt_ass);
-		}
-	  }
-	}
+          Statement::Var_Decl *q = new Statement::Var_Decl(
+            decl->return_type,
+            new std::string("edgeweight_" + *ret_decl->name));
+          q->rhs = fn_call;
+          Statement::Var_Assign *stmt_ass = new Statement::Var_Assign(
+            *q, new Expr::Times(new Expr::Vacc(*q), fn_call));
+          stmts->push_back(stmt_ass);
+        }
+      }
+    }
   }
   return stmts;
 }
@@ -1627,13 +1639,17 @@ void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
       vdecl->rhs = inject_derivative_body(ast, calling_nt,
                                           outside_fn_arg->alt_ref(),
                                           outside_arg);
-    } else if ((ast.current_derivative == 2) && !this->get_is_partof_outside() && !outside_fn_arg) {
+    } else if ((ast.current_derivative == 2) &&
+               !this->get_is_partof_outside() &&
+               !outside_fn_arg) {
       // obtain edge weight q
-      std::list<Statement::Base*> *stmts_qs = derivative_collect_traces(ast, calling_nt);
+      std::list<Statement::Base*> *stmts_qs = derivative_collect_traces(
+        ast, calling_nt);
       stmts->insert(stmts->end(), stmts_qs->begin(), stmts_qs->end());
 
       // multiply combined q with nt result
-      vdecl->rhs = new Expr::Times(new Expr::Vacc(new std::string("edgeweight_" + *ret_decl->name)), fn_call);
+      vdecl->rhs = new Expr::Times(new Expr::Vacc(new std::string(
+        "edgeweight_" + *ret_decl->name)), fn_call);
     } else {
       vdecl->rhs = fn_call;
     }
@@ -1666,12 +1682,16 @@ void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
       ass->rhs = inject_derivative_body(ast, calling_nt,
                                         outside_fn_arg->alt_ref(),
                                         outside_arg);
-    } else if ((ast.current_derivative == 2) && !calling_nt.is_partof_outside && !outside_fn_arg) {
+    } else if ((ast.current_derivative == 2) &&
+               !calling_nt.is_partof_outside &&
+               !outside_fn_arg) {
       // obtain edge weight q
-      std::list<Statement::Base*> *stmts_qs = derivative_collect_traces(ast, calling_nt);
+      std::list<Statement::Base*> *stmts_qs = derivative_collect_traces(
+        ast, calling_nt);
       stmts->insert(stmts->end(), stmts_qs->begin(), stmts_qs->end());
       // multiply combined q with nt result
-      ass->rhs = new Expr::Times(new Expr::Vacc(new std::string("edgeweight_" + *ret_decl->name)), fn_call);
+      ass->rhs = new Expr::Times(new Expr::Vacc(new std::string(
+        "edgeweight_" + *ret_decl->name)), fn_call);
     } else {
       ass->rhs = fn_call;
     }
@@ -1887,8 +1907,9 @@ void Alt::Simple::init_guards() {
 
 void Alt::Base::push_back_ret_decl(unsigned int current_derivative) {
   statements.push_back(ret_decl);
-  if (top_level && current_derivative > 1 && !is_partof_outside) { //  && !
-    Statement::Var_Decl *decl_edgeweight = new Statement::Var_Decl(ret_decl->type, new std::string("edgeweight_" + *ret_decl->name));
+  if (top_level && current_derivative > 1 && !is_partof_outside) {
+    Statement::Var_Decl *decl_edgeweight = new Statement::Var_Decl(
+      ret_decl->type, new std::string("edgeweight_" + *ret_decl->name));
     decl_edgeweight->rhs = new Expr::Const(1.0);
     statements.push_back(decl_edgeweight);
   }

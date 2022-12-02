@@ -593,7 +593,8 @@ class Simple : public Base {
   Alt::Base *find_block_parent(const Alt::Base &block);
 
   // generate code to obtain edge weights (q) for each rhs non-terminal
-  std::list<Statement::Base*> *derivative_collect_traces(AST &ast, Symbol::NT &calling_nt);
+  std::list<Statement::Base*> *derivative_collect_traces(
+    AST &ast, Symbol::NT &calling_nt);
 
  private:
   std::list<Statement::Base*> *insert_index_stmts(
