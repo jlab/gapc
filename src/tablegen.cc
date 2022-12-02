@@ -515,7 +515,7 @@ Fn_Def *Tablegen::gen_set_traces(int forDerivative) {
 
   std::string *fn_norm_name = new std::string("normalize_traces");
   if (forDerivative == 2) {
-	fn_norm_name = new std::string("soft_max_hessian_product");
+    fn_norm_name = new std::string("soft_max_hessian_product");
   }
   Expr::Fn_Call *rhs_norm = new Expr::Fn_Call(fn_norm_name);
   rhs_norm->add_arg(new Var_Acc::Array(new Var_Acc::Plain(
