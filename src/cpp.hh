@@ -158,9 +158,21 @@ class Cpp : public Base {
     void print_marker_init(const AST &ast);
     void print_marker_clear(const AST &ast);
 
- public:
-    bool in_class;
     std::string class_name;
+
+ public:
+    void set_class_name(std::string class_name, unsigned int current_derivative=0) {
+      this->class_name = class_name;
+      if (current_derivative > 0) {
+        this->class_name = this->class_name + "_derivative" + std::to_string(current_derivative);
+      }
+    }
+    std::string get_class_name_lower_derivative(unsigned int current_derivative, unsigned int derivative) {
+      assert(current_derivative > 0);
+      assert(derivative < 10);
+      return class_name.substr(0, class_name.size()-1) + std::to_string(derivative);
+    }
+    bool in_class;
     Cpp()
       : Base(), ast(0), pure_list_type(false), in_fn_head(false),
       pointer_as_itr(false),
@@ -244,14 +256,14 @@ class Cpp : public Base {
     void header_footer(const AST &ast);
     void footer(const AST &ast);
     void close_class();
-    void typedefs(Code::Gen &code);
+    void typedefs(Code::Gen &code, unsigned int current_derivative);
 
     void prelude(const Options &opts, const AST &ast);
     void imports(const AST &ast);
 
     void global_constants(const AST &ast);
 
-    void makefile(const Options &opts);
+    void makefile(const Options &opts, const AST &ast);
 
  private:
     bool print_axiom_args(const AST &ast);

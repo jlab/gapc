@@ -1586,7 +1586,11 @@ void Printer::Cpp::print_most_init(const AST &ast) {
 
 void Printer::Cpp::print_init_fn(const AST &ast) {
   stream << indent() << "void init(";
-  stream << "const gapc::Opts &opts)" << " {" << endl;
+  stream << "const gapc::Opts &opts";
+  for (unsigned int i = 1; i < ast.current_derivative; ++i) {
+	stream << ", " << get_class_name_lower_derivative(ast.current_derivative, i) << " *derivative" << std::to_string(i);
+  }
+  stream << ") {" << endl;
 
   inc_indent();
   stream << indent() << "const std::vector<std::pair<const char *, unsigned> >"
@@ -1606,6 +1610,13 @@ void Printer::Cpp::print_init_fn(const AST &ast) {
          ast.hash_decls().begin(); i != ast.hash_decls().end(); ++i) {
       stream << (*i)->ext_name() << "::set_k(opts.k);\n";
     }
+  }
+
+  if (ast.requested_derivative > 0) {
+	stream << endl;
+  }
+  for (unsigned int i = 1; i < ast.current_derivative; ++i) {
+  	stream << indent() << "this->derivative" << std::to_string(i) << " = derivative" << std::to_string(i) << ";" << endl;
   }
 
   dec_indent();
@@ -1698,7 +1709,7 @@ void Printer::Cpp::header(const AST &ast) {
     }
     if ((*ast.grammar()).is_outside()) {
       stream << "#define OUTSIDE\n";
-      if (ast.inject_derivatives) {
+      if (ast.current_derivative > 0) {
         stream << "#define DERIVATIVES\n";
       }
     }
@@ -1707,7 +1718,9 @@ void Printer::Cpp::header(const AST &ast) {
     print_type_defs(ast);
   }
   imports(ast);
+
   print_hash_decls(ast);
+
   stream << indent() << "class " << class_name << " {" << endl;
   stream << indent() << " public:" << endl;
   inc_indent();
@@ -1724,6 +1737,11 @@ void Printer::Cpp::header(const AST &ast) {
     stream << indent() << "unsigned winc;" << endl;
   }
 
+  /* create pointer to lower derivative results */
+  for (unsigned int i = 1; i < ast.current_derivative; ++i) {
+	stream << indent() << get_class_name_lower_derivative(ast.current_derivative, i) << " *derivative" << i << ";" << endl;
+  }
+
   stream << endl;
 
   print_zero_decls(*ast.grammar());
@@ -1734,7 +1752,15 @@ void Printer::Cpp::header(const AST &ast) {
   print_init_fn(ast);
   print_window_inc_fn(ast);
   dec_indent();
-  stream << indent() << " private:" << endl;
+  stream << indent();
+  if ((ast.current_derivative > 0) && (ast.current_derivative < ast.requested_derivative)) {
+	// let higher derivatives access lower DP results, e.g. second needs first
+	// however, last derivative can stay private
+	stream << " public:";
+  } else {
+    stream << " private:";
+  }
+  stream << endl;
   inc_indent();
 }
 
@@ -2320,7 +2346,8 @@ void Printer::Cpp::print_insideoutside_report_fn(
 }
 
 void Printer::Cpp::print_derivative(Symbol::NT *nt) {
-  stream << indent() << "std::cout << \"first derivatives for non-terminal \\\""
+  stream << indent() << "std::cout << \"" << ast->current_derivative
+		 << ". derivatives for non-terminal \\\""
          << (*nt->name).substr(sizeof(OUTSIDE_NT_PREFIX)-1,
                                (*nt->name).length())
          << "\\\":\\n\";" << endl;
@@ -2425,7 +2452,7 @@ void Printer::Cpp::print_run_derivative_fn(const AST &ast) {
 
 void Printer::Cpp::print_run_fn(const AST &ast) {
   Symbol::NT *axiom = ast.grammar()->axiom;
-  if (ast.inject_derivatives) {
+  if (ast.current_derivative > 0) {
     axiom = dynamic_cast<Symbol::NT*>(
       ast.grammar()->NTs[*ast.grammar()->axiom_name_inside]);
   }
@@ -2801,16 +2828,18 @@ void Printer::Cpp::close_class() {
 }
 
 
-void Printer::Cpp::typedefs(Code::Gen &code) {
-  stream << "#ifndef NO_GAPC_TYPEDEFS" << endl;
-  stream << indent() << "namespace gapc {" << endl;
-  inc_indent();
-  stream << indent() << "typedef " << class_name << " class_name;" << endl;
-  stream << indent() << "typedef " << *code.return_type()
-    << " return_type;" << endl;
-  dec_indent();
-  stream << indent() << '}' << endl;
-  stream << "#endif" << endl;
+void Printer::Cpp::typedefs(Code::Gen &code, unsigned int current_derivative) {
+  if (current_derivative <= 1) {
+    stream << "#ifndef NO_GAPC_TYPEDEFS" << endl;
+    stream << indent() << "namespace gapc {" << endl;
+    inc_indent();
+    stream << indent() << "typedef " << class_name << " class_name;" << endl;
+    stream << indent() << "typedef " << *code.return_type()
+           << " return_type;" << endl;
+    dec_indent();
+    stream << indent() << '}' << endl;
+    stream << "#endif" << endl;
+  }
   stream << endl;
   stream << "#endif" << endl;
 }
@@ -2852,7 +2881,7 @@ static const char deps[] =
 #include "prefix.hh"
 
 
-void Printer::Cpp::makefile(const Options &opts) {
+void Printer::Cpp::makefile(const Options &opts, const AST &ast) {
   stream << endl << make_comments(id_string, "#") << endl << endl;
 
   // stream << "SED = sed\n";
@@ -2875,7 +2904,14 @@ void Printer::Cpp::makefile(const Options &opts) {
        << "endif" << endl << endl;
 
   std::string base = opts.class_name;  // basename(opts.out_file);
-  std::string out_file = remove_dir(opts.out_file);
+  std::string out_file = "";
+  if (ast.requested_derivative > 0) {
+	for (unsigned int i = 1; i < ast.requested_derivative; ++i) {
+	  out_file += basename(remove_dir(opts.out_file)) + "_derivative" + std::to_string(i) + ".cc ";
+	}
+  } else {
+    out_file = remove_dir(opts.out_file);
+  }
   std::string header_file = remove_dir(opts.header_file);
   stream << "CXXFILES =  " << base << "_main.cc "
     << out_file << endl << endl;
@@ -2894,7 +2930,15 @@ void Printer::Cpp::makefile(const Options &opts) {
 
   stream << endl << endl
     << base << "_main.cc : $(RTLIB)/generic_main.cc " << out_file << endl
-    << "\techo '#include \"" << header_file << "\"' > $@" << endl
+    << "\techo '#include ";
+  if (ast.requested_derivative > 0) {
+	for (unsigned int i = 1; i < ast.requested_derivative; ++i) {
+	  stream << "\"" << basename(remove_dir(opts.out_file)) << "_derivative" << std::to_string(i) << ".hh\"";
+	}
+  } else {
+    stream << "\"" << header_file << "\"";
+  }
+  stream << "' > $@" << endl
     << "\tcat $(RTLIB)/generic_main.cc >> " << base << "_main.cc" << endl
     << endl;
   stream << deps << endl;
@@ -2913,7 +2957,7 @@ void Printer::Cpp::imports(const AST &ast) {
     return;
   }
 
-  if (ast.inject_derivatives) {
+  if (ast.current_derivative > 0) {
     stream << "#include \"rtlib/traces.hh\"" << endl;
   }
 
@@ -2966,9 +3010,16 @@ void Printer::Cpp::imports(const AST &ast) {
     }
   }
   stream << endl;
-  stream << "#include \"rtlib/generic_opts.hh\"\n";
-        stream << "#include \"rtlib/pareto_dom_sort.hh\"\n";
-        stream << "#include \"rtlib/pareto_yukish_ref.hh\"\n\n";
+  stream << "#include \"rtlib/generic_opts.hh\"" << endl;
+  stream << "#include \"rtlib/pareto_dom_sort.hh\"" << endl;
+  stream << "#include \"rtlib/pareto_yukish_ref.hh\"" << endl;
+
+  /* include code of lower derivatives */
+  for (unsigned int i = 1; i < ast.current_derivative; ++i) {
+    stream << indent() << "#include \"" << get_class_name_lower_derivative(ast.current_derivative, i) <<  ".hh\"" << endl;
+  }
+
+  stream << endl;
 }
 
 
