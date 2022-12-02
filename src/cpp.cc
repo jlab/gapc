@@ -2941,18 +2941,22 @@ void Printer::Cpp::makefile(const Options &opts, const AST &ast) {
   }
 
   stream << endl << endl
-    << base << "_main.cc : $(RTLIB)/generic_main.cc " << out_file << endl
-    << "\techo '#include ";
+    << base << "_main.cc : $(RTLIB)/generic_main.cc " << out_file << endl;
   if (ast.requested_derivative > 0) {
-    for (unsigned int i = 1; i < ast.requested_derivative; ++i) {
-      stream << "\"" << basename(remove_dir(opts.out_file)) << "_derivative"
-             << std::to_string(i) << ".hh\"";
+    for (unsigned int i = 1; i <= ast.requested_derivative; ++i) {
+      stream << "\techo '#include \"" << basename(remove_dir(opts.out_file))
+             << "_derivative" << std::to_string(i) << ".hh\"' >";
+      if (i > 1) {
+        stream << ">";
+      }
+      stream << " $@" << endl;
     }
   } else {
-    stream << "\"" << header_file << "\"";
+    stream << "\techo '#include " << "\"" << header_file << "\""
+           << "' > $@" << endl;
   }
-  stream << "' > $@" << endl
-    << "\tcat $(RTLIB)/generic_main.cc >> " << base << "_main.cc" << endl
+
+  stream << "\tcat $(RTLIB)/generic_main.cc >> " << base << "_main.cc" << endl
     << endl;
   stream << deps << endl;
   stream << ".PHONY: clean" << endl << "clean:" << endl
