@@ -2916,7 +2916,7 @@ void Printer::Cpp::makefile(const Options &opts, const AST &ast) {
 
   std::string base = opts.class_name;  // basename(opts.out_file);
   std::string out_file = "";
-  if (ast.requested_derivative > 0) {
+  if (ast.requested_derivative > 1) {
     for (unsigned int i = 1; i <= ast.requested_derivative; ++i) {
       out_file += basename(remove_dir(opts.out_file)) + \
                   "_derivative" + std::to_string(i) + ".cc ";
@@ -2942,7 +2942,7 @@ void Printer::Cpp::makefile(const Options &opts, const AST &ast) {
 
   stream << endl << endl
     << base << "_main.cc : $(RTLIB)/generic_main.cc " << out_file << endl;
-  if (ast.requested_derivative > 0) {
+  if (ast.requested_derivative > 1) {
     for (unsigned int i = 1; i <= ast.requested_derivative; ++i) {
       stream << "\techo '#include \"" << basename(remove_dir(opts.out_file))
              << "_derivative" << std::to_string(i) << ".hh\"' >";
