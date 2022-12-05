@@ -149,7 +149,7 @@ algebra alg_score implements sig_alignments(alphabet=char, answer=float) {
 
 algebra alg_jacobian extends alg_score {
   choice [float] h([float] candidates) {
-    return list(expsum(candidates));
+    return list(sum(candidates));
   }
 }
 
