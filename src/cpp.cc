@@ -2320,7 +2320,7 @@ void Printer::Cpp::print_insideoutside_report_fn(
 }
 
 void Printer::Cpp::print_derivative(Symbol::NT *nt) {
-  stream << indent() << "std::cout << \"first derivatives for non-terminal \\\""
+  stream << indent() << "std::cout << \"1. derivatives for non-terminal \\\""
          << (*nt->name).substr(sizeof(OUTSIDE_NT_PREFIX)-1,
                                (*nt->name).length())
          << "\\\":\\n\";" << endl;
