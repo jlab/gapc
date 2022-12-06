@@ -245,7 +245,8 @@ class Base {
 
  protected:
   Statement::If *filter_guards;
-  void push_back_ret_decl(unsigned int current_derivative);
+  void push_back_ret_decl(unsigned int current_derivative,
+                          bool outside_generation);
 
   Expr::Base *suchthat_code(Statement::Var_Decl &decl) const;
 

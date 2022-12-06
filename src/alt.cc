@@ -1905,9 +1905,11 @@ void Alt::Simple::init_guards() {
 }
 
 
-void Alt::Base::push_back_ret_decl(unsigned int current_derivative) {
+void Alt::Base::push_back_ret_decl(unsigned int current_derivative,
+                                   bool outside_generation) {
   statements.push_back(ret_decl);
-  if (top_level && current_derivative > 1 && !is_partof_outside) {
+  if (top_level && current_derivative > 1
+      && !is_partof_outside && !outside_generation) {
     Statement::Var_Decl *decl_edgeweight = new Statement::Var_Decl(
       ret_decl->type, new std::string("edgeweight_" + *ret_decl->name));
     decl_edgeweight->rhs = new Expr::Const(1.0);
@@ -2270,7 +2272,7 @@ void Alt::Simple::codegen(AST &ast, Symbol::NT &calling_nt) {
   }
 
   statements.clear();
-  push_back_ret_decl(ast.current_derivative);
+  push_back_ret_decl(ast.current_derivative, calling_nt.is_partof_outside);
   std::list<Statement::Base*> *stmts = &statements;
 
   init_guards();
@@ -2464,7 +2466,7 @@ void Alt::Link::codegen(AST &ast, Symbol::NT &calling_nt) {
   // std::cout << "link " << *name << std::endl;
 
   statements.clear();
-  push_back_ret_decl(ast.current_derivative);
+  push_back_ret_decl(ast.current_derivative, calling_nt.is_partof_outside);
   std::string *s = NULL;
   if (nt->is(Symbol::TERMINAL)) {
     s = name;
@@ -2542,7 +2544,7 @@ void Alt::Link::codegen(AST &ast, Symbol::NT &calling_nt) {
 void Alt::Block::codegen(AST &ast, Symbol::NT &calling_nt) {
   // std::cout << "-----------------Block " << std::endl;
   statements.clear();
-  push_back_ret_decl(ast.current_derivative);
+  push_back_ret_decl(ast.current_derivative, calling_nt.is_partof_outside);
   Statement::Fn_Call *fn = new Statement::Fn_Call(Statement::Fn_Call::EMPTY);
   fn->add_arg(*ret_decl);
   statements.push_back(fn);
