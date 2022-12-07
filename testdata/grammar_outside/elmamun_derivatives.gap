@@ -34,6 +34,30 @@ algebra alg_score implements sig_elmamun(alphabet=char, answer=float) {
   choice [float] h([float] candidates) {
     return list(sum(candidates));
   }
+} 
+
+algebra alg_hessians implements sig_elmamun(alphabet=char, answer=float) {
+  float number(int value) {
+    return 0.0;
+  }
+  float add(float left, char opSymbol, float right) {
+    return left + right + 2.0;
+  }
+  float heinz(float left, Rope opSymbol, float right) {
+    return left + right;
+  }
+  float mult(float left, char opSymbol, float right) {
+    return left + right + 3.0;
+  }
+  float minus(float left, char opSymbol, float right) {
+    return left + right;
+  }
+  float nil(void) {
+    return 0.0;
+  }
+  choice [float] h([float] candidates) {
+    return list(sum(candidates));
+  }
 }
 
 algebra alg_hessians implements sig_elmamun(alphabet=char, answer=float) {
