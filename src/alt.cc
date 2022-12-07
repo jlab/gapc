@@ -57,7 +57,7 @@ Alt::Base::Base(Type t, const Loc &l) :
   productive(false),
   datatype(NULL), eliminated(false),
   terminal_type(false), location(l),
-  ret_decl(NULL), filter_guards(NULL),
+  ret_decl(NULL), edgeweight_decl(NULL), filter_guards(NULL),
   choice_fn_type_(Expr::Fn_Call::NONE),
   tracks_(0), track_pos_(0), is_partof_outside(false) {
 }
@@ -1278,6 +1278,8 @@ void Alt::Base::init_ret_decl(unsigned int i, const std::string &prefix) {
   std::ostringstream o;
   o << prefix << "ret_" << i;
   ret_decl = new Statement::Var_Decl(datatype, new std::string(o.str()));
+  edgeweight_decl = new Statement::Var_Decl(datatype,
+    new std::string("edgeweight_" + *ret_decl->name));
 }
 
 
@@ -1965,8 +1967,6 @@ void Alt::Base::push_back_ret_decl(unsigned int current_derivative,
   statements.push_back(ret_decl);
   if (top_level && current_derivative > 1
       && !is_partof_outside && !outside_generation) {
-	this->edgeweight_decl = new Statement::Var_Decl(
-      ret_decl->type, new std::string("edgeweight_" + *ret_decl->name));
 	this->edgeweight_decl->rhs = new Expr::Const(1.0);
     statements.push_back(this->edgeweight_decl);
   }
