@@ -61,7 +61,8 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #ifndef HAVE_STRDUP
-char *strdup(const char *s);
+char *
+strdup(const char *s);
 
 
 #endif
@@ -152,6 +153,95 @@ vrna_strcat_vprintf(char        **dest,
 
 
 /**
+ *  @brief Trim only characters leading the string
+ *  @see vrna_strtrim()
+ */
+#define VRNA_TRIM_LEADING       1U
+
+/**
+ *  @brief Trim only characters trailing the string
+ *  @see vrna_strtrim()
+ */
+#define VRNA_TRIM_TRAILING      2U
+
+/**
+ *  @brief Trim only characters within the string
+ *  @see vrna_strtrim()
+ */
+#define VRNA_TRIM_IN_BETWEEN    4U
+
+/**
+ *  @brief  Replace remaining characters after trimming with the first delimiter in list
+ *  @see  vrna_strtrim()
+ */
+#define VRNA_TRIM_SUBST_BY_FIRST  8U
+
+/**
+ *  @brief Default settings for trimming, i.e. trim leading and trailing
+ *  @see vrna_strtrim()
+ */
+#define VRNA_TRIM_DEFAULT       ( VRNA_TRIM_LEADING | VRNA_TRIM_TRAILING )
+
+/**
+ *  @brief Trim characters anywhere in the string
+ *  @see vrna_strtrim()
+ */
+#define VRNA_TRIM_ALL           ( VRNA_TRIM_DEFAULT | VRNA_TRIM_IN_BETWEEN )
+
+/**
+ *  @brief Trim a string by removing (multiple) occurences of a particular character
+ *
+ *  This function removes (multiple) consecutive occurences of a set of
+ *  characters (@p delimiters) within an input string. It may be used to remove
+ *  leading and/or trailing whitespaces or to restrict the maximum number of
+ *  consecutive occurences of the delimiting characters @p delimiters. Setting
+ *  @p keep=0 removes all occurences, while other values reduce multiple
+ *  consecutive occurences to at most @p keep delimiters. This might be useful
+ *  if one would like to reduce multiple whitespaces to a single one, or
+ *  to remove empty fields within a comma-separated value string.
+ *
+ *  The parameter @p delimiters may be a pointer to a 0-terminated char string
+ *  containing a set of any ASCII character. If @em NULL is passed as delimiter
+ *  set or an empty char string, all whitespace characters are trimmed. The
+ *  @p options parameter is a bit vector that specifies which part of the string
+ *  should undergo trimming. The implementation distinguishes the leading
+ *  (#VRNA_TRIM_LEADING), trailing (#VRNA_TRIM_TRAILING), and in-between
+ *  (#VRNA_TRIM_IN_BETWEEN) part with respect to the delimiter set. Combinations
+ *  of these parts can be specified by using logical-or operator.
+ *
+ *  The following example code removes all leading and trailing
+ *  whitespace characters from the input string:
+ *  @code{.c}
+ *  char          string[20]  = "  \t blablabla   ";
+ *  unsigned int  r           = vrna_strtrim(&(string[0]),
+ *                                           NULL,
+ *                                           0,
+ *                                           VRNA_TRIM_DEFAULT);
+ *  @endcode
+ *
+ *  @note The delimiter always consists of a single character from the
+ *  set of characters provided. In case of alternative delimiters and non-null
+ *  @p keep parameter, the first @p keep delimiters are preserved within the
+ *  string. Use #VRNA_TRIM_SUBST_BY_FIRST to substitute all remaining
+ *  delimiting characters with the first from the @p delimiters list.
+ *
+ *  @see  VRNA_TRIM_LEADING, VRNA_TRIM_TRAILING, VRNA_TRIM_IN_BETWEEN,
+ *        VRNA_TRIM_SUBST_BY_FIRST, VRNA_TRIM_DEFAULT, VRNA_TRIM_ALL
+ *
+ *  @param  string      The '\0'-terminated input string to trim
+ *  @param  delimiters  The delimiter characters as 0-terminated char array (or @em NULL)
+ *  @param  keep        The maximum number of consecutive occurences of the delimiter in the output string
+ *  @param  options     The option bit vector specifying the mode of operation
+ *  @return             The number of delimiters removed from the string
+ */
+unsigned int
+vrna_strtrim(char         *string,
+             const char   *delimiters,
+             unsigned int keep,
+             unsigned int options);
+
+
+/**
  *  @brief Split a string into tokens using a delimiting character
  *
  *  This function splits a string into an array of strings using a single
@@ -167,8 +257,8 @@ vrna_strcat_vprintf(char        **dest,
  * char **tok = vrna_strsplit("GGGG&CCCC&AAAAA", NULL);
  *
  * for (char **ptr = tok; *ptr; ptr++) {
- *  printf("%s\n", *ptr);
- *  free(*ptr);
+ *   printf("%s\n", *ptr);
+ *   free(*ptr);
  * }
  * free(tok);
  * @endcode
@@ -185,6 +275,14 @@ vrna_strcat_vprintf(char        **dest,
  *  considered to be thread-safe. Also note, that it is the users responsibility
  *  to free the memory of the array and that of the individual element strings!
  *
+ *  @note In case the input string consists of consecutive delimiters, starts
+ *  or ends with one or multiple delimiters, empty strings are produced in the
+ *  output list, indicating the empty fields of data resulting from the split.
+ *  Use vrna_strtrim() prior to a call to this function to remove any leading,
+ *  trailing, or in-between empty fields.
+ *
+ *  @see vrna_strtrim()
+ *
  *  @param  string    The input string that should be split into elements
  *  @param  delimiter The delimiting character. If @c NULL, the delimiter is @c "&"
  *  @return           A @c NULL terminated list of the elements in the string
@@ -197,6 +295,7 @@ vrna_strsplit(const char  *string,
 char *
 vrna_strjoin(const char **strings,
              const char *delimiter);
+
 
 /**
  *  @brief Create a random string using characters from a specified symbol set
@@ -259,6 +358,46 @@ vrna_seq_toupper(char *sequence);
 
 
 /**
+ *  @brief  Reverse a string in-place
+ *
+ *  This function reverses a character string in the form of
+ *  an array of characters in-place, i.e. it changes the input
+ *  parameter.
+ *
+ *  @post After execution, the input @p sequence consists of the
+ *        reverse string prior to the execution.
+ *
+ *  @see vrna_DNA_complement()
+ *
+ *  @param  sequence  The string to reverse
+ */
+void
+vrna_seq_reverse(char *sequence);
+
+
+/**
+ *  @brief  Retrieve a DNA sequence which resembles the complement of the input sequence
+ *
+ *  This function returns a mew DNA string which is the complement
+ *  of the input, i.e. the nucleotide letters `A`,`C`,`G`, and `T`
+ *  are substituted by their complements `T`,`G`,`C`, and `A`, respectively.
+ *
+ *  Any characters not belonging to the alphabet of the 4 canonical
+ *  bases of DNA are not altered.
+ *
+ *  @note This function also handles lower-case input sequences and
+ *        treats `U` of the RNA alphabet equally to `T`
+ *
+ *  @see vrna_seq_reverse()
+ *
+ *  @param  sequence  the input DNA sequence
+ *  @return           The complement of the input DNA sequence
+ */
+char *
+vrna_DNA_complement(const char *sequence);
+
+
+/**
  *  @brief  Remove gap characters from a nucleotide sequence
  *
  *  @param  sequence  The original, null-terminated nucleotide sequence
@@ -311,21 +450,25 @@ vrna_cut_point_remove(const char  *string,
  *  @brief Convert an input sequence to uppercase
  *  @deprecated   Use vrna_seq_toupper() instead!
  */
-DEPRECATED(void  str_uppercase(char *sequence), "Use vrna_seq_toupper() instead");
+DEPRECATED(void
+           str_uppercase(char *sequence),
+           "Use vrna_seq_toupper() instead");
 
 /**
  *  @brief Convert a DNA input sequence to RNA alphabet
  *
  *  @deprecated Use vrna_seq_toRNA() instead!
  */
-DEPRECATED(void str_DNA2RNA(char *sequence), "Use vrna_seq_toRNA() instead");
+DEPRECATED(void
+           str_DNA2RNA(char *sequence),
+           "Use vrna_seq_toRNA() instead");
 
 /**
  *  @brief Create a random string using characters from a specified symbol set
  *
  *  @deprecated Use vrna_random_string() instead!
  */
-DEPRECATED(char *random_string(int        l,
+DEPRECATED(char *random_string(int l,
                                const char symbols[]),
            "Use vrna_random_string() instead");
 
@@ -334,8 +477,9 @@ DEPRECATED(char *random_string(int        l,
  *
  *  @deprecated Use vrna_hamming_distance() instead!
  */
-DEPRECATED(int hamming(const char *s1,
-                       const char *s2),
+DEPRECATED(int
+           hamming(const char *s1,
+                   const char *s2),
            "Use vrna_hamming_distance() instead");
 
 /**
@@ -343,9 +487,10 @@ DEPRECATED(int hamming(const char *s1,
  *
  *  @deprecated Use vrna_hamming_distance_bound() instead!
  */
-DEPRECATED(int hamming_bound(const char *s1,
-                             const char *s2,
-                             int        n),
+DEPRECATED(int
+           hamming_bound(const char *s1,
+                         const char *s2,
+                         int        n),
            "Use vrna_hamming_distance_bound() instead");
 
 #endif

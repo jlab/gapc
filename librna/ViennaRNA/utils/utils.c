@@ -242,27 +242,39 @@ vrna_message_vinfo(FILE       *fp,
 PUBLIC void
 vrna_init_rand(void)
 {
-  uint32_t seed = rj_mix(clock(), time(NULL), getpid());
+  vrna_init_rand_seed((unsigned int)rj_mix(clock(),
+                                           time(NULL),
+                                           getpid()));
+}
 
-  xsubi[0]  = xsubi[1] = xsubi[2] = (unsigned short)seed;  /* lower 16 bit */
-  xsubi[1]  += (unsigned short)((unsigned)seed >> 6);
-  xsubi[2]  += (unsigned short)((unsigned)seed >> 12);
-#ifndef HAVE_ERAND48
+
+PUBLIC void
+vrna_init_rand_seed(unsigned int seed)
+{
+#ifdef HAVE_ERAND48
+  uint32_t s = (uint32_t)seed;
+
+  xsubi[0]  = xsubi[1] = xsubi[2] = (unsigned short)s;  /* lower 16 bit */
+  xsubi[1]  += (unsigned short)((unsigned)s >> 6);
+  xsubi[2]  += (unsigned short)((unsigned)s >> 12);
+#else
   srand((unsigned int)seed);
 #endif
 }
 
-
 /*------------------------------------------------------------------------*/
 
-/* uniform random number generator; vrna_urn() is in [0,1] */
-/* uses a linear congruential library routine */
-/* 48 bit arithmetic */
+/*
+ * uniform random number generator; vrna_urn() is in [0,1]
+ * uses a linear congruential library routine
+ * 48 bit arithmetic
+ */
 PUBLIC double
 vrna_urn(void)
 {
 #ifdef HAVE_ERAND48
-  extern double erand48(unsigned short[]);
+  extern double
+  erand48(unsigned short[]);
 
 
   return erand48(xsubi);
@@ -328,8 +340,10 @@ get_input_line(char         **string,
     return VRNA_INPUT_QUIT;
   }
 
-  /* print line read if not disabled */
-  /* if(!(option & VRNA_INPUT_NOPRINT)) printf("%s\n", line); */
+  /*
+   * print line read if not disabled
+   * if(!(option & VRNA_INPUT_NOPRINT)) printf("%s\n", line);
+   */
 
   /* eliminate whitespaces at the end of the line read */
   if (!(option & VRNA_INPUT_NO_TRUNCATION)) {
@@ -345,8 +359,10 @@ get_input_line(char         **string,
   }
 
   if (*line == '>') {
-    /* fasta header */
-    /* alloc memory for the string */
+    /*
+     * fasta header
+     * alloc memory for the string
+     */
     *string = (char *)vrna_alloc(sizeof(char) * (strlen(line) + 1));
     r       = VRNA_INPUT_FASTA_HEADER;
     i       = sscanf(line, ">%s", *string);
@@ -521,9 +537,11 @@ rj_mix(uint32_t a,
 
 #ifndef VRNA_DISABLE_BACKWARD_COMPATIBILITY
 
-/*###########################################*/
-/*# deprecated functions below              #*/
-/*###########################################*/
+/*
+ * ###########################################
+ * # deprecated functions below              #
+ *###########################################
+ */
 
 PUBLIC int *
 get_iindx(unsigned int length)

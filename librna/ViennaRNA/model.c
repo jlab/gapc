@@ -86,16 +86,39 @@ int             fold_constrained  = 0;    /* fold with constraints */
  # PRIVATE VARIABLES             #
  #################################
  */
-PRIVATE int       BP_pair[NBASES][NBASES] =
-  /* _  A  C  G  U  X  K  I */
-{ { 0, 0, 0, 0, 0, 0, 0, 0 },
-  { 0, 0, 0, 0, 5, 0, 0, 5 },
-  { 0, 0, 0, 1, 0, 0, 0, 0 },
-  { 0, 0, 2, 0, 3, 0, 0, 0 },
-  { 0, 6, 0, 4, 0, 0, 0, 6 },
-  { 0, 0, 0, 0, 0, 0, 2, 0 },
-  { 0, 0, 0, 0, 0, 1, 0, 0 },
-  { 0, 6, 0, 0, 5, 0, 0, 0 } };
+
+#define   BP_REV_DEFAULT        { 0, 2, 1, 4, 3, 6, 5, 7 }
+
+#define   BP_ALIAS_DEFAULT      { 0, 1, 2, 3, 4, 3, 2, 0 }
+
+#define   BP_ENCODING_DEFAULT \
+  /*  _  A  C  G  U  X  K  I */ \
+  { { 0, 0, 0, 0, 0, 0, 0, 0 }, \
+    { 0, 0, 0, 0, 5, 0, 0, 5 }, \
+    { 0, 0, 0, 1, 0, 0, 0, 0 }, \
+    { 0, 0, 2, 0, 3, 0, 0, 0 }, \
+    { 0, 6, 0, 4, 0, 0, 0, 6 }, \
+    { 0, 0, 0, 0, 0, 0, 2, 0 }, \
+    { 0, 0, 0, 0, 0, 1, 0, 0 }, \
+    { 0, 6, 0, 0, 5, 0, 0, 0 } }
+
+#define   DM_DEFAULT \
+  { { 0, 0, 0, 0, 0, 0, 0 }, /* hamming distance between pairs */ \
+    { 0, 0, 2, 2, 1, 2, 2 } /* CG */, \
+    { 0, 2, 0, 1, 2, 2, 2 } /* GC */, \
+    { 0, 2, 1, 0, 2, 1, 2 } /* GU */, \
+    { 0, 1, 2, 2, 0, 2, 1 } /* UG */, \
+    { 0, 2, 2, 1, 2, 0, 2 } /* AU */, \
+    { 0, 2, 2, 2, 1, 2, 0 } /* UA */ }
+
+
+PRIVATE int
+BP_pair[NBASES][NBASES] = BP_ENCODING_DEFAULT;
+
+
+PRIVATE const float
+dm_default[7][7] = DM_DEFAULT;
+
 
 PRIVATE vrna_md_t defaults = {
   VRNA_MODEL_DEFAULT_TEMPERATURE,
@@ -123,18 +146,10 @@ PRIVATE vrna_md_t defaults = {
   VRNA_MODEL_DEFAULT_ALI_CV_FACT,
   VRNA_MODEL_DEFAULT_ALI_NC_FACT,
   1.07,
-  { 0,                              2,  1, 4, 3, 6, 5, 7 },
-  { 0,                              1,  2, 3, 4, 3, 2, 0 },
-  {
-    { 0,                            0,  0, 0, 0, 0, 0, 0 },
-    { 0,                            0,  0, 0, 5, 0, 0, 5 },
-    { 0,                            0,  0, 1, 0, 0, 0, 0 },
-    { 0,                            0,  2, 0, 3, 0, 0, 0 },
-    { 0,                            6,  0, 4, 0, 0, 0, 6 },
-    { 0,                            0,  0, 0, 0, 0, 2, 0 },
-    { 0,                            0,  0, 0, 0, 1, 0, 0 },
-    { 0,                            6,  0, 0, 5, 0, 0, 0 }
-  }
+  BP_REV_DEFAULT,
+  BP_ALIAS_DEFAULT,
+  BP_ENCODING_DEFAULT,
+  DM_DEFAULT
 };
 
 /*
@@ -191,6 +206,9 @@ vrna_md_copy(vrna_md_t        *md_to,
       /* copy matrices */
       for (i = 0; i <= MAXALPHA; i++)
         memcpy(md->pair[i], (md_from->pair[i]), (MAXALPHA + 1) * sizeof(int));
+      /* copy pair dists */
+      for (i = 0; i <= 6; i++)
+        memcpy(md->pair_dist[i], (md_from->pair_dist[i]), 7 * sizeof(float));
     }
   }
 
@@ -920,6 +938,10 @@ fill_pair_matrices(vrna_md_t *md)
   md->rtype[0]  = 0;
   md->rtype[7]  = 7;
 
+  for (i = 0; i < 7; i++)
+    for (j = 0; j < 7; j++)
+      md->pair_dist[i][j] = dm_default[i][j];
+
   /* was used for energy_set == 0
    * for(i = 0; i < NBASES; i++)
    *  for(j = 0; j < NBASES; j++)
@@ -958,9 +980,11 @@ prepare_default_pairs(vrna_md_t *md)
 
 #ifndef VRNA_DISABLE_BACKWARD_COMPATIBILITY
 
-/*###########################################*/
-/*# deprecated functions below              #*/
-/*###########################################*/
+/*
+ * ###########################################
+ * # deprecated functions below              #
+ *###########################################
+ */
 
 PUBLIC void
 set_model_details(vrna_md_t *md)
