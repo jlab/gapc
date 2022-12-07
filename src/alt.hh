@@ -144,6 +144,8 @@ class Base {
 
  public:
   Statement::Var_Decl *ret_decl;
+  // for derivative computation: stores the edge weight of lower derivatives: q
+  Statement::Var_Decl *edgeweight_decl;
 
   inline bool is(Type t) {
     return type == t;

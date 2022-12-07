@@ -217,8 +217,11 @@ grammar gra_needlemanwunsch uses sig_alignments(axiom=A) {
 }
 
 instance count = gra_needlemanwunsch(alg_count);
+instance count_gotoh = gra_gotoh(alg_count);
+instance enum_gotoh = gra_gotoh(alg_enum);
 instance sim_enum = gra_needlemanwunsch(alg_similarity * alg_enum);
 instance firstD = gra_needlemanwunsch(alg_score);
 instance firstD_gotoh = gra_gotoh(alg_score);
 
 instance bothD = gra_needlemanwunsch(alg_jacobian * alg_hessian);
+instance bothD_gotoh = gra_gotoh(alg_jacobian * alg_hessian);
