@@ -1,6 +1,18 @@
 #ifndef VIENNA_RNA_PACKAGE_FOLD_COMPOUND_H
 #define VIENNA_RNA_PACKAGE_FOLD_COMPOUND_H
 
+#ifdef VRNA_WARN_DEPRECATED
+# if defined(__clang__)
+#  define DEPRECATED(func, msg) func __attribute__ ((deprecated("", msg)))
+# elif defined(__GNUC__)
+#  define DEPRECATED(func, msg) func __attribute__ ((deprecated(msg)))
+# else
+#  define DEPRECATED(func, msg) func
+# endif
+#else
+# define DEPRECATED(func, msg) func
+#endif
+
 /**
  *  @file     fold_compound.h
  *  @ingroup  fold_compound
@@ -62,7 +74,6 @@ typedef void (vrna_callback_free_auxdata)(void *data);
  *
  *  @param status   The status indicator
  *  @param data     The data structure that was assigned with vrna_fold_compound_add_auxdata()
- *  @param status   The status indicator
  */
 typedef void (vrna_callback_recursion_status)(unsigned char status,
                                               void          *data);
@@ -147,18 +158,22 @@ struct vrna_fc_s {
                                      *      attributes to use within this data structure.
                                      */
   unsigned int      length;         /**<  @brief  The length of the sequence (or sequence alignment) */
-  int               cutpoint;       /**<  @brief  The position of the (cofold) cutpoint within the provided sequence.
+#ifndef VRNA_DISABLE_BACKWARD_COMPATIBILITY
+  DEPRECATED(int cutpoint,
+             "Use strand_* members instead");
+                                    /**<  @brief  The position of the (cofold) cutpoint within the provided sequence.
                                      * If there is no cutpoint, this field will be set to -1
                                      */
-
+#endif
   unsigned int      *strand_number; /**<  @brief  The strand number a particular nucleotide is associated with */
   unsigned int      *strand_order;  /**<  @brief  The strand order, i.e. permutation of current concatenated sequence */
+  unsigned int      *strand_order_uniq; /**<  @brief  The strand order array where identical sequences have the same ID */
   unsigned int      *strand_start;  /**<  @brief  The start position of a particular strand within the current concatenated sequence */
   unsigned int      *strand_end;    /**<  @brief  The end (last) position of a particular strand within the current concatenated sequence */
 
-  unsigned int      strands;
-  vrna_seq_t        *nucleotides;
-  vrna_msa_t        *alignment;
+  unsigned int      strands;        /**<  @brief  Number of interacting strands */
+  vrna_seq_t        *nucleotides;   /**<  @brief  Set of nucleotide sequences */
+  vrna_msa_t        *alignment;     /**<  @brief  Set of alignments */
 
   vrna_hc_t         *hc;            /**<  @brief  The hard constraints data structure used for structure prediction */
 
@@ -204,7 +219,7 @@ struct vrna_fc_s {
   vrna_ud_t     *domains_up;                /**<  @brief  Additional unstructured domains */
 
   /* auxiliary (user-defined) extension to the folding grammar */
-  vrna_gr_aux_t *aux_grammar;
+  vrna_gr_aux_t *aux_grammar;               /**<  @brief  Additional decomposition grammar rules */
 
   /**
    *  @}
@@ -227,7 +242,12 @@ struct vrna_fc_s {
                                          *    @see    vrna_sequence_encode()
                                          *    @warning   Only available if @verbatim type==VRNA_FC_TYPE_SINGLE @endverbatim
                                          */
-  short *sequence_encoding2;
+      short *encoding5;
+      short *encoding3;
+
+      short *sequence_encoding2;
+
+
       char *ptype;                      /**<  @brief  Pair type array
                                          *
                                          *    Contains the numerical encoding of the pair type for each pair (i,j) used
@@ -338,7 +358,7 @@ struct {
   int   window_size;              /**<  @brief  window size for local folding sliding window approach */
   char  **ptype_local;            /**<  @brief  Pair type array (for local folding) */
 #ifdef VRNA_WITH_SVM
-  vrna_zsc_dat_t  zscore_data;
+  vrna_zsc_dat_t  zscore_data;    /**<  @brief  Data structure with settings for z-score computations */
 #endif
 
   /**
