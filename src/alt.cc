@@ -1773,6 +1773,9 @@ void Alt::Simple::init_guards() {
 
     guards_inside = new Statement::If(cond);
     ret_decl_empty_block(guards_inside);
+  } else {
+    // don't leave this variable in an undefined state
+    guards_inside = NULL;
   }
 }
 
