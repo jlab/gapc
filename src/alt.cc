@@ -1483,7 +1483,6 @@ Expr::Base *Alt::Base::inject_derivative_body(AST &ast,
     Expr::Fn_Call *fn_e1 = new Expr::Fn_Call(new std::string(
       "derivative" + std::to_string(ast.current_derivative-1) + "->" +
       *(fn_e2->name)));
-      //"stefan"));
     fn_e1->add(fn_e2->exprs);
 
     Expr::Fn_Call *fn_q1 = new Expr::Fn_Call(new std::string(*(fn_call->name)));
@@ -1661,18 +1660,19 @@ void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
       stmts->insert(stmts->end(), stmts_qs->begin(), stmts_qs->end());
 
       // multiply combined q with nt result
-      vdecl->rhs = new Expr::Times(new Expr::Vacc(this->edgeweight_decl->name), fn_call);
+      vdecl->rhs = new Expr::Times(new Expr::Vacc(this->edgeweight_decl->name),
+                                   fn_call);
 //      if (ast.current_derivative == 2) {
-//    	  Expr::Fn_Call *e = new Expr::Fn_Call(Expr::Fn_Call::NOT_EMPTY);
-//    	  e->add_arg(vdecl->name);
-//    	  Statement::If *cond = new Statement::If(e);
-//    	  cond->then.push_back(vdecl);
-//    	  Statement::Fn_Call *erase =
-//    	        new Statement::Fn_Call(Statement::Fn_Call::ERASE);
-//    	  erase->add_arg(vdecl->name);
-//    	  cond->els.push_back(erase);
+//        Expr::Fn_Call *e = new Expr::Fn_Call(Expr::Fn_Call::NOT_EMPTY);
+//        e->add_arg(vdecl->name);
+//        Statement::If *cond = new Statement::If(e);
+//        cond->then.push_back(vdecl);
+//        Statement::Fn_Call *erase =
+//              new Statement::Fn_Call(Statement::Fn_Call::ERASE);
+//        erase->add_arg(vdecl->name);
+//        cond->els.push_back(erase);
 //
-//    	  //vdecl = cond;
+//        //vdecl = cond;
 //      }
     } else {
       vdecl->rhs = fn_call;
@@ -1683,7 +1683,8 @@ void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
     fn->add_arg(*vdecl);
     stmts->push_back(vdecl);
     init_derivative_recording(ast, vdecl->name);
-    std::list<Statement::Base*> *stmts_cmp_push = new std::list<Statement::Base*>();
+    std::list<Statement::Base*> *stmts_cmp_push =
+      new std::list<Statement::Base*>();
     Expr::Base *suchthat = suchthat_code(*vdecl);
     if (suchthat) {
       Statement::If *c = new Statement::If(suchthat);
@@ -1694,7 +1695,7 @@ void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
     } else {
       stmts_cmp_push->push_back(fn);
       stmts_cmp_push->insert(stmts_cmp_push->end(),
-    		                 this->derivative_statements.begin(),
+                             this->derivative_statements.begin(),
                              this->derivative_statements.end());
     }
     if ((ast.current_derivative == 2) && !this->get_is_partof_outside()) {
@@ -1702,12 +1703,13 @@ void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
       e->add_arg(vdecl->name);
       Statement::If *cond_edge_empty = new Statement::If(e);
       cond_edge_empty->then.insert(cond_edge_empty->then.begin(),
-    		                       stmts_cmp_push->begin(), stmts_cmp_push->end());
+                                   stmts_cmp_push->begin(),
+                                   stmts_cmp_push->end());
       stmts_cmp_push->clear();
       stmts_cmp_push->push_back(cond_edge_empty);
     }
     stmts->insert(stmts->end(),
-    		      stmts_cmp_push->begin(), stmts_cmp_push->end());
+                  stmts_cmp_push->begin(), stmts_cmp_push->end());
     // clear this list, as it has just been added to the statements
     this->derivative_statements.clear();
   } else {
@@ -1727,7 +1729,8 @@ void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
         ast, calling_nt);
       stmts->insert(stmts->end(), stmts_qs->begin(), stmts_qs->end());
       // multiply combined q with nt result
-      ass->rhs = new Expr::Times(new Expr::Vacc(this->edgeweight_decl->name), fn_call);
+      ass->rhs = new Expr::Times(new Expr::Vacc(this->edgeweight_decl->name),
+                                 fn_call);
     } else {
       ass->rhs = fn_call;
     }
@@ -1736,7 +1739,8 @@ void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
     // helper list of statements, to allow wrapping with IF condition
     // in case of second derivative generation to check if edge weight
     // is empty
-    std::list<Statement::Base*> *stmts_cmp_push = new std::list<Statement::Base*>();
+    std::list<Statement::Base*> *stmts_cmp_push =
+      new std::list<Statement::Base*>();
     stmts_cmp_push->push_back(ass);
     Expr::Base *suchthat = suchthat_code(*ret_decl);
     if (suchthat) {
@@ -1751,15 +1755,17 @@ void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
       e->add_arg(this->edgeweight_decl->name);
       Statement::If *cond_edge_empty = new Statement::If(e);
       cond_edge_empty->then.insert(cond_edge_empty->then.begin(),
-    		                       stmts_cmp_push->begin(), stmts_cmp_push->end());
-      Statement::Fn_Call *erase = new Statement::Fn_Call(Statement::Fn_Call::EMPTY);
+                                   stmts_cmp_push->begin(),
+                                   stmts_cmp_push->end());
+      Statement::Fn_Call *erase = new Statement::Fn_Call(
+        Statement::Fn_Call::EMPTY);
       erase->add_arg(ret_decl->name);
       cond_edge_empty->els.push_back(erase);
       stmts_cmp_push->clear();
       stmts_cmp_push->push_back(cond_edge_empty);
     }
     stmts->insert(stmts->end(),
-        		  stmts_cmp_push->begin(), stmts_cmp_push->end());
+                  stmts_cmp_push->begin(), stmts_cmp_push->end());
   }
 }
 
@@ -1967,7 +1973,7 @@ void Alt::Base::push_back_ret_decl(unsigned int current_derivative,
   statements.push_back(ret_decl);
   if (top_level && current_derivative > 1
       && !is_partof_outside && !outside_generation) {
-	this->edgeweight_decl->rhs = new Expr::Const(1.0);
+    this->edgeweight_decl->rhs = new Expr::Const(1.0);
     statements.push_back(this->edgeweight_decl);
   }
 }
