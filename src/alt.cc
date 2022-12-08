@@ -1723,7 +1723,7 @@ void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
                                         outside_arg);
     } else if ((ast.current_derivative == 2) &&
                !calling_nt.is_partof_outside &&
-               !outside_fn_arg) {
+               !outside_fn_arg && !is_terminal()) {
       // obtain edge weight q
       std::list<Statement::Base*> *stmts_qs = derivative_collect_traces(
         ast, calling_nt);
@@ -1745,12 +1745,14 @@ void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
     Expr::Base *suchthat = suchthat_code(*ret_decl);
     if (suchthat) {
       Statement::If *c = new Statement::If(suchthat);
-      Statement::Fn_Call *e = new Statement::Fn_Call(Statement::Fn_Call::EMPTY);
+      Statement::Fn_Call *e = new Statement::Fn_Call(
+        Statement::Fn_Call::EMPTY);
       e->add_arg(*ret_decl);
       c->els.push_back(e);
       stmts_cmp_push->push_back(c);
     }
-    if ((ast.current_derivative == 2) && !this->get_is_partof_outside()) {
+    if ((ast.current_derivative == 2) && !this->get_is_partof_outside() &&
+        !is_terminal()) {
       Expr::Fn_Call *e = new Expr::Fn_Call(Expr::Fn_Call::NOT_EMPTY);
       e->add_arg(this->edgeweight_decl->name);
       Statement::If *cond_edge_empty = new Statement::If(e);
