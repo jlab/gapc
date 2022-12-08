@@ -1535,7 +1535,7 @@ std::list<Statement::Base*> *Alt::Simple::derivative_collect_traces(
           fn_call->add_arg(new std::string(
             "derivative" +
             std::to_string(ast.current_derivative-1) +
-            "->" + alt_nt->table_decl->name()));
+            "->" + calling_nt.table_decl->name()));
           fn_call->is_obj = Bool(true);
 
           // index of the calling non-terminal
