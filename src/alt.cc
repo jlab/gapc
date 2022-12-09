@@ -2505,7 +2505,10 @@ void Alt::Block::codegen(AST &ast, Symbol::NT &calling_nt) {
           fn->add_arg(*(*i)->ret_decl);
 
           cond->then.push_back(fn);
-
+          (*i)->init_derivative_recording(ast, (*i)->ret_decl->name);
+          cond->then.insert(cond->then.end(),
+                            (*i)->derivative_statements.begin(),
+                            (*i)->derivative_statements.end());
           if (!disabled_spec && adp_specialization != ADP_Mode::STANDARD &&
               !ADP_Mode::is_step(adp_specialization) ) {
               Statement::Fn_Call *mark = new Statement::Fn_Call(
