@@ -1636,8 +1636,12 @@ std::list<Statement::Base*> *Alt::Link::derivatives_create_candidate() {
 }
 
 std::list<Statement::Base*> *Alt::Block::derivatives_create_candidate() {
-  throw LogError(
-    "Alt::Block::derivatives_create_candidate is not yet implemented!");
+  std::list<Statement::Base*> *stmts_record = new std::list<Statement::Base*>();
+  for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
+    std::list<Statement::Base*> *x = (*i)->derivatives_create_candidate();
+    stmts_record-> insert(stmts_record->end(), x->begin(), x->end());
+  }
+  return stmts_record;
 }
 
 std::list<Statement::Base*> *Alt::Multi::derivatives_create_candidate() {
@@ -1853,6 +1857,14 @@ std::list<Statement::Base*> *Alt::Simple::reorder_args_cg(
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
        i != args.end(); ++i) {
     (*i)->codegen(ast, calling_nt);
+    // TODO(sjanssen): is this really the best way for nested Blocks??
+    if ((*i)->is(Fn_Arg::ALT) && (*i)->alt_ref()->is(Alt::BLOCK)
+        && ((*i)->alt_ref()->derivative_statements.size() <= 0)) {
+      (*i)->alt_ref()->init_derivative_recording(ast, this->ret_decl->name);
+      this->derivative_statements.insert(this->derivative_statements.end(),
+        (*i)->alt_ref()->derivative_statements.begin(),
+        (*i)->alt_ref()->derivative_statements.end());
+    }
   }
   return add_arg_code(ast, x);
 }
