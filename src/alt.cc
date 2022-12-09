@@ -1596,26 +1596,25 @@ std::list<Statement::Base*> *Alt::Base::derivatives_create_candidate() {
 }
 
 std::list<Statement::Base*> *Alt::Simple::derivatives_create_candidate() {
-	std::list<Statement::Base*> *stmts_record = \
-	      new std::list<Statement::Base*>();
+  std::list<Statement::Base*> *stmts_record = \
+        new std::list<Statement::Base*>();
 
-	for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
-		 i != args.end(); ++i) {
-	  if ((*i)->is(Fn_Arg::ALT) && ((*i)->alt_ref()->is(Alt::LINK))) {
-		Alt::Link *alt = dynamic_cast<Alt::Link*>((*i)->alt_ref());
-		if (alt->nt->is(Symbol::NONTERMINAL)) {
-		  std::list<Statement::Base*> *x = alt->derivatives_create_candidate();
-		  stmts_record-> insert(stmts_record->end(), x->begin(), x->end());
-		}
-	  }
-	}
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
+       i != args.end(); ++i) {
+    if ((*i)->is(Fn_Arg::ALT) && ((*i)->alt_ref()->is(Alt::LINK))) {
+      Alt::Link *alt = dynamic_cast<Alt::Link*>((*i)->alt_ref());
+      if (alt->nt->is(Symbol::NONTERMINAL)) {
+        std::list<Statement::Base*> *x = alt->derivatives_create_candidate();
+        stmts_record-> insert(stmts_record->end(), x->begin(), x->end());
+      }
+    }
+  }
 
-	return stmts_record;
+  return stmts_record;
 }
 
 std::list<Statement::Base*> *Alt::Link::derivatives_create_candidate() {
-  std::list<Statement::Base*> *stmts_record = \
-	      new std::list<Statement::Base*>();
+  std::list<Statement::Base*> *stmts_record = new std::list<Statement::Base*>();
 
   Expr::Fn_Call *mkidx = new Expr::Fn_Call(
     new std::string("make_index"));
@@ -1651,7 +1650,8 @@ void Alt::Base::init_derivative_recording(
   if (ast.inject_derivatives) {
     if (!this->is_partof_outside) {
       // test if this alternative uses sub-solutions from other non-terminals
-      std::list<Statement::Base*> *stmts_record = derivatives_create_candidate();
+      std::list<Statement::Base*> *stmts_record =
+        derivatives_create_candidate();
       if (stmts_record && (stmts_record->size() > 0)) {
         // TODO(sjanssen): should I use build-in functions? Also for push_back
         Statement::Fn_Call *x = new Statement::Fn_Call("set_value");
