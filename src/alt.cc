@@ -1636,10 +1636,15 @@ std::list<Statement::Base*> *Alt::Link::derivatives_create_candidate() {
 }
 
 std::list<Statement::Base*> *Alt::Block::derivatives_create_candidate() {
+  throw LogError(
+    "Alt::Block::derivatives_create_candidate not properly implemented yet, "
+    "as Blocks without application of choice function open up the route for"
+    " huge combinatorics!");
+
   std::list<Statement::Base*> *stmts_record = new std::list<Statement::Base*>();
   for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     std::list<Statement::Base*> *x = (*i)->derivatives_create_candidate();
-    stmts_record-> insert(stmts_record->end(), x->begin(), x->end());
+    stmts_record->insert(stmts_record->end(), x->begin(), x->end());
   }
   return stmts_record;
 }
@@ -2517,10 +2522,6 @@ void Alt::Block::codegen(AST &ast, Symbol::NT &calling_nt) {
           fn->add_arg(*(*i)->ret_decl);
 
           cond->then.push_back(fn);
-          (*i)->init_derivative_recording(ast, (*i)->ret_decl->name);
-          cond->then.insert(cond->then.end(),
-                            (*i)->derivative_statements.begin(),
-                            (*i)->derivative_statements.end());
           if (!disabled_spec && adp_specialization != ADP_Mode::STANDARD &&
               !ADP_Mode::is_step(adp_specialization) ) {
               Statement::Fn_Call *mark = new Statement::Fn_Call(
