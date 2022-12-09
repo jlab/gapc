@@ -105,6 +105,49 @@ algebra alg_pfunc implements sig_foldrna(alphabet = char, answer = double) {
   }
 }
 
+// similar to alg_mfe, but datatype changed from int to double and h is sum
+algebra alg_hessians implements sig_foldrna(alphabet = char, answer = double) {
+  double sadd(Subsequence lb, double x) {
+    return x + sbase_energy();
+  }
+  double cadd(double x, double y) {
+    return x + y;
+  }
+  double drem(Subsequence lb, double x, Subsequence rb) {
+    return x + termau_energy(lb, rb);
+  }
+  double sr(Subsequence lb, double x, Subsequence rb) {
+    return x + sr_energy(lb, rb);
+  }
+  double hl(Subsequence lb, Subsequence r, Subsequence rb) {
+    return     hl_energy(r);
+  }
+  double bl(Subsequence lb, Subsequence lr, double x, Subsequence rb) {
+    return x + bl_energy(lr, rb);
+  }
+  double br(Subsequence lb, double x, Subsequence rr, Subsequence rb) {
+    return x + br_energy(lb, rr);
+  }
+  double il(Subsequence lb, Subsequence lr, double x, Subsequence rr, Subsequence rb) {
+    return x + il_energy(lr, rr);
+  }
+  double ml(Subsequence lb, double x, Subsequence rb) {
+    return x + ml_energy() + ul_energy() + termau_energy(lb, rb);
+  }
+  double incl(double x) {
+    return x + ul_energy();
+  }
+  double addss(double x, Subsequence r) {
+    return x + ss_energy(r);
+  }
+  double nil(Subsequence n) {
+    return 0.0;
+  }
+  choice [double] h([double] i) {
+    return list(sum(i));
+  }
+}
+
 algebra alg_dotBracket implements sig_foldrna(alphabet = char, answer = string) {
   string sadd(Subsequence lb,string e) {
     string res;
@@ -233,3 +276,4 @@ grammar gra_nodangle uses sig_foldrna(axiom = struct) {
 instance mfe = gra_nodangle(alg_mfe);
 instance pfunc = gra_nodangle(alg_pfunc);
 instance count = gra_nodangle(alg_count);
+instance bothD = gra_nodangle(alg_pfunc * alg_hessians);
