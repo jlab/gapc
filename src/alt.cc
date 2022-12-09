@@ -2048,7 +2048,7 @@ std::list<Statement::Base*> *Alt::Simple::reorder_args_cg(
   Symbol::NT &calling_nt) {
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
        i != args.end(); ++i) {
-    if (this->top_level) {
+    if (this->top_level && (*i)->is(Fn_Arg::ALT)) {
       (*i)->alt_ref()->edgeweight_decl = this->edgeweight_decl;
     }
     (*i)->codegen(ast, calling_nt);
