@@ -381,6 +381,10 @@ class Base {
   void init_derivative_recording(AST &ast, std::string *result_name);
   Expr::Base *inject_derivative_body(AST &ast, Symbol::NT &calling_nt,
     Alt::Base *outside_fn_arg, Expr::Base *outside_arg);
+
+ public:
+  // for derivative code generation: add code for candidate creation
+  virtual std::list<Statement::Base*> *derivatives_create_candidate();
 };
 
 
@@ -603,6 +607,9 @@ class Simple : public Base {
   std::list<Statement::Base*> *insert_index_stmts(
     std::list<Statement::Base*> *stmts);
   std::list<Statement::Base*> *inner_code;
+
+ public:
+  std::list<Statement::Base*> *derivatives_create_candidate();
 };
 
 
@@ -739,6 +746,9 @@ class Link : public Base {
   void init_outside_guards();
   Alt::Base* find_block();
   Alt::Base *find_block_parent(const Alt::Base &block);
+
+ public:
+  std::list<Statement::Base*> *derivatives_create_candidate();
 };
 
 
@@ -823,6 +833,8 @@ class Block : public Base {
           int plot_level);
   Alt::Base* find_block();
   Alt::Base *find_block_parent(const Alt::Base &block);
+
+  std::list<Statement::Base*> *derivatives_create_candidate();
 };
 
 
@@ -911,6 +923,8 @@ class Multi : public Base {
           int plot_level);
   Alt::Base* find_block();
   Alt::Base *find_block_parent(const Alt::Base &block);
+
+  std::list<Statement::Base*> *derivatives_create_candidate();
 };
 
 }  // namespace Alt

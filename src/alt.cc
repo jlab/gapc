@@ -1771,63 +1771,68 @@ void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
   }
 }
 
+std::list<Statement::Base*> *Alt::Base::derivatives_create_candidate() {
+  return NULL;
+}
+
+std::list<Statement::Base*> *Alt::Simple::derivatives_create_candidate() {
+  std::list<Statement::Base*> *stmts_record = \
+        new std::list<Statement::Base*>();
+
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
+       i != args.end(); ++i) {
+    if ((*i)->is(Fn_Arg::ALT) && ((*i)->alt_ref()->is(Alt::LINK))) {
+      Alt::Link *alt = dynamic_cast<Alt::Link*>((*i)->alt_ref());
+      if (alt->nt->is(Symbol::NONTERMINAL)) {
+        std::list<Statement::Base*> *x = alt->derivatives_create_candidate();
+        stmts_record-> insert(stmts_record->end(), x->begin(), x->end());
+      }
+    }
+  }
+
+  return stmts_record;
+}
+
+std::list<Statement::Base*> *Alt::Link::derivatives_create_candidate() {
+  std::list<Statement::Base*> *stmts_record = new std::list<Statement::Base*>();
+
+  Expr::Fn_Call *mkidx = new Expr::Fn_Call(
+    new std::string("make_index"));
+  this->add_args(mkidx);
+  // add number of index arguments for elipsis mechanism
+  mkidx->add_arg(new Expr::Const(
+  static_cast<int>(mkidx->exprs.size())), true);
+
+  Statement::Fn_Call *fn_add = new Statement::Fn_Call(
+  "add_sub_component");
+  fn_add->add_arg(new std::string("cand"));
+  fn_add->is_obj = Bool(true);
+  fn_add->add_arg(new Expr::Const(*this->nt->name));
+  fn_add->add_arg(mkidx);
+
+  stmts_record->push_back(fn_add);
+
+  return stmts_record;
+}
+
+std::list<Statement::Base*> *Alt::Block::derivatives_create_candidate() {
+  throw LogError(
+    "Alt::Block::derivatives_create_candidate is not yet implemented!");
+}
+
+std::list<Statement::Base*> *Alt::Multi::derivatives_create_candidate() {
+  throw LogError(
+    "Alt::Multi::derivatives_create_candidate is not yet implemented!");
+}
+
 void Alt::Base::init_derivative_recording(
   AST &ast, std::string *result_name) {
   if (ast.current_derivative > 0) {
     if (!this->is_partof_outside) {
       // test if this alternative uses sub-solutions from other non-terminals
-      std::list<Statement::Base*> *stmts_record = \
-      new std::list<Statement::Base*>();
-      // bool calls_other_nts = false;
-      // TODO(sjanssen): maybe split init_derivative_recording into Base Simple
-      // Link instead of testing for types here?
-      if (this->is(Alt::SIMPLE)) {
-        for (std::list<Fn_Arg::Base*>::iterator i =
-             dynamic_cast<Alt::Simple*>(this)->args.begin();
-             i != dynamic_cast<Alt::Simple*>(this)->args.end(); ++i) {
-          if ((*i)->is(Fn_Arg::ALT) && ((*i)->alt_ref()->is(Alt::LINK))) {
-            Alt::Link *alt = dynamic_cast<Alt::Link*>((*i)->alt_ref());
-            if (alt->nt->is(Symbol::NONTERMINAL)) {
-              // calls_other_nts = true;
-
-              Expr::Fn_Call *mkidx = new Expr::Fn_Call(
-                new std::string("make_index"));
-              alt->add_args(mkidx);
-              // add number of index arguments for elipsis mechanism
-              mkidx->add_arg(new Expr::Const(
-                static_cast<int>(mkidx->exprs.size())), true);
-
-              Statement::Fn_Call *fn_add = new Statement::Fn_Call(
-                "add_sub_component");
-              fn_add->add_arg(new std::string("cand"));
-              fn_add->is_obj = Bool(true);
-              fn_add->add_arg(new Expr::Const(*alt->nt->name));
-              fn_add->add_arg(mkidx);
-
-              stmts_record->push_back(fn_add);
-            }
-          }
-        }
-      }
-      if (this->is(Alt::LINK)) {
-        Alt::Link *alt = dynamic_cast<Alt::Link*>(this);
-        Expr::Fn_Call *mkidx = new Expr::Fn_Call(
-          new std::string("make_index"));
-        alt->add_args(mkidx);
-        // add number of index arguments for elipsis mechanism
-        mkidx->add_arg(new Expr::Const(
-        static_cast<int>(mkidx->exprs.size())), true);
-
-        Statement::Fn_Call *fn_add = new Statement::Fn_Call(
-        "add_sub_component");
-        fn_add->add_arg(new std::string("cand"));
-        fn_add->is_obj = Bool(true);
-        fn_add->add_arg(new Expr::Const(*alt->nt->name));
-        fn_add->add_arg(mkidx);
-
-        stmts_record->push_back(fn_add);
-      }
-      if (stmts_record->size() > 0) {
+      std::list<Statement::Base*> *stmts_record =
+        derivatives_create_candidate();
+      if (stmts_record && (stmts_record->size() > 0)) {
         // TODO(sjanssen): should I use build-in functions? Also for push_back
         Statement::Fn_Call *x = new Statement::Fn_Call("set_value");
         x->add_arg(new std::string("cand"));
