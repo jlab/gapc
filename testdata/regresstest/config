@@ -503,3 +503,5 @@ GAPC="../../../gapc --derivative 2"
 check_new_old_eq_twotrack alignments.gap unused bothD "aaaa" secondderiv "bbbb" # validated against jupyter python version
 check_new_old_eq_twotrack alignments.gap unused bothD "frzeitei" nwjamie2deriv "zeit" # validated against jupyter python version
 check_new_old_eq_twotrack alignments.gap unused bothD_gotoh "frzeitei" gotoh2deriv "zeit"
+check_new_old_eq elmamun_derivatives.gap unused bothD "1+2*3*4+5" secondderiv
+check_new_old_eq nodangle.gap unused bothD "CCaCCaaaGGaCCaaaGGaCCaaaGGaGG" secondderiv
