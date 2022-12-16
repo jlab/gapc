@@ -2594,16 +2594,40 @@ void Alt::Link::codegen(AST &ast, Symbol::NT &calling_nt) {
 //    stmts = &guards->then;
 //  }
 
+  /* In case of first derivatives, we want to normalize all result to
+   * probabilities. Therefore, the recursion base of the outside pass must be
+   * set to 1.0, instead of using the result of the initial inside pass,
+   * e.g. axiom with complete input substring */
+  Expr::Base *fn_or_const = fn;
+  if ((ast.current_derivative == 1) &&
+      (*calling_nt.orig_name == *ast.grammar()->axiom_name_inside)) {
+    unsigned int lacking_complete_tracks = calling_nt.tracks();
+    for (std::vector<std::list<Filter*> >::const_iterator track = \
+         multi_filter.begin(); track != multi_filter.end(); ++track) {
+      for (std::list<Filter*>::const_iterator filter = (*track).begin();
+           filter != (*track).end(); ++filter) {
+        if (*(*filter)->name == "complete_track") {
+          lacking_complete_tracks--;
+        }
+      }
+    }
+    if (lacking_complete_tracks == 0) {
+      fn_or_const = new Expr::Const(1.0);
+    }
+  }
+
   init_filter_guards(ast);
   if (filter_guards) {
-    Statement::Var_Assign *v = new Statement::Var_Assign(*ret_decl, fn);
+    Statement::Var_Assign *v = new Statement::Var_Assign(*ret_decl,
+                                                         fn_or_const);
     statements.push_back(filter_guards);
     filter_guards->then.push_back(v);
   } else {
     if (nt->is(Symbol::NONTERMINAL) && this->top_level
         && (ast.current_derivative > 0)
         && calling_nt.is_partof_outside) {
-      ret_decl->rhs = inject_derivative_body(ast, calling_nt, this, fn);
+        ret_decl->rhs = inject_derivative_body(ast, calling_nt, this,
+                                               fn_or_const);
     } else {
       ret_decl->rhs = fn;
     }
