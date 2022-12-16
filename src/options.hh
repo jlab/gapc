@@ -57,7 +57,8 @@ struct Options {
       pareto(0), multiDimPareto(false), cutoff(65),
       float_acc(0),
       specialization(0), step_option(0),
-      plot_grammar(0), plotgrammar_stream_(NULL) {
+      plot_grammar(0), plotgrammar_stream_(NULL),
+      checkpoint_interval(0) {
   }
 
 
@@ -201,6 +202,8 @@ struct Options {
                           std::ios_base::failbit | std::ios_base::eofbit);
     return *plotgrammar_stream_;
   }
+
+  int checkpoint_interval;  // interval for periodic checkpointing (in seconds)
 
   bool check();
 };

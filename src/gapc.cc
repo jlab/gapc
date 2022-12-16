@@ -134,7 +134,10 @@ static void parse_options(int argc, char **argv, Options *rec) {
       "  1 = grammar\n"
       "  2 = add indices\n"
       "  3 = add data types.\n"
-      "(Use 'dot -Tpdf out.dot' to generate a PDF.)\nDefault file is out.dot");
+      "(Use 'dot -Tpdf out.dot' to generate a PDF.)\nDefault file is out.dot")
+    ("checkpoint", po::value<std::string>(),
+     "enables periodic archiving/checkpointing of the tabulated non-terminals.\n"
+     "Interval format: dd:hh:mm:ss \n(e.g. 00:01:00:00 for checkpointing every 60 minutes)");
   po::options_description hidden("");
   hidden.add_options()
     ("backtrack", "deprecated for --backtrace")
@@ -263,6 +266,33 @@ static void parse_options(int argc, char **argv, Options *rec) {
   if (vm.count("plot-grammar")) {
     rec->plot_grammar = vm["plot-grammar"].as<int>();
     rec->plot_grammar_file = basename(rec->out_file) + ".dot";
+  }
+
+  if (vm.count("checkpoint")) {
+    std::string cp_interval = vm["checkpoint"].as<std::string>();
+    std::stringstream tmp_interval(cp_interval);
+    std::string val;
+    std::vector<int> interval_vals;
+    
+    try {
+      // parse the checkpointing interval the user specified
+      while (std::getline(tmp_interval, val, ':')) {
+        // split the interval string at ':' and store values
+        interval_vals.push_back(std::stoi(val));
+      }
+
+      if (interval_vals.size() != 4) {
+        throw LogError("Invalid checkpointing interval format! Must be \"dd:mm:hh::ss\".");
+      }
+    
+      // calculate the interval length (in seconds)
+      int interval = interval_vals[0] * 86400 + interval_vals[1] * 3600 +
+                     interval_vals[2] * 60 + interval_vals[3];
+      std::cout << interval << std::endl;
+      rec->checkpoint_interval = interval;
+    } catch (const std::exception &e) {
+      throw LogError(e.what());
+    }
   }
 
 

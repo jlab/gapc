@@ -2503,8 +2503,13 @@ void Printer::Cpp::makefile(const Options &opts) {
     << out_file << endl << endl;
   stream << "DEPS = $(CXXFILES:.cc=.d)" << endl
     << "OFILES = $(CXXFILES:.cc=.o) string.o" << endl << endl;
-  stream << opts.class_name << " : $(OFILES)" << endl
-    << "\t$(CXX) -o $@ $^  $(LDFLAGS) $(LDLIBS)";
+  if (opts.checkpoint_interval > 0) {
+    stream << opts.class_name << " : $(OFILES)" << endl
+      << "\t$(CXX) -o $@ $^  $(LDFLAGS) $(LDLIBS) -lboost_serialization";
+  } else {
+    stream << opts.class_name << " : $(OFILES)" << endl
+      << "\t$(CXX) -o $@ $^  $(LDFLAGS) $(LDLIBS)";
+  }
 
   // if (opts.sample) {
   //  stream << " $(GSLLIBS) ";
