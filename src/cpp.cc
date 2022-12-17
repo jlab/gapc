@@ -1060,6 +1060,7 @@ void Printer::Cpp::print_window_inc(const Symbol::NT &nt) {
 void Printer::Cpp::print(const Statement::Table_Decl &t) {
   in_class = true;
   bool wmode = ast && ast->window_mode;
+  bool checkpoint = ast && ast->checkpoint;
 
   std::string tname(t.name() + "_t");
   const Type::Base &dtype = t.datatype();
@@ -1100,6 +1101,10 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   dec_indent();
   stream << indent() << "}" << endl << endl;
 
+  if (checkpoint) {
+    ast->checkpoint->archive(stream);
+  }
+
   // start "void init()"
   stream << indent() << "void init(";
   print_paras(ns, '_');
@@ -1131,8 +1136,13 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   stream << indent() << "array.resize(newsize);" << endl;
   if (!cyk) {
     stream << indent() << "tabulated.clear();" << endl;
-    stream << indent() << "tabulated.resize(newsize);" << endl;
+    stream << indent() << "tabulated.resize(newsize);" << endl << endl;
   }
+
+  if (checkpoint) {
+    ast->checkpoint->init(stream);
+  }
+
   dec_indent();
   stream << indent() << "}" << endl << endl;
   // end "void init()"
@@ -2133,6 +2143,9 @@ void Printer::Cpp::header_footer(const AST &ast) {
   dec_indent();
   stream << indent() << " public:" << endl;
   inc_indent();
+  if (ast.checkpoint) {
+    ast.checkpoint->archive_periodically(stream, ast.grammar()->tabulated);
+  }
   print_run_fn(ast);
   print_stats_fn(ast);
 }
@@ -2161,9 +2174,6 @@ void Printer::Cpp::footer(const AST &ast) {
   }
   print_cyk_fn(ast);
 
-  if (ast.checkpoint) {
-    ast.checkpoint->archive_periodically(stream, ast.grammar()->tabulated);
-  }
   print_id();
 }
 
