@@ -57,6 +57,8 @@
 #include "printer_fwd.hh"
 #include "product.hh"
 
+#include "checkpoint.hh"
+
 
 class Signature;
 class Instance;
@@ -294,6 +296,8 @@ class AST {
   Product::Base * get_backtrack_product() {
       return backtrack_product;
   }
+
+  Checkpoint *checkpoint;
 };
 
 #endif  // SRC_AST_HH_

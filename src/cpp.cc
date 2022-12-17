@@ -1685,6 +1685,10 @@ void Printer::Cpp::header(const AST &ast) {
             stream << "#define FLOAT_ACC " << ast.get_float_acc() << "\n";
     }
     includes();
+    if (ast.checkpoint) {
+      ast.checkpoint->include(stream);
+    }
+
     print_subseq_typedef(ast);
     print_type_defs(ast);
   }
@@ -2055,7 +2059,19 @@ void Printer::Cpp::print_run_fn(const AST &ast) {
   stream << indent() << *ast.grammar()->axiom->code()->return_type;
   stream << " run() {" << endl;
   inc_indent();
-  stream << indent() << "return nt_" << *ast.grammar()->axiom_name << '(';
+
+  if (ast.checkpoint) {
+    stream << indent() << "std::atomic_bool cancel_token;" << endl;
+    stream << indent() << "archive_periodically(cancel_token, ";
+    stream << ast.checkpoint->interval << ");" << endl;
+    stream << indent() << *ast.grammar()->axiom->code()->return_type;
+    stream << " ans = ";
+  } else {
+    stream << indent() << "return ";
+  }
+  
+  
+  stream << "nt_" << *ast.grammar()->axiom_name << '(';
 
   bool first = true;
   size_t track = 0;
@@ -2080,6 +2096,11 @@ void Printer::Cpp::print_run_fn(const AST &ast) {
   }
 
   stream << ");" << endl;
+  
+  if (ast.checkpoint) {
+    stream << indent() << "cancel_token.store(false);  // stop periodic checkpointing" << endl;
+    stream << indent() << "return ans;" << endl;
+  }
   dec_indent();
   stream << indent() << '}' << endl << endl;
 }
@@ -2139,6 +2160,10 @@ void Printer::Cpp::footer(const AST &ast) {
     inc_indent();
   }
   print_cyk_fn(ast);
+
+  if (ast.checkpoint) {
+    ast.checkpoint->archive_periodically(stream, ast.grammar()->tabulated);
+  }
   print_id();
 }
 

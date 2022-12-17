@@ -631,6 +631,10 @@ class Main {
         + opts.plot_grammar_file + "'.\nUse e.g. 'dot -Tpdf "
         + opts.plot_grammar_file + " > foo.pdf' to generate a PDF.");
     }
+    
+    if (opts.checkpoint_interval > 0) {
+      driver.ast.checkpoint = new Checkpoint(opts.checkpoint_interval);
+    }
 
     driver.ast.set_class_name(opts.class_name);
 
