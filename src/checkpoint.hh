@@ -5,7 +5,6 @@
 #include "symbol.hh"
 #include "statement/table_decl.hh"
 
-class AST;
 class Checkpoint {
   public:
     size_t interval = 0;
