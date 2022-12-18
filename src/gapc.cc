@@ -633,7 +633,30 @@ class Main {
     }
     
     if (opts.checkpoint_interval > 0) {
-      driver.ast.checkpoint = new Checkpoint(opts.checkpoint_interval);
+      // list of currently supported/serializable datatypes (all primitive)
+      constexpr Type::Type SUPPORTED_TYPES[] = {Type::Type::VOID, Type::Type::INTEGER,
+                                                Type::Type::INT, Type::Type::FLOAT,
+                                                Type::Type::SIZE, Type::Type::SINGLE,
+                                                Type::Type::BIGINT};
+
+      // answer type
+      Type::Type answer_type = driver.ast.grammar()->axiom->data_type()->getType();
+      bool answer_type_supported = false;
+
+      for (Type::Type type: SUPPORTED_TYPES) {
+        if (answer_type == type) {
+          answer_type_supported = true;
+          break;
+        }
+      }
+
+      // only enable checkpointing if answer type is supported
+      if (answer_type_supported) {
+        driver.ast.checkpoint = new Checkpoint(opts.checkpoint_interval);
+      } else {
+        Log::instance()->warning("Checkpointing could not be activated, "
+                                 "because answer type cannot be serialized yet.");
+      }
     }
 
     driver.ast.set_class_name(opts.class_name);
