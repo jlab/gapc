@@ -291,7 +291,6 @@ static void parse_options(int argc, char **argv, Options *rec) {
       // calculate the interval length (in seconds)
       int interval = interval_vals[0] * 86400 + interval_vals[1] * 3600 +
                      interval_vals[2] * 60 + interval_vals[3];
-      std::cout << interval << std::endl;
       rec->checkpoint_interval = interval;
     } catch (const std::exception &e) {
       throw LogError(e.what());
@@ -661,7 +660,8 @@ class Main {
                                     Checkpoint(opts.checkpoint_interval);
       } else {
         Log::instance()->warning("Checkpointing could not be activated, because"
-                                 " answer type cannot be serialized yet.");
+                                 " serialization of answer type"
+                                 " isn't supported yet.");
       }
     }
 
