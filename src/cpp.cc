@@ -2079,8 +2079,7 @@ void Printer::Cpp::print_run_fn(const AST &ast) {
   } else {
     stream << indent() << "return ";
   }
-  
-  
+
   stream << "nt_" << *ast.grammar()->axiom_name << '(';
 
   bool first = true;
@@ -2106,9 +2105,10 @@ void Printer::Cpp::print_run_fn(const AST &ast) {
   }
 
   stream << ");" << endl;
-  
+
   if (ast.checkpoint) {
-    stream << indent() << "cancel_token.store(false);  // stop periodic checkpointing" << endl;
+    stream << indent() << "cancel_token.store(false);  "
+                          "// stop periodic checkpointing" << endl;
     stream << indent() << "return ans;" << endl;
   }
   dec_indent();

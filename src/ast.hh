@@ -297,7 +297,7 @@ class AST {
       return backtrack_product;
   }
 
-  Checkpoint *checkpoint;
+  Printer::Checkpoint *checkpoint;
 };
 
 #endif  // SRC_AST_HH_

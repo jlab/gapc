@@ -136,8 +136,10 @@ static void parse_options(int argc, char **argv, Options *rec) {
       "  3 = add data types.\n"
       "(Use 'dot -Tpdf out.dot' to generate a PDF.)\nDefault file is out.dot")
     ("checkpoint", po::value<std::string>(),
-     "enables periodic archiving/checkpointing of the tabulated non-terminals.\n"
-     "Interval format: dd:hh:mm:ss \n(e.g. 00:01:00:00 for checkpointing every 60 minutes)");
+     "enables periodic archiving/checkpointing "
+     "of the tabulated non-terminals.\n"
+     "Interval format: dd:hh:mm:ss \n"
+     "(e.g. 00:01:00:00 for checkpointing every 60 minutes)");
   po::options_description hidden("");
   hidden.add_options()
     ("backtrack", "deprecated for --backtrace")
@@ -273,7 +275,7 @@ static void parse_options(int argc, char **argv, Options *rec) {
     std::stringstream tmp_interval(cp_interval);
     std::string val;
     std::vector<int> interval_vals;
-    
+
     try {
       // parse the checkpointing interval the user specified
       while (std::getline(tmp_interval, val, ':')) {
@@ -282,9 +284,10 @@ static void parse_options(int argc, char **argv, Options *rec) {
       }
 
       if (interval_vals.size() != 4) {
-        throw LogError("Invalid checkpointing interval format! Must be \"dd:mm:hh::ss\".");
+        throw LogError("Invalid checkpointing interval format! "
+                       "Must be \"dd:mm:hh::ss\".");
       }
-    
+
       // calculate the interval length (in seconds)
       int interval = interval_vals[0] * 86400 + interval_vals[1] * 3600 +
                      interval_vals[2] * 60 + interval_vals[3];
@@ -631,19 +634,21 @@ class Main {
         + opts.plot_grammar_file + "'.\nUse e.g. 'dot -Tpdf "
         + opts.plot_grammar_file + " > foo.pdf' to generate a PDF.");
     }
-    
+
     if (opts.checkpoint_interval > 0) {
       // list of currently supported/serializable datatypes (all primitive)
-      constexpr Type::Type SUPPORTED_TYPES[] = {Type::Type::VOID, Type::Type::INTEGER,
-                                                Type::Type::INT, Type::Type::FLOAT,
-                                                Type::Type::SIZE, Type::Type::SINGLE,
-                                                Type::Type::BIGINT};
+      constexpr Type::Type
+      SUPPORTED_TYPES[] = {Type::Type::VOID, Type::Type::INTEGER,
+                           Type::Type::INT, Type::Type::FLOAT,
+                           Type::Type::SIZE, Type::Type::SINGLE,
+                           Type::Type::BIGINT};
 
       // answer type
-      Type::Type answer_type = driver.ast.grammar()->axiom->data_type()->getType();
+      Type::Type answer_type = driver.ast.grammar()->axiom->
+                               data_type()->getType();
       bool answer_type_supported = false;
 
-      for (Type::Type type: SUPPORTED_TYPES) {
+      for (Type::Type type : SUPPORTED_TYPES) {
         if (answer_type == type) {
           answer_type_supported = true;
           break;
@@ -652,10 +657,11 @@ class Main {
 
       // only enable checkpointing if answer type is supported
       if (answer_type_supported) {
-        driver.ast.checkpoint = new Checkpoint(opts.checkpoint_interval);
+        driver.ast.checkpoint = new Printer::
+                                    Checkpoint(opts.checkpoint_interval);
       } else {
-        Log::instance()->warning("Checkpointing could not be activated, "
-                                 "because answer type cannot be serialized yet.");
+        Log::instance()->warning("Checkpointing could not be activated, because"
+                                 " answer type cannot be serialized yet.");
       }
     }
 
