@@ -391,6 +391,9 @@ class Main {
     // inject rules for outside grammar
     if (opts.outside_nt_list.size() > 0) {
       grammar->inject_outside_nts(opts.outside_nt_list);
+      if (opts.derivative > 0) {
+    	grammar->replace_choice_for_derivatives();
+      }
     }
 
     // configure the window and k-best mode
