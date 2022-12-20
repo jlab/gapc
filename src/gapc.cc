@@ -658,6 +658,12 @@ class Main {
       if (answer_type_supported) {
         driver.ast.checkpoint = new Printer::
                                     Checkpoint(opts.checkpoint_interval);
+        Log::instance()->normalMessage("Checkpointing routine has been "
+                                       "integrated. A new checkpoint will be"
+                                       " created every " +
+                                       driver.ast.checkpoint->format_interval()
+                                       + " until the program terminates."
+                                     );
       } else {
         Log::instance()->warning("Checkpointing could not be activated, because"
                                  " serialization of answer type"

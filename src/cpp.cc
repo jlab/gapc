@@ -1089,6 +1089,10 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   print(ns);
   stream << indent() << dtype << " zero;" << endl;
 
+  if (checkpoint) {
+    stream << indent() << "std::filesystem::path table_path;" << endl;
+  }
+
   stream << t.fn_size() << endl;
 
   dec_indent();
@@ -1103,6 +1107,7 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
 
   if (checkpoint) {
     ast->checkpoint->archive(stream);
+    ast->checkpoint->remove(stream);
   }
 
   // start "void init()"
@@ -1114,6 +1119,9 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   }
 
   stream << ", const std::string &tname";
+  if (checkpoint) {
+    stream << ", const std::filesystem::path &path";
+  }
   stream << ") {" << endl;
   inc_indent();
   print_eqs(ns, '_');
@@ -2109,6 +2117,7 @@ void Printer::Cpp::print_run_fn(const AST &ast) {
   if (ast.checkpoint) {
     stream << indent() << "cancel_token.store(false);  "
                           "// stop periodic checkpointing" << endl;
+    stream << indent() << "remove_tables();" << endl;
     stream << indent() << "return ans;" << endl;
   }
   dec_indent();
@@ -2145,6 +2154,7 @@ void Printer::Cpp::header_footer(const AST &ast) {
   inc_indent();
   if (ast.checkpoint) {
     ast.checkpoint->archive_periodically(stream, ast.grammar()->tabulated);
+    ast.checkpoint->remove_tables(stream, ast.grammar()->tabulated);
   }
   print_run_fn(ast);
   print_stats_fn(ast);
@@ -2538,12 +2548,10 @@ void Printer::Cpp::makefile(const Options &opts) {
     << out_file << endl << endl;
   stream << "DEPS = $(CXXFILES:.cc=.d)" << endl
     << "OFILES = $(CXXFILES:.cc=.o) string.o" << endl << endl;
-  if (opts.checkpoint_interval > 0) {
-    stream << opts.class_name << " : $(OFILES)" << endl
-      << "\t$(CXX) -o $@ $^  $(LDFLAGS) $(LDLIBS) -lboost_serialization";
-  } else {
-    stream << opts.class_name << " : $(OFILES)" << endl
+  stream << opts.class_name << " : $(OFILES)" << endl
       << "\t$(CXX) -o $@ $^  $(LDFLAGS) $(LDLIBS)";
+  if (opts.checkpoint_interval > 0) {
+    stream << " -lboost_serialization -lpthread";
   }
 
   // if (opts.sample) {

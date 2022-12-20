@@ -31,7 +31,7 @@
 namespace Printer {
 class Checkpoint : public Base {
  public:
-    size_t interval = 0;
+    size_t interval = 0;  // user-specified interval (in seconds)
 
     explicit Checkpoint(size_t interval): interval(interval) {}
 
@@ -39,29 +39,42 @@ class Checkpoint : public Base {
       stream << "#include \"boost/serialization/vector.hpp\"" << endl;
       stream << "#include \"boost/archive/binary_iarchive.hpp\"" << endl;
       stream << "#include \"boost/archive/binary_oarchive.hpp\"" << endl;
+      stream << "#include \"boost/dll.hpp\"" << endl;
+      stream << "#include <unistd.h>" << endl;
       stream << "#include <atomic>" << endl;
+      stream << "#include <filesystem>" << endl;
       stream << "#include <thread>" << endl << endl;
     }
 
     void archive(Printer::Base &stream) {
       inc_indent(); inc_indent();
       stream << indent();
-      stream << "void archive(const std::string &output_file) {" << endl;
+      stream << "void archive(const std::string &tname) {" << endl;
       inc_indent();
       stream << indent() << "// save the DP table/array to disk" << endl;
       stream << indent() << "try {" << endl;
       inc_indent();
-      stream << indent() << "std::ofstream array_fout(output_file, "
+      stream << indent() << "std::ofstream array_fout(table_path, "
                             "std::ios::binary);" << endl;
+      stream << indent() << "if (!(array_fout.good())) {" << endl;
+      stream << indent() << "  throw std::ofstream::failure(\"\");" << endl;
+      stream << indent() << "}" << endl;
       stream << indent() << "boost::archive::binary_oarchive "
                             "array_out(array_fout);" << endl;
       stream << indent() << "array_out << array;" << endl;
       stream << indent() << "array_fout.close();" << endl;
       dec_indent();
-      stream << indent() << "} catch (std::exception &e) {" << endl;
+      stream << indent() << "} catch (const std::ofstream::failure &e) {"
+             << endl;
+      stream << indent() << "  std::cerr << \"Couldn't create table archive "
+             << "at path \\\"\" << table_path << \"\\\".\" " << endl;
+      stream << indent() << "            << \"Please ensure that the directory "
+             << "exists and that you have write permissions "
+             << "for this directory.\\n\";" << endl;
+      stream << indent() << "} catch (const std::exception &e) {" << endl;
       inc_indent();
-      stream << indent() << "std::cerr << \"Error during archiving of \\\"\" "
-                            "<< output_file << \"\\\" table!\""
+      stream << indent() << "std::cerr << \"Error trying to archive \\\"\" "
+                            "<< tname << \"\\\" table.\""
              << endl;
       stream << indent() << "          << \" Will retry at "
                             "the next checkpoint...\\n\";" << endl;
@@ -72,14 +85,39 @@ class Checkpoint : public Base {
       dec_indent(); dec_indent();
     }
 
+    void remove(Printer::Base &stream) {
+      inc_indent(); inc_indent();
+      stream << indent();
+      stream << "void remove() {" << endl;
+      inc_indent();
+      stream << indent() << "std::filesystem::remove(table_path);" << endl;
+      dec_indent();
+      stream << indent() << "}" << endl << endl;
+      dec_indent(); dec_indent();
+    }
+
     void init(Printer::Base &stream) {
       inc_indent(); inc_indent(); inc_indent();
+      stream << indent() << "std::string executable_name = "
+             << "boost::dll::program_location().filename().string();" << endl;
+      stream << indent() << "int process_id = getpid();" << endl;
+      stream << indent() << "std::string archive_name = tname + \"_\" + "
+             << "executable_name + \"_\" + std::to_string(process_id);" << endl;
+      stream << indent() << "if (!(path.empty())) {" << endl;
+      stream << indent() << "  table_path = path;" << endl;
+      stream << indent() << "} else {" << endl;
+      stream << indent() << "  table_path = std::filesystem::current_path();"
+             << endl << indent() << "}" << endl;
+      stream << indent() << "table_path /= archive_name;" << endl;
       stream << indent() << "// read the DP array/table from disk "
                             "and put its contents into array" << endl;
       stream << indent() << "try {" << endl;
       inc_indent();
-      stream << indent() << "std::ifstream array_fin(tname, "
+      stream << indent() << "std::ifstream array_fin(table_path, "
                             "std::ios::binary);" << endl;
+      stream << indent() << "if (!(array_fin.good())) {" << endl;
+      stream << indent() << "  throw std::ifstream::failure(\"\");" << endl;
+      stream << indent() << "}" << endl;
       stream << indent() << "boost::archive::binary_iarchive "
                             "array_in(array_fin);" << endl;
       stream << indent() << "array_in >> array;" << endl;
@@ -89,10 +127,19 @@ class Checkpoint : public Base {
       stream << indent() << "for (long unsigned int i = 0; i < array.size(); "
                             "i++) tabulated[i] = array[i];" << endl;
       dec_indent();
+      stream << indent() << "} catch (const std::ifstream::failure &e) {" 
+             << endl;
+      stream << indent() << "  std::cerr << \"\\\"\" + tname + \"\\\" archive\""
+             << endl;
+      stream << indent() << "            << " << "\"could not be opened or "
+             << "hasn't been archived yet. \""
+             << endl;
+      stream << indent() << "            << \"This table will be "
+             << "initialized empty.\\n\";" << endl;
       stream << indent() << "} catch (const std::exception &e) {" << endl;
       inc_indent();
       stream << indent() << "std::cerr << \"Error \\\"\" << e.what() << \"\\\" "
-                            "while reading \\\"\" << tname << "
+                            "trying to read \\\"\" << tname << "
                             "\"\\\" table!\"" << endl;
       stream << indent() << "          << \" This table will be "
                             "initialized empty!\\n\";" << endl;
@@ -133,6 +180,31 @@ class Checkpoint : public Base {
       dec_indent();
       stream << indent() << "}" << endl << endl;
       dec_indent();
+    }
+
+    void remove_tables(Printer::Base &stream, const nt_tables &tables) {
+       inc_indent();
+       stream << indent() << "void remove_tables() {" << endl;
+       inc_indent();
+       for (auto i = tables.begin(); i != tables.end(); ++i) {
+         std::string table_name = i->second->table_decl->name();
+         stream << indent() << table_name << ".remove();" << endl;
+       }
+       dec_indent();
+       stream << indent() << "}" << endl << endl;
+       dec_indent();
+    }
+
+    std::string format_interval() {
+      // format the user-provided checkpointing interval (for logging)
+      int days = interval / 86400;
+      int hours = (interval % 86400) / 3600;
+      int minutes = ((interval % 86400) % 3600) / 60;
+      int seconds = ((interval % 86400) % 3600) % 60;
+      return std::to_string(days) + " days, " + 
+             std::to_string(hours) + " hours, " +
+             std::to_string(minutes) + " minutes and " +
+             std::to_string(seconds) + " seconds";
     }
 };
 }  // namespace Printer
