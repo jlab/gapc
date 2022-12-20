@@ -52,7 +52,8 @@
 #include "dep_analysis.hh"
 
 #include "symbol.hh"
-
+#include "signature.hh"
+#include "fn_def.hh"
 
 
 void Grammar::add_nt(Symbol::NT *nt) {
@@ -1145,6 +1146,7 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
     // Thus, no new NTs have to be injected
     return;
   }
+
   for (std::set<Symbol::NT*>::iterator nt = outside_nts.begin();
        nt != outside_nts.end(); ++nt) {
     // use inside NT as template ...
@@ -1167,6 +1169,8 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
 
     // flag this new non-terminal as being part of the outside rules
     outside_nt->is_partof_outside = true;
+
+
 
     outside_NTs[OUTSIDE_NT_PREFIX + (*(*nt)->name)] = outside_nt;
     outside_NTs[(*(*nt)->name)] = outside_nt;
@@ -1331,6 +1335,102 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
     "Grammar has been modified into an outside version.");
 }
 
+void Grammar::replace_choice_for_derivatives() {
+  std::string PREFIX_DERIVATIVE = std::string("derivative_");
+  /* if outside grammar is generated to produce derivatives, the
+   * DP values are probabilities and as such must be summed for
+   * alternative production rules. If however the algebra uses e.g.
+   * log()-space for numerical stabilitie, choice function of
+   * inside parts is expsum instead of sum. We here replace the
+   * user provided choice function with "sum". */
+
+
+  // for every user defined choice function (in inside grammar part):
+  // create an independent copy for the outside parts and add to signature
+  for (hashtable<std::string, Fn_Decl*>::const_iterator i = ast.signature->choice_fns.begin(); i != ast.signature->choice_fns.end(); ++i) {
+	Fn_Decl *in_choice_decl = (*i).second;
+	Fn_Decl *out_choice_decl = new Fn_Decl(
+			new Type::Choice(new Type::List(in_choice_decl->return_type->component()), Loc()),
+			new std::string(PREFIX_DERIVATIVE + (*i).first));
+	for (std::list<Type::Base*>::const_iterator t = in_choice_decl->types.begin(); t != in_choice_decl->types.end(); ++t) {
+		out_choice_decl->types.push_back((*t)->clone());
+	}
+	ast.signature->choice_fns[*out_choice_decl->name] = out_choice_decl;
+	ast.signature->decls[*out_choice_decl->name] = out_choice_decl;
+
+	// also adding function definition to every algebra
+	for (hashtable<std::string, Algebra*>::iterator a = ast.algebras.begin(); a != ast.algebras.end(); ++a) {
+		Fn_Def *in_choice_def = (*a).second->choice_fns[(*i).first];
+		Fn_Def *out_choice_def = (*in_choice_def).copy();
+//		out_choice_def->paras.clear();
+//		for (std::list<Para_Decl::Base*>::const_iterator i = (*in_choice_def).paras.begin(); i != (*in_choice_def).paras.end(); ++i) {
+//////		    o->paras.push_back((*i)->copy());
+//		}
+		out_choice_def->name = out_choice_decl->name;
+
+		// replace whatever function body with list(sum(xs)) ...
+		// ... which will be optimized later into just returning xs
+		out_choice_def->stmts.clear();
+		Expr::Fn_Call *y = new Expr::Fn_Call(Expr::Fn_Call::SUM);
+		y->add(out_choice_def->paras);
+		Expr::Fn_Call *x = new Expr::Fn_Call(Expr::Fn_Call::LIST);
+		x->exprs.push_back(y);
+		out_choice_def->stmts.push_back(new Statement::Return(x));
+
+		(*a).second->choice_fns[*out_choice_decl->name] = out_choice_def;
+		(*a).second->fns[*out_choice_decl->name] = out_choice_def;
+	}
+  }
+
+  // replace choice functions of outside NTs
+  for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin();
+         i != NTs.end(); ++i) {
+	Symbol::NT *nt = dynamic_cast<Symbol::NT*>((*i).second);
+	if (nt) {
+		if (nt->is_partof_outside) {
+			if (!(*nt->eval_fn).empty()) {
+				nt->eval_fn = new std::string(PREFIX_DERIVATIVE + *nt->eval_fn);
+			}
+		}
+	}
+  }
+}
+//if (ast.inject_derivatives) {
+//      std::string *CHOICE_FN_NAME = new std::string("stefan");
+//      Fn_Decl *inside_choice_fn = ast.signature->choice_fns.find(*(inside_nt->eval_fn))->second;
+//      assert(inside_choice_fn);
+//      outside_nt->eval_fn = CHOICE_FN_NAME;
+//      if (once == false) {
+//    	  Fn_Decl *outside_choice_fn = new Fn_Decl(*inside_choice_fn);
+//    	  outside_choice_fn->name = CHOICE_FN_NAME;
+//    	  ast.signature->choice_fns[*CHOICE_FN_NAME] = outside_choice_fn;
+//    	  ast.signature->decls[*CHOICE_FN_NAME] = outside_choice_fn;
+//    	  for (hashtable<std::string, Algebra*>::iterator i = ast.algebras.begin(); i != ast.algebras.end(); ++i) {
+//        	  Fn_Def *outside_choice_fn_def = (*i).second->choice_fns[*(inside_nt->eval_fn)]->copy();
+//        	  outside_choice_fn_def->name = CHOICE_FN_NAME;
+//
+//        	  outside_choice_fn_def->types.front() = new Type::List(outside_choice_fn_def->return_type->component());
+//
+//        	  Expr::Fn_Call *x = new Expr::Fn_Call(Expr::Fn_Call::SUM);
+//        	  x->add(outside_choice_fn_def->paras);
+//        	  Expr::Fn_Call *y = new Expr::Fn_Call(Expr::Fn_Call::LIST);
+//        	  y->exprs.push_back(x);
+//        	  std::cerr << (*i).first << ": " << *y << "\n";
+//        	  dynamic_cast<Statement::Return*>(outside_choice_fn_def->stmts.front())->expr = y;
+//
+////        	  Expr::Fn_Call *y = dynamic_cast<Expr::Fn_Call*>(dynamic_cast<Statement::Return*>(outside_choice_fn_def->stmts.front())->expr)->exprs.begin();
+//
+////        	  Statement::Return *x = dynamic_cast<Statement::Return*>(outside_choice_fn_def->stmts.front());
+////        	  Expr::Fn_Call *y = dynamic_cast<Expr::Fn_Call*>(x->expr);
+////        	  dynamic_cast<Expr::Fn_Call*>(y->exprs.front())->builtin = Expr::Fn_Call::SUM;
+//        	  outside_choice_fn_def->set_target_name(*CHOICE_FN_NAME);
+//        	  //outside_choice_fn_def->stmts
+//    		  (*i).second->choice_fns[*CHOICE_FN_NAME] = outside_choice_fn_def;
+//    		  (*i).second->fns[*CHOICE_FN_NAME] = outside_choice_fn_def;
+//    	  }
+//    	  once = true;
+//      }
+//    }
 unsigned int Grammar::to_dot(unsigned int *nodeID, std::ostream &out,
         int plot_grammar) {
   int start_node;
