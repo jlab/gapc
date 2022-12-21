@@ -24,6 +24,7 @@
 #ifndef SRC_PARA_DECL_HH_
 #define SRC_PARA_DECL_HH_
 
+#include <algorithm>
 #include <string>
 #include <list>
 
@@ -56,7 +57,7 @@ class Base {
 
   virtual void replace(::Type::Base *t) = 0;
 
-  virtual Base *copy() const = 0;
+  virtual Base *copy(bool clone_type = false) const = 0;
 
   // Returns TRUE if the type of the instance is of a
   // given type.
@@ -84,7 +85,7 @@ class Simple : public Base {
   void replace(::Type::Base *t) { type_ = t; }
   void replace(std::string *n) { name_ = n; }
 
-  Base *copy() const;
+  Base *copy(bool clone_type = false) const;
 };
 
 
@@ -106,7 +107,11 @@ class Multi : public Base {
 
   void replace(::Type::Base *t);
 
-  Base *copy() const;
+  /* if parameter "clone_type" is set to true, types of the copy
+   * will be new objects, not references to the same types as the
+   * template, i.e. this
+   */
+  Base *copy(bool clone_type = false) const;
 };
 
 

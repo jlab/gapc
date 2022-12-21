@@ -48,6 +48,7 @@ class Algebra;
 
 const char OUTSIDE_NT_PREFIX[] = "outside_";
 const char OUTSIDE_AXIOMS[] = "outside_axioms";
+const char PREFIX_DERIVATIVE[] = "derivative_";
 
 class Grammar {
  private:

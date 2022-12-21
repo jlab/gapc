@@ -41,7 +41,7 @@
 #include "printer.hh"
 
 #include "mode.hh"
-
+#include "grammar.hh"
 
 
 
@@ -304,6 +304,12 @@ void Algebra::derive_role() {
           o << "Declared role of algebra choice function "
             << *fn->name << " (in algebra " << *name
             << ") does not match autodetected role " << tmp << '.';
+          /* do not raise the warning, if the choice function has been
+           * automatically generated for derivative outside application */
+          if ((*i).first.substr(0, sizeof(PREFIX_DERIVATIVE)-1).compare(
+              PREFIX_DERIVATIVE) == 0) {
+            continue;
+          }
           Log::instance()->warning(fn->location, o.str());
         }
     }
