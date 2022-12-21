@@ -1460,7 +1460,7 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
   stream << indent() << "if (inp.size() != " << ast.seq_decls.size() << ")\n"
     << indent() << indent() << "throw gapc::OptException(\"Number of input "
     << "sequences does not match.\");\n\n";
-  
+
   if (ast.checkpoint) {
     stream << indent() << "checkpoint_interval = opts.checkpoint_interval;"
            << endl;
@@ -1471,8 +1471,8 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
     stream << indent() << "std::cout << \"Checkpointing routine has been "
                        << "integrated. A new checkpoint will be \""
            << endl;
-    stream << indent() << "          << \"created every \" << formatted_interval"
-           << " << \".\\n\"" << endl;
+    stream << indent() << "          << \"created every \" << "
+           << "formatted_interval << \".\\n\"" << endl;
     stream << indent() << "          << \"The checkpoints will be saved "
            << "under \" << opts.checkpoint_path << \".\\n\\n\";" << endl;
     dec_indent();
@@ -1636,7 +1636,7 @@ void Printer::Cpp::print_init_fn(const AST &ast) {
       stream << (*i)->ext_name() << "::set_k(opts.k);\n";
     }
   }
-  
+
   dec_indent();
   stream << indent() << '}' << endl << endl;
 }

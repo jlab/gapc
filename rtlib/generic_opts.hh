@@ -105,6 +105,8 @@ class Opts {
 
     size_t checkpoint_interval;  // default interval: 3600s (1h)
     std::filesystem::path checkpoint_path;  // default path: cwd
+    int argc;
+    char **argv;
 
     Opts()
       :
@@ -119,7 +121,9 @@ class Opts {
       repeats(1),
       k(3),
       checkpoint_interval(3600),
-      checkpoint_path(std::filesystem::current_path()) {}
+      checkpoint_path(std::filesystem::current_path()),
+      argc(0),
+      argv(0) {}
 
     ~Opts() {
       for (inputs_t::iterator i = inputs.begin(); i != inputs.end(); ++i)
@@ -138,8 +142,8 @@ class Opts {
 #ifdef CHECKPOINTING_INTEGRATED
         << "--checkpointInterval,-c    d:h:m:s    specify the checkpointing "
         << "interval, default: 0:0:1:0 (1h)\n"
-        << "--checkpointPath,-p        PATH       set the path where to store the "
-        << "checkpoints, default: current working directory\n"
+        << "--checkpointPath,-p        PATH       set the path where to store "
+        << "the checkpoints, default: current working directory\n"
 #endif
     ;}
 
@@ -150,6 +154,8 @@ class Opts {
             {"checkpointInterval", required_argument, nullptr, 'c'},
             {"checkpointPath", required_argument, nullptr, 'p'},
             {nullptr, no_argument, nullptr, 0}};
+      this->argc = argc;
+      this->argv = argv;
 
 #ifdef LIBRNA_RNALIB_H_
       char *par_filename = 0;
@@ -227,6 +233,7 @@ class Opts {
             checkpoint_interval = parse_checkpointing_interval(optarg);
             break;
           case 'p' :
+          {
             std::filesystem::path arg_path(optarg);
             if (arg_path.is_absolute()) {
               checkpoint_path = arg_path;
@@ -234,6 +241,7 @@ class Opts {
               checkpoint_path /= arg_path;
             }
             break;
+          }
 #endif
           case '?' :
           case ':' :
