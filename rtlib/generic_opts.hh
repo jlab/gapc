@@ -24,6 +24,9 @@
 #ifndef RTLIB_GENERIC_OPTS_HH_
 #define RTLIB_GENERIC_OPTS_HH_
 
+extern "C" {
+  #include <getopt.h>
+}
 
 #include <unistd.h>
 
@@ -36,6 +39,7 @@
 #include <exception>
 #include <utility>
 #include <cassert>
+#include <filesystem>
 
 // define _XOPEN_SOURCE=500
 
@@ -61,6 +65,33 @@ class Opts {
     Opts(const Opts&);
     Opts &operator=(const Opts&);
 
+    int parse_checkpointing_interval(const std::string &interval) {
+      // parse the user-specified checkpointing interval
+      std::stringstream tmp_interval(interval);
+      std::string val;
+      std::vector<int> interval_vals;
+
+      try {
+        // parse the checkpointing interval the user specified
+        while (std::getline(tmp_interval, val, ':')) {
+          // split the interval string at ':' and store values
+          interval_vals.push_back(std::stoi(val));
+        }
+
+        if (interval_vals.size() != 4) {
+          throw std::exception();
+        }
+      } catch (const std::exception &e) {
+        throw OptException("Invalid interval format! "
+                           "Must be d:h:m:s (e.g. 0:0:1:0).");
+      }
+
+      // calculate the interval length (in seconds)
+      int cp_interval = interval_vals[0] * 86400 + interval_vals[1] * 3600 +
+                        interval_vals[2] * 60 + interval_vals[3];
+      return cp_interval;
+    }
+
  public:
     typedef std::vector<std::pair<const char*, unsigned> > inputs_t;
     inputs_t inputs;
@@ -71,6 +102,9 @@ class Opts {
     unsigned int delta;
     unsigned int repeats;
     unsigned k;
+
+    size_t checkpoint_interval;  // default interval: 3600s (1h)
+    std::filesystem::path checkpoint_path;  // default path: cwd
 
     Opts()
       :
@@ -83,8 +117,9 @@ class Opts {
       window_increment(0),
       delta(0),
       repeats(1),
-      k(3) {
-    }
+      k(3),
+      checkpoint_interval(3600),
+      checkpoint_path(std::filesystem::current_path()) {}
 
     ~Opts() {
       for (inputs_t::iterator i = inputs.begin(); i != inputs.end(); ++i)
@@ -99,23 +134,34 @@ class Opts {
 #ifdef LIBRNA_RNALIB_H_
         << " (-[tT] [0-9]+)? (-P PARAM-file)?"
 #endif
-        << " (-[drk] [0-9]+)* (-h)? (INPUT|-f INPUT-file)\n";
-    }
+        << " (-[drk] [0-9]+)* (-h)? (INPUT|-f INPUT-file)\n"
+#ifdef CHECKPOINTING_INTEGRATED
+        << "--checkpointInterval,-c    d:h:m:s    specify the checkpointing "
+        << "interval, default: 0:0:1:0 (1h)\n"
+        << "--checkpointPath,-p        PATH       set the path where to store the "
+        << "checkpoints, default: current working directory\n"
+#endif
+    ;}
 
     void parse(int argc, char **argv) {
       int o = 0;
       char *input = 0;
+      const option long_opts[] = {
+            {"checkpointInterval", required_argument, nullptr, 'c'},
+            {"checkpointPath", required_argument, nullptr, 'p'},
+            {nullptr, no_argument, nullptr, 0}};
+
 #ifdef LIBRNA_RNALIB_H_
       char *par_filename = 0;
 #endif
-      while ((o = getopt(argc, argv, ":f:"
+      while ((o = getopt_long(argc, argv, ":f:"
 #ifdef WINDOW_MODE
               "w:i:"
 #endif
 #ifdef LIBRNA_RNALIB_H_
               "t:T:P:"
 #endif
-              "hd:r:k:")) != -1) {
+              "hd:r:k:-:", long_opts, nullptr)) != -1) {
         switch (o) {
           case 'f' :
             {
@@ -176,6 +222,19 @@ class Opts {
           case 'r' :
             repeats = std::atoi(optarg);
             break;
+#ifdef CHECKPOINTING_INTEGRATED
+          case 'c' :
+            checkpoint_interval = parse_checkpointing_interval(optarg);
+            break;
+          case 'p' :
+            std::filesystem::path arg_path(optarg);
+            if (arg_path.is_absolute()) {
+              checkpoint_path = arg_path;
+            } else {
+              checkpoint_path /= arg_path;
+            }
+            break;
+#endif
           case '?' :
           case ':' :
             {

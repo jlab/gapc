@@ -58,7 +58,7 @@ struct Options {
       float_acc(0),
       specialization(0), step_option(0),
       plot_grammar(0), plotgrammar_stream_(NULL),
-      checkpoint_interval(0) {
+      disable_checkpointing(false) {
   }
 
 
@@ -203,7 +203,8 @@ struct Options {
     return *plotgrammar_stream_;
   }
 
-  int checkpoint_interval;  // interval for periodic checkpointing (in seconds)
+  // provide option to disable checkpointing routine integration
+  bool disable_checkpointing;
 
   bool check();
 };

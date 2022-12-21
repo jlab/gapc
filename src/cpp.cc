@@ -1120,7 +1120,7 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
 
   stream << ", const std::string &tname";
   if (checkpoint) {
-    stream << ", const std::filesystem::path &path";
+    stream << ", std::filesystem::path path";
   }
   stream << ") {" << endl;
   inc_indent();
@@ -1460,6 +1460,24 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
   stream << indent() << "if (inp.size() != " << ast.seq_decls.size() << ")\n"
     << indent() << indent() << "throw gapc::OptException(\"Number of input "
     << "sequences does not match.\");\n\n";
+  
+  if (ast.checkpoint) {
+    stream << indent() << "checkpoint_interval = opts.checkpoint_interval;"
+           << endl;
+    stream << indent() << "if (checkpoint_interval > 0) {" << endl;
+    inc_indent();
+    stream << indent() << "std::string formatted_interval = "
+           << "format_interval(checkpoint_interval);" << endl;
+    stream << indent() << "std::cout << \"Checkpointing routine has been "
+                       << "integrated. A new checkpoint will be \""
+           << endl;
+    stream << indent() << "          << \"created every \" << formatted_interval"
+           << " << \".\\n\"" << endl;
+    stream << indent() << "          << \"The checkpoints will be saved "
+           << "under \" << opts.checkpoint_path << \".\\n\\n\";" << endl;
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
+  }
 
   size_t track = 0;
   for (std::vector<Statement::Var_Decl*>::const_iterator
@@ -1523,7 +1541,12 @@ void Printer::Cpp::print_table_init(const AST &ast) {
     if (ast.window_mode) {
       stream << " opts.window_size, opts.window_increment, ";
     }
-    stream << "\""<< i->second->table_decl->name() << "\");" << endl;
+
+    stream << "\""<< i->second->table_decl->name() << "\"";
+    if (ast.checkpoint) {
+      stream << ", opts.checkpoint_path";
+    }
+    stream << ");" << endl;
   }
 }
 
@@ -1613,7 +1636,7 @@ void Printer::Cpp::print_init_fn(const AST &ast) {
       stream << (*i)->ext_name() << "::set_k(opts.k);\n";
     }
   }
-
+  
   dec_indent();
   stream << indent() << '}' << endl << endl;
 }
@@ -1713,6 +1736,12 @@ void Printer::Cpp::header(const AST &ast) {
   imports(ast);
   print_hash_decls(ast);
   stream << indent() << "class " << class_name << " {" << endl;
+  if (ast.checkpoint) {
+    stream << indent() << " private:" << endl;
+    inc_indent();
+    stream << indent() << "size_t checkpoint_interval;" << endl;
+    dec_indent();
+  }
   stream << indent() << " public:" << endl;
   inc_indent();
 
@@ -2081,7 +2110,7 @@ void Printer::Cpp::print_run_fn(const AST &ast) {
   if (ast.checkpoint) {
     stream << indent() << "std::atomic_bool cancel_token;" << endl;
     stream << indent() << "archive_periodically(cancel_token, ";
-    stream << ast.checkpoint->interval << ");" << endl;
+    stream << "checkpoint_interval" << ");" << endl;
     stream << indent() << *ast.grammar()->axiom->code()->return_type;
     stream << " ans = ";
   } else {
@@ -2150,12 +2179,17 @@ void Printer::Cpp::print_stats_fn(const AST &ast) {
 
 void Printer::Cpp::header_footer(const AST &ast) {
   dec_indent();
-  stream << indent() << " public:" << endl;
+  stream << indent() << " private:" << endl;
   inc_indent();
   if (ast.checkpoint) {
     ast.checkpoint->archive_periodically(stream, ast.grammar()->tabulated);
     ast.checkpoint->remove_tables(stream, ast.grammar()->tabulated);
+    ast.checkpoint->format_interval(stream);
+    stream << endl;
   }
+  dec_indent();
+  stream << indent() << " public:" << endl;
+  inc_indent();
   print_run_fn(ast);
   print_stats_fn(ast);
 }
@@ -2550,8 +2584,8 @@ void Printer::Cpp::makefile(const Options &opts) {
     << "OFILES = $(CXXFILES:.cc=.o) string.o" << endl << endl;
   stream << opts.class_name << " : $(OFILES)" << endl
       << "\t$(CXX) -o $@ $^  $(LDFLAGS) $(LDLIBS)";
-  if (opts.checkpoint_interval > 0) {
-    stream << " -lboost_serialization -lpthread";
+  if (!(opts.disable_checkpointing)) {
+    stream << " -lboost_serialization -lboost_filesystem -lpthread";
   }
 
   // if (opts.sample) {

@@ -135,11 +135,10 @@ static void parse_options(int argc, char **argv, Options *rec) {
       "  2 = add indices\n"
       "  3 = add data types.\n"
       "(Use 'dot -Tpdf out.dot' to generate a PDF.)\nDefault file is out.dot")
-    ("checkpoint", po::value<std::string>(),
-     "enables periodic archiving/checkpointing "
+    ("no-checkpoint",
+     "explicitly disable periodic archiving/checkpointing "
      "of the tabulated non-terminals.\n"
-     "Interval format: dd:hh:mm:ss \n"
-     "(e.g. 00:01:00:00 for checkpointing every 60 minutes)");
+     "(creates new checkpoint every 60 minutes by default)\n");
   po::options_description hidden("");
   hidden.add_options()
     ("backtrack", "deprecated for --backtrace")
@@ -270,33 +269,9 @@ static void parse_options(int argc, char **argv, Options *rec) {
     rec->plot_grammar_file = basename(rec->out_file) + ".dot";
   }
 
-  if (vm.count("checkpoint")) {
-    std::string cp_interval = vm["checkpoint"].as<std::string>();
-    std::stringstream tmp_interval(cp_interval);
-    std::string val;
-    std::vector<int> interval_vals;
-
-    try {
-      // parse the checkpointing interval the user specified
-      while (std::getline(tmp_interval, val, ':')) {
-        // split the interval string at ':' and store values
-        interval_vals.push_back(std::stoi(val));
-      }
-
-      if (interval_vals.size() != 4) {
-        throw LogError("Invalid checkpointing interval format! "
-                       "Must be \"dd:mm:hh::ss\".");
-      }
-
-      // calculate the interval length (in seconds)
-      int interval = interval_vals[0] * 86400 + interval_vals[1] * 3600 +
-                     interval_vals[2] * 60 + interval_vals[3];
-      rec->checkpoint_interval = interval;
-    } catch (const std::exception &e) {
-      throw LogError(e.what());
-    }
+  if (vm.count("no-checkpoint")) {
+    rec->disable_checkpointing = true;
   }
-
 
   bool r = rec->check();
   if (!r) {
@@ -634,7 +609,7 @@ class Main {
         + opts.plot_grammar_file + " > foo.pdf' to generate a PDF.");
     }
 
-    if (opts.checkpoint_interval > 0) {
+    if (!(opts.disable_checkpointing)) {
       // list of currently supported/serializable datatypes (all primitive)
       constexpr Type::Type
       SUPPORTED_TYPES[] = {Type::Type::VOID, Type::Type::INTEGER,
@@ -657,16 +632,11 @@ class Main {
       // only enable checkpointing if answer type is supported
       if (answer_type_supported) {
         driver.ast.checkpoint = new Printer::
-                                    Checkpoint(opts.checkpoint_interval);
-        Log::instance()->normalMessage("Checkpointing routine has been "
-                                       "integrated. A new checkpoint will be"
-                                       " created every " +
-                                       driver.ast.checkpoint->format_interval()
-                                       + " until the program terminates."
-                                     );
+                                    Checkpoint();
+        Log::instance()->normalMessage("Checkpointing routine integrated.");
       } else {
-        Log::instance()->warning("Checkpointing could not be activated, because"
-                                 " serialization of answer type"
+        Log::instance()->warning("Checkpointing routine could not be integrated"
+                                 ", because serialization of answer type"
                                  " isn't supported yet.");
       }
     }

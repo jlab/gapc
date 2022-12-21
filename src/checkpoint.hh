@@ -31,16 +31,15 @@
 namespace Printer {
 class Checkpoint : public Base {
  public:
-    size_t interval = 0;  // user-specified interval (in seconds)
-
-    explicit Checkpoint(size_t interval): interval(interval) {}
-
     void include(Printer::Base &stream) {
+      stream << "#define CHECKPOINTING_INTEGRATED" << endl << endl;
+      stream << "extern \"C\" {" << endl;
+      stream << indent() << "#include <unistd.h>" << endl;
+      stream << "}" << endl;
       stream << "#include \"boost/serialization/vector.hpp\"" << endl;
       stream << "#include \"boost/archive/binary_iarchive.hpp\"" << endl;
       stream << "#include \"boost/archive/binary_oarchive.hpp\"" << endl;
       stream << "#include \"boost/dll.hpp\"" << endl;
-      stream << "#include <unistd.h>" << endl;
       stream << "#include <atomic>" << endl;
       stream << "#include <filesystem>" << endl;
       stream << "#include <thread>" << endl << endl;
@@ -67,7 +66,7 @@ class Checkpoint : public Base {
       stream << indent() << "} catch (const std::ofstream::failure &e) {"
              << endl;
       stream << indent() << "  std::cerr << \"Couldn't create table archive "
-             << "at path \\\"\" << table_path << \"\\\".\" " << endl;
+             << "at path \" << table_path << \".\\n\"" << endl;
       stream << indent() << "            << \"Please ensure that the directory "
              << "exists and that you have write permissions "
              << "for this directory.\\n\";" << endl;
@@ -103,12 +102,7 @@ class Checkpoint : public Base {
       stream << indent() << "int process_id = getpid();" << endl;
       stream << indent() << "std::string archive_name = tname + \"_\" + "
              << "executable_name + \"_\" + std::to_string(process_id);" << endl;
-      stream << indent() << "if (!(path.empty())) {" << endl;
-      stream << indent() << "  table_path = path;" << endl;
-      stream << indent() << "} else {" << endl;
-      stream << indent() << "  table_path = std::filesystem::current_path();"
-             << endl << indent() << "}" << endl;
-      stream << indent() << "table_path /= archive_name;" << endl;
+      stream << indent() << "table_path = path / archive_name;" << endl;
       stream << indent() << "// read the DP array/table from disk "
                             "and put its contents into array" << endl;
       stream << indent() << "try {" << endl;
@@ -127,11 +121,11 @@ class Checkpoint : public Base {
       stream << indent() << "for (long unsigned int i = 0; i < array.size(); "
                             "i++) tabulated[i] = array[i];" << endl;
       dec_indent();
-      stream << indent() << "} catch (const std::ifstream::failure &e) {" 
+      stream << indent() << "} catch (const std::ifstream::failure &e) {"
              << endl;
-      stream << indent() << "  std::cerr << \"\\\"\" + tname + \"\\\" archive\""
-             << endl;
-      stream << indent() << "            << " << "\"could not be opened or "
+      stream << indent() << "  std::cerr << \"Info: \\\"\" + tname + \"\\\" "
+             << "archive\"" << endl;
+      stream << indent() << "            << " << "\" could not be opened or "
              << "hasn't been archived yet. \""
              << endl;
       stream << indent() << "            << \"This table will be "
@@ -159,6 +153,7 @@ class Checkpoint : public Base {
       inc_indent();
       stream << indent() << "// save all tables to the disk periodically "
                             "every interval seconds" << endl;
+      stream << indent() << "if (interval <= 0) return;" << endl;
       stream << indent() << "cancel_token.store(true);" << endl;
       stream << indent() << "std::thread([=, &cancel_token]() mutable {"
              << endl;
@@ -195,16 +190,28 @@ class Checkpoint : public Base {
        dec_indent();
     }
 
-    std::string format_interval() {
-      // format the user-provided checkpointing interval (for logging)
-      int days = interval / 86400;
-      int hours = (interval % 86400) / 3600;
-      int minutes = ((interval % 86400) % 3600) / 60;
-      int seconds = ((interval % 86400) % 3600) % 60;
-      return std::to_string(days) + " days, " + 
-             std::to_string(hours) + " hours, " +
-             std::to_string(minutes) + " minutes and " +
-             std::to_string(seconds) + " seconds";
+    void format_interval(Printer::Base &stream) {
+      inc_indent();
+      stream << indent() << "std::string format_interval(int interval) {"
+             << endl;
+      inc_indent();
+      stream << indent() << "// format the user-provided checkpointing "
+             << "interval (for logging)" << endl;
+      stream << indent() << "int days = interval / 86400;" << endl;
+      stream << indent() << "int hours = (interval % 86400) / 3600;" << endl;
+      stream << indent() << "int minutes = ((interval % 86400) % 3600) / 60;"
+             << endl;
+      stream << indent() << "int seconds = ((interval % 86400) % 3600) % 60;"
+             << endl;
+      stream << indent() << "return std::to_string(days) + \" days, \" +"
+             << endl;
+      stream << indent() << "       std::to_string(hours) + \" hours, \" +"
+             << endl;
+      stream << indent() << "       std::to_string(minutes) + \" minutes "
+             << "and \" + std::to_string(seconds) + \" seconds\";" << endl;
+      dec_indent();
+      stream << indent() << "}" << endl;
+      dec_indent();
     }
 };
 }  // namespace Printer
