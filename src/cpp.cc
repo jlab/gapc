@@ -1108,6 +1108,9 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   if (checkpoint) {
     ast->checkpoint->archive(stream);
     ast->checkpoint->remove(stream);
+    ast->checkpoint->get_table_path(stream);
+    ast->checkpoint->parse_checkpoint_log(stream);
+    ast->checkpoint->find_table(stream);
   }
 
   // start "void init()"
@@ -1120,7 +1123,9 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
 
   stream << ", const std::string &tname";
   if (checkpoint) {
-    stream << ", std::filesystem::path path";
+    stream << ", std::filesystem::path out_path," << endl
+           << indent() << "         std::filesystem::path in_path, "
+           << "const std::string &arg_string";
   }
   stream << ") {" << endl;
   inc_indent();
@@ -1464,8 +1469,8 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
   if (ast.checkpoint) {
     stream << indent() << "checkpoint_interval = opts.checkpoint_interval;"
            << endl;
-    stream << indent() << "if (checkpoint_interval > 0) {" << endl;
-    inc_indent();
+    stream << indent() << "std::string arg_string = "
+           << "get_arg_str(opts.argc, opts.argv);" << endl;
     stream << indent() << "std::string formatted_interval = "
            << "format_interval(checkpoint_interval);" << endl;
     stream << indent() << "std::cout << \"Checkpointing routine has been "
@@ -1474,9 +1479,8 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
     stream << indent() << "          << \"created every \" << "
            << "formatted_interval << \".\\n\"" << endl;
     stream << indent() << "          << \"The checkpoints will be saved "
-           << "under \" << opts.checkpoint_path << \".\\n\\n\";" << endl;
-    dec_indent();
-    stream << indent() << "}" << endl << endl;
+           << "under \" << opts.checkpoint_out_path << \".\\n\\n\";"
+           << endl << endl;
   }
 
   size_t track = 0;
@@ -1544,7 +1548,8 @@ void Printer::Cpp::print_table_init(const AST &ast) {
 
     stream << "\""<< i->second->table_decl->name() << "\"";
     if (ast.checkpoint) {
-      stream << ", opts.checkpoint_path";
+      stream << ", opts.checkpoint_out_path, opts.checkpoint_in_path, "
+             << "arg_string";
     }
     stream << ");" << endl;
   }
@@ -1625,6 +1630,9 @@ void Printer::Cpp::print_init_fn(const AST &ast) {
   print_seq_init(ast);
   print_filter_init(ast);
   print_table_init(ast);
+  if (ast.checkpoint) {
+    stream << indent() << "create_checkpoint_log(opts, arg_string);" << endl;
+  }
   print_zero_init(*ast.grammar());
   print_most_init(ast);
   if (ast.window_mode)
@@ -1740,6 +1748,7 @@ void Printer::Cpp::header(const AST &ast) {
     stream << indent() << " private:" << endl;
     inc_indent();
     stream << indent() << "size_t checkpoint_interval;" << endl;
+    stream << indent() << "std::filesystem::path logfile_path;" << endl;
     dec_indent();
   }
   stream << indent() << " public:" << endl;
@@ -2147,6 +2156,7 @@ void Printer::Cpp::print_run_fn(const AST &ast) {
     stream << indent() << "cancel_token.store(false);  "
                           "// stop periodic checkpointing" << endl;
     stream << indent() << "remove_tables();" << endl;
+    stream << indent() << "remove_log_file();" << endl;
     stream << indent() << "return ans;" << endl;
   }
   dec_indent();
@@ -2184,7 +2194,10 @@ void Printer::Cpp::header_footer(const AST &ast) {
   if (ast.checkpoint) {
     ast.checkpoint->archive_periodically(stream, ast.grammar()->tabulated);
     ast.checkpoint->remove_tables(stream, ast.grammar()->tabulated);
+    ast.checkpoint->remove_log_file(stream);
     ast.checkpoint->format_interval(stream);
+    ast.checkpoint->get_arg_string(stream);
+    ast.checkpoint->create_checkpoint_log(stream, ast.grammar()->tabulated);
     stream << endl;
   }
   dec_indent();
@@ -2584,7 +2597,7 @@ void Printer::Cpp::makefile(const Options &opts) {
     << "OFILES = $(CXXFILES:.cc=.o) string.o" << endl << endl;
   stream << opts.class_name << " : $(OFILES)" << endl
       << "\t$(CXX) -o $@ $^  $(LDFLAGS) $(LDLIBS)";
-  if (!(opts.disable_checkpointing)) {
+  if ((opts.checkpointing)) {
     stream << " -lboost_serialization -lboost_filesystem -lpthread";
   }
 

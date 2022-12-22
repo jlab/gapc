@@ -58,7 +58,7 @@ struct Options {
       float_acc(0),
       specialization(0), step_option(0),
       plot_grammar(0), plotgrammar_stream_(NULL),
-      disable_checkpointing(false) {
+      checkpointing(false) {
   }
 
 
@@ -204,7 +204,7 @@ struct Options {
   }
 
   // provide option to disable checkpointing routine integration
-  bool disable_checkpointing;
+  bool checkpointing;
 
   bool check();
 };

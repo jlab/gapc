@@ -89,6 +89,11 @@ class Opts {
       // calculate the interval length (in seconds)
       int cp_interval = interval_vals[0] * 86400 + interval_vals[1] * 3600 +
                         interval_vals[2] * 60 + interval_vals[3];
+
+      if (cp_interval <= 0) {
+        throw OptException("Interval cannot be <= 0 (is " +
+                           std::to_string(cp_interval) + ").");
+      }
       return cp_interval;
     }
 
@@ -104,7 +109,8 @@ class Opts {
     unsigned k;
 
     size_t checkpoint_interval;  // default interval: 3600s (1h)
-    std::filesystem::path checkpoint_path;  // default path: cwd
+    std::filesystem::path checkpoint_out_path;  // default path: cwd
+    std::filesystem::path checkpoint_in_path;  // default: empty
     int argc;
     char **argv;
 
@@ -121,7 +127,8 @@ class Opts {
       repeats(1),
       k(3),
       checkpoint_interval(3600),
-      checkpoint_path(std::filesystem::current_path()),
+      checkpoint_out_path(std::filesystem::current_path()),
+      checkpoint_in_path(std::filesystem::path("")),
       argc(0),
       argv(0) {}
 
@@ -142,8 +149,21 @@ class Opts {
 #ifdef CHECKPOINTING_INTEGRATED
         << "--checkpointInterval,-c    d:h:m:s    specify the checkpointing "
         << "interval, default: 0:0:1:0 (1h)\n"
-        << "--checkpointPath,-p        PATH       set the path where to store "
+        << "--checkpointOutput,-O      PATH       set the path where to store "
         << "the checkpoints, default: current working directory\n"
+        << "                                      The program will also attempt"
+        << " to read existing checkpoints from a Logfile from this path.\n"
+        << "                                      Use the --checkpointInput "
+        << "option to explictly set the input path for all checkpoints.\n"
+        << "--checkpointInput,-I       PATH       set the path were to read "
+        << "the checkpoints from, default: \n"
+        << "                                      parsed from "
+        << "a checkpoint Logfile located at path specified by the "
+        << "--checkpointOutput option\n"
+        << "                                      Warning: Make sure that the "
+        << "input checkpoints from this path were generated from identical \n"
+        << "                                      command line inputs to ensure"
+        << " the correctness of the answer.\n"
 #endif
     ;}
 
@@ -152,7 +172,8 @@ class Opts {
       char *input = 0;
       const option long_opts[] = {
             {"checkpointInterval", required_argument, nullptr, 'c'},
-            {"checkpointPath", required_argument, nullptr, 'p'},
+            {"checkpointOutput", required_argument, nullptr, 'O'},
+            {"checkpointInput", required_argument, nullptr, 'I'},
             {nullptr, no_argument, nullptr, 0}};
       this->argc = argc;
       this->argv = argv;
@@ -232,15 +253,25 @@ class Opts {
           case 'c' :
             checkpoint_interval = parse_checkpointing_interval(optarg);
             break;
-          case 'p' :
+          case 'O' :
           {
             std::filesystem::path arg_path(optarg);
             if (arg_path.is_absolute()) {
-              checkpoint_path = arg_path;
+              checkpoint_out_path = arg_path;
             } else {
-              checkpoint_path /= arg_path;
+              checkpoint_out_path /= arg_path;
             }
             break;
+          }
+          case 'I' :
+            {
+              std::filesystem::path arg_path(optarg);
+              if (arg_path.is_absolute()) {
+                checkpoint_in_path = arg_path;
+              } else {
+                checkpoint_in_path /= arg_path;
+              }
+              break;
           }
 #endif
           case '?' :

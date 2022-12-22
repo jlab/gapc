@@ -135,8 +135,8 @@ static void parse_options(int argc, char **argv, Options *rec) {
       "  2 = add indices\n"
       "  3 = add data types.\n"
       "(Use 'dot -Tpdf out.dot' to generate a PDF.)\nDefault file is out.dot")
-    ("no-checkpoint",
-     "explicitly disable periodic archiving/checkpointing "
+    ("checkpoint",
+     "enable periodic archiving/checkpointing "
      "of the tabulated non-terminals.\n"
      "(creates new checkpoint every 60 minutes by default)\n");
   po::options_description hidden("");
@@ -269,8 +269,8 @@ static void parse_options(int argc, char **argv, Options *rec) {
     rec->plot_grammar_file = basename(rec->out_file) + ".dot";
   }
 
-  if (vm.count("no-checkpoint")) {
-    rec->disable_checkpointing = true;
+  if (vm.count("checkpoint")) {
+    rec->checkpointing = true;
   }
 
   bool r = rec->check();
@@ -609,7 +609,7 @@ class Main {
         + opts.plot_grammar_file + " > foo.pdf' to generate a PDF.");
     }
 
-    if (!(opts.disable_checkpointing)) {
+    if ((opts.checkpointing)) {
       // list of currently supported/serializable datatypes (all primitive)
       constexpr Type::Type
       SUPPORTED_TYPES[] = {Type::Type::VOID, Type::Type::INTEGER,
@@ -630,6 +630,8 @@ class Main {
       }
 
       // only enable checkpointing if answer type is supported
+      // TODO(fymue): figure out real answer types of tables
+      // (current method is incorrect; until then: no checkpointing by default)
       if (answer_type_supported) {
         driver.ast.checkpoint = new Printer::
                                     Checkpoint();

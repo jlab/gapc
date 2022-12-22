@@ -28,6 +28,8 @@
 #include "symbol.hh"
 #include "statement/table_decl.hh"
 
+typedef hashtable<std::string, Symbol::NT*> nt_tables;
+
 namespace Printer {
 class Checkpoint : public Base {
  public:
@@ -62,7 +64,7 @@ class Checkpoint : public Base {
                             "array_out(array_fout);" << endl;
      stream << indent() << "array_out << array;" << endl;
      stream << indent() << "array_fout.close();" << endl;
-      dec_indent();
+     dec_indent();
      stream << indent() << "} catch (const std::ofstream::failure &e) {"
              << endl;
      stream << indent() << "  std::cerr << \"Couldn't create table archive "
@@ -77,11 +79,11 @@ class Checkpoint : public Base {
              << endl;
      stream << indent() << "          << \" Will retry at "
                             "the next checkpoint...\\n\";" << endl;
-      dec_indent();
+     dec_indent();
      stream << indent() << "}" << endl;
-      dec_indent();
+     dec_indent();
      stream << indent() << "}" << endl << endl;
-      dec_indent(); dec_indent();
+     dec_indent(); dec_indent();
   }
 
   void remove(Printer::Base &stream) {
@@ -90,9 +92,46 @@ class Checkpoint : public Base {
      stream << "void remove() {" << endl;
      inc_indent();
      stream << indent() << "std::filesystem::remove(table_path);" << endl;
-      dec_indent();
+     dec_indent();
      stream << indent() << "}" << endl << endl;
-      dec_indent(); dec_indent();
+     dec_indent(); dec_indent();
+  }
+
+  void get_table_path(Printer::Base &stream) {
+    inc_indent(); inc_indent();
+    stream << indent() << "std::string get_table_path() {" << endl;
+    inc_indent();
+    stream << indent() << "return table_path.string();" << endl;
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
+    dec_indent(); dec_indent();
+  }
+
+  void find_table(Printer::Base &stream) {
+     inc_indent(); inc_indent();
+     stream << indent() << "std::filesystem::path find_table("
+            << "std::filesystem::path path, const std::string &tname) {"
+            << endl;
+     inc_indent();
+     stream << indent() << "// find the table archive in the "
+            << "user-specified directory" << endl;
+     stream << indent() << "std::string curr_file;" << endl;
+     stream << indent() << "for (const auto &entry : "
+            << "std::filesystem::directory_iterator(path)) {" << endl;
+     inc_indent();
+     stream << indent() << "curr_file = entry.path().string();" << endl;
+     stream << indent() << "if (curr_file.find(tname) != curr_file.npos) {"
+            << endl;
+     inc_indent();
+     stream << indent() << "return entry.path();" << endl;
+     dec_indent();
+     stream << indent() << "}" << endl;
+     dec_indent();
+     stream << indent() << "}" << endl;
+     stream << indent() << "return std::filesystem::path(\"\");" << endl;
+     dec_indent();
+     stream << indent() << "}" << endl << endl;
+     dec_indent(); dec_indent();
   }
 
   void init(Printer::Base &stream) {
@@ -100,14 +139,29 @@ class Checkpoint : public Base {
      stream << indent() << "std::string executable_name = "
             << "boost::dll::program_location().filename().string();" << endl;
      stream << indent() << "int process_id = getpid();" << endl;
-     stream << indent() << "std::string archive_name = tname + \"_\" + "
-            << "executable_name + \"_\" + std::to_string(process_id);" << endl;
-     stream << indent() << "table_path = path / archive_name;" << endl;
+     stream << indent() << "std::string archive_name = executable_name + "
+            << "\"_\" + std::to_string(process_id);" << endl;
+     stream << indent() << "table_path = out_path / (archive_name + \"_\" + "
+            << "tname);" << endl;
+     stream << indent() << "std::string in_path_error_msg = "
+            << "\"at user-specified path\";" << endl << endl;
+     stream << indent() << "if (in_path.empty()) {" << endl;
+     inc_indent();
+     stream << indent() << "in_path = "
+            << "parse_checkpoint_log(out_path, tname, executable_name, "
+            << "arg_string);" << endl;
+     stream << indent() << "in_path_error_msg = \"in Logfile\";" << endl;
+     dec_indent();
+     stream << indent() << "} else {" << endl;
+     inc_indent();
+     stream << indent() << "in_path = find_table(in_path, tname);" << endl;
+     dec_indent();
+     stream << indent() << "}" << endl << endl;
      stream << indent() << "// read the DP array/table from disk "
                             "and put its contents into array" << endl;
      stream << indent() << "try {" << endl;
      inc_indent();
-     stream << indent() << "std::ifstream array_fin(table_path, "
+     stream << indent() << "std::ifstream array_fin(in_path, "
                             "std::ios::binary);" << endl;
      stream << indent() << "if (!(array_fin.good())) {" << endl;
      stream << indent() << "  throw std::ifstream::failure(\"\");" << endl;
@@ -125,8 +179,8 @@ class Checkpoint : public Base {
             << endl;
      stream << indent() << "  std::cerr << \"Info: \\\"\" + tname + \"\\\" "
             << "archive\"" << endl;
-     stream << indent() << "            << " << "\" could not be opened or "
-            << "hasn't been archived yet. \""
+     stream << indent() << "            << " << "\" could not be found \""
+            << " << in_path_error_msg << \" or hasn't been archived yet. \""
             << endl;
      stream << indent() << "            << \"This table will be "
             << "initialized empty.\\n\";" << endl;
@@ -145,7 +199,6 @@ class Checkpoint : public Base {
      dec_indent(); dec_indent(); dec_indent();
   }
 
-  typedef hashtable<std::string, Symbol::NT*> nt_tables;
   void archive_periodically(Printer::Base &stream, const nt_tables &tables) {
      inc_indent();
      stream << indent() << "void archive_periodically(std::atomic_bool "
@@ -153,7 +206,6 @@ class Checkpoint : public Base {
      inc_indent();
      stream << indent() << "// save all tables to the disk periodically "
                             "every interval seconds" << endl;
-     stream << indent() << "if (interval <= 0) return;" << endl;
      stream << indent() << "cancel_token.store(true);" << endl;
      stream << indent() << "std::thread([=, &cancel_token]() mutable {"
             << endl;
@@ -184,7 +236,19 @@ class Checkpoint : public Base {
      for (auto i = tables.begin(); i != tables.end(); ++i) {
        std::string table_name = i->second->table_decl->name();
        stream << indent() << table_name << ".remove();" << endl;
-    }
+     }
+     dec_indent();
+     stream << indent() << "}" << endl << endl;
+     dec_indent();
+  }
+
+  void remove_log_file(Printer::Base &stream) {
+     inc_indent();
+     stream << indent() << "void remove_log_file() {" << endl;
+     inc_indent();
+     stream << indent() << "// remove the log file after "
+            << "successfull termination of the program" << endl;
+     stream << indent() << "std::filesystem::remove(logfile_path);" << endl;
      dec_indent();
      stream << indent() << "}" << endl << endl;
      dec_indent();
@@ -210,7 +274,7 @@ class Checkpoint : public Base {
      stream << indent() << "       std::to_string(minutes) + \" minutes "
             << "and \" + std::to_string(seconds) + \" seconds\";" << endl;
      dec_indent();
-     stream << indent() << "}" << endl;
+     stream << indent() << "}" << endl << endl;
      dec_indent();
   }
 
@@ -222,14 +286,13 @@ class Checkpoint : public Base {
      stream << indent() << "// create a string from all relevant command "
             << "line arguments" << endl;
      stream << indent() << "std::stringstream arg_string;" << endl;
-     stream << indent() << "arg_string << argv[0] << \" \";" << endl;
      stream << indent() << "int i = 1;" << endl;
      stream << indent() << "while (i < argc) {" << endl;
      inc_indent();
      stream << indent() << "if (std::strcmp(argv[i], \"--checkpointInterval\")"
-            << "== 0 ||" << endl;
+            << " == 0 ||" << endl;
      stream << indent() << "    std::strcmp(argv[i], \"--checkpointPath\")"
-            << "== 0) {" << endl;
+            << " == 0) {" << endl;
      inc_indent();
      stream << indent() << "i += 2;" << endl;
      dec_indent();
@@ -241,31 +304,94 @@ class Checkpoint : public Base {
      stream << indent() << "}" << endl;
      dec_indent();
      stream << indent() << "}" << endl;
-     stream << indent() << "return arg_string.str();";
+     stream << indent() << "return arg_string.str();" << endl;
      dec_indent();
-     stream << indent() << "}" << endl;
+     stream << indent() << "}" << endl << endl;
      dec_indent();
   }
 
-  void create_checkpoint_log(Printer::Base &stream) {
+  void create_checkpoint_log(Printer::Base &stream, const nt_tables &tables) {
      inc_indent();
      stream << indent() << "void create_checkpoint_log(const gapc::Opts &opts, "
             << "const std::string &arg_string) {" << endl;
      inc_indent();
      stream << indent() << "// initialize a Log file to keep track "
             << "of archive paths" << endl;
-     stream << indent() << "std::ofstream fout(opts.checkpoint_path / "
-            << "\"test_log.txt\", std::ios::out | std::ios::app);" << endl;
-     stream << indent() << "fout << \"// Format:\n// [OPTIONS] argv[0] "
-            << "argv[1] ...\\n\";" << endl;
-     stream << indent() << "fout << \"// path/to/tables\\n\";" << endl;
-     stream << indent() << "fout << \"[OPTIONS] \"  << arg_string;" << endl;
-     stream << indent() << "fout << \"\n\" << opts.checkpoint_path << \"\n\";"
+     stream << indent() << "std::string executable_name = "
+            << "boost::dll::program_location().filename().string();" << endl;
+     stream << indent() << "std::string logfile_name = executable_name + "
+            << "\"_checkpointing_log.txt\";" << endl;
+     stream << indent() << "logfile_path = opts.checkpoint_out_path / "
+            << "logfile_name;" << endl;
+     stream << indent() << "std::ofstream fout(logfile_path, std::ios::out);"
             << endl;
+     stream << indent() << "fout << \"# Format:\\n# [OPTIONS] argv[1] "
+            << "argv[2] ...\\n\";" << endl;
+     stream << indent() << "fout << \"# path/to/table\\n\";" << endl;
+     stream << indent() << "fout << \"[OPTIONS] \"  << arg_string << \"\\n\";"
+            << endl;
+     for (auto i = tables.begin(); i != tables.end(); ++i) {
+       std::string table_name = i->second->table_decl->name();
+       stream << indent() << "fout << " << table_name << ".get_table_path()"
+              << "<< \"\\n\";" << endl;
+     }
      stream << indent() << "fout.close();" << endl;
+     dec_indent();
+     stream << indent() << "}" << endl << endl;
+     dec_indent();
+  }
+
+  void parse_checkpoint_log(Printer::Base &stream) {
+     inc_indent(); inc_indent();
+     stream << indent() << "std::filesystem::path parse_checkpoint_log("
+            << "std::filesystem::path path, const std::string &tname,"
+            << endl << indent()
+                        << "                                           "
+            << "const std::string &executable_name, const std::string "
+            << "&arg_string) {" << endl;
+     inc_indent();
+     stream << indent() << "// parse the checkpoint log and look "
+            << "for checkpoints" << endl;
+     stream << indent() << "// that were created with identical program "
+            << "input (stored in arg_string)" << endl;
+     stream << indent() << "path /= (executable_name + "
+            << "\"_checkpointing_log.txt\");" << endl;
+     stream << indent() << "std::filesystem::path input_table_path(\"\");"
+            << endl;
+     stream << indent() << "std::ifstream fin(path);" << endl;
+     stream << indent() << "if (!(fin.good())) return input_table_path;"
+            << endl << endl;
+     stream << indent() << "std::string line;" << endl;
+     stream << indent() << "std::string options_line_start = \"[OPTIONS] \";"
+            << endl;
+     stream << indent() << "bool check = false;" << endl;
+     stream << indent() << "while (std::getline(fin, line)) {" << endl;
+     inc_indent();
+     stream << indent() << "if (line[0] == '#') continue;" << endl;
+     stream << indent() << "size_t i = line.find(options_line_start);" << endl;
+     stream << indent() << "if (i != line.npos) {" << endl;
+     inc_indent();
+     stream << indent() << "check = false;" << endl;
+     stream << indent() << "line.replace(i, options_line_start.length(), "
+            << "\"\");" << endl;
+     stream << indent() << "if (line == arg_string) check = true;" << endl;
+     stream << indent() << "continue;" << endl;
+     dec_indent();
+     stream << indent() << "}" << endl;
+     stream << indent() << "if (check && line.find(tname) != line.npos) {"
+            << endl;
+     inc_indent();
+     stream << indent() << "input_table_path = std::filesystem::path(line);"
+            << endl;
+     stream << indent() << "break;" << endl;
      dec_indent();
      stream << indent() << "}" << endl;
      dec_indent();
+     stream << indent() << "}" << endl;
+     stream << indent() << "return input_table_path;" << endl;
+     dec_indent();
+     stream << indent() << "}" << endl << endl;
+     dec_indent(); dec_indent();
   }
 };
 }  // namespace Printer
