@@ -49,6 +49,7 @@ class Fn_Def;
 class Signature;
 class Filter;
 
+const char FN_NAME_DERIVATIVE_NORMALIZER[] = "normalize_derivative";
 
 class Algebra : public Signature_Base {
  private:
@@ -109,6 +110,8 @@ class Algebra : public Signature_Base {
     std::pair<std::string*, Type::Base*> &p, const Loc &l);
 
   bool check_signature(Signature &s);
+
+  bool check_derivative();
 
   void set_fns(const hashtable<std::string, Fn_Def*> &h);
 

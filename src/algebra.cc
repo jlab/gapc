@@ -392,3 +392,37 @@ Algebra *Algebra::copy() const {
   }
   return o;
 }
+
+// tests if Signature and Algebra for derivative computation contain
+// a special function that normalizes traces
+bool Algebra::check_derivative() {
+  bool r = true;
+  hashtable<std::string, Fn_Def*>::const_iterator i = this->fns.find(
+    FN_NAME_DERIVATIVE_NORMALIZER);
+  if (i == this->fns.end()) {
+    std::ostringstream o1;
+    o1 << *(*this->fns.begin()).second->return_type;
+    std::string ans_type = o1.str();
+
+    std::string msg =
+"You requested the computation of derivatives. This requires the "
+"conversion of\n"
+"weights of alternative sub-solutions (q) into probabilities. Please"
+" provide\n"
+"an additional algebra function:\n\n    " + ans_type + " " + \
+FN_NAME_DERIVATIVE_NORMALIZER + "(" + ans_type + " q, " + ans_type + \
+" pfunc)\n\n"
+"to your algebra \"" + *this->name + "\". Depending on your scoring "
+"schema and\n"
+"choice function, the body of " + FN_NAME_DERIVATIVE_NORMALIZER + \
+" should normalize e.g.\n\n"
+"  scoring schema | choice func. | normalization  \n"
+"  -----------------------------------------------\n"
+"   prob.         |     sum      |   q / pfunc    \n"
+"   log(prob.)    |    expsum    | exp(q - pfunc) \n"
+"   log(1/prob.)  |  negexpsum   | exp(pfunc - q) \n"
+"   exp(score)    |     sum      |   q / pfunc    \n";
+    Log::instance()->error(msg);
+  }
+  return r;
+}
