@@ -549,6 +549,11 @@ class Main {
         }
     }
 
+    if (opts.derivative > 0) {
+      // if user requests derivative computation, check that user also
+      // provided a normalization function for forward computation
+      instance->product->algebra()->check_derivative();
+    }
 
     driver.ast.set_float_accuracy(*instance, opts.float_acc);
     if (opts.pareto == 3) {
