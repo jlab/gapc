@@ -27,12 +27,44 @@
 #include "printer.hh"
 #include "symbol.hh"
 #include "statement/table_decl.hh"
+#include "type/base.hh"
 
 typedef hashtable<std::string, Symbol::NT*> nt_tables;
+
+// list of currently supported/serializable datatypes (all primitive)
+constexpr Type::Type
+SUPPORTED_TYPES[] = {Type::Type::VOID, Type::Type::INTEGER,
+                     Type::Type::INT, Type::Type::FLOAT,
+                     Type::Type::SIZE, Type::Type::SINGLE,
+                     Type::Type::BIGINT};
 
 namespace Printer {
 class Checkpoint : public Base {
  public:
+  static bool is_supported(const nt_tables &tables) {
+     // check datatypes of every table (all tables must have supported type)
+     bool answer_type_supported = true;
+
+     for (auto table : tables) {
+       Type::Type table_type = table.second->data_type()->getType();
+       bool table_supported = false;
+
+       for (Type::Type supported_type : SUPPORTED_TYPES) {
+         if (table_type == supported_type) {
+           table_supported = true;
+           break;
+         }
+       }
+
+       if (!table_supported) {
+         answer_type_supported = false;
+         break;
+       }
+     }
+
+     return answer_type_supported;
+  }
+
   void include(Printer::Base &stream) {
      stream << "#define CHECKPOINTING_INTEGRATED" << endl << endl;
      stream << "extern \"C\" {" << endl;

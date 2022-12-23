@@ -610,28 +610,11 @@ class Main {
     }
 
     if ((opts.checkpointing)) {
-      // list of currently supported/serializable datatypes (all primitive)
-      constexpr Type::Type
-      SUPPORTED_TYPES[] = {Type::Type::VOID, Type::Type::INTEGER,
-                           Type::Type::INT, Type::Type::FLOAT,
-                           Type::Type::SIZE, Type::Type::SINGLE,
-                           Type::Type::BIGINT};
+      bool answer_type_supported = Printer::Checkpoint::is_supported(
+                                   driver.ast.grammar()->tabulated);
 
-      // answer type
-      Type::Type answer_type = driver.ast.grammar()->axiom->
-                               data_type()->getType();
-      bool answer_type_supported = false;
-
-      for (Type::Type type : SUPPORTED_TYPES) {
-        if (answer_type == type) {
-          answer_type_supported = true;
-          break;
-        }
-      }
-
-      // only enable checkpointing if answer type is supported
-      // TODO(fymue): figure out real answer types of tables
-      // (current method is incorrect; until then: no checkpointing by default)
+      // only enable checkpointing if type of every table is supported
+      // until then: no checkpointing by default
       if (answer_type_supported) {
         driver.ast.checkpoint = new Printer::
                                     Checkpoint();
