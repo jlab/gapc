@@ -1090,7 +1090,7 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   stream << indent() << dtype << " zero;" << endl;
 
   if (checkpoint) {
-    stream << indent() << "std::filesystem::path table_path;" << endl;
+    stream << indent() << "boost::filesystem::path table_path;" << endl;
   }
 
   stream << t.fn_size() << endl;
@@ -1123,8 +1123,8 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
 
   stream << ", const std::string &tname";
   if (checkpoint) {
-    stream << ", std::filesystem::path out_path," << endl
-           << indent() << "         std::filesystem::path in_path, "
+    stream << ", boost::filesystem::path out_path," << endl
+           << indent() << "          boost::filesystem::path in_path, "
            << "const std::string &arg_string";
   }
   stream << ") {" << endl;
@@ -1479,7 +1479,7 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
     stream << indent() << "          << \"created every \" << "
            << "formatted_interval << \".\\n\"" << endl;
     stream << indent() << "          << \"The checkpoints will be saved "
-           << "under \" << opts.checkpoint_out_path << \".\\n\\n\";"
+           << "at \" << opts.checkpoint_out_path << \".\\n\\n\";"
            << endl << endl;
   }
 
@@ -1748,7 +1748,7 @@ void Printer::Cpp::header(const AST &ast) {
     stream << indent() << " private:" << endl;
     inc_indent();
     stream << indent() << "size_t checkpoint_interval;" << endl;
-    stream << indent() << "std::filesystem::path logfile_path;" << endl;
+    stream << indent() << "boost::filesystem::path logfile_path;" << endl;
     dec_indent();
   }
   stream << indent() << " public:" << endl;

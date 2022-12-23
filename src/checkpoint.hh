@@ -42,6 +42,7 @@ class Checkpoint : public Base {
      stream << "#include \"boost/archive/binary_iarchive.hpp\"" << endl;
      stream << "#include \"boost/archive/binary_oarchive.hpp\"" << endl;
      stream << "#include \"boost/dll.hpp\"" << endl;
+     stream << "#include \"boost/filesystem.hpp\"" << endl;
      stream << "#include <atomic>" << endl;
      stream << "#include <filesystem>" << endl;
      stream << "#include <thread>" << endl << endl;
@@ -91,7 +92,7 @@ class Checkpoint : public Base {
      stream << indent();
      stream << "void remove() {" << endl;
      inc_indent();
-     stream << indent() << "std::filesystem::remove(table_path);" << endl;
+     stream << indent() << "boost::filesystem::remove(table_path);" << endl;
      dec_indent();
      stream << indent() << "}" << endl << endl;
      dec_indent(); dec_indent();
@@ -109,15 +110,15 @@ class Checkpoint : public Base {
 
   void find_table(Printer::Base &stream) {
      inc_indent(); inc_indent();
-     stream << indent() << "std::filesystem::path find_table("
-            << "std::filesystem::path path, const std::string &tname) {"
+     stream << indent() << "boost::filesystem::path find_table("
+            << "boost::filesystem::path path, const std::string &tname) {"
             << endl;
      inc_indent();
      stream << indent() << "// find the table archive in the "
             << "user-specified directory" << endl;
      stream << indent() << "std::string curr_file;" << endl;
      stream << indent() << "for (const auto &entry : "
-            << "std::filesystem::directory_iterator(path)) {" << endl;
+            << "boost::filesystem::directory_iterator(path)) {" << endl;
      inc_indent();
      stream << indent() << "curr_file = entry.path().string();" << endl;
      stream << indent() << "if (curr_file.find(tname) != curr_file.npos) {"
@@ -128,7 +129,7 @@ class Checkpoint : public Base {
      stream << indent() << "}" << endl;
      dec_indent();
      stream << indent() << "}" << endl;
-     stream << indent() << "return std::filesystem::path(\"\");" << endl;
+     stream << indent() << "return boost::filesystem::path(\"\");" << endl;
      dec_indent();
      stream << indent() << "}" << endl << endl;
      dec_indent(); dec_indent();
@@ -248,7 +249,7 @@ class Checkpoint : public Base {
      inc_indent();
      stream << indent() << "// remove the log file after "
             << "successfull termination of the program" << endl;
-     stream << indent() << "std::filesystem::remove(logfile_path);" << endl;
+     stream << indent() << "boost::filesystem::remove(logfile_path);" << endl;
      dec_indent();
      stream << indent() << "}" << endl << endl;
      dec_indent();
@@ -343,8 +344,8 @@ class Checkpoint : public Base {
 
   void parse_checkpoint_log(Printer::Base &stream) {
      inc_indent(); inc_indent();
-     stream << indent() << "std::filesystem::path parse_checkpoint_log("
-            << "std::filesystem::path path, const std::string &tname,"
+     stream << indent() << "boost::filesystem::path parse_checkpoint_log("
+            << "boost::filesystem::path path, const std::string &tname,"
             << endl << indent()
                         << "                                           "
             << "const std::string &executable_name, const std::string "
@@ -356,7 +357,7 @@ class Checkpoint : public Base {
             << "input (stored in arg_string)" << endl;
      stream << indent() << "path /= (executable_name + "
             << "\"_checkpointing_log.txt\");" << endl;
-     stream << indent() << "std::filesystem::path input_table_path(\"\");"
+     stream << indent() << "boost::filesystem::path input_table_path(\"\");"
             << endl;
      stream << indent() << "std::ifstream fin(path);" << endl;
      stream << indent() << "if (!(fin.good())) return input_table_path;"
@@ -381,7 +382,7 @@ class Checkpoint : public Base {
      stream << indent() << "if (check && line.find(tname) != line.npos) {"
             << endl;
      inc_indent();
-     stream << indent() << "input_table_path = std::filesystem::path(line);"
+     stream << indent() << "input_table_path = boost::filesystem::path(line);"
             << endl;
      stream << indent() << "break;" << endl;
      dec_indent();

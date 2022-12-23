@@ -26,9 +26,9 @@
 
 extern "C" {
   #include <getopt.h>
+  #include <unistd.h>
+  #include <cstdlib>
 }
-
-#include <unistd.h>
 
 #include <iostream>
 #include <fstream>
@@ -41,9 +41,11 @@ extern "C" {
 #include <cassert>
 #include <filesystem>
 
-// define _XOPEN_SOURCE=500
+#ifdef CHECKPOINTING_INTEGRATED
+#include "boost/filesystem.hpp"
+#endif
 
-#include <cstdlib>
+// define _XOPEN_SOURCE=500
 
 namespace gapc {
 
@@ -109,8 +111,10 @@ class Opts {
     unsigned k;
 
     size_t checkpoint_interval;  // default interval: 3600s (1h)
-    std::filesystem::path checkpoint_out_path;  // default path: cwd
-    std::filesystem::path checkpoint_in_path;  // default: empty
+#ifdef CHECKPOINTING_INTEGRATED
+    boost::filesystem::path  checkpoint_out_path;  // default path: cwd
+    boost::filesystem::path  checkpoint_in_path;  // default: empty
+#endif
     int argc;
     char **argv;
 
@@ -127,8 +131,10 @@ class Opts {
       repeats(1),
       k(3),
       checkpoint_interval(3600),
-      checkpoint_out_path(std::filesystem::current_path()),
-      checkpoint_in_path(std::filesystem::path("")),
+#ifdef CHECKPOINTING_INTEGRATED
+      checkpoint_out_path(boost::filesystem::current_path()),
+      checkpoint_in_path(boost::filesystem::path("")),
+#endif
       argc(0),
       argv(0) {}
 
@@ -146,6 +152,7 @@ class Opts {
         << " (-[tT] [0-9]+)? (-P PARAM-file)?"
 #endif
         << " (-[drk] [0-9]+)* (-h)? (INPUT|-f INPUT-file)\n"
+        << "--help,-H,-h                          print this help message\n"
 #ifdef CHECKPOINTING_INTEGRATED
         << "--checkpointInterval,-c    d:h:m:s    specify the checkpointing "
         << "interval, default: 0:0:1:0 (1h)\n"
@@ -160,10 +167,10 @@ class Opts {
         << "                                      parsed from "
         << "a checkpoint Logfile located at path specified by the "
         << "--checkpointOutput option\n"
-        << "                                      Warning: Make sure that the "
-        << "input checkpoints from this path were generated from identical \n"
-        << "                                      command line inputs to ensure"
-        << " the correctness of the answer.\n"
+        << "                                      Caution: Make sure that the "
+        << "input checkpoints from this path were generated from the same \n"
+        << "                                      command line inputs as the "
+        << "inputs to this binary to ensure the correctness of the answer.\n"
 #endif
     ;}
 
@@ -171,6 +178,7 @@ class Opts {
       int o = 0;
       char *input = 0;
       const option long_opts[] = {
+            {"help", no_argument, nullptr, 'H'},
             {"checkpointInterval", required_argument, nullptr, 'c'},
             {"checkpointOutput", required_argument, nullptr, 'O'},
             {"checkpointInput", required_argument, nullptr, 'I'},
@@ -188,7 +196,10 @@ class Opts {
 #ifdef LIBRNA_RNALIB_H_
               "t:T:P:"
 #endif
-              "hd:r:k:-:", long_opts, nullptr)) != -1) {
+#ifdef CHECKPOINTING_INTEGRATED
+              "c:I:O:"
+#endif
+             "hd:r:k:H:", long_opts, nullptr)) != -1) {
         switch (o) {
           case 'f' :
             {
@@ -243,6 +254,10 @@ class Opts {
             help(argv);
             std::exit(0);
             break;
+          case 'H' :
+            help(argv);
+            std::exit(0);
+            break;
           case 'd' :
             delta = std::atoi(optarg);
             break;
@@ -255,23 +270,33 @@ class Opts {
             break;
           case 'O' :
           {
-            std::filesystem::path arg_path(optarg);
+            boost::filesystem::path arg_path(optarg);
             if (arg_path.is_absolute()) {
               checkpoint_out_path = arg_path;
             } else {
               checkpoint_out_path /= arg_path;
             }
+            if (!boost::filesystem::exists(checkpoint_out_path)) {
+              throw OptException("The output path \"" +
+                                 checkpoint_out_path.string() +
+                                 "\" doesn't exist!");
+            }
             break;
           }
           case 'I' :
-            {
-              std::filesystem::path arg_path(optarg);
-              if (arg_path.is_absolute()) {
-                checkpoint_in_path = arg_path;
-              } else {
-                checkpoint_in_path /= arg_path;
-              }
-              break;
+          {
+            boost::filesystem::path arg_path(optarg);
+            if (arg_path.is_absolute()) {
+              checkpoint_in_path = arg_path;
+            } else {
+              checkpoint_in_path = boost::filesystem::current_path() / arg_path;
+            }
+            if (!boost::filesystem::exists(checkpoint_in_path)) {
+              throw OptException("The input path \"" +
+                                 checkpoint_in_path.string() +
+                                 "\" doesn't exist!");
+            }
+            break;
           }
 #endif
           case '?' :
