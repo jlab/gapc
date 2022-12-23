@@ -13,6 +13,9 @@ algebra alg_enum auto enum;
 algebra alg_count auto count;
 
 algebra alg_score implements sig_elmamun(alphabet=char, answer=float) {
+  float normalize_derivative(float q, float pfunc) {
+    return q / pfunc;
+  }
   float number(int value) {
     return 1.0;
   }
@@ -37,6 +40,9 @@ algebra alg_score implements sig_elmamun(alphabet=char, answer=float) {
 } 
 
 algebra alg_hessians implements sig_elmamun(alphabet=char, answer=float) {
+  float normalize_derivative(float q, float pfunc) {
+    return q / pfunc;
+  }
   float number(int value) {
     return 0.0;
   }

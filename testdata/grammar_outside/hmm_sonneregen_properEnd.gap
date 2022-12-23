@@ -124,6 +124,9 @@ algebra alg_experiment implements sig_weather(alphabet=char, answer=float) {
 }
 
 algebra alg_fwd extends alg_viterbi {
+  float normalize_derivative(float q, float pfunc) {
+    return q / pfunc;
+  }
   choice [float] h([float] candidates) {
     return list(sum(candidates));
   }
