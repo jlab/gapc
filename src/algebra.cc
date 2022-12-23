@@ -397,14 +397,17 @@ Algebra *Algebra::copy() const {
 // a special function that normalizes traces
 bool Algebra::check_derivative() {
   bool r = true;
-  hashtable<std::string, Fn_Def*>::const_iterator i = this->fns.find(
-    FN_NAME_DERIVATIVE_NORMALIZER);
-  if (i == this->fns.end()) {
-    std::ostringstream o1;
-    o1 << *(*this->fns.begin()).second->return_type;
-    std::string ans_type = o1.str();
+  for (hashtable<std::string, Fn_Def*>::const_iterator i = this->fns.begin();
+       i != this->fns.end(); ++i) {
+    if ((*i).second->is_Choice_Fn()) {
+      // skip choice functions, as their type is a list of something
+      continue;
+    } else {
+      std::ostringstream o1;
+      o1 << *i->second->return_type;
+      std::string ans_type = o1.str();
 
-    std::string msg =
+      std::string msg =
 "You requested the computation of derivatives. This requires the "
 "conversion of\n"
 "weights of alternative sub-solutions (q) into probabilities. Please"
@@ -422,7 +425,9 @@ FN_NAME_DERIVATIVE_NORMALIZER + "(" + ans_type + " q, " + ans_type + \
 "   log(prob.)    |    expsum    | exp(q - pfunc) \n"
 "   log(1/prob.)  |  negexpsum   | exp(pfunc - q) \n"
 "   exp(score)    |     sum      |   q / pfunc    \n";
-    Log::instance()->error(msg);
+      Log::instance()->error(msg);
+      break;
+    }
   }
   return r;
 }
