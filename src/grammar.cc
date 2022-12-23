@@ -1340,7 +1340,7 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
 /* if outside grammar is generated to produce derivatives, the
  * DP values are probabilities and as such must be summed for
  * alternative production rules. If however the algebra uses e.g.
- * log()-space for numerical stabilitie, choice function of
+ * log()-space for numerical stability, choice function of
  * inside parts is expsum instead of sum. We here replace the
  * user provided choice function with "sum". */
 void Grammar::replace_choice_for_derivatives() {
@@ -1351,8 +1351,8 @@ void Grammar::replace_choice_for_derivatives() {
        i != ast.signature->choice_fns.end(); ++i) {
     Fn_Decl *in_choice_decl = (*i).second;
     Fn_Decl *out_choice_decl = new Fn_Decl(
-      new Type::Choice(new Type::List(in_choice_decl->return_type->component()),
-                       Loc()),
+      new Type::Choice(new Type::List(
+        in_choice_decl->return_type->component()), Loc()),
       new std::string(PREFIX_DERIVATIVE + (*i).first));
     for (std::list<Type::Base*>::const_iterator t = \
          in_choice_decl->types.begin();
