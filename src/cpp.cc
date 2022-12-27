@@ -3008,7 +3008,8 @@ void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
            << "$(info Including extra makefile $(MF))" << endl
            << "include $(MF)" << endl
        << "endif" << endl << endl;
-
+  
+  stream << "CXXFLAGS := $(CXXFLAGS) | sed 's/c++17/c++14/'" << endl;
   stream << "compiler_flags := $(CXXFLAGS) | sed -e 's/\\s/\", \"/g'" << endl;
   stream << "linker_flags := $(LDFLAGS) | sed -e 's/\\s/\", \"/g'" << endl;
   stream << "add_linker_flags := $(LDLIBS) | sed -e 's/\\s/\", \"/g'" << endl;
@@ -3036,7 +3037,7 @@ void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
   stream << "\techo -e '\"]\\n' >> $@" << endl;
   stream << "\techo -e 'gapc_extension = Extension(name = \"gapc\",' >> $@"
          << endl;
-  stream << "\techo -n '                           headers = [' >> $@" << endl;
+  stream << "\techo -n '                           depends = [' >> $@" << endl;
   stream << "\techo '" << header_files << "],' >> $@" << endl;
   stream << "\techo -n '                           sources = "
          << "[\"pytorch_interface.cc\", ' >> $@" << endl;
@@ -3050,7 +3051,7 @@ void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
   stream << "\techo -e '                           extra_link_args = "
          << "linker_flags + add_linker_flags)\\n' >> $@" << endl;
   stream << "\techo 'setup(name = \"gapc\",' >> $@" << endl;
-  stream << "\techo '      extmodules = [gapc_extension],' >> $@" << endl;
+  stream << "\techo '      ext_modules = [gapc_extension],' >> $@" << endl;
   stream << "\techo '      cmdclass = {\"build_ext\": "
          << "cpp_extension.BuildExtension})' >> $@" << endl << endl;
   stream << ".PHONY: clean" << endl << "clean:" << endl
