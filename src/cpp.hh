@@ -268,6 +268,7 @@ class Cpp : public Base {
     void global_constants(const AST &ast);
 
     void makefile(const Options &opts, const AST &ast);
+    void pytorch_makefile(const Options &opts, const AST &ast);
 
  private:
     bool print_axiom_args(const AST &ast);

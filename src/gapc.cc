@@ -144,7 +144,10 @@ static void parse_options(int argc, char **argv, Options *rec) {
       "Using backpropagation schema, generate code to compute first "
       "derivative via forward and backward pass (internally requires outside"
       " code generation AND tabulation of all non-terminals).  0 (default) = "
-      "deactivated\n  1 = first derivative");
+      "deactivated\n  1 = first derivative")
+    ("pytorch",
+     "Automatically generate a Python/Pytorch module for derivative code\n"
+     "(Requires --derivative option to be set");
   po::options_description hidden("");
   hidden.add_options()
     ("backtrack", "deprecated for --backtrace")
@@ -286,6 +289,14 @@ static void parse_options(int argc, char **argv, Options *rec) {
 
     // and tabulate all NTs (for now)
     rec->tab_everything = true;
+  }
+
+  if (vm.count("pytorch")) {
+    if (rec->derivative < 1) {
+      throw LogError("--derivative option must be >= 1!");
+    } else {
+      rec->gen_pytorch_interface = true;
+    }
   }
 
   bool r = rec->check();
@@ -729,7 +740,11 @@ class Main {
   void makefile(const AST &ast) {
     Printer::Cpp mm(driver.ast, opts.m_stream());
     mm.set_argv(argv, argc);
-    mm.makefile(opts, ast);
+    if (opts.gen_pytorch_interface) {
+      mm.pytorch_makefile(opts, ast);
+    } else {
+      mm.makefile(opts, ast);
+    }
   }
 
  public:
