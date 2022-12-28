@@ -147,7 +147,7 @@ static void parse_options(int argc, char **argv, Options *rec) {
       "deactivated\n  1 = first derivative")
     ("pytorch",
      "Automatically generate a Python/Pytorch module for derivative code\n"
-     "(Requires --derivative option to be set");
+     "(Requires --derivative option to be set)");
   po::options_description hidden("");
   hidden.add_options()
     ("backtrack", "deprecated for --backtrace")

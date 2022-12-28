@@ -3008,7 +3008,7 @@ void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
            << "$(info Including extra makefile $(MF))" << endl
            << "include $(MF)" << endl
        << "endif" << endl << endl;
-  
+
   stream << "CXXFLAGS := $(CXXFLAGS) | sed 's/c++17/c++14/'" << endl;
   stream << "compiler_flags := $(CXXFLAGS) | sed -e 's/\\s/\", \"/g'" << endl;
   stream << "linker_flags := $(LDFLAGS) | sed -e 's/\\s/\", \"/g'" << endl;
@@ -3016,7 +3016,7 @@ void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
   stream << "include_paths := $(CPPFLAGS) | sed -e 's/\\s/\", \"/g'"
          << endl << endl;
 
-  stream << "make_module: setup.py" << endl;
+  stream << "make_module: setup.py pytorch_interface.cc" << endl;
   stream << "\tpython3 setup.py install" << endl << endl;
 
   stream << "setup.py:" << endl;
@@ -3054,8 +3054,44 @@ void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
   stream << "\techo '      ext_modules = [gapc_extension],' >> $@" << endl;
   stream << "\techo '      cmdclass = {\"build_ext\": "
          << "cpp_extension.BuildExtension})' >> $@" << endl << endl;
+
+  stream << "pytorch_interface.cc:" << endl;
+  stream << "\ttouch $@" << endl;
+  print_pytorch_interface(opts, ast);
+
   stream << ".PHONY: clean" << endl << "clean:" << endl
-    << "\trm -f << pytorch_interface.cc setup.py" << endl << endl;
+    << "\trm -rf build dist *.egg-info pytorch_interface.cc setup.py"
+    << endl << endl;
+}
+
+void Printer::Cpp::print_pytorch_interface(const Options &opts,
+                                           const AST &ast) {
+  // generate a pytorch interface for the derivative code
+  // (will be generated when running make)
+
+  if (ast.requested_derivative >= 1) {
+    for (unsigned int i = 1; i <= ast.requested_derivative; ++i) {
+      stream << "\techo '#include \"" << basename(remove_dir(opts.header_file))
+                + "_derivative" + std::to_string(i) + ".hh\"' >> $@" << endl;
+    }
+  }
+
+  stream << "\techo '#include \"torch/extension.h\"' >> $@" << endl;
+  stream << "\techo -e '#include <vector>\\n' >> $@" << endl;
+  stream << "\techo 'std::vector<at::Tensor> forward(at::Tensor inp) "
+         << "{' >> $@" << endl;
+  stream << "\techo '  return {inp};' >> $@" << endl;
+  stream << "\techo -e '}\\n' >> $@" << endl;
+  stream << "\techo 'std::vector<at::Tensor> backward(at::Tensor inp) "
+         << "{' >> $@" << endl;
+  stream << "\techo '  return {inp};' >> $@" << endl;
+  stream << "\techo -e '}\\n' >> $@" << endl;
+  stream << "\techo 'PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {' >> $@"
+         << endl;
+  stream << "\techo '  m.def(\"forward\", &forward, \"GAPC forward\");' >> $@"
+         << endl;
+  stream << "\techo '  m.def(\"backward\", &backward, \"GAPC backward\");' "
+         << ">> $@" << endl << "\techo -e '}\\n' >> $@" << endl << endl;
 }
 
 void Printer::Cpp::imports(const AST &ast) {
