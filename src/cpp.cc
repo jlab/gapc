@@ -3013,6 +3013,7 @@ void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
   stream << "compiler_flags := $(CXXFLAGS) | sed -e 's/\\s/\", \"/g'" << endl;
   stream << "linker_flags := $(LDFLAGS) | sed -e 's/\\s/\", \"/g'" << endl;
   stream << "add_linker_flags := $(LDLIBS) | sed -e 's/\\s/\", \"/g'" << endl;
+  stream << "CPPFLAGS := $(CPPFLAGS) | sed 's/-I\\//\\//g'" << endl;
   stream << "include_paths := $(CPPFLAGS) | sed -e 's/\\s/\", \"/g'"
          << endl << endl;
 
@@ -3021,8 +3022,8 @@ void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
 
   stream << "setup.py:" << endl;
   stream << "\techo 'from setuptools import setup, Extension' > $@" << endl;
-  stream << "\techo -e 'from torch.utils import cpp_extension\\n' >> $@"
-         << endl;
+  stream << "\techo -e 'from torch.utils.cpp_extension import "
+         << "BuildExtension, CppExtension, include_paths\\n' >> $@" << endl;
   stream << "\techo -n 'compiler_flags = [\"' >> $@" << endl;
   stream << "\techo -n $(compiler_flags) >> $@" << endl;
   stream << "\techo -e '\"]\\n' >> $@" << endl;
@@ -3032,28 +3033,29 @@ void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
   stream << "\techo -n 'add_linker_flags = [\"' >> $@" << endl;
   stream << "\techo -n $(add_linker_flags) >> $@" << endl;
   stream << "\techo -e '\"]\\n' >> $@" << endl;
-  stream << "\techo -n 'include_paths = [\"' >> $@" << endl;
+  stream << "\techo -n 'add_include_paths = [\"' >> $@" << endl;
   stream << "\techo -n $(include_paths) >> $@" << endl;
   stream << "\techo -e '\"]\\n' >> $@" << endl;
-  stream << "\techo -e 'gapc_extension = Extension(name = \"gapc\",' >> $@"
+  stream << "\techo -e 'gapc_extension = CppExtension(name = \"gapc\",' >> $@"
          << endl;
-  stream << "\techo -n '                           depends = [' >> $@" << endl;
+  stream << "\techo -n '                              depends = [' >> $@"
+         << endl;
   stream << "\techo '" << header_files << "],' >> $@" << endl;
-  stream << "\techo -n '                           sources = "
+  stream << "\techo -n '                              sources = "
          << "[\"pytorch_interface.cc\", ' >> $@" << endl;
   stream << "\techo '" << out_files << "],' >> $@" << endl;
-  stream << "\techo -e '                           include_dirs = "
-         << "cpp_extension.include_paths() + include_paths,' >> $@" << endl;
-  stream << "\techo -e '                           language = \"c++\",'"
+  stream << "\techo -e '                              include_dirs = "
+         << "include_paths() + add_include_paths,' >> $@" << endl;
+  stream << "\techo -e '                              language = \"c++\",'"
          << ">> $@" << endl;
-  stream << "\techo -e '                           extra_compile_args = "
+  stream << "\techo -e '                              extra_compile_args = "
          << "compiler_flags,' >> $@" << endl;
-  stream << "\techo -e '                           extra_link_args = "
+  stream << "\techo -e '                              extra_ldflags = "
          << "linker_flags + add_linker_flags)\\n' >> $@" << endl;
   stream << "\techo 'setup(name = \"gapc\",' >> $@" << endl;
   stream << "\techo '      ext_modules = [gapc_extension],' >> $@" << endl;
   stream << "\techo '      cmdclass = {\"build_ext\": "
-         << "cpp_extension.BuildExtension})' >> $@" << endl << endl;
+         << "BuildExtension})' >> $@" << endl << endl;
 
   stream << "pytorch_interface.cc: $(RTLIB)/generic_pytorch_interface.cc"
          << endl;
