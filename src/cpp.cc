@@ -3017,7 +3017,10 @@ void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
   stream << "include_paths := $(CPPFLAGS) | sed -e 's/\\s/\", \"/g'"
          << endl << endl;
 
-  stream << "make_module: setup.py pytorch_interface.cc" << endl;
+  stream << "gen_files: setup.py pytorch_interface.cc" << endl;
+  stream << "\techo 'Generated setup.py and python_interface.cc'"
+         << endl << endl;
+  stream << "install:" << endl;
   stream << "\tpython3 setup.py install" << endl << endl;
 
   stream << "setup.py:" << endl;
