@@ -3055,9 +3055,17 @@ void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
   stream << "\techo '      cmdclass = {\"build_ext\": "
          << "cpp_extension.BuildExtension})' >> $@" << endl << endl;
 
-  stream << "pytorch_interface.cc:" << endl;
+  stream << "pytorch_interface.cc: $(RTLIB)/generic_pytorch_interface.cc"
+         << endl;
   stream << "\ttouch $@" << endl;
-  print_pytorch_interface(opts, ast);
+  if (ast.requested_derivative >= 1) {
+    for (unsigned int i = 1; i <= ast.requested_derivative; ++i) {
+      stream << "\techo '#include \"" << basename(remove_dir(opts.header_file))
+                + "_derivative" + std::to_string(i) + ".hh\"' >> $@" << endl;
+    }
+  }
+  stream << "\tcat $(RTLIB)/generic_pytorch_interface.cc >> $@"
+         << endl << endl;;
 
   stream << ".PHONY: clean" << endl << "clean:" << endl
     << "\trm -rf build dist *.egg-info pytorch_interface.cc setup.py"

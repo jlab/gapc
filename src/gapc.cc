@@ -146,8 +146,9 @@ static void parse_options(int argc, char **argv, Options *rec) {
       " code generation AND tabulation of all non-terminals).  0 (default) = "
       "deactivated\n  1 = first derivative")
     ("pytorch",
-     "Automatically generate a Python/Pytorch module for derivative code\n"
-     "(Requires --derivative option to be set)");
+     "Automatically generate a Python/Pytorch module providing a forward and "
+     "backward function for every derivative\n"
+     "(Requires --derivative option to be >=1)");
   po::options_description hidden("");
   hidden.add_options()
     ("backtrack", "deprecated for --backtrace")
