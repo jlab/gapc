@@ -3032,6 +3032,12 @@ void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
 
   stream << "CXXFLAGS := $(CXXFLAGS) | sed 's/c++17/c++14/'" << endl;
   stream << "compiler_flags := $(CXXFLAGS) | sed -e 's/\\s/\", \"/g'" << endl;
+  stream << "LDFLAGS := $(LDFLAGS) | sed 's/-L\\//\\//g'" << endl;
+  stream << "LDFLAGS := $(LDFLAGS) | sed -E 's/ -Xlinker -rpath -Xlinker.+//'"
+         << endl;
+  stream << "xlinker_flags := $(LDFLAGS) | "
+         << "sed -e 's/\\s/\", \"-Xlinker\", \"-rpath\", \"-Xlinker\", \"/g'"
+         << endl;
   stream << "linker_flags := $(LDFLAGS) | sed -e 's/\\s/\", \"/g'" << endl;
   stream << "add_linker_flags := $(LDLIBS) | sed -e 's/\\s/\", \"/g'" << endl;
   stream << "CPPFLAGS := $(CPPFLAGS) | sed 's/-I\\//\\//g'" << endl;
@@ -3047,12 +3053,17 @@ void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
   stream << "setup.py:" << endl;
   stream << "\techo 'from setuptools import setup, Extension' > $@" << endl;
   stream << "\techo -e 'from torch.utils.cpp_extension import "
-         << "BuildExtension, CppExtension, include_paths\\n' >> $@" << endl;
+         << "BuildExtension, CppExtension\\n' >> $@" << endl;
   stream << "\techo -n 'compiler_flags = [\"' >> $@" << endl;
   stream << "\techo -n $(compiler_flags) >> $@" << endl;
   stream << "\techo -e '\"]\\n' >> $@" << endl;
   stream << "\techo -n 'linker_flags = [\"' >> $@" << endl;
   stream << "\techo -n $(linker_flags) >> $@" << endl;
+  stream << "\techo -e '\"]\\n' >> $@" << endl;
+  stream << "\techo -n 'xlinker_flags = "
+         << "[\"-Xlinker\", \"-rpath\", \"-Xlinker\", \"' >> $@"
+         << endl;
+  stream << "\techo -n $(xlinker_flags) >> $@" << endl;
   stream << "\techo -e '\"]\\n' >> $@" << endl;
   stream << "\techo -n 'add_linker_flags = [\"' >> $@" << endl;
   stream << "\techo -n $(add_linker_flags) >> $@" << endl;
@@ -3069,13 +3080,13 @@ void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
          << "[\"pytorch_interface.cc\", ' >> $@" << endl;
   stream << "\techo '" << out_files << "],' >> $@" << endl;
   stream << "\techo -e '                              include_dirs = "
-         << "include_paths() + add_include_paths,' >> $@" << endl;
-  stream << "\techo -e '                              language = \"c++\",'"
-         << ">> $@" << endl;
+         << "add_include_paths,' >> $@" << endl;
   stream << "\techo -e '                              extra_compile_args = "
          << "compiler_flags,' >> $@" << endl;
-  stream << "\techo -e '                              extra_ldflags = "
-         << "linker_flags + add_linker_flags)\\n' >> $@" << endl;
+  stream << "\techo -e '                              extra_link_args = "
+         << "add_linker_flags + xlinker_flags,' >> $@" << endl;
+  stream << "\techo -e '                              library_dirs = "
+         << "linker_flags)\\n' >> $@" << endl;
   stream << "\techo 'setup(name = \"gapc\",' >> $@" << endl;
   stream << "\techo '      ext_modules = [gapc_extension],' >> $@" << endl;
   stream << "\techo '      cmdclass = {\"build_ext\": "
@@ -3171,6 +3182,9 @@ void Printer::Cpp::print_pytorch_backward_fn(const AST &ast) {
   stream << indent() << "for (int t_1_i = t_1_left_most; "
          << "t_1_i <= t_1_right_most; ++t_1_i) {" << endl;
   inc_indent();
+  stream << indent() << "// need to calculate everything first "
+         << "(results will be added to tensor all at once afterwards)"
+         << endl;
   stream << indent() << "nt_outside_A(t_0_i, t_1_i);" << endl;
   dec_indent();
   stream << indent() << "}" << endl;
