@@ -269,7 +269,9 @@ class Cpp : public Base {
 
     void makefile(const Options &opts, const AST &ast);
     void pytorch_makefile(const Options &opts, const AST &ast);
-    void print_pytorch_interface(const Options &opts, const AST &ast);
+    void print_pytorch_forward_fn(const AST &ast);
+    void print_pytorch_backward_fn(const AST &ast);
+    void print_pytorch_init_fn(const AST &ast);
 
  private:
     bool print_axiom_args(const AST &ast);

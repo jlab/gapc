@@ -1718,6 +1718,9 @@ void Printer::Cpp::header(const AST &ast) {
       }
     }
     includes();
+    if (ast.gen_pytorch_interface) {
+      stream << "#include \"torch/extension.h\"" << endl;
+    }
     print_subseq_typedef(ast);
     print_type_defs(ast);
   }
@@ -1726,8 +1729,13 @@ void Printer::Cpp::header(const AST &ast) {
   print_hash_decls(ast);
 
   stream << indent() << "class " << class_name << " {" << endl;
+
   stream << indent() << " public:" << endl;
   inc_indent();
+  if (ast.gen_pytorch_interface) {
+    stream << indent() << "std::vector<int64_t> tensor_size;"
+           << endl;
+  }
 
   for (std::vector<Statement::Var_Decl*>::const_iterator i =
        ast.seq_decls.begin(); i != ast.seq_decls.end(); ++i) {
@@ -1755,7 +1763,11 @@ void Printer::Cpp::header(const AST &ast) {
   print_filter_decls(ast);
   print_buddy_decls(ast);
   set_tracks(ast);
-  print_init_fn(ast);
+  if (ast.gen_pytorch_interface) {
+    print_pytorch_init_fn(ast);
+  } else {
+    print_init_fn(ast);
+  }
   print_window_inc_fn(ast);
   dec_indent();
   stream << indent();
@@ -3077,34 +3089,95 @@ void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
     << endl << endl;
 }
 
-void Printer::Cpp::print_pytorch_interface(const Options &opts,
-                                           const AST &ast) {
-  // generate a pytorch interface for the derivative code
-  // (will be generated when running make)
+void Printer::Cpp::print_pytorch_init_fn(const AST &ast) {
+  // print init function which handles the
+  // inputs from Pytorch and makes them accessible
 
-  if (ast.requested_derivative >= 1) {
-    for (unsigned int i = 1; i <= ast.requested_derivative; ++i) {
-      stream << "\techo '#include \"" << basename(remove_dir(opts.header_file))
-                + "_derivative" + std::to_string(i) + ".hh\"' >> $@" << endl;
-    }
+  stream << indent() << "void init(";
+  stream << "const torch::Tensor &inp, const char *seq1, const char *seq2";
+  for (unsigned int i = 1; i < ast.current_derivative; ++i) {
+    stream << ", " << get_class_name_lower_derivative(ast.current_derivative, i)
+           << " *derivative" << std::to_string(i);
+  }
+  stream << ") {" << endl;
+
+  inc_indent();
+
+  int n = 1;
+  for (std::vector<Statement::Var_Decl*>::const_iterator
+       i = ast.seq_decls.begin(); i != ast.seq_decls.end();
+       ++i, n++) {
+    std::string seq_name = "seq" + std::to_string(n);
+    stream << indent() << *(*i)->name << ".copy(" << seq_name
+           << ", std::strlen(" << seq_name << "));" << endl;
   }
 
-  stream << "\techo '#include \"torch/extension.h\"' >> $@" << endl;
-  stream << "\techo -e '#include <vector>\\n' >> $@" << endl;
-  stream << "\techo 'std::vector<at::Tensor> forward(at::Tensor inp) "
-         << "{' >> $@" << endl;
-  stream << "\techo '  return {inp};' >> $@" << endl;
-  stream << "\techo -e '}\\n' >> $@" << endl;
-  stream << "\techo 'std::vector<at::Tensor> backward(at::Tensor inp) "
-         << "{' >> $@" << endl;
-  stream << "\techo '  return {inp};' >> $@" << endl;
-  stream << "\techo -e '}\\n' >> $@" << endl;
-  stream << "\techo 'PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {' >> $@"
+  print_filter_init(ast);
+  print_table_init(ast);
+  print_zero_init(*ast.grammar());
+
+  size_t t = 0;
+  for (std::vector<Statement::Var_Decl*>::iterator j = ns.begin();
+       j != ns.end(); ++j, ++t) {
+    stream << indent() << "t_" << t << "_left_most = 0;\n";
+    stream << indent() << "t_" << t << "_right_most = " << "t_" << t
+      << "_seq.size();\n";
+    stream << indent() << "tensor_size.push_back(t_" << t
+           << "_right_most + 1);" << endl;
+  }
+
+  if (ast.requested_derivative > 0) {
+    stream << endl;
+  }
+  for (unsigned int i = 1; i < ast.current_derivative; ++i) {
+    stream << indent() << "this->derivative" << std::to_string(i)
+           << " = derivative" << std::to_string(i) << ";" << endl;
+  }
+
+  dec_indent();
+  stream << indent() << '}' << endl << endl;
+}
+
+void Printer::Cpp::print_pytorch_forward_fn(const AST &ast) {
+  // convert the foward score matrix to a Pytorch tensor
+  stream << indent() << "void get_forward_score_matrix(torch::Tensor &matrix) {"
          << endl;
-  stream << "\techo '  m.def(\"forward\", &forward, \"GAPC forward\");' >> $@"
-         << endl;
-  stream << "\techo '  m.def(\"backward\", &backward, \"GAPC backward\");' "
-         << ">> $@" << endl << "\techo -e '}\\n' >> $@" << endl << endl;
+  inc_indent();
+  stream << indent() << "for (int t_0_i = t_0_left_most; "
+         << "t_0_i <= t_0_right_most; ++t_0_i) {" << endl;
+  inc_indent();
+  stream << indent() << "for (int t_1_i = t_1_left_most; "
+         << "t_1_i <= t_1_right_most; ++t_1_i) {" << endl;
+  inc_indent();
+  stream << indent() << "matrix.index_put_({t_0_i, t_1_i}, "
+         << "A_table.get(t_0_i, t_1_i));" << endl;
+  dec_indent();
+  stream << indent() << "}" << endl;
+  dec_indent();
+  stream << indent() << "}" << endl;
+  dec_indent();
+  stream << indent() << "}" << endl << endl;
+}
+
+void Printer::Cpp::print_pytorch_backward_fn(const AST &ast) {
+  // convert the foward score matrix to a Pytorch tensor
+  stream << indent() << "void get_backward_score_matrix"
+         << "(torch::Tensor &matrix) {" << endl;
+  inc_indent();
+  stream << indent() << "for (int t_0_i = t_0_left_most; "
+         << "t_0_i <= t_0_right_most; ++t_0_i) {" << endl;
+  inc_indent();
+  stream << indent() << "for (int t_1_i = t_1_left_most; "
+         << "t_1_i <= t_1_right_most; ++t_1_i) {" << endl;
+  inc_indent();
+  stream << indent() << "matrix.index_put_({t_0_i, t_1_i}, "
+         << "nt_outside_A(t_0_i, t_1_i));" << endl;
+  dec_indent();
+  stream << indent() << "}" << endl;
+  dec_indent();
+  stream << indent() << "}" << endl;
+  dec_indent();
+  stream << indent() << "}" << endl << endl;
 }
 
 void Printer::Cpp::imports(const AST &ast) {

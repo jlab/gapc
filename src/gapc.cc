@@ -382,6 +382,7 @@ class Main {
     // to be injected
     driver.ast.requested_derivative = opts.derivative;
     driver.ast.current_derivative = opts.derivative > 0 ? 1 : 0;
+    driver.ast.gen_pytorch_interface = opts.gen_pytorch_interface;
 
     if (driver.is_failing()) {
       throw LogError("Seen parse errors.");
@@ -670,7 +671,10 @@ class Main {
     hh.footer(driver.ast);
     hh.end_fwd_decls();
     hh.header_footer(driver.ast);
-    if (grammar->is_outside()) {
+    if (driver.ast.gen_pytorch_interface) {
+      hh.print_pytorch_forward_fn(driver.ast);
+      hh.print_pytorch_backward_fn(driver.ast);
+    } else if (grammar->is_outside()) {
       if (driver.ast.current_derivative > 0) {
         hh.print_run_derivative_fn(driver.ast);
       } else {

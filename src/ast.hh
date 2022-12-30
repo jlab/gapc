@@ -309,6 +309,7 @@ class AST {
    *     of first derivatives
    */
   unsigned int requested_derivative = 0;
+  bool gen_pytorch_interface = false;
 };
 
 #endif  // SRC_AST_HH_
