@@ -56,7 +56,7 @@ std::vector<torch::Tensor> forward_D1(const torch::Tensor &inp,
 // #endif
   gapc::add_event("start");
   obj.cyk();
-  torch::Tensor forward_score_matrix = torch::zeros(obj.tensor_size);
+  torch::Tensor forward_score_matrix = torch::zeros(obj.tensor_size, torch::kFloat64);
   gapc::return_type ans = obj.run();
   obj.get_forward_score_matrix(forward_score_matrix);
   gapc::add_event("end_computation");
@@ -65,7 +65,7 @@ std::vector<torch::Tensor> forward_D1(const torch::Tensor &inp,
 
 std::vector<torch::Tensor> backward_D1(const torch::Tensor &inp,
                                        const char *seq1, const char *seq2) {
-  torch::Tensor backward_score_matrix = torch::zeros(obj.tensor_size);
+  torch::Tensor backward_score_matrix = torch::zeros(obj.tensor_size, torch::kFloat64);
   obj.get_backward_score_matrix(backward_score_matrix);
   gapc::add_event("end");
   return {backward_score_matrix};
@@ -77,7 +77,7 @@ std::vector<torch::Tensor> forward_D2(const torch::Tensor &inp,
   obj_D2 = gapc::class_name_D2();
   obj_D2.init(inp, seq1, seq2, &obj);
   gapc::add_event("start second derivative");
-  torch::Tensor forward_score_matrix = torch::zeros(obj_D2.tensor_size);
+  torch::Tensor forward_score_matrix = torch::zeros(obj_D2.tensor_size, torch::kFloat64);
   gapc::return_type ans = obj_D2.run();
   obj_D2.get_forward_score_matrix(forward_score_matrix);
   gapc::add_event("end_computation of second derivative");
@@ -86,7 +86,7 @@ std::vector<torch::Tensor> forward_D2(const torch::Tensor &inp,
 
 std::vector<torch::Tensor> backward_D2(const torch::Tensor &inp,
                                        const char *seq1, const char *seq2) {
-  torch::Tensor backward_score_matrix = torch::zeros(obj_D2.tensor_size);
+  torch::Tensor backward_score_matrix = torch::zeros(obj_D2.tensor_size, torch::kFloat64);
   obj_D2.get_backward_score_matrix(backward_score_matrix);
   gapc::add_event("end_result of second derivative");
   return {backward_score_matrix};
@@ -94,11 +94,17 @@ std::vector<torch::Tensor> backward_D2(const torch::Tensor &inp,
 #endif
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
-  m.def("forward_D1", &forward_D1, "First derivative forward");
-  m.def("backward_D1", &backward_D1, "First derivative backward");
+  m.def("forward_D1", &forward_D1,
+        "Calculate the 1st derivative score matrix for the forward pass");
+  m.def("backward_D1", &backward_D1,
+        "Calculate the 1st derivative score matrix for the backward pass.\n"
+        "Make sure to execute forward_D1 beforehand!");
 #ifdef SECOND_DERIVATIVE
-  m.def("forward_D2", &forward_D2, "Second derivative forward");
-  m.def("backward_D2", &backward_D2, "Second derivative backward");
+  m.def("forward_D2", &forward_D2,
+        "Calculate the 2nd derivative score matrix for the forward pass");
+  m.def("backward_D2", &backward_D2,
+        "Calculate the 2nd derivative score matrix for the backward pass.\n"
+        "Make sure to execute forward_D2 beforehand!");
 #endif
 }
 

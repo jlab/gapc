@@ -1060,6 +1060,7 @@ void Printer::Cpp::print_window_inc(const Symbol::NT &nt) {
 void Printer::Cpp::print(const Statement::Table_Decl &t) {
   in_class = true;
   bool wmode = ast && ast->window_mode;
+  bool pytorch = ast && ast->gen_pytorch_interface;
 
   std::string tname(t.name() + "_t");
   const Type::Base &dtype = t.datatype();
@@ -1103,6 +1104,14 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   stream << indent() << "empty(zero);" << endl;
   dec_indent();
   stream << indent() << "}" << endl << endl;
+
+  if (pytorch) {
+    stream << indent() << dtype << " *get_array_data() {" << endl;
+    inc_indent();
+    stream << indent() << "return array.data();" << endl;
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
+  }
 
   // start "void init()"
   stream << indent() << "void init(";
@@ -3139,28 +3148,20 @@ void Printer::Cpp::print_pytorch_init_fn(const AST &ast) {
 }
 
 void Printer::Cpp::print_pytorch_forward_fn(const AST &ast) {
-  // convert the foward score matrix to a Pytorch tensor
-  stream << indent() << "void get_forward_score_matrix(torch::Tensor &matrix) {"
-         << endl;
+  // convert the forward score matrix to a Pytorch tensor
+  stream << indent() << "void get_forward_score_matrix"
+         << "(torch::Tensor &matrix) {" << endl;
   inc_indent();
-  stream << indent() << "for (int t_0_i = t_0_left_most; "
-         << "t_0_i <= t_0_right_most; ++t_0_i) {" << endl;
-  inc_indent();
-  stream << indent() << "for (int t_1_i = t_1_left_most; "
-         << "t_1_i <= t_1_right_most; ++t_1_i) {" << endl;
-  inc_indent();
-  stream << indent() << "matrix.index_put_({t_0_i, t_1_i}, "
-         << "A_table.get(t_0_i, t_1_i));" << endl;
-  dec_indent();
-  stream << indent() << "}" << endl;
-  dec_indent();
-  stream << indent() << "}" << endl;
+  stream << indent() << "matrix = torch::from_blob("
+         << "A_table.get_array_data(), "
+         << "{t_0_right_most + 1, t_1_right_most + 1}, "
+         << "torch::kFloat64);" << endl;
   dec_indent();
   stream << indent() << "}" << endl << endl;
 }
 
 void Printer::Cpp::print_pytorch_backward_fn(const AST &ast) {
-  // convert the foward score matrix to a Pytorch tensor
+  // convert the backward score matrix to a Pytorch tensor
   stream << indent() << "void get_backward_score_matrix"
          << "(torch::Tensor &matrix) {" << endl;
   inc_indent();
@@ -3170,12 +3171,15 @@ void Printer::Cpp::print_pytorch_backward_fn(const AST &ast) {
   stream << indent() << "for (int t_1_i = t_1_left_most; "
          << "t_1_i <= t_1_right_most; ++t_1_i) {" << endl;
   inc_indent();
-  stream << indent() << "matrix.index_put_({t_0_i, t_1_i}, "
-         << "nt_outside_A(t_0_i, t_1_i));" << endl;
+  stream << indent() << "nt_outside_A(t_0_i, t_1_i);" << endl;
   dec_indent();
   stream << indent() << "}" << endl;
   dec_indent();
   stream << indent() << "}" << endl;
+  stream << indent() << "matrix = torch::from_blob("
+         << "outside_A_table.get_array_data(), "
+         << "{t_0_right_most + 1, t_1_right_most + 1}, "
+         << "torch::kFloat64);" << endl;
   dec_indent();
   stream << indent() << "}" << endl << endl;
 }
