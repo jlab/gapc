@@ -3048,7 +3048,7 @@ void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
   stream << "\techo 'Generated setup.py and python_interface.cc'"
          << endl << endl;
   stream << "install:" << endl;
-  stream << "\tpython3 setup.py install" << endl << endl;
+  stream << "\tpip3 install ." << endl << endl;
 
   stream << "setup.py:" << endl;
   stream << "\techo 'from setuptools import setup, Extension' > $@" << endl;
@@ -3101,7 +3101,7 @@ void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
                 + "_derivative" + std::to_string(i) + ".hh\"' >> $@" << endl;
     }
   } else if (ast.requested_derivative == 1) {
-    stream << "\techo '#include \"" << header_files << "\"' >> $@" << endl;
+    stream << "\techo '#include " << header_files << "' >> $@" << endl;
   }
   stream << "\tcat $(RTLIB)/generic_pytorch_interface.cc >> $@"
          << endl << endl;;
@@ -3168,7 +3168,7 @@ void Printer::Cpp::print_pytorch_forward_fn(const AST &ast) {
   for (auto i = ast.grammar()->NTs.begin();
       i != ast.grammar()->NTs.end(); ++i) {
     Symbol::NT *nt = dynamic_cast<Symbol::NT*>((*i).second);
-    if (nt && nt->is_partof_outside) {
+    if (nt && !(nt->is_partof_outside)) {
       stream << indent() << "matrices.push_back(torch::from_blob("
              << *(nt->name) << "_table.get_array_data(), "
              << "tensor_size, torch::kFloat64));" << endl;

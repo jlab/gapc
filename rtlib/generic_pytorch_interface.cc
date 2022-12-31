@@ -101,10 +101,12 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
         "Make sure to execute forward_D1 beforehand!");
 #ifdef SECOND_DERIVATIVE
   m.def("forward_D2", &forward_D2,
-        "Calculate the 2nd derivative score matrix for the forward pass");
+        "Calculate the 2nd derivative score matrix for the forward pass.\n"
+        "Make sure to execute forward_D1 and backward_D1 beforehand!");
   m.def("backward_D2", &backward_D2,
         "Calculate the 2nd derivative score matrix for the backward pass.\n"
-        "Make sure to execute forward_D2 beforehand!");
+        "Make sure to execute forward_D1, backward_D1 and "
+        "forward_D2 beforehand!");
 #endif
 }
 
