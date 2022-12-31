@@ -3095,11 +3095,13 @@ void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
   stream << "pytorch_interface.cc: $(RTLIB)/generic_pytorch_interface.cc"
          << endl;
   stream << "\ttouch $@" << endl;
-  if (ast.requested_derivative >= 1) {
+  if (ast.requested_derivative > 1) {
     for (unsigned int i = 1; i <= ast.requested_derivative; ++i) {
       stream << "\techo '#include \"" << basename(remove_dir(opts.header_file))
                 + "_derivative" + std::to_string(i) + ".hh\"' >> $@" << endl;
     }
+  } else if (ast.requested_derivative == 1) {
+    stream << "\techo '#include \"" << header_files << "\"' >> $@" << endl;
   }
   stream << "\tcat $(RTLIB)/generic_pytorch_interface.cc >> $@"
          << endl << endl;;
@@ -3160,21 +3162,26 @@ void Printer::Cpp::print_pytorch_init_fn(const AST &ast) {
 
 void Printer::Cpp::print_pytorch_forward_fn(const AST &ast) {
   // convert the forward score matrix to a Pytorch tensor
-  stream << indent() << "void get_forward_score_matrix"
-         << "(torch::Tensor &matrix) {" << endl;
+  stream << indent() << "void get_forward_score_matrices"
+         << "(std::vector<torch::Tensor> &matrices) {" << endl;
   inc_indent();
-  stream << indent() << "matrix = torch::from_blob("
-         << "A_table.get_array_data(), "
-         << "{t_0_right_most + 1, t_1_right_most + 1}, "
-         << "torch::kFloat64);" << endl;
+  for (auto i = ast.grammar()->NTs.begin();
+      i != ast.grammar()->NTs.end(); ++i) {
+    Symbol::NT *nt = dynamic_cast<Symbol::NT*>((*i).second);
+    if (nt && nt->is_partof_outside) {
+      stream << indent() << "matrices.push_back(torch::from_blob("
+             << *(nt->name) << "_table.get_array_data(), "
+             << "tensor_size, torch::kFloat64));" << endl;
+    }
+  }
   dec_indent();
   stream << indent() << "}" << endl << endl;
 }
 
 void Printer::Cpp::print_pytorch_backward_fn(const AST &ast) {
   // convert the backward score matrix to a Pytorch tensor
-  stream << indent() << "void get_backward_score_matrix"
-         << "(torch::Tensor &matrix) {" << endl;
+  stream << indent() << "void get_backward_score_matrices"
+         << "(std::vector<torch::Tensor> &matrices) {" << endl;
   inc_indent();
   stream << indent() << "for (int t_0_i = t_0_left_most; "
          << "t_0_i <= t_0_right_most; ++t_0_i) {" << endl;
@@ -3185,15 +3192,27 @@ void Printer::Cpp::print_pytorch_backward_fn(const AST &ast) {
   stream << indent() << "// need to calculate everything first "
          << "(results will be added to tensor all at once afterwards)"
          << endl;
-  stream << indent() << "nt_outside_A(t_0_i, t_1_i);" << endl;
+  for (auto i = ast.grammar()->NTs.begin();
+      i != ast.grammar()->NTs.end(); ++i) {
+    Symbol::NT *nt = dynamic_cast<Symbol::NT*>((*i).second);
+    if (nt && nt->is_partof_outside) {
+      stream << indent() << "nt_" << *(nt->name) << "(t_0_i, t_1_i);"
+             << endl;
+    }
+  }
   dec_indent();
   stream << indent() << "}" << endl;
   dec_indent();
   stream << indent() << "}" << endl;
-  stream << indent() << "matrix = torch::from_blob("
-         << "outside_A_table.get_array_data(), "
-         << "{t_0_right_most + 1, t_1_right_most + 1}, "
-         << "torch::kFloat64);" << endl;
+  for (auto i = ast.grammar()->NTs.begin();
+      i != ast.grammar()->NTs.end(); ++i) {
+    Symbol::NT *nt = dynamic_cast<Symbol::NT*>((*i).second);
+    if (nt && nt->is_partof_outside) {
+      stream << indent() << "matrices.push_back(torch::from_blob("
+             << *(nt->name) << "_table.get_array_data(), "
+             << "tensor_size, torch::kFloat64));" << endl;
+    }
+  }
   dec_indent();
   stream << indent() << "}" << endl << endl;
 }
