@@ -145,10 +145,11 @@ static void parse_options(int argc, char **argv, Options *rec) {
       "derivative via forward and backward pass (internally requires outside"
       " code generation AND tabulation of all non-terminals).  0 (default) = "
       "deactivated\n  1 = first derivative")
-    ("pytorch",
-     "Automatically generate a Python/Pytorch module providing a forward and "
-     "backward function for every derivative\n"
-     "(Requires --derivative option to be >=1)");
+    ("as-torchmod", po::value<std::string>(),
+     "Generate adjusted Makefile which builds a Python/Pytorch module "
+     "providing a forward and backward function for every derivative\n"
+     "(Requirements: --derivative option has to be >= 1, torch and pip/"
+     "pip3 Python packages need to be installed for the module build step)");
   po::options_description hidden("");
   hidden.add_options()
     ("backtrack", "deprecated for --backtrace")
@@ -292,11 +293,13 @@ static void parse_options(int argc, char **argv, Options *rec) {
     rec->tab_everything = true;
   }
 
-  if (vm.count("pytorch")) {
+  if (vm.count("as-torchmod")) {
     if (rec->derivative < 1) {
-      throw LogError("--derivative option must be >= 1!");
+      throw LogError("--derivative option must be >= 1 "
+                     "for Pytorch module generation!");
     } else {
-      rec->gen_pytorch_interface = true;
+      rec->as_pytorch_module = true;
+      rec->pytorch_module_mame = vm["as-torchmod"].as<std::string>();
     }
   }
 
@@ -382,7 +385,7 @@ class Main {
     // to be injected
     driver.ast.requested_derivative = opts.derivative;
     driver.ast.current_derivative = opts.derivative > 0 ? 1 : 0;
-    driver.ast.gen_pytorch_interface = opts.gen_pytorch_interface;
+    driver.ast.as_pytorch_module = opts.as_pytorch_module;
 
     if (driver.is_failing()) {
       throw LogError("Seen parse errors.");
@@ -671,7 +674,7 @@ class Main {
     hh.footer(driver.ast);
     hh.end_fwd_decls();
     hh.header_footer(driver.ast);
-    if (driver.ast.gen_pytorch_interface) {
+    if (driver.ast.as_pytorch_module) {
       hh.print_pytorch_forward_fn(driver.ast);
       hh.print_pytorch_backward_fn(driver.ast);
     } else if (grammar->is_outside()) {
@@ -745,7 +748,7 @@ class Main {
   void makefile(const AST &ast) {
     Printer::Cpp mm(driver.ast, opts.m_stream());
     mm.set_argv(argv, argc);
-    if (opts.gen_pytorch_interface) {
+    if (opts.as_pytorch_module) {
       mm.pytorch_makefile(opts, ast);
     } else {
       mm.makefile(opts, ast);

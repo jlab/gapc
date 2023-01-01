@@ -59,7 +59,7 @@ struct Options {
       specialization(0), step_option(0),
       plot_grammar(0), plotgrammar_stream_(NULL),
       derivative(0),
-      gen_pytorch_interface(false) {
+      as_pytorch_module(false) {
   }
 
 
@@ -217,7 +217,8 @@ struct Options {
    */
   int derivative;
 
-  bool gen_pytorch_interface;
+  bool as_pytorch_module;
+  std::string pytorch_module_mame;
 
   bool check();
 };

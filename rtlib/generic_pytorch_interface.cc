@@ -43,7 +43,6 @@ gapc::class_name obj;
 
 std::vector<torch::Tensor> forward_D1(const torch::Tensor &inp,
                                       const char *seq1, const char *seq2) {
-  obj = gapc::class_name();
   obj.init(inp, seq1, seq2);
 // #if defined(__SUNPRO_CC) && __SUNPRO_CC <= 0x5100
 //   #warning Enable sync_with_stdio because of Sun CC 12 Compiler Bug
@@ -74,7 +73,6 @@ std::vector<torch::Tensor> backward_D1(const torch::Tensor &inp,
 #ifdef SECOND_DERIVATIVE
 std::vector<torch::Tensor> forward_D2(const torch::Tensor &inp,
                                       const char *seq1, const char *seq2) {
-  obj_D2 = gapc::class_name_D2();
   obj_D2.init(inp, seq1, seq2, &obj);
   gapc::add_event("start second derivative");
   std::vector<torch::Tensor> forward_score_matrices;

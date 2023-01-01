@@ -1060,7 +1060,7 @@ void Printer::Cpp::print_window_inc(const Symbol::NT &nt) {
 void Printer::Cpp::print(const Statement::Table_Decl &t) {
   in_class = true;
   bool wmode = ast && ast->window_mode;
-  bool pytorch = ast && ast->gen_pytorch_interface;
+  bool pytorch = ast && ast->as_pytorch_module;
 
   std::string tname(t.name() + "_t");
   const Type::Base &dtype = t.datatype();
@@ -1141,6 +1141,9 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
 
   stream << indent() << ptype << " newsize = size(";
   stream << ");" << endl;
+  if (pytorch) {
+    stream << indent() << "array.clear();" << endl;
+  }
   stream << indent() << "array.resize(newsize);" << endl;
   if (t.for_derivatives) {
     stream << indent() << "traces.resize(newsize);" << endl;
@@ -1727,7 +1730,7 @@ void Printer::Cpp::header(const AST &ast) {
       }
     }
     includes();
-    if (ast.gen_pytorch_interface) {
+    if (ast.as_pytorch_module) {
       stream << "#include \"torch/extension.h\"" << endl;
     }
     print_subseq_typedef(ast);
@@ -1741,7 +1744,7 @@ void Printer::Cpp::header(const AST &ast) {
 
   stream << indent() << " public:" << endl;
   inc_indent();
-  if (ast.gen_pytorch_interface) {
+  if (ast.as_pytorch_module) {
     stream << indent() << "std::vector<int64_t> tensor_size;"
            << endl;
   }
@@ -1772,7 +1775,7 @@ void Printer::Cpp::header(const AST &ast) {
   print_filter_decls(ast);
   print_buddy_decls(ast);
   set_tracks(ast);
-  if (ast.gen_pytorch_interface) {
+  if (ast.as_pytorch_module) {
     print_pytorch_init_fn(ast);
   } else {
     print_init_fn(ast);
@@ -3072,8 +3075,8 @@ void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
   stream << "\techo -n 'include_dirs = [\"' >> $@" << endl;
   stream << "\techo -n $(include_dirs) >> $@" << endl;
   stream << "\techo -e '\"]\\n' >> $@" << endl;
-  stream << "\techo -e 'gapc_extension = CppExtension(name = \"gapc\",' >> $@"
-         << endl;
+  stream << "\techo -e 'gapc_extension = CppExtension(name = \""
+         << opts.pytorch_module_mame << "\",' >> $@" << endl;
   stream << "\techo -n '                              depends = [' >> $@"
          << endl;
   stream << "\techo '" << header_files << "],' >> $@" << endl;
@@ -3090,7 +3093,8 @@ void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
          << "libraries,' >> $@" << endl;
   stream << "\techo -e '                              library_dirs = "
          << "library_dirs)\\n' >> $@" << endl;
-  stream << "\techo 'setup(name = \"gapc\",' >> $@" << endl;
+  stream << "\techo 'setup(name = \"" << opts.pytorch_module_mame
+         << "\",' >> $@" << endl;
   stream << "\techo '      version = \"0.0.1\",' >> $@" << endl;
   stream << "\techo '      ext_modules = [gapc_extension],' >> $@" << endl;
   stream << "\techo '      cmdclass = {\"build_ext\": "
@@ -3142,6 +3146,9 @@ void Printer::Cpp::print_pytorch_init_fn(const AST &ast) {
   print_table_init(ast);
   print_zero_init(*ast.grammar());
 
+  if (ast.as_pytorch_module) {
+    stream << indent() << "tensor_size.clear();" << endl;
+  }
   size_t t = 0;
   for (std::vector<Statement::Var_Decl*>::iterator j = ns.begin();
        j != ns.end(); ++j, ++t) {
