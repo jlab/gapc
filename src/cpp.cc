@@ -3031,17 +3031,18 @@ void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
        << "endif" << endl << endl;
 
   stream << "CXXFLAGS := $(CXXFLAGS) | sed 's/c++17/c++14/'" << endl;
-  stream << "compiler_flags := $(CXXFLAGS) | sed -e 's/\\s/\", \"/g'" << endl;
+  stream << "compiler_args := $(CXXFLAGS) | sed -e 's/\\s/\", \"/g'" << endl;
   stream << "LDFLAGS := $(LDFLAGS) | sed 's/-L\\//\\//g'" << endl;
   stream << "LDFLAGS := $(LDFLAGS) | sed -E 's/ -Xlinker -rpath -Xlinker.+//'"
          << endl;
-  stream << "xlinker_flags := $(LDFLAGS) | "
+  stream << "xlinker_args := $(LDFLAGS) | "
          << "sed -e 's/\\s/\", \"-Xlinker\", \"-rpath\", \"-Xlinker\", \"/g'"
          << endl;
-  stream << "linker_flags := $(LDFLAGS) | sed -e 's/\\s/\", \"/g'" << endl;
-  stream << "add_linker_flags := $(LDLIBS) | sed -e 's/\\s/\", \"/g'" << endl;
+  stream << "library_dirs := $(LDFLAGS) | sed -e 's/\\s/\", \"/g'" << endl;
+  stream << "LDLIBS := $(LDLIBS) | sed 's/-l//g'" << endl;
+  stream << "libraries := $(LDLIBS) | sed -e 's/\\s/\", \"/g'" << endl;
   stream << "CPPFLAGS := $(CPPFLAGS) | sed 's/-I\\//\\//g'" << endl;
-  stream << "include_paths := $(CPPFLAGS) | sed -e 's/\\s/\", \"/g'"
+  stream << "include_dirs := $(CPPFLAGS) | sed -e 's/\\s/\", \"/g'"
          << endl << endl;
 
   stream << "gen_files: setup.py pytorch_interface.cc" << endl;
@@ -3051,25 +3052,25 @@ void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
   stream << "\tpip3 install ." << endl << endl;
 
   stream << "setup.py:" << endl;
-  stream << "\techo 'from setuptools import setup, Extension' > $@" << endl;
+  stream << "\techo 'from setuptools import setup' > $@" << endl;
   stream << "\techo -e 'from torch.utils.cpp_extension import "
          << "BuildExtension, CppExtension\\n' >> $@" << endl;
-  stream << "\techo -n 'compiler_flags = [\"' >> $@" << endl;
-  stream << "\techo -n $(compiler_flags) >> $@" << endl;
+  stream << "\techo -n 'compiler_args = [\"' >> $@" << endl;
+  stream << "\techo -n $(compiler_args) >> $@" << endl;
   stream << "\techo -e '\"]\\n' >> $@" << endl;
-  stream << "\techo -n 'linker_flags = [\"' >> $@" << endl;
-  stream << "\techo -n $(linker_flags) >> $@" << endl;
+  stream << "\techo -n 'library_dirs = [\"' >> $@" << endl;
+  stream << "\techo -n $(library_dirs) >> $@" << endl;
   stream << "\techo -e '\"]\\n' >> $@" << endl;
-  stream << "\techo -n 'xlinker_flags = "
+  stream << "\techo -n 'xlinker_args = "
          << "[\"-Xlinker\", \"-rpath\", \"-Xlinker\", \"' >> $@"
          << endl;
-  stream << "\techo -n $(xlinker_flags) >> $@" << endl;
+  stream << "\techo -n $(xlinker_args) >> $@" << endl;
   stream << "\techo -e '\"]\\n' >> $@" << endl;
-  stream << "\techo -n 'add_linker_flags = [\"' >> $@" << endl;
-  stream << "\techo -n $(add_linker_flags) >> $@" << endl;
+  stream << "\techo -n 'libraries = [\"' >> $@" << endl;
+  stream << "\techo -n $(libraries) >> $@" << endl;
   stream << "\techo -e '\"]\\n' >> $@" << endl;
-  stream << "\techo -n 'add_include_paths = [\"' >> $@" << endl;
-  stream << "\techo -n $(include_paths) >> $@" << endl;
+  stream << "\techo -n 'include_dirs = [\"' >> $@" << endl;
+  stream << "\techo -n $(include_dirs) >> $@" << endl;
   stream << "\techo -e '\"]\\n' >> $@" << endl;
   stream << "\techo -e 'gapc_extension = CppExtension(name = \"gapc\",' >> $@"
          << endl;
@@ -3080,14 +3081,17 @@ void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
          << "[\"pytorch_interface.cc\", ' >> $@" << endl;
   stream << "\techo '" << out_files << "],' >> $@" << endl;
   stream << "\techo -e '                              include_dirs = "
-         << "add_include_paths,' >> $@" << endl;
+         << "include_dirs,' >> $@" << endl;
   stream << "\techo -e '                              extra_compile_args = "
-         << "compiler_flags,' >> $@" << endl;
+         << "compiler_args,' >> $@" << endl;
   stream << "\techo -e '                              extra_link_args = "
-         << "add_linker_flags + xlinker_flags,' >> $@" << endl;
+         << "xlinker_args,' >> $@" << endl;
+  stream << "\techo -e '                              libraries = "
+         << "libraries,' >> $@" << endl;
   stream << "\techo -e '                              library_dirs = "
-         << "linker_flags)\\n' >> $@" << endl;
+         << "library_dirs)\\n' >> $@" << endl;
   stream << "\techo 'setup(name = \"gapc\",' >> $@" << endl;
+  stream << "\techo '      version = \"0.0.1\",' >> $@" << endl;
   stream << "\techo '      ext_modules = [gapc_extension],' >> $@" << endl;
   stream << "\techo '      cmdclass = {\"build_ext\": "
          << "BuildExtension})' >> $@" << endl << endl;
