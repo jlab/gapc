@@ -113,7 +113,7 @@ class Checkpoint : public Base {
                             "<< tname << \"\\\" table.\""
              << endl;
      stream << indent() << "          << \" Will retry in \" "
-            << "<< formatted_interval << \".\n\";" << endl;
+            << "<< formatted_interval << \".\\n\";" << endl;
      dec_indent();
      stream << indent() << "}" << endl;
      dec_indent();
@@ -212,9 +212,9 @@ class Checkpoint : public Base {
      stream << indent() << "for (long unsigned int i = 0; i < array.size(); "
                             "i++) tabulated[i] = array[i];" << endl;
      stream << indent() << "std::cout << \"Info: Successfully loaded checkpoint"
-            << " for \\\"\" << tname << \"\\\" table.\n"
-            << "          << Will continue calculating from here.\" "
-            << "<< std::endl;" << endl;
+            << " for \\\"\" << tname << \"\\\" table.\"" << endl;
+     stream << indent() << "          << \"Will continue calculating from here."
+            << "\" << std::endl;" << endl;
      dec_indent();
      stream << indent() << "} catch (const std::ifstream::failure &e) {"
             << endl;
