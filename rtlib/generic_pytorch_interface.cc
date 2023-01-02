@@ -36,13 +36,22 @@
 #include "rtlib/generic_opts.hh"
 #include "torch/extension.h"
 
+// main objects need to be global so both functions have access
 gapc::class_name obj;
 #ifdef SECOND_DERIVATIVE
   gapc::class_name_D2 obj_D2;
 #endif
 
+/*
+   for now, all functions need to be called with two
+   input strings (just like out when compiling out_main.cc);
+   but they can also take tensors/inputs directly from Python/
+   Pytorch (see const torch::Tensor &inp placerholder argument)
+*/
+
 std::vector<torch::Tensor> forward_D1(const torch::Tensor &inp,
                                       const char *seq1, const char *seq2) {
+  // execute forward pass and return first derivative forward score matrices
   obj.init(inp, seq1, seq2);
 // #if defined(__SUNPRO_CC) && __SUNPRO_CC <= 0x5100
 //   #warning Enable sync_with_stdio because of Sun CC 12 Compiler Bug
@@ -64,6 +73,7 @@ std::vector<torch::Tensor> forward_D1(const torch::Tensor &inp,
 
 std::vector<torch::Tensor> backward_D1(const torch::Tensor &inp,
                                        const char *seq1, const char *seq2) {
+  // execute backward pass and return first derivative backward score matrices
   std::vector<torch::Tensor> backward_score_matrices;
   obj.get_backward_score_matrices(backward_score_matrices);
   gapc::add_event("end");
@@ -73,6 +83,7 @@ std::vector<torch::Tensor> backward_D1(const torch::Tensor &inp,
 #ifdef SECOND_DERIVATIVE
 std::vector<torch::Tensor> forward_D2(const torch::Tensor &inp,
                                       const char *seq1, const char *seq2) {
+  // execute forward pass and return second derivative backward score matrices
   obj_D2.init(inp, seq1, seq2, &obj);
   gapc::add_event("start second derivative");
   std::vector<torch::Tensor> forward_score_matrices;
@@ -84,6 +95,7 @@ std::vector<torch::Tensor> forward_D2(const torch::Tensor &inp,
 
 std::vector<torch::Tensor> backward_D2(const torch::Tensor &inp,
                                        const char *seq1, const char *seq2) {
+  // execute backward pass and return second derivative backward score matrices
   std::vector<torch::Tensor> backward_score_matrices;
   obj_D2.get_backward_score_matrices(backward_score_matrices);
   gapc::add_event("end_result of second derivative");
@@ -91,6 +103,7 @@ std::vector<torch::Tensor> backward_D2(const torch::Tensor &inp,
 }
 #endif
 
+// pybind11 binding instructions
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   m.def("forward_D1", &forward_D1,
         "Calculate the 1st derivative score matrix for the forward pass");
