@@ -2598,7 +2598,7 @@ void Printer::Cpp::makefile(const Options &opts) {
   stream << opts.class_name << " : $(OFILES)" << endl
       << "\t$(CXX) -o $@ $^  $(LDFLAGS) $(LDLIBS)";
   if ((opts.checkpointing)) {
-    stream << " -lboost_serialization -lboost_filesystem -lpthread";
+    stream << " -lboost_serialization -lboost_filesystem -lpthread - ldl";
   }
 
   // if (opts.sample) {

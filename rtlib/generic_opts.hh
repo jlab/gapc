@@ -39,8 +39,8 @@ extern "C" {
 #include <exception>
 #include <utility>
 #include <cassert>
-#include <filesystem>
 
+#define CHECKPOINTING_INTEGRATED
 #ifdef CHECKPOINTING_INTEGRATED
 #include "boost/filesystem.hpp"
 #endif
@@ -154,8 +154,8 @@ class Opts {
         << " (-[drk] [0-9]+)* (-h)? (INPUT|-f INPUT-file)\n"
         << "--help,-H,-h                          print this help message\n"
 #ifdef CHECKPOINTING_INTEGRATED
-        << "--checkpointInterval,-c    d:h:m:s    specify the checkpointing "
-        << "interval, default: 0:0:1:0 (1h)\n"
+        << "--checkpointInterval,-p    d:h:m:s    specify the periodic "
+        << "checkpointing interval, default: 0:0:1:0 (1h)\n"
         << "--checkpointOutput,-O      PATH       set the path where to store "
         << "the checkpoints, default: current working directory\n"
         << "                                      The program will also attempt"
@@ -179,7 +179,7 @@ class Opts {
       char *input = 0;
       const option long_opts[] = {
             {"help", no_argument, nullptr, 'H'},
-            {"checkpointInterval", required_argument, nullptr, 'c'},
+            {"checkpointInterval", required_argument, nullptr, 'p'},
             {"checkpointOutput", required_argument, nullptr, 'O'},
             {"checkpointInput", required_argument, nullptr, 'I'},
             {nullptr, no_argument, nullptr, 0}};
@@ -265,7 +265,7 @@ class Opts {
             repeats = std::atoi(optarg);
             break;
 #ifdef CHECKPOINTING_INTEGRATED
-          case 'c' :
+          case 'p' :
             checkpoint_interval = parse_checkpointing_interval(optarg);
             break;
           case 'O' :

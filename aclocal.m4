@@ -1,6 +1,6 @@
-# generated automatically by aclocal 1.15.1 -*- Autoconf -*-
+# generated automatically by aclocal 1.16.5 -*- Autoconf -*-
 
-# Copyright (C) 1996-2017 Free Software Foundation, Inc.
+# Copyright (C) 1996-2021 Free Software Foundation, Inc.
 
 # This file is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
@@ -176,7 +176,9 @@ int main (void)
 AU_ALIAS([AM_PATH_GSL], [AX_PATH_GSL])
 
 m4_include([m4/ax_boost_base.m4])
+m4_include([m4/ax_boost_fileystem.m4])
 m4_include([m4/ax_boost_program_options.m4])
+m4_include([m4/ax_boost_serialization.m4])
 m4_include([m4/ax_boost_unit_test_framework.m4])
 m4_include([m4/ax_check_compile_flag.m4])
 m4_include([m4/ax_compare_version.m4])
