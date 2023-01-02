@@ -98,7 +98,8 @@ class Checkpoint : public Base {
      stream << indent() << "array_out << array;" << endl;
      stream << indent() << "array_fout.close();" << endl;
      stream << indent() << "std::cout << \"Info: Archived \\\"\" << tname << "
-            << "\"\\\" table at current checkpoint.\" << std::endl;" << endl;
+            << "\"\\\" table into \\\"\" << table_path << \"\\\".\" "
+            << "<< std::endl;" << endl;
      dec_indent();
      stream << indent() << "} catch (const std::ofstream::failure &e) {"
              << endl;
@@ -214,7 +215,7 @@ class Checkpoint : public Base {
      stream << indent() << "std::cout << \"Info: Successfully loaded checkpoint"
             << " for \\\"\" << tname << \"\\\" table.\"" << endl;
      stream << indent() << "          << \"Will continue calculating from here."
-            << "\" << std::endl;" << endl;
+            << "\\n\" << std::endl;" << endl;
      dec_indent();
      stream << indent() << "} catch (const std::ifstream::failure &e) {"
             << endl;

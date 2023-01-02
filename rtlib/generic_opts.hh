@@ -27,9 +27,10 @@
 extern "C" {
   #include <getopt.h>
   #include <unistd.h>
-  #include <cstdlib>
+  #include <sys/stat.h>
 }
 
+#include <cstdlib>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -283,6 +284,31 @@ class Opts {
           case 'p' :
             checkpoint_interval = parse_checkpointing_interval(optarg);
             break;
+          case 'I' :
+          {
+            boost::filesystem::path arg_path(optarg);
+            if (arg_path.is_absolute()) {
+              checkpoint_in_path = arg_path;
+            } else {
+              checkpoint_in_path = boost::filesystem::current_path() / arg_path;
+            }
+            if (!boost::filesystem::exists(checkpoint_in_path)) {
+              throw OptException("The input path \"" +
+                                 checkpoint_in_path.string() +
+                                 "\" doesn't exist!");
+            }
+
+            // check user permissions of checkpoint input directory
+            struct stat checkpoint_in_dir;
+            stat(checkpoint_in_path.c_str(), &checkpoint_in_dir);
+            if (!(checkpoint_in_dir.st_mode & S_IRUSR)) {
+              throw OptException("Missing read permissions for"
+                                 " input path \""
+                                 + checkpoint_in_path.string()
+                                 + "\"!");
+            }
+            break;
+          }
           case 'O' :
           {
             boost::filesystem::path arg_path(optarg);
@@ -296,20 +322,30 @@ class Opts {
                                  checkpoint_out_path.string() +
                                  "\" doesn't exist!");
             }
-            break;
-          }
-          case 'I' :
-          {
-            boost::filesystem::path arg_path(optarg);
-            if (arg_path.is_absolute()) {
-              checkpoint_in_path = arg_path;
-            } else {
-              checkpoint_in_path = boost::filesystem::current_path() / arg_path;
-            }
-            if (!boost::filesystem::exists(checkpoint_in_path)) {
-              throw OptException("The input path \"" +
-                                 checkpoint_in_path.string() +
-                                 "\" doesn't exist!");
+
+            // check user permissions of checkpoint output directory
+            struct stat checkpoint_out_dir;
+            stat(checkpoint_out_path.c_str(), &checkpoint_out_dir);
+
+            // if no checkpoint input path was specified, assume
+            // output path is input path
+            bool need_read_permissions = checkpoint_in_path.empty();
+            bool has_read_permissions = (checkpoint_out_dir.st_mode
+                                         & S_IRUSR) &&
+                                        need_read_permissions;
+            bool has_write_permissions = checkpoint_out_dir.st_mode & S_IWUSR;
+
+            if (!has_write_permissions || (need_read_permissions &
+                !has_read_permissions)) {
+              std::string read_perm_msg = (need_read_permissions &
+                                          !has_read_permissions) ?
+                                          "and read" : "";
+              throw OptException("Insufficient permissions for"
+                                 " output path \""
+                                 + checkpoint_out_path.string()
+                                 + "\"! Write "
+                                 + read_perm_msg
+                                 + " permissions are required!");
             }
             break;
           }
