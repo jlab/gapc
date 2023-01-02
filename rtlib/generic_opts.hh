@@ -40,7 +40,6 @@ extern "C" {
 #include <utility>
 #include <cassert>
 
-#define CHECKPOINTING_INTEGRATED
 #ifdef CHECKPOINTING_INTEGRATED
 #include "boost/filesystem.hpp"
 #endif
@@ -155,22 +154,38 @@ class Opts {
         << "--help,-H,-h                          print this help message\n"
 #ifdef CHECKPOINTING_INTEGRATED
         << "--checkpointInterval,-p    d:h:m:s    specify the periodic "
-        << "checkpointing interval, default: 0:0:1:0 (1h)\n"
-        << "--checkpointOutput,-O      PATH       set the path where to store "
-        << "the checkpoints, default: current working directory\n"
+        << "checkpointing\n"
+        << "                                      interval,default: 0:0:1:0 "
+        << "(1h)\n"
+        << "--checkpointOutput,-O      PATH       set path where to store "
+        << "the checkpoints,\n"
+        << "                                      default: current working "
+        << "directory\n"
         << "                                      The program will also attempt"
-        << " to read existing checkpoints from a Logfile from this path.\n"
-        << "                                      Use the --checkpointInput "
-        << "option to explictly set the input path for all checkpoints.\n"
-        << "--checkpointInput,-I       PATH       set the path were to read "
-        << "the checkpoints from, default: \n"
-        << "                                      parsed from "
-        << "a checkpoint Logfile located at path specified by the "
-        << "--checkpointOutput option\n"
+        << " to read\n"
+        << "                                      existing checkpoints from a "
+        << "Logfile\n"
+        << "                                      from this path. Use the\n"
+        << "                                      --checkpointInput option to "
+        << "explictly set\n"
+        << "                                      the input path for "
+        << "all checkpoints.\n"
+        << "--checkpointInput,-I       PATH       set the path were to read\n"
+        << "                                      the checkpoints from, "
+        << "default:\n"
+        << "                                      parsed from a checkpoint "
+        << "Logfile located\n"
+        << "                                      at path specified by the\n"
+        << "                                      --checkpointOutput option\n"
         << "                                      Caution: Make sure that the "
-        << "input checkpoints from this path were generated from the same \n"
-        << "                                      command line inputs as the "
-        << "inputs to this binary to ensure the correctness of the answer.\n"
+        << "input\n"
+        << "                                      checkpoints from this path\n"
+        << "                                      were generated from the same "
+        << "command\n"
+        << "                                      line inputs as the inputs "
+        << "to \n"
+        << "                                      this binary to ensure the\n"
+        << "                                      correctness of the answer.\n"
 #endif
     ;}
 

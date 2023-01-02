@@ -1091,6 +1091,7 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
 
   if (checkpoint) {
     stream << indent() << "boost::filesystem::path table_path;" << endl;
+    stream << indent() << "std::string formatted_interval;" << endl;
   }
 
   stream << t.fn_size() << endl;
@@ -1125,7 +1126,8 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   if (checkpoint) {
     stream << ", boost::filesystem::path out_path," << endl
            << indent() << "          boost::filesystem::path in_path, "
-           << "const std::string &arg_string";
+           << "const std::string &arg_string, "
+           << "std::string formatted_interval";
   }
   stream << ") {" << endl;
   inc_indent();
@@ -1548,8 +1550,9 @@ void Printer::Cpp::print_table_init(const AST &ast) {
 
     stream << "\""<< i->second->table_decl->name() << "\"";
     if (ast.checkpoint) {
-      stream << ", opts.checkpoint_out_path, opts.checkpoint_in_path, "
-             << "arg_string";
+      stream << ", opts.checkpoint_out_path," << endl;
+      stream << indent() << "                opts.checkpoint_in_path, "
+             << "arg_string, formatted_interval";
     }
     stream << ");" << endl;
   }
@@ -2598,7 +2601,7 @@ void Printer::Cpp::makefile(const Options &opts) {
   stream << opts.class_name << " : $(OFILES)" << endl
       << "\t$(CXX) -o $@ $^  $(LDFLAGS) $(LDLIBS)";
   if ((opts.checkpointing)) {
-    stream << " -lboost_serialization -lboost_filesystem -lpthread - ldl";
+    stream << " -lboost_serialization -lboost_filesystem -lpthread -ldl";
   }
 
   // if (opts.sample) {

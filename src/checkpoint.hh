@@ -97,6 +97,8 @@ class Checkpoint : public Base {
                             "array_out(array_fout);" << endl;
      stream << indent() << "array_out << array;" << endl;
      stream << indent() << "array_fout.close();" << endl;
+     stream << indent() << "std::cout << \"Info: Archived \\\"\" << tname << "
+            << "\"\\\" table at current checkpoint.\" << std::endl;" << endl;
      dec_indent();
      stream << indent() << "} catch (const std::ofstream::failure &e) {"
              << endl;
@@ -110,8 +112,8 @@ class Checkpoint : public Base {
      stream << indent() << "std::cerr << \"Error trying to archive \\\"\" "
                             "<< tname << \"\\\" table.\""
              << endl;
-     stream << indent() << "          << \" Will retry at "
-                            "the next checkpoint...\\n\";" << endl;
+     stream << indent() << "          << \" Will retry in \" "
+            << "<< formatted_interval << \".\n\";" << endl;
      dec_indent();
      stream << indent() << "}" << endl;
      dec_indent();
@@ -169,6 +171,8 @@ class Checkpoint : public Base {
 
   void init(Printer::Base &stream) {
      inc_indent(); inc_indent(); inc_indent();
+     stream << indent() << "this->formatted_interval = formatted_interval;"
+            << endl;
      stream << indent() << "std::string executable_name = "
             << "boost::dll::program_location().filename().string();" << endl;
      stream << indent() << "int process_id = getpid();" << endl;
@@ -207,6 +211,10 @@ class Checkpoint : public Base {
                             "in the tabulated vector" << endl;
      stream << indent() << "for (long unsigned int i = 0; i < array.size(); "
                             "i++) tabulated[i] = array[i];" << endl;
+     stream << indent() << "std::cout << \"Info: Successfully loaded checkpoint"
+            << " for \\\"\" << tname << \"\\\" table.\n"
+            << "          << Will continue calculating from here.\" "
+            << "<< std::endl;" << endl;
      dec_indent();
      stream << indent() << "} catch (const std::ifstream::failure &e) {"
             << endl;
