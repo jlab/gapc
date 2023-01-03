@@ -76,7 +76,7 @@ class Checkpoint : public Base {
      stream << "#include \"boost/dll.hpp\"" << endl;
      stream << "#include \"boost/filesystem.hpp\"" << endl;
      stream << "#include <atomic>" << endl;
-     stream << "#include <filesystem>" << endl;
+     stream << "#include <ctime>" << endl;
      stream << "#include <thread>" << endl << endl;
   }
 
@@ -110,8 +110,14 @@ class Checkpoint : public Base {
              << "for this directory.\\n\";" << endl;
      stream << indent() << "} catch (const std::exception &e) {" << endl;
      inc_indent();
-     stream << indent() << "std::cerr << \"Error trying to archive \\\"\" "
-                            "<< tname << \"\\\" table.\""
+     stream << indent() << "std::time_t curr_time = std::time(nullptr);"
+            << endl;
+     stream << indent() << "char curr_time_str[std::size(\"hh:mm:ss\")];"
+            << endl;
+     stream << indent() << "std::strftime(curr_time_str, sizeof(curr_time_str),"
+            << " \"%T\", std::localtime(&curr_time));" << endl;
+     stream << indent() << "std::cerr << \"[\" << curr_time_str << \"] "
+            << "Error trying to archive \\\"\" << tname << \"\\\" table.\""
              << endl;
      stream << indent() << "          << \" Will retry in \" "
             << "<< formatted_interval << \".\\n\";" << endl;

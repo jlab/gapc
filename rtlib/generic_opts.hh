@@ -213,7 +213,7 @@ class Opts {
               "t:T:P:"
 #endif
 #ifdef CHECKPOINTING_INTEGRATED
-              "c:I:O:"
+              "p:I:O:"
 #endif
              "hd:r:k:H:", long_opts, nullptr)) != -1) {
         switch (o) {
