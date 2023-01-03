@@ -69,6 +69,7 @@ class Checkpoint : public Base {
      stream << "#define CHECKPOINTING_INTEGRATED" << endl << endl;
      stream << "extern \"C\" {" << endl;
      stream << indent() << "#include <unistd.h>" << endl;
+     stream << indent() << "#include <sys/resource.h>" << endl;
      stream << "}" << endl;
      stream << "#include \"boost/serialization/vector.hpp\"" << endl;
      stream << "#include \"boost/archive/binary_iarchive.hpp\"" << endl;
@@ -97,8 +98,8 @@ class Checkpoint : public Base {
                             "array_out(array_fout);" << endl;
      stream << indent() << "array_out << array;" << endl;
      stream << indent() << "array_fout.close();" << endl;
-     stream << indent() << "std::cout << \"Info: Archived \\\"\" << tname << "
-            << "\"\\\" table into \\\"\" << table_path << \"\\\".\" "
+     stream << indent() << "std::cerr << \"Info: Archived \\\"\" << tname << "
+            << "\"\\\" table into \" << table_path << \".\" "
             << "<< std::endl;" << endl;
      dec_indent();
      stream << indent() << "} catch (const std::ofstream::failure &e) {"
@@ -218,7 +219,7 @@ class Checkpoint : public Base {
                             "in the tabulated vector" << endl;
      stream << indent() << "for (long unsigned int i = 0; i < array.size(); "
                             "i++) tabulated[i] = array[i];" << endl;
-     stream << indent() << "std::cout << \"Info: Successfully loaded checkpoint"
+     stream << indent() << "std::cerr << \"Info: Successfully loaded checkpoint"
             << " for \\\"\" << tname << \"\\\" table.\"" << endl;
      stream << indent() << "          << \"Will continue calculating from here."
             << "\\n\" << std::endl;" << endl;
@@ -268,8 +269,9 @@ class Checkpoint : public Base {
        std::string table_name = i->second->table_decl->name();
        stream << "              " << indent();
        stream << table_name << ".archive(\"" << table_name << "\");" << endl;
-    }
-
+     }
+     stream << "              " << indent();
+     stream << "update_checkpoint_log();" << endl;
      stream << "               }" << endl;
      stream << "             }).detach();" << endl;
      dec_indent();
@@ -360,8 +362,9 @@ class Checkpoint : public Base {
 
   void create_checkpoint_log(Printer::Base &stream, const nt_tables &tables) {
      inc_indent();
-     stream << indent() << "void create_checkpoint_log(const gapc::Opts &opts, "
-            << "const std::string &arg_string) {" << endl;
+     stream << indent() << "boost::filesystem::path create_checkpoint_log("
+            << "const gapc::Opts &opts, const std::string &arg_string) {"
+            << endl;
      inc_indent();
      stream << indent() << "// initialize a Log file to keep track "
             << "of archive paths" << endl;
@@ -376,13 +379,44 @@ class Checkpoint : public Base {
      stream << indent() << "fout << \"# Format:\\n# [OPTIONS] argv[1] "
             << "argv[2] ...\\n\";" << endl;
      stream << indent() << "fout << \"# path/to/table\\n\";" << endl;
-     stream << indent() << "fout << \"[OPTIONS] \"  << arg_string << \"\\n\";"
+     stream << indent() << "fout << \"# [CHECKPOINT] cpu_time(s) max_rss(kb) "
+            << "\\n\";" << endl;
+     stream << indent() << "fout << \"[OPTIONS] \" << arg_string << \"\\n\";"
             << endl;
      for (auto i = tables.begin(); i != tables.end(); ++i) {
        std::string table_name = i->second->table_decl->name();
        stream << indent() << "fout << " << table_name << ".get_table_path()"
               << "<< \"\\n\";" << endl;
      }
+     stream << indent() << "fout.close();" << endl << endl;
+     dec_indent();
+     stream << indent() << "return logfile_path;" << endl;
+     stream << indent() << "}" << endl << endl;
+     dec_indent();
+  }
+
+  void update_checkpoint_log(Printer::Base &stream) {
+     inc_indent();
+     stream << indent() << "void update_checkpoint_log() {" << endl;
+     inc_indent();
+     stream << indent() << "// add cpu time and max rss from start of "
+            << "program to the current checkpoint" << endl;
+     stream << indent() << "std::ofstream fout(logfile_path, std::ios::out"
+            << " | std::ios::app);" << endl;
+     stream << indent() << "struct rusage curr_usage;" << endl;
+     stream << indent() << "int success = getrusage(RUSAGE_SELF, &curr_usage);"
+            << endl;
+     stream << indent() << "if (success == 0) {" << endl;
+     inc_indent();
+     stream << indent() << "long max_rss = curr_usage.ru_maxrss;" << endl;
+     stream << indent() << "std::clock_t curr_cpu_time = std::clock();" << endl;
+     stream << indent() << "double cpu_time_since_start = 1000.0 * "
+           << "(curr_cpu_time - start_cpu_time) / CLOCKS_PER_SEC;" << endl;
+     stream << indent() << "fout << \"[CHECKPOINT] \""
+            << " << std::to_string(cpu_time_since_start / 1000.0) << \" \""
+            << " << std::to_string(max_rss) << \"\\n\";" << endl;
+     dec_indent();
+     stream << indent() << "}" << endl;
      stream << indent() << "fout.close();" << endl;
      dec_indent();
      stream << indent() << "}" << endl << endl;

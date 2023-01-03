@@ -1469,13 +1469,15 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
     << "sequences does not match.\");\n\n";
 
   if (ast.checkpoint) {
+    stream << indent() << "start_cpu_time = std::clock();"
+           << endl;
     stream << indent() << "checkpoint_interval = opts.checkpoint_interval;"
            << endl;
     stream << indent() << "std::string arg_string = "
            << "get_arg_str(opts.argc, opts.argv);" << endl;
     stream << indent() << "std::string formatted_interval = "
            << "format_interval(checkpoint_interval);" << endl;
-    stream << indent() << "std::cout << \"Checkpointing routine has been "
+    stream << indent() << "std::cerr << \"Checkpointing routine has been "
                        << "integrated. A new checkpoint will be \""
            << endl;
     stream << indent() << "          << \"created every \" << "
@@ -1752,6 +1754,7 @@ void Printer::Cpp::header(const AST &ast) {
     inc_indent();
     stream << indent() << "size_t checkpoint_interval;" << endl;
     stream << indent() << "boost::filesystem::path logfile_path;" << endl;
+    stream << indent() << "std::clock_t start_cpu_time;" << endl;
     dec_indent();
   }
   stream << indent() << " public:" << endl;
@@ -2201,6 +2204,7 @@ void Printer::Cpp::header_footer(const AST &ast) {
     ast.checkpoint->format_interval(stream);
     ast.checkpoint->get_arg_string(stream);
     ast.checkpoint->create_checkpoint_log(stream, ast.grammar()->tabulated);
+    ast.checkpoint->update_checkpoint_log(stream);
     stream << endl;
   }
   dec_indent();
