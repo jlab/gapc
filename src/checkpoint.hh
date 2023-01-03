@@ -425,7 +425,7 @@ class Checkpoint : public Base {
 
   void parse_checkpoint_log(Printer::Base &stream) {
      inc_indent(); inc_indent();
-     stream << indent() << "boost::filesystem::path parse_checkpoint_log("
+     stream << indent() << "void parse_checkpoint_log("
             << "boost::filesystem::path path, const std::string &tname,"
             << endl << indent()
                         << "                                           "
@@ -470,7 +470,6 @@ class Checkpoint : public Base {
      stream << indent() << "}" << endl;
      dec_indent();
      stream << indent() << "}" << endl;
-     stream << indent() << "return input_table_path;" << endl;
      dec_indent();
      stream << indent() << "}" << endl << endl;
      dec_indent(); dec_indent();
