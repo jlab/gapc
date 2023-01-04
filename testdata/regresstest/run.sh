@@ -102,8 +102,10 @@ check_checkpoint_eq()
   seq=$4
   export seq; export cpp_base; export RUN_CPP_FLAGS
 
-  # run command and kill the process after $6 + 1 seconds so checkpoints are created
+  # run command and kill the process after $6 + 1 seconds (== checkpointInterval + 1s)
+  # so checkpoints are created
   timeout $((6+1)) ksh -c './$cpp_base $RUN_CPP_FLAGS $seq'
+  
 
   # run command again (it will load the checkpoints this time)
   run_cpp $cpp_base $3 $4 $5
@@ -117,7 +119,9 @@ check_checkpoint_eq()
     succ_count=$((succ_count+1))
   fi
   echo +------------------------------------------------------------------------------+
-  rm -f string.o
+
+  # remove the table archives after finishing the test
+  rm -f string.o *_table
 }
 
 check_new_old_eq()
