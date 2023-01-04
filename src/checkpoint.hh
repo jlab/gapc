@@ -220,9 +220,9 @@ class Checkpoint : public Base {
      stream << indent() << "for (long unsigned int i = 0; i < array.size(); "
                             "i++) tabulated[i] = array[i];" << endl;
      stream << indent() << "std::cerr << \"Info: Successfully loaded checkpoint"
-            << " for \\\"\" << tname << \"\\\" table.\"" << endl;
+            << " for \\\"\" << tname << \"\\\" table. \"" << endl;
      stream << indent() << "          << \"Will continue calculating from here."
-            << "\\n\" << std::endl;" << endl;
+            << "\" << std::endl;" << endl;
      dec_indent();
      stream << indent() << "} catch (const std::ifstream::failure &e) {"
             << endl;
