@@ -78,6 +78,48 @@ cmp_new_old_output()
   log diff -u -w -B a b
 }
 
+check_checkpoint_eq()
+{
+  # check if checkpoints are created/loaded correctly and if
+  # answers if the program starts from a checkpoint are still correct
+
+  if [[ `echo $1$3$5 | grep $FILTER` != $1$3$5  ]]; then
+    return
+  fi
+
+  # work around 1 sec timestamp filesystems ... WTF?!?
+  sleep 1
+
+  echo +------------------------------------------------------------------------------+
+  failed=0
+  temp=$failed
+
+  cpp_base=${1%%.*}
+  build_cpp $GRAMMAR/$1 $cpp_base $3
+
+  # have to export arguments for the binary execution since timeout will launch
+  # a new subprocess which won't have access to anything defined in the current shell
+  seq=$4
+  export seq; export cpp_base; export RUN_CPP_FLAGS
+
+  # run command and kill the process after $6 + 1 seconds so checkpoints are created
+  timeout $((6+1)) ksh -c './$cpp_base $RUN_CPP_FLAGS $seq'
+
+  # run command again (it will load the checkpoints this time)
+  run_cpp $cpp_base $3 $4 $5
+  cmp_new_old_output $cpp_base $REF $3 $5
+
+  if [ $temp != $failed ]; then
+    echo --++--FAIL--++--
+    err_count=$((err_count+1))
+  else
+    echo OK
+    succ_count=$((succ_count+1))
+  fi
+  echo +------------------------------------------------------------------------------+
+  rm -f string.o
+}
+
 check_new_old_eq()
 {
   if [[ `echo $1$3$5 | grep $FILTER` != $1$3$5  ]]; then
