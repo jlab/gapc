@@ -362,7 +362,7 @@ class Checkpoint : public Base {
 
   void create_checkpoint_log(Printer::Base &stream, const nt_tables &tables) {
      inc_indent();
-     stream << indent() << "boost::filesystem::path create_checkpoint_log("
+     stream << indent() << "void create_checkpoint_log("
             << "const gapc::Opts &opts, const std::string &arg_string) {"
             << endl;
      inc_indent();
@@ -388,9 +388,8 @@ class Checkpoint : public Base {
        stream << indent() << "fout << " << table_name << ".get_table_path()"
               << "<< \"\\n\";" << endl;
      }
-     stream << indent() << "fout.close();" << endl << endl;
+     stream << indent() << "fout.close();" << endl;
      dec_indent();
-     stream << indent() << "return logfile_path;" << endl;
      stream << indent() << "}" << endl << endl;
      dec_indent();
   }
@@ -425,7 +424,7 @@ class Checkpoint : public Base {
 
   void parse_checkpoint_log(Printer::Base &stream) {
      inc_indent(); inc_indent();
-     stream << indent() << "void parse_checkpoint_log("
+     stream << indent() << "boost::filesystem::path parse_checkpoint_log("
             << "boost::filesystem::path path, const std::string &tname,"
             << endl << indent()
                         << "                                           "
@@ -470,6 +469,7 @@ class Checkpoint : public Base {
      stream << indent() << "}" << endl;
      dec_indent();
      stream << indent() << "}" << endl;
+     stream << indent() << "return input_table_path;" << endl;
      dec_indent();
      stream << indent() << "}" << endl << endl;
      dec_indent(); dec_indent();
