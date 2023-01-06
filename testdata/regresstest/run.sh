@@ -102,10 +102,9 @@ check_checkpoint_eq()
   seq=$4
   export seq; export cpp_base; export RUN_CPP_FLAGS
 
-  # run command and kill the process after $6 + 1 seconds (== checkpointInterval + 1s)
+  # run command and kill the process after $6 + 0.5 seconds (== checkpointInterval + 0.5s)
   # so checkpoints are created
-  timeout $((6+1)) $KSH -c './$cpp_base $RUN_CPP_FLAGS $seq'
-  
+  timeout $6.5 $KSH -c './$cpp_base $RUN_CPP_FLAGS $seq'
 
   # run command again (it will load the checkpoints this time)
   run_cpp $cpp_base $3 $4 $5
