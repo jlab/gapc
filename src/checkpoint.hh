@@ -89,7 +89,7 @@ class Checkpoint : public Base {
      stream << indent() << "// save the DP table/array to disk" << endl;
      stream << indent() << "try {" << endl;
      inc_indent();
-     stream << indent() << "std::ofstream array_fout(table_path, "
+     stream << indent() << "std::ofstream array_fout(table_path.c_str(), "
                             "std::ios::binary);" << endl;
      stream << indent() << "if (!(array_fout.good())) {" << endl;
      stream << indent() << "  throw std::ofstream::failure(\"\");" << endl;
@@ -113,7 +113,7 @@ class Checkpoint : public Base {
      inc_indent();
      stream << indent() << "std::time_t curr_time = std::time(nullptr);"
             << endl;
-     stream << indent() << "char curr_time_str[std::size(\"hh:mm:ss\")];"
+     stream << indent() << "char curr_time_str[sizeof(\"hh:mm:ss\")];"
             << endl;
      stream << indent() << "std::strftime(curr_time_str, sizeof(curr_time_str),"
             << " \"%T\", std::localtime(&curr_time));" << endl;
@@ -206,8 +206,8 @@ class Checkpoint : public Base {
                             "and put its contents into array" << endl;
      stream << indent() << "try {" << endl;
      inc_indent();
-     stream << indent() << "std::ifstream array_fin(in_path, "
-                            "std::ios::binary);" << endl;
+     stream << indent() << "std::ifstream array_fin(in_path.c_str(), "
+            << "std::ios::binary);" << endl;
      stream << indent() << "if (!(array_fin.good())) {" << endl;
      stream << indent() << "  throw std::ifstream::failure(\"\");" << endl;
      stream << indent() << "}" << endl;
@@ -374,8 +374,8 @@ class Checkpoint : public Base {
             << "\"_checkpointing_log.txt\";" << endl;
      stream << indent() << "logfile_path = opts.checkpoint_out_path / "
             << "logfile_name;" << endl;
-     stream << indent() << "std::ofstream fout(logfile_path, std::ios::out);"
-            << endl;
+     stream << indent() << "std::ofstream fout(logfile_path.c_str(), "
+            << "std::ios::out);" << endl;
      stream << indent() << "fout << \"# Format:\\n# [OPTIONS] argv[1] "
             << "argv[2] ...\\n\";" << endl;
      stream << indent() << "fout << \"# path/to/table\\n\";" << endl;
@@ -400,8 +400,8 @@ class Checkpoint : public Base {
      inc_indent();
      stream << indent() << "// add cpu time and max rss from start of "
             << "program to the current checkpoint" << endl;
-     stream << indent() << "std::ofstream fout(logfile_path, std::ios::out"
-            << " | std::ios::app);" << endl;
+     stream << indent() << "std::ofstream fout(logfile_path.c_str(), "
+            << "std::ios::out | std::ios::app);" << endl;
      stream << indent() << "struct rusage curr_usage;" << endl;
      stream << indent() << "int success = getrusage(RUSAGE_SELF, &curr_usage);"
             << endl;
@@ -439,7 +439,8 @@ class Checkpoint : public Base {
             << "\"_checkpointing_log.txt\");" << endl;
      stream << indent() << "boost::filesystem::path input_table_path(\"\");"
             << endl;
-     stream << indent() << "std::ifstream fin(path);" << endl;
+     stream << indent() << "std::ifstream fin(path.c_str(), std::ios::binary);"
+            << endl;
      stream << indent() << "if (!(fin.good())) return input_table_path;"
             << endl << endl;
      stream << indent() << "std::string line;" << endl;
