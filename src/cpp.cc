@@ -1143,6 +1143,7 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   stream << ");" << endl;
   if (pytorch) {
     stream << indent() << "array.clear();" << endl;
+    stream << indent() << "traces.clear();" << endl;
   }
   stream << indent() << "array.resize(newsize);" << endl;
   if (t.for_derivatives) {

@@ -83,7 +83,7 @@ std::vector<torch::Tensor> backward_D1(const torch::Tensor &inp,
 #ifdef SECOND_DERIVATIVE
 std::vector<torch::Tensor> forward_D2(const torch::Tensor &inp,
                                       const char *seq1, const char *seq2) {
-  // execute forward pass and return second derivative backward score matrices
+  // execute forward pass and return second derivative forward score matrices
   obj_D2.init(inp, seq1, seq2, &obj);
   gapc::add_event("start second derivative");
   std::vector<torch::Tensor> forward_score_matrices;
