@@ -1056,7 +1056,8 @@ void Symbol::NT::init_table_decl(const AST &ast) {
 
   Tablegen tg;
   tg.set_window_mode(ast.window_mode);
-  table_decl = tg.create(*this, t, ast.code_mode() == Code::Mode::CYK);
+  table_decl = tg.create(*this, t, ast.code_mode() == Code::Mode::CYK,
+                         ast.checkpoint != nullptr);
 }
 
 #include <boost/algorithm/string/replace.hpp>

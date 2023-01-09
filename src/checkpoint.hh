@@ -142,12 +142,24 @@ class Checkpoint : public Base {
 
   void get_table_path(Printer::Base &stream) {
     inc_indent(); inc_indent();
-    stream << indent() << "std::string get_table_path() {" << endl;
+    stream << indent() << "std::string get_table_path() const {" << endl;
     inc_indent();
     stream << indent() << "return table_path.string();" << endl;
     dec_indent();
     stream << indent() << "}" << endl << endl;
     dec_indent(); dec_indent();
+  }
+
+  void get_tabulated_vals_percentage(Printer::Base &stream) {
+     inc_indent(); inc_indent();
+     stream << indent();
+     stream << "double get_tabulated_vals_percentage() const {" << endl;
+     inc_indent();
+     stream << indent() << "return static_cast<double>(tabulated_vals_counter) "
+            << "/ tabulated.size() * 100.0;" << endl;
+     dec_indent();
+     stream << indent() << "}" << endl << endl;
+     dec_indent(); dec_indent();
   }
 
   void find_table(Printer::Base &stream) {
@@ -378,9 +390,18 @@ class Checkpoint : public Base {
             << "std::ios::out);" << endl;
      stream << indent() << "fout << \"# Format:\\n# [OPTIONS] argv[1] "
             << "argv[2] ...\\n\";" << endl;
-     stream << indent() << "fout << \"# path/to/table\\n\";" << endl;
-     stream << indent() << "fout << \"# [CHECKPOINT] cpu_time(s) max_rss(kb) "
-            << "\\n\";" << endl;
+     for (auto i = tables.begin(); i != tables.end(); ++i) {
+       std::string table_name = i->second->table_decl->name();
+       stream << indent() << "fout << \"# path/to/" << table_name << "\\n\";"
+              << endl;
+     }
+     // stream << indent() << "fout << \"# path/to/table\\n\";" << endl;
+     stream << indent() << "fout << \"# [CHECKPOINT] cpu_time(s) max_rss(kb) ";
+     for (auto i = tables.begin(); i != tables.end(); ++i) {
+       std::string table_name = i->second->table_decl->name();
+       stream << table_name << "(%) ";
+     }
+     stream << "\\n\";" << endl;
      stream << indent() << "fout << \"[OPTIONS] \" << arg_string << \"\\n\";"
             << endl;
      for (auto i = tables.begin(); i != tables.end(); ++i) {
@@ -394,7 +415,7 @@ class Checkpoint : public Base {
      dec_indent();
   }
 
-  void update_checkpoint_log(Printer::Base &stream) {
+  void update_checkpoint_log(Printer::Base &stream, const nt_tables &tables) {
      inc_indent();
      stream << indent() << "void update_checkpoint_log() {" << endl;
      inc_indent();
@@ -413,7 +434,13 @@ class Checkpoint : public Base {
            << "(curr_cpu_time - start_cpu_time) / CLOCKS_PER_SEC;" << endl;
      stream << indent() << "fout << \"[CHECKPOINT] \""
             << " << std::to_string(cpu_time_since_start / 1000.0) << \" \""
-            << " << std::to_string(max_rss) << \"\\n\";" << endl;
+            << " << std::to_string(max_rss) << \" \";" << endl;
+     for (auto i = tables.begin(); i != tables.end(); ++i) {
+       std::string table_name = i->second->table_decl->name();
+       stream << indent() << "fout << " << table_name
+              << ".get_tabulated_vals_percentage() << \" \";" << endl;
+     }
+     stream << endl << indent() << "fout << \"\\n\";" << endl;
      dec_indent();
      stream << indent() << "}" << endl;
      stream << indent() << "fout.close();" << endl;

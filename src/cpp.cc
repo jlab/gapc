@@ -1092,6 +1092,7 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   if (checkpoint) {
     stream << indent() << "boost::filesystem::path table_path;" << endl;
     stream << indent() << "std::string formatted_interval;" << endl;
+    stream << indent() << "size_t tabulated_vals_counter = 0;" << endl << endl;
   }
 
   stream << t.fn_size() << endl;
@@ -1110,6 +1111,7 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
     ast->checkpoint->archive(stream);
     ast->checkpoint->remove(stream);
     ast->checkpoint->get_table_path(stream);
+    ast->checkpoint->get_tabulated_vals_percentage(stream);
     ast->checkpoint->parse_checkpoint_log(stream);
     ast->checkpoint->find_table(stream);
   }
@@ -2204,7 +2206,7 @@ void Printer::Cpp::header_footer(const AST &ast) {
     ast.checkpoint->format_interval(stream);
     ast.checkpoint->get_arg_string(stream);
     ast.checkpoint->create_checkpoint_log(stream, ast.grammar()->tabulated);
-    ast.checkpoint->update_checkpoint_log(stream);
+    ast.checkpoint->update_checkpoint_log(stream, ast.grammar()->tabulated);
     stream << endl;
   }
   dec_indent();

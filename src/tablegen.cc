@@ -49,7 +49,8 @@ Tablegen::Tablegen()
   cond(0),
   dtype(0),
   cyk_(false),
-  window_mode_(false) {
+  window_mode_(false),
+  checkpoint_(false) {
   // FIXME?
   type = new ::Type::Size();
 
@@ -348,8 +349,9 @@ void Tablegen::offset(size_t track_pos, itr f, const itr &e) {
 #include "symbol.hh"
 
 Statement::Table_Decl *Tablegen::create(Symbol::NT &nt,
-    std::string *name, bool cyk) {
+    std::string *name, bool cyk, bool checkpoint) {
   cyk_ = cyk;
+  checkpoint_ = checkpoint;
   std::list<Expr::Base*> ors;
   nt.gen_ys_guards(ors);
   if (!ors.empty())
@@ -475,6 +477,13 @@ Fn_Def *Tablegen::gen_tab() {
           new Var_Acc::Plain(new std::string("tabulated")), off),
         new Expr::Const(new Const::Bool(true)));
     c.push_back(y);
+  }
+
+  // increase total tabulated vals counter
+  if (checkpoint_) {
+    Statement::Increase *z =
+    new Statement::Increase(new std::string("tabulated_vals_counter"));
+    c.push_back(z);
   }
 
   f->set_statements(c);

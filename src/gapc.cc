@@ -565,6 +565,23 @@ class Main {
     // for example for Min or max choice functions
     driver.ast.instance_grammar_eliminate_lists(instance);
 
+    if ((opts.checkpointing)) {
+      bool answer_type_supported = Printer::Checkpoint::is_supported(
+                                   driver.ast.grammar()->tabulated);
+
+      // only enable checkpointing if type of every table is supported
+      // until then: no checkpointing by default
+      if (answer_type_supported) {
+        driver.ast.checkpoint = new Printer::
+                                    Checkpoint();
+        Log::instance()->normalMessage("Checkpointing routine integrated.");
+      } else {
+        Log::instance()->warning("Checkpointing routine could not be integrated"
+                                 ", because serialization of answer type"
+                                 " isn't supported yet.");
+      }
+    }
+
     Grammar *grammar = driver.ast.grammar();
     grammar->init_list_sizes();
     driver.ast.warn_missing_choice_fns(instance);
@@ -607,23 +624,6 @@ class Main {
         "Graphviz representation of selected grammar has been saved in '"
         + opts.plot_grammar_file + "'.\nUse e.g. 'dot -Tpdf "
         + opts.plot_grammar_file + " > foo.pdf' to generate a PDF.");
-    }
-
-    if ((opts.checkpointing)) {
-      bool answer_type_supported = Printer::Checkpoint::is_supported(
-                                   driver.ast.grammar()->tabulated);
-
-      // only enable checkpointing if type of every table is supported
-      // until then: no checkpointing by default
-      if (answer_type_supported) {
-        driver.ast.checkpoint = new Printer::
-                                    Checkpoint();
-        Log::instance()->normalMessage("Checkpointing routine integrated.");
-      } else {
-        Log::instance()->warning("Checkpointing routine could not be integrated"
-                                 ", because serialization of answer type"
-                                 " isn't supported yet.");
-      }
     }
 
     driver.ast.set_class_name(opts.class_name);
