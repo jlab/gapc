@@ -407,24 +407,21 @@ bool Algebra::check_derivative() {
         std::ostringstream o1;
         o1 << *i->second->return_type;
         ans_type = o1.str();
+        break;
       }
   }
 
   hashtable<std::string, Fn_Def*>::const_iterator i = this->fns.find(
       FN_NAME_DERIVATIVE_NORMALIZER);
   if (i == this->fns.end()) {
-    std::ostringstream o1;
-    o1 << *i->second->return_type;
-    std::string ans_type = o1.str();
-
     std::string msg =
 "You requested the computation of derivatives. This requires the "
 "conversion of\n"
 "weights of alternative sub-solutions (q) into probabilities. Please"
 " provide\n"
-"an additional algebra function:\n\n    " + ans_type + " " + \
+"an additional algebra function, e.g.:\n\n    " + ans_type + " " + \
 FN_NAME_DERIVATIVE_NORMALIZER + "(" + ans_type + " q, " + ans_type + \
-" pfunc)\n\n"
+" pfunc) {\n      return q <OPERATOR> pfunc;\n    }\n\n"
 "to your algebra \"" + *this->name + "\". Depending on your scoring "
 "schema and\n"
 "choice function, the body of " + FN_NAME_DERIVATIVE_NORMALIZER + \
