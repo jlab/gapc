@@ -496,5 +496,10 @@ check_new_old_eq_twotrack alignments.gap unused firstD "frzeitei" nwjamiederiv "
 check_new_old_eq_twotrack alignments.gap unused firstD_gotoh "freizunt" gotohderiv "frnt"
 check_new_old_eq nodangle.gap unused pfunc "GCaaaGC" nodanglederiv
 check_new_old_eq nodangle.gap unused pfunc "CCaCCaaaGGaCCaaaGGaCCaaaGGaGG" nodanglederivlong
+
 # results of the below HMM where extensively validated by Stefan via Excel and python implementations
-check_new_old_eq hmm_sonneregen_properEnd.gap unused fwd "SSRR" sonneregen1deriv
+# tests for special "normalize_derivative" algebra function
+CPPFLAGS_EXTRA="$DEFAULT_CPPFLAGS_EXTRA"  # for negexpsum function, defined as external *.hh file
+check_new_old_eq hmm_sonneregen_properEnd.gap unused fwd "SSRR" sonneregen1deriv # probs - sum
+check_new_old_eq hmm_sonneregen_properEnd.gap unused fwd_log "SSRR" sonneregen1deriv_log # log - expsum
+check_new_old_eq hmm_sonneregen_properEnd.gap unused fwd_neglog "SSRR" sonneregen1deriv_neglog # neglog - negexpsum
