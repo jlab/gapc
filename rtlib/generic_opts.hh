@@ -104,10 +104,8 @@ class Opts {
         << " (-[tT] [0-9]+)? (-P PARAM-file)?"
 #endif
         << " (-[drk] [0-9]+)* (INPUT|-f INPUT-file)\n"
-        << "--help,-h         print this help message\n"
-        << "--printCall,-v    print the GAPC call that \n"
-        << "                  generated the source code \n"
-        << "                  of this binary\n";
+        << "--help,-h         print this help message\n\n"
+        << "GAPC call: \"" << GAPC_CALL_STRING << "\"\n\n";
     }
 
     void parse(int argc, char **argv) {
@@ -115,7 +113,6 @@ class Opts {
       char *input = 0;
       const option long_opts[] = {
             {"help", no_argument, nullptr, 'h'},
-            {"printCall", no_argument, nullptr, 'v'},
             {nullptr, no_argument, nullptr, 0}};
 #ifdef LIBRNA_RNALIB_H_
       char *par_filename = 0;
@@ -188,9 +185,6 @@ class Opts {
           case 'r' :
             repeats = std::atoi(optarg);
             break;
-          case 'v' :
-            print_call = true;
-            break;
           case '?' :
           case ':' :
             {
@@ -206,7 +200,7 @@ class Opts {
             }
         }
       }
-      if (!input && !print_call) {
+      if (!input) {
         if (optind == argc)
           throw OptException("Missing input sequence or no -f.");
         for (; optind < argc; ++optind) {
