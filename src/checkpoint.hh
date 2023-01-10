@@ -390,6 +390,8 @@ class Checkpoint : public Base {
             << "std::ios::out);" << endl;
      stream << indent() << "fout << \"# Format:\\n# [OPTIONS] argv[1] "
             << "argv[2] ...\\n\";" << endl;
+     // stream << indent() << "fout << \"# [GAPC-CALL] \" << GAPC_CALL_STRING "
+     //        << "\"\\n\";" << endl;
      for (auto i = tables.begin(); i != tables.end(); ++i) {
        std::string table_name = i->second->table_decl->name();
        stream << indent() << "fout << \"# path/to/" << table_name << "\\n\";"

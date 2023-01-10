@@ -110,8 +110,8 @@ class Opts {
     unsigned int repeats;
     unsigned k;
 
-    size_t checkpoint_interval;  // default interval: 3600s (1h)
 #ifdef CHECKPOINTING_INTEGRATED
+    size_t checkpoint_interval;  // default interval: 3600s (1h)
     boost::filesystem::path  checkpoint_out_path;  // default path: cwd
     boost::filesystem::path  checkpoint_in_path;  // default: empty
 #endif
@@ -130,8 +130,8 @@ class Opts {
       delta(0),
       repeats(1),
       k(3),
-      checkpoint_interval(3600),
 #ifdef CHECKPOINTING_INTEGRATED
+      checkpoint_interval(3600),
       checkpoint_out_path(boost::filesystem::current_path()),
       checkpoint_in_path(boost::filesystem::path("")),
 #endif
@@ -152,11 +152,11 @@ class Opts {
         << " (-[tT] [0-9]+)? (-P PARAM-file)?"
 #endif
         << " (-[drk] [0-9]+)* (-h)? (INPUT|-f INPUT-file)\n"
-        << "--help,-H,-h                          print this help message\n"
+        << "--help   ,-h                          print this help message\n"
 #ifdef CHECKPOINTING_INTEGRATED
         << "--checkpointInterval,-p    d:h:m:s    specify the periodic "
         << "checkpointing\n"
-        << "                                      interval,default: 0:0:1:0 "
+        << "                                      interval,default: 0:1:0:0 "
         << "(1h)\n"
         << "--checkpointOutput,-O      PATH       set path where to store "
         << "the checkpoints,\n"
@@ -194,7 +194,7 @@ class Opts {
       int o = 0;
       char *input = 0;
       const option long_opts[] = {
-            {"help", no_argument, nullptr, 'H'},
+            {"help", no_argument, nullptr, 'h'},
             {"checkpointInterval", required_argument, nullptr, 'p'},
             {"checkpointOutput", required_argument, nullptr, 'O'},
             {"checkpointInput", required_argument, nullptr, 'I'},
@@ -267,10 +267,6 @@ class Opts {
             k = std::atoi(optarg);
             break;
           case 'h' :
-            help(argv);
-            std::exit(0);
-            break;
-          case 'H' :
             help(argv);
             std::exit(0);
             break;
