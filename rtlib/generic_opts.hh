@@ -104,11 +104,11 @@ class Opts {
         << " (-[tT] [0-9]+)? (-P PARAM-file)?"
 #endif
         << " (-[drk] [0-9]+)* (INPUT|-f INPUT-file)\n"
-        << "--help,-h         print this help message\n\n"
+        << "--help,-h         print this help message\n"
 #ifdef GAPC_CALL_STRING
-        << "GAPC call: \"" << GAPC_CALL_STRING << "\"\n\n"
+        << "GAPC call: \"" << GAPC_CALL_STRING << "\"\n"
 #endif
-      ;  
+        << "\n";
     }
 
     void parse(int argc, char **argv) {
