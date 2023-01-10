@@ -81,6 +81,7 @@ class Base {
   bool fwd_decls;
 
   std::string id_string;
+  std::string gapc_call_string;
 
  public:
   Base() : ind_count(0), out(std::cerr), line_number(0), stream(*this),

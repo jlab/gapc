@@ -24,8 +24,10 @@
 #ifndef RTLIB_GENERIC_OPTS_HH_
 #define RTLIB_GENERIC_OPTS_HH_
 
-
-#include <unistd.h>
+extern "C" {
+  #include <getopt.h>
+  #include <unistd.h>
+}
 
 #include <iostream>
 #include <fstream>
@@ -71,6 +73,7 @@ class Opts {
     unsigned int delta;
     unsigned int repeats;
     unsigned k;
+    bool print_call;
 
     Opts()
       :
@@ -83,7 +86,8 @@ class Opts {
       window_increment(0),
       delta(0),
       repeats(1),
-      k(3) {
+      k(3),
+      print_call(false) {
     }
 
     ~Opts() {
@@ -99,23 +103,31 @@ class Opts {
 #ifdef LIBRNA_RNALIB_H_
         << " (-[tT] [0-9]+)? (-P PARAM-file)?"
 #endif
-        << " (-[drk] [0-9]+)* (-h)? (INPUT|-f INPUT-file)\n";
+        << " (-[drk] [0-9]+)* (INPUT|-f INPUT-file)\n"
+        << "--help,-h         print this help message\n"
+        << "--printCall,-v    print the GAPC call that \n"
+        << "                  generated the source code \n"
+        << "                  of this binary\n";
     }
 
     void parse(int argc, char **argv) {
       int o = 0;
       char *input = 0;
+      const option long_opts[] = {
+            {"help", no_argument, nullptr, 'h'},
+            {"printCall", no_argument, nullptr, 'v'},
+            {nullptr, no_argument, nullptr, 0}};
 #ifdef LIBRNA_RNALIB_H_
       char *par_filename = 0;
 #endif
-      while ((o = getopt(argc, argv, ":f:"
+      while ((o = getopt_long(argc, argv, ":f:"
 #ifdef WINDOW_MODE
               "w:i:"
 #endif
 #ifdef LIBRNA_RNALIB_H_
               "t:T:P:"
 #endif
-              "hd:r:k:")) != -1) {
+              "hvd:r:k:", long_opts, nullptr)) != -1) {
         switch (o) {
           case 'f' :
             {
@@ -176,6 +188,9 @@ class Opts {
           case 'r' :
             repeats = std::atoi(optarg);
             break;
+          case 'v' :
+            print_call = true;
+            break;
           case '?' :
           case ':' :
             {
@@ -191,7 +206,7 @@ class Opts {
             }
         }
       }
-      if (!input) {
+      if (!input && !print_call) {
         if (optind == argc)
           throw OptException("Missing input sequence or no -f.");
         for (; optind < argc; ++optind) {

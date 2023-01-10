@@ -1578,7 +1578,13 @@ void Printer::Cpp::print_init_fn(const AST &ast) {
 
   inc_indent();
   stream << indent() << "const std::vector<std::pair<const char *, unsigned> >"
-    << " &inp = opts.inputs;\n";
+    << " &inp = opts.inputs;" << endl << endl;
+  stream << indent() << "if (opts.print_call) {" << endl;
+  inc_indent();
+  stream << indent() << "std::cerr << gapc_call_string << std::endl;" << endl;
+  stream << indent() << "exit(0);" << endl;
+  dec_indent();
+  stream << indent() << "}" << endl << endl;
 
   print_buddy_init(ast);
   print_seq_init(ast);
@@ -1688,9 +1694,16 @@ void Printer::Cpp::header(const AST &ast) {
     print_subseq_typedef(ast);
     print_type_defs(ast);
   }
+
   imports(ast);
   print_hash_decls(ast);
+
   stream << indent() << "class " << class_name << " {" << endl;
+  stream << indent() << " private:" << endl;
+  inc_indent();
+  stream << indent() << "std::string gapc_call_string = \""
+         << gapc_call_string << "\";" << endl << endl;
+  dec_indent();
   stream << indent() << " public:" << endl;
   inc_indent();
 
