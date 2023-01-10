@@ -105,7 +105,10 @@ class Opts {
 #endif
         << " (-[drk] [0-9]+)* (INPUT|-f INPUT-file)\n"
         << "--help,-h         print this help message\n\n"
-        << "GAPC call: \"" << GAPC_CALL_STRING << "\"\n\n";
+#ifdef GAPC_CALL_STRING
+        << "GAPC call: \"" << GAPC_CALL_STRING << "\"\n\n"
+#endif
+      ;  
     }
 
     void parse(int argc, char **argv) {
