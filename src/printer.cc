@@ -458,7 +458,7 @@ void Printer::Base::set_argv(char **argv, int argc) {
       gapc_call << ' ';
     }
   }
-  
+
   gapc_version_string = gapc::version_id;
   gapc_call_string = gapc_call.str();
   o << gapc_call_string;
