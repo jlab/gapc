@@ -122,7 +122,7 @@ class Opts {
 #ifdef LIBRNA_RNALIB_H_
               "t:T:P:"
 #endif
-              "hvd:r:k:")) != -1) {
+              "hd:r:k:")) != -1) {
         switch (o) {
           case 'f' :
             {
