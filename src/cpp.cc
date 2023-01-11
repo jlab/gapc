@@ -1686,6 +1686,8 @@ void Printer::Cpp::header(const AST &ast) {
     }
 
     stream << "#define GAPC_CALL_STRING \"" << gapc_call_string << "\""
+           << endl;
+    stream << "#define GAPC_VERSION_STRING \"" << gapc_version_string << "\""
            << endl << endl;
     includes();
     print_subseq_typedef(ast);

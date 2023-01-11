@@ -105,8 +105,9 @@ class Opts {
 #endif
         << " (-[drk] [0-9]+)* (INPUT|-f INPUT-file)\n"
         << "--help,-h         print this help message\n"
-#ifdef GAPC_CALL_STRING
-        << "GAPC call: \"" << GAPC_CALL_STRING << "\"\n"
+#if defined(GAPC_CALL_STRING) && defined(GAPC_VERSION_STRING)
+        << "GAPC call:        \"" << GAPC_CALL_STRING << "\"\n"
+				<< "GAPC version:     \"" << GAPC_VERSION_STRING << "\"\n"
 #endif
         << "\n";
     }
