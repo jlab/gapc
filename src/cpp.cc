@@ -1115,6 +1115,7 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
     ast->checkpoint->get_tabulated_vals_percentage(stream);
     ast->checkpoint->parse_checkpoint_log(stream);
     ast->checkpoint->find_table(stream);
+    ast->checkpoint->find_logfile(stream);
   }
 
   // start "void init()"

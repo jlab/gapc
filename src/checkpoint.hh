@@ -165,8 +165,8 @@ class Checkpoint : public Base {
   void find_table(Printer::Base &stream) {
      inc_indent(); inc_indent();
      stream << indent() << "boost::filesystem::path find_table("
-            << "boost::filesystem::path path, const std::string &tname) {"
-            << endl;
+            << "const boost::filesystem::path &path, const std::string &tname)"
+            << " {" << endl;
      inc_indent();
      stream << indent() << "// find the table archive in the "
             << "user-specified directory" << endl;
@@ -177,6 +177,38 @@ class Checkpoint : public Base {
      stream << indent() << "curr_file = entry.path().string();" << endl;
      stream << indent() << "if (curr_file.find(tname) != curr_file.npos) {"
             << endl;
+     inc_indent();
+     stream << indent() << "return entry.path();" << endl;
+     dec_indent();
+     stream << indent() << "}" << endl;
+     dec_indent();
+     stream << indent() << "}" << endl;
+     stream << indent() << "return boost::filesystem::path(\"\");" << endl;
+     dec_indent();
+     stream << indent() << "}" << endl << endl;
+     dec_indent(); dec_indent();
+  }
+
+  void find_logfile(Printer::Base &stream) {
+     inc_indent(); inc_indent();
+     stream << indent() << "boost::filesystem::path find_logfile("
+            << "const boost::filesystem::path &path, "
+            << "const boost::filesystem::path &curr_logfile_path) {"
+            << endl;
+     inc_indent();
+     stream << indent() << "// find the Logfile in the "
+            << "user-specified directory" << endl;
+     stream << indent() << "std::string curr_file;" << endl;
+     stream << indent() << "for (const auto &entry : "
+            << "boost::filesystem::directory_iterator(path)) {" << endl;
+     inc_indent();
+     stream << indent() << "// skip the Logfile this binary created"
+            << endl;
+     stream << indent() << "if (entry.path() == curr_logfile_path) "
+            << "continue;" << endl;
+     stream << indent() << "curr_file = entry.path().string();" << endl;
+     stream << indent() << "if (curr_file.find(\"_checkpointing_log.txt\") "
+            << "!= curr_file.npos) {" << endl;
      inc_indent();
      stream << indent() << "return entry.path();" << endl;
      dec_indent();
@@ -200,8 +232,8 @@ class Checkpoint : public Base {
      stream << indent() << "if (in_path.empty()) {" << endl;
      inc_indent();
      stream << indent() << "in_table_path = "
-            << "parse_checkpoint_log(tname, arg_string, logfile_path);"
-            << endl;
+            << "parse_checkpoint_log(tname, arg_string, out_path, "
+            << "logfile_path);" << endl;
      stream << indent() << "in_path_error_msg = \"in Logfile\";" << endl;
      dec_indent();
      stream << indent() << "} else {" << endl;
@@ -347,9 +379,17 @@ class Checkpoint : public Base {
      stream << indent() << "int i = 1;" << endl;
      stream << indent() << "while (i < argc) {" << endl;
      inc_indent();
-     stream << indent() << "if (std::strcmp(argv[i], \"--checkpointInterval\")"
+     stream << indent() << "if (std::strcmp(argv[i], \"-p\")"
             << " == 0 ||" << endl;
-     stream << indent() << "    std::strcmp(argv[i], \"--checkpointPath\")"
+     stream << indent() << "    std::strcmp(argv[i], \"-I\")"
+            << " == 0 ||" << endl;
+     stream << indent() << "    std::strcmp(argv[i], \"-O\")"
+            << " == 0 ||" << endl;
+     stream << indent() << "    std::strcmp(argv[i], \"--checkpointOutput\")"
+            << " == 0 ||" << endl;
+     stream << indent() << "    std::strcmp(argv[i], \"--checkpointInput\")"
+            << " == 0 ||" << endl;
+     stream << indent() << "    std::strcmp(argv[i], \"--checkpointInterval\")"
             << " == 0) {" << endl;
      inc_indent();
      stream << indent() << "i += 2;" << endl;
@@ -446,19 +486,22 @@ class Checkpoint : public Base {
      stream << indent() << "boost::filesystem::path parse_checkpoint_log("
             << "const std::string &tname, const std::string &arg_string,"
             << endl
-            << indent() << "                                              "
-            << "const boost::filesystem::path &logfile_path) {"
+            << indent() << "                                             "
+            << "const boost::filesystem::path &path, "
+            << "const boost::filesystem::path &curr_logfile_path) {"
             << endl;
      inc_indent();
      stream << indent() << "// parse the checkpoint log and look "
             << "for checkpoints" << endl;
      stream << indent() << "// that were created with identical program "
             << "input (stored in arg_string)" << endl;
-     stream << indent() << "boost::filesystem::path input_table_path(\"\");"
+     stream << indent() << "boost::filesystem::path logfile_path = "
+            << "find_logfile(path, curr_logfile_path);" << endl;
+     stream << indent() << "boost::filesystem::path inp_table_path(\"\");"
             << endl;
      stream << indent() << "std::ifstream fin(logfile_path.c_str(), "
             << "std::ios::binary);" << endl;
-     stream << indent() << "if (!(fin.good())) return input_table_path;"
+     stream << indent() << "if (!(fin.good())) return in_table_path;"
             << endl << endl;
      stream << indent() << "std::string line;" << endl;
      stream << indent() << "std::string options_line_start = \"[OPTIONS] \";"
@@ -480,14 +523,14 @@ class Checkpoint : public Base {
      stream << indent() << "if (check && line.find(tname) != line.npos) {"
             << endl;
      inc_indent();
-     stream << indent() << "input_table_path = boost::filesystem::path(line);"
+     stream << indent() << "inp_table_path = boost::filesystem::path(line);"
             << endl;
      stream << indent() << "break;" << endl;
      dec_indent();
      stream << indent() << "}" << endl;
      dec_indent();
      stream << indent() << "}" << endl;
-     stream << indent() << "return input_table_path;" << endl;
+     stream << indent() << "return inp_table_path;" << endl;
      dec_indent();
      stream << indent() << "}" << endl << endl;
      dec_indent(); dec_indent();
