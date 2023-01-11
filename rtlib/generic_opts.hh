@@ -73,7 +73,6 @@ class Opts {
     unsigned int delta;
     unsigned int repeats;
     unsigned k;
-    bool print_call;
 
     Opts()
       :
@@ -86,8 +85,7 @@ class Opts {
       window_increment(0),
       delta(0),
       repeats(1),
-      k(3),
-      print_call(false) {
+      k(3) {
     }
 
     ~Opts() {
@@ -103,8 +101,7 @@ class Opts {
 #ifdef LIBRNA_RNALIB_H_
         << " (-[tT] [0-9]+)? (-P PARAM-file)?"
 #endif
-        << " (-[drk] [0-9]+)* (INPUT|-f INPUT-file)\n"
-        << "--help,-h         print this help message\n"
+        << " (-[drk] [0-9]+)* (INPUT|-f INPUT-file)\n\n"
 #if defined(GAPC_CALL_STRING) && defined(GAPC_VERSION_STRING)
         << "GAPC call:        \"" << GAPC_CALL_STRING << "\"\n"
         << "GAPC version:     \"" << GAPC_VERSION_STRING << "\"\n"
@@ -115,20 +112,17 @@ class Opts {
     void parse(int argc, char **argv) {
       int o = 0;
       char *input = 0;
-      const option long_opts[] = {
-            {"help", no_argument, nullptr, 'h'},
-            {nullptr, no_argument, nullptr, 0}};
 #ifdef LIBRNA_RNALIB_H_
       char *par_filename = 0;
 #endif
-      while ((o = getopt_long(argc, argv, ":f:"
+      while ((o = getopt(argc, argv, ":f:"
 #ifdef WINDOW_MODE
               "w:i:"
 #endif
 #ifdef LIBRNA_RNALIB_H_
               "t:T:P:"
 #endif
-              "hvd:r:k:", long_opts, nullptr)) != -1) {
+              "hvd:r:k:")) != -1) {
         switch (o) {
           case 'f' :
             {
