@@ -74,7 +74,6 @@ class Checkpoint : public Base {
      stream << "#include \"boost/serialization/vector.hpp\"" << endl;
      stream << "#include \"boost/archive/binary_iarchive.hpp\"" << endl;
      stream << "#include \"boost/archive/binary_oarchive.hpp\"" << endl;
-     stream << "#include \"boost/dll.hpp\"" << endl;
      stream << "#include \"boost/filesystem.hpp\"" << endl;
      stream << "#include <atomic>" << endl;
      stream << "#include <ctime>" << endl;
@@ -89,7 +88,7 @@ class Checkpoint : public Base {
      stream << indent() << "// save the DP table/array to disk" << endl;
      stream << indent() << "try {" << endl;
      inc_indent();
-     stream << indent() << "std::ofstream array_fout(table_path.c_str(), "
+     stream << indent() << "std::ofstream array_fout(out_table_path.c_str(), "
                             "std::ios::binary);" << endl;
      stream << indent() << "if (!(array_fout.good())) {" << endl;
      stream << indent() << "  throw std::ofstream::failure(\"\");" << endl;
@@ -99,13 +98,13 @@ class Checkpoint : public Base {
      stream << indent() << "array_out << array;" << endl;
      stream << indent() << "array_fout.close();" << endl;
      stream << indent() << "std::cerr << \"Info: Archived \\\"\" << tname << "
-            << "\"\\\" table into \" << table_path << \".\" "
+            << "\"\\\" table into \" << out_table_path << \".\" "
             << "<< std::endl;" << endl;
      dec_indent();
      stream << indent() << "} catch (const std::ofstream::failure &e) {"
              << endl;
      stream << indent() << "  std::cerr << \"Couldn't create table archive "
-             << "at path \" << table_path << \".\\n\"" << endl;
+             << "at path \" << out_table_path << \".\\n\"" << endl;
      stream << indent() << "            << \"Please ensure that the directory "
              << "exists and that you have write permissions "
              << "for this directory.\\n\";" << endl;
@@ -134,17 +133,18 @@ class Checkpoint : public Base {
      stream << indent();
      stream << "void remove() {" << endl;
      inc_indent();
-     stream << indent() << "boost::filesystem::remove(table_path);" << endl;
+     stream << indent() << "boost::filesystem::remove(out_table_path);" << endl;
+     stream << indent() << "boost::filesystem::remove(in_table_path);" << endl;
      dec_indent();
      stream << indent() << "}" << endl << endl;
      dec_indent(); dec_indent();
   }
 
-  void get_table_path(Printer::Base &stream) {
+  void get_out_table_path(Printer::Base &stream) {
     inc_indent(); inc_indent();
-    stream << indent() << "std::string get_table_path() const {" << endl;
+    stream << indent() << "std::string get_out_table_path() const {" << endl;
     inc_indent();
-    stream << indent() << "return table_path.string();" << endl;
+    stream << indent() << "return out_table_path.string();" << endl;
     dec_indent();
     stream << indent() << "}" << endl << endl;
     dec_indent(); dec_indent();
@@ -193,32 +193,28 @@ class Checkpoint : public Base {
      inc_indent(); inc_indent(); inc_indent();
      stream << indent() << "this->formatted_interval = formatted_interval;"
             << endl;
-     stream << indent() << "std::string executable_name = "
-            << "boost::dll::program_location().filename().string();" << endl;
-     stream << indent() << "int process_id = getpid();" << endl;
-     stream << indent() << "std::string archive_name = executable_name + "
-            << "\"_\" + std::to_string(process_id);" << endl;
-     stream << indent() << "table_path = out_path / (archive_name + \"_\" + "
+     stream << indent() << "out_table_path = out_path / (file_prefix + \"_\" + "
             << "tname);" << endl;
      stream << indent() << "std::string in_path_error_msg = "
             << "\"at user-specified path\";" << endl << endl;
      stream << indent() << "if (in_path.empty()) {" << endl;
      inc_indent();
-     stream << indent() << "in_path = "
-            << "parse_checkpoint_log(out_path, tname, executable_name, "
-            << "arg_string);" << endl;
+     stream << indent() << "in_table_path = "
+            << "parse_checkpoint_log(tname, arg_string, logfile_path);"
+            << endl;
      stream << indent() << "in_path_error_msg = \"in Logfile\";" << endl;
      dec_indent();
      stream << indent() << "} else {" << endl;
      inc_indent();
-     stream << indent() << "in_path = find_table(in_path, tname);" << endl;
+     stream << indent() << "in_table_path = find_table(in_path, tname);"
+            << endl;
      dec_indent();
      stream << indent() << "}" << endl << endl;
      stream << indent() << "// read the DP array/table from disk "
                             "and put its contents into array" << endl;
      stream << indent() << "try {" << endl;
      inc_indent();
-     stream << indent() << "std::ifstream array_fin(in_path.c_str(), "
+     stream << indent() << "std::ifstream array_fin(in_table_path.c_str(), "
             << "std::ios::binary);" << endl;
      stream << indent() << "if (!(array_fin.good())) {" << endl;
      stream << indent() << "  throw std::ifstream::failure(\"\");" << endl;
@@ -380,12 +376,6 @@ class Checkpoint : public Base {
      inc_indent();
      stream << indent() << "// initialize a Log file to keep track "
             << "of archive paths" << endl;
-     stream << indent() << "std::string executable_name = "
-            << "boost::dll::program_location().filename().string();" << endl;
-     stream << indent() << "std::string logfile_name = executable_name + "
-            << "\"_checkpointing_log.txt\";" << endl;
-     stream << indent() << "logfile_path = opts.checkpoint_out_path / "
-            << "logfile_name;" << endl;
      stream << indent() << "std::ofstream fout(logfile_path.c_str(), "
             << "std::ios::out);" << endl;
      stream << indent() << "fout << \"# Format:\\n# [OPTIONS] argv[1] "
@@ -408,7 +398,7 @@ class Checkpoint : public Base {
             << endl;
      for (auto i = tables.begin(); i != tables.end(); ++i) {
        std::string table_name = i->second->table_decl->name();
-       stream << indent() << "fout << " << table_name << ".get_table_path()"
+       stream << indent() << "fout << " << table_name << ".get_out_table_path()"
               << "<< \"\\n\";" << endl;
      }
      stream << indent() << "fout.close();" << endl;
@@ -454,22 +444,20 @@ class Checkpoint : public Base {
   void parse_checkpoint_log(Printer::Base &stream) {
      inc_indent(); inc_indent();
      stream << indent() << "boost::filesystem::path parse_checkpoint_log("
-            << "boost::filesystem::path path, const std::string &tname,"
-            << endl << indent()
-                        << "                                           "
-            << "const std::string &executable_name, const std::string "
-            << "&arg_string) {" << endl;
+            << "const std::string &tname, const std::string &arg_string,"
+            << endl
+            << indent() << "                                              "
+            << "const boost::filesystem::path &logfile_path) {"
+            << endl;
      inc_indent();
      stream << indent() << "// parse the checkpoint log and look "
             << "for checkpoints" << endl;
      stream << indent() << "// that were created with identical program "
             << "input (stored in arg_string)" << endl;
-     stream << indent() << "path /= (executable_name + "
-            << "\"_checkpointing_log.txt\");" << endl;
      stream << indent() << "boost::filesystem::path input_table_path(\"\");"
             << endl;
-     stream << indent() << "std::ifstream fin(path.c_str(), std::ios::binary);"
-            << endl;
+     stream << indent() << "std::ifstream fin(logfile_path.c_str(), "
+            << "std::ios::binary);" << endl;
      stream << indent() << "if (!(fin.good())) return input_table_path;"
             << endl << endl;
      stream << indent() << "std::string line;" << endl;

@@ -1090,7 +1090,8 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   stream << indent() << dtype << " zero;" << endl;
 
   if (checkpoint) {
-    stream << indent() << "boost::filesystem::path table_path;" << endl;
+    stream << indent() << "boost::filesystem::path out_table_path;" << endl;
+    stream << indent() << "boost::filesystem::path in_table_path;" << endl;
     stream << indent() << "std::string formatted_interval;" << endl;
     stream << indent() << "size_t tabulated_vals_counter = 0;" << endl << endl;
   }
@@ -1110,7 +1111,7 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   if (checkpoint) {
     ast->checkpoint->archive(stream);
     ast->checkpoint->remove(stream);
-    ast->checkpoint->get_table_path(stream);
+    ast->checkpoint->get_out_table_path(stream);
     ast->checkpoint->get_tabulated_vals_percentage(stream);
     ast->checkpoint->parse_checkpoint_log(stream);
     ast->checkpoint->find_table(stream);
@@ -1126,10 +1127,13 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
 
   stream << ", const std::string &tname";
   if (checkpoint) {
-    stream << ", boost::filesystem::path out_path," << endl
-           << indent() << "          boost::filesystem::path in_path, "
-           << "const std::string &arg_string, "
-           << "std::string formatted_interval";
+    stream << ", const boost::filesystem::path &out_path," << endl
+           << indent() << "          const boost::filesystem::path &in_path, "
+           << "const std::string &arg_string," << endl
+           << indent() << "          const std::string &formatted_interval, "
+           << "const std::string &file_prefix," << endl
+           << indent() << "          "
+           << "const boost::filesystem::path &logfile_path";
   }
   stream << ") {" << endl;
   inc_indent();
@@ -1473,6 +1477,21 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
   if (ast.checkpoint) {
     stream << indent() << "start_cpu_time = std::clock();"
            << endl;
+    stream << indent() << "std::string binary_name = opts.argv[0];" << endl;
+    stream << indent() << "size_t start = binary_name.find_last_of('/');"
+           << endl;
+    stream << indent() << "if (start != binary_name.npos) {" << endl;
+    inc_indent();
+    stream << indent() << "binary_name = binary_name.substr(start + 1, "
+           << "binary_name.size() - start - 1);" << endl;
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
+    stream << indent() << "file_prefix = binary_name + \"_\" + "
+           << "std::to_string(getpid());" << endl;
+    stream << indent() << "std::string logfile_name = file_prefix + "
+           << "\"_checkpointing_log.txt\";" << endl;
+    stream << indent() << "logfile_path = opts.checkpoint_out_path / "
+           << "logfile_name;" << endl;
     stream << indent() << "checkpoint_interval = opts.checkpoint_interval;"
            << endl;
     stream << indent() << "std::string arg_string = "
@@ -1556,7 +1575,9 @@ void Printer::Cpp::print_table_init(const AST &ast) {
     if (ast.checkpoint) {
       stream << ", opts.checkpoint_out_path," << endl;
       stream << indent() << "                opts.checkpoint_in_path, "
-             << "arg_string, formatted_interval";
+             << "arg_string, formatted_interval," << endl;
+      stream << indent() << "                file_prefix, "
+             << "logfile_path";
     }
     stream << ");" << endl;
   }
@@ -1757,6 +1778,7 @@ void Printer::Cpp::header(const AST &ast) {
     stream << indent() << "size_t checkpoint_interval;" << endl;
     stream << indent() << "boost::filesystem::path logfile_path;" << endl;
     stream << indent() << "std::clock_t start_cpu_time;" << endl;
+    stream << indent() << "std::string file_prefix;" << endl;
     dec_indent();
   }
   stream << indent() << " public:" << endl;
