@@ -186,9 +186,15 @@ class Opts {
         << "                                      line inputs as the inputs "
         << "to \n"
         << "                                      this binary to ensure the\n"
-        << "                                      correctness of the answer.\n"
+        << "                                      correctness of the answer."
+        << "\n\n"
 #endif
-    ;}
+#if defined(GAPC_CALL_STRING) && defined(GAPC_VERSION_STRING)
+        << "GAPC call:        \"" << GAPC_CALL_STRING << "\"\n"
+        << "GAPC version:     \"" << GAPC_VERSION_STRING << "\"\n"
+#endif
+        << "\n";
+    }
 
     void parse(int argc, char **argv) {
       int o = 0;
