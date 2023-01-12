@@ -116,12 +116,17 @@ class candidate {
     return q;
   }
 
-  std::vector<Trace> get_normalized_candidate(double eval) const {
+  /* we need to normalize the individual trace values into probabilities
+   * trace values can come in different flavors, depending on what the
+   * user uses as scoring schema. See Algebra::check_derivative
+   */
+  std::vector<Trace> get_normalized_candidate(
+    double eval, double (func)(double a, double b)) const {
     std::vector<Trace> res;
     for (std::vector<Trace>::const_iterator part = this->sub_components.begin();
          part != this->sub_components.end(); ++part) {
       res.push_back({std::get<0>(*part), std::get<1>(*part),
-                     this->get_value() / eval});
+                    func(this->get_value() , eval)});
     }
     return res;
   }
@@ -146,11 +151,12 @@ typedef std::vector<candidate> NTtraces;
 inline
 std::vector<Trace> normalize_traces(std::vector<Trace> *tabulated,
                                     const std::vector<candidate> &candidates,
-                                    double eval) {
+                                    double eval,
+                                    double (func)(double a, double b)) {
   std::vector<std::tuple<std::string, std::vector<unsigned int>, double > > res;
   for (std::vector<candidate>::const_iterator i = candidates.begin();
        i != candidates.end(); ++i) {
-    std::vector<Trace> comp = (*i).get_normalized_candidate(eval);
+    std::vector<Trace> comp = (*i).get_normalized_candidate(eval, func);
     res.insert(res.end(), comp.begin(), comp.end());
   }
   return res;

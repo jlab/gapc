@@ -1,3 +1,5 @@
+import negexpsum
+
 type Rope = extern
 
 signature sig_weather(alphabet, answer) {
@@ -124,10 +126,122 @@ algebra alg_experiment implements sig_weather(alphabet=char, answer=float) {
 }
 
 algebra alg_fwd extends alg_viterbi {
+  float normalize_derivative(float q, float pfunc) {
+    return q / pfunc;
+  }
   choice [float] h([float] candidates) {
     return list(sum(candidates));
   }
 }
+
+algebra alg_fwd_log implements sig_weather(alphabet=char, answer=float) {
+  float transition_start_hoch(float transition, float emission, float x) {
+    return log(transition) + emission + x;
+  }
+  float transition_start_tief(float transition, float emission, float x) {
+    return log(transition) + emission + x;
+  }
+  float transition_start_ende(float transition, float x) {
+    return log(transition) + x;
+  }
+  float transition_hoch_tief(float transition, float emission, float x) {
+    return log(transition) + emission + x;
+  }
+  float transition_hoch_hoch(float transition, float emission, float x) {
+    return log(transition) + emission + x;
+  }
+  float transition_hoch_ende(float transition, float x) {
+    return log(transition) + x;
+  }
+  float transition_tief_tief(float transition, float emission, float x) {
+    return log(transition) + emission + x;
+  }
+  float transition_tief_hoch(float transition, float emission, float x) {
+    return log(transition) + emission + x;
+  }
+  float transition_tief_ende(float transition, float x) {
+    return log(transition) + x;
+  }
+  
+  float emission_hoch_sonne(float emission, char a) {
+    return log(emission);
+  }
+  float emission_hoch_regen(float emission, char a) {
+    return log(emission);
+  }
+  float emission_tief_sonne(float emission, char a) {
+    return log(emission);
+  }
+  float emission_tief_regen(float emission, char a) {
+    return log(emission);
+  }
+  float nil(void) {
+    return log(1.0);
+  }
+
+  float normalize_derivative(float q, float pfunc) {
+    return exp(q - pfunc);
+  }
+
+  choice [float] h([float] candidates) {
+    return list(expsum(candidates));
+  }
+}
+
+algebra alg_fwd_neglog implements sig_weather(alphabet=char, answer=float) {
+  float transition_start_hoch(float transition, float emission, float x) {
+    return log(1.0/transition) + emission + x;
+  }
+  float transition_start_tief(float transition, float emission, float x) {
+    return log(1.0/transition) + emission + x;
+  }
+  float transition_start_ende(float transition, float x) {
+    return log(1.0/transition) + x;
+  }
+  float transition_hoch_tief(float transition, float emission, float x) {
+    return log(1.0/transition) + emission + x;
+  }
+  float transition_hoch_hoch(float transition, float emission, float x) {
+    return log(1.0/transition) + emission + x;
+  }
+  float transition_hoch_ende(float transition, float x) {
+    return log(1.0/transition) + x;
+  }
+  float transition_tief_tief(float transition, float emission, float x) {
+    return log(1.0/transition) + emission + x;
+  }
+  float transition_tief_hoch(float transition, float emission, float x) {
+    return log(1.0/transition) + emission + x;
+  }
+  float transition_tief_ende(float transition, float x) {
+    return log(1.0/transition) + x;
+  }
+  
+  float emission_hoch_sonne(float emission, char a) {
+    return log(1.0/emission);
+  }
+  float emission_hoch_regen(float emission, char a) {
+    return log(1.0/emission);
+  }
+  float emission_tief_sonne(float emission, char a) {
+    return log(1.0/emission);
+  }
+  float emission_tief_regen(float emission, char a) {
+    return log(1.0/emission);
+  }
+  float nil(void) {
+    return log(1.0/1.0);
+  }
+
+  float normalize_derivative(float q, float pfunc) {
+    return exp(pfunc - q);
+  }
+
+  synoptic choice [float] h([float] candidates) {
+    return list(negexpsum(candidates));
+  }
+}
+
 
 algebra alg_states implements sig_weather(alphabet=char, answer=Rope) {
   Rope transition_start_hoch(float transition, Rope emission, Rope x) {
@@ -352,4 +466,6 @@ grammar gra_weather uses sig_weather(axiom=start) {
 instance enum = gra_weather(alg_enum);
 instance viterbistatesmult = gra_weather(alg_viterbi * alg_states * alg_mult);
 instance fwd = gra_weather(alg_fwd);
+instance fwd_log = gra_weather(alg_fwd_log);
+instance fwd_neglog = gra_weather(alg_fwd_neglog);
 instance multviterbistates = gra_weather(alg_mult * alg_viterbi * alg_states);
