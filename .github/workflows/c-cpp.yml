@@ -16,6 +16,7 @@ on:
 
 jobs:
   gapc_ubuntu:
+    needs: cpplint
     strategy:
       matrix:
         # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
@@ -62,6 +63,7 @@ jobs:
         GHC="ghc -package-db $package_path" make test-paral
 
   gapc_osx:
+    needs: cpplint
     strategy:
       matrix:
         # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
@@ -99,6 +101,7 @@ jobs:
       run: make test-paral
 
   fold-grammars:
+    needs: cpplint
     strategy:
       matrix:
         task: [default, shapes, pkiss, alishapes, palikiss, knotinframe]
