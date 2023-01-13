@@ -2597,9 +2597,12 @@ void Alt::Link::codegen(AST &ast, Symbol::NT &calling_nt) {
   /* In case of first derivatives, we want to normalize all result to
    * probabilities. Therefore, the recursion base of the outside pass must be
    * set to 1.0, instead of using the result of the initial inside pass,
-   * e.g. axiom with complete input substring */
+   * e.g. axiom with complete input substring.
+   * It's similar for second derivatives, but since they are no probabilities
+   * recursion base must be 0.0 not 1.0.
+   * */
   Expr::Base *fn_or_const = fn;
-  if ((ast.current_derivative == 1) &&
+  if ((ast.current_derivative >= 1) &&
       (*calling_nt.orig_name == *ast.grammar()->axiom_name_inside)) {
     unsigned int lacking_complete_tracks = calling_nt.tracks();
     for (std::vector<std::list<Filter*> >::const_iterator track = \
@@ -2612,7 +2615,11 @@ void Alt::Link::codegen(AST &ast, Symbol::NT &calling_nt) {
       }
     }
     if (lacking_complete_tracks == 0) {
-      fn_or_const = new Expr::Const(1.0);
+      if (ast.current_derivative == 1) {
+        fn_or_const = new Expr::Const(1.0);
+      } else if (ast.current_derivative == 2) {
+        fn_or_const = new Expr::Const(0.0);
+      }
     }
   }
 
