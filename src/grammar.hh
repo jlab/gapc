@@ -48,6 +48,7 @@ class Algebra;
 
 const char OUTSIDE_NT_PREFIX[] = "outside_";
 const char OUTSIDE_AXIOMS[] = "outside_axioms";
+const char PREFIX_DERIVATIVE[] = "derivative_";
 
 class Grammar {
  private:
@@ -228,6 +229,13 @@ class Grammar {
   void inject_outside_nts(std::vector<std::string> outside_nt_list);
   // same as above, without checking user provided NT list
   void inject_outside_nts();
+
+  // replace choice functions in outside rules with list(sum())
+  // when user requested derivative computation, since the computed
+  // values are probabilities, regardless of user transformation like
+  // log- or exp- space
+  void replace_choice_for_derivatives();
+
   unsigned int to_dot(unsigned int *nodeID, std::ostream &out, int plot_level);
 
   // blocks allow alternatives for sub-productions. This function shell free
