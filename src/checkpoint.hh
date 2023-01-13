@@ -24,6 +24,7 @@
 #define SRC_CHECKPOINT_HH_
 
 #include <string>
+#include <array>
 #include "printer.hh"
 #include "symbol.hh"
 #include "statement/table_decl.hh"
@@ -32,37 +33,63 @@
 typedef hashtable<std::string, Symbol::NT*> nt_tables;
 
 // list of currently supported/serializable datatypes (all primitive)
-constexpr Type::Type
-SUPPORTED_TYPES[] = {Type::Type::VOID, Type::Type::INTEGER,
+constexpr std::array<Type::Type, 7>
+SUPPORTED_TYPES = {Type::Type::VOID, Type::Type::INTEGER,
                      Type::Type::INT, Type::Type::FLOAT,
                      Type::Type::SIZE, Type::Type::SINGLE,
                      Type::Type::BIGINT};
 
+// list of supported compound types
+// (can contain multiple subtypes, which all must be part of SUPPORTED_TYPES)
+constexpr std::array<Type::Type, 2>
+COMPOUND_TYPES = {Type::Type::LIST, Type::Type::TUPLE};
+
 namespace Printer {
 class Checkpoint : public Base {
+ private:
+  template<size_t n>
+  static bool has_type(std::array<Type::Type, n> arr, Type::Type type) {
+    for (Type::Type supported_type : arr) {
+         if (type == supported_type) {
+           return true;
+         }
+    }
+    return false;
+  }
+
+  static bool __is_supported(Type::Base *type) {
+    Type::Type curr_type = type->getType();
+
+    if (has_type(COMPOUND_TYPES, curr_type)) {
+       // check if type has left and right (e.g. Tuple)
+       // or justs wrap singular type (e.g. List)
+       bool has_left_and_right = has_type(COMPOUND_TYPES,
+                                          type->component()->getType());
+       if (has_left_and_right) {
+         return __is_supported(type->left()) && __is_supported(type->right());
+       } else {
+         return __is_supported(type->component());
+       }
+    }
+
+    return has_type(SUPPORTED_TYPES, curr_type);
+  }
+
  public:
   static bool is_supported(const nt_tables &tables) {
      // check datatypes of every table (all tables must have supported type)
-     bool answer_type_supported = true;
+     bool supported = true;
 
      for (auto table : tables) {
-       Type::Type table_type = table.second->data_type()->getType();
-       bool table_supported = false;
+       Type::Base *table_type = table.second->data_type();
 
-       for (Type::Type supported_type : SUPPORTED_TYPES) {
-         if (table_type == supported_type) {
-           table_supported = true;
-           break;
-         }
-       }
-
-       if (!table_supported) {
-         answer_type_supported = false;
+       if (!__is_supported(table_type)) {
+         supported = false;
          break;
        }
      }
 
-     return answer_type_supported;
+     return supported;
   }
 
   void include(Printer::Base &stream) {
@@ -75,6 +102,7 @@ class Checkpoint : public Base {
      stream << "#include \"boost/archive/binary_iarchive.hpp\"" << endl;
      stream << "#include \"boost/archive/binary_oarchive.hpp\"" << endl;
      stream << "#include \"boost/filesystem.hpp\"" << endl;
+     stream << "#include \"rtlib/loaded.hh\"" << endl;
      stream << "#include <atomic>" << endl;
      stream << "#include <ctime>" << endl;
      stream << "#include <thread>" << endl << endl;
@@ -134,7 +162,6 @@ class Checkpoint : public Base {
      stream << "void remove() {" << endl;
      inc_indent();
      stream << indent() << "boost::filesystem::remove(out_table_path);" << endl;
-     stream << indent() << "boost::filesystem::remove(in_table_path);" << endl;
      dec_indent();
      stream << indent() << "}" << endl << endl;
      dec_indent(); dec_indent();
@@ -258,7 +285,15 @@ class Checkpoint : public Base {
      stream << indent() << "// mark the already existing table values "
                             "in the tabulated vector" << endl;
      stream << indent() << "for (long unsigned int i = 0; i < array.size(); "
-                            "i++) tabulated[i] = array[i];" << endl;
+            << "i++) {" << endl;
+     inc_indent();
+     stream << indent() << "if (is_loaded(array[i])) {" << endl;
+     inc_indent();
+     stream << indent() << "tabulated[i] = true;" << endl;
+     dec_indent();
+     stream << indent() << "}"  << endl;
+     dec_indent();
+     stream << indent() << "}"  << endl << endl;
      stream << indent() << "std::cerr << \"Info: Successfully loaded checkpoint"
             << " for \\\"\" << tname << \"\\\" table. \"" << endl;
      stream << indent() << "          << \"Will continue calculating from here."
@@ -266,13 +301,19 @@ class Checkpoint : public Base {
      dec_indent();
      stream << indent() << "} catch (const std::ifstream::failure &e) {"
             << endl;
-     stream << indent() << "  std::cerr << \"Info: \\\"\" + tname + \"\\\" "
+     inc_indent();
+     stream << indent() << "std::cerr << \"Info: \\\"\" + tname + \"\\\" "
             << "archive\"" << endl;
-     stream << indent() << "            << " << "\" could not be found \""
+     stream << indent() << "          << " << "\" could not be found \""
             << " << in_path_error_msg << \" or hasn't been archived yet. \""
             << endl;
-     stream << indent() << "            << \"This table will be "
+     stream << indent() << "          << \"This table will be "
             << "initialized empty.\\n\";" << endl;
+     stream << indent() << "tabulated.clear();" << endl;
+     stream << indent() << "tabulated.resize(newsize);" << endl;
+     stream << indent() << "array.clear();" << endl;
+     stream << indent() << "array.resize(newsize);" << endl;
+     dec_indent();
      stream << indent() << "} catch (const std::exception &e) {" << endl;
      inc_indent();
      stream << indent() << "std::cerr << \"Error \\\"\" << e.what() << \"\\\" "
@@ -281,6 +322,7 @@ class Checkpoint : public Base {
      stream << indent() << "          << \" This table will be "
                             "initialized empty!\\n\";" << endl;
      stream << indent() << "tabulated.clear();" << endl;
+     stream << indent() << "tabulated.resize(newsize);" << endl;
      stream << indent() << "array.clear();" << endl;
      stream << indent() << "array.resize(newsize);" << endl;
      dec_indent();

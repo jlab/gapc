@@ -577,7 +577,7 @@ class Main {
         Log::instance()->normalMessage("Checkpointing routine integrated.");
       } else {
         Log::instance()->warning("Checkpointing routine could not be integrated"
-                                 ", because serialization of answer type"
+                                 ", because serialization of table type"
                                  " isn't supported yet.");
       }
     }

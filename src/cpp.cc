@@ -1155,14 +1155,16 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
 
   stream << indent() << ptype << " newsize = size(";
   stream << ");" << endl;
-  stream << indent() << "array.resize(newsize);" << endl;
+
   if (!cyk) {
-    stream << indent() << "tabulated.clear();" << endl;
-    stream << indent() << "tabulated.resize(newsize);" << endl << endl;
-  }
+      stream << indent() << "tabulated.clear();" << endl;
+      stream << indent() << "tabulated.resize(newsize);" << endl << endl;
+    }
 
   if (checkpoint) {
     ast->checkpoint->init(stream);
+  } else {
+    stream << indent() << "array.resize(newsize);" << endl;
   }
 
   dec_indent();

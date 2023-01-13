@@ -26,11 +26,20 @@
 
 #include <algorithm>
 #include <boost/shared_ptr.hpp>
+#include "boost/serialization/shared_ptr.hpp"
 
 namespace Ref {
 template<class T> class Lazy {
  public:
   boost::shared_ptr<T> l;
+
+ private:
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int version) {
+    ar & l;
+  }
 
  protected:
   void lazy() {

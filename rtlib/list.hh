@@ -53,6 +53,12 @@
 #include "output.hh"
 #include "hash.hh"
 
+// serialization headers for the checkpointing option
+// (will be included in generated code through rtlib/adp.hh)
+#include "boost/serialization/base_object.hpp"
+#include "boost/serialization/deque.hpp"
+#include "boost/serialization/utility.hpp"
+
 // FIXME
 // #include <iostream>
 
@@ -66,6 +72,14 @@ template <class T, typename pos_int = unsigned char>
 class List : public std::deque<T> {
  public:
   typedef typename std::deque<T>::reverse_iterator reverse_iterator;
+
+ private:
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int version) {
+    ar & boost::serialization::base_object<std::deque<T>>(*this);
+  }
 };
 
 
@@ -86,6 +100,15 @@ template<class T, typename pos_int = unsigned char>
 class List_Ref : public ::Ref::Lazy<List<T, pos_int> > {
  public:
   typedef typename List<T, pos_int>::reverse_iterator reverse_iterator;
+
+ private:
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int version) {
+    ar &
+    boost::serialization::base_object<::Ref::Lazy<List<T, pos_int>>>(*this);
+  }
 };
 
 template<class T, typename pos_int>
