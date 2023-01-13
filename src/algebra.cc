@@ -22,7 +22,6 @@
 }}} */
 
 
-
 #include <cassert>
 
 #include "algebra.hh"
@@ -42,6 +41,7 @@
 #include "printer.hh"
 
 #include "mode.hh"
+
 
 
 
