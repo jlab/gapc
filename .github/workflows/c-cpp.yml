@@ -140,7 +140,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: actions/setup-python@v3
+    - uses: actions/setup-python@v4
     - run: pip install cpplint
     - run: cpplint --recursive --counting 'detailed' --filter="-runtime/references,-build/include_subdir" --extensions=cc,hh src/ rtlib/
     - run: cpplint --counting 'detailed' --filter="-build/include_subdir,-readability/casting,-runtime/arrays" --extensions=c,h librna/rnalib.{c,h}
