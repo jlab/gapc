@@ -22,6 +22,7 @@
 }}} */
 
 
+
 #include <cassert>
 
 #include "algebra.hh"
