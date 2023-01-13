@@ -522,3 +522,5 @@ instance fwd_neglog = gra_weather(alg_fwd_neglog);
 instance multviterbistates = gra_weather(alg_mult * alg_viterbi * alg_states);
 
 instance bothD = gra_weather(alg_fwd * alg_hessians);
+instance bothD_log = gra_weather(alg_fwd_log * alg_hessians);
+instance bothD_neglog = gra_weather(alg_fwd_neglog * alg_hessians);
