@@ -550,8 +550,8 @@ class Main {
         }
     }
 
-    if (opts.derivative > 0) {
-      // if user requests derivative computation, check that user also
+    if (driver.ast.current_derivative == 1) {
+      // if user requests first derivative computation, check that user also
       // provided a normalization function for forward computation
       instance->product->algebra()->check_derivative();
     }
