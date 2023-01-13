@@ -43,7 +43,7 @@
 #include "mode.hh"
 
 
-
+{
 
 // create a joined algebra
 Algebra::Algebra(Algebra &a, Algebra &b) :
