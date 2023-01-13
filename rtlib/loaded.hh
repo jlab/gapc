@@ -55,7 +55,7 @@ inline bool is_loaded(int x) {
   return x != 0;
 }
 
-inline bool is_loaded(long x) {
+inline bool is_loaded(int64_t x) {
   return x != 0;
 }
 
@@ -63,11 +63,7 @@ inline bool is_loaded(unsigned int x) {
   return x != 0;
 }
 
-inline bool is_loaded(unsigned long x) {
-  return x != 0;
-}
-
-inline bool is_loaded(unsigned long long x) {
+inline bool is_loaded(unsigned int64_t x) {
   return x != 0;
 }
 
