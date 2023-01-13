@@ -145,9 +145,3 @@ jobs:
     - run: cpplint --recursive --counting 'detailed' --filter="-runtime/references,-build/include_subdir" --extensions=cc,hh src/ rtlib/
     - run: cpplint --counting 'detailed' --filter="-build/include_subdir,-readability/casting,-runtime/arrays" --extensions=c,h librna/rnalib.{c,h}
     - run: cpplint --recursive --counting 'detailed' --filter="-runtime/references,-build/include_subdir" testdata/unittest/*
-    - uses: vishnudxb/cancel-workflow@v1.2
-      if: failure()
-      with:
-        repo: jlab/gapc
-        workflow_id: ${{ github.run_id }}
-        access_token: ${{ github.token }}
