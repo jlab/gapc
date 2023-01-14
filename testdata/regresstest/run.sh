@@ -105,8 +105,10 @@ check_checkpoint_eq()
   # run command and kill the process after $6 + 0.5 seconds (== checkpointInterval + 0.5s)
   # so checkpoints are created
   timeout $6.5 $KSH -c './$cpp_base $RUN_CPP_FLAGS $seq'
+  LOGFILE_PATH=$(find ~+ -type f -name "*_checkpointing_log.txt")
 
-  # run command again (it will load the checkpoints this time)
+  # specify Logfile path and run command again (it will load the checkpoints this time)
+  CPPFLAGS="--checkpointInput $LOGFILE_PATH"
   run_cpp $cpp_base $3 $4 $5
   cmp_new_old_output $cpp_base $REF $3 $5
 
@@ -120,7 +122,7 @@ check_checkpoint_eq()
   echo +------------------------------------------------------------------------------+
 
   # remove the table archives after finishing the test
-  rm -f string.o *_table
+  rm -f string.o *_table *_checkpointing_log.txt
 }
 
 check_new_old_eq()
