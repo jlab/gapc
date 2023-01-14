@@ -116,8 +116,14 @@ class Checkpoint : public Base {
      stream << indent() << "// save the DP table/array to disk" << endl;
      stream << indent() << "try {" << endl;
      inc_indent();
-     stream << indent() << "std::ofstream array_fout(out_table_path.c_str(), "
-                            "std::ios::binary);" << endl;
+     stream << indent() << "/* create temp archive and replace last archive "
+            << "with new archive" << endl
+            << indent() << "   once new archive has been created instead "
+            << "of just overwriting" << endl
+            << indent() << "   the last archive to avoid file corruption "
+            << "if process crashes during overwrite */" << endl;
+     stream << indent() << "std::ofstream array_fout(tmp_out_table_path.c_str()"
+            << ", std::ios::binary);" << endl;
      stream << indent() << "if (!(array_fout.good())) {" << endl;
      stream << indent() << "  throw std::ofstream::failure(\"\");" << endl;
      stream << indent() << "}" << endl;
@@ -125,6 +131,8 @@ class Checkpoint : public Base {
                             "array_out(array_fout);" << endl;
      stream << indent() << "array_out << array;" << endl;
      stream << indent() << "array_fout.close();" << endl;
+     stream << indent() << "boost::filesystem::rename(tmp_out_table_path, "
+            << "out_table_path);" << endl;
      stream << indent() << "std::cerr << \"Info: Archived \\\"\" << tname << "
             << "\"\\\" table into \" << out_table_path << \".\" "
             << "<< std::endl;" << endl;
@@ -149,6 +157,8 @@ class Checkpoint : public Base {
              << endl;
      stream << indent() << "          << \" Will retry in \" "
             << "<< formatted_interval << \".\\n\";" << endl;
+     stream << indent() << "boost::filesystem::remove(tmp_out_table_path);"
+            << endl;
      dec_indent();
      stream << indent() << "}" << endl;
      dec_indent();
@@ -189,90 +199,22 @@ class Checkpoint : public Base {
      dec_indent(); dec_indent();
   }
 
-  void find_table(Printer::Base &stream) {
-     inc_indent(); inc_indent();
-     stream << indent() << "boost::filesystem::path find_table("
-            << "const boost::filesystem::path &path, const std::string &tname)"
-            << " {" << endl;
-     inc_indent();
-     stream << indent() << "// find the table archive in the "
-            << "user-specified directory" << endl;
-     stream << indent() << "std::string curr_file;" << endl;
-     stream << indent() << "for (const auto &entry : "
-            << "boost::filesystem::directory_iterator(path)) {" << endl;
-     inc_indent();
-     stream << indent() << "curr_file = entry.path().string();" << endl;
-     stream << indent() << "if (curr_file.find(tname) != curr_file.npos) {"
-            << endl;
-     inc_indent();
-     stream << indent() << "return entry.path();" << endl;
-     dec_indent();
-     stream << indent() << "}" << endl;
-     dec_indent();
-     stream << indent() << "}" << endl;
-     stream << indent() << "return boost::filesystem::path(\"\");" << endl;
-     dec_indent();
-     stream << indent() << "}" << endl << endl;
-     dec_indent(); dec_indent();
-  }
-
-  void find_logfile(Printer::Base &stream) {
-     inc_indent(); inc_indent();
-     stream << indent() << "boost::filesystem::path find_logfile("
-            << "const boost::filesystem::path &path, "
-            << "const boost::filesystem::path &curr_logfile_path) {"
-            << endl;
-     inc_indent();
-     stream << indent() << "// find the Logfile in the "
-            << "user-specified directory" << endl;
-     stream << indent() << "std::string curr_file;" << endl;
-     stream << indent() << "for (const auto &entry : "
-            << "boost::filesystem::directory_iterator(path)) {" << endl;
-     inc_indent();
-     stream << indent() << "// skip the Logfile this binary created"
-            << endl;
-     stream << indent() << "if (entry.path() == curr_logfile_path) "
-            << "continue;" << endl;
-     stream << indent() << "curr_file = entry.path().string();" << endl;
-     stream << indent() << "if (curr_file.find(\"_checkpointing_log.txt\") "
-            << "!= curr_file.npos) {" << endl;
-     inc_indent();
-     stream << indent() << "return entry.path();" << endl;
-     dec_indent();
-     stream << indent() << "}" << endl;
-     dec_indent();
-     stream << indent() << "}" << endl;
-     stream << indent() << "return boost::filesystem::path(\"\");" << endl;
-     dec_indent();
-     stream << indent() << "}" << endl << endl;
-     dec_indent(); dec_indent();
-  }
-
   void init(Printer::Base &stream) {
      inc_indent(); inc_indent(); inc_indent();
      stream << indent() << "this->formatted_interval = formatted_interval;"
             << endl;
      stream << indent() << "out_table_path = out_path / (file_prefix + \"_\" + "
             << "tname);" << endl;
-     stream << indent() << "std::string in_path_error_msg = "
-            << "\"at user-specified path\";" << endl << endl;
-     stream << indent() << "if (in_path.empty()) {" << endl;
+     stream << indent() << "tmp_out_table_path = out_path / (file_prefix + "
+            << "\"_\" + tname + \"_new\");" << endl << endl;
+     stream << indent() << "if (!(in_path.empty())) {" << endl;
      inc_indent();
-     stream << indent() << "in_table_path = "
-            << "parse_checkpoint_log(tname, arg_string, out_path, "
-            << "logfile_path);" << endl;
-     stream << indent() << "in_path_error_msg = \"in Logfile\";" << endl;
-     dec_indent();
-     stream << indent() << "} else {" << endl;
-     inc_indent();
-     stream << indent() << "in_table_path = find_table(in_path, tname);"
-            << endl;
-     dec_indent();
-     stream << indent() << "}" << endl << endl;
      stream << indent() << "// read the DP array/table from disk "
                             "and put its contents into array" << endl;
      stream << indent() << "try {" << endl;
      inc_indent();
+     stream << indent() << "parse_checkpoint_log(tname, arg_string, in_path);"
+            << endl << endl;
      stream << indent() << "std::ifstream array_fin(in_table_path.c_str(), "
             << "std::ios::binary);" << endl;
      stream << indent() << "if (!(array_fin.good())) {" << endl;
@@ -281,7 +223,7 @@ class Checkpoint : public Base {
      stream << indent() << "boost::archive::binary_iarchive "
                             "array_in(array_fin);" << endl;
      stream << indent() << "array_in >> array;" << endl;
-     stream << indent() << "array_fin.close();" << endl;
+     stream << indent() << "array_fin.close();" << endl << endl;
      stream << indent() << "// mark the already existing table values "
                             "in the tabulated vector" << endl;
      stream << indent() << "for (long unsigned int i = 0; i < array.size(); "
@@ -290,6 +232,7 @@ class Checkpoint : public Base {
      stream << indent() << "if (is_loaded(array[i])) {" << endl;
      inc_indent();
      stream << indent() << "tabulated[i] = true;" << endl;
+     stream << indent() << "tabulated_vals_counter++;" << endl;
      dec_indent();
      stream << indent() << "}"  << endl;
      dec_indent();
@@ -299,14 +242,19 @@ class Checkpoint : public Base {
      stream << indent() << "          << \"Will continue calculating from here."
             << "\" << std::endl;" << endl;
      dec_indent();
+     stream << indent() << "} catch (const ParseException &e) {"
+            << endl;
+     inc_indent();
+     stream << indent() << "std::cerr << e.what() << std::endl;" << endl;
+     stream << indent() << "array.resize(newsize);" << endl;
+     dec_indent();
      stream << indent() << "} catch (const std::ifstream::failure &e) {"
             << endl;
      inc_indent();
      stream << indent() << "std::cerr << \"Info: \\\"\" + tname + \"\\\" "
             << "archive\"" << endl;
-     stream << indent() << "          << " << "\" could not be found \""
-            << " << in_path_error_msg << \" or hasn't been archived yet. \""
-            << endl;
+     stream << indent() << "          << " << "\" could not be found in "
+            << "Logfile or hasn't been archived yet. \"" << endl;
      stream << indent() << "          << \"This table will be "
             << "initialized empty.\\n\";" << endl;
      stream << indent() << "tabulated.clear();" << endl;
@@ -320,13 +268,19 @@ class Checkpoint : public Base {
                             "trying to read \\\"\" << tname << "
                             "\"\\\" table!\"" << endl;
      stream << indent() << "          << \" This table will be "
-                            "initialized empty!\\n\";" << endl;
+                            "initialized empty.\\n\";" << endl;
      stream << indent() << "tabulated.clear();" << endl;
      stream << indent() << "tabulated.resize(newsize);" << endl;
      stream << indent() << "array.clear();" << endl;
      stream << indent() << "array.resize(newsize);" << endl;
      dec_indent();
      stream << indent() << "}" << endl;
+     dec_indent();
+     stream << indent() << "} else {" << endl;
+     inc_indent();
+     stream << indent() << "array.resize(newsize);" << endl;
+     dec_indent();
+     stream << indent() << "}" << endl << endl;
      dec_indent(); dec_indent(); dec_indent();
   }
 
@@ -525,54 +479,56 @@ class Checkpoint : public Base {
 
   void parse_checkpoint_log(Printer::Base &stream) {
      inc_indent(); inc_indent();
-     stream << indent() << "boost::filesystem::path parse_checkpoint_log("
+     stream << indent() << "void parse_checkpoint_log("
             << "const std::string &tname, const std::string &arg_string,"
             << endl
-            << indent() << "                                             "
-            << "const boost::filesystem::path &path, "
-            << "const boost::filesystem::path &curr_logfile_path) {"
+            << indent() << "                          "
+            << "const boost::filesystem::path &path) {"
             << endl;
      inc_indent();
      stream << indent() << "// parse the checkpoint log and look "
             << "for checkpoints" << endl;
      stream << indent() << "// that were created with identical program "
-            << "input (stored in arg_string)" << endl;
-     stream << indent() << "boost::filesystem::path logfile_path = "
-            << "find_logfile(path, curr_logfile_path);" << endl;
-     stream << indent() << "boost::filesystem::path inp_table_path(\"\");"
-            << endl;
-     stream << indent() << "std::ifstream fin(logfile_path.c_str(), "
+            << "input (if that info is available)" << endl;
+     stream << indent() << "std::ifstream fin(path.c_str(), "
             << "std::ios::binary);" << endl;
-     stream << indent() << "if (!(fin.good())) return in_table_path;"
+     stream << indent() << "if (!(fin.good())) return;"
             << endl << endl;
      stream << indent() << "std::string line;" << endl;
      stream << indent() << "std::string options_line_start = \"[OPTIONS] \";"
             << endl;
-     stream << indent() << "bool check = false;" << endl;
      stream << indent() << "while (std::getline(fin, line)) {" << endl;
      inc_indent();
      stream << indent() << "if (line[0] == '#') continue;" << endl;
      stream << indent() << "size_t i = line.find(options_line_start);" << endl;
      stream << indent() << "if (i != line.npos) {" << endl;
      inc_indent();
-     stream << indent() << "check = false;" << endl;
      stream << indent() << "line.replace(i, options_line_start.length(), "
             << "\"\");" << endl;
-     stream << indent() << "if (line == arg_string) check = true;" << endl;
-     stream << indent() << "continue;" << endl;
+     stream << indent() << "if (line != arg_string) {" << endl;
+     inc_indent();
+     stream << indent() << "throw ParseException(\"Error: The checkpoint "
+            << "for \\\"\" + tname + \"\\\" table was created with different \""
+            << endl
+            << indent() << "                     \"command line inputs than"
+            << " this program was executed with.\\n\"" << endl
+            << indent() << "                     \"       This table will "
+            << "be initialized empty.\");" << endl;
+     stream << indent() << "return;" << endl;
+     dec_indent();
+     stream << indent() << "}" << endl << endl;
      dec_indent();
      stream << indent() << "}" << endl;
-     stream << indent() << "if (check && line.find(tname) != line.npos) {"
+     stream << indent() << "if (line.find(tname) != line.npos) {"
             << endl;
      inc_indent();
-     stream << indent() << "inp_table_path = boost::filesystem::path(line);"
+     stream << indent() << "in_table_path = boost::filesystem::path(line);"
             << endl;
-     stream << indent() << "break;" << endl;
+     stream << indent() << "return;" << endl;
      dec_indent();
      stream << indent() << "}" << endl;
      dec_indent();
      stream << indent() << "}" << endl;
-     stream << indent() << "return inp_table_path;" << endl;
      dec_indent();
      stream << indent() << "}" << endl << endl;
      dec_indent(); dec_indent();

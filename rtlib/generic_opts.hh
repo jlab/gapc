@@ -114,6 +114,7 @@ class Opts {
     size_t checkpoint_interval;  // default interval: 3600s (1h)
     boost::filesystem::path  checkpoint_out_path;  // default path: cwd
     boost::filesystem::path  checkpoint_in_path;  // default: empty
+    std::string user_file_prefix;
 #endif
     int argc;
     char **argv;
@@ -134,6 +135,7 @@ class Opts {
       checkpoint_interval(3600),
       checkpoint_out_path(boost::filesystem::current_path()),
       checkpoint_in_path(boost::filesystem::path("")),
+      user_file_prefix(""),
 #endif
       argc(0),
       argv(0) {}
@@ -154,41 +156,42 @@ class Opts {
         << " (-[drk] [0-9]+)* (-h)? (INPUT|-f INPUT-file)\n"
         << "--help   ,-h                          print this help message\n"
 #ifdef CHECKPOINTING_INTEGRATED
-        << "--checkpointInterval,-p    d:h:m:s    specify the periodic "
+        << "--checkpointInterval,-p  d:h:m:s      specify the periodic "
         << "checkpointing\n"
         << "                                      interval,default: 0:1:0:0 "
         << "(1h)\n"
-        << "--checkpointOutput,-O      PATH       set path where to store "
+        << "--checkpointOutput,-O   PATH/PREFIX   set path where to store "
         << "the checkpoints,\n"
         << "                                      default: current working "
         << "directory\n"
-        << "                                      The program will also attempt"
-        << " to read\n"
-        << "                                      existing checkpoints from a "
-        << "Logfile\n"
-        << "                                      from this path. Use the\n"
-        << "                                      --checkpointInput option to "
-        << "explictly set\n"
-        << "                                      the input path for "
-        << "all checkpoints.\n"
-        << "--checkpointInput,-I       PATH       set the path were to read\n"
-        << "                                      the checkpoints from, "
-        << "default:\n"
-        << "                                      parsed from a checkpoint "
-        << "Logfile located\n"
-        << "                                      at path specified by the\n"
-        << "                                      --checkpointOutput option\n"
-        << "                                      Caution: Make sure that the "
-        << "input\n"
-        << "                                      checkpoints from this path\n"
-        << "                                      were generated from the same "
-        << "command\n"
-        << "                                      line inputs as the inputs "
-        << "to \n"
-        << "                                      this binary to ensure the\n"
-        << "                                      correctness of the answer."
-        << "\n\n"
+        << "                                      Optional: append prefix for "
+        << "generated\n"
+        << "                                      files to PATH (e.g. PATH:\n"
+        << "                                      \"/path/to/dir/file_prefix\""
+        << "\n"
+        << "                                      will set PATH to \"/path/to/"
+        << "dir/\"\n"
+        << "                                      and PREFIX to \"file_prefix\""
+        << ").\n"
+        << "                                      Make sure to add a \"/\" to\n"
+        << "                                      the end of PATH if you don't"
+        << "\n"
+        << "                                      wish to add a prefix to the "
+        << "files.\n"
+        << "--checkpointInput,-I    LOGFILE       set the path to the Logfile\n"
+        << "                                      of the checkpoints you wish "
+        << "to load.\n"
+        << "                                      (This file was generated "
+        << "along\n"
+        << "                                      with the checkpoint archives."
+        << "\n"
+        << "                                      If it isn't available\n"
+        << "                                      add the path to each archive "
+        << "to a \n"
+        << "                                      text file and provide the \n"
+        << "                                      path to this file).\n"
 #endif
+       << "\n"
 #if defined(GAPC_CALL_STRING) && defined(GAPC_VERSION_STRING)
         << "GAPC call:        \"" << GAPC_CALL_STRING << "\"\n"
         << "GAPC version:     \"" << GAPC_VERSION_STRING << "\"\n"
@@ -294,10 +297,11 @@ class Opts {
             } else {
               checkpoint_in_path = boost::filesystem::current_path() / arg_path;
             }
-            if (!boost::filesystem::exists(checkpoint_in_path)) {
-              throw OptException("The input path \"" +
+            if (!boost::filesystem::exists(checkpoint_in_path) ||
+                !boost::filesystem::is_regular_file(checkpoint_in_path)) {
+              throw OptException("Logfile could not be found at path \"" +
                                  checkpoint_in_path.string() +
-                                 "\" doesn't exist!");
+                                 "\"!");
             }
 
             // check user permissions of checkpoint input directory
@@ -305,7 +309,7 @@ class Opts {
             stat(checkpoint_in_path.c_str(), &checkpoint_in_dir);
             if (!(checkpoint_in_dir.st_mode & S_IRUSR)) {
               throw OptException("Missing read permissions for"
-                                 " input path \""
+                                 " Logfile \""
                                  + checkpoint_in_path.string()
                                  + "\"!");
             }
@@ -313,41 +317,40 @@ class Opts {
           }
           case 'O' :
           {
-            boost::filesystem::path arg_path(optarg);
-            if (arg_path.is_absolute()) {
-              checkpoint_out_path = arg_path;
+            std::string path_str(optarg);
+            size_t idx = path_str.find_last_of('/');
+
+            if (idx == path_str.npos) {
+              checkpoint_out_path /= path_str;
             } else {
-              checkpoint_out_path /= arg_path;
+              user_file_prefix = path_str.substr(idx + 1,
+                                                 path_str.size() - idx - 1)
+                                 + "_";
+              boost::filesystem::path arg_path(path_str.substr(0, idx));
+
+              if (arg_path.is_absolute()) {
+                checkpoint_out_path = arg_path;
+              } else {
+                checkpoint_out_path /= arg_path;
+              }
             }
-            if (!boost::filesystem::exists(checkpoint_out_path)) {
+
+            if (!boost::filesystem::exists(checkpoint_out_path) ||
+                !boost::filesystem::is_directory(checkpoint_out_path)) {
               throw OptException("The output path \"" +
                                  checkpoint_out_path.string() +
-                                 "\" doesn't exist!");
+                                 "\" is not a directory!");
             }
 
             // check user permissions of checkpoint output directory
             struct stat checkpoint_out_dir;
             stat(checkpoint_out_path.c_str(), &checkpoint_out_dir);
 
-            // if no checkpoint input path was specified, assume
-            // output path is input path
-            bool need_read_permissions = checkpoint_in_path.empty();
-            bool has_read_permissions = (checkpoint_out_dir.st_mode
-                                         & S_IRUSR) &&
-                                        need_read_permissions;
-            bool has_write_permissions = checkpoint_out_dir.st_mode & S_IWUSR;
-
-            if (!has_write_permissions || (need_read_permissions &
-                !has_read_permissions)) {
-              std::string read_perm_msg = (need_read_permissions &
-                                          !has_read_permissions) ?
-                                          "and read" : "";
-              throw OptException("Insufficient permissions for"
+            if (!(checkpoint_out_dir.st_mode & S_IWUSR)) {
+              throw OptException("Missing write permissions for"
                                  " output path \""
                                  + checkpoint_out_path.string()
-                                 + "\"! Write "
-                                 + read_perm_msg
-                                 + " permissions are required!");
+                                 + "\"!");
             }
             break;
           }
