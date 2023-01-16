@@ -3288,3 +3288,24 @@ Fn_Def *Fn_Def::copy() const {
     o->paras.push_back((*i)->copy());
   return o;
 }
+
+Fn_Def *Fn_Def::copy_parameters(std::string *name) const {
+  Fn_Def *o = this->copy();
+
+  o->parameters.clear();
+  o->paras.clear();
+  o->types.clear();
+  o->names.clear();
+
+  std::list<Para_Decl::Base*> *o_paras = new std::list<Para_Decl::Base*>();
+  for (std::list<Para_Decl::Base*>::const_iterator i = this->paras.begin();
+       i != this->paras.end(); ++i) {
+    o_paras->push_back((*i)->copy(true));
+  }
+  o->set_paras(*o_paras);
+
+  o->name = name;
+
+  return o;
+}
+

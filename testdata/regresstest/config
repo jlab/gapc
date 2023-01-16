@@ -496,8 +496,13 @@ check_new_old_eq_twotrack alignments.gap unused firstD "frzeitei" nwjamiederiv "
 check_new_old_eq_twotrack alignments.gap unused firstD_gotoh "freizunt" gotohderiv "frnt"
 check_new_old_eq nodangle.gap unused pfunc "GCaaaGC" nodanglederiv
 check_new_old_eq nodangle.gap unused pfunc "CCaCCaaaGGaCCaaaGGaCCaaaGGaGG" nodanglederivlong
+
 # results of the below HMM where extensively validated by Stefan via Excel and python implementations
-check_new_old_eq hmm_sonneregen_properEnd.gap unused fwd "SSRR" sonneregen1deriv
+CPPFLAGS_EXTRA="$DEFAULT_CPPFLAGS_EXTRA"  # for negexpsum function, defined as external *.hh file
+# tests for special "normalize_derivative" algebra function
+check_new_old_eq hmm_sonneregen_properEnd.gap unused fwd "SSRR" sonneregen1deriv # probs - sum
+check_new_old_eq hmm_sonneregen_properEnd.gap unused fwd_log "SSRR" sonneregen1deriv_log # log - expsum
+check_new_old_eq hmm_sonneregen_properEnd.gap unused fwd_neglog "SSRR" sonneregen1deriv_neglog # neglog - negexpsum
 
 # tests for second derivative computation
 GRAMMAR=../../grammar_outside
@@ -507,3 +512,8 @@ check_new_old_eq_twotrack alignments.gap unused bothD "frzeitei" nwjamie2deriv "
 check_new_old_eq_twotrack alignments.gap unused bothD_gotoh "frzeitei" gotoh2deriv "zeit"
 check_new_old_eq elmamun_derivatives.gap unused bothD "1+2*3*4+5" secondderiv
 check_new_old_eq nodangle.gap unused bothD "CCaCCaaaGGaCCaaaGGaCCaaaGGaGG" secondderiv
+
+# despite different score normalizations for jacobians=1D, hessians=2D are the same
+check_new_old_eq hmm_sonneregen_properEnd.gap unused bothD "SSRR" sonneregen2deriv_normal # probs - sum
+check_new_old_eq hmm_sonneregen_properEnd.gap unused bothD_log "SSRR" sonneregen2deriv_log # probs - sum
+check_new_old_eq hmm_sonneregen_properEnd.gap unused bothD_neglog "SSRR" sonneregen2deriv_neglog # probs - sum

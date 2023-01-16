@@ -131,6 +131,7 @@ class Fn_Def : public Fn_Decl {
 
     explicit Fn_Def(const Fn_Decl &other);
 
+
     void set_paras(const std::list<Para_Decl::Base*> &l);
 
     void add_para(Type::Base *type, std::string *n);
@@ -314,6 +315,13 @@ class Fn_Def : public Fn_Decl {
     bool check_ntparas(const Fn_Decl &d);
 
     Fn_Def *copy() const;
+
+    /* this will construct a new Fn_Def object, while using this as template,
+     * but replaces the parameters with deep copies instead of using the same
+     * references (as Fn_Def::copy() would do).
+     * Furthermore, name of the new Fn_Def is takes as first argument.
+     */
+    Fn_Def *copy_parameters(std::string *name) const;
 };
 
 

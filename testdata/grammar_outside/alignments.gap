@@ -106,6 +106,9 @@ algebra alg_hessian implements sig_alignments(alphabet=char, answer=float) {
 
 
 algebra alg_score implements sig_alignments(alphabet=char, answer=float) {
+  float normalize_derivative(float q, float pfunc) {
+    return q / pfunc;
+  }
   float Ins(<alphabet a, void>, <Subsequence locA, void>, float x) {
     return x * exp(-2.0);
   }

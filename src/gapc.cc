@@ -408,6 +408,9 @@ class Main {
     // inject rules for outside grammar
     if (opts.outside_nt_list.size() > 0) {
       grammar->inject_outside_nts(opts.outside_nt_list);
+      if (opts.derivative > 0) {
+        grammar->replace_choice_for_derivatives();
+      }
     }
 
     // configure the window and k-best mode
@@ -563,6 +566,11 @@ class Main {
         }
     }
 
+    if (driver.ast.current_derivative == 1) {
+      // if user requests first derivative computation, check that user also
+      // provided a normalization function for forward computation
+      instance->product->algebra()->check_derivative();
+    }
 
     driver.ast.set_float_accuracy(*instance, opts.float_acc);
     if (opts.pareto == 3) {

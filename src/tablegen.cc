@@ -522,6 +522,11 @@ Fn_Def *Tablegen::gen_set_traces(int forDerivative) {
     new std::string("&traces")), off));
   rhs_norm->add_arg(new std::string("candidates"));
   rhs_norm->add_arg(new std::string("e"));
+  if (forDerivative == 1) {
+    rhs_norm->add_arg(new std::string("&" + *(new std::string(
+      FN_NAME_DERIVATIVE_NORMALIZER))));
+  }
+
   Statement::Var_Assign *fn_norm = new Statement::Var_Assign(
     new Var_Acc::Array(new Var_Acc::Plain(new std::string("traces")), off),
     rhs_norm);

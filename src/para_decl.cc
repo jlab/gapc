@@ -28,7 +28,6 @@
 
 #include "type/multi.hh"
 
-
 namespace Para_Decl {
 Base::~Base() {
 }
@@ -63,14 +62,17 @@ void Multi::replace(::Type::Base *t) {
 }
 
 
-Base *Simple::copy() const {
+Base *Simple::copy(bool clone_type) const {
   Simple *o = new Simple(*this);
   o->name_ = new std::string(*name_);
+  if (clone_type) {
+    o->type_ = type_->clone();
+  }
   return o;
 }
 
 
-Base *Multi::copy() const {
+Base *Multi::copy(bool clone_type) const {
   Multi *o = new Multi (*this);
   o->list_.clear();
   for (std::list<Simple*>::const_iterator i = list_.begin();
@@ -79,6 +81,11 @@ Base *Multi::copy() const {
     assert(t);
     o->list_.push_back(t);
   }
+  if (clone_type) {
+    o->type_ = type_->clone();
+  }
   return o;
 }
+
+
 }  // namespace Para_Decl

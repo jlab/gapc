@@ -637,7 +637,27 @@ void Printer::Cpp::print(const Fn_Def &fn_def) {
     }
     stream << ')' << endl;
   } else {
-    stream << indent() << *fn_def.return_type << ' ';
+    stream << indent();
+    if (fwd_decls &&
+      fn_def.name->compare(FN_NAME_DERIVATIVE_NORMALIZER) == 0) {
+      /* TODO(sjanssen): why is it necessary that the function is declared
+       * static at all? The aim is to pass the function as a pointer to
+       * functions in rtlib/trace.hh
+       * https://stackoverflow.com/questions/12662891/
+       *   how-can-i-pass-a-member-function-where-a-free-function-is-expected
+       * https://stackoverflow.com/questions/2374847/
+       *   passing-member-function-pointer-to-member-object-in-c
+       * https://stackoverflow.com/questions/30541367/
+       *   c-cannot-convert-double-to-double-for-argument-1-to-void
+       *   -sortdouble-in
+       * https://stackoverflow.com/questions/6339970/
+       *   c-using-function-as-parameter
+       * https://www.geeksforgeeks.org/
+       *   passing-a-function-as-a-parameter-in-cpp/
+       */
+      stream << "static ";
+    }
+    stream << *fn_def.return_type << ' ';
     if (!fwd_decls && !in_class) {
       stream << class_name << "::";
     }
