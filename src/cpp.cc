@@ -1608,7 +1608,7 @@ void Printer::Cpp::print_init_fn(const AST &ast) {
 
   inc_indent();
   stream << indent() << "const std::vector<std::pair<const char *, unsigned> >"
-    << " &inp = opts.inputs;\n";
+    << " &inp = opts.inputs;" << endl << endl;
 
   print_buddy_init(ast);
   print_seq_init(ast);
@@ -1730,6 +1730,11 @@ void Printer::Cpp::header(const AST &ast) {
         stream << "#define SECOND_DERIVATIVE\n";
       }
     }
+
+    stream << "#define GAPC_CALL_STRING \"" << gapc_call_string << "\""
+           << endl;
+    stream << "#define GAPC_VERSION_STRING \"" << gapc_version_string << "\""
+           << endl << endl;
     includes();
     if (ast.as_pytorch_module) {
       stream << "#include \"torch/extension.h\"" << endl;
@@ -1737,6 +1742,7 @@ void Printer::Cpp::header(const AST &ast) {
     print_subseq_typedef(ast);
     print_type_defs(ast);
   }
+
   imports(ast);
 
   print_hash_decls(ast);
