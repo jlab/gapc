@@ -46,6 +46,9 @@ int main(int argc, char **argv) {
     std::exit(1);
   }
   gapc::class_name obj;
+#ifdef SECOND_DERIVATIVE
+  gapc::class_name_D2 obj_D2;
+#endif
 
   try {
     obj.init(opts);
@@ -114,6 +117,15 @@ int main(int argc, char **argv) {
   obj.print_subopt(std::cout, opts.delta);
 
   gapc::add_event("end");
+#endif
+
+#ifdef SECOND_DERIVATIVE
+  obj_D2.init(opts, &obj);
+  gapc::add_event("start second derivative");
+  obj_D2.run();
+  gapc::add_event("end_computation of second derivative");
+  obj_D2.report_derivative(std::cout);
+  gapc::add_event("end_result of second derivative");
 #endif
 
 #ifdef STATS

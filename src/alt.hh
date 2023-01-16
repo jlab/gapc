@@ -144,6 +144,8 @@ class Base {
 
  public:
   Statement::Var_Decl *ret_decl;
+  // for derivative computation: stores the edge weight of lower derivatives: q
+  Statement::Var_Decl *edgeweight_decl;
 
   inline bool is(Type t) {
     return type == t;
@@ -245,7 +247,8 @@ class Base {
 
  protected:
   Statement::If *filter_guards;
-  void push_back_ret_decl();
+  void push_back_ret_decl(unsigned int current_derivative,
+                          bool outside_generation);
 
   Expr::Base *suchthat_code(Statement::Var_Decl &decl) const;
 
@@ -376,7 +379,7 @@ class Base {
   bool inside_end = false;
 
   void init_derivative_recording(AST &ast, std::string *result_name);
-  Expr::Fn_Call *inject_derivative_body(AST &ast, Symbol::NT &calling_nt,
+  Expr::Base *inject_derivative_body(AST &ast, Symbol::NT &calling_nt,
     Alt::Base *outside_fn_arg, Expr::Base *outside_arg);
 
  public:
@@ -595,6 +598,10 @@ class Simple : public Base {
           int plot_level);
   Alt::Base* find_block();
   Alt::Base *find_block_parent(const Alt::Base &block);
+
+  // generate code to obtain edge weights (q) for each rhs non-terminal
+  std::list<Statement::Base*> *derivative_collect_traces(
+    AST &ast, Symbol::NT &calling_nt);
 
  private:
   std::list<Statement::Base*> *insert_index_stmts(

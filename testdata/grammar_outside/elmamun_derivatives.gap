@@ -66,7 +66,6 @@ algebra alg_hessians implements sig_elmamun(alphabet=char, answer=float) {
   }
 }
 
-
 grammar gra_elmamun uses sig_elmamun(axiom = formula) {
   formula = number(INT)
 	  | add(formula, CHAR('+'), formula)

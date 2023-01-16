@@ -4,7 +4,7 @@ on:
   push:
     branches: [ master ]
   pull_request:
-    branches: [ master, outside_looporder ]
+    branches: [ master, outside_looporder, first_derivative, second_derivative ]
   workflow_dispatch:
     inputs:
       logLevel:

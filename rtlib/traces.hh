@@ -79,6 +79,7 @@ bool is_same_index(std::vector<unsigned int> a, std::vector<unsigned int> b) {
 class candidate {
  private:
   double value;
+  double q;
   std::vector<Trace> sub_components;
 
  public:
@@ -94,6 +95,10 @@ class candidate {
     this->value = value;
   }
 
+  void set_q(double q) {
+    this->q = q;
+  }
+
   void add_sub_component(std::string otherNT,
                          std::vector<unsigned int> *indices) {
     sub_components.push_back({otherNT, *indices, NULL});
@@ -107,6 +112,10 @@ class candidate {
     return value;
   }
 
+  double get_q() const {
+    return q;
+  }
+
   /* we need to normalize the individual trace values into probabilities
    * trace values can come in different flavors, depending on what the
    * user uses as scoring schema. See Algebra::check_derivative
@@ -118,6 +127,16 @@ class candidate {
          part != this->sub_components.end(); ++part) {
       res.push_back({std::get<0>(*part), std::get<1>(*part),
                     func(this->get_value() , eval)});
+    }
+    return res;
+  }
+
+  std::vector<Trace> get_soft_max_hessian_candidate(double eval) const {
+    std::vector<Trace> res;
+    for (std::vector<Trace>::const_iterator part = this->sub_components.begin();
+         part != this->sub_components.end(); ++part) {
+      res.push_back({std::get<0>(*part), std::get<1>(*part),
+                     this->get_q() - (eval * this->get_value())});
     }
     return res;
   }
@@ -138,6 +157,19 @@ std::vector<Trace> normalize_traces(std::vector<Trace> *tabulated,
   for (std::vector<candidate>::const_iterator i = candidates.begin();
        i != candidates.end(); ++i) {
     std::vector<Trace> comp = (*i).get_normalized_candidate(eval, func);
+    res.insert(res.end(), comp.begin(), comp.end());
+  }
+  return res;
+}
+
+inline
+std::vector<Trace> soft_max_hessian_product(std::vector<Trace> *tabulated,
+                                    const std::vector<candidate> &candidates,
+                                    double eval) {
+  std::vector<std::tuple<std::string, std::vector<unsigned int>, double > > res;
+  for (std::vector<candidate>::const_iterator i = candidates.begin();
+       i != candidates.end(); ++i) {
+    std::vector<Trace> comp = (*i).get_soft_max_hessian_candidate(eval);
     res.insert(res.end(), comp.begin(), comp.end());
   }
   return res;

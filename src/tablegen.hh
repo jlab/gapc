@@ -84,7 +84,7 @@ class Tablegen {
     Fn_Def *gen_is_tab();
     Fn_Def *gen_untab();
     Fn_Def *gen_tab();
-    Fn_Def *gen_set_traces();
+    Fn_Def *gen_set_traces(int forDerivative = 1);
     Fn_Def *gen_get_traces();
     Fn_Def *gen_get_tab();
     Fn_Def *gen_size();
@@ -97,7 +97,7 @@ class Tablegen {
     void offset(size_t track_pos, itr first, const itr &end);
 
     Statement::Table_Decl *create(Symbol::NT &nt,
-      std::string *name, bool cyk, bool for_derivatives);
+      std::string *name, bool cyk, int forDerivative);
 };
 
 

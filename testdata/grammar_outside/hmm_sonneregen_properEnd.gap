@@ -186,7 +186,6 @@ algebra alg_hessians implements sig_weather(alphabet=char, answer=float) {
 }
 
 
-
 algebra alg_fwd_log implements sig_weather(alphabet=char, answer=float) {
   float transition_start_hoch(float transition, float emission, float x) {
     return log(transition) + emission + x;
@@ -522,7 +521,6 @@ instance fwd = gra_weather(alg_fwd);
 instance fwd_log = gra_weather(alg_fwd_log);
 instance fwd_neglog = gra_weather(alg_fwd_neglog);
 instance multviterbistates = gra_weather(alg_mult * alg_viterbi * alg_states);
-
 
 instance bothD = gra_weather(alg_fwd * alg_hessians);
 instance bothD_log = gra_weather(alg_fwd_log * alg_hessians);

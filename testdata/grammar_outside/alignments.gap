@@ -37,7 +37,7 @@ algebra alg_similarity implements sig_alignments(alphabet=char, answer=int) {
   int Sto(<void, void>) {
     return 0;
   }
-	
+
   int Region(<Rope aleft, void>, int x, <Rope aright, void>) {
     return x;
   }
@@ -47,7 +47,7 @@ algebra alg_similarity implements sig_alignments(alphabet=char, answer=int) {
   int Region_Pr_Pr(<void, Rope bleft>, int x, <void, Rope bright>) {
     return x;
   }
-	
+
   // this is slightly different form http://rna.informatik.uni-freiburg.de/Teaching/index.jsp?toolName=Gotoh#
   // as there Ins + Insx is computed for first blank, we here score Ins for first blank and Insx for all following ones
   int Insx(<alphabet a, void>, <Subsequence locA, void>, int x) {
@@ -61,6 +61,49 @@ algebra alg_similarity implements sig_alignments(alphabet=char, answer=int) {
     return list(maximum(candidates));
   }
 }
+
+algebra alg_hessian implements sig_alignments(alphabet=char, answer=float) {
+  float Ins(<alphabet a, void>, <Subsequence locA, void>, float x) {
+    return x + -2.0;
+  }
+  float Del(<void, alphabet b>, <void, Subsequence locB>, float x) {
+    return x + -2.0;
+  }
+  float Ers(<alphabet a, alphabet b>, <Subsequence locA, Subsequence locB>, float x) {
+    if (a == b) {
+      return x +2.0;
+    } else {
+      return x +1.0;
+    }
+  }
+  float Sto(<void, void>) {
+    return 0.0;
+  }
+
+  float Region(<Rope aleft, void>, float x, <Rope aright, void>) {
+    return x;
+  }
+  float Region_Pr(<Rope aleft, void>, float x, <void, Rope bright>) {
+    return x;
+  }
+  float Region_Pr_Pr(<void, Rope bleft>, float x, <void, Rope bright>) {
+    return x;
+  }
+
+  // this is slightly different form http://rna.informatik.uni-freiburg.de/Teaching/index.jsp?toolName=Gotoh#
+  // as there Ins + Insx is computed for first blank, we here score Ins for first blank and Insx for all following ones
+  float Insx(<alphabet a, void>, <Subsequence locA, void>, float x) {
+    return x + -1.0;
+  }
+  float Delx(<void, alphabet b>, <void, Subsequence locB>, float x) {
+    return x + -1.0;
+  }
+
+  choice [float] h([float] candidates) {
+    return list(sum(candidates));
+  }
+}
+
 
 algebra alg_score implements sig_alignments(alphabet=char, answer=float) {
   float normalize_derivative(float q, float pfunc) {
@@ -102,6 +145,12 @@ algebra alg_score implements sig_alignments(alphabet=char, answer=float) {
     return x * exp(-1.0);
   }
 
+  choice [float] h([float] candidates) {
+    return list(sum(candidates));
+  }
+}
+
+algebra alg_jacobian extends alg_score {
   choice [float] h([float] candidates) {
     return list(sum(candidates));
   }
@@ -171,6 +220,11 @@ grammar gra_needlemanwunsch uses sig_alignments(axiom=A) {
 }
 
 instance count = gra_needlemanwunsch(alg_count);
+instance count_gotoh = gra_gotoh(alg_count);
+instance enum_gotoh = gra_gotoh(alg_enum);
 instance sim_enum = gra_needlemanwunsch(alg_similarity * alg_enum);
 instance firstD = gra_needlemanwunsch(alg_score);
 instance firstD_gotoh = gra_gotoh(alg_score);
+
+instance bothD = gra_needlemanwunsch(alg_jacobian * alg_hessian);
+instance bothD_gotoh = gra_gotoh(alg_jacobian * alg_hessian);

@@ -348,7 +348,7 @@ void Tablegen::offset(size_t track_pos, itr f, const itr &e) {
 #include "symbol.hh"
 
 Statement::Table_Decl *Tablegen::create(Symbol::NT &nt,
-    std::string *name, bool cyk, bool for_derivatives) {
+    std::string *name, bool cyk, int forDerivative) {
   cyk_ = cyk;
   std::list<Expr::Base*> ors;
   nt.gen_ys_guards(ors);
@@ -369,7 +369,7 @@ Statement::Table_Decl *Tablegen::create(Symbol::NT &nt,
   offset(nt.track_pos(), nt.tables().begin(), nt.tables().end());
   Fn_Def *fn_tab = gen_tab();
 
-  Fn_Def *fn_set_traces = gen_set_traces();
+  Fn_Def *fn_set_traces = gen_set_traces(forDerivative);
 
   ret_zero = new Statement::Return(new Expr::Vacc(new std::string("zero")));
   offset(nt.track_pos(), nt.tables().begin(), nt.tables().end());
@@ -381,7 +381,7 @@ Statement::Table_Decl *Tablegen::create(Symbol::NT &nt,
   Statement::Table_Decl *td = new Statement::Table_Decl(nt, dtype, name, cyk,
       fn_is_tab, fn_tab, fn_set_traces, fn_get_traces, fn_get_tab, fn_size,
       ns);
-  td->for_derivatives = for_derivatives;
+  td->for_derivatives = forDerivative > 0;
   td->set_fn_untab(fn_untab);
   return td;
 }
@@ -485,7 +485,7 @@ Fn_Def *Tablegen::gen_tab() {
   return f;
 }
 
-Fn_Def *Tablegen::gen_set_traces() {
+Fn_Def *Tablegen::gen_set_traces(int forDerivative) {
   Fn_Def *f = new Fn_Def(new Type::RealVoid(), new std::string("set_traces"));
   f->add_paras(paras);
   f->add_para(new ::Type::External(new std::string("NTtraces")),
@@ -513,14 +513,19 @@ Fn_Def *Tablegen::gen_set_traces() {
   a->add_arg(new Expr::Less(off, new Expr::Fn_Call(new std::string("size"))));
   c.push_back(a);
 
-  Expr::Fn_Call *rhs_norm = new Expr::Fn_Call(new std::string(
-    "normalize_traces"));
+  std::string *fn_norm_name = new std::string("normalize_traces");
+  if (forDerivative == 2) {
+    fn_norm_name = new std::string("soft_max_hessian_product");
+  }
+  Expr::Fn_Call *rhs_norm = new Expr::Fn_Call(fn_norm_name);
   rhs_norm->add_arg(new Var_Acc::Array(new Var_Acc::Plain(
     new std::string("&traces")), off));
   rhs_norm->add_arg(new std::string("candidates"));
   rhs_norm->add_arg(new std::string("e"));
-  rhs_norm->add_arg(new std::string("&" + *(new std::string(
-    FN_NAME_DERIVATIVE_NORMALIZER))));
+  if (forDerivative == 1) {
+    rhs_norm->add_arg(new std::string("&" + *(new std::string(
+      FN_NAME_DERIVATIVE_NORMALIZER))));
+  }
 
   Statement::Var_Assign *fn_norm = new Statement::Var_Assign(
     new Var_Acc::Array(new Var_Acc::Plain(new std::string("traces")), off),
