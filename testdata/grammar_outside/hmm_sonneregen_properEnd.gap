@@ -134,6 +134,59 @@ algebra alg_fwd extends alg_viterbi {
   }
 }
 
+
+algebra alg_hessians implements sig_weather(alphabet=char, answer=float) {
+  float transition_start_hoch(float transition, float emission, float x) {
+    return 0.48 * emission * x;
+  }
+  float transition_start_tief(float transition, float emission, float x) {
+    return 0.51 * emission * x;
+  }
+  float transition_start_ende(float transition, float x) {
+    return 0.01 * x;
+  }
+  float transition_hoch_tief(float transition, float emission, float x) {
+    return 0.20 * emission * x;
+  }
+  float transition_hoch_hoch(float transition, float emission, float x) {
+    return 0.70 * emission * x;
+  }
+  float transition_hoch_ende(float transition, float x) {
+    return 0.10 * x;
+  }
+  float transition_tief_tief(float transition, float emission, float x) {
+    return 0.50 * emission * x;
+  }
+  float transition_tief_hoch(float transition, float emission, float x) {
+    return 0.40 * emission * x;
+  }
+  float transition_tief_ende(float transition, float x) {
+    return 0.10 * x;
+  }
+  
+  float emission_hoch_sonne(float emission, char a) {
+    return 0.6;
+  }
+  float emission_hoch_regen(float emission, char a) {
+    return 0.4;
+  }
+  float emission_tief_sonne(float emission, char a) {
+    return 0.5;
+  }
+  float emission_tief_regen(float emission, char a) {
+    return 0.5;
+  }
+  float nil(void) {
+    return 1.0;
+  }
+
+  choice [float] h([float] candidates) {
+    return list(sum(candidates));
+  }
+}
+
+
+
 algebra alg_fwd_log implements sig_weather(alphabet=char, answer=float) {
   float transition_start_hoch(float transition, float emission, float x) {
     return log(transition) + emission + x;
@@ -469,3 +522,9 @@ instance fwd = gra_weather(alg_fwd);
 instance fwd_log = gra_weather(alg_fwd_log);
 instance fwd_neglog = gra_weather(alg_fwd_neglog);
 instance multviterbistates = gra_weather(alg_mult * alg_viterbi * alg_states);
+
+
+instance bothD = gra_weather(alg_fwd * alg_hessians);
+instance bothD_log = gra_weather(alg_fwd_log * alg_hessians);
+instance bothD_neglog = gra_weather(alg_fwd_neglog * alg_hessians);
+

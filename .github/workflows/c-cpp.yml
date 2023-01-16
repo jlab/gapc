@@ -16,6 +16,7 @@ on:
 
 jobs:
   gapc_ubuntu:
+    needs: cpplint
     strategy:
       matrix:
         # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
@@ -62,6 +63,7 @@ jobs:
         GHC="ghc -package-db $package_path" make test-paral
 
   gapc_osx:
+    needs: cpplint
     strategy:
       matrix:
         # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
@@ -99,6 +101,7 @@ jobs:
       run: make test-paral
 
   fold-grammars:
+    needs: cpplint
     strategy:
       matrix:
         task: [default, shapes, pkiss, alishapes, palikiss, knotinframe]
@@ -137,14 +140,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: actions/setup-python@v3
+    - uses: actions/setup-python@v4
     - run: pip install cpplint
     - run: cpplint --recursive --counting 'detailed' --filter="-runtime/references,-build/include_subdir" --extensions=cc,hh src/ rtlib/
     - run: cpplint --counting 'detailed' --filter="-build/include_subdir,-readability/casting,-runtime/arrays" --extensions=c,h librna/rnalib.{c,h}
     - run: cpplint --recursive --counting 'detailed' --filter="-runtime/references,-build/include_subdir" testdata/unittest/*
-    - uses: vishnudxb/cancel-workflow@v1.2
-      if: failure()
-      with:
-        repo: jlab/gapc
-        workflow_id: ${{ github.run_id }}
-        access_token: ${{ github.token }}
