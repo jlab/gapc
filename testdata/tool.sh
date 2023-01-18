@@ -24,7 +24,7 @@ build_haskell()
 
 run_cpp()
 {
-  log2 $1.$2.$4.out $1.$2.$4.err ./$1 $RUN_CPP_FLAGS $3
+  log2 $1.$2.${4-emptyinput}.out $1.$2.${4-emptyinput}.err ./$1 $RUN_CPP_FLAGS $3
 }
 
 run_haskell()
