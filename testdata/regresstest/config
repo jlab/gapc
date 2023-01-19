@@ -440,3 +440,4 @@ GAPC="../../../gapc"
 RUN_CPP_FLAGS=" -f emptyinput "
 echo "" > emptyinput # create an input file with empty word, since '' as parameter is not correctly propagated through bash scripts
 check_new_old_eq empty_ys_issue.gap unused count dummyinput shouldbe1
+check_new_old_eq empty_ys_issue_larger.gap unused count dummyinput shouldbe1
