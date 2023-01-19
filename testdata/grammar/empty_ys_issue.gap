@@ -48,5 +48,5 @@ grammar gra_ok uses sig_cm(axiom = state_S_0) {
 // }
 // in the get() method of the state_E_12 table, namely the -1, which should be 0
       
-instance enum = gra_wrong(alg_count);
+instance count = gra_wrong(alg_count);
 instance ok = gra_ok(alg_count);

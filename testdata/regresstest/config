@@ -437,4 +437,6 @@ GAPC="../../../gapc --float-accuracy 2"
 check_new_old_eq elm.gap unused pareto "1+2*3+4*5" floatacc
 
 GAPC="../../../gapc"
-check_new_old_eq empty_ys_issue.gap unused enum '' shouldbe1
+RUN_CPP_FLAGS=" -f emptyinput "
+echo "" > emptyinput # create an input file with empty word, since '' as parameter is not correctly propagated through bash scripts
+check_new_old_eq empty_ys_issue.gap unused count dummyinput shouldbe1
