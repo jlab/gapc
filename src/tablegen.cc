@@ -119,7 +119,7 @@ void Tablegen::head(Expr::Base *&i, Expr::Base *&j, Expr::Base *&n,
 
 void Tablegen::offset_const(titr track, itr first, const itr &end,
     Expr::Base *dim, Expr::Base *access) {
-	std::list<Expr::Base*> ors;
+  std::list<Expr::Base*> ors;
 
   const Table &table = *first;
   const Yield::Size &left = table.left_rest();
