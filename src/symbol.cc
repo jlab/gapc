@@ -250,9 +250,12 @@ void Symbol::NT::init_table_dim(const Yield::Size &l, const Yield::Size &r,
         table_dim.set_left_rest(l);
       }
     } else {
-      table_dim |= Table::CONSTANT;
-      table_dim.set_left_rest(l);
-      table_dim.set_right_rest(r);
+      // check that bounds are not larger than minimal yield size
+      if (!(l.low() > (this->multi_ys()(track)).low())) {
+        table_dim |= Table::CONSTANT;
+        table_dim.set_left_rest(l);
+        table_dim.set_right_rest(r);
+      }
     }
 
     Yield::Size a;
