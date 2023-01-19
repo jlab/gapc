@@ -244,10 +244,16 @@ void Symbol::NT::init_table_dim(const Yield::Size &l, const Yield::Size &r,
       table_dim |= Table::LINEAR;
       if (l.high() == Yield::UP) {
         table_dim.set_sticky(Table::RIGHT);
-        table_dim.set_right_rest(r);
+        // check that bounds are not larger than minimal yield size
+        if (!(r.high() > (this->multi_ys()(track)).low())) {
+          table_dim.set_right_rest(r);
+        }
       } else {
         table_dim.set_sticky(Table::LEFT);
-        table_dim.set_left_rest(l);
+        // check that bounds are not larger than minimal yield size
+        if (!(l.high() > (this->multi_ys()(track)).low())) {
+          table_dim.set_left_rest(l);
+        }
       }
     } else {
       // check that bounds are not larger than minimal yield size
