@@ -205,8 +205,9 @@ void Tablegen::offset_right_lin(titr track, itr first, const itr &end,
   Expr::Base *i, *j, *n;
   head(i, j, n, table, *track);
 
-  Expr::Base *cond = new Expr::Less(j, new Expr::Minus(
-    n, new Expr::Const(right.high())));
+  Expr::Base *cond = new Expr::Less(
+    new Expr::Plus(j, new Expr::Const(right.high())),
+    n);
   if (right.low() != Yield::Poly(0)) {
     cond = new Expr::Or(cond, new Expr::Greater(j, new Expr::Minus(
       n, new Expr::Const(right.low()))));
