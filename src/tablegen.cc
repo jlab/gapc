@@ -119,6 +119,8 @@ void Tablegen::head(Expr::Base *&i, Expr::Base *&j, Expr::Base *&n,
 
 void Tablegen::offset_const(titr track, itr first, const itr &end,
     Expr::Base *dim, Expr::Base *access) {
+	std::list<Expr::Base*> ors;
+
   const Table &table = *first;
   const Yield::Size &left = table.left_rest();
   const Yield::Size &right = table.right_rest();
@@ -126,10 +128,10 @@ void Tablegen::offset_const(titr track, itr first, const itr &end,
   Expr::Base *i, *j, *n;
   head(i, j, n, table, *track);
 
-  std::list<Expr::Base*> ors;
   ors.push_back(new Expr::Greater(i, new Expr::Const(left.high())) );
-  ors.push_back(new Expr::Less(j,
-          new Expr::Minus(n, new Expr::Const(right.high()))) );
+  ors.push_back(new Expr::Less(
+    new Expr::Plus(j, new Expr::Const(right.high())),
+    n));
   if (left.low() > 0)
     ors.push_back(new Expr::Less(i, new Expr::Const(left.low())));
   if (right.high() < Yield::UP)
