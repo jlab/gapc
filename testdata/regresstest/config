@@ -436,6 +436,16 @@ GRAMMAR=../../grammar
 GAPC="../../../gapc --float-accuracy 2"
 check_new_old_eq elm.gap unused pareto "1+2*3+4*5" floatacc
 
+GAPC="../../../gapc"
+check_new_old_eq empty_ys_issue.gap unused count "A" Ashouldbe0
+check_new_old_eq empty_ys_issue.gap unused count "AA" AAshouldbe1
+check_new_old_eq empty_ys_issue.gap unused count "AAA" AAAshouldbe0
+RUN_CPP_FLAGS=" -f emptyinput "
+echo "" > emptyinput # create an input file with empty word, since '' as parameter is not correctly propagated through bash scripts
+check_new_old_eq empty_ys_issue.gap unused count dummyinput shouldbe1
+check_new_old_eq empty_ys_issue_larger.gap unused count dummyinput shouldbe1
+RUN_CPP_FLAGS=""
+
 # ensure that previously composed answers are not erased by later application of filters for completely different alternatives, see PR https://github.com/jlab/gapc/pull/123
 GRAMMAR=../../grammar2
 GAPC="../../../gapc"
