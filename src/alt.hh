@@ -330,6 +330,9 @@ class Base {
 
   virtual void set_ntparas(const Loc &loc, std::list<Expr::Base*> *l);
 
+  // generates graphviz code to represent NT-parameters
+  virtual void ntparas_to_dot(std::ostream &out);
+
   bool choice_set();
   unsigned int to_dot_semanticfilters(unsigned int *nodeID, unsigned int thisID,
     std::ostream &out, std::vector<unsigned int> *childIDs = NULL);
@@ -581,6 +584,8 @@ class Simple : public Base {
   void set_partof_outside(bool is_outside);
   bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace,
     hashtable<std::string, unsigned int> &skip_occurences);
+
+  void ntparas_to_dot(std::ostream &out);
   unsigned int* to_dot(unsigned int *nodeID, std::ostream &out,
           int plot_level);
   Alt::Base* find_block();
@@ -713,6 +718,7 @@ class Link : public Base {
 
  public:
   void set_ntparas(const Loc &loc, std::list<Expr::Base*> *l);
+  void ntparas_to_dot(std::ostream &out);
   bool check_ntparas();
 
   void optimize_choice();
