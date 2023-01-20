@@ -1254,7 +1254,11 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
   }
   link->set_tracks(this->axiom->tracks(), this->axiom->track_pos());
   link->init_multi_ys();
-  link->add_multitrack_filter(*comptracks, f->type, Loc());
+  if (link->nt->tracks() == 1) {
+    link->filters.push_back(f);
+  } else {
+    link->add_multitrack_filter(*comptracks, f->type, Loc());
+  }
   link->top_level = Bool(true);
   dynamic_cast<Symbol::NT*>(outside_NTs.find(
     *this->axiom_name)->second)->alts.push_back(link);
@@ -1317,16 +1321,9 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
     this->axiom_name = nt_axiom_name;
     this->init_axiom();
   }
-  // re-run parts of "check_semantics" to properly initialize novel non-
-  // terminals and links to non-terminals, but explicitly do NOT
-  // re-run yield size analysis since it does not respect outside
-  // situations.
-//  this->init_multi_yield_sizes();
-//  this->init_calls();
-//  this->init_in_out();
-//  this->init_table_dims();
+  // re-run "check_semantics" to properly initialize novel non-
+  // terminals and links to non-terminals
   this->check_semantic();
-
 
   // mark the modified grammar as an outside one
   this->outside = true;
