@@ -3274,5 +3274,6 @@ void Alt::Link::ntparas_to_dot(std::ostream &out) {
   }
   if (this->ntparas.size() > 0) {
     out << ")";
-  }}
+  }
+}
 // END functions produce graphViz code to represent the grammar
