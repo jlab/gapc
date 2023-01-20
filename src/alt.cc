@@ -3125,8 +3125,8 @@ void to_dot_indices(std::vector<Expr::Base*> indices, std::ostream &out) {
 void to_dot_multiys(Yield::Multi m_ys, std::ostream &out) {
   out << "<tr>";
   for (Yield::Multi::iterator ys = m_ys.begin(); ys != m_ys.end(); ++ys) {
-	  out << "<td colspan=\"3\">min=" << ys->low();
-	  out << ", max=" << ys->high() << "</td>";
+    out << "<td colspan=\"3\">min=" << ys->low();
+    out << ", max=" << ys->high() << "</td>";
   }
   out << "</tr>";
 }
