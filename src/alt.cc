@@ -3604,7 +3604,7 @@ Expr::Base *Alt::Simple::get_next_var_right2left(Expr::Base *left_index,
     Yield::Size ys_this, Yield::Size *ys_lefts) {
   if (ys_this.low() == ys_this.high()) {
     // constant yield size
-    if (ys_lefts->low() == 0) {
+    if ((ys_lefts->low() == 0) && (ys_lefts->high() == 0)) {
       return innermost_left_index;
     } else {
       return left_index->plus(ys_this.low());
@@ -3636,7 +3636,7 @@ Expr::Base *Alt::Simple::get_next_var_left2right(Expr::Base *right_index,
 
   // constant yield size
   if (ys_this.low() == ys_this.high()) {
-    if (ys_rights->low() == 0) {
+    if ((ys_rights->low() == 0) && (ys_rights->high() == 0)) {
       // we might fall back to j, if yield between outside NT and current
       // right hand side argument is 0
       next_index = innermost_right_index;
