@@ -3155,7 +3155,6 @@ void to_dot_filternameargs(Filter *filter, std::ostream &out) {
 unsigned int Alt::Base::to_dot_semanticfilters(unsigned int *nodeID,
     unsigned int thisID, std::ostream &out,
     std::vector<unsigned int> *childIDs) {
-
   unsigned int max_depth = 0;
   // add syntactic filters
   for (std::list<Filter*>::const_iterator filter = this->filters.begin();
@@ -3285,7 +3284,8 @@ unsigned int* Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out,
     }
   }
   out << "</tr>";
-  to_dot_multiys(m_ys, out);
+  // TODO(sjanssen): update Truth before activating yield size plotting
+  // to_dot_multiys(m_ys, out);
   out << "</table>>, color=\"";
   if (simple) {
     if (simple->is_terminal()) {
@@ -3533,7 +3533,6 @@ bool Alt::Link::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace,
           // replace old NT (=find) with novel NT (=replace)
           this->nt = replace;
           this->m_ys = replace->multi_ys();
-          //this->m_ys_inside = replace->multi_ys();
           this->name = replace->name;
           this->is_partof_outside = replace->is_partof_outside;
           return true;

@@ -1218,9 +1218,9 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
             outside_alt->m_ys_inside = outside_alt->multi_ys();
             // append copied+replaced alternative to the list of alternatives
             // for the outside version of the called non-terminal
-            Symbol::NT *called_nt = (dynamic_cast<Symbol::NT*>(
-                    outside_NTs.find(*((*it_nt)->name))->second));
-            called_nt->alts.push_back(outside_alt);
+            (dynamic_cast<Symbol::NT*>(
+              outside_NTs.find(*((*it_nt)->name))->second))->alts.push_back(
+                outside_alt);
             skip_occurences[*((*it_nt)->name)]++;
           }
         } else {

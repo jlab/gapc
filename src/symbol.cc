@@ -1669,7 +1669,8 @@ unsigned int Symbol::Base::to_dot(unsigned int *nodeID, std::ostream &out,
     out << "</td>";
     to_dot_indices(this->right_indices, out);
     out << "</tr>";
-    to_dot_multiys(this->m_ys, out);
+    // TODO(sjanssen): wait for truth update
+    // to_dot_multiys(this->m_ys, out);
     out << "</table>>";
   } else {
     out << "<td>" << *this->name << "</td></tr></table>>";
