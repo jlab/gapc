@@ -911,4 +911,6 @@ class Multi : public Base {
 // used as a helper for to_dot functions
 void to_dot_indices(std::vector<Expr::Base*> indices, std::ostream &out);
 
+void to_dot_multiys(Yield::Multi m_ys, std::ostream &out);
+
 #endif  // SRC_ALT_HH_

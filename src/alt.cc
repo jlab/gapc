@@ -2620,6 +2620,7 @@ void Alt::Simple::init_multi_ys() {
        input, i.e. NOT for CONST_xxx terminal parser, that inject values for
        later use in algebras.
     */
+    // TODO(sjanssen) isn't there a better method to check for constants?
     if (name->rfind("CONST_", 0) != 0) {
         Yield::Poly max_terminal_arg_yield = Yield::Poly(0);
         for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
@@ -3121,6 +3122,14 @@ void to_dot_indices(std::vector<Expr::Base*> indices, std::ostream &out) {
   }
   out << "</font></td>";
 }
+void to_dot_multiys(Yield::Multi m_ys, std::ostream &out) {
+  out << "<tr>";
+  for (Yield::Multi::iterator ys = m_ys.begin(); ys != m_ys.end(); ++ys) {
+	  out << "<td colspan=\"3\">min=" << ys->low();
+	  out << ", max=" << ys->high() << "</td>";
+  }
+  out << "</tr>";
+}
 void to_dot_filternameargs(Filter *filter, std::ostream &out) {
   out << *filter->name;
   for (std::list<Expr::Base*>::const_iterator arg = filter->args.begin();
@@ -3146,6 +3155,7 @@ void to_dot_filternameargs(Filter *filter, std::ostream &out) {
 unsigned int Alt::Base::to_dot_semanticfilters(unsigned int *nodeID,
     unsigned int thisID, std::ostream &out,
     std::vector<unsigned int> *childIDs) {
+
   unsigned int max_depth = 0;
   // add syntactic filters
   for (std::list<Filter*>::const_iterator filter = this->filters.begin();
@@ -3274,7 +3284,9 @@ unsigned int* Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out,
       to_dot_indices(this->right_indices, out);
     }
   }
-  out << "</tr></table>>, color=\"";
+  out << "</tr>";
+  to_dot_multiys(m_ys, out);
+  out << "</table>>, color=\"";
   if (simple) {
     if (simple->is_terminal()) {
       out << "blue";
@@ -3520,6 +3532,8 @@ bool Alt::Link::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace,
         if (skip_occurences[*(find->name)] == 0) {
           // replace old NT (=find) with novel NT (=replace)
           this->nt = replace;
+          this->m_ys = replace->multi_ys();
+          //this->m_ys_inside = replace->multi_ys();
           this->name = replace->name;
           this->is_partof_outside = replace->is_partof_outside;
           return true;

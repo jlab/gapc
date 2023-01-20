@@ -1218,9 +1218,9 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
             outside_alt->m_ys_inside = outside_alt->multi_ys();
             // append copied+replaced alternative to the list of alternatives
             // for the outside version of the called non-terminal
-            (dynamic_cast<Symbol::NT*>(
-              outside_NTs.find(*((*it_nt)->name))->second))->alts.push_back(
-                outside_alt);
+            Symbol::NT *called_nt = (dynamic_cast<Symbol::NT*>(
+                    outside_NTs.find(*((*it_nt)->name))->second));
+            called_nt->alts.push_back(outside_alt);
             skip_occurences[*((*it_nt)->name)]++;
           }
         } else {
@@ -1321,9 +1321,12 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
   // terminals and links to non-terminals, but explicitly do NOT
   // re-run yield size analysis since it does not respect outside
   // situations.
-  this->init_calls();
-  this->init_in_out();
-  this->init_table_dims();
+//  this->init_multi_yield_sizes();
+//  this->init_calls();
+//  this->init_in_out();
+//  this->init_table_dims();
+  this->check_semantic();
+
 
   // mark the modified grammar as an outside one
   this->outside = true;
