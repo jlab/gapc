@@ -587,6 +587,7 @@ class Simple : public Base {
   void set_partof_outside(bool is_outside);
   bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace,
     hashtable<std::string, unsigned int> &skip_occurences);
+
   Alt::Base* find_block();
   Alt::Base *find_block_parent(const Alt::Base &block);
 
