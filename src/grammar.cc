@@ -1321,9 +1321,13 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
     this->axiom_name = nt_axiom_name;
     this->init_axiom();
   }
-  // re-run "check_semantics" to properly initialize novel non-
-  // terminals and links to non-terminals
-  this->check_semantic();
+  // re-run parts of "check_semantics" to properly initialize novel non-
+  // terminals and links to non-terminals, but explicitly do NOT
+  // re-run yield size analysis since it does not respect outside
+  // situations.
+  this->init_calls();
+  this->init_in_out();
+  this->init_table_dims();
 
   // mark the modified grammar as an outside one
   this->outside = true;
