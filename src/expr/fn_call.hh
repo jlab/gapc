@@ -115,7 +115,7 @@ class Fn_Call : public Base {
     void add_arg(const Statement::Table_Decl &v);
     void add(const Statement::Table_Decl &v);
     void add_arg(std::string *n);
-    void add_arg(Expr::Base *e);
+    void add_arg(Expr::Base *e, bool as_first = false);
     void add_arg(Var_Acc::Base *e);
 
     void add(

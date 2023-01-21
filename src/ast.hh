@@ -294,6 +294,8 @@ class AST {
   Product::Base * get_backtrack_product() {
       return backtrack_product;
   }
+
+  bool inject_derivatives = false;
 };
 
 #endif  // SRC_AST_HH_

@@ -52,7 +52,9 @@
 #include "dep_analysis.hh"
 
 #include "symbol.hh"
-
+#include "signature.hh"
+#include "fn_def.hh"
+#include "para_decl.hh"
 
 
 void Grammar::add_nt(Symbol::NT *nt) {
@@ -1057,7 +1059,6 @@ void Grammar::inject_outside_nts() {
   Grammar::inject_outside_nts(outside_nt_list);
 }
 void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
-  std::string OUTSIDE_NT_PREFIX = "outside_";
   hashtable<std::string, Symbol::Base*> outside_NTs;
   std::set<Symbol::NT*> outside_nts = std::set<Symbol::NT*>();
 
@@ -1146,6 +1147,7 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
     // Thus, no new NTs have to be injected
     return;
   }
+
   for (std::set<Symbol::NT*>::iterator nt = outside_nts.begin();
        nt != outside_nts.end(); ++nt) {
     // use inside NT as template ...
@@ -1168,6 +1170,8 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
 
     // flag this new non-terminal as being part of the outside rules
     outside_nt->is_partof_outside = true;
+
+
 
     outside_NTs[OUTSIDE_NT_PREFIX + (*(*nt)->name)] = outside_nt;
     outside_NTs[(*(*nt)->name)] = outside_nt;
@@ -1294,7 +1298,7 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
   } else {
     // otherwise, we need to add another left hand side non-terminal
     // which points to multiple non-terminals WITHOUT making a choice
-    std::string *nt_axiom_name = new std::string("outside_axioms");
+    std::string *nt_axiom_name = new std::string(OUTSIDE_AXIOMS);
     Symbol::NT *nt_axiom = new Symbol::NT(nt_axiom_name, Loc());
     // carry over tracks from original inside axiom
     nt_axiom->set_tracks(this->axiom->tracks(), this->axiom->track_pos());
@@ -1331,6 +1335,77 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
   Log::instance()->verboseMessage(
     "Grammar has been modified into an outside version.");
 }
+
+
+/* if outside grammar is generated to produce derivatives, the
+ * DP values are probabilities and as such must be summed for
+ * alternative production rules. If however the algebra uses e.g.
+ * log()-space for numerical stability, choice function of
+ * inside parts is expsum instead of sum. We here replace the
+ * user provided choice function with "sum". */
+void Grammar::replace_choice_for_derivatives() {
+  // for every user defined choice function (in inside grammar part):
+  // create an independent copy for the outside parts and add to signature
+  for (hashtable<std::string, Fn_Decl*>::const_iterator i = \
+       ast.signature->choice_fns.begin();
+       i != ast.signature->choice_fns.end(); ++i) {
+    Fn_Decl *in_choice_decl = (*i).second;
+    Fn_Decl *out_choice_decl = new Fn_Decl(
+      new Type::Choice(new Type::List(
+        in_choice_decl->return_type->component()), Loc()),
+      new std::string(PREFIX_DERIVATIVE + (*i).first));
+    for (std::list<Type::Base*>::const_iterator t = \
+         in_choice_decl->types.begin();
+         t != in_choice_decl->types.end(); ++t) {
+      out_choice_decl->types.push_back((*t)->clone());
+    }
+    ast.signature->choice_fns[*out_choice_decl->name] = out_choice_decl;
+    ast.signature->decls[*out_choice_decl->name] = out_choice_decl;
+
+    // also adding function definition to every algebra
+    for (hashtable<std::string, Algebra*>::iterator a = ast.algebras.begin();
+         a != ast.algebras.end(); ++a) {
+      Fn_Def *in_choice_def = (*a).second->choice_fns[(*i).first];
+      if (in_choice_def) {
+        Fn_Def *out_choice_def = in_choice_def->copy_parameters(
+          out_choice_decl->name);
+
+        // replace whatever function body with list(sum(xs)) ...
+        // ... which will be optimized later into just returning xs
+        out_choice_def->stmts.clear();
+        Expr::Fn_Call *y = new Expr::Fn_Call(Expr::Fn_Call::SUM);
+        y->add(out_choice_def->paras);
+        Expr::Fn_Call *x = new Expr::Fn_Call(Expr::Fn_Call::LIST);
+        x->exprs.push_back(y);
+        out_choice_def->stmts.push_back(new Statement::Return(x));
+
+        (*a).second->choice_fns[*out_choice_decl->name] = out_choice_def;
+        (*a).second->fns[*out_choice_decl->name] = out_choice_def;
+      } else {
+        Log::instance()->error(
+          "Choice function " + (*i).first + " not defined in algebra "
+          + (*a).first + "!");
+      }
+    }
+  }
+
+  // replace choice functions of outside NTs
+  for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin();
+         i != NTs.end(); ++i) {
+    Symbol::NT *nt = dynamic_cast<Symbol::NT*>((*i).second);
+    if (nt) {
+      if (nt->is_partof_outside) {
+        if (!(*nt->eval_fn).empty()) {
+          nt->eval_fn = new std::string(PREFIX_DERIVATIVE + *nt->eval_fn);
+        }
+      }
+    }
+  }
+  Log::instance()->verboseMessage(
+    "Choice functions have been modified into 'sum' for outside "
+    "grammar parts in order to compute derivatives.");
+}
+
 
 unsigned int Grammar::to_dot(unsigned int *nodeID, std::ostream &out,
         int plot_grammar) {

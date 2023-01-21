@@ -252,7 +252,9 @@ class Base {
 
  public:
   std::list<Statement::Base*> statements;
-  virtual void codegen(AST &ast) = 0;
+  // these statements are used to record the use of sub-solutions
+  std::list<Statement::Base*> derivative_statements;
+  virtual void codegen(AST &ast, Symbol::NT &calling_nt) = 0;
   void init_filter_guards(AST &ast);
 
   virtual void print_dot_edge(std::ostream &out, Symbol::NT &nt) = 0;
@@ -375,6 +377,14 @@ class Base {
   // blocks)
   virtual Alt::Base *find_block_parent(const Alt::Base &block);
   bool inside_end = false;
+
+  void init_derivative_recording(AST &ast, std::string *result_name);
+  Expr::Fn_Call *inject_derivative_body(AST &ast, Symbol::NT &calling_nt,
+    Alt::Base *outside_fn_arg, Expr::Base *outside_arg);
+
+ public:
+  // for derivative code generation: add code for candidate creation
+  virtual std::list<Statement::Base*> *derivatives_create_candidate();
 };
 
 
@@ -469,7 +479,7 @@ class Simple : public Base {
   void add_clear_code(
     std::list<Statement::Base*> &stmts, const Fn_Arg::Base &b);
   std::list<Statement::Base*> *reorder_args_cg(
-    AST &ast, std::list<Statement::Base*> &l);
+    AST &ast, std::list<Statement::Base*> &l, Symbol::NT &calling_nt);
 
 
   void add_overlay_code(
@@ -510,9 +520,9 @@ class Simple : public Base {
 
   void init_foreach();
   bool has_arg_list();
-  void init_body(AST &ast);
+  void init_body(AST &ast, Symbol::NT &calling_nt);
   void init_guards();
-  void codegen(AST &ast);
+  void codegen(AST &ast, Symbol::NT &calling_nt);
 
   void print_dot_edge(std::ostream &out, Symbol::NT &nt);
 
@@ -595,6 +605,9 @@ class Simple : public Base {
   std::list<Statement::Base*> *insert_index_stmts(
     std::list<Statement::Base*> *stmts);
   std::list<Statement::Base*> *inner_code;
+
+ public:
+  std::list<Statement::Base*> *derivatives_create_candidate();
 };
 
 
@@ -677,7 +690,7 @@ class Link : public Base {
 
   // void init_ret_decl(unsigned int i);
 
-  void codegen(AST &ast);
+  void codegen(AST &ast, Symbol::NT &calling_nt);
 
   void print_dot_edge(std::ostream &out, Symbol::NT &nt);
 
@@ -697,7 +710,7 @@ class Link : public Base {
   void multi_collect_factors(Runtime::Poly &p);
   void multi_init_calls(const Runtime::Poly &p, size_t base_tracks);
 
- private:
+ public:
   void add_args(Expr::Fn_Call *fn);
 
  private:
@@ -732,6 +745,9 @@ class Link : public Base {
   void init_outside_guards();
   Alt::Base* find_block();
   Alt::Base *find_block_parent(const Alt::Base &block);
+
+ public:
+  std::list<Statement::Base*> *derivatives_create_candidate();
 };
 
 
@@ -791,7 +807,7 @@ class Block : public Base {
     Expr::Base *center_left, Expr::Base *center_right,
     bool is_right_of_outside_nt = false);
 
-  void codegen(AST &ast);
+  void codegen(AST &ast, Symbol::NT &calling_nt);
 
   void print_dot_edge(std::ostream &out, Symbol::NT &nt);
 
@@ -816,6 +832,8 @@ class Block : public Base {
           int plot_level);
   Alt::Base* find_block();
   Alt::Base *find_block_parent(const Alt::Base &block);
+
+  std::list<Statement::Base*> *derivatives_create_candidate();
 };
 
 
@@ -876,7 +894,7 @@ class Multi : public Base {
     Expr::Base *center_left, Expr::Base *center_right,
     bool is_right_of_outside_nt = false);
 
-  void codegen(AST &ast);
+  void codegen(AST &ast, Symbol::NT &calling_nt);
   void print_dot_edge(std::ostream &out, Symbol::NT &nt);
   void print(std::ostream &s);
 
@@ -904,6 +922,8 @@ class Multi : public Base {
           int plot_level);
   Alt::Base* find_block();
   Alt::Base *find_block_parent(const Alt::Base &block);
+
+  std::list<Statement::Base*> *derivatives_create_candidate();
 };
 
 }  // namespace Alt

@@ -97,7 +97,11 @@ int main(int argc, char **argv) {
   std::cout << "Answer: \n";
   obj.print_result(std::cout, res);
 #else
+#ifndef DERIVATIVES
   obj.report_insideoutside(std::cout);
+#else
+  obj.report_derivative(std::cout);
+#endif
 #endif
 
   gapc::add_event("end_result_pp");

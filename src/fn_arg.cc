@@ -388,8 +388,8 @@ void Fn_Arg::Alt::init_ret_decl(unsigned int i, const std::string &prefix) {
   }
 }
 
-void Fn_Arg::Alt::codegen(AST &ast) {
-  alt->codegen(ast);
+void Fn_Arg::Alt::codegen(AST &ast, Symbol::NT &calling_nt) {
+  alt->codegen(ast, calling_nt);
   // statements_ = alt->statements;
   assert(!ret_decls_.empty());
   if (ret_decls_.size() == 1) {
@@ -408,7 +408,7 @@ void Fn_Arg::Alt::codegen(AST &ast) {
   // statements_.push_back(ret_decl);
 }
 
-void Fn_Arg::Const::codegen(AST &ast) {
+void Fn_Arg::Const::codegen(AST &ast, Symbol::NT &calling_nt) {
   assert(ret_decls_.size() == 1);
   ret_decls_.front()->rhs = new Expr::Const(expr_);
 }

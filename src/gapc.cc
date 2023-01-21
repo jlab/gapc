@@ -139,7 +139,12 @@ static void parse_options(int argc, char **argv, Options *rec) {
       "  1 = grammar\n"
       "  2 = add indices\n"
       "  3 = add data types.\n"
-      "(Use 'dot -Tpdf out.dot' to generate a PDF.)\nDefault file is out.dot");
+      "(Use 'dot -Tpdf out.dot' to generate a PDF.)\nDefault file is out.dot")
+    ("derivative", po::value<int>(),
+      "Using backpropagation schema, generate code to compute first "
+      "derivative via forward and backward pass (internally requires outside"
+      " code generation AND tabulation of all non-terminals).  0 (default) = "
+      "deactivated\n  1 = first derivative");
   po::options_description hidden("");
   hidden.add_options()
     ("backtrack", "deprecated for --backtrace")
@@ -273,6 +278,15 @@ static void parse_options(int argc, char **argv, Options *rec) {
     rec->plot_grammar_file = basename(rec->out_file) + ".dot";
   }
 
+  if (vm.count("derivative")) {
+    rec->derivative = vm["derivative"].as<int>();
+
+    // also activate outside generation
+    rec->outside_nt_list = {"ALL"};
+
+    // and tabulate all NTs (for now)
+    rec->tab_everything = true;
+  }
 
   bool r = rec->check();
   if (!r) {
@@ -352,6 +366,10 @@ class Main {
     driver.ast.select_grammar(opts.instance);
     driver.parse_product(opts.product);
 
+    // lets the AST know if code for derivative computation has
+    // to be injected
+    driver.ast.inject_derivatives = opts.derivative > 0;
+
     if (driver.is_failing()) {
       throw LogError("Seen parse errors.");
     }
@@ -373,6 +391,9 @@ class Main {
     // inject rules for outside grammar
     if (opts.outside_nt_list.size() > 0) {
       grammar->inject_outside_nts(opts.outside_nt_list);
+      if (opts.derivative > 0) {
+        grammar->replace_choice_for_derivatives();
+      }
     }
 
     // configure the window and k-best mode
@@ -528,6 +549,11 @@ class Main {
         }
     }
 
+    if (opts.derivative > 0) {
+      // if user requests derivative computation, check that user also
+      // provided a normalization function for forward computation
+      instance->product->algebra()->check_derivative();
+    }
 
     driver.ast.set_float_accuracy(*instance, opts.float_acc);
     if (opts.pareto == 3) {
@@ -636,7 +662,11 @@ class Main {
     hh.end_fwd_decls();
     hh.header_footer(driver.ast);
     if (grammar->is_outside()) {
-      hh.print_insideoutside_report_fn(opts.outside_nt_list, driver.ast);
+      if (driver.ast.inject_derivatives) {
+        hh.print_run_derivative_fn(driver.ast);
+      } else {
+        hh.print_insideoutside_report_fn(opts.outside_nt_list, driver.ast);
+      }
     }
 
     // Write out the C++ implementation file of the

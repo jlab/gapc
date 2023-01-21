@@ -1423,8 +1423,53 @@ void Alt::Base::add_seqs(Expr::Fn_Call *fn_call, const AST &ast) const {
   }
 }
 
+// TODO(sjanssen): rename outside_fn_arg to reflect actual datatype
+Expr::Fn_Call *Alt::Base::inject_derivative_body(AST &ast,
+  Symbol::NT &calling_nt, Alt::Base *outside_fn_arg,
+  Expr::Base *outside_arg) {
+  assert(outside_fn_arg);
+  Alt::Link *outside_alt = dynamic_cast<Alt::Link*>(outside_fn_arg);
+  Expr::Fn_Call *fn_call = new Expr::Fn_Call(new std::string("get_traces"));
+  fn_call->exprs.clear();
 
-void Alt::Simple::init_body(AST &ast) {
+  fn_call->add_arg(new std::string((*outside_alt->name).substr(
+    sizeof(OUTSIDE_NT_PREFIX)-1, (*outside_alt->name).length()) + "_table"));
+  fn_call->is_obj = Bool(true);
+
+  // abuse mkidx to obtain indices from outside-NT call, i.e. not really
+  // calling make_index
+  Expr::Fn_Call *mkidx = new Expr::Fn_Call(new std::string("*make_index"));
+  outside_alt->add_args(mkidx);
+  fn_call->exprs.insert(fn_call->exprs.end(),
+                        mkidx->exprs.begin(), mkidx->exprs.end());
+
+  // add name of non-terminal that requests traces
+  // together with make_index, this information is used to sub-set
+  // stored traces to those that actually lead to this DP cell
+  fn_call->exprs.push_back(new Expr::Const((*calling_nt.name).substr(
+    sizeof(OUTSIDE_NT_PREFIX)-1, (*calling_nt.name).length())));
+
+  // index of the calling non-terminal
+  mkidx->exprs.clear();
+  Fn_Def *x = new Fn_Def();
+  x->add_para(calling_nt);
+  for (std::list<Para_Decl::Base*>::const_iterator i = x->paras.begin();
+       i != x->paras.end(); ++i) {
+    Para_Decl::Simple *s = dynamic_cast<Para_Decl::Simple*>(*i);
+    if (s) {
+      mkidx->add_arg((*s).name());
+    }
+  }
+  mkidx->add_arg(new Expr::Const(static_cast<int>(mkidx->exprs.size())), true);
+  fn_call->exprs.push_back(mkidx);
+
+  // result of outside non terminal, e.g. a_0
+  fn_call->exprs.push_back(outside_arg);
+
+  return fn_call;
+}
+
+void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
   body_stmts.clear();
 
   std::list<Statement::Base*> *stmts = &body_stmts;
@@ -1446,6 +1491,10 @@ void Alt::Simple::init_body(AST &ast) {
     fn_call->add(left_indices, right_indices);
   }
 
+  // record which of the arguments holds the single link to an outside NT
+  // used for derivative computation
+  Fn_Arg::Base *outside_fn_arg = NULL;
+  Expr::Vacc *outside_arg = NULL;
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end();
        ++i) {
     if ((*i)->is(Fn_Arg::CONST)) {
@@ -1454,6 +1503,15 @@ void Alt::Simple::init_body(AST &ast) {
       assert(!c->ret_decls().empty());
       fn_call->exprs.push_back(c->ret_decls().front()->rhs);
       continue;
+    }
+    if (this->get_is_partof_outside() && ast.inject_derivatives) {
+      Fn_Arg::Alt *fn_alt = dynamic_cast<Fn_Arg::Alt*>(*i);
+      if (fn_alt) {
+        Alt::Link *alt_link = dynamic_cast<Alt::Link*>((*fn_alt).alt_ref());
+        if (alt_link && alt_link->nt->is_partof_outside) {
+          outside_fn_arg = *i;
+        }
+      }
     }
     std::vector<Statement::Var_Decl*>::const_iterator k =
       (*i)->ret_decls().begin();
@@ -1464,6 +1522,9 @@ void Alt::Simple::init_body(AST &ast) {
         arg = new Expr::Vacc(**j);
       } else {
         arg = new Expr::Vacc(**k);
+      }
+      if (outside_fn_arg && !outside_arg) {
+        outside_arg = arg;
       }
       fn_call->exprs.push_back(arg);
     }
@@ -1476,25 +1537,48 @@ void Alt::Simple::init_body(AST &ast) {
       decl->return_type, new std::string("ans"));
     pre_decl.clear();
     pre_decl.push_back(vdecl);
-    vdecl->rhs = fn_call;
+    if (ast.inject_derivatives && this->get_is_partof_outside() &&
+        outside_fn_arg) {
+      vdecl->rhs = inject_derivative_body(ast, calling_nt,
+                                          outside_fn_arg->alt_ref(),
+                                          outside_arg);
+    } else {
+      vdecl->rhs = fn_call;
+    }
     Statement::Fn_Call *fn = new Statement::Fn_Call(
       Statement::Fn_Call::PUSH_BACK);
     fn->add_arg(*ret_decl);
     fn->add_arg(*vdecl);
     stmts->push_back(vdecl);
+    init_derivative_recording(ast, vdecl->name);
     Expr::Base *suchthat = suchthat_code(*vdecl);
     if (suchthat) {
       Statement::If *c = new Statement::If(suchthat);
       c->then.push_back(fn);
+      c->then.insert(c->then.end(), this->derivative_statements.begin(),
+                     this->derivative_statements.end());
       stmts->push_back(c);
     } else {
       stmts->push_back(fn);
+      stmts->insert(stmts->end(), this->derivative_statements.begin(),
+                    this->derivative_statements.end());
     }
+    // clear this list, as it has just been added to the statements
+    this->derivative_statements.clear();
   } else {
     Statement::Var_Assign *ass = new Statement::Var_Assign(*ret_decl);
     pre_decl.clear();
     pre_decl.push_back(ret_decl);
-    ass->rhs = fn_call;
+    if (ast.inject_derivatives && calling_nt.is_partof_outside &&
+        outside_fn_arg) {
+      ass->rhs = inject_derivative_body(ast, calling_nt,
+                                        outside_fn_arg->alt_ref(),
+                                        outside_arg);
+    } else {
+      ass->rhs = fn_call;
+    }
+    // derviative statements will later be added in Symbol::NT::codegen
+    init_derivative_recording(ast, ret_decl->name);
     stmts->push_back(ass);
     Expr::Base *suchthat = suchthat_code(*ret_decl);
     if (suchthat) {
@@ -1503,6 +1587,103 @@ void Alt::Simple::init_body(AST &ast) {
       e->add_arg(*ret_decl);
       c->els.push_back(e);
       stmts->push_back(c);
+    }
+  }
+}
+
+std::list<Statement::Base*> *Alt::Base::derivatives_create_candidate() {
+  return NULL;
+}
+
+std::list<Statement::Base*> *Alt::Simple::derivatives_create_candidate() {
+  std::list<Statement::Base*> *stmts_record = \
+        new std::list<Statement::Base*>();
+
+  for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
+       i != args.end(); ++i) {
+    if ((*i)->is(Fn_Arg::ALT) && ((*i)->alt_ref()->is(Alt::LINK))) {
+      Alt::Link *alt = dynamic_cast<Alt::Link*>((*i)->alt_ref());
+      if (alt->nt->is(Symbol::NONTERMINAL)) {
+        std::list<Statement::Base*> *x = alt->derivatives_create_candidate();
+        stmts_record-> insert(stmts_record->end(), x->begin(), x->end());
+      }
+    }
+  }
+
+  return stmts_record;
+}
+
+std::list<Statement::Base*> *Alt::Link::derivatives_create_candidate() {
+  std::list<Statement::Base*> *stmts_record = new std::list<Statement::Base*>();
+
+  Expr::Fn_Call *mkidx = new Expr::Fn_Call(
+    new std::string("make_index"));
+  this->add_args(mkidx);
+  // add number of index arguments for elipsis mechanism
+  mkidx->add_arg(new Expr::Const(
+  static_cast<int>(mkidx->exprs.size())), true);
+
+  Statement::Fn_Call *fn_add = new Statement::Fn_Call(
+  "add_sub_component");
+  fn_add->add_arg(new std::string("cand"));
+  fn_add->is_obj = Bool(true);
+  fn_add->add_arg(new Expr::Const(*this->nt->name));
+  fn_add->add_arg(mkidx);
+
+  stmts_record->push_back(fn_add);
+
+  return stmts_record;
+}
+
+std::list<Statement::Base*> *Alt::Block::derivatives_create_candidate() {
+  throw LogError(
+    "Alt::Block::derivatives_create_candidate not properly implemented yet, "
+    "as Blocks without application of choice function open up the route for"
+    " huge combinatorics!");
+
+  std::list<Statement::Base*> *stmts_record = new std::list<Statement::Base*>();
+  for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
+    std::list<Statement::Base*> *x = (*i)->derivatives_create_candidate();
+    stmts_record->insert(stmts_record->end(), x->begin(), x->end());
+  }
+  return stmts_record;
+}
+
+std::list<Statement::Base*> *Alt::Multi::derivatives_create_candidate() {
+  throw LogError(
+    "Alt::Multi::derivatives_create_candidate is not yet implemented!");
+}
+
+void Alt::Base::init_derivative_recording(
+  AST &ast, std::string *result_name) {
+  if (ast.inject_derivatives) {
+    if (!this->is_partof_outside) {
+      // test if this alternative uses sub-solutions from other non-terminals
+      std::list<Statement::Base*> *stmts_record =
+        derivatives_create_candidate();
+      if (stmts_record && (stmts_record->size() > 0)) {
+        // TODO(sjanssen): should I use build-in functions? Also for push_back
+        Statement::Fn_Call *x = new Statement::Fn_Call("set_value");
+        x->add_arg(new std::string("cand"));
+        x->is_obj = Bool(true);
+        assert(result_name);
+        x->add_arg(result_name);
+        stmts_record->push_front(x);
+
+        Statement::Var_Decl *candidate = new Statement::Var_Decl(
+          new ::Type::External(new std::string("candidate")), "cand");
+        stmts_record->push_front(candidate);
+
+        Statement::Fn_Call *fn_push = new Statement::Fn_Call("push_back");
+        fn_push->add_arg(new std::string("candidates"));
+        fn_push->is_obj = Bool(true);
+        fn_push->add_arg(new std::string("cand"));
+        stmts_record->push_back(fn_push);
+
+        this->derivative_statements.insert(this->derivative_statements.end(),
+                                           stmts_record->begin(),
+                                           stmts_record->end());
+      }
     }
   }
 }
@@ -1676,10 +1857,19 @@ void Alt::Simple::add_clear_code(
 
 
 std::list<Statement::Base*> *Alt::Simple::reorder_args_cg(
-  AST &ast, std::list<Statement::Base*> &x) {
+  AST &ast, std::list<Statement::Base*> &x,
+  Symbol::NT &calling_nt) {
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
        i != args.end(); ++i) {
-    (*i)->codegen(ast);
+    (*i)->codegen(ast, calling_nt);
+    // TODO(sjanssen): is this really the best way for nested Blocks??
+    if ((*i)->is(Fn_Arg::ALT) && (*i)->alt_ref()->is(Alt::BLOCK)
+        && ((*i)->alt_ref()->derivative_statements.size() <= 0)) {
+      (*i)->alt_ref()->init_derivative_recording(ast, this->ret_decl->name);
+      this->derivative_statements.insert(this->derivative_statements.end(),
+        (*i)->alt_ref()->derivative_statements.begin(),
+        (*i)->alt_ref()->derivative_statements.end());
+    }
   }
   return add_arg_code(ast, x);
 }
@@ -1954,7 +2144,7 @@ std::list<Statement::Base*> *Alt::Simple::add_guards(
   return stmts;
 }
 
-void Alt::Simple::codegen(AST &ast) {
+void Alt::Simple::codegen(AST &ast, Symbol::NT &calling_nt) {
   // std::cout << "-----------Simple IN" << std::endl;
 
   bool nullary = false;
@@ -2065,7 +2255,8 @@ void Alt::Simple::codegen(AST &ast) {
 
   stmts = insert_index_stmts(stmts);
 
-  std::list<Statement::Base*> *inner_guards_body = reorder_args_cg(ast, *stmts);
+  std::list<Statement::Base*> *inner_guards_body = reorder_args_cg(
+    ast, *stmts, calling_nt);
   pre_stmts.clear();
   pre_cond.clear();
   pre_cond.push_back(add_arg_code(ast, pre_stmts));
@@ -2078,7 +2269,7 @@ void Alt::Simple::codegen(AST &ast) {
       foreach_loops.begin(), foreach_loops.end());
     loop_body = &f->statements;
   }
-  init_body(ast);
+  init_body(ast, calling_nt);
   if (!disabled_spec && !nullary && answer_list &&
      adp_specialization != ADP_Mode::STANDARD) {
       std::list<Statement::Base*> *app_stmts;
@@ -2160,12 +2351,11 @@ void Alt::Link::add_args(Expr::Fn_Call *fn) {
 }
 
 
-void Alt::Link::codegen(AST &ast) {
+void Alt::Link::codegen(AST &ast, Symbol::NT &calling_nt) {
   // std::cout << "link " << *name << std::endl;
 
   statements.clear();
   push_back_ret_decl();
-
   std::string *s = NULL;
   if (nt->is(Symbol::TERMINAL)) {
     s = name;
@@ -2205,13 +2395,45 @@ void Alt::Link::codegen(AST &ast) {
 //    stmts = &guards->then;
 //  }
 
+  /* In case of first derivatives, we want to normalize all result to
+   * probabilities. Therefore, the recursion base of the outside pass must be
+   * set to 1.0, instead of using the result of the initial inside pass,
+   * e.g. axiom with complete input substring */
+  Expr::Base *fn_or_const = fn;
+  if ((ast.inject_derivatives) &&
+      (*calling_nt.orig_name == *ast.grammar()->axiom_name_inside)) {
+    unsigned int lacking_complete_tracks = calling_nt.tracks();
+    for (std::vector<std::list<Filter*> >::const_iterator track = \
+         multi_filter.begin(); track != multi_filter.end(); ++track) {
+      for (std::list<Filter*>::const_iterator filter = (*track).begin();
+           filter != (*track).end(); ++filter) {
+        if (*(*filter)->name == "complete_track") {
+          lacking_complete_tracks--;
+        }
+      }
+    }
+    if (lacking_complete_tracks == 0) {
+      fn_or_const = new Expr::Const(1.0);
+    }
+  }
+
   init_filter_guards(ast);
   if (filter_guards) {
-    Statement::Var_Assign *v = new Statement::Var_Assign(*ret_decl, fn);
+    Statement::Var_Assign *v = new Statement::Var_Assign(*ret_decl,
+                                                         fn_or_const);
     statements.push_back(filter_guards);
     filter_guards->then.push_back(v);
   } else {
-    ret_decl->rhs = fn;
+    if (nt->is(Symbol::NONTERMINAL) && this->top_level && ast.inject_derivatives
+        && calling_nt.is_partof_outside) {
+        ret_decl->rhs = inject_derivative_body(ast, calling_nt, this,
+                                               fn_or_const);
+    } else {
+      ret_decl->rhs = fn;
+    }
+    if (nt->is(Symbol::NONTERMINAL) && this->top_level) {
+      init_derivative_recording(ast, ret_decl->name);
+    }
   }
   Expr::Base *suchthat = suchthat_code(*ret_decl);
   if (suchthat) {
@@ -2231,7 +2453,7 @@ void Alt::Link::codegen(AST &ast) {
 }
 
 
-void Alt::Block::codegen(AST &ast) {
+void Alt::Block::codegen(AST &ast, Symbol::NT &calling_nt) {
   // std::cout << "-----------------Block " << std::endl;
   statements.clear();
   push_back_ret_decl();
@@ -2260,7 +2482,7 @@ void Alt::Block::codegen(AST &ast) {
       }
     }
 
-    (*i)->codegen(ast);
+    (*i)->codegen(ast, calling_nt);
     stmts->insert(
       stmts->end(), (*i)->statements.begin(), (*i)->statements.end());
 
@@ -2324,7 +2546,6 @@ void Alt::Block::codegen(AST &ast) {
           fn->add_arg(*(*i)->ret_decl);
 
           cond->then.push_back(fn);
-
           if (!disabled_spec && adp_specialization != ADP_Mode::STANDARD &&
               !ADP_Mode::is_step(adp_specialization) ) {
               Statement::Fn_Call *mark = new Statement::Fn_Call(
@@ -2540,7 +2761,7 @@ Multi::Multi(const std::list<Alt::Base*> &t, const Loc &l) :
 }
 
 
-void Multi::codegen(AST &ast) {
+void Multi::codegen(AST &ast, Symbol::NT &calling_nt) {
   statements.clear();
   assert(ret_decls_.size() == list.size());
 
@@ -2565,7 +2786,7 @@ void Multi::codegen(AST &ast) {
   std::list<Statement::Var_Decl*>::iterator j = ret_decls_.begin();
   for (std::list<Alt::Base*>::iterator i = list.begin();
        i != list.end(); ++i, ++j) {
-    (*i)->codegen(ast);
+    (*i)->codegen(ast, calling_nt);
     stmts->insert(
       stmts->end(), (*i)->statements.begin(), (*i)->statements.end());
     assert(!(*j)->rhs);

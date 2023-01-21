@@ -779,9 +779,10 @@ Statement::Base *Symbol::NT::build_return_empty(const Code::Mode &mode) {
 }
 
 void Symbol::NT::init_guards(Code::Mode mode) {
+  std::list<Expr::Base*> cond_list = {};
+
   guards.clear();
 
-  std::list<Expr::Base*> cond_list;
   // else, guards are generated in tablegen.cc
   if (!tabulated || mode == Code::Mode::CYK)
     gen_ys_guards(cond_list);
@@ -984,7 +985,7 @@ void Symbol::NT::marker_code(const Code::Mode &mode,
   ret_stmts.push_back(c);
 }
 
-void Symbol::NT::init_ret_stmts(Code::Mode mode) {
+void Symbol::NT::init_ret_stmts(Code::Mode mode, AST &ast) {
   assert(table_decl);
   ret_stmts.clear();
   Expr::Vacc *ret = NULL;
@@ -1021,6 +1022,15 @@ void Symbol::NT::init_ret_stmts(Code::Mode mode) {
     tabfn->add(*table_decl);
     tabfn->add_arg(ret);
     ret_stmts.push_back(tabfn);
+
+    if (ast.inject_derivatives && !this->is_partof_outside
+        && *this->name != OUTSIDE_AXIOMS) {
+      Statement::Fn_Call *tracefn = new Statement::Fn_Call("set_traces");
+      tracefn->add(*table_decl);
+      tracefn->add_arg(new std::string("candidates"));
+      tracefn->add_arg(ret);
+      ret_stmts.push_back(tracefn);
+    }
 
     Expr::Fn_Call *get_tab = new Expr::Fn_Call(Expr::Fn_Call::GET_TABULATED);
     get_tab->add(*table_decl);
@@ -1080,7 +1090,8 @@ void Symbol::NT::init_table_decl(const AST &ast) {
 
   Tablegen tg;
   tg.set_window_mode(ast.window_mode);
-  table_decl = tg.create(*this, t, ast.code_mode() == Code::Mode::CYK);
+  table_decl = tg.create(*this, t, ast.code_mode() == Code::Mode::CYK,
+                         ast.inject_derivatives && !this->is_partof_outside);
 }
 
 #include <boost/algorithm/string/replace.hpp>
@@ -1206,7 +1217,9 @@ struct SetADPDisabled : public Visitor {
 
 void Symbol::NT::codegen(AST &ast) {
   // moving this uninizialized list to the front of the method to avoid issues with gdb within eclipse: https://www.eclipse.org/forums/index.php/t/1109346/
-  std::list<Statement::Base*> stmts;
+  std::list<Statement::Base*> stmts = {};
+  Fn_Def *score_code = 0;
+  Fn_Def *f = 0;
 
   // disable specialisation if needed in backtrace mode
   SetADPDisabled v = SetADPDisabled(ast.code_mode() == Code::Mode::BACKTRACK &&
@@ -1216,7 +1229,6 @@ void Symbol::NT::codegen(AST &ast) {
       (*i)->traverse(v);
   }
 
-  Fn_Def *score_code = 0;
   if (!code_.empty()) {
     score_code = code_.back();
   }
@@ -1228,7 +1240,6 @@ void Symbol::NT::codegen(AST &ast) {
   if (tabulated) {
     dt = new ::Type::Referencable(datatype);
   }
-  Fn_Def *f = 0;
   if (ast.cyk() && tabulated && ast.code_mode() != Code::Mode::BACKTRACK) {
     add_cyk_stub(ast);
     f = new Fn_Def(new ::Type::RealVoid(),
@@ -1257,6 +1268,12 @@ void Symbol::NT::codegen(AST &ast) {
   }
 
   stmts.push_back(ret_decl);
+  if (ast.inject_derivatives) {
+    if (!this->is_partof_outside) {
+      stmts.push_back(new Statement::Var_Decl(new ::Type::External(
+        new std::string("NTtraces")), "candidates"));
+    }
+  }
   stmts.push_back(new Statement::Fn_Call(
     Statement::Fn_Call::EMPTY, *ret_decl));
   std::list<Statement::Base*>::iterator j = post_alt_stmts.begin();
@@ -1264,10 +1281,30 @@ void Symbol::NT::codegen(AST &ast) {
        // << alts.size() << std::endl;
   for (std::list<Alt::Base*>::iterator i = alts.begin();
        i != alts.end() && j != post_alt_stmts.end(); ++i, ++j) {
-    (*i)->codegen(ast);
+    (*i)->codegen(ast, *this);
     stmts.insert(stmts.end(), (*i)->statements.begin(), (*i)->statements.end());
     if (*j) {
       stmts.push_back(*j);
+
+      /* if derivatives require tracing of sub-solutions, but the alternative
+         result is pushed to the candidate list below its body, we have to make
+         sure that according code is put after the push_back statement */
+      // TODO(sjanssen): can we find better way to make these statements part
+      // of the return declaration?
+      if (((*i)->derivative_statements.size() > 0) && (*j)->is(Statement::IF)) {
+        Statement::If *stmts_if = dynamic_cast<Statement::If*>(*j);
+        if (stmts_if) {
+          Statement::Fn_Call *stmts_then = dynamic_cast<Statement::Fn_Call*>(
+            *(stmts_if->then.begin()));
+          if (stmts_then && stmts_then->is(Statement::FN_CALL) &&
+              (stmts_then->builtin == Statement::Fn_Call::PUSH_BACK)) {
+            stmts_if->then.insert(stmts_if->then.end(),
+                                  (*i)->derivative_statements.begin(),
+                                  (*i)->derivative_statements.end());
+            (*i)->derivative_statements.clear();
+          }
+        }
+      }
 
       // this is a little shoed in, but set_ret_decl_rhs would need a
       // full rewrite otherwise
@@ -1302,7 +1339,7 @@ void Symbol::NT::codegen(AST &ast) {
       stmts.push_back(join);
   }
 
-  init_ret_stmts(ast.code_mode());
+  init_ret_stmts(ast.code_mode(), ast);
   stmts.insert(stmts.end(), ret_stmts.begin(), ret_stmts.end());
   f->stmts = stmts;
 

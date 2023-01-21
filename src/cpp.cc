@@ -637,7 +637,27 @@ void Printer::Cpp::print(const Fn_Def &fn_def) {
     }
     stream << ')' << endl;
   } else {
-    stream << indent() << *fn_def.return_type << ' ';
+    stream << indent();
+    if (fwd_decls &&
+      fn_def.name->compare(FN_NAME_DERIVATIVE_NORMALIZER) == 0) {
+      /* TODO(sjanssen): why is it necessary that the function is declared
+       * static at all? The aim is to pass the function as a pointer to
+       * functions in rtlib/trace.hh
+       * https://stackoverflow.com/questions/12662891/
+       *   how-can-i-pass-a-member-function-where-a-free-function-is-expected
+       * https://stackoverflow.com/questions/2374847/
+       *   passing-member-function-pointer-to-member-object-in-c
+       * https://stackoverflow.com/questions/30541367/
+       *   c-cannot-convert-double-to-double-for-argument-1-to-void
+       *   -sortdouble-in
+       * https://stackoverflow.com/questions/6339970/
+       *   c-using-function-as-parameter
+       * https://www.geeksforgeeks.org/
+       *   passing-a-function-as-a-parameter-in-cpp/
+       */
+      stream << "static ";
+    }
+    stream << *fn_def.return_type << ' ';
     if (!fwd_decls && !in_class) {
       stream << class_name << "::";
     }
@@ -1082,6 +1102,10 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   print_most_decl(t.nt());
 
   stream << indent() << "std::vector<" << dtype << "> array;" << endl;
+  if (t.for_derivatives) {
+    stream << indent() << "std::vector<std::vector<std::tuple<std::string, "
+           << "std::vector<unsigned int>, " << dtype << "> > > traces;" << endl;
+  }
   if  (!cyk) {
     stream << indent() << "std::vector<bool> tabulated;" << endl;
   }
@@ -1129,6 +1153,9 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   stream << indent() << ptype << " newsize = size(";
   stream << ");" << endl;
   stream << indent() << "array.resize(newsize);" << endl;
+  if (t.for_derivatives) {
+    stream << indent() << "traces.resize(newsize);" << endl;
+  }
   if (!cyk) {
     stream << indent() << "tabulated.clear();" << endl;
     stream << indent() << "tabulated.resize(newsize);" << endl;
@@ -1155,6 +1182,11 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   stream << t.fn_get_tab() << endl;
 
   stream << t.fn_tab();
+
+  if (t.for_derivatives && *t.nt().name != OUTSIDE_AXIOMS) {
+    stream << endl << t.fn_set_traces();
+    stream << endl << t.fn_get_traces();
+  }
 
   dec_indent();
   stream << indent() << "};" << endl;
@@ -1686,6 +1718,9 @@ void Printer::Cpp::header(const AST &ast) {
     }
     if ((*ast.grammar()).is_outside()) {
       stream << "#define OUTSIDE\n";
+      if (ast.inject_derivatives) {
+        stream << "#define DERIVATIVES\n";
+      }
     }
 
     stream << "#define GAPC_CALL_STRING \"" << gapc_call_string << "\""
@@ -2311,15 +2346,125 @@ void Printer::Cpp::print_insideoutside_report_fn(
   stream << indent() << "}" << endl << endl;
 }
 
+void Printer::Cpp::print_derivative(Symbol::NT *nt) {
+  stream << indent() << "std::cout << \"1. derivatives for non-terminal \\\""
+         << (*nt->name).substr(sizeof(OUTSIDE_NT_PREFIX)-1,
+                               (*nt->name).length())
+         << "\\\":\\n\";" << endl;
+  // aggregated level (=dim + tracks) of nested loops
+  unsigned int nesting = 0;
+  std::vector<std::string> *args = new std::vector<std::string>();
+  // opening for loops
+  for (size_t track = 0; track < nt->tracks(); ++track) {
+    unsigned int dim = 2;
+    if (nt->tables()[track].delete_left_index()) {
+      dim--;
+    }
+    if (nt->tables()[track].delete_right_index()) {
+      dim--;
+    }
+    if (dim >= 1) {
+      stream << indent() << "for (unsigned int t_" << track << "_i = t_"
+             << track << "_left_most; t_" << track << "_i <= t_" << track
+             << "_right_most; ++t_" << track << "_i) {" << endl;
+      inc_indent();
+      args->push_back("t_" + std::to_string(track) + "_i");
+    }
+    if (dim >= 2) {
+      stream << indent() << "// properly indent following results as"
+             << " an upper right triangle" << endl;
+      stream << indent() << "for (unsigned int t_" << track << "_j = t_"
+             << track << "_left_most; t_" << track << "_j < t_" << track
+             << "_i; ++t_" << track << "_j) {" << endl;
+      inc_indent();
+      stream << indent() << "std::cout << \"\\t\";" << endl;
+      dec_indent();
+      stream << indent() << "}" << endl;
+      stream << indent() << "for (unsigned int t_" << track << "_j = t_"
+             << track << "_i; t_" << track << "_j <= t_" << track
+             << "_right_most; ++t_" << track << "_j) {" << endl;
+      inc_indent();
+      args->push_back("t_" + std::to_string(track) + "_j");
+    }
+    nesting += dim;
+  }
+
+  // loop body
+  std::list<Fn_Def*> &l = nt->code_list();
+  std::stringstream list_args;
+  std::stringstream list_args_print;
+  bool first = true;
+  for (std::vector<std::string>::const_iterator a = args->begin();
+       a != args->end(); ++a) {
+    if (!first) {
+      list_args << ", ";
+      list_args_print << " << \",\"";
+    }
+    first = false;
+    list_args << *a;
+    list_args_print << " << " << *a;
+  }
+  for (std::list<Fn_Def*>::iterator i = l.begin(); i != l.end(); ++i) {
+    std::string res = "res_" + *(nt->name);
+    stream << indent() << *((*i)->return_type) << " " << res << " = nt_"
+           << *nt->name << "(" << list_args.str() << ");\n"
+           << indent() << "std::cout << " << res << ";" << endl;
+    // only for first return statement
+    break;
+  }
+
+  // close loops
+  for (unsigned int d = 0; d < nesting; ++d) {
+    if (d > 0) {
+      stream << indent() << "std::cout << \"\\n\";" << endl;
+    } else {
+      stream << indent() << "std::cout << \"\\t\";" << endl;
+    }
+    dec_indent();
+    stream << indent() << "}" << endl;
+  }
+  if (nesting == 1) {
+    stream << indent() << "std::cout << \"\\n\";" << endl;
+  }
+}
+void Printer::Cpp::print_run_derivative_fn(const AST &ast) {
+  stream << indent() << "void report_derivative(std::ostream &out) {"
+         << endl;
+  inc_indent();
+
+  stream << indent() << "// forward pass has already been executed through "
+         << "obj.run(), called via XXX_main.cc" << endl;
+
+  stream << indent() << "// execute backward pass" << endl;
+  for (hashtable<std::string, Symbol::Base*>::iterator
+       i = (*ast.grammar()).NTs.begin();
+       i != (*ast.grammar()).NTs.end(); ++i) {
+    Symbol::NT *nt = dynamic_cast<Symbol::NT*>((*i).second);
+    if (nt && nt->is_partof_outside) {
+      print_derivative(nt);
+    }
+  }
+
+
+  dec_indent();
+  stream << indent() << "}" << endl << endl;
+}
+
 void Printer::Cpp::print_run_fn(const AST &ast) {
-  stream << indent() << *ast.grammar()->axiom->code()->return_type;
+  Symbol::NT *axiom = ast.grammar()->axiom;
+  if (ast.inject_derivatives) {
+    axiom = dynamic_cast<Symbol::NT*>(
+      ast.grammar()->NTs[*ast.grammar()->axiom_name_inside]);
+  }
+
+  stream << indent() << *axiom->code()->return_type;
   stream << " run() {" << endl;
   inc_indent();
-  stream << indent() << "return nt_" << *ast.grammar()->axiom_name << '(';
+  stream << indent() << "return nt_" << *axiom->name << '(';
 
   bool first = true;
   size_t track = 0;
-  const std::vector<Table> &tables = ast.grammar()->axiom->tables();
+  const std::vector<Table> &tables = axiom->tables();
   for (std::vector<Table>::const_iterator i = tables.begin();
        i != tables.end(); ++i, ++track) {
     Table t = *i;
@@ -2793,6 +2938,10 @@ void Printer::Cpp::makefile(const Options &opts) {
 void Printer::Cpp::imports(const AST &ast) {
   if (fwd_decls) {
     return;
+  }
+
+  if (ast.inject_derivatives) {
+    stream << "#include \"rtlib/traces.hh\"" << endl;
   }
 
   if (ast.code_mode() != Code::Mode::SUBOPT) {

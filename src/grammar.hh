@@ -46,6 +46,9 @@ class Visitor;
 class AST;
 class Algebra;
 
+const char OUTSIDE_NT_PREFIX[] = "outside_";
+const char OUTSIDE_AXIOMS[] = "outside_axioms";
+const char PREFIX_DERIVATIVE[] = "derivative_";
 
 class Grammar {
  private:
@@ -103,13 +106,17 @@ class Grammar {
   // is the root node of the grammar tree.
   Symbol::NT* axiom;
 
+  // Name of the user provided axiom. Relevant in outside mode
+  // which extends the user grammar and introduces a different axiom
+  std::string *axiom_name_inside;
 
   // Inits the grammar with the values for the AST, the grammar name,
   // the name of the signature, the axiom's name and the location of
   // the grammar. In addition this grammar is added to the list of
   // predefined terminals.
   Grammar(AST &as, std::string *n, std::string *s, std::string *a, const Loc &l)
-    : ast(as),  name(n), sig_name(s), axiom_name(a), location(l), axiom(NULL) {
+    : ast(as),  name(n), sig_name(s), axiom_name(a), location(l), axiom(NULL),
+      axiom_name_inside(a) {
     Terminal::add_predefined(*this);
   }
 
@@ -222,6 +229,13 @@ class Grammar {
   void inject_outside_nts(std::vector<std::string> outside_nt_list);
   // same as above, without checking user provided NT list
   void inject_outside_nts();
+
+  // replace choice functions in outside rules with list(sum())
+  // when user requested derivative computation, since the computed
+  // values are probabilities, regardless of user transformation like
+  // log- or exp- space
+  void replace_choice_for_derivatives();
+
   unsigned int to_dot(unsigned int *nodeID, std::ostream &out, int plot_level);
 
   // blocks allow alternatives for sub-productions. This function shell free

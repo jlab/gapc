@@ -165,5 +165,7 @@ iterator end();
 
 // For debug purposes
 std::ostream &operator<<(std::ostream &s, const Statement::Base &b);
+std::ostream &operator<<(std::ostream &s,
+                         const std::list<Statement::Base*> &stmts);
 
 #endif  // SRC_STATEMENT_BASE_HH_

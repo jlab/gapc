@@ -64,6 +64,9 @@ algebra alg_mfe implements sig_foldrna(alphabet = char, answer = int) {
 }
 
 algebra alg_pfunc implements sig_foldrna(alphabet = char, answer = double) {
+  float normalize_derivative(float q, float pfunc) {
+    return q / pfunc;
+  }
   double sadd(Subsequence lb, double x) {
     return scale(1) *                     x * mk_pf(sbase_energy());
   }

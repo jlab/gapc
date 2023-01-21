@@ -132,7 +132,7 @@ class Base {
 
     virtual void init_ret_decl(unsigned int i, const std::string &prefix);
 
-    virtual void codegen(AST &ast) = 0;
+    virtual void codegen(AST &ast, Symbol::NT &calling_nt) = 0;
     virtual std::list<Statement::Base*> &statements() = 0;
 
     virtual void print_dot_edge(std::ostream &out, Symbol::NT &nt);
@@ -187,7 +187,7 @@ class Alt : public Base {
       unsigned int &k, size_t track, Expr::Base *center_left,
       Expr::Base *center_right, bool is_right_of_outside_nt = false);
 
-    void codegen(AST &ast);
+    void codegen(AST &ast, Symbol::NT &calling_nt);
     std::list<Statement::Base*> &statements();
 
     void print_dot_edge(std::ostream &out, Symbol::NT &nt);
@@ -241,7 +241,7 @@ class Const : public Base {
      unsigned int &k, size_t track, Expr::Base *center_left,
      Expr::Base *center_right, bool is_right_of_outside_nt = false);
 
-    void codegen(AST &ast);
+    void codegen(AST &ast, Symbol::NT &calling_nt);
     std::list<Statement::Base*> &statements();
 
     void print(std::ostream &s);

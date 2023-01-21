@@ -351,7 +351,7 @@ void Tablegen::offset(size_t track_pos, itr f, const itr &e) {
 #include "symbol.hh"
 
 Statement::Table_Decl *Tablegen::create(Symbol::NT &nt,
-    std::string *name, bool cyk) {
+    std::string *name, bool cyk, bool for_derivatives) {
   cyk_ = cyk;
   std::list<Expr::Base*> ors;
   nt.gen_ys_guards(ors);
@@ -372,15 +372,19 @@ Statement::Table_Decl *Tablegen::create(Symbol::NT &nt,
   offset(nt.track_pos(), nt.tables().begin(), nt.tables().end());
   Fn_Def *fn_tab = gen_tab();
 
+  Fn_Def *fn_set_traces = gen_set_traces();
+
   ret_zero = new Statement::Return(new Expr::Vacc(new std::string("zero")));
   offset(nt.track_pos(), nt.tables().begin(), nt.tables().end());
   Fn_Def *fn_get_tab = gen_get_tab();
+  Fn_Def *fn_get_traces = gen_get_traces();
 
   Fn_Def *fn_size = gen_size();
 
   Statement::Table_Decl *td = new Statement::Table_Decl(nt, dtype, name, cyk,
-      fn_is_tab, fn_tab, fn_get_tab, fn_size,
+      fn_is_tab, fn_tab, fn_set_traces, fn_get_traces, fn_get_tab, fn_size,
       ns);
+  td->for_derivatives = for_derivatives;
   td->set_fn_untab(fn_untab);
   return td;
 }
@@ -484,11 +488,119 @@ Fn_Def *Tablegen::gen_tab() {
   return f;
 }
 
-Fn_Def *Tablegen::gen_get_tab() {
-  Fn_Def *f = new Fn_Def(new Type::Referencable(dtype), new std::string("get"));
+Fn_Def *Tablegen::gen_set_traces() {
+  Fn_Def *f = new Fn_Def(new Type::RealVoid(), new std::string("set_traces"));
   f->add_paras(paras);
+  f->add_para(new ::Type::External(new std::string("NTtraces")),
+              new std::string("candidates"));
+
+  // FIXME const & in dtype -> see cpp.cc in_fn_head
+  f->add_para(dtype, new std::string("e"));
 
   std::list<Statement::Base*> c;
+
+  c.insert(c.end(), code.begin(), code.end());
+
+  Statement::Fn_Call *ass = new Statement::Fn_Call(Statement::Fn_Call::ASSERT);
+  ass->add_arg(new Expr::Const(0));
+
+  if (cond) {
+    Statement::If *i = new Statement::If(cond, ass);
+    c.push_back(i);
+  }
+
+  c.insert(c.end(), window_code.begin(), window_code.end());
+
+
+  Statement::Fn_Call *a = new Statement::Fn_Call(Statement::Fn_Call::ASSERT);
+  a->add_arg(new Expr::Less(off, new Expr::Fn_Call(new std::string("size"))));
+  c.push_back(a);
+
+  Expr::Fn_Call *rhs_norm = new Expr::Fn_Call(new std::string(
+    "normalize_traces"));
+  rhs_norm->add_arg(new Var_Acc::Array(new Var_Acc::Plain(
+    new std::string("&traces")), off));
+  rhs_norm->add_arg(new std::string("candidates"));
+  rhs_norm->add_arg(new std::string("e"));
+  rhs_norm->add_arg(new std::string("&" + *(new std::string(
+    FN_NAME_DERIVATIVE_NORMALIZER))));
+
+  Statement::Var_Assign *fn_norm = new Statement::Var_Assign(
+    new Var_Acc::Array(new Var_Acc::Plain(new std::string("traces")), off),
+    rhs_norm);
+  c.push_back(fn_norm);
+
+  f->set_statements(c);
+  return f;
+}
+
+Fn_Def *Tablegen::gen_get_traces() {
+  std::list<Statement::Base*> c;
+
+  Fn_Def *f = new Fn_Def(dtype, new std::string("get_traces"));
+  f->add_paras(paras);
+  f->add_para(new ::Type::External(new std::string("std::string")),
+              new std::string("to_nt"));
+  ::Type::External *idx = new ::Type::External(new std::string(
+    "std::vector<unsigned int>"));
+  f->add_para(idx, new std::string("to_indices"));
+
+  // FIXME const & in dtype -> see cpp.cc in_fn_head
+  f->add_para(dtype, new std::string("e"));
+
+  c.insert(c.end(), code.begin(), code.end());
+
+  Statement::Fn_Call *ass = new Statement::Fn_Call(Statement::Fn_Call::ASSERT);
+  ass->add_arg(new Expr::Const(0));
+
+  if (cond) {
+    Statement::If *i = new Statement::If(cond, ass);
+    c.push_back(i);
+  }
+
+  c.insert(c.end(), window_code.begin(), window_code.end());
+
+  // return zero IF inside answer is zero, i.e. not tabulated
+  Expr::Vacc *acc_tab = new Expr::Vacc(new Var_Acc::Array(
+    new Var_Acc::Plain(new std::string("tabulated")), off));
+  Statement::If *test = new Statement::If(new Expr::Not(acc_tab),
+                                          this->ret_zero);
+  c.push_back(test);
+
+  if (!cyk_) {
+    Statement::Fn_Call *a = new Statement::Fn_Call(Statement::Fn_Call::ASSERT);
+    a->add_arg(new Var_Acc::Array(
+      new Var_Acc::Plain(new std::string("tabulated")), off));
+    c.push_back(a);
+  }
+
+  Statement::Fn_Call *a = new Statement::Fn_Call(Statement::Fn_Call::ASSERT);
+  a->add_arg(new Expr::Less(off, new Expr::Fn_Call(new std::string("size"))));
+  c.push_back(a);
+
+  Statement::Var_Decl *r = new Statement::Var_Decl(dtype, "res");
+  Expr::Fn_Call *fn_norm = new Expr::Fn_Call(new std::string(
+    "get_trace_weights"));
+  fn_norm->add_arg(new Var_Acc::Array(new Var_Acc::Plain(
+    new std::string("traces")), off));
+  fn_norm->add_arg(new std::string("to_nt"));
+  fn_norm->add_arg(new std::string("to_indices"));
+  fn_norm->add_arg(new std::string("e"));
+  r->rhs = fn_norm;
+  c.push_back(r);
+
+  Statement::Return *ret = new Statement::Return(new std::string("res"));
+  c.push_back(ret);
+
+  f->set_statements(c);
+  return f;
+}
+
+Fn_Def *Tablegen::gen_get_tab() {
+  std::list<Statement::Base*> c;
+
+  Fn_Def *f = new Fn_Def(new Type::Referencable(dtype), new std::string("get"));
+  f->add_paras(paras);
 
   if (cond) {
     Statement::If *i = new Statement::If(cond, ret_zero);

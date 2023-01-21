@@ -456,7 +456,7 @@ class NT : public Base {
     ::Type::Base *data_type_before_eval();
     void add_specialised_arguments(Statement::Fn_Call *fn, bool keep_coopt);
     void set_ret_decl_rhs(Code::Mode mode);
-    void init_ret_stmts(Code::Mode mode);
+    void init_ret_stmts(Code::Mode mode, AST &ast);
     std::list<Statement::Base*> table_guard;
     void init_table_decl(const AST &ast);
     void init_table_code(const Code::Mode &mode);
