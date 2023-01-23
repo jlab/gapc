@@ -84,8 +84,7 @@ inline bool is_loaded(bool x) {
 }
 
 inline bool is_loaded(const String &s) {
-  String empty;
-  return s != empty;
+  return s.isEmpty();
 }
 
 inline bool is_loaded(const Rope &s) {
@@ -107,16 +106,14 @@ is_loaded(const Basic_Subsequence<T, U> &p) {
   return is_loaded(p.seq) && (is_loaded(p.i) || is_loaded(p.j));
 }
 
-template <typename T> inline bool
-is_loaded(const List_Ref<T> &l) {
-  if (l.l == NULL) return false;
-  return is_loaded(*(l.l));
+template <class T, typename pos_int> inline bool
+is_loaded(const List_Ref<T, pos_int> &l) {
+  return l.l && !(l.const_ref().empty());
 }
 
-template <typename T> inline bool
+template <class T> inline bool
 is_loaded(const Ref::Lazy<T> &l) {
-  if (l.l == NULL) return false;
-  return is_loaded(*(l.l));
+  return l.l && !(l.const_ref().empty());
 }
 
 template <typename T> inline bool

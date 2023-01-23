@@ -566,19 +566,21 @@ class Main {
     driver.ast.instance_grammar_eliminate_lists(instance);
 
     if ((opts.checkpointing)) {
-      bool answer_type_supported = Printer::Checkpoint::is_supported(
-                                   driver.ast.grammar()->tabulated);
+      Printer::Checkpoint *cp = new Printer::Checkpoint();
+      bool answer_type_supported = cp->is_supported(driver.ast.grammar()->
+                                                    tabulated);
 
       // only enable checkpointing if type of every table is supported
       // until then: no checkpointing by default
       if (answer_type_supported) {
-        driver.ast.checkpoint = new Printer::
-                                    Checkpoint();
+        driver.ast.checkpoint = cp;
         Log::instance()->normalMessage("Checkpointing routine integrated.");
       } else {
         Log::instance()->warning("Checkpointing routine could not be integrated"
                                  ", because serialization of table type"
                                  " isn't supported yet.");
+        opts.checkpointing = false;
+        delete cp;
       }
     }
 

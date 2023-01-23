@@ -37,9 +37,22 @@
 
 #include "pool.hh"
 
+#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
+#include "boost/serialization/array.hpp"
+#endif
+
 namespace rope {
 class Ref_Count {
  private:
+#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int version) {
+    ar & i;
+  }
+#endif
+
   uint32_t i;
 
  public:
@@ -75,6 +88,17 @@ class Block {
     enum { block_size = Refcount::block_size };
 
  private:
+#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
+    friend class boost::serialization::access;
+
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version) {
+      ar & pos;
+      ar & next;
+      ar & boost::serialization::make_array(array, block_size);
+      ar & refcount;
+    }
+#endif
     // enum { RL , LR } Dir;
     // Dir dir;
 
@@ -171,6 +195,15 @@ template<typename T> class Readonly {
 template<>
 class Readonly<Ref_Count> {
  private:
+#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
+    friend class boost::serialization::access;
+
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version) {
+      ar & pos;
+    }
+#endif
+
     unsigned char pos;
 
  public:
@@ -219,6 +252,18 @@ class Ref {
     static Pool<Block<Refcount> > pool;
 
  private:
+#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
+    friend class boost::serialization::access;
+
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version) {
+      ar & first;
+      ar & last;
+      ar & empty_;
+      ar & readonly;
+    }
+#endif
+
     Block<Refcount> *first;
     Block<Refcount> *last;
     bool empty_;

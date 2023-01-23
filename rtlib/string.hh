@@ -31,6 +31,8 @@
 #include <utility>
 #include <ostream>
 #include <stack>
+#include <vector>
+#include <cstdint>
 
 // tr1 has it
 #include <boost/cstdint.hpp>
@@ -42,10 +44,46 @@
 
 #include "../rtlib/cstr.h"
 
+#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
+#include "boost/serialization/array.hpp"  // serialize e.g. char*
+#endif
+
 class String {
  private:
+#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
+    friend class boost::serialization::access;
+
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version) {
+      ar & block;
+      ar & readonly;
+      ar & empty_;
+      // ar & links;
+      ar & block_as_int;
+    }
+#endif
+
+ public:
     class Block {
      private:
+#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
+        friend class boost::serialization::access;
+
+        template<class Archive>
+        void serialize(Archive & ar, const unsigned int version) {
+          // ar & vec_i;
+          // assert(vec_i >= 0);
+          // ar & listref_i;
+          // assert(listref_i >= 0);
+          // ar & string_n;
+          // assert(string_n > 0);
+          // ar & table_class;
+          // assert(table_class > 0);
+          ar & pos;
+          // assert(pos <= size);
+          ar & boost::serialization::make_array(array, size);
+    }
+#endif
         void del(Block *b) {
           assert(b->ref_count);
           b->dec_ref();
@@ -56,9 +94,14 @@ class String {
         Block &operator=(const Block &b);
 
      public:
-        uint32_t ref_count;
+      // int32_t vec_i;
+      // int32_t listref_i;
+      // unsigned char string_n;
+      // unsigned char table_class;
+      uint32_t ref_count;
       // enum { size = 27 };
-      enum { size = 59 };
+      // enum { size = 49 }; // for v1 of String serialization (doesn't work)
+      enum { size = 59 };  // total size of object should be 64 bytes
       enum { SEQ_END, SEQ, LINK, REP };
 
       unsigned char pos;
@@ -132,11 +175,20 @@ class String {
       iterator begin() { return iterator(this); }
       iterator end() { return iterator(this, this); }
 
-      Block() : ref_count(1), pos(0) {
-      }
+      // Block() : vec_i(-1),
+      //           listref_i(-1),
+      //           string_n(0),
+      //           table_class(0),
+      //           ref_count(1),
+      //           pos(0) {}
 
-      Block(const Block &b)
-        : ref_count(1), pos(b.pos) {
+      Block() : ref_count(1), pos(0) {}
+
+      // Block(const Block &b) : vec_i(b.vec_i), listref_i(b.listref_i),
+      //                         string_n(b.string_n),
+      //                         table_class(b.table_class),
+      //                         ref_count(1), pos(b.pos) {
+      Block(const Block &b) : ref_count(1), pos(b.pos) {
         for (unsigned char i = 0; i < pos; ++i)
           array[i] = b.array[i];
         for (iterator i = begin(); i != end(); ++i)
@@ -183,8 +235,9 @@ class String {
         b->inc_ref();
         assert(pos + 1 + sizeof(Block*) <= size);
         array[pos++] = LINK;
-        for (unsigned char i = 0; i < sizeof(Block*); ++i)
+        for (unsigned char i = 0; i < sizeof(Block*); ++i) {
           array[pos++] = ((unsigned char*)&b)[i];
+        }
       }
 
       void append(char c, uint32_t l) {
@@ -205,6 +258,7 @@ class String {
       void put(std::ostream &s) const;
     };
 
+ private:
     static Pool<Block> pool;
 
     Block *block;
@@ -219,6 +273,9 @@ class String {
       if (!block->ref_count) {
         delete block;
         block = NULL;
+#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
+        block_as_int = 0;
+#endif
       }
     }
 
@@ -227,16 +284,45 @@ class String {
         Block *t = new Block(*block);
         del();
         block = t;
+#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
+        block_as_int = reinterpret_cast<uintptr_t>(block);
+#endif
       }
     }
 
  public:
-    String() : block(NULL), readonly(false), empty_(false) {
+#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
+    /*
+       in order to reconstruct the links this object
+       (potentially) is linked to, we need to keep track
+       of the indices of this object and its links in the table/vector
+       that gets serialized and archived to the disk,
+       so they adresses of the links stored in the Block array can be
+       updated with the new adresses of the links after deserialization
+    */
+
+    // indices of link(s) to other Strings
+    // (can be at most 5 links per Block; need to store 3 indices per Block)
+    // std::vector<unsigned int> links;
+    uintptr_t block_as_int;
+#endif
+
+    String() : block(NULL), readonly(false), empty_(false)
+#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
+               , block_as_int(0)
+#endif
+    {}
+
+    Block *get_block() const {
+      return block;
     }
 
     void lazy_alloc() {
       if (!block)
         block = new Block();
+#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
+        block_as_int = reinterpret_cast<uintptr_t>(block);
+#endif
     }
 
     String(const String &s) {
@@ -248,6 +334,10 @@ class String {
         readonly = false;
       }
       empty_ = s.empty_;
+#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
+      //  links = s.links;
+      block_as_int = reinterpret_cast<uintptr_t>(block);
+#endif
     }
 
     ~String() {
@@ -275,6 +365,15 @@ class String {
       empty_ = false;
       check_copy();
       block->append(s.block);
+#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
+      // add the required indices/identifiers of the linked Block
+      // to this String object so address of the linked Block can be
+      // overwritten/updated after deserializing the tables
+      // links.push_back(s.block->table_class);
+      // links.push_back(s.block->vec_i);
+      // links.push_back(s.block->listref_i);
+      // links.push_back(s.block->string_n);
+#endif
     }
 
     void append(int i) {
@@ -323,7 +422,7 @@ class String {
                 end = true;
                 return;
               } else {
-                block = stack.top().first;
+                stack.top().first;
                 i = stack.top().second;
                 stack.pop();
                 continue;
@@ -442,6 +541,10 @@ class String {
       else
         readonly = false;
       empty_ = s.empty_;
+#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
+      // links = s.links;
+      block_as_int = reinterpret_cast<uintptr_t>(block);
+#endif
       return *this;
     }
 

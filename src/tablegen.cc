@@ -352,9 +352,13 @@ void Tablegen::offset(size_t track_pos, itr f, const itr &e) {
 #include "symbol.hh"
 
 Statement::Table_Decl *Tablegen::create(Symbol::NT &nt,
-    std::string *name, bool cyk, bool checkpoint) {
+    std::string *name, bool cyk, bool checkpoint, bool cp_strings) {
   cyk_ = cyk;
-  checkpoint_ = checkpoint;
+  checkpoint_ = checkpoint;  // is checkpointing activated?
+
+  // check whether String/Rope has to be serialized for checkpointing
+  checkpoint_strings_ = cp_strings;
+
   std::list<Expr::Base*> ors;
   nt.gen_ys_guards(ors);
   if (!ors.empty())
@@ -483,10 +487,38 @@ Fn_Def *Tablegen::gen_tab() {
   }
 
   // increase total tabulated vals counter
+  // (if tables contain Strings, also call ADD_VECTOR_INDEX_TO_STRING macro)
   if (checkpoint_) {
-    Statement::Increase *z =
-    new Statement::Increase(new std::string("tabulated_vals_counter"));
-    c.push_back(z);
+    Expr::Fn_Call *is_loaded_call = new Expr::Fn_Call(new std::string(
+                                                      "is_loaded"));
+    is_loaded_call->add_arg(new Var_Acc::Array(
+                             new Var_Acc::Plain(
+                              new std::string("array")), off));
+
+    Statement::Var_Assign *is_loaded = new Statement::Var_Assign(
+                                       new Var_Acc::Plain(
+                                       new std::string("bool loaded")),
+                                       is_loaded_call);
+    c.push_back(is_loaded);
+    Expr::Vacc *loaded_expr = new Expr::Vacc(new std::string("loaded"));
+
+    Statement::Increase *inc_tab_c = new Statement::Increase(
+                                     new std::string("tabulated_vals_counter"));
+    Statement::If *is_loaded_stmt = new Statement::If(loaded_expr, inc_tab_c);
+
+    // TODO(fymue): figure out if this is needed for Rope;
+    // if not, remove since String doesn't use this mechanism anymore
+    //                  ----vvvvvvvv------ (disabled for now)
+    if (checkpoint_strings_ && false) {
+      // only add this macro if String/Rope has to be serialized
+      Statement::Fn_Call * add_vec = new Statement::Fn_Call(
+                                      "ADD_VECTOR_INDEX_TO_STRING");
+      add_vec->add_arg(off);
+      add_vec->add_arg(new std::string("table_class"));
+      is_loaded_stmt->then.push_back(add_vec);
+    }
+
+    c.push_back(is_loaded_stmt);
   }
 
   f->set_statements(c);

@@ -1094,7 +1094,13 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
     stream << indent() << "boost::filesystem::path tmp_out_table_path;" << endl;
     stream << indent() << "boost::filesystem::path in_table_path;" << endl;
     stream << indent() << "std::string formatted_interval;" << endl;
-    stream << indent() << "size_t tabulated_vals_counter = 0;" << endl << endl;
+    stream << indent() << "size_t tabulated_vals_counter = 0;" << endl;
+    // probably going to remove this
+    if (ast->checkpoint->strings && false) {
+      stream << indent() << "nt_tables table_class = nt_tables::" << t.name()
+             << ";" << endl;
+    }
+    stream << endl;
   }
 
   stream << t.fn_size() << endl;
@@ -1115,6 +1121,9 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
     ast->checkpoint->get_out_table_path(stream);
     ast->checkpoint->get_tabulated_vals_percentage(stream);
     ast->checkpoint->parse_checkpoint_log(stream);
+    if (ast->checkpoint->strings) {
+      ast->checkpoint->get_table(stream, dtype);
+    }
   }
 
   // start "void init()"
@@ -1661,6 +1670,9 @@ void Printer::Cpp::print_init_fn(const AST &ast) {
   print_filter_init(ast);
   print_table_init(ast);
   if (ast.checkpoint) {
+    if (ast.checkpoint->strings) {
+      stream << indent() << "restore_string_links();" << endl;
+    }
     stream << indent() << "create_checkpoint_log(opts, arg_string);" << endl;
   }
   print_zero_init(*ast.grammar());
@@ -1768,10 +1780,12 @@ void Printer::Cpp::header(const AST &ast) {
            << endl;
     stream << "#define GAPC_VERSION_STRING \"" << gapc_version_string << "\""
            << endl << endl;
-    includes();
+
     if (ast.checkpoint) {
-      ast.checkpoint->include(stream);
+      ast.checkpoint->include(stream, ast.grammar()->tabulated);
     }
+
+    includes();
 
     print_subseq_typedef(ast);
     print_type_defs(ast);
@@ -1790,6 +1804,10 @@ void Printer::Cpp::header(const AST &ast) {
     stream << indent() << "boost::filesystem::path logfile_path;" << endl;
     stream << indent() << "std::clock_t start_cpu_time;" << endl;
     stream << indent() << "std::string file_prefix;" << endl;
+    if (ast.checkpoint->strings) {
+      stream << indent() << "std::unordered_map<uintptr_t, String::Block*> "
+             << "link_map;" << endl;
+    }
     dec_indent();
   }
   stream << indent() << " public:" << endl;
@@ -2238,7 +2256,12 @@ void Printer::Cpp::header_footer(const AST &ast) {
     ast.checkpoint->remove_log_file(stream);
     ast.checkpoint->format_interval(stream);
     ast.checkpoint->get_arg_string(stream);
-    ast.checkpoint->create_checkpoint_log(stream, ast.grammar()->tabulated);
+    if (ast.checkpoint->strings) {
+      ast.checkpoint->restore_string_links(stream, ast.grammar()->tabulated);
+    }
+    ast.checkpoint->create_checkpoint_log(stream, ast.grammar()->tabulated,
+                                          gapc_call_string,
+                                          gapc_version_string);
     ast.checkpoint->update_checkpoint_log(stream, ast.grammar()->tabulated);
     stream << endl;
   }

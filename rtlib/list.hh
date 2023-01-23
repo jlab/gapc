@@ -53,11 +53,13 @@
 #include "output.hh"
 #include "hash.hh"
 
-// serialization headers for the checkpointing option
+#if defined(CHECKPOINTING_INTEGRATED) && defined(LIST_REF)
+// serialization headers for the checkpointing of ListRef objects
 // (will be included in generated code through rtlib/adp.hh)
-#include "boost/serialization/base_object.hpp"
-#include "boost/serialization/deque.hpp"
-#include "boost/serialization/utility.hpp"
+
+#include "boost/serialization/base_object.hpp"  // serialize base obj of class
+#include "boost/serialization/deque.hpp"  // serialize std::deque
+#endif
 
 // FIXME
 // #include <iostream>
@@ -74,12 +76,15 @@ class List : public std::deque<T> {
   typedef typename std::deque<T>::reverse_iterator reverse_iterator;
 
  private:
+#if defined(CHECKPOINTING_INTEGRATED) && defined(LIST_REF)
   friend class boost::serialization::access;
 
   template<class Archive>
   void serialize(Archive & ar, const unsigned int version) {
+    // serialize the base object (std::deque)
     ar & boost::serialization::base_object<std::deque<T>>(*this);
   }
+#endif
 };
 
 
@@ -102,13 +107,17 @@ class List_Ref : public ::Ref::Lazy<List<T, pos_int> > {
   typedef typename List<T, pos_int>::reverse_iterator reverse_iterator;
 
  private:
+#if defined(CHECKPOINTING_INTEGRATED) && defined(LIST_REF)
   friend class boost::serialization::access;
 
   template<class Archive>
   void serialize(Archive & ar, const unsigned int version) {
+    // serialize the base object
+    // (basically just a wrapper around boost::shared_ptr)
     ar &
     boost::serialization::base_object<::Ref::Lazy<List<T, pos_int>>>(*this);
   }
+#endif
 };
 
 template<class T, typename pos_int>
@@ -150,6 +159,9 @@ inline void clear(List_Ref<T, pos_int> &x) {
 template<class T, typename pos_int>
 inline void push_back(List_Ref<T, pos_int> &x, const T &e) {
   assert(is_not_empty(e));
+#if defined(CHECKPOINTING_INTEGRATED) && defined(LIST_REF) && defined(S1)
+  ADD_LISTREF_INDEX_TO_STRING((x.ref().size()))
+#endif
   x.ref().push_back(e);
 }
 
@@ -158,7 +170,6 @@ inline void append(List_Ref<T, pos_int> &x, List_Ref<T, pos_int> &e) {
   if (isEmpty(e))
     return;
   assert(&x.ref() != &e.ref());
-
   std::copy(e.ref().begin(), e.ref().end(), std::back_inserter(x.ref()));
 }
 
