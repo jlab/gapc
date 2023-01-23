@@ -3077,6 +3077,7 @@ unsigned int* Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out,
       out << ".[ ";
     }
     out << *simple->name;
+    simple->ntparas_to_dot(out);
     if (simple->has_index_overlay()) {
       out << " ].";
     }
@@ -3099,6 +3100,7 @@ unsigned int* Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out,
   }
   if (link) {
     out << "<td>" << *link->name;
+    link->ntparas_to_dot(out);
   }
   Alt::Block *block = dynamic_cast<Alt::Block*>(this);
   if (block) {
@@ -3239,5 +3241,39 @@ unsigned int* Alt::Multi::to_dot(unsigned int *nodeID, std::ostream &out,
 
   // return not the cluster ID but the id of the first element
   return res;
+}
+
+void Alt::Base::ntparas_to_dot(std::ostream &out) {
+  throw LogError("Non-terminal parameter list cannot be plotted to graphViz!");
+}
+void Alt::Simple::ntparas_to_dot(std::ostream &out) {
+  if (this->ntparas.size() > 0) {
+    out << " (";
+  }
+  for (std::list<Expr::Base*>::const_iterator ip = this->ntparas.begin();
+       ip != this->ntparas.end(); ++ip) {
+    out << *(*ip);
+    if (std::next(ip) != this->ntparas.end()) {
+      out << ", ";
+    }
+  }
+  if (this->ntparas.size() > 0) {
+    out << ")";
+  }
+}
+void Alt::Link::ntparas_to_dot(std::ostream &out) {
+  if (this->ntparas.size() > 0) {
+    out << " (";
+  }
+  for (std::list<Expr::Base*>::const_iterator ip = this->ntparas.begin();
+       ip != this->ntparas.end(); ++ip) {
+    out << *(*ip);
+    if (std::next(ip) != this->ntparas.end()) {
+      out << ", ";
+    }
+  }
+  if (this->ntparas.size() > 0) {
+    out << ")";
+  }
 }
 // END functions produce graphViz code to represent the grammar

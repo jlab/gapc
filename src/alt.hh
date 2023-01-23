@@ -307,6 +307,9 @@ class Base {
 
   virtual void set_ntparas(const Loc &loc, std::list<Expr::Base*> *l);
 
+  // generates graphviz code to represent NT-parameters
+  virtual void ntparas_to_dot(std::ostream &out);
+
   bool choice_set();
   unsigned int to_dot_semanticfilters(unsigned int *nodeID, unsigned int thisID,
     std::ostream &out, std::vector<unsigned int> *childIDs = NULL);
@@ -490,6 +493,7 @@ class Simple : public Base {
 
  public:
   void set_ntparas(std::list<Expr::Base*> *l);
+  void ntparas_to_dot(std::ostream &out);
   unsigned int* to_dot(unsigned int *nodeID, std::ostream &out,
           int plot_level);
 
@@ -611,6 +615,7 @@ class Link : public Base {
 
  public:
   void set_ntparas(const Loc &loc, std::list<Expr::Base*> *l);
+  void ntparas_to_dot(std::ostream &out);
   bool check_ntparas();
 
   void optimize_choice();
