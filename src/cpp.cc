@@ -1093,6 +1093,7 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
     stream << indent() << "boost::filesystem::path out_table_path;" << endl;
     stream << indent() << "boost::filesystem::path tmp_out_table_path;" << endl;
     stream << indent() << "boost::filesystem::path in_table_path;" << endl;
+    stream << indent() << "std::mutex m;" << endl;
     stream << indent() << "std::string formatted_interval;" << endl;
     stream << indent() << "size_t tabulated_vals_counter = 0;" << endl;
     // probably going to remove this
@@ -1671,7 +1672,11 @@ void Printer::Cpp::print_init_fn(const AST &ast) {
   print_table_init(ast);
   if (ast.checkpoint) {
     if (ast.checkpoint->strings) {
+      stream << indent() << "if (!(opts.checkpoint_in_path.empty())) {" << endl;
+      inc_indent();
       stream << indent() << "restore_string_links();" << endl;
+      dec_indent();
+      stream << indent() << "}" << endl;
     }
     stream << indent() << "create_checkpoint_log(opts, arg_string);" << endl;
   }

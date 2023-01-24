@@ -473,6 +473,13 @@ Fn_Def *Tablegen::gen_tab() {
   a->add_arg(new Expr::Less(off, new Expr::Fn_Call(new std::string("size"))));
   c.push_back(a);
 
+  if (checkpoint_) {
+    Statement::Fn_Call *m = new Statement::Fn_Call(
+                             "std::lock_guard<std::mutex> lock");
+    m->add_arg(new std::string("m"));
+    c.push_back(m);
+  }
+
   Statement::Var_Assign *x = new Statement::Var_Assign(
       new Var_Acc::Array(new Var_Acc::Plain(new std::string("array")), off),
       new Expr::Vacc(new std::string("e")));

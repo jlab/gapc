@@ -336,6 +336,7 @@ class Checkpoint : public Base {
      stream << "#include <atomic>" << endl;
      stream << "#include <ctime>" << endl;
      stream << "#include <unordered_map>" << endl;
+     stream << "#include <mutex>" << endl;
      stream << "#include <thread>" << endl << endl;
   }
 
@@ -380,6 +381,8 @@ class Checkpoint : public Base {
         inc_indent();
         stream << indent() << "// add address of block of current string to map"
                << endl;
+        stream << indent() << "assert(l[k].S" << i+1
+               << " && l[k].B" << i+1 << ");" << endl;
         stream << indent() << "String::Block *b = l[k].B" << i+1 << ";" << endl;
         stream << indent() << "link_map[l[k].S" << i+1 << "] = b;" << endl;
         dec_indent();
@@ -405,6 +408,8 @@ class Checkpoint : public Base {
       for (size_t i = 0; i < string_type_accessors.size(); i++) {
         stream << indent() << "if (l[k].B" << i+1 << ") {" << endl;
         inc_indent();
+        stream << indent() << "assert(l[k].S" << i+1
+               << " && l[k].B" << i+1 << ");" << endl;
         stream << indent() << "String::Block *b = l[k].B" << i+1 << ";" << endl;
         stream << indent() << "unsigned char c = 0;" << endl;
         stream << indent() << "// replace addresses of all links with "
@@ -430,10 +435,15 @@ class Checkpoint : public Base {
         stream << indent() << "c++;" << endl;
         stream << indent() << "uintptr_t linked_block = "
                << "reinterpret_cast<uintptr_t>(b->get_link(c));" << endl;
+        stream << indent() << "assert(link_map.find(linked_block) != "
+               << "link_map.end());" << endl;
         stream << indent() << "String::Block *next_block = "
                << "link_map[linked_block];" << endl;
+        stream << indent() << "assert(next_block);" << endl;
         stream << indent() << "// overwrite memory address of linked block"
                << "with memory address of the same block after deserialization"
+               << endl;
+        stream << indent() << "assert(c + sizeof(String::Block*) <= b->pos);"
                << endl;
         stream << indent() << "for (unsigned char t = 0; t < "
                << "sizeof(String::Block*); t++, c++) {"
@@ -488,6 +498,9 @@ class Checkpoint : public Base {
      stream << indent() << "}" << endl;
      stream << indent() << "boost::archive::binary_oarchive "
                             "array_out(array_fout);" << endl;
+     stream << indent() << "// lock the mutex so main thread can't "
+            << "write during archiving" << endl;
+     stream << indent() << "std::lock_guard<std::mutex> lock(m);" << endl;
      stream << indent() << "array_out << array;" << endl;
      stream << indent() << "array_fout.close();" << endl;
      stream << indent() << "boost::filesystem::rename(tmp_out_table_path, "
