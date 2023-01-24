@@ -422,7 +422,7 @@ class String {
                 end = true;
                 return;
               } else {
-                stack.top().first;
+                block = stack.top().first;
                 i = stack.top().second;
                 stack.pop();
                 continue;
