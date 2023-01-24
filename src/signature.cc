@@ -381,10 +381,21 @@ struct Generate_Enum_Stmts : public Generate_Stmts {
     apply(l, fn.paras, cur);
     fn.stmts.insert(fn.stmts.end(), l.begin(), l.end());
 
+    if (fn.ntparas().size() > 0) {
+      f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
+      f->add_arg(*ret);
+      f->add_arg(new Expr::Const(';'));
+      fn.stmts.push_back(f);
+      std::list<Statement::Base*> lntparas;
+      apply(lntparas, fn.ntparas(), ret);
+      fn.stmts.insert(fn.stmts.end(), lntparas.begin(), lntparas.end());
+    }
+
     f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
     f->add_arg(*ret);
     f->add_arg(new Expr::Const(' '));
     fn.stmts.push_back(f);
+
     f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
     f->add_arg(*ret);
     f->add_arg(new Expr::Const(')'));
