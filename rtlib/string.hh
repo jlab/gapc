@@ -58,7 +58,6 @@ class String {
       ar & block;
       ar & readonly;
       ar & empty_;
-      // ar & links;
       ar & block_as_int;
     }
 #endif
@@ -71,16 +70,7 @@ class String {
 
         template<class Archive>
         void serialize(Archive & ar, const unsigned int version) {
-          // ar & vec_i;
-          // assert(vec_i >= 0);
-          // ar & listref_i;
-          // assert(listref_i >= 0);
-          // ar & string_n;
-          // assert(string_n > 0);
-          // ar & table_class;
-          // assert(table_class > 0);
           ar & pos;
-          // assert(pos <= size);
           ar & boost::serialization::make_array(array, size);
     }
 #endif
@@ -94,13 +84,7 @@ class String {
         Block &operator=(const Block &b);
 
      public:
-      // int32_t vec_i;
-      // int32_t listref_i;
-      // unsigned char string_n;
-      // unsigned char table_class;
       uint32_t ref_count;
-      // enum { size = 27 };
-      // enum { size = 49 }; // for v1 of String serialization (doesn't work)
       enum { size = 59 };  // total size of object should be 64 bytes
       enum { SEQ_END, SEQ, LINK, REP };
 
@@ -175,19 +159,8 @@ class String {
       iterator begin() { return iterator(this); }
       iterator end() { return iterator(this, this); }
 
-      // Block() : vec_i(-1),
-      //           listref_i(-1),
-      //           string_n(0),
-      //           table_class(0),
-      //           ref_count(1),
-      //           pos(0) {}
-
       Block() : ref_count(1), pos(0) {}
 
-      // Block(const Block &b) : vec_i(b.vec_i), listref_i(b.listref_i),
-      //                         string_n(b.string_n),
-      //                         table_class(b.table_class),
-      //                         ref_count(1), pos(b.pos) {
       Block(const Block &b) : ref_count(1), pos(b.pos) {
         for (unsigned char i = 0; i < pos; ++i)
           array[i] = b.array[i];
@@ -293,18 +266,8 @@ class String {
 
  public:
 #if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
-    /*
-       in order to reconstruct the links this object
-       (potentially) is linked to, we need to keep track
-       of the indices of this object and its links in the table/vector
-       that gets serialized and archived to the disk,
-       so they adresses of the links stored in the Block array can be
-       updated with the new adresses of the links after deserialization
-    */
-
-    // indices of link(s) to other Strings
-    // (can be at most 5 links per Block; need to store 3 indices per Block)
-    // std::vector<unsigned int> links;
+    // store block ptr as decimal number so
+    // links can be restored after deserialization
     uintptr_t block_as_int;
 #endif
 
@@ -336,7 +299,6 @@ class String {
       }
       empty_ = s.empty_;
 #if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
-      //  links = s.links;
       block_as_int = reinterpret_cast<uintptr_t>(block);
 #endif
     }
@@ -366,15 +328,6 @@ class String {
       empty_ = false;
       check_copy();
       block->append(s.block);
-#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
-      // add the required indices/identifiers of the linked Block
-      // to this String object so address of the linked Block can be
-      // overwritten/updated after deserializing the tables
-      // links.push_back(s.block->table_class);
-      // links.push_back(s.block->vec_i);
-      // links.push_back(s.block->listref_i);
-      // links.push_back(s.block->string_n);
-#endif
     }
 
     void append(int i) {
@@ -543,7 +496,6 @@ class String {
         readonly = false;
       empty_ = s.empty_;
 #if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
-      // links = s.links;
       block_as_int = reinterpret_cast<uintptr_t>(block);
 #endif
       return *this;
