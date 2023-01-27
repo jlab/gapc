@@ -159,9 +159,6 @@ inline void clear(List_Ref<T, pos_int> &x) {
 template<class T, typename pos_int>
 inline void push_back(List_Ref<T, pos_int> &x, const T &e) {
   assert(is_not_empty(e));
-#if defined(CHECKPOINTING_INTEGRATED) && defined(LIST_REF) && defined(S1)
-  ADD_LISTREF_INDEX_TO_STRING((x.ref().size()))
-#endif
   x.ref().push_back(e);
 }
 

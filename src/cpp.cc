@@ -1124,6 +1124,8 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
     ast->checkpoint->parse_checkpoint_log(stream);
     if (ast->checkpoint->strings) {
       ast->checkpoint->get_table(stream, dtype);
+      ast->checkpoint->get_tabulated(stream);
+      ast->checkpoint->get_tabulated_count(stream);
     }
   }
 
@@ -1809,10 +1811,6 @@ void Printer::Cpp::header(const AST &ast) {
     stream << indent() << "boost::filesystem::path logfile_path;" << endl;
     stream << indent() << "std::clock_t start_cpu_time;" << endl;
     stream << indent() << "std::string file_prefix;" << endl;
-    if (ast.checkpoint->strings) {
-      stream << indent() << "std::unordered_map<uintptr_t, String::Block*> "
-             << "link_map;" << endl;
-    }
     dec_indent();
   }
   stream << indent() << " public:" << endl;
@@ -2256,18 +2254,18 @@ void Printer::Cpp::header_footer(const AST &ast) {
   stream << indent() << " private:" << endl;
   inc_indent();
   if (ast.checkpoint) {
-    ast.checkpoint->archive_periodically(stream, ast.grammar()->tabulated);
-    ast.checkpoint->remove_tables(stream, ast.grammar()->tabulated);
+    nt_tables &tabulated = ast.grammar()->tabulated;
+    ast.checkpoint->archive_periodically(stream, tabulated);
+    ast.checkpoint->remove_tables(stream, tabulated);
     ast.checkpoint->remove_log_file(stream);
     ast.checkpoint->format_interval(stream);
     ast.checkpoint->get_arg_string(stream);
     if (ast.checkpoint->strings) {
-      ast.checkpoint->restore_string_links(stream, ast.grammar()->tabulated);
+      ast.checkpoint->restore_string_links(stream, tabulated);
+      ast.checkpoint->find_broken_listrefs(stream, tabulated);
     }
-    ast.checkpoint->create_checkpoint_log(stream, ast.grammar()->tabulated,
-                                          gapc_call_string,
-                                          gapc_version_string);
-    ast.checkpoint->update_checkpoint_log(stream, ast.grammar()->tabulated);
+    ast.checkpoint->create_checkpoint_log(stream, tabulated);
+    ast.checkpoint->update_checkpoint_log(stream, tabulated);
     stream << endl;
   }
   dec_indent();

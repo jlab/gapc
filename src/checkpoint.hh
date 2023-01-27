@@ -196,132 +196,8 @@ class Checkpoint : public Base {
                      .substr(1, string_type_accessors[i].npos)<< endl;
        }
        stream << endl;
-
-       // -------
-       // define these macros so the code compiles;
-       // will remove them once the final method to
-       // (de)serialize strings is implemented
-       stream << "#define RESTORE_STRING_LINKS(IDX)" << endl;
-       stream << "#define ADD_VECTOR_INDEX_TO_STRING(IDX, TABLE_CLASS)" << endl;
-       stream << "#define ADD_LISTREF_INDEX_TO_STRING(IDX)" << endl;
      }
 
-     //      ----vvvvvvvv---- (disabled for now)
-     if (strings && false) {
-       // macro for restoring/overwriting links between Strings
-       // after deserializing/loading all tables
-       stream << "#define RESTORE_STRING_LINKS(IDX) { \\" << endl
-              << "  auto &l = curr_table[IDX].ref(); \\" << endl;
-       for (size_t i = 0; i < string_type_accessors.size(); i++) {
-         stream << "  RESTORE_LINKS(S" << i+1 << ", B" << i+1 << ") \\"
-                << endl;
-       }
-       stream << "}" << endl << endl;
-
-       stream << "#define RESTORE_LINKS(S, B) { \\" << endl
-              << "  for (size_t j = 0; j < l.size(); j++) { \\"
-              << endl
-              << "    auto *b = l[j].B; \\" << endl
-              << "    if (b) { \\" << endl
-              << "      auto &links = l[j].S; \\" << endl
-              << "      unsigned int link_i = 0; \\" << endl
-              << "      unsigned char c = 0; \\" << endl
-              << "      while (c < b->pos) { \\" << endl
-              << "        switch (b->array[c]) { \\" << endl
-              << "          case b->LINK : \\" << endl
-              << "          { \\" << endl
-              << "            assert(!(links.empty())); \\" << endl
-              << "            c++; \\" << endl
-              << "            unsigned int table_class = links[link_i++]; \\"
-              << endl
-              << "            assert(table_class > 0 && "
-              << "table_class < nt_tables::end); \\" << endl
-              << "            auto &listref_el = (*(tables[--table_class]))"
-              << "[links[link_i]].ref()[links[link_i + 1]]; \\" << endl
-              << "            link_i += 2; \\" << endl
-              << "            auto *nxt_b = listref_el.B1; \\" << endl
-              << "            assert(nxt_b != nullptr); \\" << endl
-              << "            nxt_b->inc_ref(); \\" << endl
-              << "            uint8_t string_n = links[link_i++]; \\" << endl
-              << "            switch (string_n) { \\" << endl;
-       for (size_t i = 1; i < string_type_accessors.size(); i++) {
-         stream << "              case " << i+1 << " : \\" << endl
-                << "                nxt_b = listref_el.B" << i+1 << "; \\"
-                << endl
-                << "                break; \\" << endl;
-       }
-       stream << "            } \\" << endl
-              << "            for (unsigned char p = 0; p < 8; p++) { \\"
-              << endl
-              << "              b->array[p+c] = ((unsigned char*)&nxt_b)[p]; \\"
-              << endl
-              << "            } \\" << endl
-              << "            c += 8; \\" << endl
-              << "            break; \\" << endl
-              << "          } \\" << endl
-              << "          case b->REP : \\" << endl
-              << "            c += 6; \\" << endl
-              << "            break; \\" << endl
-              << "          case b->SEQ : \\" << endl
-              << "            c += 3; \\" << endl
-              << "            break; \\" << endl
-              << "          default : \\" << endl
-              << "            c++; \\" << endl
-              << "        } \\" << endl
-              << "      } \\" << endl
-              << "    } \\" << endl
-              << "  } \\" << endl
-              << "}" << endl << endl;
-       stream << "// add idx of String in vector to all String objects" << endl;
-       stream << "#define ADD_VECTOR_INDEX_TO_STRING(IDX, TABLE_CLASS) \\"
-              << endl
-              << "  auto &l = array[IDX].ref(); \\" << endl
-              << "  for (size_t i = 0; i < l.size(); i++) { \\"
-              << endl;
-       for (size_t i = 0; i < string_type_accessors.size(); i++) {
-         stream << "    ADD_VEC(B" << i+1 << ", IDX, TABLE_CLASS) \\" << endl;
-       }
-       stream << "  }" << endl << endl;
-
-       stream << "// add the vector idx/table class identifier to Block" << endl
-              << "// (cf. nt_tables enum for table class enumeration)"  << endl;
-       stream << "#define ADD_VEC(B, IDX, T) \\" << endl
-              << "  if (l[i].B) { \\" << endl
-              << "    if (l[i].B->vec_i == -1) l[i].B->vec_i = IDX; \\" << endl
-              << "    if (l[i].B->table_class == 0) "
-              << "l[i].B->table_class = T; \\" << endl
-              << "  }" << endl << endl;
-
-       stream << "// add idx of String in ListRef object to all "
-              << "String objects" << endl;
-       stream << "#define ADD_LISTREF_INDEX_TO_STRING(IDX) \\" << endl;
-       for (size_t i = 0; i < string_type_accessors.size(); i++) {
-         if (i < string_type_accessors.size() - 1) {
-           stream << "  ADD_REF(B" << i+1 << ", IDX, " << i+1 << ") \\" << endl;
-         } else {
-           stream << "  ADD_REF(B" << i+1 << ", IDX, " << i+1 << ")" << endl;
-         }
-       }
-       stream << endl;
-
-       stream << "#define ADD_REF(B, IDX, B_N) \\" << endl
-              << "  if (e.B) { \\" << endl
-              << "    if (e.B->listref_i == -1) e.B->listref_i = IDX; \\"
-              << endl
-              << "    if (e.B->string_n == 0) e.B->string_n = B_N; \\" << endl
-              << "  }" << endl << endl;
-
-       stream << "enum nt_tables {" << endl;
-       inc_indent();
-       stream << indent() << "none," << endl;
-       for (auto i = tables.begin(); i != tables.end(); ++i) {
-         const std::string &table_name = i->second->table_decl->name();
-         stream << indent() << table_name << "," << endl;
-       }
-       stream << indent() << "end" << endl;
-       dec_indent();
-       stream << "};" << endl << endl;
-     }
 
      stream << "extern \"C\" {" << endl;
      stream << indent() << "#include <unistd.h>" << endl;
@@ -346,8 +222,14 @@ class Checkpoint : public Base {
       inc_indent();
       size_t n_tables = tables.size();
       stream << indent() << "int n_tables = " << n_tables << ";" << endl;
+      stream << indent() << "std::unordered_map<uintptr_t, String::Block*> "
+             << "link_map;" << endl;
+      stream << indent() << "std::unordered_map<" << endl
+             << indent() << " uintptr_t, std::vector<std::pair<int, size_t>>> "
+             << "block_linked_at;" << endl;
+      stream << indent() << "std::vector<std::pair<int, size_t>> "
+             << "broken_listrefs;" << endl;
       size_t c = 0;
-      Type::Base *table_type = nullptr;
       for (auto i = tables.begin(); i != tables.end(); ++i) {
         c++;
         const std::string &table_name = i->second->table_decl->name();
@@ -363,6 +245,38 @@ class Checkpoint : public Base {
             stream << table_name << ".get_table()," << endl;
           } else {
             stream << table_name << ".get_table()};" << endl << endl;
+          }
+        }
+      }
+      c = 0;
+      for (auto i = tables.begin(); i != tables.end(); ++i) {
+        c++;
+        const std::string &table_name = i->second->table_decl->name();
+        if (c == 1) {
+          stream << indent() << "std::vector<bool> *tabulated[] = {"
+                 << table_name << ".get_tabulated()," << endl;
+        } else {
+          stream << indent() << "                                  ";
+          if (c < n_tables) {
+            stream << table_name << ".get_tabulated()," << endl;
+          } else {
+            stream << table_name << ".get_tabulated()};" << endl << endl;
+          }
+        }
+      }
+      c = 0;
+      for (auto i = tables.begin(); i != tables.end(); ++i) {
+        c++;
+        const std::string &table_name = i->second->table_decl->name();
+        if (c == 1) {
+          stream << indent() << "size_t *tabulated_counts[] = {"
+                 << table_name << ".get_tabulated_count()," << endl;
+        } else {
+          stream << indent() << "                                  ";
+          if (c < n_tables) {
+            stream << table_name << ".get_tabulated_count()," << endl;
+          } else {
+            stream << table_name << ".get_tabulated_count()};" << endl << endl;
           }
         }
       }
@@ -384,36 +298,12 @@ class Checkpoint : public Base {
         stream << indent() << "assert(l[k].S" << i+1
                << " && l[k].B" << i+1 << ");" << endl;
         stream << indent() << "String::Block *b = l[k].B" << i+1 << ";" << endl;
-        stream << indent() << "link_map[l[k].S" << i+1 << "] = b;" << endl;
-        dec_indent();
-        stream << indent() << "}" << endl;
-      }
-      dec_indent();
-      stream << indent() << "}" << endl;
-      dec_indent();
-      stream << indent() << "}" << endl;
-      dec_indent();
-      stream << indent() << "}" << endl << endl;
-      stream << indent() << "// restore string links" << endl;
-
-      stream << indent() << "for (int i = 0; i < n_tables; i++) {" << endl;
-      inc_indent();
-      stream << indent() << "auto &curr_table = *(tables[i]);" << endl;
-      stream << indent() << "for (size_t j = 0; j < curr_table.size(); j++) {"
-             << endl;
-      inc_indent();
-      stream << indent() << "auto &l = curr_table[j].ref();" << endl;
-      stream << indent() << "for (size_t k = 0; k < l.size(); k++) {" << endl;
-      inc_indent();
-      for (size_t i = 0; i < string_type_accessors.size(); i++) {
-        stream << indent() << "if (l[k].B" << i+1 << ") {" << endl;
-        inc_indent();
-        stream << indent() << "assert(l[k].S" << i+1
-               << " && l[k].B" << i+1 << ");" << endl;
-        stream << indent() << "String::Block *b = l[k].B" << i+1 << ";" << endl;
+        stream << indent() << "link_map[l[k].S" << i+1 << "] = b;"
+               << endl << endl;
         stream << indent() << "unsigned char c = 0;" << endl;
-        stream << indent() << "// replace addresses of all links with "
-               << "new addresses of respective blocks after deserialization"
+        stream << indent() << "// store table/vector idx of every linked Block"
+               << endl;
+        stream << indent() << "// so invalid links can be removes properly"
                << endl;
         stream << indent() << "while (c < b->pos) {" << endl;
         inc_indent();
@@ -435,8 +325,113 @@ class Checkpoint : public Base {
         stream << indent() << "c++;" << endl;
         stream << indent() << "uintptr_t linked_block = "
                << "reinterpret_cast<uintptr_t>(b->get_link(c));" << endl;
-        stream << indent() << "assert(link_map.find(linked_block) != "
-               << "link_map.end());" << endl;
+        stream << indent() << "if (block_linked_at.find(linked_block) !="
+               << " block_linked_at.end()) {" << endl;
+        inc_indent();
+        stream << indent() << "block_linked_at[linked_block]."
+               << "emplace_back(i, j);" << endl;
+        dec_indent();
+        stream << indent() << "} else {" << endl;
+        inc_indent();
+        stream << indent() << "block_linked_at[linked_block] = "
+               << "std::vector<std::pair<int, size_t>>{" << endl
+               << "                                 "
+               << "std::pair<int, size_t>{i, j}};" << endl;
+        dec_indent();
+        stream << indent() << "}" << endl;
+        stream << indent() << "c += 8;" << endl;
+        stream << indent() << "break;" << endl;
+        dec_indent();
+        stream << indent() << "}" << endl;
+        stream << indent() << "default :" << endl;
+        inc_indent();
+        stream << indent() << "c++;" << endl;
+        dec_indent();
+        stream << indent() << "}" << endl;
+        dec_indent();
+        stream << indent() << "}" << endl;
+        dec_indent();
+        stream << indent() << "}" << endl;
+      }
+      dec_indent();
+      stream << indent() << "}" << endl;
+      dec_indent();
+      stream << indent() << "}" << endl;
+      dec_indent();
+      stream << indent() << "}" << endl << endl;
+      stream << indent() << "// restore string links" << endl;
+
+      stream << indent() << "for (int i = 0; i < n_tables; i++) {" << endl;
+      inc_indent();
+      stream << indent() << "auto &curr_table = *(tables[i]);" << endl;
+      stream << indent() << "for (size_t j = 0; j < curr_table.size(); j++) {"
+             << endl;
+      inc_indent();
+      stream << indent() << "auto &l = curr_table[j].ref();" << endl;
+      stream << indent() << "if (!((*(tabulated[i]))[j])) {" << endl;
+      inc_indent();
+      stream << indent() << "assert(l.size() == 0);" << endl;
+      stream << indent() << "continue;" << endl;
+      dec_indent();
+      stream << indent() << "}" << endl << endl;
+      stream << indent() << "// true if an unresolvable link was found in "
+             << "one of the Strings of the current ListRef" << endl;
+      stream << indent() << "bool cant_resolve = false;" << endl;
+      stream << indent() << "std::vector<String::Block*> valid_links;" << endl;
+      stream << indent() << "for (size_t k = 0; k < l.size() "
+             << "&& !cant_resolve; k++) {" << endl;
+      inc_indent();
+      for (size_t i = 0; i < string_type_accessors.size(); i++) {
+        stream << indent() << "if (l[k].B" << i+1 << ") {" << endl;
+        inc_indent();
+        stream << indent() << "assert(l[k].S" << i+1
+               << " && l[k].B" << i+1 << ");" << endl;
+        stream << indent() << "String::Block *b = l[k].B" << i+1 << ";" << endl;
+        stream << indent() << "unsigned char c = 0;" << endl;
+        stream << indent() << "// replace addresses of all links with "
+               << "new addresses of respective blocks after deserialization"
+               << endl;
+        stream << indent() << "while (c < b->pos && !cant_resolve) {" << endl;
+        inc_indent();
+        stream << indent() << "switch (b->array[c]) {" << endl;
+        inc_indent();
+        stream << indent() << "case b->REP :" << endl;
+        inc_indent();
+        stream << indent() << "c += 6;" << endl;
+        stream << indent() << "break;" << endl;
+        dec_indent();
+        stream << indent() << "case b->SEQ :" << endl;
+        inc_indent();
+        stream << indent() << "c += 3;" << endl;
+        stream << indent() << "break;" << endl;
+        dec_indent();
+        stream << indent() << "case b->LINK :" << endl;
+        stream << indent() << "{" << endl;
+        inc_indent();
+        stream << indent() << "c++;" << endl;
+        stream << indent() << "uintptr_t linked_block = "
+               << "reinterpret_cast<uintptr_t>(b->get_link(c));" << endl;
+        stream << indent() << "if (link_map.find(linked_block) == "
+               << "link_map.end()) {" << endl;
+        inc_indent();
+        /*
+          check if link can be mapped to an existing Block in one of the tables;
+          if not, this link can't be resolved and the String object
+          wrapping this Block as well as all the other String objects
+          in the current ListRef have to be deleted so they are recalculated
+          once the algorithm requests this ListRef;
+          to ensure that every other String/ListRef can resolve its links,
+          we have to make sure that the to-be-deleted Strings aren't
+          linked anywhere else;
+          if they are, we also have to delete the Strings where these
+          Strings are linked;
+          we have to keep doing this until all Strings that need to be deleted
+          aren't linked to any other strings
+        */
+        stream << indent() << "cant_resolve = true;" << endl;
+        stream << indent() << "break;" << endl;
+        dec_indent();
+        stream << indent() << "}" << endl;
         stream << indent() << "String::Block *next_block = "
                << "link_map[linked_block];" << endl;
         stream << indent() << "assert(next_block);" << endl;
@@ -453,7 +448,7 @@ class Checkpoint : public Base {
                << endl;
         dec_indent();
         stream << indent() << "}" << endl;
-        stream << indent() << "next_block->inc_ref();" << endl;
+        stream << indent() << "valid_links.push_back(next_block);" << endl;
         stream << indent() << "break;" << endl;
         dec_indent();
         stream << indent() << "}" << endl;
@@ -469,12 +464,133 @@ class Checkpoint : public Base {
         dec_indent();
       }
       stream << indent() << "}" << endl;
+      stream << indent() << "if (cant_resolve) {" << endl;
+      inc_indent();
+      stream << indent() << "// mark current ListRef for delete/overwrite"
+             << endl;
+      stream << indent() << "broken_listrefs.emplace_back(i, j);" << endl;
+      dec_indent();
+      stream << indent() << "} else  {" << endl;
+      inc_indent();
+      stream << indent() << "for (String::Block *b : valid_links) b->inc_ref();"
+             << endl;
       dec_indent();
       stream << indent() << "}" << endl;
       dec_indent();
       stream << indent() << "}" << endl;
       dec_indent();
       stream << indent() << "}" << endl << endl;
+      stream << indent() << "int n = broken_listrefs.size();" << endl;
+      // only recursively call from the initial elements
+      // of borken_listrefs since new elements will be added
+      // to the same vector but won't need to be processed again
+      stream << indent() << "for (int d = 0; d < n; d++) {" << endl;
+      inc_indent();
+      stream << indent() << "std::vector<std::pair<int, size_t>> "
+             << "additional{broken_listrefs[d]};" << endl;
+      stream << indent() << "find_broken_listrefs(additional, tables, "
+             << "block_linked_at);" << endl;
+      stream << indent() << "for (auto &lr : additional) {" << endl;
+      inc_indent();
+      stream << indent() << "broken_listrefs.emplace_back(lr);" << endl;
+      dec_indent();
+      stream << indent() << "}" << endl;
+      dec_indent();
+      stream << indent() << "}" << endl << endl;
+      stream << indent() << "// mark the broken ListRefs "
+             << "as not tabulated" << endl;
+      stream << indent() << "for (const auto& [table_i, vec_i] : "
+             << "broken_listrefs) {" << endl;
+      inc_indent();
+      stream << indent() << "auto &listref = (*(tables[table_i]))[vec_i].ref();"
+             << endl;
+      stream << indent() << "bool is_tabulated = "
+             << "(*(tabulated[table_i]))[vec_i];" << endl;
+      stream << indent() << "if (is_tabulated) {" << endl;
+      inc_indent();
+      stream << indent() << "(*(tabulated[table_i]))[vec_i] = false;" << endl;
+      stream << indent() << "(*(tabulated_counts[table_i]))--;" << endl;
+      dec_indent();
+      stream << indent() << "}" << endl;
+      dec_indent();
+      stream << indent() << "}" << endl;
+      dec_indent();
+      stream << indent() << "}" << endl << endl;
+      dec_indent();
+  }
+
+  void find_broken_listrefs(Printer::Base &stream, const nt_tables &tables) {
+     inc_indent();
+     stream << indent() << "void find_broken_listrefs("
+            << "std::vector<std::pair<int, size_t>> &broken_listrefs," << endl
+            << indent() << "std::vector<"
+            << tables.begin()->second->table_decl->datatype()
+            << "> *tables[]," << endl
+            << indent() << "std::unordered_map<uintptr_t, "
+            << "std::vector<std::pair<int, size_t>>> &block_linked_at) {"
+            << endl;
+      inc_indent();
+      stream << indent() << "// recursively add all ListRefs that "
+             << "need to invalidated" << endl;
+      stream << indent() << "// because they contain links to Strings that "
+             << "also need" << endl;
+      stream << indent() << "// to be invalidated to the broken_listrefs vector"
+             << endl << endl;
+      stream << indent() << "if (broken_listrefs.empty()) return;" << endl;
+      stream << indent() << "bool has_link = false;" << endl;
+      stream << indent() << "auto [table_i, vec_i] = broken_listrefs.back();"
+             << endl;
+      stream << indent() << "auto &listref = (*(tables[table_i]))[vec_i].ref();"
+             << endl;
+      stream << indent() << "for (size_t i = 0; i < "
+             << "listref.size() && !has_link; i++) {" << endl;
+      inc_indent();
+      stream << indent() << "if (listref[i].B1) {" << endl;
+      inc_indent();
+      stream << indent() << "assert(listref[i].S1 && listref[i].B1);" << endl;
+      stream << indent() << "uintptr_t b_int = listref[i].S1;" << endl;
+      stream << indent() << "String::Block *b = listref[i].B1;" << endl;
+      stream << indent() << "if (block_linked_at[b_int].size() > 0) {" << endl;
+      inc_indent();
+      stream << indent() << "// if a String that is linked to "
+             << "somewhere is found;" << endl;
+      stream << indent() << "// the Strings that link to this "
+            << "String need to be deleted as well" << endl;
+      stream << indent() << "has_link = true;" << endl;
+      dec_indent();
+      stream << indent() << "} else b->inc_ref();" << endl;
+      dec_indent();
+      stream << indent() << "}" << endl;
+      dec_indent();
+      stream << indent() << "}" << endl << endl;
+      stream << indent() << "// recursion anchor" << endl;
+      stream << indent() << "// (will only be executed if a String of the "
+             << "current ListRef is linked to somewhere)" << endl;
+      stream << indent() << "if (has_link) {" << endl;
+      inc_indent();
+      stream << indent() << "for (size_t i = 0; i < listref.size(); i++) {"
+             << endl;
+      inc_indent();
+      stream << indent() << "if (listref[i].B1) {" << endl;
+      inc_indent();
+      stream << indent() << "std::vector<std::pair<int, size_t>> &links = "
+             << "block_linked_at[listref[i].S1];" << endl;
+      stream << indent() << "for (auto& nxt_listref : links) {" << endl;
+      inc_indent();
+      stream << indent() << "broken_listrefs.push_back(nxt_listref);" << endl;
+      stream << indent() << "find_broken_listrefs(broken_listrefs, "
+             << "tables, block_linked_at);" << endl;
+      dec_indent();
+      stream << indent() << "}" << endl;
+      dec_indent();
+      stream << indent() << "}" << endl;
+      dec_indent();
+      stream << indent() << "}" << endl;
+      dec_indent();
+      stream << indent() << "}" << endl;
+      dec_indent();
+      stream << indent() << "}" << endl << endl;
+      dec_indent();
   }
 
   void archive(Printer::Base &stream) {
@@ -555,6 +671,28 @@ class Checkpoint : public Base {
      stream << "std::vector<" << dtype << "> *get_table() {" << endl;
      inc_indent();
      stream << indent() << "return &array;" << endl;
+     dec_indent();
+     stream << indent() << "}" << endl << endl;
+     dec_indent(); dec_indent();
+  }
+
+  void get_tabulated(Printer::Base &stream) {
+     inc_indent(); inc_indent();
+     stream << indent();
+     stream << "std::vector<bool> *get_tabulated() {" << endl;
+     inc_indent();
+     stream << indent() << "return &tabulated;" << endl;
+     dec_indent();
+     stream << indent() << "}" << endl << endl;
+     dec_indent(); dec_indent();
+  }
+
+  void get_tabulated_count(Printer::Base &stream) {
+     inc_indent(); inc_indent();
+     stream << indent();
+     stream << "size_t *get_tabulated_count() {" << endl;
+     inc_indent();
+     stream << indent() << "return &tabulated_vals_counter;" << endl;
      dec_indent();
      stream << indent() << "}" << endl << endl;
      dec_indent(); dec_indent();
@@ -716,7 +854,7 @@ class Checkpoint : public Base {
      stream << indent() << "void remove_log_file() {" << endl;
      inc_indent();
      stream << indent() << "// remove the log file after "
-            << "successfull termination of the program" << endl;
+            << "successful termination of the program" << endl;
      stream << indent() << "boost::filesystem::remove(logfile_path);" << endl;
      dec_indent();
      stream << indent() << "}" << endl << endl;
@@ -787,9 +925,7 @@ class Checkpoint : public Base {
      dec_indent();
   }
 
-  void create_checkpoint_log(Printer::Base &stream, const nt_tables &tables,
-                             const std::string &call_string,
-                             const std::string &version_string) {
+  void create_checkpoint_log(Printer::Base &stream, const nt_tables &tables) {
      inc_indent();
      stream << indent() << "void create_checkpoint_log("
             << "const gapc::Opts &opts, const std::string &arg_string) {"
@@ -801,8 +937,6 @@ class Checkpoint : public Base {
             << "std::ios::out);" << endl;
      stream << indent() << "fout << \"# Format:\\n# [OPTIONS] argv[1] "
             << "argv[2] ...\\n\";" << endl;
-     // stream << indent() << "fout << \"# [GAPC-CALL] \" << GAPC_CALL_STRING "
-     //        << "\"\\n\";" << endl;
      for (auto i = tables.begin(); i != tables.end(); ++i) {
        const std::string &table_name = i->second->table_decl->name();
        stream << indent() << "fout << \"# path/to/" << table_name << "\\n\";"
@@ -825,10 +959,10 @@ class Checkpoint : public Base {
        stream << indent() << "fout << " << table_name << ".get_out_table_path()"
               << "<< \"\\n\";" << endl;
      }
-     stream << indent() << "fout << \"[GAPC CALL] "
-            << call_string << "\\n\";" << endl;
-     stream << indent() << "fout << \"[GAPC VERSION] "
-            << version_string << "\\n\";" << endl;
+     stream << indent() << "fout << \"[GAPC CALL] \" << GAPC_CALL_STRING "
+            << "<< \"\\n\";" << endl;
+     stream << indent() << "fout << \"[GAPC VERSION] \" << GAPC_VERSION_STRING "
+            << "<< \"\\n\";" << endl;
      stream << indent() << "fout.close();" << endl;
      dec_indent();
      stream << indent() << "}" << endl << endl;

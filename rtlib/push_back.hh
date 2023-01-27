@@ -78,9 +78,6 @@ template<class T, typename pos_int>
 inline void push_back_max_other(List_Ref<T, pos_int> &x, T &e) {
   assert(!isEmpty(e));
   if (isEmpty(x) || left_most(x.ref().front()) == left_most(e)) {
-#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
-    ADD_LISTREF_INDEX_TO_STRING((x.ref().size()))
-#endif
     x.ref().push_back(e);
     return;
   }
@@ -90,9 +87,6 @@ inline void push_back_max_other(List_Ref<T, pos_int> &x, T &e) {
       erase(*i);
     }
     x.ref().clear();
-#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
-    ADD_LISTREF_INDEX_TO_STRING((x.ref().size()))
-#endif
     x.ref().push_back(e);
     return;
   }
@@ -103,9 +97,6 @@ template<class T, typename pos_int>
 inline void push_back_min_other(List_Ref<T, pos_int> &x, T &e) {
   assert(!isEmpty(e));
   if (isEmpty(x) || left_most(x.ref().front()) == left_most(e)) {
-#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
-    ADD_LISTREF_INDEX_TO_STRING((x.ref().size()))
-#endif
     x.ref().push_back(e);
     return;
   }
@@ -115,9 +106,6 @@ inline void push_back_min_other(List_Ref<T, pos_int> &x, T &e) {
       erase(*i);
     }
     x.ref().clear();
-#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
-    ADD_LISTREF_INDEX_TO_STRING((x.ref().size()))
-#endif
     x.ref().push_back(e);
     return;
   }
@@ -129,17 +117,11 @@ inline void push_back_min_other(List_Ref<T, pos_int> &x, T &e) {
 template<class T, typename pos_int>
 inline void push_back_max(List_Ref<T, pos_int> &x, T &e) {
   if (isEmpty(x)) {
-#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
-    ADD_LISTREF_INDEX_TO_STRING((x.ref().size()))
-#endif
     x.ref().push_back(e);
     return;
   }
   if (x.ref().front() < e) {
     erase(x.ref().front());
-#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
-    ADD_LISTREF_INDEX_TO_STRING(0)
-#endif
     x.ref().front() = e;
     return;
   }
@@ -160,16 +142,10 @@ inline void push_back_max(T &x, T &e) {
 template<class T, typename pos_int>
 inline void push_back_min(List_Ref<T, pos_int> &x, T &e) {
   if (isEmpty(x)) {
-#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
-    ADD_LISTREF_INDEX_TO_STRING((x.ref().size()))
-#endif
     x.ref().push_back(e);
     return;
   }
   if (x.ref().front() > e) {
-#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
-    ADD_LISTREF_INDEX_TO_STRING(0)
-#endif
     x.ref().front() = e;
     return;
   }
@@ -189,15 +165,9 @@ inline void push_back_min(T &x, T &e) {
 template<class T, typename pos_int>
 inline void push_back_sum(List_Ref<T, pos_int> &x, T &e) {
   if (isEmpty(x)) {
-#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
-    ADD_LISTREF_INDEX_TO_STRING((x.ref().size()))
-#endif
     x.ref().push_back(e);
     return;
   }
-#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
-  ADD_LISTREF_INDEX_TO_STRING(0)
-#endif
   x.ref().front() += e;
 }
 
@@ -285,9 +255,6 @@ template<class T, typename pos_int>
 inline void push_back_class_syn(List_Ref<T, pos_int> &x, T &e) {
   assert(!isEmpty(e));
   if (isEmpty(x)) {
-#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
-    ADD_LISTREF_INDEX_TO_STRING((x.ref().size()))
-#endif
     x.ref().push_back(e);
     return;
   }
@@ -298,9 +265,6 @@ inline void push_back_class_syn(List_Ref<T, pos_int> &x, T &e) {
       return;
     }
   }
-#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
-    ADD_LISTREF_INDEX_TO_STRING((x.ref().size()))
-#endif
   l.push_back(e);
 }
 

@@ -28,6 +28,8 @@ extern "C" {
   #include <getopt.h>
   #include <unistd.h>
   #include <sys/stat.h>
+  #include <ctype.h>
+  #include <stdio.h>
 }
 
 #include <cstdlib>

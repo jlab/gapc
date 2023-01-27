@@ -494,7 +494,6 @@ Fn_Def *Tablegen::gen_tab() {
   }
 
   // increase total tabulated vals counter
-  // (if tables contain Strings, also call ADD_VECTOR_INDEX_TO_STRING macro)
   if (checkpoint_) {
     Expr::Fn_Call *is_loaded_call = new Expr::Fn_Call(new std::string(
                                                       "is_loaded"));
@@ -512,18 +511,6 @@ Fn_Def *Tablegen::gen_tab() {
     Statement::Increase *inc_tab_c = new Statement::Increase(
                                      new std::string("tabulated_vals_counter"));
     Statement::If *is_loaded_stmt = new Statement::If(loaded_expr, inc_tab_c);
-
-    // TODO(fymue): figure out if this is needed for Rope;
-    // if not, remove since String doesn't use this mechanism anymore
-    //                  ----vvvvvvvv------ (disabled for now)
-    if (checkpoint_strings_ && false) {
-      // only add this macro if String/Rope has to be serialized
-      Statement::Fn_Call * add_vec = new Statement::Fn_Call(
-                                      "ADD_VECTOR_INDEX_TO_STRING");
-      add_vec->add_arg(off);
-      add_vec->add_arg(new std::string("table_class"));
-      is_loaded_stmt->then.push_back(add_vec);
-    }
 
     c.push_back(is_loaded_stmt);
   }

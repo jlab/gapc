@@ -266,8 +266,9 @@ class String {
     bool empty_;
 
     void del() {
-      if (!block)
+      if (!block) {
         return;
+      }
       assert(block->ref_count);
       block->dec_ref();
       if (!block->ref_count) {
