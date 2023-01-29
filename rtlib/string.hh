@@ -71,7 +71,9 @@ class String {
         template<class Archive>
         void serialize(Archive & ar, const unsigned int version) {
           ar & pos;
-          ar & boost::serialization::make_array(array, size);
+          for (unsigned char i = 0; i < pos; i++) {
+            ar & array[i];
+          }
     }
 #endif
         void del(Block *b) {
