@@ -41,6 +41,9 @@
 #include "bitops.hh"
 #include "multipool.hh"
 
+#ifdef CHECKPOINTING_INTEGRATED
+#include "boost/serialization/split_member.hpp"
+#endif
 
 #ifndef HAVE_EFFICIENT_FFS
   #ifdef __GNUC__
@@ -51,6 +54,30 @@
 template <typename T, typename Size, typename alphset = ShapeAlph<T, Size> >
 class Fiber {
  private:
+#ifdef CHECKPOINTING_INTEGRATED
+    Size array_size;  // length/number of elements of array
+    friend class boost::serialization::access;
+
+    template<class Archive>
+    void save(Archive & ar, const unsigned int version) const {
+      ar & length();
+      for (Size i = 0; i < length(); i++) {
+        ar << array[i];
+      }
+    }
+
+    template<class Archive>
+    void load(Archive & ar, const unsigned int version) {
+      ar >> array_size;
+      array = alloc(array_size);  // need to allocate space first
+      for (Size i = 0; i < array_size; i++) {
+        ar >> array[i];
+      }
+    }
+
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
+#endif
+
     enum { bits = sizeof(T)*8, char_width = alphset::char_width,
       chars = bits/char_width };
 
@@ -88,8 +115,11 @@ class Fiber {
  public:
     T *array;
 
-    Fiber() : array(&null_elem) {
-    }
+    Fiber() : array(&null_elem)
+#ifdef CHECKPOINTING_INTEGRATED
+              , array_size(0)
+#endif
+    {}
 
     Fiber(const Fiber<T, Size, alphset> &other) {
       if (other.isEmpty()) {

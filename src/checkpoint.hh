@@ -42,11 +42,12 @@ class Checkpoint : public Base {
   std::vector<std::string> block_type_accessors;
 
   // list of currently supported/serializable datatypes (all primitive)
-  const std::array<Type::Type, 8>
+  const std::array<Type::Type, 9>
   SUPPORTED_TYPES = {Type::Type::VOID, Type::Type::INTEGER,
                      Type::Type::INT, Type::Type::FLOAT,
                      Type::Type::SIZE, Type::Type::SINGLE,
-                     Type::Type::BIGINT, Type::Type::STRING};
+                     Type::Type::BIGINT, Type::Type::STRING,
+                     Type::Type::SHAPE};
 
   // list of supported compound types
   // (can contain multiple subtypes, which all must be part of SUPPORTED_TYPES)
@@ -54,7 +55,7 @@ class Checkpoint : public Base {
   COMPOUND_TYPES = {Type::Type::TUPLE};
 
   template<size_t n>
-  bool has_type(std::array<Type::Type, n> arr, Type::Type type) {
+  bool has_type(const std::array<Type::Type, n> &arr, Type::Type type) {
     for (Type::Type supported_type : arr) {
          if (type == supported_type) {
            if (type == Type::Type::STRING) {
@@ -205,6 +206,7 @@ class Checkpoint : public Base {
      stream << "}" << endl;
      stream << "#include \"boost/serialization/vector.hpp\"" << endl;
      stream << "#include \"boost/serialization/utility.hpp\"" << endl;
+     stream << "#include \"boost/serialization/access.hpp\"" << endl;
      stream << "#include \"boost/archive/binary_iarchive.hpp\"" << endl;
      stream << "#include \"boost/archive/binary_oarchive.hpp\"" << endl;
      stream << "#include \"boost/filesystem.hpp\"" << endl;

@@ -44,10 +44,6 @@
 
 #include "../rtlib/cstr.h"
 
-#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
-#include "boost/serialization/array.hpp"  // serialize e.g. char*
-#endif
-
 class String {
  private:
 #if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
@@ -74,7 +70,7 @@ class String {
           for (unsigned char i = 0; i < pos; i++) {
             ar & array[i];
           }
-    }
+       }
 #endif
         void del(Block *b) {
           assert(b->ref_count);
