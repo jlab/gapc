@@ -352,12 +352,9 @@ void Tablegen::offset(size_t track_pos, itr f, const itr &e) {
 #include "symbol.hh"
 
 Statement::Table_Decl *Tablegen::create(Symbol::NT &nt,
-    std::string *name, bool cyk, bool checkpoint, bool cp_strings) {
+    std::string *name, bool cyk, bool checkpoint) {
   cyk_ = cyk;
   checkpoint_ = checkpoint;  // is checkpointing activated?
-
-  // check whether String/Rope has to be serialized for checkpointing
-  checkpoint_strings_ = cp_strings;
 
   std::list<Expr::Base*> ors;
   nt.gen_ys_guards(ors);
