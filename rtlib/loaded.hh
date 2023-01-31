@@ -39,8 +39,10 @@
 /*
   this header file contains functions to check whether or not
   a datatype is "loaded" or not. In this case, "loaded" means
-  non-zero. This should work for all GAPC-generated/-supported
-  types.
+  non-zero/non-empty (default constructed objects are 
+  considered empty, for example), which needs to be detected 
+  when loading checkpoints (--checkpoint option).
+  This should work for all GAPC-generated/-supported types.
 */
 
 inline bool is_loaded(char x) {
@@ -103,7 +105,7 @@ is_loaded(const std::pair<T, U> &p) {
 
 template <typename T, typename U> inline bool
 is_loaded(const Basic_Subsequence<T, U> &p) {
-  return is_loaded(p.seq) && (is_loaded(p.i) || is_loaded(p.j));
+  return is_loaded(p.i) || is_loaded(p.j);
 }
 
 template <class T, typename pos_int> inline bool
@@ -121,10 +123,10 @@ is_loaded(const List<T> &l) {
   return !(l.empty());
 }
 
-// For multi-track:
+// For multi-track
 template<typename T1, typename T2> inline bool
 is_loaded(const T1 &x1, const T2 &x2) {
-  return !(is_loaded(x1) || is_loaded(x2));
+  return is_loaded(x1) && is_loaded(x2);
 }
 
 #endif  // RTLIB_LOADED_HH_

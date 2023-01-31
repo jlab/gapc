@@ -1122,8 +1122,10 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
     ast->checkpoint->get_out_table_path(stream);
     ast->checkpoint->get_tabulated_vals_percentage(stream);
     ast->checkpoint->parse_checkpoint_log(stream);
-    if (ast->checkpoint->strings) {
+    if (ast->checkpoint->strings || ast->checkpoint->subseq) {
       ast->checkpoint->get_table(stream, dtype);
+    }
+    if (ast->checkpoint->strings) {
       ast->checkpoint->get_tabulated(stream);
       ast->checkpoint->get_tabulated_count(stream);
     }
@@ -1359,7 +1361,23 @@ void Printer::Cpp::print_type_defs(const AST &ast) {
         }
         stream << indent() << "bool empty_;" << endl << indent() << *def->name
           << "() : empty_(false) {}" << endl;
-        dec_indent();
+
+        if (ast.checkpoint && ast.checkpoint->user_def) {
+          // serialize method for user-defined type
+          stream << indent() << "friend class boost::serialization::access;"
+                 << endl << endl;
+          stream << indent() << "template <class Archive>" << endl;
+          stream << indent() << "void serialize(Archive &ar, "
+                 << "const unsigned int version) {" << endl;
+          inc_indent();
+          for (std::list<std::pair<Type::Name*, std::string*>*>::const_iterator
+             i = tuple->list.begin(); i != tuple->list.end(); ++i) {
+            stream << indent() << "ar & " << *(*i)->second << ";" << endl;
+          }
+          stream << indent() << "ar & empty_;" << endl;
+          dec_indent();
+          stream << indent() << "}" << endl << endl;
+        }
 
         // FIXME let user decide how to compare user defined tuples ...
         if (tuple->list.front()->first->lhs->const_simple()->is(Type::INT) ||
@@ -1414,7 +1432,7 @@ void Printer::Cpp::print_type_defs(const AST &ast) {
             << "other." << *tuple->list.front()->second << ";"
             << endl << "}" << endl;
         }
-
+        dec_indent();
         stream << endl << indent() << "};" << endl << endl;
 
         stream << indent()
@@ -1439,6 +1457,25 @@ void Printer::Cpp::print_type_defs(const AST &ast) {
           << "e.empty_ = true; }" << endl;
         stream << "inline bool isEmpty(const " << *def->name << " &e) {"
           << " return e.empty_; }" << endl;
+
+        if (ast.checkpoint && ast.checkpoint->user_def) {
+          // is_loaded method for user-defined type
+          // (to check whether a table entry is already
+          //  tabulated or not when loading checkpoints)
+          stream << indent() << "inline bool is_loaded(const "
+                 << *def->name << " &el) {" << endl;
+          inc_indent();
+          stream << indent() << "return ";
+          for (std::list<std::pair<Type::Name*, std::string*>*>::const_iterator
+             i = tuple->list.begin(), j = --tuple->list.end();
+             i != j; ++i) {
+            stream << "is_loaded(el." << *(*i)->second << ") && ";
+          }
+          stream << "is_loaded(el." << *tuple->list.back()->second << ");"
+                 << endl;
+          dec_indent();
+          stream << indent() << "}" << endl << endl;
+        }
       } else {
         stream << indent() << "typedef " << *def->rhs << ' '
           << *def->name << ';' << endl;
@@ -1673,10 +1710,15 @@ void Printer::Cpp::print_init_fn(const AST &ast) {
   print_filter_init(ast);
   print_table_init(ast);
   if (ast.checkpoint) {
-    if (ast.checkpoint->strings) {
+    if (ast.checkpoint->strings || ast.checkpoint->subseq) {
       stream << indent() << "if (!(opts.checkpoint_in_path.empty())) {" << endl;
       inc_indent();
-      stream << indent() << "restore_string_links();" << endl;
+      if (ast.checkpoint->strings) {
+        stream << indent() << "restore_string_links();" << endl;
+      }
+      if (ast.checkpoint->subseq) {
+        stream << indent() << "add_seq_to_subseqs();" << endl;
+      }
       dec_indent();
       stream << indent() << "}" << endl;
     }
@@ -2263,6 +2305,9 @@ void Printer::Cpp::header_footer(const AST &ast) {
     if (ast.checkpoint->strings) {
       ast.checkpoint->restore_string_links(stream, tabulated);
       ast.checkpoint->find_broken_listrefs(stream, tabulated);
+    }
+    if (ast.checkpoint->subseq) {
+      ast.checkpoint->add_seq_to_subseqs(stream, tabulated);
     }
     ast.checkpoint->create_checkpoint_log(stream, tabulated);
     ast.checkpoint->update_checkpoint_log(stream, tabulated);

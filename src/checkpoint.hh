@@ -26,6 +26,8 @@
 #include <string>
 #include <array>
 #include <vector>
+#include <list>
+#include <utility>
 #include <sstream>
 #include "printer.hh"
 #include "symbol.hh"
@@ -37,48 +39,47 @@ typedef hashtable<std::string, Symbol::NT*> nt_tables;
 namespace Printer {
 class Checkpoint : public Base {
  private:
-  bool list_ref;  // true when table types are wrapped in ListRef
-  std::vector<std::string> string_type_accessors;
-  std::vector<std::string> block_type_accessors;
+  // true if table types are wrapped in ListRef
+  bool list_ref;
 
-  // list of currently supported/serializable datatypes (all primitive)
-  const std::array<Type::Type, 9>
+  std::vector<std::string> string_type_accessors, block_type_accessors,
+                           subseq_type_accessors;
+
+  // currently supported/serializable datatypes
+  const std::array<Type::Type, 10>
   SUPPORTED_TYPES = {Type::Type::VOID, Type::Type::INTEGER,
                      Type::Type::INT, Type::Type::FLOAT,
                      Type::Type::SIZE, Type::Type::SINGLE,
                      Type::Type::BIGINT, Type::Type::STRING,
-                     Type::Type::SHAPE};
-
-  // list of supported compound types
-  // (can contain multiple subtypes, which all must be part of SUPPORTED_TYPES)
-  const std::array<Type::Type, 1>
-  COMPOUND_TYPES = {Type::Type::TUPLE};
+                     Type::Type::SHAPE, Type::Type::SUBSEQ};
 
   template<size_t n>
-  bool has_type(const std::array<Type::Type, n> &arr, Type::Type type) {
+  bool has_type(const std::array<Type::Type, n> &arr, Type::Type type,
+                Type::Base *t) {
     for (Type::Type supported_type : arr) {
          if (type == supported_type) {
-           if (type == Type::Type::STRING) {
-              strings = true;
-           }
+           if (type == Type::Type::STRING) strings = true;
+           else if (type == Type::Type::SUBSEQ) subseq = true;
            return true;
          }
     }
     return false;
   }
 
-  void add_string_accessor(Type::Type type,
-                           std::vector<std::string> &str_type_accessor) {
+  void add_type_accessor(Type::Type type,
+                         std::vector<std::string> &type_accessor) {
     if (type == Type::Type::STRING) {
-      std::stringstream string_type_accessor;
-      for (auto el : str_type_accessor) string_type_accessor << el;
-        // string_type_accessors.push_back(string_type_accessor.str() +
-        //                                 ".links");
-        string_type_accessors.push_back(string_type_accessor.str() +
-                                        ".block_as_int");
-      block_type_accessors.push_back(string_type_accessor.str() +
+      std::stringstream final_type_accessor;
+      for (auto el : type_accessor) final_type_accessor << el;
+      string_type_accessors.push_back(final_type_accessor.str() +
+                                      ".block_as_int");
+      block_type_accessors.push_back(final_type_accessor.str() +
                                      ".get_block()");
-      return;
+    } else if (type == Type::Type::SUBSEQ) {
+      std::stringstream final_type_accessor;
+      for (auto el : type_accessor) final_type_accessor << el;
+      subseq_type_accessors.push_back(final_type_accessor.str() +
+                                      ".seq");
     }
   }
 
@@ -86,52 +87,110 @@ class Checkpoint : public Base {
     Type::Type curr_type = type->getType();
 
     if (curr_type == Type::Type::LIST) {
+       // List_Ref
        list_ref = true;
        return __is_supported(type->component());
-    } else if (has_type(COMPOUND_TYPES, curr_type)) {
-       // check if type has left and right (e.g. Tuple)
-       bool has_left_and_right = has_type(COMPOUND_TYPES,
-                                          type->component()->getType());
+    } else if (curr_type == Type::Type::TUPLE) {
+       // algebra product
+       // check if type has left and right (e.g. std::pair)
+       bool has_left_and_right =
+        type->component()->getType() == Type::Type::TUPLE;
        if (has_left_and_right) {
          return __is_supported(type->left()) && __is_supported(type->right());
        } else {
          return __is_supported(type->component());
        }
+    } else if (curr_type == Type::Type::TUPLEDEF ||
+               curr_type == Type::Type::DEF) {
+      // user-defined type
+      // (gets converted to struct; all members need to be supported)
+      Type::TupleDef *s = NULL;
+      if (curr_type == Type::Type::DEF) {
+        Type::Def *d = dynamic_cast<Type::Def*>(type);
+
+        // sometimes DEF is really just TUPLEDEF in disguise, so check for that
+        if (d->rhs->getType() == Type::Type::TUPLEDEF) {
+          s = dynamic_cast<Type::TupleDef*>(d->rhs);
+        } else {
+          return __is_supported(d->rhs);
+        }
+      } else {
+        s = dynamic_cast<Type::TupleDef*>(type);
+      }
+
+      // check if every member of struct/user-defined type is supported
+      for (std::list<std::pair<Type::Name*, std::string*>*>::const_iterator
+        i = s->list.begin(); i != s->list.end(); ++i) {
+        Type::Type member_type = Type::Type::NONE;
+        for (auto &type : SUPPORTED_TYPES) {
+          if ((*i)->first->lhs->const_simple()->is(type)) {
+            member_type = type;
+            break;
+          }
+        }
+        if (member_type == Type::Type::NONE) return false;
+        else if (member_type == Type::Type::STRING) strings = true;
+        else if (member_type == Type::Type::SUBSEQ) subseq = true;
+      }
+      user_def = true;
+      return true;
     }
 
-    return has_type(SUPPORTED_TYPES, curr_type);
+    return has_type(SUPPORTED_TYPES, curr_type, type);
   }
 
-  void gen_string_accessors(Type::Base *type,
-                            std::vector<std::string> &str_type_accessor) {
-    // generate String/Rope accessors
+  void gen_type_accessors(Type::Base *type,
+                         std::vector<std::string> &type_accessor) {
+    // generate accessors for types so they can be indexed/addressed
+    // (required for String, Subsequence)
     Type::Type curr_type = type->getType();
 
     if (curr_type == Type::Type::LIST) {
-       gen_string_accessors(type->component(), str_type_accessor);
+       gen_type_accessors(type->component(), type_accessor);
        return;
-    } else if (has_type(COMPOUND_TYPES, curr_type)) {
-       // check if type has left and right (e.g. Tuple)
-       bool has_left_and_right = has_type(COMPOUND_TYPES,
-                                          type->component()->getType());
+    } else if (curr_type == Type::Type::TUPLE) {
+       // check if type has left and right (e.g. std::pair)
+       bool has_left_and_right =
+        type->component()->getType() == Type::Type::TUPLE;
        if (has_left_and_right) {
-         str_type_accessor.push_back(".first");
+         type_accessor.push_back(".first");
 
-         gen_string_accessors(type->left(), str_type_accessor);
-         str_type_accessor.pop_back();
+         gen_type_accessors(type->left(), type_accessor);
+         type_accessor.pop_back();
 
-         str_type_accessor.push_back(".second");
-         gen_string_accessors(type->right(), str_type_accessor);
-         str_type_accessor.pop_back();
+         type_accessor.push_back(".second");
+         gen_type_accessors(type->right(), type_accessor);
+         type_accessor.pop_back();
 
          return;
        } else {
-         gen_string_accessors(type->component(), str_type_accessor);
+         gen_type_accessors(type->component(), type_accessor);
          return;
        }
+    } else if (curr_type == Type::Type::TUPLEDEF) {
+      // user-defined type
+      // (gets converted into struct; all members need to be supported)
+      Type::TupleDef * s = dynamic_cast<Type::TupleDef*>(type);
+      for (std::list<std::pair<Type::Name*, std::string*>*>::const_iterator
+        i = s->list.begin(); i != s->list.end(); ++i) {
+        Type::Type member_type = Type::Type::NONE;
+        // check if every member of struct/user-defined type is supported
+        for (auto &type : SUPPORTED_TYPES) {
+          if ((*i)->first->lhs->const_simple()->is(type)) {
+            member_type = type;
+            break;
+          }
+        }
+        const std::string &member_name = *(*i)->second;  // name of member var
+        type_accessor.push_back("." + member_name);
+        add_type_accessor(member_type, type_accessor);
+        type_accessor.pop_back();
+      }
+
+      return;
     }
 
-    add_string_accessor(curr_type, str_type_accessor);
+    add_type_accessor(curr_type, type_accessor);
   }
 
  public:
@@ -144,7 +203,25 @@ class Checkpoint : public Base {
   */
   bool strings;
 
-  Checkpoint() : list_ref(false), strings(false) {}
+  /*
+    true if tables contain Subsequence objects (require additional processing);
+    this will most likely only be needed if a Subsequence object
+    is part of a user-specified type which is tabulated as e.g. a
+    pretty-print algebra
+  */
+  bool subseq;
+
+  /*
+     true if tables contain a user-defined type;
+     this type is represented as a struct in the generated header file;
+     if the checkpointing option was specified, this struct needs
+     a serialize method so the tables containing this type can be
+     (de)serialized properly
+   */
+  bool user_def;
+
+  Checkpoint() : list_ref(false), strings(false),
+                 subseq(false), user_def(false) {}
 
   bool is_supported(const nt_tables &tables) {
      // check datatypes of every table (all tables must have supported type)
@@ -159,18 +236,20 @@ class Checkpoint : public Base {
        }
      }
 
-     if (supported && strings) {
+     if (supported && (strings || subseq || user_def)) {
        /*
-          generate accessors for String/Rope types (if they are part of type)
-          needed to access these objects efficiently during (de)serializing;
-          this only works if String/Rope objects are wrapped in a ListRef
+          generate accessors for String/Subsequence types
+          (if they are part of type);
+          these are needed to access these objects efficiently during
+          (de)serializing;
+          this only works if String objects are wrapped in a ListRef
           object, so return false if ListRef is not part of the type
        */
-       if (!list_ref) {
+       if (strings && !list_ref) {
          supported = false;
        } else {
-         std::vector<std::string> str_type_accessor;
-         gen_string_accessors(table_type, str_type_accessor);
+         std::vector<std::string> type_accessor;
+         gen_type_accessors(table_type, type_accessor);
        }
      }
 
@@ -190,15 +269,24 @@ class Checkpoint : public Base {
            stream << "#define S" << i+1 << " "
                   << string_type_accessors[i]
                      .substr(1, string_type_accessors[i].npos)<< endl;
-         }
-
-         stream << "#define B" << i+1 << " "
+           stream << "#define B" << i+1 << " "
                   << block_type_accessors[i]
-                     .substr(1, string_type_accessors[i].npos)<< endl;
+                     .substr(1, block_type_accessors[i].npos)<< endl;
+         }
        }
        stream << endl;
      }
-
+     if (subseq) {
+       // define macros for easy/efficient access to Subsequence objects
+       for (size_t i = 0; i < subseq_type_accessors.size(); i++) {
+         if (!(subseq_type_accessors[i].empty())) {
+           stream << "#define SUBSEQ" << i+1 << " "
+                  << subseq_type_accessors[i]
+                     .substr(1, subseq_type_accessors[i].npos)<< endl;
+         }
+       }
+       stream << endl;
+     }
 
      stream << "extern \"C\" {" << endl;
      stream << indent() << "#include <unistd.h>" << endl;
@@ -224,13 +312,14 @@ class Checkpoint : public Base {
       inc_indent();
       size_t n_tables = tables.size();
       stream << indent() << "int n_tables = " << n_tables << ";" << endl;
+      stream << indent() << "size_t max_table_size = 0;" << endl;
       stream << indent() << "std::unordered_map<uintptr_t, String::Block*> "
              << "link_map;" << endl;
       stream << indent() << "std::unordered_map<" << endl
              << indent() << " uintptr_t, std::vector<std::pair<int, size_t>>> "
              << "block_linked_at;" << endl;
       stream << indent() << "std::vector<std::pair<int, size_t>> "
-             << "broken_listrefs;" << endl;
+             << "broken_listrefs, initial_broken_listrefs;" << endl;
       size_t c = 0;
       for (auto i = tables.begin(); i != tables.end(); ++i) {
         c++;
@@ -286,6 +375,8 @@ class Checkpoint : public Base {
       stream << indent() << "for (int i = 0; i < n_tables; i++) {" << endl;
       inc_indent();
       stream << indent() << "auto &curr_table = *(tables[i]);" << endl;
+      stream << indent() << "max_table_size = "
+             << "max(max_table_size, curr_table.size());" << endl;
       stream << indent() << "for (size_t j = 0; "
              << "j < curr_table.size(); j++) {" << endl;
       inc_indent();
@@ -305,7 +396,7 @@ class Checkpoint : public Base {
         stream << indent() << "unsigned char c = 0;" << endl;
         stream << indent() << "// store table/vector idx of every linked Block"
                << endl;
-        stream << indent() << "// so invalid links can be removes properly"
+        stream << indent() << "// so invalid links can be removed properly"
                << endl;
         stream << indent() << "while (c < b->pos) {" << endl;
         inc_indent();
@@ -470,7 +561,8 @@ class Checkpoint : public Base {
       inc_indent();
       stream << indent() << "// mark current ListRef for delete/overwrite"
              << endl;
-      stream << indent() << "broken_listrefs.emplace_back(i, j);" << endl;
+      stream << indent() << "initial_broken_listrefs.emplace_back(i, j);"
+             << endl;
       dec_indent();
       stream << indent() << "} else  {" << endl;
       inc_indent();
@@ -482,16 +574,21 @@ class Checkpoint : public Base {
       stream << indent() << "}" << endl;
       dec_indent();
       stream << indent() << "}" << endl << endl;
-      stream << indent() << "int n = broken_listrefs.size();" << endl;
       // only recursively call from the initial elements
       // of borken_listrefs since new elements will be added
       // to the same vector but won't need to be processed again
-      stream << indent() << "for (int d = 0; d < n; d++) {" << endl;
+      stream << indent() << "std::vector<bool> already_checked"
+             << "(n_tables * max_table_size);" << endl;
+      stream << indent() << "for (auto &ilr : initial_broken_listrefs) {"
+             << endl;
       inc_indent();
       stream << indent() << "std::vector<std::pair<int, size_t>> "
-             << "additional{broken_listrefs[d]};" << endl;
+             << "additional{ilr};" << endl;
+      stream << indent() << "size_t idx = ilr.first * "
+             << "max_table_size + ilr.second;" << endl;
+      stream << indent() << "already_checked[idx] = true;" << endl;
       stream << indent() << "find_broken_listrefs(additional, tables, "
-             << "block_linked_at);" << endl;
+             << "block_linked_at, max_table_size, already_checked);" << endl;
       stream << indent() << "for (auto &lr : additional) {" << endl;
       inc_indent();
       stream << indent() << "broken_listrefs.emplace_back(lr);" << endl;
@@ -504,8 +601,6 @@ class Checkpoint : public Base {
       stream << indent() << "for (const auto& [table_i, vec_i] : "
              << "broken_listrefs) {" << endl;
       inc_indent();
-      stream << indent() << "auto &listref = (*(tables[table_i]))[vec_i].ref();"
-             << endl;
       stream << indent() << "bool is_tabulated = "
              << "(*(tabulated[table_i]))[vec_i];" << endl;
       stream << indent() << "if (is_tabulated) {" << endl;
@@ -529,7 +624,9 @@ class Checkpoint : public Base {
             << tables.begin()->second->table_decl->datatype()
             << "> *tables[]," << endl
             << indent() << "std::unordered_map<uintptr_t, "
-            << "std::vector<std::pair<int, size_t>>> &block_linked_at) {"
+            << "std::vector<std::pair<int, size_t>>> &block_linked_at," << endl
+            << indent() << "size_t max_table_size, "
+            << "std::vector<bool> &already_checked) {"
             << endl;
       inc_indent();
       stream << indent() << "// recursively add all ListRefs that "
@@ -545,13 +642,14 @@ class Checkpoint : public Base {
       stream << indent() << "auto &listref = (*(tables[table_i]))[vec_i].ref();"
              << endl;
       stream << indent() << "for (size_t i = 0; i < "
-             << "listref.size() && !has_link; i++) {" << endl;
+             << "listref.size(); i++) {" << endl;
       inc_indent();
       stream << indent() << "if (listref[i].B1) {" << endl;
       inc_indent();
       stream << indent() << "assert(listref[i].S1 && listref[i].B1);" << endl;
       stream << indent() << "uintptr_t b_int = listref[i].S1;" << endl;
       stream << indent() << "String::Block *b = listref[i].B1;" << endl;
+      stream << indent() << "b->inc_ref();" << endl;
       stream << indent() << "if (block_linked_at[b_int].size() > 0) {" << endl;
       inc_indent();
       stream << indent() << "// if a String that is linked to "
@@ -560,7 +658,7 @@ class Checkpoint : public Base {
             << "String need to be deleted as well" << endl;
       stream << indent() << "has_link = true;" << endl;
       dec_indent();
-      stream << indent() << "} else b->inc_ref();" << endl;
+      stream << indent() << "}" << endl;
       dec_indent();
       stream << indent() << "}" << endl;
       dec_indent();
@@ -579,9 +677,17 @@ class Checkpoint : public Base {
              << "block_linked_at[listref[i].S1];" << endl;
       stream << indent() << "for (auto& nxt_listref : links) {" << endl;
       inc_indent();
+      stream << indent() << "size_t idx = nxt_listref.first * "
+             << "max_table_size + nxt_listref.second;" << endl;
+      stream << indent() << "if (!(already_checked[idx])) {" << endl;
+      inc_indent();
+      stream << indent() << "already_checked[idx] = true;" << endl;
       stream << indent() << "broken_listrefs.push_back(nxt_listref);" << endl;
       stream << indent() << "find_broken_listrefs(broken_listrefs, "
-             << "tables, block_linked_at);" << endl;
+             << "tables, block_linked_at, max_table_size, already_checked);"
+             << endl;
+      dec_indent();
+      stream << indent() << "}" << endl;
       dec_indent();
       stream << indent() << "}" << endl;
       dec_indent();
@@ -593,6 +699,64 @@ class Checkpoint : public Base {
       dec_indent();
       stream << indent() << "}" << endl << endl;
       dec_indent();
+  }
+
+  void add_seq_to_subseqs(Printer::Base &stream, const nt_tables &tables) {
+     inc_indent();
+     stream << indent() << "void add_seq_to_subseqs() {" << endl;
+     inc_indent();
+     stream << indent() << "// add seq ptr to all Subsequence objects" << endl;
+     stream << indent() << "// (seq wasn't serialized since it's the same "
+            << "for every Subsequence object)" << endl;
+     size_t c = 0;
+     size_t n_tables = tables.size();
+     stream << indent() << "int n_tables = " << n_tables << ";" << endl;
+     for (auto i = tables.begin(); i != tables.end(); ++i) {
+       c++;
+       const std::string &table_name = i->second->table_decl->name();
+       if (c == 1) {
+         stream << indent() << "std::vector<"
+                << i->second->table_decl->datatype()
+                << ">" << endl;
+         stream << indent() << "*tables[] = {"
+                << table_name << ".get_table()," << endl;
+       } else {
+         stream << indent() << "             ";
+         if (c < n_tables) {
+           stream << table_name << ".get_table()," << endl;
+         } else {
+           stream << table_name << ".get_table()};" << endl << endl;
+         }
+       }
+     }
+     stream << indent() << "for (int i = 0; i < n_tables; i++) {" << endl;
+     inc_indent();
+     stream << indent() << "auto &curr_table = *(tables[i]);" << endl;
+     stream << indent() << "for (size_t j = 0; "
+            << "j < curr_table.size(); j++) {" << endl;
+     inc_indent();
+     if (list_ref) {
+       stream << indent() << "auto &l = curr_table[j].ref();" << endl;
+       stream << indent() << "for (size_t k = 0; k < l.size(); k++) {" << endl;
+       inc_indent();
+       for (size_t s = 0; s < subseq_type_accessors.size(); s++) {
+         stream << indent() << "l[k].SUBSEQ" << s+1 << " = &t_0_seq;" << endl;
+       }
+       dec_indent();
+       stream << indent() << "}" << endl;
+       dec_indent();
+     } else {
+       for (size_t s = 0; s < subseq_type_accessors.size(); s++) {
+         stream << indent() << "curr_table[j].SUBSEQ"
+                << s+1 << " = &t_0_seq;" << endl;
+       }
+     }
+     stream << indent() << "}" << endl;
+     dec_indent();
+     stream << indent() << "}" << endl;
+     dec_indent();
+     stream << indent() << "}" << endl << endl;
+     dec_indent();
   }
 
   void archive(Printer::Base &stream) {

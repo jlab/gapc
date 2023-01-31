@@ -60,7 +60,7 @@ class Fiber {
 
     template<class Archive>
     void save(Archive & ar, const unsigned int version) const {
-      ar & length();
+      ar << length();
       for (Size i = 0; i < length(); i++) {
         ar << array[i];
       }
