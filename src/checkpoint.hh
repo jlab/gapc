@@ -46,22 +46,30 @@ class Checkpoint : public Base {
                            subseq_type_accessors;
 
   // currently supported/serializable datatypes
-  const std::array<Type::Type, 10>
+  const std::array<Type::Type, 11>
   SUPPORTED_TYPES = {Type::Type::VOID, Type::Type::INTEGER,
                      Type::Type::INT, Type::Type::FLOAT,
                      Type::Type::SIZE, Type::Type::SINGLE,
                      Type::Type::BIGINT, Type::Type::STRING,
-                     Type::Type::SHAPE, Type::Type::SUBSEQ};
+                     Type::Type::SHAPE, Type::Type::SUBSEQ,
+                     Type::Type::EXTERNAL};
 
   template<size_t n>
   bool has_type(const std::array<Type::Type, n> &arr, Type::Type type,
                 Type::Base *t) {
     for (Type::Type supported_type : arr) {
-         if (type == supported_type) {
-           if (type == Type::Type::STRING) strings = true;
-           else if (type == Type::Type::SUBSEQ) subseq = true;
-           return true;
-         }
+      if (type == supported_type) {
+        if (type == Type::Type::STRING) {
+          strings = true;
+        } else if (type == Type::Type::SUBSEQ) {
+          subseq = true;
+        } else if (type == Type::Type::EXTERNAL) {
+          // only allow external type "Rope"
+          Type::External *e = dynamic_cast<Type::External*>(t);
+          if (*e->name != "Rope") return false;
+        }
+          return true;
+      }
     }
     return false;
   }

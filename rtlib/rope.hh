@@ -29,6 +29,8 @@
 #include <algorithm>
 #include <cstring>
 #include <utility>
+#include <fstream>
+#include <sstream>
 
 #include <boost/cstdint.hpp>
 
@@ -37,22 +39,9 @@
 
 #include "pool.hh"
 
-#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
-#include "boost/serialization/array.hpp"
-#endif
-
 namespace rope {
 class Ref_Count {
  private:
-#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
-  friend class boost::serialization::access;
-
-  template<class Archive>
-  void serialize(Archive & ar, const unsigned int version) {
-    ar & i;
-  }
-#endif
-
   uint32_t i;
 
  public:
@@ -88,19 +77,19 @@ class Block {
     enum { block_size = Refcount::block_size };
 
  private:
-#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
-    friend class boost::serialization::access;
-
-    template<class Archive>
-    void serialize(Archive & ar, const unsigned int version) {
-      ar & pos;
-      ar & next;
-      ar & boost::serialization::make_array(array, block_size);
-      ar & refcount;
-    }
-#endif
     // enum { RL , LR } Dir;
     // Dir dir;
+#ifdef CHECKPOINTING_INTEGRATED
+  friend class boost::serialization::access;
+  template <class Archive>
+  void serialize(Archive &ar, const unsigned int version) {
+      ar & pos;
+      ar & next;
+      for (unsigned char i = 0; i < pos; i++) {
+        ar & array[i];
+      }
+  }
+#endif
 
     Block<Refcount> &operator=(const Block<Refcount> &r);
     Block(const Block<Refcount> &r);
@@ -195,15 +184,13 @@ template<typename T> class Readonly {
 template<>
 class Readonly<Ref_Count> {
  private:
-#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
+#ifdef CHECKPOINTING_INTEGRATED
     friend class boost::serialization::access;
-
-    template<class Archive>
-    void serialize(Archive & ar, const unsigned int version) {
+    template <class Archive>
+    void serialize(Archive &ar, const unsigned int version) {
       ar & pos;
     }
 #endif
-
     unsigned char pos;
 
  public:
@@ -252,18 +239,16 @@ class Ref {
     static Pool<Block<Refcount> > pool;
 
  private:
-#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
+#ifdef CHECKPOINTING_INTEGRATED
     friend class boost::serialization::access;
-
-    template<class Archive>
-    void serialize(Archive & ar, const unsigned int version) {
+    template <class Archive>
+    void serialize(Archive &ar, const unsigned int version) {
       ar & first;
       ar & last;
       ar & empty_;
       ar & readonly;
     }
 #endif
-
     Block<Refcount> *first;
     Block<Refcount> *last;
     bool empty_;
@@ -450,8 +435,57 @@ class Ref {
         append(s);
     }
 
-    template <typename O>
-    void put(O &o) const {
+    void put(std::ofstream &o) const {
+      if (readonly == true) {
+        Block<Refcount>* i = first;
+        while (i) {
+          unsigned char z = 0;
+          if (i == last) {
+            z = readonly();
+          } else {
+            z = i->size();
+            assert(z == Block<Refcount>::block_size);
+          }
+          for (unsigned char j = 0; j < z; ++j)
+            o << i->array[j];
+          i = i->next;
+        }
+      } else {
+        Block<Refcount>* i = first;
+        while (i) {
+          for (unsigned char j = 0; j < i->size(); ++j)
+            o << i->array[j];
+          i = i->next;
+        }
+      }
+    }
+
+    void put(std::stringstream &o) const {
+      if (readonly == true) {
+        Block<Refcount>* i = first;
+        while (i) {
+          unsigned char z = 0;
+          if (i == last) {
+            z = readonly();
+          } else {
+            z = i->size();
+            assert(z == Block<Refcount>::block_size);
+          }
+          for (unsigned char j = 0; j < z; ++j)
+            o << i->array[j];
+          i = i->next;
+        }
+      } else {
+        Block<Refcount>* i = first;
+        while (i) {
+          for (unsigned char j = 0; j < i->size(); ++j)
+            o << i->array[j];
+          i = i->next;
+        }
+      }
+    }
+
+    void put(std::ostream &o) const {
       if (readonly == true) {
         Block<Refcount>* i = first;
         while (i) {
@@ -667,8 +701,26 @@ class Ref {
     }
 };
 
-template <typename O, typename Refcount>
-  inline O &operator<<(O &o, const Ref<Refcount>& r) { r.put(o); return o; }
+template <typename Refcount>
+inline std::ofstream &operator<<(std::ofstream &o,
+                                 const Ref<Refcount>& r) {
+  r.put(o);
+  return o;
+}
+
+template <typename Refcount>
+inline std::stringstream &operator<<(std::stringstream &o,
+                                     const Ref<Refcount>& r) {
+  r.put(o);
+  return o;
+}
+
+template <typename Refcount>
+inline std::ostream &operator<<(std::ostream &o,
+                                const Ref<Refcount>& r) {
+  r.put(o);
+  return o;
+}
 
 }  // namespace rope
 
