@@ -95,7 +95,7 @@ class Checkpoint : public Base {
     Type::Type curr_type = type->getType();
 
     if (curr_type == Type::Type::LIST) {
-       // List_Ref
+       // List_Ref or Hash::Ref
        list_ref = true;
        return __is_supported(type->component());
     } else if (curr_type == Type::Type::TUPLE) {

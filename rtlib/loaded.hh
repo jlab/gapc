@@ -113,6 +113,11 @@ is_loaded(const List_Ref<T, pos_int> &l) {
   return l.l && !(l.const_ref().empty());
 }
 
+template<class T, class I>
+inline bool is_loaded(const Hash::Ref<T, I> &x) {
+  return x.l && !(x.const_ref().isEmpty());
+}
+
 template <class T> inline bool
 is_loaded(const Ref::Lazy<T> &l) {
   return l.l && !(l.const_ref().empty());

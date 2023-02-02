@@ -45,6 +45,13 @@
 
 #include "hash_stats.hh"
 
+#if defined(CHECKPOINTING_INTEGRATED) && defined(LIST_REF)
+// serialization headers for the checkpointing of Hash_Ref objects
+// (will be included in generated code through rtlib/adp.hh)
+
+#include "boost/serialization/base_object.hpp"  // serialize base obj of class
+#endif
+
 
 using std::swap;
 
@@ -154,6 +161,16 @@ template <typename T,
           >
 class Set {
  private:
+#if defined(CHECKPOINTING_INTEGRATED) && defined(LIST_REF)
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int version) {
+    ar & array;
+    ar & init;
+    ar & used_;
+  }
+#endif
     Vector_Sparse<T, U> array;
     std::vector<bool> init;
     U used_;
@@ -375,6 +392,18 @@ void Set<SET_TEMPLATE_ARGS>::operator delete(void *b) noexcept(false) {
 template<class T, class I>
 class Ref : public ::Ref::Lazy<Set<T, I> > {
  private:
+#if defined(CHECKPOINTING_INTEGRATED) && defined(LIST_REF)
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int version) {
+    // serialize the base object
+    // (basically just a wrapper around boost::shared_ptr)
+    ar &
+    boost::serialization::base_object<::Ref::Lazy<Set<T, I>>>(*this);
+  }
+#endif
+
  public:
 };
 

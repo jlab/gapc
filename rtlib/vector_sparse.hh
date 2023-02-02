@@ -31,11 +31,37 @@
 
 #include <iterator>
 
+#if defined(CHECKPOINTING_INTEGRATED) && defined(LIST_REF)
+#include "boost/serialization/split_member.hpp"
+#endif
+
 using std::swap;
 
 template <typename T, typename U = size_t>
 class Stapel {
  private:
+#if defined(CHECKPOINTING_INTEGRATED) && defined(LIST_REF)
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void save(Archive &ar, const unsigned int version) const {
+    ar << top_;
+    for (size_t i = 0; i < top_; i++) {
+      ar << array[i];
+    }
+  }
+
+  template<class Archive>
+  void load(Archive &ar, const unsigned int version) {
+    ar >> top_;
+    resize(top_);
+    for (size_t i = 0; i < top_; i++) {
+      ar >> array[i];
+    }
+  }
+
+  BOOST_SERIALIZATION_SPLIT_MEMBER()
+#endif
   T *array;
   U top_, size_;
 
@@ -121,6 +147,31 @@ swap(Stapel<T, U> &a, Stapel<T, U> &b) {
 
 template <typename T, typename U = size_t> class Vector_Sparse {
  private:
+#if defined(CHECKPOINTING_INTEGRATED) && defined(LIST_REF)
+  size_t n_elements;
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void save(Archive &ar, const unsigned int version) const {
+    ar << n_elements;
+    ar << stack;
+    for (size_t i = 0; i < n_elements; i++) {
+      ar << array[i];
+    }
+  }
+
+  template<class Archive>
+  void load(Archive &ar, const unsigned int version) {
+    ar >> n_elements;
+    ar >> stack;
+    resize(n_elements);  // allocate space for array and set size_
+    for (size_t i = 0; i < size_; i++) {
+      ar >> array[i];
+    }
+  }
+
+  BOOST_SERIALIZATION_SPLIT_MEMBER()
+#endif
   T *array;
   U size_;
   Stapel<U> stack;
@@ -131,10 +182,17 @@ template <typename T, typename U = size_t> class Vector_Sparse {
   Vector_Sparse &operator=(const Vector_Sparse &);
 
  public:
-  Vector_Sparse() : array(0), size_(0) {
-  }
+  Vector_Sparse() : array(0), size_(0)
+#if defined(CHECKPOINTING_INTEGRATED) && defined(LIST_REF)
+                    , n_elements(0)
+#endif
+  {}
 
-  explicit Vector_Sparse(U i) : array(0), size_(0) {
+  explicit Vector_Sparse(U i) : array(0), size_(0)
+#if defined(CHECKPOINTING_INTEGRATED) && defined(LIST_REF)
+                                , n_elements(0)
+#endif
+  {
     resize(i);
   }
 
@@ -152,6 +210,9 @@ template <typename T, typename U = size_t> class Vector_Sparse {
     swap(stack, o.stack);
 #ifndef NDEBUG
     swap(init_, o.init_);
+#endif
+#if defined(CHECKPOINTING_INTEGRATED) && defined(LIST_REF)
+    swap(n_elements, o.n_elements);
 #endif
   }
 
@@ -194,6 +255,9 @@ template <typename T, typename U = size_t> class Vector_Sparse {
     if (!array) {
       array = static_cast<T*>(std::malloc(sizeof(T) * i));
       size_ = i;
+#if defined(CHECKPOINTING_INTEGRATED) && defined(LIST_REF)
+      n_elements = size_;
+#endif
     } else {
       T *t = static_cast<T*>(std::realloc(array, sizeof(T) * i));
       assert(t);
@@ -202,6 +266,9 @@ template <typename T, typename U = size_t> class Vector_Sparse {
       }
       array = t;
       size_ = i;
+#if defined(CHECKPOINTING_INTEGRATED) && defined(LIST_REF)
+      n_elements = size_;
+#endif
     }
   }
 
