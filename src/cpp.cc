@@ -1096,11 +1096,6 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
     stream << indent() << "std::mutex m;" << endl;
     stream << indent() << "std::string formatted_interval;" << endl;
     stream << indent() << "size_t tabulated_vals_counter = 0;" << endl;
-    // probably going to remove this
-    if (ast->checkpoint->strings && false) {
-      stream << indent() << "nt_tables table_class = nt_tables::" << t.name()
-             << ";" << endl;
-    }
     stream << endl;
   }
 

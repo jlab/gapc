@@ -150,7 +150,7 @@ class Checkpoint : public Base {
   void gen_type_accessors(Type::Base *type,
                          std::vector<std::string> &type_accessor) {
     // generate accessors for types so they can be indexed/addressed
-    // (required for String, Subsequence)
+    // (required for String, Subsequence and user-defined types)
     Type::Type curr_type = type->getType();
 
     if (curr_type == Type::Type::LIST) {
@@ -203,19 +203,20 @@ class Checkpoint : public Base {
 
  public:
   /*
-     true if tables contain String/Rope objects;
-     these are a lot more complicated to serialize than other types,
+     true if tables contain String objects;
+     these are a lot more complicated to deserialize than other types as
+     they require the manual restoration of the links between Strings
      so this boolean information is needed when generating the
      source code so additional code can be inserted to enable
-     the proper serialization of these types
+     the proper deserialization of these types
   */
   bool strings;
 
   /*
     true if tables contain Subsequence objects (require additional processing);
     this will most likely only be needed if a Subsequence object
-    is part of a user-specified type which is tabulated as e.g. a
-    pretty-print algebra
+    is part of a user-specified type which is tabulated as e.g.
+    a pretty-print algebra
   */
   bool subseq;
 
@@ -246,12 +247,11 @@ class Checkpoint : public Base {
 
      if (supported && (strings || subseq || user_def)) {
        /*
-          generate accessors for String/Subsequence types
-          (if they are part of type);
+          generate accessors for String/Subsequence/user-defined types;
           these are needed to access these objects efficiently during
-          (de)serializing;
-          this only works if String objects are wrapped in a ListRef
-          object, so return false if ListRef is not part of the type
+          (de)serialization of the checkpointed archives;
+          for Strings: only works if String objects are wrapped in a List_Ref
+          object, so return false if List_Ref is not part of the type
        */
        if (strings && !list_ref) {
          supported = false;
@@ -582,9 +582,7 @@ class Checkpoint : public Base {
       stream << indent() << "}" << endl;
       dec_indent();
       stream << indent() << "}" << endl << endl;
-      // only recursively call from the initial elements
-      // of borken_listrefs since new elements will be added
-      // to the same vector but won't need to be processed again
+      // only recursively call from the initial elements of broken_listrefs
       stream << indent() << "std::vector<bool> already_checked"
              << "(n_tables * max_table_size);" << endl;
       stream << indent() << "for (auto &ilr : initial_broken_listrefs) {"
@@ -714,8 +712,8 @@ class Checkpoint : public Base {
      stream << indent() << "void add_seq_to_subseqs() {" << endl;
      inc_indent();
      stream << indent() << "// add seq ptr to all Subsequence objects" << endl;
-     stream << indent() << "// (seq wasn't serialized since it's the same "
-            << "for every Subsequence object)" << endl;
+     stream << indent() << "// (seq wasn't serialized for efficiency "
+            << "since it's the same for every Subsequence object)" << endl;
      size_t c = 0;
      size_t n_tables = tables.size();
      stream << indent() << "int n_tables = " << n_tables << ";" << endl;
