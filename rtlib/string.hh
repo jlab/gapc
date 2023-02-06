@@ -46,7 +46,7 @@
 
 class String {
  private:
-#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
+#if defined(CHECKPOINTING_INTEGRATED)
     friend class boost::serialization::access;
 
     template<class Archive>
@@ -61,7 +61,7 @@ class String {
  public:
     class Block {
      private:
-#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
+#if defined(CHECKPOINTING_INTEGRATED)
         friend class boost::serialization::access;
 
         template<class Archive>
@@ -245,7 +245,7 @@ class String {
       if (!block->ref_count) {
         delete block;
         block = NULL;
-#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
+#if defined(CHECKPOINTING_INTEGRATED)
         block_as_int = 0;
 #endif
       }
@@ -256,21 +256,21 @@ class String {
         Block *t = new Block(*block);
         del();
         block = t;
-#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
+#if defined(CHECKPOINTING_INTEGRATED)
         block_as_int = reinterpret_cast<uintptr_t>(block);
 #endif
       }
     }
 
  public:
-#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
+#if defined(CHECKPOINTING_INTEGRATED)
     // store block ptr as decimal number so
     // links can be restored after deserialization
     uintptr_t block_as_int;
 #endif
 
     String() : block(NULL), readonly(false), empty_(false)
-#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
+#if defined(CHECKPOINTING_INTEGRATED)
                , block_as_int(0)
 #endif
     {}
@@ -282,7 +282,7 @@ class String {
     void lazy_alloc() {
       if (!block)
         block = new Block();
-#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
+#if defined(CHECKPOINTING_INTEGRATED)
         block_as_int = reinterpret_cast<uintptr_t>(block);
 #endif
     }
@@ -296,7 +296,7 @@ class String {
         readonly = false;
       }
       empty_ = s.empty_;
-#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
+#if defined(CHECKPOINTING_INTEGRATED)
       block_as_int = reinterpret_cast<uintptr_t>(block);
 #endif
     }
@@ -493,7 +493,7 @@ class String {
       else
         readonly = false;
       empty_ = s.empty_;
-#if defined(CHECKPOINTING_INTEGRATED) && defined(S1)
+#if defined(CHECKPOINTING_INTEGRATED)
       block_as_int = reinterpret_cast<uintptr_t>(block);
 #endif
       return *this;

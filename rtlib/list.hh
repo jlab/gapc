@@ -53,7 +53,7 @@
 #include "output.hh"
 #include "hash.hh"
 
-#if defined(CHECKPOINTING_INTEGRATED) && defined(LIST_REF)
+#if defined(CHECKPOINTING_INTEGRATED)
 // serialization headers for the checkpointing of ListRef objects
 // (will be included in generated code through rtlib/adp.hh)
 
@@ -76,7 +76,7 @@ class List : public std::deque<T> {
   typedef typename std::deque<T>::reverse_iterator reverse_iterator;
 
  private:
-#if defined(CHECKPOINTING_INTEGRATED) && defined(LIST_REF)
+#if defined(CHECKPOINTING_INTEGRATED)
   friend class boost::serialization::access;
 
   template<class Archive>
@@ -107,7 +107,7 @@ class List_Ref : public ::Ref::Lazy<List<T, pos_int> > {
   typedef typename List<T, pos_int>::reverse_iterator reverse_iterator;
 
  private:
-#if defined(CHECKPOINTING_INTEGRATED) && defined(LIST_REF)
+#if defined(CHECKPOINTING_INTEGRATED)
   friend class boost::serialization::access;
 
   template<class Archive>

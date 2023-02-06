@@ -45,7 +45,7 @@
 
 #include "hash_stats.hh"
 
-#if defined(CHECKPOINTING_INTEGRATED) && defined(LIST_REF)
+#if defined(CHECKPOINTING_INTEGRATED)
 // serialization headers for the checkpointing of Hash_Ref objects
 // (will be included in generated code through rtlib/adp.hh)
 
@@ -161,7 +161,7 @@ template <typename T,
           >
 class Set {
  private:
-#if defined(CHECKPOINTING_INTEGRATED) && defined(LIST_REF)
+#if defined(CHECKPOINTING_INTEGRATED)
   friend class boost::serialization::access;
 
   template<class Archive>
@@ -392,7 +392,7 @@ void Set<SET_TEMPLATE_ARGS>::operator delete(void *b) noexcept(false) {
 template<class T, class I>
 class Ref : public ::Ref::Lazy<Set<T, I> > {
  private:
-#if defined(CHECKPOINTING_INTEGRATED) && defined(LIST_REF)
+#if defined(CHECKPOINTING_INTEGRATED)
   friend class boost::serialization::access;
 
   template<class Archive>

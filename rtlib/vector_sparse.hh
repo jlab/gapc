@@ -31,7 +31,7 @@
 
 #include <iterator>
 
-#if defined(CHECKPOINTING_INTEGRATED) && defined(LIST_REF)
+#if defined(CHECKPOINTING_INTEGRATED)
 #include "boost/serialization/split_member.hpp"
 #endif
 
@@ -40,7 +40,7 @@ using std::swap;
 template <typename T, typename U = size_t>
 class Stapel {
  private:
-#if defined(CHECKPOINTING_INTEGRATED) && defined(LIST_REF)
+#if defined(CHECKPOINTING_INTEGRATED)
   friend class boost::serialization::access;
 
   template<class Archive>
@@ -147,7 +147,7 @@ swap(Stapel<T, U> &a, Stapel<T, U> &b) {
 
 template <typename T, typename U = size_t> class Vector_Sparse {
  private:
-#if defined(CHECKPOINTING_INTEGRATED) && defined(LIST_REF)
+#if defined(CHECKPOINTING_INTEGRATED)
   size_t n_elements;
   friend class boost::serialization::access;
 
@@ -183,13 +183,13 @@ template <typename T, typename U = size_t> class Vector_Sparse {
 
  public:
   Vector_Sparse() : array(0), size_(0)
-#if defined(CHECKPOINTING_INTEGRATED) && defined(LIST_REF)
+#if defined(CHECKPOINTING_INTEGRATED)
                     , n_elements(0)
 #endif
   {}
 
   explicit Vector_Sparse(U i) : array(0), size_(0)
-#if defined(CHECKPOINTING_INTEGRATED) && defined(LIST_REF)
+#if defined(CHECKPOINTING_INTEGRATED)
                                 , n_elements(0)
 #endif
   {
@@ -211,7 +211,7 @@ template <typename T, typename U = size_t> class Vector_Sparse {
 #ifndef NDEBUG
     swap(init_, o.init_);
 #endif
-#if defined(CHECKPOINTING_INTEGRATED) && defined(LIST_REF)
+#if defined(CHECKPOINTING_INTEGRATED)
     swap(n_elements, o.n_elements);
 #endif
   }
@@ -255,7 +255,7 @@ template <typename T, typename U = size_t> class Vector_Sparse {
     if (!array) {
       array = static_cast<T*>(std::malloc(sizeof(T) * i));
       size_ = i;
-#if defined(CHECKPOINTING_INTEGRATED) && defined(LIST_REF)
+#if defined(CHECKPOINTING_INTEGRATED)
       n_elements = size_;
 #endif
     } else {
@@ -266,7 +266,7 @@ template <typename T, typename U = size_t> class Vector_Sparse {
       }
       array = t;
       size_ = i;
-#if defined(CHECKPOINTING_INTEGRATED) && defined(LIST_REF)
+#if defined(CHECKPOINTING_INTEGRATED)
       n_elements = size_;
 #endif
     }
