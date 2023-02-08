@@ -1249,10 +1249,13 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
   link->nt = dynamic_cast<Symbol::Base*>(this->axiom);
 
   /* When outside parsing is completed, we need to switch to
-   * the original inside rules and parse the empty word. Adding
+   * the original inside rules and parse the empty word, but only
+   * at the end of a track, not an empty word in between. Adding
    * these filters will ensure that nothing but the empty word
    * is parsed with this transition.
    */
+  Filter *f_eot = new Filter(new std::string("end_of_track"), Loc());
+  f_eot->type = Filter::WITH;
   Filter *f_max = new Filter(new std::string("maxsize"), Loc());
   f_max->args.push_back(new Expr::Const(new Const::Int(0)));
   f_max->init_builtin();
@@ -1266,18 +1269,25 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
   if (link->nt->tracks() == 1) {
     link->filters.push_back(f_min);
     link->filters.push_back(f_max);
+    link->filters.push_back(f_eot);
   } else {
     std::list<Filter*> *comptracks = new std::list<Filter*>();
     for (unsigned int track = 0; track < this->axiom->tracks(); ++track) {
       comptracks->push_back(f_min);
     }
     link->add_multitrack_filter(*comptracks, f_min->type, Loc());
-    comptracks = new std::list<Filter*>();
 
+    comptracks = new std::list<Filter*>();
     for (unsigned int track = 0; track < this->axiom->tracks(); ++track) {
       comptracks->push_back(f_max);
     }
     link->add_multitrack_filter(*comptracks, f_max->type, Loc());
+
+    comptracks = new std::list<Filter*>();
+    for (unsigned int track = 0; track < this->axiom->tracks(); ++track) {
+      comptracks->push_back(f_eot);
+    }
+    link->add_multitrack_filter(*comptracks, f_eot->type, Loc());
   }
   link->top_level = Bool(true);
   dynamic_cast<Symbol::NT*>(outside_NTs.find(
