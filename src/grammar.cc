@@ -42,6 +42,7 @@
 #include "inline_nts.hh"
 
 #include "expr.hh"
+#include "const.hh"
 
 #include "index_visitor.hh"
 
@@ -1246,18 +1247,37 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
   }
   Alt::Link *link = new Alt::Link(this->axiom_name, this->axiom_loc);
   link->nt = dynamic_cast<Symbol::Base*>(this->axiom);
-  Filter *f = new Filter(new std::string("complete_track"), Loc());
-  f->type = Filter::WITH;
-  std::list<Filter*> *comptracks = new std::list<Filter*>();
-  for (unsigned int track = 0; track < this->axiom->tracks(); ++track) {
-    comptracks->push_back(f);
-  }
+
+  /* When outside parsing is completed, we need to switch to
+   * the original inside rules and parse the empty word. Adding
+   * these filters will ensure that nothing but the empty word
+   * is parsed with this transition.
+   */
+  Filter *f_max = new Filter(new std::string("maxsize"), Loc());
+  f_max->args.push_back(new Expr::Const(new Const::Int(0)));
+  f_max->init_builtin();
+  f_max->type = Filter::WITH;
+  Filter *f_min = new Filter(new std::string("minsize"), Loc());
+  f_min->args.push_back(new Expr::Const(new Const::Int(0)));
+  f_min->init_builtin();
+  f_min->type = Filter::WITH;
   link->set_tracks(this->axiom->tracks(), this->axiom->track_pos());
   link->init_multi_ys();
   if (link->nt->tracks() == 1) {
-    link->filters.push_back(f);
+    link->filters.push_back(f_min);
+    link->filters.push_back(f_max);
   } else {
-    link->add_multitrack_filter(*comptracks, f->type, Loc());
+    std::list<Filter*> *comptracks = new std::list<Filter*>();
+    for (unsigned int track = 0; track < this->axiom->tracks(); ++track) {
+      comptracks->push_back(f_min);
+    }
+    link->add_multitrack_filter(*comptracks, f_min->type, Loc());
+    comptracks = new std::list<Filter*>();
+
+    for (unsigned int track = 0; track < this->axiom->tracks(); ++track) {
+      comptracks->push_back(f_max);
+    }
+    link->add_multitrack_filter(*comptracks, f_max->type, Loc());
   }
   link->top_level = Bool(true);
   dynamic_cast<Symbol::NT*>(outside_NTs.find(
