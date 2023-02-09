@@ -51,6 +51,8 @@ jobs:
       #~ run: make test-unit
     # we need to install Haskell (especially the System.Random lib) for paralell tests, since we compare Haskell ADP with gapc
     - uses: haskell/actions/setup@v2
+      with:
+        cabal-version: '3.6.2.0'
       id: haskell
     - name: cabal
       run: |
