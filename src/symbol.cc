@@ -1643,7 +1643,27 @@ unsigned int Symbol::Base::to_dot(unsigned int *nodeID, std::ostream &out,
     }
     out << "</td>";
     to_dot_indices(this->right_indices, out);
-    out << "</tr></table>>";
+    out << "</tr>";
+    if (plot_grammar > 3) {
+      to_dot_multiys(this->m_ys, out);
+    }
+    if (plot_grammar > 4) {
+      // print table dimensions ...
+      Symbol::NT *nt = dynamic_cast<Symbol::NT*>(this);
+      if (nt) {
+        // .. if Symbol is Non-terminal
+        out << "<tr><td colspan=\"3\">";
+        for (std::vector<Table>::const_iterator t = nt->tables().begin();
+             t != nt->tables().end(); ++t) {
+          (*t).print(out);
+          if (std::next(t) != nt->tables().end()) {
+            out << " ";
+          }
+        }
+        out << "</td></tr>";
+      }
+    }
+    out << "</table>>";
   } else {
     out << "<td>" << *this->name << "</td></tr></table>>";
   }

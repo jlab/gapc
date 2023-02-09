@@ -2972,6 +2972,20 @@ void to_dot_indices(std::vector<Expr::Base*> indices, std::ostream &out) {
   }
   out << "</font></td>";
 }
+void to_dot_multiys(Yield::Multi m_ys, std::ostream &out) {
+  // one additional line per track for minimum and maximum yield size
+  unsigned int track = 0;
+  for (Yield::Multi::iterator ys = m_ys.begin(); ys != m_ys.end();
+       ++ys, ++track) {
+    out << "<tr>";
+    out << "<td colspan=\"3\">yield size";
+    if (m_ys.tracks() > 1) {
+      out << " (track " << track << ")";
+    }
+    out << ": " << *ys << "</td>";
+    out << "</tr>";
+  }
+}
 void to_dot_filternameargs(Filter *filter, std::ostream &out) {
   out << *filter->name;
   for (std::list<Expr::Base*>::const_iterator arg = filter->args.begin();
@@ -3125,7 +3139,11 @@ unsigned int* Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out,
       to_dot_indices(this->right_indices, out);
     }
   }
-  out << "</tr></table>>, color=\"";
+  out << "</tr>";
+  if (plot_grammar > 3) {
+    to_dot_multiys(m_ys, out);
+  }
+  out << "</table>>, color=\"";
   if (simple) {
     if (simple->is_terminal()) {
       out << "blue";
