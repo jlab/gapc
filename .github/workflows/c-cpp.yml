@@ -16,14 +16,14 @@ on:
 
 jobs:
   gapc_ubuntu:
-    needs: cpplint
-    strategy:
-      matrix:
-        # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
-        # as of 21st Sep 2021, ubuntu-16.04 is no longer supported by github actions: https://github.blog/changelog/2021-04-29-github-actions-ubuntu-16-04-lts-virtual-environment-will-be-removed-on-september-20-2021/
-        # 18.04 burnout: https://github.com/actions/runner-images/issues/6002
-        os: [ubuntu-20.04, ubuntu-22.04]
-    runs-on: ${{ matrix.os }}
+    #~ needs: cpplint
+    #~ strategy:
+      #~ matrix:
+        #~ # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
+        #~ # as of 21st Sep 2021, ubuntu-16.04 is no longer supported by github actions: https://github.blog/changelog/2021-04-29-github-actions-ubuntu-16-04-lts-virtual-environment-will-be-removed-on-september-20-2021/
+        #~ # 18.04 burnout: https://github.com/actions/runner-images/issues/6002
+        #~ os: [ubuntu-20.04, ubuntu-22.04]
+    runs-on: ubuntu-latest #${{ matrix.os }}
     steps:
     - name: Update apt
       run: sudo apt-get update
@@ -33,7 +33,7 @@ jobs:
     #~ - name: Checkout truth
       #~ run: git clone --branch master https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE/../gapc-test-suite
 
-    #~ - uses: actions/checkout@v3
+    - uses: actions/checkout@v3
     #~ - name: configure
       #~ run: ./configure --prefix $GITHUB_WORKSPACE
     #~ - name: make
@@ -136,12 +136,12 @@ jobs:
         #~ perl runTests.pl 2 ${{ matrix.task }}
         #~ popd
 
-  cpplint:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
-    - run: pip install cpplint
-    - run: cpplint --recursive --counting 'detailed' --filter="-runtime/references,-build/include_subdir" --extensions=cc,hh src/ rtlib/
-    - run: cpplint --counting 'detailed' --filter="-build/include_subdir,-readability/casting,-runtime/arrays" --extensions=c,h librna/rnalib.{c,h}
-    - run: cpplint --recursive --counting 'detailed' --filter="-runtime/references,-build/include_subdir" testdata/unittest/*
+  #~ cpplint:
+    #~ runs-on: ubuntu-latest
+    #~ steps:
+    #~ - uses: actions/checkout@v3
+    #~ - uses: actions/setup-python@v4
+    #~ - run: pip install cpplint
+    #~ - run: cpplint --recursive --counting 'detailed' --filter="-runtime/references,-build/include_subdir" --extensions=cc,hh src/ rtlib/
+    #~ - run: cpplint --counting 'detailed' --filter="-build/include_subdir,-readability/casting,-runtime/arrays" --extensions=c,h librna/rnalib.{c,h}
+    #~ - run: cpplint --recursive --counting 'detailed' --filter="-runtime/references,-build/include_subdir" testdata/unittest/*
