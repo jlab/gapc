@@ -317,13 +317,31 @@ void Fn_Def::add_para(Symbol::NT &nt) {
 
   std::vector<Expr::Base*>::iterator j = left.begin();
   std::vector<Expr::Base*>::iterator k = right.begin();
+  std::vector<Expr::Base*>::iterator odl = nt.left_indices_outsidedummy.begin();
+  std::vector<Expr::Base*>::iterator odr =
+    nt.right_indices_outsidedummy.begin();
   for (std::vector<Table>::const_iterator i = tables.begin();
-       i != tables.end(); ++i, ++j, ++k) {
+       i != tables.end(); ++i, ++j, ++k, ++odl, ++odr) {
     // only add the
-    if (!(*i).delete_left_index())
+    /* do NOT reduce indices, if this NT was the inside axiom and is
+     * used in an outside context. We need them to ensure that
+     * complete input sequence is parsed for outside and empty
+     * word for the inside part of the grammar, as this NT marks
+     * the transition between both grammar parts */
+    if (!(*i).delete_left_index()) {
       add_para(t, (*j)->vacc()->name());
-    if (!(*i).delete_right_index())
+    } else {
+      if (nt.is_inside_axiom) {
+        add_para(t, (*odl)->vacc()->name());
+      }
+    }
+    if (!(*i).delete_right_index()) {
       add_para(t, (*k)->vacc()->name());
+    } else {
+      if (nt.is_inside_axiom) {
+        add_para(t, (*odr)->vacc()->name());
+      }
+    }
   }
 
   set_paras(nt.ntargs());
