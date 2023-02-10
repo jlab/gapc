@@ -2146,13 +2146,52 @@ void Alt::Link::add_args(Expr::Fn_Call *fn) {
   assert(left_indices.size() == tables.size());
   std::vector<Expr::Base*>::iterator k = right_indices.begin();
   std::vector<Expr::Base*>::iterator j = left_indices.begin();
+  std::vector<Expr::Base*>::iterator odl = x->left_indices_outsidedummy.begin();
+  std::vector<Expr::Base*>::iterator odr =
+    x->right_indices_outsidedummy.begin();
+  std::vector<Expr::Base*>::iterator ontl = x->left_indices.begin();
+  std::vector<Expr::Base*>::iterator ontr = x->right_indices.begin();
   for (std::vector<Table>::const_iterator i = tables.begin();
-       i != tables.end(); ++i, ++j, ++k) {
+       i != tables.end(); ++i, ++j, ++k, ++odl, ++odr) {
+    if (this->is_outside_inside_transition) {
+        /* we encounter the one and only situation for outside grammars
+         * where we transit from outside (full input sequence) into inside
+         * and need to make sure we parse the empty word.
+         */
+      if (((*i).delete_left_index() && (!(*i).delete_right_index()))) {
+        fn->add_arg(*ontl);
+        fn->add_arg(*ontl);
+      } else if ((!(*i).delete_left_index() && ((*i).delete_right_index()))) {
+        fn->add_arg(*ontr);
+        fn->add_arg(*ontr);
+      } else {
+        fn->add_arg(new Expr::Const(0));
+        fn->add_arg(new Expr::Const(0));
+      }
+      // ignore the "normal" logic below
+      continue;
+    }
     if (!(*i).delete_left_index()) {
       fn->add_arg(*j);
+    } else {
+      if (x->is_inside_axiom) {
+        if (this->is_partof_outside) {
+          fn->add_arg(*ontl);
+        } else {
+          fn->add_arg(*odl);
+        }
+      }
     }
     if (!(*i).delete_right_index()) {
       fn->add_arg(*k);
+    } else {
+      if (x->is_inside_axiom) {
+        if (this->is_partof_outside) {
+          fn->add_arg(*ontr);
+        } else {
+          fn->add_arg(*odr);
+        }
+      }
     }
   }
 
@@ -3539,6 +3578,7 @@ bool Alt::Link::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace,
         if (skip_occurences[*(find->name)] == 0) {
           // replace old NT (=find) with novel NT (=replace)
           this->nt = replace;
+          this->m_ys = replace->multi_ys();
           this->name = replace->name;
           this->is_partof_outside = replace->is_partof_outside;
           return true;
@@ -3609,7 +3649,7 @@ Expr::Base *Alt::Simple::get_next_var_right2left(Expr::Base *left_index,
     Yield::Size ys_this, Yield::Size *ys_lefts) {
   if (ys_this.low() == ys_this.high()) {
     // constant yield size
-    if (ys_lefts->low() == 0) {
+    if ((ys_lefts->low() == 0) && (ys_lefts->high() == 0)) {
       return innermost_left_index;
     } else {
       return left_index->plus(ys_this.low());
@@ -3641,7 +3681,7 @@ Expr::Base *Alt::Simple::get_next_var_left2right(Expr::Base *right_index,
 
   // constant yield size
   if (ys_this.low() == ys_this.high()) {
-    if (ys_rights->low() == 0) {
+    if ((ys_rights->low() == 0) && (ys_rights->high() == 0)) {
       // we might fall back to j, if yield between outside NT and current
       // right hand side argument is 0
       next_index = innermost_right_index;
