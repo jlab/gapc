@@ -89,7 +89,8 @@ class Cpp : public Base {
     void print_openmp_cyk(const AST &ast);
 
     std::string multi_index_str(const std::vector<Table> &tables,
-      const Yield::Multi &mys, bool is_outside = false);
+      const Yield::Multi &mys, bool is_outside = false,
+      bool is_inside_axiom = false);
     void multi_print_inner_cyk(const std::list<Symbol::NT*> &l,
       const std::list<Symbol::NT*> &tord, size_t track, size_t tracks,
       size_t track_pos,

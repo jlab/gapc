@@ -1743,7 +1743,8 @@ void Printer::Cpp::print_openmp_cyk_nt_calls(const AST &ast,
       if ((*i)->is_tabulated() && !(*i)->tables().front().is_cyk_right()) {
         o1 << indent() << "nt_tabulate_" << *(*i)->name << "("
           << multi_index_str((*i)->tables(), (*i)->multi_ys(),
-                             (*i)->is_partof_outside)
+                             (*i)->is_partof_outside,
+                             (*i)->is_inside_axiom)
           << ");\n";
       }
     }
@@ -1762,7 +1763,8 @@ void Printer::Cpp::print_openmp_cyk_all_nt_calls(const AST &ast,
       if ((*i)->is_tabulated()) {
         o2 << indent() << "nt_tabulate_" << *(*i)->name << "("
           << multi_index_str((*i)->tables(), (*i)->multi_ys(),
-                             (*i)->is_partof_outside)
+                             (*i)->is_partof_outside,
+                             (*i)->is_inside_axiom)
           << ");\n";
       }
     }
@@ -1917,7 +1919,7 @@ void Printer::Cpp::print_openmp_cyk(const AST &ast) {
 
 std::string Printer::Cpp::multi_index_str(
   const std::vector<Table> &tables, const Yield::Multi &mys,
-  bool is_outside) {
+  bool is_outside, bool is_inside_axiom) {
   assert(tables.size() == mys.tracks());
   std::ostringstream o;
   size_t track = 0;
@@ -1930,12 +1932,20 @@ std::string Printer::Cpp::multi_index_str(
       } else {
         o << ", (t_" << track << "_j - t_" << track << "_i + 1)";
       }
+    } else {
+      if (is_inside_axiom) {
+        o << ", t_" << track << "_left_most";
+      }
     }
     if (!(*i).delete_right_index()) {
       if (is_outside == false) {
         o << ", t_" << track << "_j";
       } else {
         o << ", (t_" << track << "_n - t_" << track << "_i + 1)";
+      }
+    } else {
+      if (is_inside_axiom) {
+        o << ", t_" << track << "_right_most";
       }
     }
   }
@@ -1962,7 +1972,8 @@ void Printer::Cpp::multi_print_inner_cyk(
        i != l.end(); ++i) {
     if ((*i)->is_partof_outside == for_outsideNTs) {
       std::string index_str = multi_index_str((*i)->tables(), (*i)->multi_ys(),
-                                              (*i)->is_partof_outside);
+                                              (*i)->is_partof_outside,
+                                              (*i)->is_inside_axiom);
       stream << indent() << "nt_tabulate_" << *(*i)->name << '('
              << index_str << ");" << endl;
     }
@@ -2202,6 +2213,7 @@ void Printer::Cpp::print_insideoutside(Symbol::NT *nt) {
   // aggregated level (=dim + tracks) of nested loops
   unsigned int nesting = 0;
   std::vector<std::string> *args = new std::vector<std::string>();
+  std::vector<std::string> *args_call = new std::vector<std::string>();
   // opening for loops
   for (size_t track = 0; track < nt->tracks(); ++track) {
     unsigned int dim = 2;
@@ -2217,6 +2229,7 @@ void Printer::Cpp::print_insideoutside(Symbol::NT *nt) {
              << "_right_most; ++t_" << track << "_i) {" << endl;
       inc_indent();
       args->push_back("t_" + std::to_string(track) + "_i");
+      args_call->push_back("t_" + std::to_string(track) + "_i");
     }
     if (dim >= 2) {
       stream << indent() << "for (unsigned int t_" << track << "_j = t_"
@@ -2224,24 +2237,40 @@ void Printer::Cpp::print_insideoutside(Symbol::NT *nt) {
              << "_right_most; ++t_" << track << "_j) {" << endl;
       inc_indent();
       args->push_back("t_" + std::to_string(track) + "_j");
+      args_call->push_back("t_" + std::to_string(track) + "_j");
+    }
+    if (nt->is_inside_axiom) {
+      if (dim == 0) {
+        args_call->push_back("t_" + std::to_string(track) + "_left_most");
+      }
+      if (dim == 1) {
+        args_call->push_back("t_" + std::to_string(track) + "_right_most");
+      }
     }
     nesting += dim;
   }
 
   // loop body
   std::list<Fn_Def*> &l = nt->code_list();
-  std::stringstream list_args;
   std::stringstream list_args_print;
   bool first = true;
   for (std::vector<std::string>::const_iterator a = args->begin();
        a != args->end(); ++a) {
     if (!first) {
-      list_args << ", ";
       list_args_print << " << \",\"";
     }
     first = false;
-    list_args << *a;
     list_args_print << " << " << *a;
+  }
+  std::stringstream list_args;
+  first = true;
+  for (std::vector<std::string>::const_iterator a = args_call->begin();
+       a != args_call->end(); ++a) {
+    if (!first) {
+      list_args << ", ";
+    }
+    first = false;
+    list_args << *a;
   }
   stream << indent() << "out << \"start answers " << *nt->name
          << "(\"" << list_args_print.str() << " << \"):\\n\";\n";
