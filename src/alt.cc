@@ -2152,7 +2152,7 @@ void Alt::Link::add_args(Expr::Fn_Call *fn) {
   std::vector<Expr::Base*>::iterator ontl = x->left_indices.begin();
   std::vector<Expr::Base*>::iterator ontr = x->right_indices.begin();
   for (std::vector<Table>::const_iterator i = tables.begin();
-       i != tables.end(); ++i, ++j, ++k, ++odl, ++odr) {
+       i != tables.end(); ++i, ++j, ++k, ++odl, ++odr, ++ontl, ++ontr) {
     if (this->is_outside_inside_transition) {
         /* we encounter the one and only situation for outside grammars
          * where we transit from outside (full input sequence) into inside
