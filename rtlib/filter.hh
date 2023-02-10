@@ -130,7 +130,7 @@ inline bool samesize(const Basic_Sequence<a1, pos_type> &s1,
 template<typename alphabet, typename pos_type, typename T>
 inline bool complete_track(
     const Basic_Sequence<alphabet, pos_type> &seq, T i, T j) {
-  return ((i == seq.n) && (j == seq.n));
+  return ((i == 0) && (j == seq.n));
 }
 
 #endif  // RTLIB_FILTER_HH_
