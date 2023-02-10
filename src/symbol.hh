@@ -126,6 +126,15 @@ class Base {
     Loc location;
     std::vector<Expr::Base*> left_indices;
     std::vector<Expr::Base*> right_indices;
+    /* the user defined inside axiom must be called from outside grammar parts
+     * such that the outside parts consumes the full input sequence(s) (0,n).
+     * But the inside NT call must parse the remainder, i.e. the empty word
+     * If however, table dimension of this axiom was reduced, we cannot pass
+     * prober boundaries. For such cases, we generate dummy variables that
+     * do not extend table dimensions, but can ensure that (0,0) and (n, 0) are
+     * passed. */
+    std::vector<Expr::Base*> left_indices_outsidedummy;
+    std::vector<Expr::Base*> right_indices_outsidedummy;
     bool is(Type t) const {
       return type == t;
     }
@@ -525,6 +534,12 @@ class NT : public Base {
     unsigned int to_dot(unsigned int *nodeID, std::ostream &out,
             bool is_rhs, Symbol::NT *axiom, int plot_grammar);
     void resolve_blocks();
+
+    // in outside grammar generation context: flags the one non-terminal
+    // that was the axiom for the inside part of the grammar, i.e. user
+    // defined axiom. Axiom will be re-set to an outside version during
+    // Grammar::inject_outside_nts()
+    bool is_inside_axiom = false;
 };
 
 
