@@ -732,6 +732,12 @@ class Link : public Base {
   void init_outside_guards();
   Alt::Base* find_block();
   Alt::Base *find_block_parent(const Alt::Base &block);
+
+  /* flags the one and only situation where outside grammar
+   * transitions into inside rules, i.e. user defined axiom.
+   * we need to ensure that according NT call asks for the
+   * empy word. */
+  bool is_outside_inside_transition = false;
 };
 
 
