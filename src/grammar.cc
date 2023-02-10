@@ -868,11 +868,16 @@ void Grammar::init_indices() {
   traverse(cl);
   for (size_t track = 0; track < axiom->tracks(); ++track) {
     // variable access for all possible boundaries
-    std::ostringstream i, j, lm, rm;
+    std::ostringstream i, j, lm, rm, outside_l_dummy, outside_r_dummy;
     i << "t_" << track << "_i";
     j << "t_" << track << "_j";
     lm << "t_" << track << "_left_most";
     rm << "t_" << track << "_right_most";
+    /* helper variables for outside/inside transition
+     * which must be parameterized, but table dimension might be
+     * reduced to const or linear */
+    outside_l_dummy << "t_" << track << "_outsidedummy_left";
+    outside_r_dummy << "t_" << track << "_outsidedummy_right";
     Expr::Vacc *left = new Expr::Vacc(new std::string(i.str()));
     Expr::Vacc *right = new Expr::Vacc(new std::string(j.str()));
     Expr::Vacc *left_most = new Expr::Vacc(new std::string(lm.str()));
@@ -886,7 +891,17 @@ void Grammar::init_indices() {
       const Table &table = (*i)->tables()[idx];
       Expr::Vacc *l = table.delete_left_index() ? left_most : left;
       Expr::Vacc *r = table.delete_right_index() ? right_most : right;
-
+      if ((*i)->is_inside_axiom) {
+        // always false for pure inside grammars
+        if (table.delete_left_index()) {
+          (*i)->left_indices_outsidedummy.push_back(
+            new Expr::Vacc(new std::string(outside_l_dummy.str())));
+        }
+        if (table.delete_right_index()) {
+          (*i)->right_indices_outsidedummy.push_back(
+            new Expr::Vacc(new std::string(outside_r_dummy.str())));
+        }
+      }
       if ((*i)->tracks() == 1 && (*i)->track_pos() != track) {
         continue;
       }
@@ -1173,6 +1188,9 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
     outside_NTs[(*(*nt)->name)] = outside_nt;
   }
 
+  // flag inside axiom
+  this->axiom->is_inside_axiom = true;
+
   // 3) create copy of inside alternative, replace called non-terminal with
   // calling outside version and append to called outside version
   std::set<Symbol::NT*> *axiom_candidates = new std::set<Symbol::NT*>();
@@ -1254,6 +1272,7 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
   }
   link->set_tracks(this->axiom->tracks(), this->axiom->track_pos());
   link->init_multi_ys();
+  link->is_outside_inside_transition = true;
   if (link->nt->tracks() == 1) {
     link->filters.push_back(f);
   } else {
