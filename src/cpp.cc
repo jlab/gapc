@@ -2210,6 +2210,10 @@ void Printer::Cpp::print_cyk_fn(const AST &ast) {
 }
 
 void Printer::Cpp::print_insideoutside(Symbol::NT *nt) {
+  std::stringstream list_args_print;
+  std::stringstream list_args;
+  std::list<Fn_Def*> &l = nt->code_list();
+
   // aggregated level (=dim + tracks) of nested loops
   unsigned int nesting = 0;
   std::vector<std::string> *args = new std::vector<std::string>();
@@ -2240,10 +2244,10 @@ void Printer::Cpp::print_insideoutside(Symbol::NT *nt) {
       args_call->push_back("t_" + std::to_string(track) + "_j");
     }
     if (nt->is_inside_axiom) {
-      if (dim == 0) {
+      if (dim <= 1) {
         args_call->push_back("t_" + std::to_string(track) + "_left_most");
       }
-      if (dim == 1) {
+      if (dim < 2) {
         args_call->push_back("t_" + std::to_string(track) + "_right_most");
       }
     }
@@ -2251,8 +2255,6 @@ void Printer::Cpp::print_insideoutside(Symbol::NT *nt) {
   }
 
   // loop body
-  std::list<Fn_Def*> &l = nt->code_list();
-  std::stringstream list_args_print;
   bool first = true;
   for (std::vector<std::string>::const_iterator a = args->begin();
        a != args->end(); ++a) {
@@ -2262,7 +2264,6 @@ void Printer::Cpp::print_insideoutside(Symbol::NT *nt) {
     first = false;
     list_args_print << " << " << *a;
   }
-  std::stringstream list_args;
   first = true;
   for (std::vector<std::string>::const_iterator a = args_call->begin();
        a != args_call->end(); ++a) {
