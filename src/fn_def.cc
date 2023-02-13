@@ -308,7 +308,7 @@ void Fn_Def::add_paras(const std::list<Statement::Var_Decl*> &l) {
 #include "var_acc.hh"
 
 // add a nonterminal
-void Fn_Def::add_para(Symbol::NT &nt) {
+void Fn_Def::add_para(Symbol::NT &nt, bool for_outside_grammar) {
   Type::Base *t = new Type::Size();
 
   const std::vector<Table> &tables = nt.tables();
@@ -317,29 +317,27 @@ void Fn_Def::add_para(Symbol::NT &nt) {
 
   std::vector<Expr::Base*>::iterator j = left.begin();
   std::vector<Expr::Base*>::iterator k = right.begin();
-  std::vector<Expr::Base*>::iterator odl = nt.left_indices_outsidedummy.begin();
-  std::vector<Expr::Base*>::iterator odr =
-    nt.right_indices_outsidedummy.begin();
   for (std::vector<Table>::const_iterator i = tables.begin();
-       i != tables.end(); ++i, ++j, ++k, ++odl, ++odr) {
+       i != tables.end(); ++i, ++j, ++k) {
     // only add the
-    /* do NOT reduce indices, if this NT was the inside axiom and is
-     * used in an outside context. We need them to ensure that
-     * complete input sequence is parsed for outside and empty
-     * word for the inside part of the grammar, as this NT marks
-     * the transition between both grammar parts */
     if (!(*i).delete_left_index()) {
       add_para(t, (*j)->vacc()->name());
-    } else {
-      if (nt.is_inside_axiom) {
-        add_para(t, (*odl)->vacc()->name());
-      }
     }
     if (!(*i).delete_right_index()) {
       add_para(t, (*k)->vacc()->name());
-    } else {
-      if (nt.is_inside_axiom) {
-        add_para(t, (*odr)->vacc()->name());
+    }
+    if (for_outside_grammar) {
+      /* A non-terminal table dimension might have been optimized to be
+       * constant. Thus, the NT can only be called implicitly with the
+       * full input sequence. That is fine for pure inside grammars. However,
+       * in an outside context we at least have to be able to call ALL NTs
+       * either with full input sequence (as before) OR with the empty input.
+       * We therefore call the NT in those cases with global left_most /
+       * right_most values, which will be shadowed by 0, 0 in their call
+       */
+      if ((*i).is_const_table()) {
+        add_para(t, (*j)->vacc()->name());
+        add_para(t, (*k)->vacc()->name());
       }
     }
   }
