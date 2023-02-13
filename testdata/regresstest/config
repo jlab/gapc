@@ -501,10 +501,13 @@ check_new_old_eq elmamun.gap unused count "1+2*3" outside_elm
 # check correct indices for multiple CONST_FLOAT args for outside generation; caused by incorrectly set yield size when replacing NTs
 check_new_old_eq nonzero_constsize.gap unused count "G" outside_constissue
 
+# test if outside to inside transitions works also for constant non-terminal tables, i.e. those missing t_0_i t_0_j parameters which should be replaced via dummies in this one and only situation
+check_new_old_eq constAxiom.gap unused enum "G" outside_out2in
+
 # check TMHMM outside with real sequence which previously revealed < 1.0 prob sums
 CPPFLAGS_EXTRA=$DEFAULT_CPPFLAGS_EXTRA
 check_new_old_eq tmhmm.gap unused fwd_scaled "MENLNMDLLYMAAAVMMGLAAIGAAIGIGILGGKFLEGAARQPDLIPLLRTQFFIVMGLVDAIPMIAVGLGLYVMFAVA" outside_tmhmm
-CPPFLAGS_EXTRA=""
 
-# test if outside to inside transitions works also for constant non-terminal tables, i.e. those missing t_0_i t_0_j parameters which should be replaced via dummies in this one and only situation
-check_new_old_eq constAxiom.gap unused enum "G" outside_out2in
+check_new_old_eq RFmini.gap unused enum "G" outside_cm
+check_new_old_eq RFmini.gap unused count "G" outside_cm
+CPPFLAGS_EXTRA=""
