@@ -95,6 +95,7 @@ class Table {
     }
     bool delete_left_index() const;
     bool delete_right_index() const;
+    bool is_const_table() const;
 
     bool is_cyk_const() const {
       return dim == CONSTANT &&
