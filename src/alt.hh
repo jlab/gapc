@@ -698,7 +698,7 @@ class Link : public Base {
   void multi_init_calls(const Runtime::Poly &p, size_t base_tracks);
 
  private:
-  void add_args(Expr::Fn_Call *fn);
+  void add_args(Expr::Fn_Call *fn, bool for_outside_grammar = false);
 
  private:
   std::list<Expr::Base*> indices;

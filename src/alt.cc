@@ -2123,7 +2123,7 @@ void Alt::Simple::codegen(AST &ast) {
 }
 
 
-void Alt::Link::add_args(Expr::Fn_Call *fn) {
+void Alt::Link::add_args(Expr::Fn_Call *fn, bool for_outside_grammar) {
   if (is_explicit()) {
     fn->add(indices);
     fn->add(ntparas);
@@ -2146,50 +2146,34 @@ void Alt::Link::add_args(Expr::Fn_Call *fn) {
   assert(left_indices.size() == tables.size());
   std::vector<Expr::Base*>::iterator k = right_indices.begin();
   std::vector<Expr::Base*>::iterator j = left_indices.begin();
-  std::vector<Expr::Base*>::iterator odl = x->left_indices_outsidedummy.begin();
-  std::vector<Expr::Base*>::iterator odr =
-    x->right_indices_outsidedummy.begin();
-  std::vector<Expr::Base*>::iterator ontl = x->left_indices.begin();
-  std::vector<Expr::Base*>::iterator ontr = x->right_indices.begin();
   for (std::vector<Table>::const_iterator i = tables.begin();
-       i != tables.end(); ++i, ++j, ++k, ++odl, ++odr, ++ontl, ++ontr) {
-    if (this->is_outside_inside_transition) {
-        /* we encounter the one and only situation for outside grammars
-         * where we transit from outside (full input sequence) into inside
-         * and need to make sure we parse the empty word.
-         */
-      if (((*i).delete_left_index() && (!(*i).delete_right_index()))) {
-        fn->add_arg(*ontl);
-        fn->add_arg(*ontl);
-      } else if ((!(*i).delete_left_index() && ((*i).delete_right_index()))) {
-        fn->add_arg(*ontr);
-        fn->add_arg(*ontr);
-      } else {
-        fn->add_arg(new Expr::Const(0));
-        fn->add_arg(new Expr::Const(0));
-      }
-      // ignore the "normal" logic below
-      continue;
-    }
+       i != tables.end(); ++i, ++j, ++k) {
     if (!(*i).delete_left_index()) {
       fn->add_arg(*j);
-    } else {
-      if (x->is_inside_axiom) {
-        if (this->is_partof_outside) {
-          fn->add_arg(*ontl);
-        } else {
-          fn->add_arg(*odl);
-        }
-      }
     }
     if (!(*i).delete_right_index()) {
       fn->add_arg(*k);
-    } else {
-      if (x->is_inside_axiom) {
-        if (this->is_partof_outside) {
-          fn->add_arg(*ontr);
+    }
+    if (for_outside_grammar) {
+      /* A non-terminal table dimension might have been optimized to be
+       * constant. Thus, the NT can only be called implicitly with the
+       * full input sequence. That is fine for pure inside grammars. However,
+       * in an outside context we at least have to be able to call ALL NTs
+       * either with full input sequence (as before) OR with the empty input.
+       * We therefore call the NT in those cases with global left_most /
+       * right_most values, which will be shadowed by 0, 0 in their call
+       */
+      if ((*i).is_const_table()) {
+        if (this->is_outside_inside_transition) {
+          /* we encounter the one and only situation for outside grammars
+           * where we transit from outside (full input sequence) into inside
+           * and need to make sure we parse the empty word.
+           */
+          fn->add_arg((*k)->minus(*j));
+          fn->add_arg((*k)->minus(*j));
         } else {
-          fn->add_arg(*odr);
+          fn->add_arg(*j);
+          fn->add_arg(*k);
         }
       }
     }
@@ -2222,7 +2206,7 @@ void Alt::Link::codegen(AST &ast) {
     add_seqs(fn, ast);
   }
 
-  add_args(fn);
+  add_args(fn, ast.grammar()->is_outside());
 
   if (nt->is(Symbol::NONTERMINAL) && ast.code_mode() == Code::Mode::SUBOPT) {
     fn->exprs.push_back(new Expr::Vacc(new std::string("global_score")));
