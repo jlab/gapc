@@ -1743,8 +1743,7 @@ void Printer::Cpp::print_openmp_cyk_nt_calls(const AST &ast,
       if ((*i)->is_tabulated() && !(*i)->tables().front().is_cyk_right()) {
         o1 << indent() << "nt_tabulate_" << *(*i)->name << "("
           << multi_index_str((*i)->tables(), (*i)->multi_ys(),
-                             (*i)->is_partof_outside,
-                             (*i)->is_inside_axiom)
+                             (*i)->is_partof_outside)
           << ");\n";
       }
     }
@@ -1763,8 +1762,7 @@ void Printer::Cpp::print_openmp_cyk_all_nt_calls(const AST &ast,
       if ((*i)->is_tabulated()) {
         o2 << indent() << "nt_tabulate_" << *(*i)->name << "("
           << multi_index_str((*i)->tables(), (*i)->multi_ys(),
-                             (*i)->is_partof_outside,
-                             (*i)->is_inside_axiom)
+                             (*i)->is_partof_outside)
           << ");\n";
       }
     }
@@ -1919,7 +1917,7 @@ void Printer::Cpp::print_openmp_cyk(const AST &ast) {
 
 std::string Printer::Cpp::multi_index_str(
   const std::vector<Table> &tables, const Yield::Multi &mys,
-  bool is_outside, bool is_inside_axiom) {
+  bool is_outside) {
   assert(tables.size() == mys.tracks());
   std::ostringstream o;
   size_t track = 0;
@@ -1932,20 +1930,12 @@ std::string Printer::Cpp::multi_index_str(
       } else {
         o << ", (t_" << track << "_j - t_" << track << "_i + 1)";
       }
-    } else {
-      if (is_inside_axiom) {
-        o << ", t_" << track << "_left_most";
-      }
     }
     if (!(*i).delete_right_index()) {
       if (is_outside == false) {
         o << ", t_" << track << "_j";
       } else {
         o << ", (t_" << track << "_n - t_" << track << "_i + 1)";
-      }
-    } else {
-      if (is_inside_axiom) {
-        o << ", t_" << track << "_right_most";
       }
     }
   }
@@ -1972,8 +1962,7 @@ void Printer::Cpp::multi_print_inner_cyk(
        i != l.end(); ++i) {
     if ((*i)->is_partof_outside == for_outsideNTs) {
       std::string index_str = multi_index_str((*i)->tables(), (*i)->multi_ys(),
-                                              (*i)->is_partof_outside,
-                                              (*i)->is_inside_axiom);
+                                              (*i)->is_partof_outside);
       stream << indent() << "nt_tabulate_" << *(*i)->name << '('
              << index_str << ");" << endl;
     }
@@ -2210,16 +2199,19 @@ void Printer::Cpp::print_cyk_fn(const AST &ast) {
 }
 
 void Printer::Cpp::print_insideoutside(Symbol::NT *nt) {
-  std::stringstream list_args_print;
   std::stringstream list_args;
+  std::stringstream list_args_print;
   std::list<Fn_Def*> &l = nt->code_list();
 
   // aggregated level (=dim + tracks) of nested loops
   unsigned int nesting = 0;
   std::vector<std::string> *args = new std::vector<std::string>();
-  std::vector<std::string> *args_call = new std::vector<std::string>();
+  std::vector<std::string> *args_ntcall = new std::vector<std::string>();
+  std::vector<Expr::Base*>::iterator lidx = nt->left_indices.begin();
+  std::vector<Expr::Base*>::iterator ridx = nt->right_indices.begin();
+
   // opening for loops
-  for (size_t track = 0; track < nt->tracks(); ++track) {
+  for (size_t track = 0; track < nt->tracks(); ++track, ++lidx, ++ridx) {
     unsigned int dim = 2;
     if (nt->tables()[track].delete_left_index()) {
       dim--;
@@ -2233,7 +2225,7 @@ void Printer::Cpp::print_insideoutside(Symbol::NT *nt) {
              << "_right_most; ++t_" << track << "_i) {" << endl;
       inc_indent();
       args->push_back("t_" + std::to_string(track) + "_i");
-      args_call->push_back("t_" + std::to_string(track) + "_i");
+      args_ntcall->push_back("t_" + std::to_string(track) + "_i");
     }
     if (dim >= 2) {
       stream << indent() << "for (unsigned int t_" << track << "_j = t_"
@@ -2241,14 +2233,27 @@ void Printer::Cpp::print_insideoutside(Symbol::NT *nt) {
              << "_right_most; ++t_" << track << "_j) {" << endl;
       inc_indent();
       args->push_back("t_" + std::to_string(track) + "_j");
-      args_call->push_back("t_" + std::to_string(track) + "_j");
+      args_ntcall->push_back("t_" + std::to_string(track) + "_j");
     }
-    if (nt->is_inside_axiom) {
-      if (dim <= 1) {
-        args_call->push_back("t_" + std::to_string(track) + "_left_most");
-      }
-      if (dim < 2) {
-        args_call->push_back("t_" + std::to_string(track) + "_right_most");
+    if (this->ast->grammar()->is_outside()) {
+      if (nt->tables()[track].is_const_table()) {
+        if (!nt->is_partof_outside) {
+          // TODO(sjanssen): can't we put Expr::Base args to a list
+          // and print this list later on?
+          // call const inside NT with complete input sequence
+          std::stringstream hl;
+          (*lidx)->put(hl);
+          args_ntcall->push_back(hl.str());
+          std::stringstream hr;
+          (*ridx)->put(hr);
+          args_ntcall->push_back(hr.str());
+        } else {
+          // call const outside NT with empty input sequence
+          std::stringstream hl;
+          (*ridx)->minus(*lidx)->put(hl);
+          args_ntcall->push_back(hl.str());
+          args_ntcall->push_back(hl.str());
+        }
       }
     }
     nesting += dim;
@@ -2265,8 +2270,8 @@ void Printer::Cpp::print_insideoutside(Symbol::NT *nt) {
     list_args_print << " << " << *a;
   }
   first = true;
-  for (std::vector<std::string>::const_iterator a = args_call->begin();
-       a != args_call->end(); ++a) {
+  for (std::vector<std::string>::const_iterator a = args_ntcall->begin();
+       a != args_ntcall->end(); ++a) {
     if (!first) {
       list_args << ", ";
     }
@@ -2342,6 +2347,8 @@ void Printer::Cpp::print_insideoutside_report_fn(
 }
 
 void Printer::Cpp::print_run_fn(const AST &ast) {
+  // TODO(sjanssen) can we redesign this function and use Expr::Base
+  // fn_arg functions?!
   stream << indent() << *ast.grammar()->axiom->code()->return_type;
   stream << " run() {" << endl;
   inc_indent();
@@ -2350,8 +2357,12 @@ void Printer::Cpp::print_run_fn(const AST &ast) {
   bool first = true;
   size_t track = 0;
   const std::vector<Table> &tables = ast.grammar()->axiom->tables();
+  std::vector<Expr::Base*>::iterator lidx =
+    ast.grammar()->axiom->left_indices.begin();
+  std::vector<Expr::Base*>::iterator ridx =
+    ast.grammar()->axiom->right_indices.begin();
   for (std::vector<Table>::const_iterator i = tables.begin();
-       i != tables.end(); ++i, ++track) {
+       i != tables.end(); ++i, ++track, ++lidx, ++ridx) {
     Table t = *i;
     if (!t.delete_left_index()) {
       if (!first) {
@@ -2366,6 +2377,19 @@ void Printer::Cpp::print_run_fn(const AST &ast) {
       }
       first = false;
       stream << "t_" << track << "_right_most";
+    }
+    if (ast.grammar()->is_outside()) {
+      if (t.is_const_table()) {
+        if (!first) {
+          stream << ", ";
+        }
+        std::stringstream hl;
+        (*lidx)->put(hl);
+        stream << hl.str() << ", ";
+        std::stringstream hr;
+        (*ridx)->put(hr);
+        stream << hr.str();
+      }
     }
   }
 
