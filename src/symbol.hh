@@ -126,15 +126,6 @@ class Base {
     Loc location;
     std::vector<Expr::Base*> left_indices;
     std::vector<Expr::Base*> right_indices;
-    /* the user defined inside axiom must be called from outside grammar parts
-     * such that the outside parts consumes the full input sequence(s) (0,n).
-     * But the inside NT call must parse the remainder, i.e. the empty word
-     * If however, table dimension of this axiom was reduced, we cannot pass
-     * prober boundaries. For such cases, we generate dummy variables that
-     * do not extend table dimensions, but can ensure that (0,0) and (n, 0) are
-     * passed. */
-    std::vector<Expr::Base*> left_indices_outsidedummy;
-    std::vector<Expr::Base*> right_indices_outsidedummy;
     bool is(Type t) const {
       return type == t;
     }
