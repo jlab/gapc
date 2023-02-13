@@ -868,16 +868,11 @@ void Grammar::init_indices() {
   traverse(cl);
   for (size_t track = 0; track < axiom->tracks(); ++track) {
     // variable access for all possible boundaries
-    std::ostringstream i, j, lm, rm, outside_l_dummy, outside_r_dummy;
+    std::ostringstream i, j, lm, rm;
     i << "t_" << track << "_i";
     j << "t_" << track << "_j";
     lm << "t_" << track << "_left_most";
     rm << "t_" << track << "_right_most";
-    /* helper variables for outside/inside transition
-     * which must be parameterized, but table dimension might be
-     * reduced to const or linear */
-    outside_l_dummy << "t_" << track << "_outsidedummy_left";
-    outside_r_dummy << "t_" << track << "_outsidedummy_right";
     Expr::Vacc *left = new Expr::Vacc(new std::string(i.str()));
     Expr::Vacc *right = new Expr::Vacc(new std::string(j.str()));
     Expr::Vacc *left_most = new Expr::Vacc(new std::string(lm.str()));
@@ -891,17 +886,6 @@ void Grammar::init_indices() {
       const Table &table = (*i)->tables()[idx];
       Expr::Vacc *l = table.delete_left_index() ? left_most : left;
       Expr::Vacc *r = table.delete_right_index() ? right_most : right;
-      if ((*i)->is_inside_axiom) {
-        // always false for pure inside grammars
-        if (table.delete_left_index()) {
-          (*i)->left_indices_outsidedummy.push_back(
-            new Expr::Vacc(new std::string(outside_l_dummy.str())));
-        }
-        if (table.delete_right_index()) {
-          (*i)->right_indices_outsidedummy.push_back(
-            new Expr::Vacc(new std::string(outside_r_dummy.str())));
-        }
-      }
       if ((*i)->tracks() == 1 && (*i)->track_pos() != track) {
         continue;
       }
