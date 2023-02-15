@@ -1328,9 +1328,29 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
   // terminals and links to non-terminals, but explicitly do NOT
   // re-run yield size analysis since it does not respect outside
   // situations.
-  this->init_calls();
-  this->init_in_out();
-  this->init_table_dims();
+  //~ this->init_calls();
+  //~ this->init_in_out();
+  //~ this->init_table_dims();
+  /* NT-table dimension optimization (all start quadratic, but depending on
+   * yield size, some NT-tables can be reduced to linear or even constant
+   * "tables") must be re-considered, since original inside NTs will now
+   * be called from outside NTs and former constant tables (e.g. consuming
+   * the full input) might now be within a variable infix size and thus
+   * must become quadratic again.
+   * We therefore here reset the flag of all NTs to enable re-computation
+   * of optimal table dimensions ... within the outside context.
+   */
+  for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin();
+       i != NTs.end(); ++i) {
+    if ((*i).second->is(Symbol::NONTERMINAL)) {
+      dynamic_cast<Symbol::NT*>((*i).second)->reset_table_dim();
+    }
+  }
+  /* re-run "check_semantics" to properly initialize novel non-
+   * terminals, links to non-terminals, update yield size analysis and
+   * update table dimensions for NTs
+   */
+  this->check_semantic();
 
   // mark the modified grammar as an outside one
   this->outside = true;
