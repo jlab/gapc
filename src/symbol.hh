@@ -398,6 +398,9 @@ class NT : public Base {
     std::vector<Table> table_dims;
 
  public:
+    std::vector<Table> table_dims_inside;
+
+ public:
     const std::vector<Table> &tables() const {
       return table_dims;
     }
