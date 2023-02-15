@@ -3539,6 +3539,7 @@ bool Alt::Link::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace,
         if (skip_occurences[*(find->name)] == 0) {
           // replace old NT (=find) with novel NT (=replace)
           this->nt = replace;
+          this->m_ys = replace->multi_ys();
           this->name = replace->name;
           this->is_partof_outside = replace->is_partof_outside;
           return true;
