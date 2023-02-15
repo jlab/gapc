@@ -1160,6 +1160,14 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
 
     // and clone for outside version
     Symbol::NT *outside_nt = inside_nt->clone(inside_nt->track_pos());
+
+    /* create copies of the current inside table dimensions of the NT
+     * when reporting inside/outside results, we can thus skip a few
+     * cells of NTs that are now linear or const but will become
+     * quadratic due to outside context, e.g. struct of nodangle */
+    outside_nt->table_dims_inside = inside_nt->tables();
+    inside_nt->table_dims_inside = inside_nt->tables();
+
     // remove all existing alternative production rules
     outside_nt->alts.clear();
     // and correct NT name, to now point to outside version
@@ -1324,13 +1332,6 @@ void Grammar::inject_outside_nts(std::vector<std::string> outside_nt_list) {
     this->axiom_name = nt_axiom_name;
     this->init_axiom();
   }
-  // re-run parts of "check_semantics" to properly initialize novel non-
-  // terminals and links to non-terminals, but explicitly do NOT
-  // re-run yield size analysis since it does not respect outside
-  // situations.
-  //~ this->init_calls();
-  //~ this->init_in_out();
-  //~ this->init_table_dims();
   /* NT-table dimension optimization (all start quadratic, but depending on
    * yield size, some NT-tables can be reduced to linear or even constant
    * "tables") must be re-considered, since original inside NTs will now
