@@ -2201,22 +2201,19 @@ void Printer::Cpp::print_cyk_fn(const AST &ast) {
 void Printer::Cpp::print_insideoutside(Symbol::NT *nt) {
   std::stringstream list_args;
   std::stringstream list_args_print;
-  std::list<Fn_Def*> &l = nt->code_list();
 
   // aggregated level (=dim + tracks) of nested loops
   unsigned int nesting = 0;
   std::vector<std::string> *args = new std::vector<std::string>();
-  std::vector<std::string> *args_ntcall = new std::vector<std::string>();
-  std::vector<Expr::Base*>::iterator lidx = nt->left_indices.begin();
-  std::vector<Expr::Base*>::iterator ridx = nt->right_indices.begin();
-
   // opening for loops
-  for (size_t track = 0; track < nt->tracks(); ++track, ++lidx, ++ridx) {
+  for (size_t track = 0; track < nt->tracks(); ++track) {
     unsigned int dim = 2;
-    if (nt->tables()[track].delete_left_index()) {
+    //if (nt->tables()[track].delete_left_index()) {
+    if (nt->table_dims_inside[track].delete_left_index()) {
       dim--;
     }
-    if (nt->tables()[track].delete_right_index()) {
+    //if (nt->tables()[track].delete_right_index()) {
+    if (nt->table_dims_inside[track].delete_right_index()) {
       dim--;
     }
     if (dim >= 1) {
@@ -2225,7 +2222,6 @@ void Printer::Cpp::print_insideoutside(Symbol::NT *nt) {
              << "_right_most; ++t_" << track << "_i) {" << endl;
       inc_indent();
       args->push_back("t_" + std::to_string(track) + "_i");
-      args_ntcall->push_back("t_" + std::to_string(track) + "_i");
     }
     if (dim >= 2) {
       stream << indent() << "for (unsigned int t_" << track << "_j = t_"
@@ -2233,33 +2229,26 @@ void Printer::Cpp::print_insideoutside(Symbol::NT *nt) {
              << "_right_most; ++t_" << track << "_j) {" << endl;
       inc_indent();
       args->push_back("t_" + std::to_string(track) + "_j");
-      args_ntcall->push_back("t_" + std::to_string(track) + "_j");
-    }
-    if (this->ast->grammar()->is_outside()) {
-      if (nt->tables()[track].is_const_table()) {
-        if (!nt->is_partof_outside) {
-          // TODO(sjanssen): can't we put Expr::Base args to a list
-          // and print this list later on?
-          // call const inside NT with complete input sequence
-          std::stringstream hl;
-          (*lidx)->put(hl);
-          args_ntcall->push_back(hl.str());
-          std::stringstream hr;
-          (*ridx)->put(hr);
-          args_ntcall->push_back(hr.str());
-        } else {
-          // call const outside NT with empty input sequence
-          std::stringstream hl;
-          (*ridx)->minus(*lidx)->put(hl);
-          args_ntcall->push_back(hl.str());
-          args_ntcall->push_back(hl.str());
-        }
-      }
     }
     nesting += dim;
   }
 
+  std::vector<std::string> *args_call = new std::vector<std::string>();
+  for (size_t track = 0; track < nt->tracks(); ++track) {
+	if (nt->table_dims_inside[track].delete_left_index()) {
+	  args_call->push_back("t_" + std::to_string(track) + "_left_most");
+	} else {
+	  args_call->push_back("t_" + std::to_string(track) + "_i");
+	}
+	if (nt->table_dims_inside[track].delete_right_index()) {
+	  args_call->push_back("t_" + std::to_string(track) + "_right_most");
+	} else {
+	  args_call->push_back("t_" + std::to_string(track) + "_j");
+	}
+  }
+
   // loop body
+  std::list<Fn_Def*> &l = nt->code_list();
   bool first = true;
   for (std::vector<std::string>::const_iterator a = args->begin();
        a != args->end(); ++a) {
@@ -2270,8 +2259,8 @@ void Printer::Cpp::print_insideoutside(Symbol::NT *nt) {
     list_args_print << " << " << *a;
   }
   first = true;
-  for (std::vector<std::string>::const_iterator a = args_ntcall->begin();
-       a != args_ntcall->end(); ++a) {
+  for (std::vector<std::string>::const_iterator a = args_call->begin();
+         a != args_call->end(); ++a) {
     if (!first) {
       list_args << ", ";
     }
