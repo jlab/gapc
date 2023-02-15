@@ -2149,33 +2149,17 @@ void Alt::Link::add_args(Expr::Fn_Call *fn, bool for_outside_grammar) {
   for (std::vector<Table>::const_iterator i = tables.begin();
        i != tables.end(); ++i, ++j, ++k) {
     if (!(*i).delete_left_index()) {
-      fn->add_arg(*j);
+      if (for_outside_grammar && this->is_outside_inside_transition) {
+        /* if this is the transition from outside into inside grammar
+         * we have to call inside with empty input sequence, i.e.
+         * (right, right) index. */
+        fn->add_arg(*k);
+      } else {
+        fn->add_arg(*j);
+      }
     }
     if (!(*i).delete_right_index()) {
       fn->add_arg(*k);
-    }
-    if (for_outside_grammar) {
-      /* A non-terminal table dimension might have been optimized to be
-       * constant. Thus, the NT can only be called implicitly with the
-       * full input sequence. That is fine for pure inside grammars. However,
-       * in an outside context we at least have to be able to call ALL NTs
-       * either with full input sequence (as before) OR with the empty input.
-       * We therefore call the NT in those cases with global left_most /
-       * right_most values, which will be shadowed by 0, 0 in their call
-       */
-      if ((*i).is_const_table()) {
-        if (this->is_outside_inside_transition) {
-          /* we encounter the one and only situation for outside grammars
-           * where we transit from outside (full input sequence) into inside
-           * and need to make sure we parse the empty word.
-           */
-          fn->add_arg((*k)->minus(*j));
-          fn->add_arg((*k)->minus(*j));
-        } else {
-          fn->add_arg(*j);
-          fn->add_arg(*k);
-        }
-      }
     }
   }
 
@@ -2679,7 +2663,16 @@ void Alt::Simple::init_multi_ys() {
 
 
 void Alt::Link::init_multi_ys() {
-  m_ys = nt->multi_ys();
+  // TODO(sjanssen): would it make sense to run an outside specific yield
+  // size analysis for more thight guards??
+  if (nt->is_partof_outside) {
+	m_ys.set_tracks(tracks_);
+    for (Yield::Multi::iterator i = m_ys.begin(); i != m_ys.end(); ++i) {
+      *i = Yield::Size(0, Yield::UP);
+    }
+  } else {
+    m_ys = nt->multi_ys();
+  }
   Base::init_multi_ys();
 }
 
