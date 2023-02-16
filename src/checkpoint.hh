@@ -54,6 +54,15 @@ class Checkpoint : public Base {
                      Type::Type::SHAPE, Type::Type::SUBSEQ,
                      Type::Type::EXTERNAL};
 
+const std::array<std::string, 11>
+SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
+                            "answer_pknot_mfecovar", "mfecovar",
+                            "mfecovar_macrostate", "pftuple",
+                            "answer_pknot_pfunc",
+                            "answer_ali_pfunc_macrostate",
+                            "answer_macrostate_mfe",
+                            "answer_macrostate_pfunc"};
+
   template<size_t n>
   bool has_type(const std::array<Type::Type, n> &arr, Type::Type type,
                 Type::Base *t) {
@@ -64,9 +73,16 @@ class Checkpoint : public Base {
         } else if (type == Type::Type::SUBSEQ) {
           subseq = true;
         } else if (type == Type::Type::EXTERNAL) {
-          // only allow external type "Rope"
+          // only allow external type "Rope" and some fold-grammars types
           Type::External *e = dynamic_cast<Type::External*>(t);
-          if (*e->name != "Rope") return false;
+          bool supported_external_type = false;
+          for (const std::string &supported_ext : SUPPORTED_EXTERNAL_TYPES) {
+            if (*e->name == supported_ext) {
+              supported_external_type = true;
+              break;
+            }
+          }
+          if (!supported_external_type) return false;
         }
           return true;
       }
@@ -264,7 +280,7 @@ class Checkpoint : public Base {
      return supported;
   }
 
-  void include(Printer::Base &stream, const nt_tables &tables) {
+  void macros(Printer::Base &stream) {
      stream << "#define CHECKPOINTING_INTEGRATED" << endl << endl;
      if (list_ref) {
        // set macro if tables contain List_Ref type
@@ -295,7 +311,9 @@ class Checkpoint : public Base {
        }
        stream << endl;
      }
+  }
 
+  void include(Printer::Base &stream, const nt_tables &tables) {
      stream << "extern \"C\" {" << endl;
      stream << indent() << "#include <unistd.h>" << endl;
      stream << indent() << "#include <sys/resource.h>" << endl;
@@ -306,7 +324,6 @@ class Checkpoint : public Base {
      stream << "#include \"boost/archive/binary_iarchive.hpp\"" << endl;
      stream << "#include \"boost/archive/binary_oarchive.hpp\"" << endl;
      stream << "#include \"boost/filesystem.hpp\"" << endl;
-     stream << "#include \"rtlib/loaded.hh\"" << endl;
      stream << "#include <atomic>" << endl;
      stream << "#include <ctime>" << endl;
      stream << "#include <unordered_map>" << endl;
@@ -1111,8 +1128,8 @@ class Checkpoint : public Base {
             << "argv[2] ...\\n\";" << endl;
      for (auto i = tables.begin(); i != tables.end(); ++i) {
        const std::string &table_name = i->second->table_decl->name();
-       stream << indent() << "fout << \"# path/to/" << table_name << "\\n\";"
-              << endl;
+       stream << indent() << "fout << \"# [TABLE_NAME] path/to/"
+              << table_name << "\\n\";" << endl;
      }
      stream << indent() << "fout << \"# [GAPC CALL] GAPC call string\\n\";"
             << endl;
@@ -1128,7 +1145,8 @@ class Checkpoint : public Base {
             << endl;
      for (auto i = tables.begin(); i != tables.end(); ++i) {
        const std::string &table_name = i->second->table_decl->name();
-       stream << indent() << "fout << " << table_name << ".get_out_table_path()"
+       stream << indent() << "fout << \"[" << table_name << "] \" << "
+              << table_name << ".get_out_table_path() "
               << "<< \"\\n\";" << endl;
      }
      stream << indent() << "fout << \"[GAPC CALL] \" << GAPC_CALL_STRING "
@@ -1188,13 +1206,14 @@ class Checkpoint : public Base {
             << "for checkpoints" << endl;
      stream << indent() << "// that were created with identical program "
             << "input (if that info is available)" << endl;
-     stream << indent() << "std::ifstream fin(path.c_str(), "
-            << "std::ios::binary);" << endl;
+     stream << indent() << "std::ifstream fin(path.c_str());" << endl;
      stream << indent() << "if (!(fin.good())) return;"
             << endl << endl;
-     stream << indent() << "std::string line;" << endl;
+     stream << indent() << "std::string line, curr_tname;" << endl;
      stream << indent() << "std::string options_line_start = \"[OPTIONS] \";"
             << endl;
+     stream << indent() << "std::string table_path_start = "
+            << "\"[\" + tname + \"] \";" << endl;
      stream << indent() << "while (std::getline(fin, line)) {" << endl;
      inc_indent();
      stream << indent() << "if (line[0] == '#') continue;" << endl;
@@ -1214,15 +1233,24 @@ class Checkpoint : public Base {
             << "be initialized empty.\");" << endl;
      stream << indent() << "return;" << endl;
      dec_indent();
-     stream << indent() << "}" << endl << endl;
+     stream << indent() << "}" << endl;
      dec_indent();
      stream << indent() << "}" << endl;
-     stream << indent() << "if (line.find(tname) != line.npos) {"
+     stream << indent() << "i = line.find(table_path_start);" << endl;
+     stream << indent() << "if (i != line.npos) {" << endl;
+     inc_indent();
+     stream << indent() << "curr_tname = line.substr(1, line.find(\"]\") - 1);"
+            << endl;
+     stream << indent() << "if (curr_tname == tname) {"
             << endl;
      inc_indent();
+     stream << indent() << "line.replace(i, table_path_start.length(), "
+            << "\"\");" << endl;
      stream << indent() << "in_table_path = boost::filesystem::path(line);"
             << endl;
      stream << indent() << "return;" << endl;
+     dec_indent();
+     stream << indent() << "}" << endl;
      dec_indent();
      stream << indent() << "}" << endl;
      dec_indent();

@@ -245,6 +245,11 @@ class Set {
     Set &operator=(const Set&);
 
  public:
+#ifdef CHECKPOINTING_INTEGRATED
+    size_t vector_size() const  {
+      return array.size();
+    }
+#endif
     U ref_count;
     Set()
       : used_(0),

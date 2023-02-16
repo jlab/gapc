@@ -35,6 +35,7 @@
 #include "rope.hh"
 #include "list.hh"
 #include "ref.hh"
+#include "shape.hh"
 
 /*
   this header file contains functions to check whether or not
@@ -57,18 +58,6 @@ inline bool is_loaded(int x) {
   return x != 0;
 }
 
-inline bool is_loaded(unsigned int x) {
-  return x != 0;
-}
-
-inline bool is_loaded(int16_t x) {
-  return x != 0;
-}
-
-inline bool is_loaded(int64_t x) {
-  return x != 0;
-}
-
 inline bool is_loaded(float x) {
   return x != 0.0;
 }
@@ -86,21 +75,25 @@ inline bool is_loaded(bool x) {
 }
 
 inline bool is_loaded(const String &s) {
-  return s.isEmpty();
+  return s.get_block() != NULL;
 }
 
 inline bool is_loaded(const Rope &s) {
   return s.size() > 0;
 }
 
+inline bool is_loaded(const Shape &s) {
+  return s.size() > 0;
+}
+
+template <typename T, typename I, typename Z> inline bool
+is_loaded(const Fiber<T, I, Z> &f) {
+  return f.size() > 0;
+}
+
 template <typename X> inline bool
 is_loaded(const rope::Ref<X> &p) {
   return p.size() > 0;
-}
-
-template <typename T, typename U> inline bool
-is_loaded(const std::pair<T, U> &p) {
-  return is_loaded(p.first) || is_loaded(p.second);
 }
 
 template <typename T, typename U> inline bool
@@ -115,7 +108,7 @@ is_loaded(const List_Ref<T, pos_int> &l) {
 
 template<class T, class I>
 inline bool is_loaded(const Hash::Ref<T, I> &x) {
-  return x.l && !(x.const_ref().isEmpty());
+  return x.l && x.const_ref().vector_size() > 0;
 }
 
 template <class T> inline bool
@@ -132,6 +125,11 @@ is_loaded(const List<T> &l) {
 template<typename T1, typename T2> inline bool
 is_loaded(const T1 &x1, const T2 &x2) {
   return is_loaded(x1) && is_loaded(x2);
+}
+
+template <typename T, typename U> inline bool
+is_loaded(const std::pair<T, U> &p) {
+  return is_loaded(p.first) || is_loaded(p.second);
 }
 
 #endif  // RTLIB_LOADED_HH_
