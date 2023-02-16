@@ -134,11 +134,9 @@ static void parse_options(int argc, char **argv, Options *rec) {
       "  1 = grammar\n"
       "  2 = add indices\n"
       "  3 = add data types.\n"
-      "(Use 'dot -Tpdf out.dot' to generate a PDF.)\nDefault file is out.dot")
-    ("checkpoint",
-     "enable periodic archiving/checkpointing "
-     "of the tabulated non-terminals.\n"
-     "(creates new checkpoint every 60 minutes by default)\n");
+      "  4 = add min/max yield sizes.\n"
+      "  5 = add non-terminal table dimensions.\n"
+      "(Use 'dot -Tpdf out.dot' to generate a PDF.)\nDefault file is out.dot");
   po::options_description hidden("");
   hidden.add_options()
     ("backtrack", "deprecated for --backtrace")
