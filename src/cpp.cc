@@ -2201,18 +2201,19 @@ void Printer::Cpp::print_cyk_fn(const AST &ast) {
 void Printer::Cpp::print_insideoutside(Symbol::NT *nt) {
   std::stringstream list_args;
   std::stringstream list_args_print;
+  std::list<Fn_Def*> &l = nt->code_list();
+  std::vector<std::string> *args = new std::vector<std::string>();
+  std::vector<std::string> *args_call = new std::vector<std::string>();
 
   // aggregated level (=dim + tracks) of nested loops
   unsigned int nesting = 0;
-  std::vector<std::string> *args = new std::vector<std::string>();
+
   // opening for loops
   for (size_t track = 0; track < nt->tracks(); ++track) {
     unsigned int dim = 2;
-    //if (nt->tables()[track].delete_left_index()) {
     if (nt->table_dims_inside[track].delete_left_index()) {
       dim--;
     }
-    //if (nt->tables()[track].delete_right_index()) {
     if (nt->table_dims_inside[track].delete_right_index()) {
       dim--;
     }
@@ -2233,22 +2234,26 @@ void Printer::Cpp::print_insideoutside(Symbol::NT *nt) {
     nesting += dim;
   }
 
-  std::vector<std::string> *args_call = new std::vector<std::string>();
   for (size_t track = 0; track < nt->tracks(); ++track) {
-	if (nt->table_dims_inside[track].delete_left_index()) {
-	  args_call->push_back("t_" + std::to_string(track) + "_left_most");
-	} else {
-	  args_call->push_back("t_" + std::to_string(track) + "_i");
-	}
-	if (nt->table_dims_inside[track].delete_right_index()) {
-	  args_call->push_back("t_" + std::to_string(track) + "_right_most");
-	} else {
-	  args_call->push_back("t_" + std::to_string(track) + "_j");
-	}
+    std::string nextLoopVar = "i";
+    if (nt->table_dims_inside[track].delete_left_index()) {
+      if (!nt->tables()[track].delete_left_index()) {
+        args_call->push_back("t_" + std::to_string(track) + "_left_most");
+      }
+    } else {
+      args_call->push_back("t_" + std::to_string(track) + "_" + nextLoopVar);
+      nextLoopVar = "j";
+    }
+    if (nt->table_dims_inside[track].delete_right_index()) {
+      if (!nt->tables()[track].delete_right_index()) {
+        args_call->push_back("t_" + std::to_string(track) + "_right_most");
+      }
+    } else {
+      args_call->push_back("t_" + std::to_string(track) + "_" + nextLoopVar);
+    }
   }
 
   // loop body
-  std::list<Fn_Def*> &l = nt->code_list();
   bool first = true;
   for (std::vector<std::string>::const_iterator a = args->begin();
        a != args->end(); ++a) {
