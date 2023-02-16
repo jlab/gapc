@@ -47,4 +47,5 @@ grammar gra_cm uses sig_cm(axiom = state_B_3) {
 }
 
 instance count = gra_cm(alg_count);
+instance enum = gra_cm(alg_enum);
     
