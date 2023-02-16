@@ -2148,15 +2148,15 @@ void Alt::Link::add_args(Expr::Fn_Call *fn, bool for_outside_grammar) {
   std::vector<Expr::Base*>::iterator j = left_indices.begin();
   for (std::vector<Table>::const_iterator i = tables.begin();
        i != tables.end(); ++i, ++j, ++k) {
-    if (!(*i).delete_left_index()) {
-      if (for_outside_grammar && this->is_outside_inside_transition) {
-        /* if this is the transition from outside into inside grammar
-         * we have to call inside with empty input sequence, i.e.
-         * (right, right) index. */
-        fn->add_arg(*k);
-      } else {
+    if (for_outside_grammar && this->is_outside_inside_transition) {
+      if ((*i).is_const_table()) {
         fn->add_arg(*j);
+        fn->add_arg(*j);
+        continue;
       }
+    }
+    if (!(*i).delete_left_index()) {
+      fn->add_arg(*j);
     }
     if (!(*i).delete_right_index()) {
       fn->add_arg(*k);
