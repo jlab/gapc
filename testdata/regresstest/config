@@ -510,4 +510,11 @@ check_new_old_eq tmhmm.gap unused fwd_scaled "MENLNMDLLYMAAAVMMGLAAIGAAIGIGILGGK
 
 check_new_old_eq RFmini.gap unused enum "G" outside_cm
 check_new_old_eq RFmini.gap unused count "G" outside_cm
+
+# Results can be converted into probabilities via nt_inside(i,j) + nt_outside(i,j) - axiom(0,n) - axiom(0,0)
+# where axiom(0,0) is the pfunc value of the empty word. This words because we are in log2-space.
+# Converted to probabilities: 2^nt_inside(i,j) * 2^nt_outside(i,j) / 2^axiom(0,n) / 2^axiom(0,0)
+# The important aspect is that we have to also normalize by axiom(0,0) since the inside result of
+# the empty word "" != 0 <-- log2-space but will be integrated in each and every outside candidate
+check_new_old_eq RFmini.gap unused inside "G" outside_cm
 CPPFLAGS_EXTRA=""
