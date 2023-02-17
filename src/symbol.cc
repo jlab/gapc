@@ -1236,7 +1236,7 @@ void Symbol::NT::codegen(AST &ast) {
   } else {
     f = new Fn_Def(dt, new std::string("nt_" + *name));
   }
-  f->add_para(*this, ast.grammar()->is_outside());
+  f->add_para(*this);
 
   subopt_header(ast, score_code, f, stmts);
 

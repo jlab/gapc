@@ -886,6 +886,7 @@ void Grammar::init_indices() {
       const Table &table = (*i)->tables()[idx];
       Expr::Vacc *l = table.delete_left_index() ? left_most : left;
       Expr::Vacc *r = table.delete_right_index() ? right_most : right;
+
       if ((*i)->tracks() == 1 && (*i)->track_pos() != track) {
         continue;
       }

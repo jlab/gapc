@@ -2373,12 +2373,8 @@ void Printer::Cpp::print_run_fn(const AST &ast) {
   bool first = true;
   size_t track = 0;
   const std::vector<Table> &tables = ast.grammar()->axiom->tables();
-  std::vector<Expr::Base*>::iterator lidx =
-    ast.grammar()->axiom->left_indices.begin();
-  std::vector<Expr::Base*>::iterator ridx =
-    ast.grammar()->axiom->right_indices.begin();
   for (std::vector<Table>::const_iterator i = tables.begin();
-       i != tables.end(); ++i, ++track, ++lidx, ++ridx) {
+       i != tables.end(); ++i, ++track) {
     Table t = *i;
     if (!t.delete_left_index()) {
       if (!first) {
@@ -2394,19 +2390,6 @@ void Printer::Cpp::print_run_fn(const AST &ast) {
       first = false;
       stream << "t_" << track << "_right_most";
     }
-//    if (ast.grammar()->is_outside()) {
-//      if (t.is_const_table()) {
-//        if (!first) {
-//          stream << ", ";
-//        }
-//        std::stringstream hl;
-//        (*lidx)->put(hl);
-//        stream << hl.str() << ", ";
-//        std::stringstream hr;
-//        (*ridx)->put(hr);
-//        stream << hr.str();
-//      }
-//    }
   }
 
   stream << ");" << endl;

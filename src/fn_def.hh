@@ -135,7 +135,7 @@ class Fn_Def : public Fn_Decl {
 
     void add_para(Type::Base *type, std::string *n);
     void add_paras(const std::list<Statement::Var_Decl*> &l);
-    void add_para(Symbol::NT &nt, bool for_outside_grammar = false);
+    void add_para(Symbol::NT &nt);
 
     void annotate_terminal_arguments(Fn_Decl &d);
 

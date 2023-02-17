@@ -308,7 +308,7 @@ void Fn_Def::add_paras(const std::list<Statement::Var_Decl*> &l) {
 #include "var_acc.hh"
 
 // add a nonterminal
-void Fn_Def::add_para(Symbol::NT &nt, bool for_outside_grammar) {
+void Fn_Def::add_para(Symbol::NT &nt) {
   Type::Base *t = new Type::Size();
 
   const std::vector<Table> &tables = nt.tables();
