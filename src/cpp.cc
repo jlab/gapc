@@ -2380,14 +2380,14 @@ void Printer::Cpp::print_run_fn(const AST &ast) {
   for (std::vector<Table>::const_iterator i = tables.begin();
        i != tables.end(); ++i, ++track, ++lidx, ++ridx) {
     Table t = *i;
-    if (!t.delete_left_index() || t.is_const_table()) {
+    if (!t.delete_left_index()) {
       if (!first) {
         stream << ", ";
       }
       first = false;
       stream << "t_" << track << "_left_most";
     }
-    if (!t.delete_right_index() || t.is_const_table()) {
+    if (!t.delete_right_index()) {
       if (!first) {
         stream << ", ";
       }
