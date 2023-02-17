@@ -517,4 +517,9 @@ check_new_old_eq RFmini.gap unused count "G" outside_cm
 # The important aspect is that we have to also normalize by axiom(0,0) since the inside result of
 # the empty word "" != 0 <-- log2-space but will be integrated in each and every outside candidate
 check_new_old_eq RFmini.gap unused inside "G" outside_cm
+
+# more extensive example as before, also checked against cm_OutsideAlign of Infernal
+GAPC="../../../gapc --outside_grammar state_MR_3 --outside_grammar state_MP_6 --outside_grammar state_S_0 --outside_grammar state_E_120"
+check_new_old_eq RF00005.gap unused inside "GACGGUAU" outside_cm5
+
 CPPFLAGS_EXTRA=""
