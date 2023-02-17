@@ -2666,7 +2666,7 @@ void Alt::Link::init_multi_ys() {
   // TODO(sjanssen): would it make sense to run an outside specific yield
   // size analysis for more thight guards??
   if (nt->is_partof_outside) {
-	m_ys.set_tracks(tracks_);
+    m_ys.set_tracks(tracks_);
     for (Yield::Multi::iterator i = m_ys.begin(); i != m_ys.end(); ++i) {
       *i = Yield::Size(0, Yield::UP);
     }
