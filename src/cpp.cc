@@ -1924,14 +1924,14 @@ std::string Printer::Cpp::multi_index_str(
   Yield::Multi::const_iterator j = mys.begin();
   for (std::vector<Table>::const_iterator i = tables.begin();
        i != tables.end(); ++i, ++j, ++track) {
-    if (!(*i).delete_left_index()) {
+    if (!(*i).delete_left_index() || (*i).is_const_table()) {
       if (is_outside == false) {
         o << ", t_" << track << "_i-1";
       } else {
         o << ", (t_" << track << "_j - t_" << track << "_i + 1)";
       }
     }
-    if (!(*i).delete_right_index()) {
+    if (!(*i).delete_right_index() || (*i).is_const_table()) {
       if (is_outside == false) {
         o << ", t_" << track << "_j";
       } else {
@@ -2015,9 +2015,13 @@ void Printer::Cpp::multi_print_cyk_loops_quadratic(
     std::string *js,
     std::string *ns, bool for_outsideNTs) {
   if (!inner->empty()) {
-    stream << indent() << "for (" << *t << " " << *js << " = 0; " << *js
+	stream << indent() << "for (" << *t << " " << *js << " = 0; " << *js
            << " < " << *ns << "; " << "++" << *js << ") {" << endl;
     inc_indent();
+    if (for_outsideNTs) {
+      multi_print_cyk_loops_quadratic_inner(tord, track, tracks, track_pos, t, left, is, for_outsideNTs);
+    }
+    stream << indent() << "// A: quadratic loops" << endl;
     stream << indent() << "for (" << *t << " " << *is << " = " << *js
            << " + 1; " << *is << " > 1; " << *is << "--) {" << endl;
     inc_indent();
@@ -2027,17 +2031,32 @@ void Printer::Cpp::multi_print_cyk_loops_quadratic(
     dec_indent();
     stream << indent() << "}" << endl << endl;
 
-    if (!left->empty()) {
-      stream << indent();
-      if (!for_outsideNTs) {
-        stream << *t << " ";
-      }
-      stream << *is << " = 1;" << endl;
-      multi_print_inner_cyk(*left, tord, track, tracks, track_pos, t,
-                            for_outsideNTs);
+    if (!for_outsideNTs) {
+      multi_print_cyk_loops_quadratic_inner(tord, track, tracks, track_pos, t, left, is, for_outsideNTs);
     }
     dec_indent();
     stream << indent() << "}" << endl << endl;
+  }
+}
+void Printer::Cpp::multi_print_cyk_loops_quadratic_inner(
+		const std::list<Symbol::NT*> &tord,
+		size_t track,
+		size_t tracks,
+		size_t track_pos,
+		Type::Base *t,
+		std::list<Symbol::NT*> *left,
+		std::string *is,
+		bool for_outsideNTs
+		) {
+  if (!left->empty()) {
+    stream << indent() << "// B: inner quadratic loops" << endl;
+    stream << indent();
+    if (!for_outsideNTs) {
+      stream << *t << " ";
+    }
+    stream << *is << " = 1;" << endl;
+    multi_print_inner_cyk(*left, tord, track, tracks, track_pos, t,
+                          for_outsideNTs);
   }
 }
 void Printer::Cpp::multi_print_cyk_loops_linear(
@@ -2053,6 +2072,8 @@ void Printer::Cpp::multi_print_cyk_loops_linear(
     std::string *js,
     std::string *ns, bool for_outsideNTs
     ) {
+  stream << indent() << "// C: linear loops" << endl;
+
   if (inner->empty() && !left->empty()) {
     stream << indent() << "for (" << *t << " " << *js << " = 0; "
            << *js << " < " << *ns
@@ -2092,6 +2113,7 @@ void Printer::Cpp::multi_print_cyk_loops_constant(
     std::list<Symbol::NT*> *all,
     std::string *is, bool for_outsideNTs
     ) {
+  stream << indent() << "// D: constant loops" << endl;
   if (!all->empty()) {
     stream << indent();
     if (!for_outsideNTs) {
@@ -2131,13 +2153,13 @@ void Printer::Cpp::multi_print_cyk(
   // outside NTs (which access inside NT values)
   if (this->ast->grammar()->is_outside()) {
     stream << endl << endl;
-    multi_print_cyk_loops_linear(
-      tord, track, tracks, track_pos, t, &inner, &left, &right, &is, &js, &ns,
-      true);
-    multi_print_cyk_loops_constant(
-      tord, track, tracks, track_pos, t, &all, &is, true);
     multi_print_cyk_loops_quadratic(
       tord, track, tracks, track_pos, t, &inner, &left, &is, &js, &ns, true);
+    multi_print_cyk_loops_linear(
+          tord, track, tracks, track_pos, t, &inner, &left, &right, &is, &js, &ns,
+          true);
+    multi_print_cyk_loops_constant(
+      tord, track, tracks, track_pos, t, &all, &is, true);
   }
 }
 
@@ -2358,33 +2380,33 @@ void Printer::Cpp::print_run_fn(const AST &ast) {
   for (std::vector<Table>::const_iterator i = tables.begin();
        i != tables.end(); ++i, ++track, ++lidx, ++ridx) {
     Table t = *i;
-    if (!t.delete_left_index()) {
+    if (!t.delete_left_index() || t.is_const_table()) {
       if (!first) {
         stream << ", ";
       }
       first = false;
       stream << "t_" << track << "_left_most";
     }
-    if (!t.delete_right_index()) {
+    if (!t.delete_right_index() || t.is_const_table()) {
       if (!first) {
         stream << ", ";
       }
       first = false;
       stream << "t_" << track << "_right_most";
     }
-    if (ast.grammar()->is_outside()) {
-      if (t.is_const_table()) {
-        if (!first) {
-          stream << ", ";
-        }
-        std::stringstream hl;
-        (*lidx)->put(hl);
-        stream << hl.str() << ", ";
-        std::stringstream hr;
-        (*ridx)->put(hr);
-        stream << hr.str();
-      }
-    }
+//    if (ast.grammar()->is_outside()) {
+//      if (t.is_const_table()) {
+//        if (!first) {
+//          stream << ", ";
+//        }
+//        std::stringstream hl;
+//        (*lidx)->put(hl);
+//        stream << hl.str() << ", ";
+//        std::stringstream hr;
+//        (*ridx)->put(hr);
+//        stream << hr.str();
+//      }
+//    }
   }
 
   stream << ");" << endl;
