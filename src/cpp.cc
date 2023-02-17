@@ -1924,14 +1924,14 @@ std::string Printer::Cpp::multi_index_str(
   Yield::Multi::const_iterator j = mys.begin();
   for (std::vector<Table>::const_iterator i = tables.begin();
        i != tables.end(); ++i, ++j, ++track) {
-    if (!(*i).delete_left_index() || (*i).is_const_table()) {
+    if (!(*i).delete_left_index()) {
       if (is_outside == false) {
         o << ", t_" << track << "_i-1";
       } else {
         o << ", (t_" << track << "_j - t_" << track << "_i + 1)";
       }
     }
-    if (!(*i).delete_right_index() || (*i).is_const_table()) {
+    if (!(*i).delete_right_index()) {
       if (is_outside == false) {
         o << ", t_" << track << "_j";
       } else {
