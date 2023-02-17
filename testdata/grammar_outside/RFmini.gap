@@ -1,5 +1,5 @@
 
-import "RFmini.hh"
+import "RFmini_data.hh"
 
 signature sig_cm(alphabet, answer) {
   answer silent_transition(float, answer);
@@ -152,4 +152,4 @@ instance count = gra_cm(alg_count);
 instance enum = gra_cm(alg_enum);
 instance enumcyk = gra_cm(alg_enum * alg_cyk);
 instance cykenum = gra_cm(alg_cyk * alg_enum);
-    
+instance inside = gra_cm(alg_inside);
