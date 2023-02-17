@@ -320,8 +320,10 @@ void Fn_Def::add_para(Symbol::NT &nt) {
   for (std::vector<Table>::const_iterator i = tables.begin();
        i != tables.end(); ++i, ++j, ++k) {
     // only add the
-    if (!(*i).delete_left_index()) add_para(t, (*j)->vacc()->name());
-    if (!(*i).delete_right_index()) add_para(t, (*k)->vacc()->name());
+    if (!(*i).delete_left_index())
+      add_para(t, (*j)->vacc()->name());
+    if (!(*i).delete_right_index())
+      add_para(t, (*k)->vacc()->name());
   }
 
   set_paras(nt.ntargs());
