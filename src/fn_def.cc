@@ -320,26 +320,8 @@ void Fn_Def::add_para(Symbol::NT &nt, bool for_outside_grammar) {
   for (std::vector<Table>::const_iterator i = tables.begin();
        i != tables.end(); ++i, ++j, ++k) {
     // only add the
-    if (!(*i).delete_left_index()) {
-      add_para(t, (*j)->vacc()->name());
-    }
-    if (!(*i).delete_right_index()) {
-      add_para(t, (*k)->vacc()->name());
-    }
-    if (for_outside_grammar) {
-      /* A non-terminal table dimension might have been optimized to be
-       * constant. Thus, the NT can only be called implicitly with the
-       * full input sequence. That is fine for pure inside grammars. However,
-       * in an outside context we at least have to be able to call ALL NTs
-       * either with full input sequence (as before) OR with the empty input.
-       * We therefore call the NT in those cases with global left_most /
-       * right_most values, which will be shadowed by 0, 0 in their call
-       */
-      if ((*i).is_const_table()) {
-        add_para(t, (*j)->vacc()->name());
-        add_para(t, (*k)->vacc()->name());
-      }
-    }
+    if (!(*i).delete_left_index()) add_para(t, (*j)->vacc()->name());
+    if (!(*i).delete_right_index()) add_para(t, (*k)->vacc()->name());
   }
 
   set_paras(nt.ntargs());
