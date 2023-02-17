@@ -2157,7 +2157,7 @@ void Printer::Cpp::multi_print_cyk(
     multi_print_cyk_loops_quadratic(
       tord, track, tracks, track_pos, t, &inner, &left, &is, &js, &ns, true);
     multi_print_cyk_loops_linear(
-          tord, track, tracks, track_pos, t, &inner, &left, &right, &is, &js
+          tord, track, tracks, track_pos, t, &inner, &left, &right, &is, &js,
           &ns, true);
     multi_print_cyk_loops_constant(
       tord, track, tracks, track_pos, t, &all, &is, true);
