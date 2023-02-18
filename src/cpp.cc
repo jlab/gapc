@@ -1955,10 +1955,13 @@ void Printer::Cpp::multi_print_cyk(
   stream << indent() << *t << " t_" << track << "_n = t_" << real_track
     << "_seq.size();" << endl << endl;
 
+  // SMJ 2023-02-18: I've added the x: xxx loops comments, but
+  // am not 100% sure if they are correct in multitrack contexts
   if (!inner.empty()) {
     stream << indent() << "for (" << *t << " " << js << " = 0; " << js << " < "
       << ns << "; " << "++" << js << ") {" << endl;
     inc_indent();
+    stream << indent() << "// A: quadratic loops" << endl;
     stream << indent() << "for (" << *t << " " << is << " = " << js << " + 1; "
       << is << " > 1; " << is << "--) {" << endl;
     inc_indent();
@@ -1968,6 +1971,7 @@ void Printer::Cpp::multi_print_cyk(
     stream << indent() << "}" << endl << endl;
 
     if (!left.empty()) {
+      stream << indent() << "// B: inner quadratic loops" << endl;
       stream << indent() << *t << " " << is << " = 1;" << endl;
       multi_print_inner_cyk(left, tord, track, tracks, track_pos, t);
     }
@@ -1975,6 +1979,7 @@ void Printer::Cpp::multi_print_cyk(
     stream << indent() << "}" << endl << endl;
   }
   if (inner.empty() && !left.empty()) {
+    stream << indent() << "// C: linear loops" << endl;
     stream << indent() << "for (" << *t << " " << js << " = 0; "
            << js << " < " << ns
            << "; " << "++" << js << ") {" << endl;
@@ -1985,6 +1990,7 @@ void Printer::Cpp::multi_print_cyk(
     stream << indent() << "}" << endl << endl;
   }
   if (!right.empty()) {
+    stream << indent() << "// C: linear loops" << endl;
     stream << indent() << *t << " " << js << " = " << ns << ";" << endl;
     stream << indent() << "for (" << *t << " "<< is << " = " << js << " + 1; "
       << is << " > 1; " << is << "--) {" << endl;
@@ -1995,6 +2001,7 @@ void Printer::Cpp::multi_print_cyk(
   }
 
   if (!all.empty()) {
+    stream << indent() << "// D: constant loops" << endl;
     stream << indent() << *t << " " << is << " = 1;" << endl;
     multi_print_inner_cyk(all, tord, track, tracks, track_pos, t);
   }
