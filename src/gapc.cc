@@ -567,7 +567,7 @@ class Main {
     // for example for Min or max choice functions
     driver.ast.instance_grammar_eliminate_lists(instance);
 
-    if ((opts.checkpointing)) {
+    if (opts.checkpointing) {
       if (opts.cyk) {
         // since DP algorithm doesn't do lookups at the beginning of
         // the nt_* functions in cyk-mode, the checkpointing mechanism
@@ -576,21 +576,23 @@ class Main {
                                  ", because checkpointing mechanism is "
                                  "incompatible with cyk-style "
                                  "code generation.");
-      }
-      Printer::Checkpoint *cp = new Printer::Checkpoint();
-      bool answer_type_supported = cp->is_supported(driver.ast.grammar()->
-                                                    tabulated);
-
-      // only enable checkpointing if type of every table is supported
-      if (answer_type_supported) {
-        driver.ast.checkpoint = cp;
-        Log::instance()->normalMessage("Checkpointing routine integrated.");
-      } else {
-        Log::instance()->warning("Checkpointing routine could not be integrated"
-                                 ", because (one of) the table type(s) "
-                                 "can't be serialized.");
         opts.checkpointing = false;
-        delete cp;
+      } else {
+        Printer::Checkpoint *cp = new Printer::Checkpoint();
+        bool answer_type_supported = cp->is_supported(driver.ast.grammar()->
+                                                      tabulated);
+
+        // only enable checkpointing if type of every table is supported
+        if (answer_type_supported) {
+          driver.ast.checkpoint = cp;
+          Log::instance()->normalMessage("Checkpointing routine integrated.");
+        } else {
+          Log::instance()->warning("Checkpointing routine could not be "
+                                   "integrated, because (one of) the table  "
+                                   "type(s) can't be serialized.");
+          opts.checkpointing = false;
+          delete cp;
+        }
       }
     }
 
