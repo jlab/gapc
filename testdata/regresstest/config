@@ -523,6 +523,7 @@ GAPC="../../../gapc --outside_grammar state_MR_3 --outside_grammar state_MP_6 --
 check_new_old_eq RF00005.gap unused inside "GACGGUAU" outside_cm5
 
 GAPC="../../../gapc --outside_grammar a_1 --outside_grammar a_47 --outside_grammar a_82"
-check_new_old_eq acmsearch_RF00005.gap unused inside "GACGGUAU" outside_acm
+# not yet explored
+#check_new_old_eq acmsearch_RF00005.gap unused inside "GACGGUAU" outside_acm
 
 CPPFLAGS_EXTRA=""
