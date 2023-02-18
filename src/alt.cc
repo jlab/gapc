@@ -2123,7 +2123,7 @@ void Alt::Simple::codegen(AST &ast) {
 }
 
 
-void Alt::Link::add_args(Expr::Fn_Call *fn) {
+void Alt::Link::add_args(Expr::Fn_Call *fn, bool for_outside_grammar) {
   if (is_explicit()) {
     fn->add(indices);
     fn->add(ntparas);
@@ -2148,6 +2148,13 @@ void Alt::Link::add_args(Expr::Fn_Call *fn) {
   std::vector<Expr::Base*>::iterator j = left_indices.begin();
   for (std::vector<Table>::const_iterator i = tables.begin();
        i != tables.end(); ++i, ++j, ++k) {
+    if (for_outside_grammar && this->is_outside_inside_transition) {
+      if ((*i).is_const_table()) {
+        fn->add_arg(*j);
+        fn->add_arg(*j);
+        continue;
+      }
+    }
     if (!(*i).delete_left_index()) {
       fn->add_arg(*j);
     }
@@ -2183,7 +2190,7 @@ void Alt::Link::codegen(AST &ast) {
     add_seqs(fn, ast);
   }
 
-  add_args(fn);
+  add_args(fn, ast.grammar()->is_outside());
 
   if (nt->is(Symbol::NONTERMINAL) && ast.code_mode() == Code::Mode::SUBOPT) {
     fn->exprs.push_back(new Expr::Vacc(new std::string("global_score")));
@@ -2656,7 +2663,16 @@ void Alt::Simple::init_multi_ys() {
 
 
 void Alt::Link::init_multi_ys() {
-  m_ys = nt->multi_ys();
+  // TODO(sjanssen): would it make sense to run an outside specific yield
+  // size analysis for more thight guards??
+  if (nt->is_partof_outside) {
+    m_ys.set_tracks(tracks_);
+    for (Yield::Multi::iterator i = m_ys.begin(); i != m_ys.end(); ++i) {
+      *i = Yield::Size(0, Yield::UP);
+    }
+  } else {
+    m_ys = nt->multi_ys();
+  }
   Base::init_multi_ys();
 }
 
@@ -3539,6 +3555,7 @@ bool Alt::Link::replace_nonterminal(Symbol::NT *find, Symbol::NT *replace,
         if (skip_occurences[*(find->name)] == 0) {
           // replace old NT (=find) with novel NT (=replace)
           this->nt = replace;
+          this->m_ys = replace->multi_ys();
           this->name = replace->name;
           this->is_partof_outside = replace->is_partof_outside;
           return true;
@@ -3609,7 +3626,7 @@ Expr::Base *Alt::Simple::get_next_var_right2left(Expr::Base *left_index,
     Yield::Size ys_this, Yield::Size *ys_lefts) {
   if (ys_this.low() == ys_this.high()) {
     // constant yield size
-    if (ys_lefts->low() == 0) {
+    if ((ys_lefts->low() == 0) && (ys_lefts->high() == 0)) {
       return innermost_left_index;
     } else {
       return left_index->plus(ys_this.low());
@@ -3641,7 +3658,7 @@ Expr::Base *Alt::Simple::get_next_var_left2right(Expr::Base *right_index,
 
   // constant yield size
   if (ys_this.low() == ys_this.high()) {
-    if (ys_rights->low() == 0) {
+    if ((ys_rights->low() == 0) && (ys_rights->high() == 0)) {
       // we might fall back to j, if yield between outside NT and current
       // right hand side argument is 0
       next_index = innermost_right_index;

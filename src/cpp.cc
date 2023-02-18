@@ -2018,6 +2018,11 @@ void Printer::Cpp::multi_print_cyk_loops_quadratic(
     stream << indent() << "for (" << *t << " " << *js << " = 0; " << *js
            << " < " << *ns << "; " << "++" << *js << ") {" << endl;
     inc_indent();
+    if (for_outsideNTs) {
+      multi_print_cyk_loops_quadratic_inner(
+        tord, track, tracks, track_pos, t, left, is, for_outsideNTs);
+    }
+    stream << indent() << "// A: quadratic loops" << endl;
     stream << indent() << "for (" << *t << " " << *is << " = " << *js
            << " + 1; " << *is << " > 1; " << *is << "--) {" << endl;
     inc_indent();
@@ -2027,17 +2032,32 @@ void Printer::Cpp::multi_print_cyk_loops_quadratic(
     dec_indent();
     stream << indent() << "}" << endl << endl;
 
-    if (!left->empty()) {
-      stream << indent();
-      if (!for_outsideNTs) {
-        stream << *t << " ";
-      }
-      stream << *is << " = 1;" << endl;
-      multi_print_inner_cyk(*left, tord, track, tracks, track_pos, t,
-                            for_outsideNTs);
+    if (!for_outsideNTs) {
+      multi_print_cyk_loops_quadratic_inner(
+        tord, track, tracks, track_pos, t, left, is, for_outsideNTs);
     }
     dec_indent();
     stream << indent() << "}" << endl << endl;
+  }
+}
+void Printer::Cpp::multi_print_cyk_loops_quadratic_inner(
+    const std::list<Symbol::NT*> &tord,
+    size_t track,
+    size_t tracks,
+    size_t track_pos,
+    Type::Base *t,
+    std::list<Symbol::NT*> *left,
+    std::string *is,
+    bool for_outsideNTs) {
+  if (!left->empty()) {
+    stream << indent() << "// B: inner quadratic loops" << endl;
+    stream << indent();
+    if (!for_outsideNTs) {
+      stream << *t << " ";
+    }
+    stream << *is << " = 1;" << endl;
+    multi_print_inner_cyk(*left, tord, track, tracks, track_pos, t,
+                          for_outsideNTs);
   }
 }
 void Printer::Cpp::multi_print_cyk_loops_linear(
@@ -2053,6 +2073,8 @@ void Printer::Cpp::multi_print_cyk_loops_linear(
     std::string *js,
     std::string *ns, bool for_outsideNTs
     ) {
+  stream << indent() << "// C: linear loops" << endl;
+
   if (inner->empty() && !left->empty()) {
     stream << indent() << "for (" << *t << " " << *js << " = 0; "
            << *js << " < " << *ns
@@ -2092,6 +2114,7 @@ void Printer::Cpp::multi_print_cyk_loops_constant(
     std::list<Symbol::NT*> *all,
     std::string *is, bool for_outsideNTs
     ) {
+  stream << indent() << "// D: constant loops" << endl;
   if (!all->empty()) {
     stream << indent();
     if (!for_outsideNTs) {
@@ -2131,13 +2154,13 @@ void Printer::Cpp::multi_print_cyk(
   // outside NTs (which access inside NT values)
   if (this->ast->grammar()->is_outside()) {
     stream << endl << endl;
-    multi_print_cyk_loops_linear(
-      tord, track, tracks, track_pos, t, &inner, &left, &right, &is, &js, &ns,
-      true);
-    multi_print_cyk_loops_constant(
-      tord, track, tracks, track_pos, t, &all, &is, true);
     multi_print_cyk_loops_quadratic(
       tord, track, tracks, track_pos, t, &inner, &left, &is, &js, &ns, true);
+    multi_print_cyk_loops_linear(
+          tord, track, tracks, track_pos, t, &inner, &left, &right, &is, &js,
+          &ns, true);
+    multi_print_cyk_loops_constant(
+      tord, track, tracks, track_pos, t, &all, &is, true);
   }
 }
 
@@ -2199,16 +2222,22 @@ void Printer::Cpp::print_cyk_fn(const AST &ast) {
 }
 
 void Printer::Cpp::print_insideoutside(Symbol::NT *nt) {
+  std::stringstream list_args;
+  std::stringstream list_args_print;
+  std::list<Fn_Def*> &l = nt->code_list();
+  std::vector<std::string> *args = new std::vector<std::string>();
+  std::vector<std::string> *args_call = new std::vector<std::string>();
+
   // aggregated level (=dim + tracks) of nested loops
   unsigned int nesting = 0;
-  std::vector<std::string> *args = new std::vector<std::string>();
+
   // opening for loops
   for (size_t track = 0; track < nt->tracks(); ++track) {
     unsigned int dim = 2;
-    if (nt->tables()[track].delete_left_index()) {
+    if (nt->table_dims_inside[track].delete_left_index()) {
       dim--;
     }
-    if (nt->tables()[track].delete_right_index()) {
+    if (nt->table_dims_inside[track].delete_right_index()) {
       dim--;
     }
     if (dim >= 1) {
@@ -2228,20 +2257,43 @@ void Printer::Cpp::print_insideoutside(Symbol::NT *nt) {
     nesting += dim;
   }
 
+  for (size_t track = 0; track < nt->tracks(); ++track) {
+    std::string nextLoopVar = "i";
+    if (nt->table_dims_inside[track].delete_left_index()) {
+      if (!nt->tables()[track].delete_left_index()) {
+        args_call->push_back("t_" + std::to_string(track) + "_left_most");
+      }
+    } else {
+      args_call->push_back("t_" + std::to_string(track) + "_" + nextLoopVar);
+      nextLoopVar = "j";
+    }
+    if (nt->table_dims_inside[track].delete_right_index()) {
+      if (!nt->tables()[track].delete_right_index()) {
+        args_call->push_back("t_" + std::to_string(track) + "_right_most");
+      }
+    } else {
+      args_call->push_back("t_" + std::to_string(track) + "_" + nextLoopVar);
+    }
+  }
+
   // loop body
-  std::list<Fn_Def*> &l = nt->code_list();
-  std::stringstream list_args;
-  std::stringstream list_args_print;
   bool first = true;
   for (std::vector<std::string>::const_iterator a = args->begin();
        a != args->end(); ++a) {
     if (!first) {
-      list_args << ", ";
       list_args_print << " << \",\"";
     }
     first = false;
-    list_args << *a;
     list_args_print << " << " << *a;
+  }
+  first = true;
+  for (std::vector<std::string>::const_iterator a = args_call->begin();
+         a != args_call->end(); ++a) {
+    if (!first) {
+      list_args << ", ";
+    }
+    first = false;
+    list_args << *a;
   }
   stream << indent() << "out << \"start answers " << *nt->name
          << "(\"" << list_args_print.str() << " << \"):\\n\";\n";
@@ -2312,6 +2364,8 @@ void Printer::Cpp::print_insideoutside_report_fn(
 }
 
 void Printer::Cpp::print_run_fn(const AST &ast) {
+  // TODO(sjanssen) can we redesign this function and use Expr::Base
+  // fn_arg functions?!
   stream << indent() << *ast.grammar()->axiom->code()->return_type;
   stream << " run() {" << endl;
   inc_indent();

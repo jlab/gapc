@@ -348,6 +348,13 @@ class NT : public Base {
     void set_alts(const std::list<Alt::Base*> &a);
     bool inside_end = false;
 
+    // This flags the table dimension computation as invalid.
+    // Used for outside grammar generation, as table dimensions
+    // have to be re-computed after outside NTs were injected
+    void reset_table_dim() {
+      this->tab_dim_ready = false;
+    }
+
  public:
     std::string *eval_fn;
     Fn_Decl *eval_decl;
@@ -389,6 +396,9 @@ class NT : public Base {
 
  private:
     std::vector<Table> table_dims;
+
+ public:
+    std::vector<Table> table_dims_inside;
 
  public:
     const std::vector<Table> &tables() const {
@@ -525,6 +535,12 @@ class NT : public Base {
     unsigned int to_dot(unsigned int *nodeID, std::ostream &out,
             bool is_rhs, Symbol::NT *axiom, int plot_grammar);
     void resolve_blocks();
+
+    // in outside grammar generation context: flags the one non-terminal
+    // that was the axiom for the inside part of the grammar, i.e. user
+    // defined axiom. Axiom will be re-set to an outside version during
+    // Grammar::inject_outside_nts()
+    bool is_inside_axiom = false;
 };
 
 

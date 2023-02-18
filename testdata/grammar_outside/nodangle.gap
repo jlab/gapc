@@ -233,3 +233,4 @@ grammar gra_nodangle uses sig_foldrna(axiom = struct) {
 instance mfe = gra_nodangle(alg_mfe);
 instance pfunc = gra_nodangle(alg_pfunc);
 instance count = gra_nodangle(alg_count);
+instance enum = gra_nodangle(alg_enum);
