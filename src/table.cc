@@ -70,6 +70,9 @@ bool Table::delete_right_index() const {
   return (dim == CONSTANT || (dim == LINEAR && sticky_ == RIGHT)) &&
     right_rest_.high() == 0;
 }
+bool Table::is_const_table() const {
+  return delete_left_index() && delete_right_index();
+}
 
 void Table::set_sticky(Sticky s) {
   if (sticky_ != NO_INDEX && sticky_ != s) {

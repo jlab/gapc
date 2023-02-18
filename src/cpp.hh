@@ -109,6 +109,15 @@ class Cpp : public Base {
       std::string *is,
       std::string *js,
       std::string *ns, bool for_outsideNTs = false);
+    void multi_print_cyk_loops_quadratic_inner(
+      const std::list<Symbol::NT*> &tord,
+      size_t track,
+      size_t tracks,
+      size_t track_pos,
+      Type::Base *t,
+      std::list<Symbol::NT*> *left,
+      std::string *is,
+      bool for_outsideNTs = false);
     void multi_print_cyk_loops_linear(
       const std::list<Symbol::NT*> &tord,
       size_t track,
