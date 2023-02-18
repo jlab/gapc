@@ -18,6 +18,8 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    * Author: fymue
 }}} */
 
 #ifndef SRC_CHECKPOINT_HH_
@@ -54,14 +56,14 @@ class Checkpoint : public Base {
                      Type::Type::SHAPE, Type::Type::SUBSEQ,
                      Type::Type::EXTERNAL};
 
-const std::array<std::string, 11>
+const std::array<std::string, 12>
 SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
                             "answer_pknot_mfecovar", "mfecovar",
                             "mfecovar_macrostate", "pftuple",
                             "answer_pknot_pfunc",
                             "answer_ali_pfunc_macrostate",
                             "answer_macrostate_mfe",
-                            "answer_macrostate_pfunc"};
+                            "answer_macrostate_pfunc", "shape_t"};
 
   template<size_t n>
   bool has_type(const std::array<Type::Type, n> &arr, Type::Type type,
@@ -806,7 +808,8 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      stream << indent() << "// lock the mutex so main thread can't "
             << "write during archiving" << endl;
      stream << indent() << "std::lock_guard<std::mutex> lock(m);" << endl;
-     stream << indent() << "array_out << array;" << endl;
+     stream << indent() << "array_out << array << tabulated << "
+            << "tabulated_vals_counter;" << endl;
      stream << indent() << "array_fout.close();" << endl;
      stream << indent() << "boost::filesystem::rename(tmp_out_table_path, "
             << "out_table_path);" << endl;
@@ -825,10 +828,10 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      inc_indent();
      stream << indent() << "std::time_t curr_time = std::time(nullptr);"
             << endl;
-     stream << indent() << "char curr_time_str[sizeof(\"hh:mm:ss\")];"
-            << endl;
+     stream << indent() << "char curr_time_str["
+            << "sizeof(\"yyyy-mm-dd, hh:mm:ss\")];" << endl;
      stream << indent() << "std::strftime(curr_time_str, sizeof(curr_time_str),"
-            << " \"%T\", std::localtime(&curr_time));" << endl;
+            << " \"%F, %T\", std::localtime(&curr_time));" << endl;
      stream << indent() << "std::cerr << \"[\" << curr_time_str << \"] "
             << "Error trying to archive \\\"\" << tname << \"\\\" table.\""
              << endl;
@@ -932,21 +935,9 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      stream << indent() << "}" << endl;
      stream << indent() << "boost::archive::binary_iarchive "
                             "array_in(array_fin);" << endl;
-     stream << indent() << "array_in >> array;" << endl;
+     stream << indent() << "array_in >> array >> tabulated >> "
+            << "tabulated_vals_counter;" << endl;
      stream << indent() << "array_fin.close();" << endl << endl;
-     stream << indent() << "// mark the already existing table values "
-                            "in the tabulated vector" << endl;
-     stream << indent() << "for (size_t i = 0; i < array.size(); "
-            << "i++) {" << endl;
-     inc_indent();
-     stream << indent() << "if (is_loaded(array[i])) {" << endl;
-     inc_indent();
-     stream << indent() << "tabulated[i] = true;" << endl;
-     stream << indent() << "tabulated_vals_counter++;" << endl;
-     dec_indent();
-     stream << indent() << "}"  << endl;
-     dec_indent();
-     stream << indent() << "}"  << endl << endl;
      stream << indent() << "std::cerr << \"Info: Successfully loaded checkpoint"
             << " for \\\"\" << tname << \"\\\" table. \"" << endl;
      stream << indent() << "          << \"Will continue calculating from here."
@@ -956,39 +947,31 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
             << endl;
      inc_indent();
      stream << indent() << "std::cerr << e.what() << std::endl;" << endl;
-     stream << indent() << "array.resize(newsize);" << endl;
+     stream << indent() << "std::exit(1);" << endl;
      dec_indent();
      stream << indent() << "} catch (const std::ifstream::failure &e) {"
             << endl;
      inc_indent();
-     stream << indent() << "std::cerr << \"Info: \\\"\" + tname + \"\\\" "
+     stream << indent() << "std::cerr << \"Error: \\\"\" + tname + \"\\\" "
             << "archive\"" << endl;
      stream << indent() << "          << " << "\" could not be found in "
-            << "Logfile or hasn't been archived yet. \"" << endl;
-     stream << indent() << "          << \"This table will be "
-            << "initialized empty.\\n\";" << endl;
-     stream << indent() << "tabulated.clear();" << endl;
-     stream << indent() << "tabulated.resize(newsize);" << endl;
-     stream << indent() << "array.clear();" << endl;
-     stream << indent() << "array.resize(newsize);" << endl;
+            << "Logfile or hasn't been archived yet.\\n\";" << endl;
+     stream << indent() << "std::exit(1);" << endl;
      dec_indent();
      stream << indent() << "} catch (const std::exception &e) {" << endl;
      inc_indent();
      stream << indent() << "std::cerr << \"Error \\\"\" << e.what() << \"\\\" "
                             "trying to read \\\"\" << tname << "
-                            "\"\\\" table!\"" << endl;
-     stream << indent() << "          << \" This table will be "
-                            "initialized empty.\\n\";" << endl;
-     stream << indent() << "tabulated.clear();" << endl;
-     stream << indent() << "tabulated.resize(newsize);" << endl;
-     stream << indent() << "array.clear();" << endl;
-     stream << indent() << "array.resize(newsize);" << endl;
+                            "\"\\\" table!\\n\";" << endl;
+     stream << indent() << "std::exit(1);" << endl;
      dec_indent();
      stream << indent() << "}" << endl;
      dec_indent();
      stream << indent() << "} else {" << endl;
      inc_indent();
      stream << indent() << "array.resize(newsize);" << endl;
+     stream << indent() << "tabulated.clear();" << endl;
+     stream << indent() << "tabulated.resize(newsize);" << endl;
      dec_indent();
      stream << indent() << "}" << endl << endl;
      dec_indent(); dec_indent(); dec_indent();
@@ -1228,9 +1211,7 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
             << "for \\\"\" + tname + \"\\\" table was created with different \""
             << endl
             << indent() << "                     \"command line inputs than"
-            << " this program was executed with.\\n\"" << endl
-            << indent() << "                     \"       This table will "
-            << "be initialized empty.\");" << endl;
+            << " this program was executed with.\\n\");" << endl;
      stream << indent() << "return;" << endl;
      dec_indent();
      stream << indent() << "}" << endl;

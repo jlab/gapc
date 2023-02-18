@@ -471,10 +471,18 @@ Fn_Def *Tablegen::gen_tab() {
   c.push_back(a);
 
   if (checkpoint_) {
+    // add std::lock_guard to ensure that the archiving thread
+    // can't read the array while the value is being set
     Statement::Fn_Call *m = new Statement::Fn_Call(
                              "std::lock_guard<std::mutex> lock");
     m->add_arg(new std::string("m"));
+
+    // increase the counter tracking how many cells have been tabulated
+    Statement::Increase *inc_tab_c = new Statement::Increase(
+                                     new std::string("tabulated_vals_counter"));
+
     c.push_back(m);
+    c.push_back(inc_tab_c);
   }
 
   Statement::Var_Assign *x = new Statement::Var_Assign(
@@ -488,28 +496,6 @@ Fn_Def *Tablegen::gen_tab() {
           new Var_Acc::Plain(new std::string("tabulated")), off),
         new Expr::Const(new Const::Bool(true)));
     c.push_back(y);
-  }
-
-  // increase total tabulated vals counter
-  if (checkpoint_) {
-    Expr::Fn_Call *is_loaded_call = new Expr::Fn_Call(new std::string(
-                                                      "is_loaded"));
-    is_loaded_call->add_arg(new Var_Acc::Array(
-                             new Var_Acc::Plain(
-                              new std::string("array")), off));
-
-    Statement::Var_Assign *is_loaded = new Statement::Var_Assign(
-                                       new Var_Acc::Plain(
-                                       new std::string("bool loaded")),
-                                       is_loaded_call);
-    c.push_back(is_loaded);
-    Expr::Vacc *loaded_expr = new Expr::Vacc(new std::string("loaded"));
-
-    Statement::Increase *inc_tab_c = new Statement::Increase(
-                                     new std::string("tabulated_vals_counter"));
-    Statement::If *is_loaded_stmt = new Statement::If(loaded_expr, inc_tab_c);
-
-    c.push_back(is_loaded_stmt);
   }
 
   f->set_statements(c);

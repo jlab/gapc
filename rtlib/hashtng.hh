@@ -122,6 +122,21 @@ struct DisableShrink {
 
 template <typename T, typename U = uint32_t>
 struct Default_Inspector {
+#if defined(CHECKPOINTING_INTEGRATED)
+  /*
+     while this default inspector doesn't contain any members,
+     custom inspector objects are often used as template arguments
+     for the Set class that gets wrapped in the Hash::Ref class;
+     these custom inspectors can potentially contain memebers
+     that need to would need to be serialized, so this default
+     inspector needs an empty serialize method so boost doesn't complain
+  */
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int version) {
+  }
+#endif
   T init(const T &x) const { return x; }
   U hash(const T &x) const {
     return hashable_value(x);
@@ -169,6 +184,7 @@ class Set {
     ar & array;
     ar & init;
     ar & used_;
+    ar & inspector;
   }
 #endif
     Vector_Sparse<T, U> array;

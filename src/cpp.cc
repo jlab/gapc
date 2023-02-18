@@ -1162,7 +1162,7 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   stream << indent() << ptype << " newsize = size(";
   stream << ");" << endl;
 
-  if (!cyk) {
+  if (!cyk && !checkpoint) {
       stream << indent() << "tabulated.clear();" << endl;
       stream << indent() << "tabulated.resize(newsize);" << endl << endl;
     }
@@ -1170,6 +1170,8 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   if (checkpoint) {
     ast->checkpoint->init(stream);
   } else {
+    stream << indent() << "tabulated.clear();" << endl;
+    stream << indent() << "tabulated.resize(newsize);" << endl;
     stream << indent() << "array.resize(newsize);" << endl;
   }
 
@@ -1452,25 +1454,6 @@ void Printer::Cpp::print_type_defs(const AST &ast) {
           << "e.empty_ = true; }" << endl;
         stream << "inline bool isEmpty(const " << *def->name << " &e) {"
           << " return e.empty_; }" << endl;
-
-        if (ast.checkpoint && ast.checkpoint->user_def) {
-          // is_loaded method for user-defined type
-          // (to check whether a table entry is already
-          //  tabulated or not when loading checkpoints)
-          stream << indent() << "inline bool is_loaded(const "
-                 << *def->name << " &el) {" << endl;
-          inc_indent();
-          stream << indent() << "return ";
-          for (std::list<std::pair<Type::Name*, std::string*>*>::const_iterator
-             i = tuple->list.begin(), j = --tuple->list.end();
-             i != j; ++i) {
-            stream << "is_loaded(el." << *(*i)->second << ") && ";
-          }
-          stream << "is_loaded(el." << *tuple->list.back()->second << ");"
-                 << endl;
-          dec_indent();
-          stream << indent() << "}" << endl << endl;
-        }
       } else {
         stream << indent() << "typedef " << *def->rhs << ' '
           << *def->name << ';' << endl;
@@ -1530,9 +1513,16 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
            << "binary_name.size() - start - 1);" << endl;
     dec_indent();
     stream << indent() << "}" << endl << endl;
-    stream << indent() << "file_prefix = opts.user_file_prefix + "
-           << "binary_name + \"_\" + std::to_string(getpid());"
-           << endl << endl;
+    stream << indent() << "if (opts.user_file_prefix.empty()) {" << endl;
+    inc_indent();
+    stream << indent() << "file_prefix = binary_name + \"_\" + "
+           << "std::to_string(getpid());" << endl;
+    dec_indent();
+    stream << indent() << "} else {" << endl;
+    inc_indent();
+    stream << indent() << "file_prefix = opts.user_file_prefix;" << endl;
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
     stream << indent() << "std::string logfile_name = file_prefix + "
            << "\"_checkpointing_log.txt\";" << endl;
     stream << indent() << "logfile_path = opts.checkpoint_out_path / "
@@ -2791,10 +2781,6 @@ void Printer::Cpp::imports(const AST &ast) {
   stream << "#include \"rtlib/generic_opts.hh\"\n";
   stream << "#include \"rtlib/pareto_dom_sort.hh\"\n";
   stream << "#include \"rtlib/pareto_yukish_ref.hh\"\n\n";
-
-  if (ast.checkpoint) {
-    stream << "#include \"rtlib/loaded.hh\"\n\n";
-  }
 }
 
 
@@ -3125,6 +3111,22 @@ void Printer::Cpp::print(const Statement::Hash_Decl &d) {
        i != f.end(); ++i) {
     stream << indent() << *(*i)->type << "<type> " << *(*i)->name << ";"
       << endl;
+  }
+
+  if (ast->checkpoint) {
+    stream << endl;
+    stream << indent() << "friend class boost::serialization::access;"
+           << endl << endl;
+    stream << indent() << "template <class Archive>" << endl;
+    stream << indent() << "void serialize(Archive &ar, "
+           << "const unsigned int version) {" << endl;
+    inc_indent();
+    for (std::list<Statement::Var_Decl*>::const_iterator i = f.begin();
+       i != f.end(); ++i) {
+    stream << indent() << "ar & " << *(*i)->name << ";" << endl;
+    }
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
   }
 
   if (d.kbest()) {

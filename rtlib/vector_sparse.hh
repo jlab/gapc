@@ -45,17 +45,23 @@ class Stapel {
 
   template<class Archive>
   void save(Archive &ar, const unsigned int version) const {
+    ar << size_;
     ar << top_;
-    for (size_t i = 0; i < top_; i++) {
+    for (size_t i = 0; i < size_; i++) {
       ar << array[i];
     }
   }
 
   template<class Archive>
   void load(Archive &ar, const unsigned int version) {
+    // temporarily store size_ value in tmp_size,
+    // because resize method won't execute if its input
+    // is <= size_, so it wouldn't do anything if size_ is set directly
+    U tmp_size;
+    ar >> tmp_size;
+    resize(tmp_size);  // this will set size_
     ar >> top_;
-    resize(top_);
-    for (size_t i = 0; i < top_; i++) {
+    for (size_t i = 0; i < size_; i++) {
       ar >> array[i];
     }
   }
@@ -69,8 +75,7 @@ class Stapel {
   Stapel &operator=(const Stapel &);
 
  public:
-  Stapel() : array(0), top_(0), size_(0) {
-  }
+  Stapel() : array(0), top_(0), size_(0) {}
 
   explicit Stapel(U i) : array(0), top_(0), size_(0) {
     resize(i);
@@ -153,18 +158,24 @@ template <typename T, typename U = size_t> class Vector_Sparse {
 
   template<class Archive>
   void save(Archive &ar, const unsigned int version) const {
-    ar << n_elements;
     ar << stack;
-    for (size_t i = 0; i < n_elements; i++) {
+    ar << size_;
+    for (size_t i = 0; i < size_; i++) {
       ar << array[i];
     }
   }
 
   template<class Archive>
   void load(Archive &ar, const unsigned int version) {
-    ar >> n_elements;
     ar >> stack;
-    resize(n_elements);  // allocate space for array and set size_
+
+    // temporarily store size_ value in tmp_size,
+    // because resize method won't execute if its input
+    // is <= size_, so it wouldn't do anything if size_ is set directly
+    U tmp_size;
+    ar >> tmp_size;
+    resize(tmp_size);  // allocate space for array and set size_
+
     for (size_t i = 0; i < size_; i++) {
       ar >> array[i];
     }
@@ -182,17 +193,9 @@ template <typename T, typename U = size_t> class Vector_Sparse {
   Vector_Sparse &operator=(const Vector_Sparse &);
 
  public:
-  Vector_Sparse() : array(0), size_(0)
-#if defined(CHECKPOINTING_INTEGRATED)
-                    , n_elements(0)
-#endif
-  {}
+  Vector_Sparse() : array(0), size_(0) {}
 
-  explicit Vector_Sparse(U i) : array(0), size_(0)
-#if defined(CHECKPOINTING_INTEGRATED)
-                                , n_elements(0)
-#endif
-  {
+  explicit Vector_Sparse(U i) : array(0), size_(0) {
     resize(i);
   }
 
@@ -210,9 +213,6 @@ template <typename T, typename U = size_t> class Vector_Sparse {
     swap(stack, o.stack);
 #ifndef NDEBUG
     swap(init_, o.init_);
-#endif
-#if defined(CHECKPOINTING_INTEGRATED)
-    swap(n_elements, o.n_elements);
 #endif
   }
 
@@ -255,9 +255,6 @@ template <typename T, typename U = size_t> class Vector_Sparse {
     if (!array) {
       array = static_cast<T*>(std::malloc(sizeof(T) * i));
       size_ = i;
-#if defined(CHECKPOINTING_INTEGRATED)
-      n_elements = size_;
-#endif
     } else {
       T *t = static_cast<T*>(std::realloc(array, sizeof(T) * i));
       assert(t);
@@ -266,9 +263,6 @@ template <typename T, typename U = size_t> class Vector_Sparse {
       }
       array = t;
       size_ = i;
-#if defined(CHECKPOINTING_INTEGRATED)
-      n_elements = size_;
-#endif
     }
   }
 
