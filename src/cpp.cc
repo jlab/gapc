@@ -2073,9 +2073,8 @@ void Printer::Cpp::multi_print_cyk_loops_linear(
     std::string *js,
     std::string *ns, bool for_outsideNTs
     ) {
-  stream << indent() << "// C: linear loops" << endl;
-
   if (inner->empty() && !left->empty()) {
+    stream << indent() << "// C: linear loops" << endl;
     stream << indent() << "for (" << *t << " " << *js << " = 0; "
            << *js << " < " << *ns
            << "; " << "++" << *js << ") {" << endl;
@@ -2091,6 +2090,7 @@ void Printer::Cpp::multi_print_cyk_loops_linear(
     stream << indent() << "}" << endl << endl;
   }
   if (!right->empty()) {
+    stream << indent() << "// C: linear loops" << endl;
     stream << indent();
     if (!for_outsideNTs) {
       stream << *t << " ";
@@ -2114,8 +2114,8 @@ void Printer::Cpp::multi_print_cyk_loops_constant(
     std::list<Symbol::NT*> *all,
     std::string *is, bool for_outsideNTs
     ) {
-  stream << indent() << "// D: constant loops" << endl;
   if (!all->empty()) {
+    stream << indent() << "// D: constant loops" << endl;
     stream << indent();
     if (!for_outsideNTs) {
       stream << *t << " ";
