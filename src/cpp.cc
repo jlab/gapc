@@ -1162,14 +1162,14 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   stream << indent() << ptype << " newsize = size(";
   stream << ");" << endl;
 
+  stream << indent() << "array.resize(newsize);" << endl;
+  if (!cyk && !checkpoint) {
+    stream << indent() << "tabulated.clear();" << endl;
+    stream << indent() << "tabulated.resize(newsize);" << endl;
+  }
+
   if (checkpoint) {
     ast->checkpoint->init(stream);
-  } else {
-    stream << indent() << "array.resize(newsize);" << endl;
-    if (!cyk) {
-      stream << indent() << "tabulated.clear();" << endl;
-      stream << indent() << "tabulated.resize(newsize);" << endl;
-    }
   }
 
   dec_indent();
@@ -1377,61 +1377,78 @@ void Printer::Cpp::print_type_defs(const AST &ast) {
         if (tuple->list.front()->first->lhs->const_simple()->is(Type::INT) ||
             tuple->list.front()->first->lhs->const_simple()->is(Type::FLOAT) ||
             tuple->list.front()->first->lhs->const_simple()->is(Type::SINGLE)) {
-          stream << "bool operator>(const " << *def->name << "& other) const {"
-            << " return " << *tuple->list.front()->second << " > "
-            << "other." << *tuple->list.front()->second << "; }" << endl;
-          stream << "bool operator<(const " << *def->name << "& other) const {"
-            << " return " << *tuple->list.front()->second << " < "
-            << "other." << *tuple->list.front()->second << "; }" << endl;
-          stream << "bool operator==(const " << *def->name
-            << "& other) const {"
-            << " return " << *tuple->list.front()->second << " == "
-            << "other." << *tuple->list.front()->second << "; }" << endl;
-          stream << "template <typename T> bool operator>(const T &other) "
-            << "const {"
-            << "return " << *tuple->list.front()->second << " > other; }"
-            << endl;
-          stream << "template <typename T> bool operator<(const T &other) "
-            << "const {"
-            << "return " << *tuple->list.front()->second << " < other; }"
-            << endl;
-          stream << "template <typename T> bool operator==(const T &other) "
+          stream << indent()
+                 << "bool operator>(const " << *def->name << "& other) const {"
+                 << " return " << *tuple->list.front()->second << " > "
+                 << "other." << *tuple->list.front()->second << "; }" << endl;
+          stream << indent()
+                 << "bool operator<(const " << *def->name << "& other) const {"
+                 << " return " << *tuple->list.front()->second << " < "
+                 << "other." << *tuple->list.front()->second << "; }" << endl;
+          stream << indent()
+                 << "bool operator==(const " << *def->name
+                 << "& other) const {"
+                 << " return " << *tuple->list.front()->second << " == "
+                 << "other." << *tuple->list.front()->second << "; }" << endl;
+          stream << indent()
+                 << "template <typename T> bool operator>(const T &other) "
+                 << "const {"
+                 << "return " << *tuple->list.front()->second << " > other; }"
+                 << endl;
+          stream << indent()
+                 << "template <typename T> bool operator<(const T &other) "
+                 << "const {"
+                 << "return " << *tuple->list.front()->second << " < other; }"
+                 << endl;
+          stream << indent()
+                 << "template <typename T> bool operator==(const T &other) "
             << "const {"
             << "return " << *tuple->list.front()->second << " == other; }"
             << endl;
 
           // Subopt bt operators
-          stream << endl << endl;
-          stream << *def->name << "(int i) : " << *tuple->list.front()->second
-            << "(i), empty_(false) {}" << endl;
-          stream << *def->name << " operator+(const " << *def->name
-            << " &other) const" << endl << '{' << endl
-            << "assert(!empty_); assert(!other.empty_);" << endl
-            << "return " << *def->name << '(' << *tuple->list.front()->second
-            << " + other." << *tuple->list.front()->second << ");" << endl
-            << '}' << endl;
-          stream << *def->name << " operator-(const " << *def->name
-            << " &other) const" << endl << '{' << endl
-            << "assert(!empty_);" << endl
-            << "if (other.empty_) return " << *def->name << '('
-            << *tuple->list.front()->second << ");" << endl
-            << "return " << *def->name << '(' << *tuple->list.front()->second
-            << " - other." << *tuple->list.front()->second << ");" << endl
-            << '}' << endl;
-          stream << "bool operator<=(const " << *def->name
-            << "& other) const {"
-            << endl
-            << "assert(!empty_); assert(!other.empty_);" << endl
-            << "return " << *tuple->list.front()->second << " <= "
-            << "other." << *tuple->list.front()->second << ";"
-            << endl << "}" << endl;
+          stream << indent() << endl << endl;
+          stream << indent() << *def->name << "(int i) : "
+                 << *tuple->list.front()->second
+                 << "(i), empty_(false) {}" << endl;
+          stream << indent() << *def->name << " operator+(const " << *def->name
+            << " &other) const" << '{' << endl;
+          inc_indent();
+          stream << indent() << "assert(!empty_); assert(!other.empty_);"
+                 << endl;
+          stream << indent() << "return " << *def->name << '('
+                 << *tuple->list.front()->second
+                 << " + other." << *tuple->list.front()->second << ");" << endl;
+          dec_indent();
+          stream << indent() << '}' << endl;
+          stream << indent() << *def->name << " operator-(const " << *def->name
+                 << " &other) const" << '{' << endl;
+          inc_indent();
+          stream << indent() << "assert(!empty_);" << endl;
+          stream << indent() << "if (other.empty_) return " << *def->name << '('
+                 << *tuple->list.front()->second << ");" << endl;
+          stream << indent() << "return " << *def->name << '('
+                 << *tuple->list.front()->second
+                 << " - other." << *tuple->list.front()->second << ");" << endl;
+          dec_indent();
+          stream << indent() << '}' << endl;
+          stream << indent() << "bool operator<=(const " << *def->name
+            << "& other) const {" << endl;
+          inc_indent();
+          stream << indent() << "assert(!empty_); assert(!other.empty_);"
+                 << endl;
+          stream << indent() << "return " << *tuple->list.front()->second
+                 << " <= " << "other." << *tuple->list.front()->second << ";"
+                 << endl;
+          dec_indent();
+          stream << indent() << "}" << endl;
         }
         dec_indent();
-        stream << endl << indent() << "};" << endl << endl;
+        stream << indent() << "};" << endl << endl;
 
         stream << indent()
-          << "inline std::ostream &operator<<(std::ostream &o, const "
-          << *def->name << " &tuple) {" << endl;
+               << "inline std::ostream &operator<<(std::ostream &o, const "
+               << *def->name << " &tuple) {" << endl;
         inc_indent();
         stream << indent() << "o << '('";
         assert(!tuple->list.empty());
@@ -1443,7 +1460,7 @@ void Printer::Cpp::print_type_defs(const AST &ast) {
           stream << indent() << " << \", \" << tuple." << *(*j)->second
             << endl;
         }
-        stream << indent() << " << ')' ;" << endl;
+        stream << indent() << "  << ')' ;" << endl;
         stream << indent() << "return o;" << endl;
         dec_indent();
         stream << indent() << '}' << endl << endl;
@@ -1501,15 +1518,9 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
   if (ast.checkpoint) {
     stream << indent() << "start_cpu_time = std::clock();"
            << endl;
-    stream << indent() << "std::string binary_name = opts.argv[0];" << endl;
-    stream << indent() << "size_t start = binary_name.find_last_of('/');"
-           << endl;
-    stream << indent() << "if (start != binary_name.npos) {" << endl;
-    inc_indent();
-    stream << indent() << "binary_name = binary_name.substr(start + 1, "
-           << "binary_name.size() - start - 1);" << endl;
-    dec_indent();
-    stream << indent() << "}" << endl << endl;
+    stream << indent() << "std::string binary_name = "
+           << "boost::filesystem::path(opts.argv[0]).filename().string();"
+           << endl << endl;
     stream << indent() << "if (opts.user_file_prefix.empty()) {" << endl;
     inc_indent();
     stream << indent() << "file_prefix = binary_name + \"_\" + "
@@ -1813,6 +1824,8 @@ void Printer::Cpp::header(const AST &ast) {
            << endl << endl;
 
     if (ast.checkpoint) {
+      // insert checkpointing macros to enable e.g. String accession
+      // and to enable serialize functions of the rtlib datatypes
       ast.checkpoint->macros(stream);
       ast.checkpoint->include(stream, ast.grammar()->tabulated);
     }
@@ -2700,7 +2713,7 @@ void Printer::Cpp::makefile(const Options &opts) {
     << "OFILES = $(CXXFILES:.cc=.o) string.o" << endl << endl;
   stream << opts.class_name << " : $(OFILES)" << endl
       << "\t$(CXX) -o $@ $^  $(LDFLAGS) $(LDLIBS)";
-  if ((opts.checkpointing)) {
+  if (opts.checkpointing) {
     stream << " -lboost_serialization -lboost_filesystem -lpthread -ldl";
   }
 
