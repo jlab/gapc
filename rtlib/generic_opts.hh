@@ -134,7 +134,7 @@ class Opts {
       repeats(1),
       k(3),
 #ifdef CHECKPOINTING_INTEGRATED
-      checkpoint_interval(3600),
+      checkpoint_interval(DEFAULT_CHECKPOINT_INTERVAL),
       checkpoint_out_path(boost::filesystem::current_path()),
       checkpoint_in_path(boost::filesystem::path("")),
       user_file_prefix(""),

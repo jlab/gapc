@@ -53,8 +53,6 @@
 #include "printer/gap.hh"
 #include "specialize_grammar/create_specialized_grammar.hh"
 
-
-
 namespace po = boost::program_options;
 
 
@@ -138,9 +136,12 @@ static void parse_options(int argc, char **argv, Options *rec) {
       "  5 = add non-terminal table dimensions.\n"
       "(Use 'dot -Tpdf out.dot' to generate a PDF.)\nDefault file is out.dot")
     ("checkpoint",
-     "enable periodic archiving/checkpointing "
-     "of the tabulated non-terminals.\n"
-     "(creates new checkpoint every 60 minutes by default)\n");
+    "enable periodic checkpointing of program progress.\n"
+    "Useful for long running programs that might crash intermediately.\n"
+    "You can continue from last checkpoint when re-executing the program.\n"
+    "Checkpointing interval can be configured in the generated binary\n"
+    "(creates new checkpoint every " DEFAULT_CP_INTERVAL_MIN_STR
+    " minutes by default)\n");
   po::options_description hidden("");
   hidden.add_options()
     ("backtrack", "deprecated for --backtrace")
@@ -572,11 +573,12 @@ class Main {
         // since DP algorithm doesn't do lookups at the beginning of
         // the nt_* functions in cyk-mode, the checkpointing mechanism
         // can't work in this case and won't be integrated
-        Log::instance()->warning("Checkpointing routine could not be integrated"
-                                 ", because checkpointing mechanism is "
-                                 "incompatible with cyk-style "
-                                 "code generation.");
+        Log::instance()->error("Checkpointing routine could not be integrated"
+                               ", because checkpointing mechanism is "
+                               "incompatible with cyk-style "
+                               "code generation.");
         opts.checkpointing = false;
+        std::exit(0);
       } else {
         Printer::Checkpoint *cp = new Printer::Checkpoint();
         bool answer_type_supported = cp->is_supported(driver.ast.grammar()->
@@ -587,11 +589,12 @@ class Main {
           driver.ast.checkpoint = cp;
           Log::instance()->normalMessage("Checkpointing routine integrated.");
         } else {
-          Log::instance()->warning("Checkpointing routine could not be "
-                                   "integrated, because (one of) the table  "
-                                   "type(s) can't be serialized.");
+          Log::instance()->error("Checkpointing routine could not be "
+                                 "integrated, because (one of) the table  "
+                                 "type(s) can't be serialized.");
           opts.checkpointing = false;
           delete cp;
+          std::exit(0);
         }
       }
     }
