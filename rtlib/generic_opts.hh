@@ -319,23 +319,15 @@ class Opts {
           }
           case 'O' :
           {
-            std::string path_str(optarg);
-            size_t idx = path_str.find_last_of('/');
-
-            if (idx == path_str.npos) {
-              checkpoint_out_path /= path_str;
-            } else {
-              user_file_prefix = path_str.substr(idx + 1,
-                                                 path_str.size() - idx - 1)
-                                 + "_";
-              boost::filesystem::path arg_path(path_str.substr(0, idx));
+              boost::filesystem::path arg_path(optarg);
 
               if (arg_path.is_absolute()) {
                 checkpoint_out_path = arg_path;
               } else {
                 checkpoint_out_path /= arg_path;
               }
-            }
+
+            user_file_prefix = arg_path.filename().string();
 
             if (!boost::filesystem::exists(checkpoint_out_path) ||
                 !boost::filesystem::is_directory(checkpoint_out_path)) {

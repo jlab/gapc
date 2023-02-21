@@ -135,13 +135,15 @@ static void parse_options(int argc, char **argv, Options *rec) {
       "  4 = add min/max yield sizes.\n"
       "  5 = add non-terminal table dimensions.\n"
       "(Use 'dot -Tpdf out.dot' to generate a PDF.)\nDefault file is out.dot")
-    ("checkpoint",
-    "enable periodic checkpointing of program progress.\n"
-    "Useful for long running programs that might crash intermediately.\n"
-    "You can continue from last checkpoint when re-executing the program.\n"
-    "Checkpointing interval can be configured in the generated binary\n"
-    "(creates new checkpoint every "DEFAULT_CP_INTERVAL_MIN_STR
-    " minutes by default)\n");
+    ("checkpoint", std::string(
+     "enable periodic checkpointing of program progress.\n"
+     "Useful for long running programs that might crash intermediately.\n"
+     "You can continue from last checkpoint when re-executing the program.\n"
+     "Checkpointing interval can be configured in the generated binary\n"
+     "(creates new checkpoint every "
+     + std::to_string(DEFAULT_CP_INTERVAL_MIN)
+     + " minutes by default)\n").c_str());
+
   po::options_description hidden("");
   hidden.add_options()
     ("backtrack", "deprecated for --backtrace")

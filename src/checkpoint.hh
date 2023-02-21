@@ -39,9 +39,7 @@
 // default checkpointing interval
 // (modify here if you want to change it)
 #define DEFAULT_CP_INTERVAL_SEC     3600
-#define DEFAULT_CP_INTERVAL_SEC_STR "3600"
-#define DEFAULT_CP_INTERVAL_MIN     60
-#define DEFAULT_CP_INTERVAL_MIN_STR "60"
+#define DEFAULT_CP_INTERVAL_MIN     (DEFAULT_CP_INTERVAL_SEC / 60)
 
 typedef hashtable<std::string, Symbol::NT*> nt_tables;
 
@@ -75,18 +73,26 @@ class Checkpoint : public Base {
                      Type::Type::EXTERNAL};
 
 /*
-   currently supported/serializable external datatyes (2023-02-20);
+   currently supported/(de)serializable external datatyes (2023-02-20);
    except for Rope (which is part of rtlib), all of these types
-   are defined in the fold-grammars repository
+   are defined in the fold-grammars repository;
+   unfortunately programs that tabulate external types
+   with "String" or "Subsequence" members cannot be checkpointed,
+   because no member information can be generated for external
+   types since C++ doesn't support reflection,
+   which makes accessor generation and thus checkpointing
+   those types impossible;
+   if you want to checkpoint a program that tabulates non-
+   supported external types (that also don't contain "String"
+   or "Subsequence" objects), make sure to provide a "serialize"
+   method for them (cf. e.g. rope.hh, line 242 or
+   https://www.boost.org/doc/libs/1_80_0/libs/serialization/doc/tutorial.html);
 */
 const std::vector<std::string>
 SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
                             "answer_pknot_mfecovar", "mfecovar",
-                            "mfecovar_macrostate", "pftuple",
-                            "answer_pknot_pfunc",
-                            "answer_ali_pfunc_macrostate",
-                            "answer_macrostate_mfe",
-                            "answer_macrostate_pfunc", "shape_t"};
+                            "pftuple", "answer_pknot_pfunc",
+                            "shape_t"};
 
   // check if the currently looked at type is contained
   // in SUPPORTED_TYPES or SUPPORTED_EXTERNAL_TYPES
@@ -109,7 +115,12 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
               break;
             }
           }
-          if (!supported_external_type) return false;
+          if (!supported_external_type) {
+            std::cerr << "External type \"" << *e->name
+                      << "\" cannot be serialized by default.\n"
+                      << "Please provide a serialize method for this type.\n";
+            return false;
+          }
         }
         return true;
       }
