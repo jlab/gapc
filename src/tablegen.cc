@@ -471,17 +471,18 @@ Fn_Def *Tablegen::gen_tab() {
   c.push_back(a);
 
   if (checkpoint_) {
-    // add std::lock_guard to ensure that the archiving thread
+    // create a std::lock_guard object and lock the table's mutex
+    // to ensure that the archiving thread
     // can't read the array while the value is being set
-    Statement::Fn_Call *m = new Statement::Fn_Call(
+    Statement::Fn_Call *lock_guard = new Statement::Fn_Call(
                              "std::lock_guard<std::mutex> lock");
-    m->add_arg(new std::string("m"));
+    // "m" is the mutex object
+    lock_guard->add_arg(new std::string("m"));
+    c.push_back(lock_guard);
 
     // increase the counter tracking how many cells have been tabulated
     Statement::Increase *inc_tab_c = new Statement::Increase(
                                      new std::string("tabulated_vals_counter"));
-
-    c.push_back(m);
     c.push_back(inc_tab_c);
   }
 

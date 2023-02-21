@@ -36,19 +36,37 @@
 #include "statement/table_decl.hh"
 #include "type/base.hh"
 
+// default checkpointing interval
+// (modify here if you want to change it)
+#define DEFAULT_CP_INTERVAL_SEC     3600
+#define DEFAULT_CP_INTERVAL_SEC_STR "3600"
+#define DEFAULT_CP_INTERVAL_MIN     60
+#define DEFAULT_CP_INTERVAL_MIN_STR "60"
+
 typedef hashtable<std::string, Symbol::NT*> nt_tables;
 
 namespace Printer {
+/*
+  contains methods that handle the insertion of the checkpointing
+  routine into the generated header file;
+  this class also extends Base to get access to indent-related methods
+*/
 class Checkpoint : public Base {
  private:
-  // true if table types are wrapped in ListRef
+  /*
+     true if table types are wrapped in List_Ref;
+     this information is required whenever the String type
+     is part of a table's datatype, because tables containting
+     Strings need to be additionally processed after deserialization,
+     which can only work if the Strings are wrapped in a List_Ref object
+  */
   bool list_ref;
 
   std::vector<std::string> string_type_accessors, block_type_accessors,
                            subseq_type_accessors;
 
-  // currently supported/serializable datatypes
-  const std::array<Type::Type, 11>
+  // currently supported/serializable GAPC-internal datatypes (2023-02-20)
+  const std::vector<Type::Type>
   SUPPORTED_TYPES = {Type::Type::VOID, Type::Type::INTEGER,
                      Type::Type::INT, Type::Type::FLOAT,
                      Type::Type::SIZE, Type::Type::SINGLE,
@@ -56,7 +74,12 @@ class Checkpoint : public Base {
                      Type::Type::SHAPE, Type::Type::SUBSEQ,
                      Type::Type::EXTERNAL};
 
-const std::array<std::string, 12>
+/*
+   currently supported/serializable external datatyes (2023-02-20);
+   except for Rope (which is part of rtlib), all of these types
+   are defined in the fold-grammars repository
+*/
+const std::vector<std::string>
 SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
                             "answer_pknot_mfecovar", "mfecovar",
                             "mfecovar_macrostate", "pftuple",
@@ -65,10 +88,12 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
                             "answer_macrostate_mfe",
                             "answer_macrostate_pfunc", "shape_t"};
 
-  template<size_t n>
-  bool has_type(const std::array<Type::Type, n> &arr, Type::Type type,
-                Type::Base *t) {
-    for (Type::Type supported_type : arr) {
+  // check if the currently looked at type is contained
+  // in SUPPORTED_TYPES or SUPPORTED_EXTERNAL_TYPES
+  bool has_type(const std::vector<Type::Type> &supported_types,
+                const std::vector<std::string> &supported_ext_types,
+                Type::Type type, Type::Base *t) {
+    for (Type::Type supported_type : supported_types) {
       if (type == supported_type) {
         if (type == Type::Type::STRING) {
           strings = true;
@@ -78,7 +103,7 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
           // only allow external type "Rope" and some fold-grammars types
           Type::External *e = dynamic_cast<Type::External*>(t);
           bool supported_external_type = false;
-          for (const std::string &supported_ext : SUPPORTED_EXTERNAL_TYPES) {
+          for (const std::string &supported_ext : supported_ext_types) {
             if (*e->name == supported_ext) {
               supported_external_type = true;
               break;
@@ -86,12 +111,20 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
           }
           if (!supported_external_type) return false;
         }
-          return true;
+        return true;
       }
     }
     return false;
   }
 
+  /*
+     add the final accessor to the currently looked at type
+     if the current type is "String", the it's block needs to be
+     accessed (str.get_block()) as well as the address of that block
+     as an integer (str.block_as_int);
+     if the current type is "Subsequence", it's "seq" member needs
+     to be accessed (subseq.seq)
+  */
   void add_type_accessor(Type::Type type,
                          std::vector<std::string> &type_accessor) {
     if (type == Type::Type::STRING) {
@@ -147,28 +180,29 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
       // check if every member of struct/user-defined type is supported
       for (std::list<std::pair<Type::Name*, std::string*>*>::const_iterator
         i = s->list.begin(); i != s->list.end(); ++i) {
-        Type::Type member_type = Type::Type::NONE;
-        for (auto &type : SUPPORTED_TYPES) {
-          if ((*i)->first->lhs->const_simple()->is(type)) {
-            member_type = type;
-            break;
-          }
-        }
-        if (member_type == Type::Type::NONE) return false;
-        else if (member_type == Type::Type::STRING) strings = true;
-        else if (member_type == Type::Type::SUBSEQ) subseq = true;
+        Type::Base *curr_type = (*i)->first->lhs->simple();
+        if (!__is_supported(curr_type)) return false;
       }
       user_def = true;
       return true;
     }
 
-    return has_type(SUPPORTED_TYPES, curr_type, type);
+    return has_type(SUPPORTED_TYPES, SUPPORTED_EXTERNAL_TYPES,
+                    curr_type, type);
   }
 
+  /*
+     generate accessors for types so they can be indexed/addressed
+     (required for String, Subsequence and user-defined types);
+     these accessors will be inserted into the generated code
+     as marcos, which will be expanded in the respective target
+     functions (restore_string_links for "String" and
+     "add_seq_to_subseqs" for "Subsequence" and used to access
+     these objects efficiently without the need to do any searching
+     where exactly these objects are stored
+  */
   void gen_type_accessors(Type::Base *type,
-                         std::vector<std::string> &type_accessor) {
-    // generate accessors for types so they can be indexed/addressed
-    // (required for String, Subsequence and user-defined types)
+                          std::vector<std::string> &type_accessor) {
     Type::Type curr_type = type->getType();
 
     if (curr_type == Type::Type::LIST) {
@@ -193,23 +227,30 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
          gen_type_accessors(type->component(), type_accessor);
          return;
        }
-    } else if (curr_type == Type::Type::TUPLEDEF) {
+    } else if (curr_type == Type::Type::TUPLEDEF ||
+               curr_type == Type::Type::DEF) {
       // user-defined type
-      // (gets converted into struct; all members need to be supported)
-      Type::TupleDef * s = dynamic_cast<Type::TupleDef*>(type);
+      Type::TupleDef *s = NULL;
+      if (curr_type == Type::Type::DEF) {
+        Type::Def *d = dynamic_cast<Type::Def*>(type);
+
+        // sometimes DEF is really just TUPLEDEF in disguise, so check for that
+        if (d->rhs->getType() == Type::Type::TUPLEDEF) {
+          s = dynamic_cast<Type::TupleDef*>(d->rhs);
+        } else {
+          return gen_type_accessors(d->rhs, type_accessor);
+        }
+      } else {
+        s = dynamic_cast<Type::TupleDef*>(type);
+      }
+
       for (std::list<std::pair<Type::Name*, std::string*>*>::const_iterator
         i = s->list.begin(); i != s->list.end(); ++i) {
-        Type::Type member_type = Type::Type::NONE;
-        // check if every member of struct/user-defined type is supported
-        for (auto &type : SUPPORTED_TYPES) {
-          if ((*i)->first->lhs->const_simple()->is(type)) {
-            member_type = type;
-            break;
-          }
-        }
+        Type::Base *member_type = (*i)->first->lhs->simple();
         const std::string &member_name = *(*i)->second;  // name of member var
+
         type_accessor.push_back("." + member_name);
-        add_type_accessor(member_type, type_accessor);
+        gen_type_accessors(member_type, type_accessor);
         type_accessor.pop_back();
       }
 
@@ -283,7 +324,9 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
   }
 
   void macros(Printer::Base &stream) {
-     stream << "#define CHECKPOINTING_INTEGRATED" << endl << endl;
+     stream << "#define CHECKPOINTING_INTEGRATED" << endl;
+     stream << "#define DEFAULT_CHECKPOINT_INTERVAL "
+            << DEFAULT_CP_INTERVAL_SEC << endl;
      if (list_ref) {
        // set macro if tables contain List_Ref type
        stream << "#define LIST_REF" << endl << endl;
@@ -333,6 +376,24 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      stream << "#include <thread>" << endl << endl;
   }
 
+  /*
+     this method restores the links between the String objects of the
+     different tables;
+     internally, String objects can only store 59 characters/bytes of data.
+     In order to allow for longer strings, String objects are linked together
+     similarly to a linked list;
+     the links however are directly written into the data buffer of a String
+     object and not stored as a ptr member of the object, which renders the
+     links useless after deserialization since the memory addresses that were
+     written into the data buffers of the strings are now no longer valid;
+     to restore these links, this function loops over every string and looks at
+     an additional new String member ("block_as_int"), which contains the address
+     of the links as an integer value;
+     these can be used to perform lookups whenever a link is parsed, at which
+     point the broken address can be overwritten and the actual address
+     of the linked string can be written into the data buffer, which restores
+     the links between the strings
+  */
   void restore_string_links(Printer::Base &stream, const nt_tables &tables) {
       inc_indent();
       stream << indent() << "void restore_string_links() {" << endl;

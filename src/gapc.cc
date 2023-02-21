@@ -140,7 +140,7 @@ static void parse_options(int argc, char **argv, Options *rec) {
     "Useful for long running programs that might crash intermediately.\n"
     "You can continue from last checkpoint when re-executing the program.\n"
     "Checkpointing interval can be configured in the generated binary\n"
-    "(creates new checkpoint every " DEFAULT_CP_INTERVAL_MIN_STR
+    "(creates new checkpoint every "DEFAULT_CP_INTERVAL_MIN_STR
     " minutes by default)\n");
   po::options_description hidden("");
   hidden.add_options()

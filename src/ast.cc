@@ -64,7 +64,7 @@ AST::AST()
     backtrack_filter(0),
     original_product(0),
     char_type(0),
-    checkpoint(0) {
+    checkpoint(nullptr) {
   Type::add_predefined(types);
 }
 

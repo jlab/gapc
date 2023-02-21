@@ -203,7 +203,7 @@ struct Options {
     return *plotgrammar_stream_;
   }
 
-  // provide option to disable checkpointing routine integration
+  // provide option to enable checkpointing routine integration
   bool checkpointing;
 
   bool check();
