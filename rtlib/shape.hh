@@ -60,18 +60,26 @@ class Fiber {
 
     template<class Archive>
     void save(Archive & ar, const unsigned int version) const {
-      ar << length();
-      for (Size i = 0; i < length(); i++) {
-        ar << array[i];
+      if (is_null_elem()) {
+        ar << (Size)0;
+      } else {
+        ar << length();
+        for (Size i = 0; i < length(); i++) {
+          ar << array[i];
+        }
       }
     }
 
     template<class Archive>
     void load(Archive & ar, const unsigned int version) {
       ar >> array_size;
-      array = alloc(array_size);  // need to allocate space first
-      for (Size i = 0; i < array_size; i++) {
-        ar >> array[i];
+      if (array_size == 0) {
+        array = &null_elem;
+      } else {
+        array = alloc(array_size);  // need to allocate space first
+        for (Size i = 0; i < array_size; i++) {
+          ar >> array[i];
+        }
       }
     }
 
