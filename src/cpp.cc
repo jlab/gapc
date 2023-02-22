@@ -1092,7 +1092,7 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   if (checkpoint) {
     stream << indent() << "boost::filesystem::path out_table_path;" << endl;
     stream << indent() << "boost::filesystem::path tmp_out_table_path;" << endl;
-    stream << indent() << "boost::filesystem::path in_table_path;" << endl;
+    stream << indent() << "boost::filesystem::path in_archive_path;" << endl;
     stream << indent() << "std::mutex m;" << endl;
     stream << indent() << "std::string formatted_interval;" << endl;
     stream << indent() << "size_t tabulated_vals_counter = 0;" << endl;
@@ -1537,6 +1537,18 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
            << "\"_checkpointing_log.txt\";" << endl;
     stream << indent() << "logfile_path = opts.checkpoint_out_path / "
            << "logfile_name;" << endl << endl;
+    if (ast.checkpoint->cyk) {
+      stream << indent() << "std::string cyk_archive = "
+             << "file_prefix + \"_cyk_indices\";" << endl;
+      stream << indent() << "out_cyk_path = opts.checkpoint_out_path / "
+             << "cyk_archive;" << endl;
+      stream << indent() << "tmp_out_cyk_path = opts.checkpoint_out_path / "
+             << "(cyk_archive + \"_new\");" << endl << endl;
+      for (size_t i = 0; i < ast.grammar()->axiom->tracks(); i++) {
+        stream << indent() << "t_" << i << "_i = 0;" << endl;
+        stream << indent() << "t_" << i << "_j = 0;" << endl;
+      }
+    }
     stream << indent() << "checkpoint_interval = opts.checkpoint_interval;"
            << endl << endl;
     stream << indent() << "std::string arg_string = "
@@ -1705,7 +1717,8 @@ void Printer::Cpp::print_init_fn(const AST &ast) {
   print_filter_init(ast);
   print_table_init(ast);
   if (ast.checkpoint && !ast.checkpoint->is_buddy) {
-    if (ast.checkpoint->strings || ast.checkpoint->subseq) {
+    if (ast.checkpoint->strings ||
+       ast.checkpoint->subseq || ast.checkpoint->cyk) {
       stream << indent() << "if (!(opts.checkpoint_in_path.empty())) {" << endl;
       inc_indent();
       if (ast.checkpoint->strings) {
@@ -1714,10 +1727,21 @@ void Printer::Cpp::print_init_fn(const AST &ast) {
       if (ast.checkpoint->subseq) {
         stream << indent() << "add_seq_to_subseqs();" << endl;
       }
+      if (ast.checkpoint->cyk) {
+        stream << indent() << "parse_checkpoint_log(\"CYK_INDICES\", "
+               << "arg_string, opts.checkpoint_in_path);" << endl;
+        stream << indent() << "load_cyk_indices();" << endl;
+      }
       dec_indent();
       stream << indent() << "}" << endl;
     }
     stream << indent() << "create_checkpoint_log(opts, arg_string);" << endl;
+    stream << indent() << "archive_periodically(cancel_token, ";
+    stream << "checkpoint_interval";
+    if (ast.checkpoint->cyk) {
+      stream<< ", mutex";
+    }
+    stream << ");" << endl;
   }
   print_zero_init(*ast.grammar());
   print_most_init(ast);
@@ -1859,8 +1883,18 @@ void Printer::Cpp::header(const AST &ast) {
            << endl << endl;
     stream << indent() << "size_t checkpoint_interval;" << endl;
     stream << indent() << "boost::filesystem::path logfile_path;" << endl;
+    if (ast.checkpoint->cyk) {
+      stream << indent() << "boost::filesystem::path out_cyk_path;"
+             << endl;
+      stream << indent() << "boost::filesystem::path tmp_out_cyk_path;"
+             << endl;
+      stream << indent() << "boost::filesystem::path in_archive_path;"
+             << endl;
+      stream << indent() << "fair_mutex mutex;" << endl;
+    }
     stream << indent() << "std::clock_t start_cpu_time;" << endl;
     stream << indent() << "std::string file_prefix;" << endl;
+    stream << indent() << "std::atomic_bool cancel_token;" << endl;
     dec_indent();
   }
   stream << indent() << " public:" << endl;
@@ -1872,6 +1906,17 @@ void Printer::Cpp::header(const AST &ast) {
   }
 
   print_most_decl(*ast.grammar()->axiom);
+
+  if (ast.checkpoint && ast.checkpoint->cyk) {
+    ::Type::Base *type = new Type::Size();
+    // store indices for cyk loops here so they can be archived/loaded
+    stream << indent() << "// indices for cyk loops" << endl;
+    for (size_t t = 0; t < ast.grammar()->axiom->tracks(); t++) {
+      stream << indent() << *type << " t_" << t << "_i;" << endl;
+      stream << indent() << *type << " t_" << t << "_j;" << endl;
+    }
+    delete type;
+  }
 
   if (ast.window_mode) {
     stream << indent() << "unsigned wsize;" << endl;
@@ -2120,16 +2165,32 @@ void Printer::Cpp::multi_print_cyk(
   stream << indent() << *t << " t_" << track << "_n = t_" << real_track
     << "_seq.size();" << endl << endl;
 
+  bool checkpoint = ast->checkpoint && ast->checkpoint->cyk;
+
   // SMJ 2023-02-18: I've added the x: xxx loops comments, but
   // am not 100% sure if they are correct in multitrack contexts
   if (!inner.empty()) {
-    stream << indent() << "for (" << *t << " " << js << " = 0; " << js << " < "
+    if (checkpoint) {
+      stream << indent() << "for (; " << js << " < "
       << ns << "; " << "++" << js << ") {" << endl;
+    } else {
+      stream << indent() << "for (" << *t << " " << js << " = 0; "
+             << js << " < " << ns << "; " << "++" << js << ") {"
+             << endl;
+    }
     inc_indent();
+
     stream << indent() << "// A: quadratic loops" << endl;
-    stream << indent() << "for (" << *t << " " << is << " = " << js << " + 1; "
-      << is << " > 1; " << is << "--) {" << endl;
-    inc_indent();
+    if (checkpoint) {
+      stream << indent() << "for (" << is << " = " << js << " + 1; "
+             << is << " > 1; " << is << "--) {" << endl;
+      inc_indent();
+      stream << indent() << "std::lock_guard<fair_mutex> lock(mutex);" << endl;
+    } else {
+      stream << indent() << "for (" << *t << " " << is << " = "
+             << js << " + 1; " << is << " > 1; " << is << "--) {" << endl;
+      inc_indent();
+    }
 
     multi_print_inner_cyk(inner, tord, track, tracks, track_pos, t);
     dec_indent();
@@ -2138,6 +2199,10 @@ void Printer::Cpp::multi_print_cyk(
     if (!left.empty()) {
       stream << indent() << "// B: inner quadratic loops" << endl;
       stream << indent() << *t << " " << is << " = 1;" << endl;
+      if (checkpoint) {
+        stream << indent() << "std::lock_guard<fair_mutex> lock(mutex);"
+               << endl;
+      }
       multi_print_inner_cyk(left, tord, track, tracks, track_pos, t);
     }
     dec_indent();
@@ -2157,9 +2222,19 @@ void Printer::Cpp::multi_print_cyk(
   if (!right.empty()) {
     stream << indent() << "// C: linear loops" << endl;
     stream << indent() << *t << " " << js << " = " << ns << ";" << endl;
-    stream << indent() << "for (" << *t << " "<< is << " = " << js << " + 1; "
-      << is << " > 1; " << is << "--) {" << endl;
+    if (checkpoint) {
+      stream << indent() << "for (" << is << " = " << js << " + 1;"
+             << is << " > 1; " << is << "--) {"
+             << endl;
+    } else {
+      stream << indent() << "for (" << *t << " "<< is << " = " << js << " + 1; "
+             << is << " > 1; " << is << "--) {" << endl;
+    }
     inc_indent();
+    if (checkpoint) {
+      stream << indent() << "std::lock_guard<fair_mutex> lock(mutex);"
+             << endl;
+    }
     multi_print_inner_cyk(right, tord, track, tracks, track_pos, t);
     dec_indent();
     stream << indent() << "}" << endl << endl;
@@ -2168,6 +2243,10 @@ void Printer::Cpp::multi_print_cyk(
   if (!all.empty()) {
     stream << indent() << "// D: constant loops" << endl;
     stream << indent() << *t << " " << is << " = 1;" << endl;
+    if (checkpoint) {
+      stream << indent() << "std::lock_guard<fair_mutex> lock(mutex);"
+             << endl;
+    }
     multi_print_inner_cyk(all, tord, track, tracks, track_pos, t);
   }
 }
@@ -2235,17 +2314,7 @@ void Printer::Cpp::print_run_fn(const AST &ast) {
   stream << " run() {" << endl;
   inc_indent();
 
-  if (ast.checkpoint && !ast.checkpoint->is_buddy) {
-    stream << indent() << "std::atomic_bool cancel_token;" << endl;
-    stream << indent() << "archive_periodically(cancel_token, ";
-    stream << "checkpoint_interval" << ");" << endl;
-    stream << indent() << *ast.grammar()->axiom->code()->return_type;
-    stream << " ans = ";
-  } else {
-    stream << indent() << "return ";
-  }
-
-  stream << "nt_" << *ast.grammar()->axiom_name << '(';
+  stream << indent() << "return nt_" << *ast.grammar()->axiom_name << '(';
 
   bool first = true;
   size_t track = 0;
@@ -2270,14 +2339,6 @@ void Printer::Cpp::print_run_fn(const AST &ast) {
   }
 
   stream << ");" << endl;
-
-  if (ast.checkpoint && !ast.checkpoint->is_buddy) {
-    stream << indent() << "cancel_token.store(false);  "
-                          "// stop periodic checkpointing" << endl;
-    stream << indent() << "remove_tables();" << endl;
-    stream << indent() << "remove_log_file();" << endl;
-    stream << indent() << "return ans;" << endl;
-  }
   dec_indent();
   stream << indent() << '}' << endl << endl;
 }
@@ -2312,6 +2373,13 @@ void Printer::Cpp::header_footer(const AST &ast) {
   inc_indent();
   if (ast.checkpoint && !ast.checkpoint->is_buddy) {
     nt_tables &tabulated = ast.grammar()->tabulated;
+    if (ast.checkpoint->cyk) {
+      ast.checkpoint->archive_cyk_indices(stream,
+                                          ast.grammar()->axiom->tracks());
+      ast.checkpoint->load_cyk_indices(stream,
+                                       ast.grammar()->axiom->tracks());
+      ast.checkpoint->parse_checkpoint_log(stream);
+    }
     ast.checkpoint->archive_periodically(stream, tabulated);
     ast.checkpoint->remove_tables(stream, tabulated);
     ast.checkpoint->remove_log_file(stream);
@@ -2546,6 +2614,14 @@ void Printer::Cpp::print_subopt_fn(const AST &ast) {
   if (ast.code_mode() != Code::Mode::SUBOPT) {
     stream << indent() << "void print_subopt(std::ostream &out, "
     << "int " << " delta = 0) {" << endl;
+    if (ast.checkpoint && !ast.checkpoint->is_buddy) {
+      inc_indent();
+      stream << indent() << "cancel_token.store(false);  "
+             << "// stop periodic checkpointing" << endl;
+      stream << indent() << "remove_tables();" << endl;
+      stream << indent() << "remove_log_file();" << endl;
+      dec_indent();
+    }
     stream << indent() << '}' << endl;
     return;
   }
@@ -2596,6 +2672,13 @@ void Printer::Cpp::print_subopt_fn(const AST &ast) {
   }
 
   print_marker_clear(ast);
+
+  if (ast.checkpoint && !ast.checkpoint->is_buddy) {
+    stream << indent() << "cancel_token.store(false);  "
+           << "// stop periodic checkpointing" << endl;
+    stream << indent() << "remove_tables();" << endl;
+    stream << indent() << "remove_log_file();" << endl;
+    }
 
   dec_indent();
   stream << indent() << '}' << endl;
