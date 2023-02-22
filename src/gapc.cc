@@ -571,28 +571,54 @@ class Main {
     driver.ast.instance_grammar_eliminate_lists(instance);
 
     if (opts.checkpointing) {
-      if (opts.cyk) {
-        // since DP algorithm doesn't do lookups at the beginning of
-        // the nt_* functions in cyk-mode, the checkpointing mechanism
-        // can't work in this case and won't be integrated
-        Log::instance()->error("Checkpointing routine could not be integrated"
-                               ", because checkpointing mechanism is "
-                               "incompatible with cyk-style "
-                               "code generation.");
-        opts.checkpointing = false;
-        std::exit(0);
+      if (driver.ast.checkpoint) {
+        /*
+           delete Checkpoint class if it exists already;
+           this is only the case if a classified/interleaved
+           product is parsed, in which case this method (back)
+           gets called twice: once for the buddy out class (1st call)
+           and once for the regular out class (2nd call)
+        */
+        delete driver.ast.checkpoint;
+      }
+
+      Printer::Checkpoint *cp = new Printer::Checkpoint();
+      driver.ast.checkpoint = cp;
+
+      if (opts.classified) {
+        /*
+           true if product is classified/interleaved product;
+           for this type of product, a buddy class is generated,
+           whose tables don't need to be checkpointed though,
+           so the table types will not be checked for compatibility;
+           this method will be called once more for the actual class,
+           in which case opts.classified will be false,
+           so the tables are regularly checked for compatibility and
+           the checkpointing routine will be inserted if that's the case
+        */
+        cp->is_buddy = true;
       } else {
-        Printer::Checkpoint *cp = new Printer::Checkpoint();
+        if (opts.cyk) {
+          // since DP algorithm doesn't do lookups at the beginning of
+          // the nt_* functions in cyk-mode, the current checkpointing mechanism
+          // can't work in this case and won't be integrated
+          Log::instance()->error("Checkpointing routine could not be integrated"
+                                 ", because checkpointing mechanism is "
+                                 "currently incompatible with cyk-style "
+                                 "code generation.");
+          opts.checkpointing = false;
+          delete cp;
+          std::exit(0);
+        }
         bool answer_type_supported = cp->is_supported(driver.ast.grammar()->
                                                       tabulated);
 
         // only enable checkpointing if type of every table is supported
         if (answer_type_supported) {
-          driver.ast.checkpoint = cp;
           Log::instance()->normalMessage("Checkpointing routine integrated.");
         } else {
           Log::instance()->error("Checkpointing routine could not be "
-                                 "integrated, because (one of) the table  "
+                                 "integrated, because (one of) the table "
                                  "type(s) can't be serialized.");
           opts.checkpointing = false;
           delete cp;

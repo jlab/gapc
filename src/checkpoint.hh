@@ -116,7 +116,7 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
             }
           }
           if (!supported_external_type) {
-            std::cerr << "External type \"" << *e->name
+            std::cerr << "Error: External type \"" << *e->name
                       << "\" cannot be serialized by default.\n"
                       << "Please provide a serialize method for this type.\n";
             return false;
@@ -125,6 +125,7 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
         return true;
       }
     }
+    std::cerr << "Error: Type \"" << *t << "\" cannot be serialized.\n";
     return false;
   }
 
@@ -296,11 +297,19 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      if the checkpointing option was specified, this struct needs
      a serialize method so the tables containing this type can be
      (de)serialized properly
-   */
+  */
   bool user_def;
 
+  /*
+     true if the currently parsed out class is a buddy class,
+     in which case the checkpointing routine doesn't need to
+     be integrated
+  */
+  bool is_buddy;
+
   Checkpoint() : list_ref(false), strings(false),
-                 subseq(false), user_def(false) {}
+                 subseq(false), user_def(false),
+                 is_buddy(false) {}
 
   bool is_supported(const nt_tables &tables) {
      // check datatypes of every table (all tables must have supported type)
@@ -335,9 +344,8 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
   }
 
   void macros(Printer::Base &stream) {
-     stream << "#define CHECKPOINTING_INTEGRATED" << endl;
      stream << "#define DEFAULT_CHECKPOINT_INTERVAL "
-            << DEFAULT_CP_INTERVAL_SEC << endl;
+            << DEFAULT_CP_INTERVAL_SEC << endl << endl;
      if (list_ref) {
        // set macro if tables contain List_Ref type
        stream << "#define LIST_REF" << endl << endl;

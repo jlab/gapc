@@ -1060,7 +1060,7 @@ void Printer::Cpp::print_window_inc(const Symbol::NT &nt) {
 void Printer::Cpp::print(const Statement::Table_Decl &t) {
   in_class = true;
   bool wmode = ast && ast->window_mode;
-  bool checkpoint = ast && ast->checkpoint;
+  bool checkpoint = ast && ast->checkpoint && !ast->checkpoint->is_buddy;
 
   std::string tname(t.name() + "_t");
   const Type::Base &dtype = t.datatype();
@@ -1162,7 +1162,6 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   stream << indent() << ptype << " newsize = size(";
   stream << ");" << endl;
 
-  stream << indent() << "array.resize(newsize);" << endl;
   if (!cyk && !checkpoint) {
     stream << indent() << "tabulated.clear();" << endl;
     stream << indent() << "tabulated.resize(newsize);" << endl;
@@ -1170,6 +1169,8 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
 
   if (checkpoint) {
     ast->checkpoint->init(stream);
+  } else {
+    stream << indent() << "array.resize(newsize);" << endl;
   }
 
   dec_indent();
@@ -1356,7 +1357,8 @@ void Printer::Cpp::print_type_defs(const AST &ast) {
         stream << indent() << "bool empty_;" << endl << indent() << *def->name
           << "() : empty_(false) {}" << endl;
 
-        if (ast.checkpoint && ast.checkpoint->user_def) {
+        if (ast.checkpoint && ast.checkpoint->user_def &&
+            !ast.checkpoint->is_buddy) {
           // serialize method for user-defined type
           stream << indent() << "friend class boost::serialization::access;"
                  << endl << endl;
@@ -1515,7 +1517,7 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
     << indent() << indent() << "throw gapc::OptException(\"Number of input "
     << "sequences does not match.\");\n\n";
 
-  if (ast.checkpoint) {
+  if (ast.checkpoint && !ast.checkpoint->is_buddy) {
     stream << indent() << "start_cpu_time = std::clock();"
            << endl;
     stream << indent() << "std::string binary_name = "
@@ -1615,7 +1617,7 @@ void Printer::Cpp::print_table_init(const AST &ast) {
     }
 
     stream << "\""<< i->second->table_decl->name() << "\"";
-    if (ast.checkpoint) {
+    if (ast.checkpoint && !ast.checkpoint->is_buddy) {
       stream << ", opts.checkpoint_out_path," << endl;
       stream << indent() << "                opts.checkpoint_in_path, "
              << "arg_string, formatted_interval," << endl;
@@ -1702,7 +1704,7 @@ void Printer::Cpp::print_init_fn(const AST &ast) {
   print_seq_init(ast);
   print_filter_init(ast);
   print_table_init(ast);
-  if (ast.checkpoint) {
+  if (ast.checkpoint && !ast.checkpoint->is_buddy) {
     if (ast.checkpoint->strings || ast.checkpoint->subseq) {
       stream << indent() << "if (!(opts.checkpoint_in_path.empty())) {" << endl;
       inc_indent();
@@ -1824,9 +1826,14 @@ void Printer::Cpp::header(const AST &ast) {
            << endl << endl;
 
     if (ast.checkpoint) {
-      // insert checkpointing macros to enable e.g. String accession
-      // and to enable serialize functions of the rtlib datatypes
-      ast.checkpoint->macros(stream);
+      /*
+         this macro always needs to be at the top of the header file
+         so the serialize methods of the rtlib datatypes are visible
+         to the preprocessor
+      */
+      stream << "#define CHECKPOINTING_INTEGRATED" << endl;
+
+      // include required (boost) header files
       ast.checkpoint->include(stream, ast.grammar()->tabulated);
     }
 
@@ -1836,11 +1843,16 @@ void Printer::Cpp::header(const AST &ast) {
     print_type_defs(ast);
   }
 
+  if (ast.checkpoint) {
+    // insert checkpointing accessor macros
+    ast.checkpoint->macros(stream);
+  }
+
   imports(ast);
   print_hash_decls(ast);
 
   stream << indent() << "class " << class_name << " {" << endl;
-  if (ast.checkpoint) {
+  if (ast.checkpoint && !ast.checkpoint->is_buddy) {
     stream << indent() << " private:" << endl;
     inc_indent();
     stream << indent() << "typedef gapc::OptException ParseException;"
@@ -2223,7 +2235,7 @@ void Printer::Cpp::print_run_fn(const AST &ast) {
   stream << " run() {" << endl;
   inc_indent();
 
-  if (ast.checkpoint) {
+  if (ast.checkpoint && !ast.checkpoint->is_buddy) {
     stream << indent() << "std::atomic_bool cancel_token;" << endl;
     stream << indent() << "archive_periodically(cancel_token, ";
     stream << "checkpoint_interval" << ");" << endl;
@@ -2259,7 +2271,7 @@ void Printer::Cpp::print_run_fn(const AST &ast) {
 
   stream << ");" << endl;
 
-  if (ast.checkpoint) {
+  if (ast.checkpoint && !ast.checkpoint->is_buddy) {
     stream << indent() << "cancel_token.store(false);  "
                           "// stop periodic checkpointing" << endl;
     stream << indent() << "remove_tables();" << endl;
@@ -2298,7 +2310,7 @@ void Printer::Cpp::header_footer(const AST &ast) {
   dec_indent();
   stream << indent() << " private:" << endl;
   inc_indent();
-  if (ast.checkpoint) {
+  if (ast.checkpoint && !ast.checkpoint->is_buddy) {
     nt_tables &tabulated = ast.grammar()->tabulated;
     ast.checkpoint->archive_periodically(stream, tabulated);
     ast.checkpoint->remove_tables(stream, tabulated);
@@ -3130,7 +3142,7 @@ void Printer::Cpp::print(const Statement::Hash_Decl &d) {
       << endl;
   }
 
-  if (ast->checkpoint) {
+  if (ast->checkpoint && !ast->checkpoint->is_buddy) {
     stream << endl;
     stream << indent() << "friend class boost::serialization::access;"
            << endl << endl;
