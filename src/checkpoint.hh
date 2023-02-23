@@ -54,9 +54,9 @@ class Checkpoint : public Base {
   /*
      true if table types are wrapped in List_Ref;
      this information is required whenever the String type
-     is part of a table's datatype, because tables containting
-     Strings need to be additionally processed after deserialization,
-     which can only work if the Strings are wrapped in a List_Ref object
+     is part of a table's datatype, because tables containing
+     "String" objects need to be additionally processed after deserialization,
+     which can only work if "String" objects are wrapped in a List_Ref object
   */
   bool list_ref;
 
@@ -86,7 +86,8 @@ class Checkpoint : public Base {
    supported external types (that also don't contain "String"
    or "Subsequence" objects), make sure to provide a "serialize"
    method for them (cf. e.g. rope.hh, line 242 or
-   https://www.boost.org/doc/libs/1_80_0/libs/serialization/doc/tutorial.html);
+   https://www.boost.org/doc/libs/1_80_0/libs/serialization/doc/tutorial.html)
+   and to add their names to this vector;
 */
 const std::vector<std::string>
 SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
@@ -205,11 +206,11 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
 
   /*
      generate accessors for types so they can be indexed/addressed
-     (required for String, Subsequence and user-defined types);
+     (required for "String", "Subsequence" and user-defined types);
      these accessors will be inserted into the generated code
-     as marcos, which will be expanded in the respective target
+     as macros, which will be expanded in the respective target
      functions (restore_string_links for "String" and
-     "add_seq_to_subseqs" for "Subsequence" and used to access
+     "add_seq_to_subseqs" for "Subsequence") and used to access
      these objects efficiently without the need to do any searching
      where exactly these objects are stored
   */
@@ -274,7 +275,7 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
 
  public:
   /*
-     true if tables contain String objects;
+     true if tables contain "String" objects;
      these are a lot more complicated to deserialize than other types as
      they require the manual restoration of the links between Strings
      so this boolean information is needed when generating the
@@ -284,7 +285,7 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
   bool strings;
 
   /*
-    true if tables contain Subsequence objects (require additional processing);
+    true if tables contain "Subsequence" objects (require additional processing)
     this will most likely only be needed if a Subsequence object
     is part of a user-specified type which is tabulated as e.g.
     a pretty-print algebra
@@ -309,7 +310,7 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
 
   /*
      true if cyk-style code generation was requested;
-     this requires an adjusted checkpointing mechanism,
+     this requires an adjustment to the checkpointing mechanism,
      because the functions that tabulate the non-terminal
      tables don't peform any lookups for already tabulated
      cells in cyk mode;
@@ -318,8 +319,8 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      than the current index have already been calculated;
      in order to checkpoint programs with this codestyle,
      the loop indices are archived instead of the tabulated
-     vector so the program knows at which point to continue
-     calculating
+     vector so the program knows at which point/at which loop
+     iteration to continue calculating
   */
   bool cyk;
 
@@ -966,8 +967,8 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      stream << indent() << "boost::archive::binary_oarchive "
                             "array_out(array_fout);" << endl;
      for (size_t i = 0; i < n_tracks; i++) {
-       stream << indent() << "array_out << t_" << i << "_i;" << endl;
-       stream << indent() << "array_out << t_" << i << "_j;" << endl;
+       stream << indent() << "array_out << t_" << i << "_i + 1;" << endl;
+       stream << indent() << "array_out << t_" << i << "_j - 1;" << endl;
      }
      stream << indent() << "array_fout.close();" << endl;
      stream << indent() << "boost::filesystem::rename(tmp_out_cyk_path, "
@@ -1189,8 +1190,11 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
   void archive_periodically(Printer::Base &stream, const nt_tables &tables) {
      inc_indent();
      stream << indent() << "void archive_periodically(std::atomic_bool "
-                            "&cancel_token, size_t interval, "
-                            "fair_mutex &mutex) {" << endl;
+                            "&cancel_token, size_t interval";
+     if (cyk) {
+       stream << ", fair_mutex &mutex";
+     }
+     stream << ") {" << endl;
      inc_indent();
      stream << indent() << "// save all tables to the disk periodically "
                             "every interval seconds" << endl;

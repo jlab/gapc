@@ -1545,7 +1545,7 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
       stream << indent() << "tmp_out_cyk_path = opts.checkpoint_out_path / "
              << "(cyk_archive + \"_new\");" << endl << endl;
       for (size_t i = 0; i < ast.grammar()->axiom->tracks(); i++) {
-        stream << indent() << "t_" << i << "_i = 0;" << endl;
+        stream << indent() << "t_" << i << "_i = 1;" << endl;
         stream << indent() << "t_" << i << "_j = 0;" << endl;
       }
     }
@@ -2171,6 +2171,14 @@ void Printer::Cpp::multi_print_cyk(
   // am not 100% sure if they are correct in multitrack contexts
   if (!inner.empty()) {
     if (checkpoint) {
+      /*
+         in checkpointing mode, the loop indices (e.g. t_0_i and t_0_j
+         in single-track mode; names can differ in multi-track mode)
+         are members of the out class instead of local loop variables
+         so they can be archived/loaded;
+         if they are loaded, the outer loop variable (e.g. t_0_j) starts
+         from whatever value was loaded from the checkpoint
+      */
       stream << indent() << "for (; " << js << " < "
       << ns << "; " << "++" << js << ") {" << endl;
     } else {
@@ -2182,7 +2190,16 @@ void Printer::Cpp::multi_print_cyk(
 
     stream << indent() << "// A: quadratic loops" << endl;
     if (checkpoint) {
-      stream << indent() << "for (" << is << " = " << js << " + 1; "
+      /*
+         in checkpointing mode, the inner loop variable (e.g. t_0_i)
+         is either regularly set to e.g. t_0_j + 1 or to whatever value
+         was loaded from the checkpoint archive;
+         however, this loaded checkpoint value will only be the start value
+         for t_0_i in the first inner loop pass;
+         afterwards it will regularly be set to t_0_j + 1;
+      */
+      stream << indent() << "for (" << is << " = ("
+             << is << " == 1 ? " << js << " + 1 : " << is << "); "
              << is << " > 1; " << is << "--) {" << endl;
       inc_indent();
       stream << indent() << "std::lock_guard<fair_mutex> lock(mutex);" << endl;
@@ -2210,9 +2227,15 @@ void Printer::Cpp::multi_print_cyk(
   }
   if (inner.empty() && !left.empty()) {
     stream << indent() << "// C: linear loops" << endl;
-    stream << indent() << "for (" << *t << " " << js << " = 0; "
-           << js << " < " << ns
-           << "; " << "++" << js << ") {" << endl;
+    if (checkpoint) {
+      stream << indent() << "for (; "
+             << js << " < " << ns
+             << "; " << "++" << js << ") {" << endl;
+    } else {
+      stream << indent() << "for (" << *t << " " << js << " = 0; "
+             << js << " < " << ns
+             << "; " << "++" << js << ") {" << endl;
+    }
     inc_indent();
     stream << indent() << *t << " " << is << " = 1;" << endl;
     multi_print_inner_cyk(left, tord, track, tracks, track_pos, t);
@@ -2223,9 +2246,16 @@ void Printer::Cpp::multi_print_cyk(
     stream << indent() << "// C: linear loops" << endl;
     stream << indent() << *t << " " << js << " = " << ns << ";" << endl;
     if (checkpoint) {
-      stream << indent() << "for (" << is << " = " << js << " + 1;"
-             << is << " > 1; " << is << "--) {"
-             << endl;
+      /*
+         in checkpointing mode, the entire quadratic loop (A) will be skipped
+         if the loaded value for t_0_j == t_0_n, so this is the loop that
+         would get executed next; here, we once again check if t_0_i equals
+         its default value (1); if it doesn't, we know that we can continue
+         calculating from whatever value t_0_i is set to
+      */
+      stream << indent() << "for (" << is << " = ("
+             << is << " == 1 ? " << js << " + 1 : " << is << "); "
+             << is << " > 1; " << is << "--) {" << endl;
     } else {
       stream << indent() << "for (" << *t << " "<< is << " = " << js << " + 1; "
              << is << " > 1; " << is << "--) {" << endl;
