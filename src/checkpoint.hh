@@ -410,6 +410,7 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      stream << "#include <unordered_map>" << endl;
      stream << "#include <mutex>" << endl;
      if (cyk) {
+       stream << "#include <algorithm>" << endl;
        stream << "#include \"rtlib/fair_mutex.hh\"" << endl;
      }
      stream << "#include <thread>" << endl << endl;
@@ -466,19 +467,21 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
           }
         }
       }
-      c = 0;
-      for (auto i = tables.begin(); i != tables.end(); ++i) {
-        c++;
-        const std::string &table_name = i->second->table_decl->name();
-        if (c == 1) {
-          stream << indent() << "std::vector<bool> *tabulated[] = {"
-                 << table_name << ".get_tabulated()," << endl;
-        } else {
-          stream << indent() << "                                  ";
-          if (c < n_tables) {
-            stream << table_name << ".get_tabulated()," << endl;
+      if (!cyk) {
+        c = 0;
+        for (auto i = tables.begin(); i != tables.end(); ++i) {
+          c++;
+          const std::string &table_name = i->second->table_decl->name();
+          if (c == 1) {
+            stream << indent() << "std::vector<bool> *tabulated[] = {"
+                   << table_name << ".get_tabulated()," << endl;
           } else {
-            stream << table_name << ".get_tabulated()};" << endl << endl;
+            stream << indent() << "                                  ";
+            if (c < n_tables) {
+              stream << table_name << ".get_tabulated()," << endl;
+            } else {
+              stream << table_name << ".get_tabulated()};" << endl << endl;
+            }
           }
         }
       }
@@ -588,12 +591,14 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
              << endl;
       inc_indent();
       stream << indent() << "auto &l = curr_table[j].ref();" << endl;
-      stream << indent() << "if (!((*(tabulated[i]))[j])) {" << endl;
-      inc_indent();
-      stream << indent() << "assert(l.size() == 0);" << endl;
-      stream << indent() << "continue;" << endl;
-      dec_indent();
-      stream << indent() << "}" << endl << endl;
+      if (!cyk) {
+        stream << indent() << "if (!((*(tabulated[i]))[j])) {" << endl;
+        inc_indent();
+        stream << indent() << "assert(l.size() == 0);" << endl;
+        stream << indent() << "continue;" << endl;
+        dec_indent();
+        stream << indent() << "}" << endl << endl;
+      }
       stream << indent() << "// true if an unresolvable link was found in "
              << "one of the Strings of the current ListRef" << endl;
       stream << indent() << "bool cant_resolve = false;" << endl;
@@ -721,17 +726,55 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
       stream << indent() << "}" << endl;
       dec_indent();
       stream << indent() << "}" << endl << endl;
-      stream << indent() << "// mark the broken ListRefs "
-             << "as not tabulated" << endl;
-      stream << indent() << "for (const auto& [table_i, vec_i] : "
-             << "broken_listrefs) {" << endl;
-      inc_indent();
-      stream << indent() << "bool is_tabulated = "
-             << "(*(tabulated[table_i]))[vec_i];" << endl;
-      stream << indent() << "if (is_tabulated) {" << endl;
-      inc_indent();
-      stream << indent() << "(*(tabulated[table_i]))[vec_i] = false;" << endl;
-      stream << indent() << "(*(tabulated_counts[table_i]))--;" << endl;
+      if (cyk) {
+        stream << indent() << "// recalculate the broken List_Ref's " << endl;
+        stream << indent() << "unsigned int i, j;" << endl;
+        stream << indent() << "// sort by vector idx to match cyk loop order"
+               << endl;
+        stream << indent() << "std::sort(broken_listrefs.begin(), "
+               << "broken_listrefs.end()," << endl
+               << indent() << "          [](const std::pair<int, size_t> &l,"
+               << "const std::pair<int, size_t> &r) {" << endl
+               << indent() << "          return l.second < r.second;});"
+               << endl;
+        stream << indent() << "for (const auto& [table_i, vec_i] : "
+               << "broken_listrefs) {" << endl;
+        inc_indent();
+        stream << indent() << "std::pair<int, int> indices = "
+               << "map_1d_to_2d(vec_i);" << endl;
+       stream << indent() << "i = indices.first; j = indices.second;" << endl;
+        stream << indent() << "switch (table_i) {" << endl;
+        inc_indent();
+        int c = 0;
+        for (auto i = tables.begin(); i != tables.end(); ++i) {
+          const std::string &table_name = i->first;
+          stream << indent() << "case " << c << " :" << endl;
+          inc_indent();
+          // get table configuration (quadratic, linear etc.)
+          Table::Dim dim = i->second->tables().back().type();
+          stream << indent() << "nt_tabulate_" << table_name;
+          if (dim == Table::Dim::QUADRATIC) {
+            stream << "(i, j);" << endl;
+          } else if (dim == Table::Dim::LINEAR) {
+            stream << "(vec_i);" << endl;
+          }
+          stream << indent() << "break;" << endl;
+          dec_indent();
+          ++c;
+        }
+      } else {
+        stream << indent() << "// mark the broken List_Ref's "
+               << "as not tabulated" << endl;
+        stream << indent() << "for (const auto& [table_i, vec_i] : "
+               << "broken_listrefs) {" << endl;
+        inc_indent();
+        stream << indent() << "bool is_tabulated = "
+               << "(*(tabulated[table_i]))[vec_i];" << endl;
+        stream << indent() << "if (is_tabulated) {" << endl;
+        inc_indent();
+        stream << indent() << "(*(tabulated[table_i]))[vec_i] = false;" << endl;
+        stream << indent() << "(*(tabulated_counts[table_i]))--;" << endl;
+      }
       dec_indent();
       stream << indent() << "}" << endl;
       dec_indent();
@@ -1047,6 +1090,26 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      dec_indent();
      stream << indent() << "}" << endl << endl;
      dec_indent();
+  }
+
+  void map_1d_to_2d(Printer::Base &stream) {
+    /*
+       converts an idx of a 1D upper triangular array
+       into a row and col idx as if the 1D upper
+       triangular array was a 2D array
+    */
+    inc_indent();
+    stream << indent() << "std::pair<int, int> map_1d_to_2d(size_t idx) {"
+           << endl;
+    inc_indent();
+    stream << indent() << "double n = (-1.0 + sqrt(1 + 4 * 2 * idx)) / 2.0;"
+           << endl;
+    stream << indent() << "int i = (int) trunc(n);" << endl;
+    stream << indent() << "int j = idx - i * (i+1) / 2;" << endl;
+    stream << indent() << "return std::pair<int, int>(j, i);" << endl;
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
+    dec_indent();
   }
 
   void remove(Printer::Base &stream) {
@@ -1416,7 +1479,8 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
   }
 
   void parse_checkpoint_log(Printer::Base &stream) {
-     inc_indent(); inc_indent();
+     inc_indent();
+     if (!cyk) inc_indent();
      stream << indent() << "void parse_checkpoint_log("
             << "const std::string &archive_name, const std::string &arg_string,"
             << endl
@@ -1477,7 +1541,8 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      stream << indent() << "}" << endl;
      dec_indent();
      stream << indent() << "}" << endl << endl;
-     dec_indent(); dec_indent();
+     dec_indent();
+     if (!cyk) dec_indent();
   }
 };
 }  // namespace Printer

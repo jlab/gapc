@@ -604,17 +604,7 @@ class Main {
         // only enable checkpointing if type of every table is supported
         if (answer_type_supported) {
           if (opts.cyk) {
-            if (cp->strings) {
-              Log::instance()->error("Checkpointing routine could not be "
-                                     "integrated, because table type(s) "
-                                     "contain \"String\" objects, which are "
-                                     "incompatible with the cyk "
-                                     "checkpointing mechanism.");
-              delete cp;
-              std::exit(0);
-            } else {
-              cp->cyk = true;
-            }
+            cp->cyk = true;
           }
           Log::instance()->normalMessage("Checkpointing routine integrated.");
         } else {

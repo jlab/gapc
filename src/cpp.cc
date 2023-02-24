@@ -1121,7 +1121,9 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
       ast->checkpoint->get_table(stream, dtype);
     }
     if (ast->checkpoint->strings) {
-      ast->checkpoint->get_tabulated(stream);
+      if (!ast->checkpoint->cyk) {
+        ast->checkpoint->get_tabulated(stream);
+      }
       ast->checkpoint->get_tabulated_count(stream);
     }
   }
@@ -2408,6 +2410,7 @@ void Printer::Cpp::header_footer(const AST &ast) {
                                           ast.grammar()->axiom->tracks());
       ast.checkpoint->load_cyk_indices(stream,
                                        ast.grammar()->axiom->tracks());
+      ast.checkpoint->map_1d_to_2d(stream);
       ast.checkpoint->parse_checkpoint_log(stream);
     }
     ast.checkpoint->archive_periodically(stream, tabulated);
