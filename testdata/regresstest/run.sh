@@ -107,9 +107,9 @@ check_checkpoint_eq()
   PID=$(timeout $6.5 $KSH -c './$cpp_base $RUN_CPP_FLAGS $seq & echo $!')
 
   # specify Logfile path and run command again (it will load the checkpoints this time)
-  LOGFILE_PATH=$PWD"/adpf_"$PID"_checkpointing_log.txt"
+  cpp_base=${1%%.*}
+  LOGFILE_PATH=$PWD"/"$cpp_base"_"$PID"_checkpointing_log.txt"
   TABLE_PATH=$PWD"/"$cpp_base"_"$PID"_*_table"
-  echo $TABLE_PATH
   CPPFLAGS="--checkpointInput $LOGFILE_PATH"
 
   run_cpp $cpp_base $3 $4 $5
