@@ -1120,10 +1120,8 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
     if (ast->checkpoint->strings || ast->checkpoint->subseq) {
       ast->checkpoint->get_table(stream, dtype);
     }
-    if (ast->checkpoint->strings) {
-      if (!ast->checkpoint->cyk) {
-        ast->checkpoint->get_tabulated(stream);
-      }
+    if (ast->checkpoint->strings && !ast->checkpoint->cyk) {
+      ast->checkpoint->get_tabulated(stream);
       ast->checkpoint->get_tabulated_count(stream);
     }
   }
