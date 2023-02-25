@@ -320,11 +320,12 @@ class Opts {
           case 'O' :
           {
               boost::filesystem::path arg_path(optarg);
+              boost::filesystem::path out_path = arg_path.parent_path();
 
-              if (arg_path.is_absolute()) {
-                checkpoint_out_path = arg_path;
+              if (out_path.is_absolute()) {
+                checkpoint_out_path = out_path;
               } else {
-                checkpoint_out_path /= arg_path;
+                checkpoint_out_path /= out_path;
               }
 
             user_file_prefix = arg_path.filename().string();
