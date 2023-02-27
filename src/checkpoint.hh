@@ -1166,6 +1166,13 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      inc_indent();
      stream << indent() << "i += 2;" << endl;
      dec_indent();
+     stream << indent() << "} else if (std::strcmp(argv[i], \"--keepArchives\")"
+            << " == 0 ||" << endl;
+     stream << indent() << "           std::strcmp(argv[i], \"-K\") == 0) {"
+            << endl;
+     inc_indent();
+     stream << indent() << "++i;" << endl;
+     dec_indent();
      stream << indent() << "} else {" << endl;
      inc_indent();
      stream << indent() << "std::stringstream arg_pair;" << endl;

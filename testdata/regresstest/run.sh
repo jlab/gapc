@@ -97,20 +97,18 @@ check_checkpoint_eq()
   cpp_base=${1%%.*}
   build_cpp $GRAMMAR/$1 $cpp_base $3
 
-  # have to export arguments for the binary execution since timeout will launch
-  # a new subprocess which won't have access to anything defined in the current shell
-  seq=$4
-  export seq; export cpp_base; export RUN_CPP_FLAGS
+  # run command and create checkpoint archives after $6 seconds
+  RUN_CPP_FLAGS="--checkpointInterval 0:0:0:$6 --keepArchives"
+  ./$cpp_base $RUN_CPP_FLAGS $4 > /dev/null &
+  PID=$!
 
-  # run command and kill the process after $6 + 0.5 seconds (== checkpointInterval + 0.5s)
-  # so checkpoints are created
-  PID=$(timeout $6.5 $KSH -c './$cpp_base $RUN_CPP_FLAGS $seq & echo $!')
+  # wait for background process to finish
+  wait $PID
 
   # specify Logfile path and run command again (it will load the checkpoints this time)
-  cpp_base=${1%%.*}
   LOGFILE_PATH=$PWD"/"$cpp_base"_"$PID"_checkpointing_log.txt"
   TABLE_PATH=$PWD"/"$cpp_base"_"$PID"_*_table"
-  CPPFLAGS="--checkpointInput $LOGFILE_PATH"
+  RUN_CPP_FLAGS="--checkpointInput $LOGFILE_PATH"
 
   run_cpp $cpp_base $3 $4 $5
   cmp_new_old_output $cpp_base $REF $3 $5

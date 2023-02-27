@@ -1538,7 +1538,8 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
     stream << indent() << "logfile_path = opts.checkpoint_out_path / "
            << "logfile_name;" << endl << endl;
     stream << indent() << "checkpoint_interval = opts.checkpoint_interval;"
-           << endl << endl;
+           << endl;
+    stream << indent() << "keep_archives = opts.keep_archives;" << endl;
     stream << indent() << "std::string arg_string = "
            << "get_arg_str(opts.argc, opts.argv);" << endl;
     stream << indent() << "std::string formatted_interval = "
@@ -1861,6 +1862,7 @@ void Printer::Cpp::header(const AST &ast) {
     stream << indent() << "boost::filesystem::path logfile_path;" << endl;
     stream << indent() << "std::clock_t start_cpu_time;" << endl;
     stream << indent() << "std::string file_prefix;" << endl;
+    stream << indent() << "bool keep_archives;" << endl;
     dec_indent();
   }
   stream << indent() << " public:" << endl;
@@ -2274,8 +2276,12 @@ void Printer::Cpp::print_run_fn(const AST &ast) {
   if (ast.checkpoint && !ast.checkpoint->is_buddy) {
     stream << indent() << "cancel_token.store(false);  "
                           "// stop periodic checkpointing" << endl;
+    stream << indent() << "if (!keep_archives) {" << endl;
+    inc_indent();
     stream << indent() << "remove_tables();" << endl;
     stream << indent() << "remove_log_file();" << endl;
+    dec_indent();
+    stream << indent() << "}" << endl;
     stream << indent() << "return ans;" << endl;
   }
   dec_indent();
