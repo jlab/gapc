@@ -27,7 +27,6 @@
 extern "C" {
   #include <getopt.h>
   #include <unistd.h>
-  #include <sys/stat.h>
   #include <ctype.h>
   #include <stdio.h>
 }
@@ -166,7 +165,7 @@ class Opts {
         << "the checkpoints,\n"
         << "                                      default: current working "
         << "directory\n"
-        << "                                      Optional: add custom prefix"
+        << "                                      Optional: add custom prefix "
         << "for generated\n"
         << "                                      files to PATH (e.g. PATH:\n"
         << "                                      \"/path/to/dir/file_prefix\""
@@ -306,10 +305,9 @@ class Opts {
                                  "\"!");
             }
 
-            // check user permissions of checkpoint input directory
-            struct stat checkpoint_in_dir;
-            stat(checkpoint_in_path.c_str(), &checkpoint_in_dir);
-            if (!(checkpoint_in_dir.st_mode & S_IRUSR)) {
+            // check if current user has read permissions
+            // for checkpoint input directory
+            if (access(checkpoint_in_path.c_str(), R_OK) != 0) {
               throw OptException("Missing read permissions for"
                                  " Logfile \""
                                  + checkpoint_in_path.string()
@@ -337,11 +335,9 @@ class Opts {
                                  "\" is not a directory!");
             }
 
-            // check user permissions of checkpoint output directory
-            struct stat checkpoint_out_dir;
-            stat(checkpoint_out_path.c_str(), &checkpoint_out_dir);
-
-            if (!(checkpoint_out_dir.st_mode & S_IWUSR)) {
+            // check if current user has write permissions
+            // for checkpoint output directory
+            if (access(checkpoint_out_path.c_str(), W_OK) != 0) {
               throw OptException("Missing write permissions for"
                                  " output path \""
                                  + checkpoint_out_path.string()

@@ -69,7 +69,7 @@ class Checkpoint : public Base {
                      Type::Type::SIZE, Type::Type::SINGLE,
                      Type::Type::BIGINT, Type::Type::STRING,
                      Type::Type::SHAPE, Type::Type::SUBSEQ,
-                     Type::Type::EXTERNAL};
+                     Type::Type::EXTERNAL, Type::Type::CHAR};
 
 /*
    currently supported/(de)serializable external datatyes (2023-02-20);
@@ -196,6 +196,9 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
       }
       user_def = true;
       return true;
+    } else if (curr_type == Type::Type::USAGE) {
+      Type::Usage *u = dynamic_cast<Type::Usage*>(type);
+      return __is_supported(u->base);
     }
 
     return has_type(SUPPORTED_TYPES, SUPPORTED_EXTERNAL_TYPES,
