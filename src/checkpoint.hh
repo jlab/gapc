@@ -26,7 +26,6 @@
 #define SRC_CHECKPOINT_HH_
 
 #include <string>
-#include <array>
 #include <vector>
 #include <list>
 #include <utility>
@@ -70,7 +69,7 @@ class Checkpoint : public Base {
                      Type::Type::SIZE, Type::Type::SINGLE,
                      Type::Type::BIGINT, Type::Type::STRING,
                      Type::Type::SHAPE, Type::Type::SUBSEQ,
-                     Type::Type::EXTERNAL};
+                     Type::Type::EXTERNAL, Type::Type::CHAR};
 
 /*
    currently supported/(de)serializable external datatyes (2023-02-20);
@@ -198,6 +197,9 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
       }
       user_def = true;
       return true;
+    } else if (curr_type == Type::Type::USAGE) {
+      Type::Usage *u = dynamic_cast<Type::Usage*>(type);
+      return __is_supported(u->base);
     }
 
     return has_type(SUPPORTED_TYPES, SUPPORTED_EXTERNAL_TYPES,
@@ -1359,6 +1361,7 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      stream << indent() << "// create a string from all relevant command "
             << "line arguments" << endl;
      stream << indent() << "std::stringstream arg_string;" << endl;
+     stream << indent() << "std::vector<std::string> ordered_args;" << endl;
      stream << indent() << "int i = 1;" << endl;
      stream << indent() << "while (i < argc) {" << endl;
      inc_indent();
@@ -1379,12 +1382,21 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      dec_indent();
      stream << indent() << "} else {" << endl;
      inc_indent();
-     stream << indent() << "arg_string << argv[i] << \" \";" << endl;
-     stream << indent() << "i++;" << endl;
+     stream << indent() << "std::stringstream arg_pair;" << endl;
+     stream << indent() << "arg_pair << argv[i++] << \" \";" << endl;
+     stream << indent() << "if (i < argc) arg_pair << argv[i++];" << endl;
+     stream << indent() << "ordered_args.push_back(arg_pair.str());" << endl;
      dec_indent();
      stream << indent() << "}" << endl;
      dec_indent();
-     stream << indent() << "}" << endl;
+     stream << indent() << "}" << endl << endl;
+     stream << indent() << "std::sort(ordered_args.begin(), "
+            << "ordered_args.end());" << endl;
+     stream << indent() << "for (std::string &el : ordered_args) {" << endl;
+     inc_indent();
+     stream << indent() << "arg_string << el << \" \";" << endl;
+     dec_indent();
+     stream << indent() << "}" << endl << endl;
      stream << indent() << "return arg_string.str();" << endl;
      dec_indent();
      stream << indent() << "}" << endl << endl;

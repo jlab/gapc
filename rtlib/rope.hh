@@ -435,6 +435,11 @@ class Ref {
         append(s);
     }
 
+    /*
+       need to overload put methods, because operator<< needs to be
+       overloaded so it doesn't interfere with boost's operator<<
+       overload for the serialization of an archive
+    */
     void put(std::ofstream &o) const {
       if (readonly == true) {
         Block<Refcount>* i = first;

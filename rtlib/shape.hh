@@ -55,7 +55,6 @@ template <typename T, typename Size, typename alphset = ShapeAlph<T, Size> >
 class Fiber {
  private:
 #ifdef CHECKPOINTING_INTEGRATED
-    Size array_size;  // length/number of elements of array
     friend class boost::serialization::access;
 
     template<class Archive>
@@ -72,6 +71,7 @@ class Fiber {
 
     template<class Archive>
     void load(Archive & ar, const unsigned int version) {
+      Size array_size;
       ar >> array_size;
       if (array_size == 0) {
         array = &null_elem;
@@ -123,11 +123,7 @@ class Fiber {
  public:
     T *array;
 
-    Fiber() : array(&null_elem)
-#ifdef CHECKPOINTING_INTEGRATED
-              , array_size(0)
-#endif
-    {}
+    Fiber() : array(&null_elem) {}
 
     Fiber(const Fiber<T, Size, alphset> &other) {
       if (other.isEmpty()) {

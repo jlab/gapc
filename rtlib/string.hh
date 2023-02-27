@@ -83,7 +83,10 @@ class String {
 
      public:
       uint32_t ref_count;
-      enum { size = 59 };  // total size of object should be 64 bytes
+
+      // total size of object should be 64 bytes
+      // (refcount: 4 bytes, pos: 1 byte, array: 59 bytes -> 64 bytes total)
+      enum { size = 59 };
       enum { SEQ_END, SEQ, LINK, REP };
 
       unsigned char pos;

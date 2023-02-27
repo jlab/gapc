@@ -127,8 +127,8 @@ struct Default_Inspector {
      while this default inspector doesn't contain any members,
      custom inspector objects are often used as template arguments
      for the Set class that gets wrapped in the Hash::Ref class;
-     these custom inspectors can potentially contain memebers
-     that need to would need to be serialized, so this default
+     these custom inspectors can potentially contain members
+     that need to be serialized, so this default
      inspector needs an empty serialize method so boost doesn't complain
   */
   friend class boost::serialization::access;
