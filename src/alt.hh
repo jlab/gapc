@@ -307,6 +307,9 @@ class Base {
   virtual bool multi_detect_loop(
     const Yield::Multi &left, const Yield::Multi &right,
     Symbol::NT *n) const = 0;
+  size_t get_multi_filter_size() {
+    return multi_filter.size();
+  }
 
  private:
   Yield::Multi multi_ys_max_temp;
