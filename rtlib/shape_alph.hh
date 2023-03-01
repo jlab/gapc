@@ -70,7 +70,7 @@ struct ShapeAlph {
     }
   }
   char to_char(T &t, Size i) const {
-    switch (t >> i & T(pow(2, static_cast<int>(this->char_width)-1))) {
+    switch (t >> i & T(pow(2, static_cast<int>(this->char_width))-1)) {
       case 1 : return '[';
       case 2 : return ']';
       case 3 : return '_';
