@@ -24,8 +24,10 @@
 #ifndef RTLIB_GENERIC_OPTS_HH_
 #define RTLIB_GENERIC_OPTS_HH_
 
-
-#include <unistd.h>
+extern "C" {
+  #include <getopt.h>
+  #include <unistd.h>
+}
 
 #include <iostream>
 #include <fstream>
@@ -99,7 +101,12 @@ class Opts {
 #ifdef LIBRNA_RNALIB_H_
         << " (-[tT] [0-9]+)? (-P PARAM-file)?"
 #endif
-        << " (-[drk] [0-9]+)* (-h)? (INPUT|-f INPUT-file)\n";
+        << " (-[drk] [0-9]+)* (INPUT|-f INPUT-file)\n\n"
+#if defined(GAPC_CALL_STRING) && defined(GAPC_VERSION_STRING)
+        << "GAPC call:        \"" << GAPC_CALL_STRING << "\"\n"
+        << "GAPC version:     \"" << GAPC_VERSION_STRING << "\"\n"
+#endif
+        << "\n";
     }
 
     void parse(int argc, char **argv) {

@@ -97,7 +97,14 @@ void Expr::Minus::put(std::ostream &s) const {
 void Expr::Const::put(std::ostream &s) const {
   s << *base;
 }
-
+void Expr::Const::put_noquote(std::ostream &s) const {
+  ::Const::String *basestring = dynamic_cast<::Const::String*>(this->base);
+  // SMJ 2022-05-06: I've only seen quotes printing out for Strings
+  // However, for plotGrammar *.dot creation, " must be properly escaped,
+  // which is handled in alt.cc and requires an un-quoted version here
+  assert(basestring);
+  basestring->put_noquote(s);
+}
 
 void Expr::Less_Eq::put(std::ostream &s) const {
   s << '(' << *lhs << " <= " << *rhs << ')';

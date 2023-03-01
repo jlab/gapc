@@ -25,6 +25,8 @@
 #define SRC_TYPE_BASE_HH_
 
 #include <cassert>
+#include <sstream>
+#include <string>
 
 #include "../loc.hh"
 #include "../printer_fwd.hh"
@@ -101,6 +103,7 @@ class Base {
     virtual Base *deref();
 
     virtual void print(Printer::Base &s) const = 0;
+    void to_dot(std::ostream &out);
 };
 
 
@@ -111,5 +114,7 @@ inline std::ostream & operator<< (std::ostream &s, const Base &p) {
 
 }  // namespace Type
 
+void replaceAll(std::string& str, const std::string& from,
+  const std::string& to);
 
 #endif  // SRC_TYPE_BASE_HH_

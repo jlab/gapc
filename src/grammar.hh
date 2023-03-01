@@ -205,6 +205,8 @@ class Grammar {
   bool multi_detect_loops();
 
   void multi_propagate_max_filter();
+
+  unsigned int to_dot(unsigned int *nodeID, std::ostream &out, int plot_level);
 };
 
 
