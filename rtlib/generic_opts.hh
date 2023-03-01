@@ -116,6 +116,7 @@ class Opts {
     boost::filesystem::path  checkpoint_out_path;  // default path: cwd
     boost::filesystem::path  checkpoint_in_path;  // default: empty
     std::string user_file_prefix;
+    bool keep_archives;  // default: delete after calculations completed
 #endif
     int argc;
     char **argv;
@@ -137,6 +138,7 @@ class Opts {
       checkpoint_out_path(boost::filesystem::current_path()),
       checkpoint_in_path(boost::filesystem::path("")),
       user_file_prefix(""),
+      keep_archives(false),
 #endif
       argc(0),
       argv(0) {}
@@ -191,6 +193,10 @@ class Opts {
         << "to a \n"
         << "                                      text file and provide the \n"
         << "                                      path to this file).\n"
+        << "--keepArchives,-K                     don't delete checkpointing "
+        << "archives\n"
+        << "                                      after the program finished "
+        << "its calculations\n"
 #endif
        << "\n"
 #if defined(GAPC_CALL_STRING) && defined(GAPC_VERSION_STRING)
@@ -208,6 +214,7 @@ class Opts {
             {"checkpointInterval", required_argument, nullptr, 'p'},
             {"checkpointOutput", required_argument, nullptr, 'O'},
             {"checkpointInput", required_argument, nullptr, 'I'},
+            {"keepArchives", no_argument, nullptr, 'K'},
             {nullptr, no_argument, nullptr, 0}};
       this->argc = argc;
       this->argv = argv;
@@ -223,7 +230,7 @@ class Opts {
               "t:T:P:"
 #endif
 #ifdef CHECKPOINTING_INTEGRATED
-              "p:I:O:"
+              "p:I:KO:"
 #endif
              "hd:r:k:H:", long_opts, nullptr)) != -1) {
         switch (o) {
@@ -345,6 +352,9 @@ class Opts {
             }
             break;
           }
+          case 'K' :
+            keep_archives = true;
+            break;
 #endif
           case '?' :
           case ':' :

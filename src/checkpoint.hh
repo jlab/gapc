@@ -534,17 +534,17 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
         inc_indent();
         stream << indent() << "switch (b->array[c]) {" << endl;
         inc_indent();
-        stream << indent() << "case b->REP :" << endl;
+        stream << indent() << "case String::Block::REP :" << endl;
         inc_indent();
         stream << indent() << "c += 6;" << endl;
         stream << indent() << "break;" << endl;
         dec_indent();
-        stream << indent() << "case b->SEQ :" << endl;
+        stream << indent() << "case String::Block::SEQ :" << endl;
         inc_indent();
         stream << indent() << "c += 3;" << endl;
         stream << indent() << "break;" << endl;
         dec_indent();
-        stream << indent() << "case b->LINK :" << endl;
+        stream << indent() << "case String::Block::LINK :" << endl;
         stream << indent() << "{" << endl;
         inc_indent();
         stream << indent() << "c++;" << endl;
@@ -622,17 +622,17 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
         inc_indent();
         stream << indent() << "switch (b->array[c]) {" << endl;
         inc_indent();
-        stream << indent() << "case b->REP :" << endl;
+        stream << indent() << "case String::Block::REP :" << endl;
         inc_indent();
         stream << indent() << "c += 6;" << endl;
         stream << indent() << "break;" << endl;
         dec_indent();
-        stream << indent() << "case b->SEQ :" << endl;
+        stream << indent() << "case String::Block::SEQ :" << endl;
         inc_indent();
         stream << indent() << "c += 3;" << endl;
         stream << indent() << "break;" << endl;
         dec_indent();
-        stream << indent() << "case b->LINK :" << endl;
+        stream << indent() << "case String::Block::LINK :" << endl;
         stream << indent() << "{" << endl;
         inc_indent();
         stream << indent() << "c++;" << endl;
@@ -777,6 +777,19 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
         stream << indent() << "(*(tabulated[table_i]))[vec_i] = false;" << endl;
         stream << indent() << "(*(tabulated_counts[table_i]))--;" << endl;
       }
+      stream << indent() << "// mark the broken ListRefs "
+             << "as not tabulated" << endl;
+      stream << indent() << "for (const auto& b : "
+             << "broken_listrefs) {" << endl;
+      inc_indent();
+      stream << indent() << "int table_i = b.first;" << endl;
+      stream << indent() << "size_t vec_i = b.second;" << endl;
+      stream << indent() << "bool is_tabulated = "
+             << "(*(tabulated[table_i]))[vec_i];" << endl;
+      stream << indent() << "if (is_tabulated) {" << endl;
+      inc_indent();
+      stream << indent() << "(*(tabulated[table_i]))[vec_i] = false;" << endl;
+      stream << indent() << "(*(tabulated_counts[table_i]))--;" << endl;
       dec_indent();
       stream << indent() << "}" << endl;
       dec_indent();
@@ -807,8 +820,10 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
              << endl << endl;
       stream << indent() << "if (broken_listrefs.empty()) return;" << endl;
       stream << indent() << "bool has_link = false;" << endl;
-      stream << indent() << "auto [table_i, vec_i] = broken_listrefs.back();"
-             << endl;
+      stream << indent() << "std::pair<int, size_t> &b = "
+             << "broken_listrefs.back();" << endl;
+      stream << indent() << "int table_i = b.first;" << endl;
+      stream << indent() << "size_t vec_i = b.second;" << endl;
       stream << indent() << "auto &listref = (*(tables[table_i]))[vec_i].ref();"
              << endl;
       stream << indent() << "for (size_t i = 0; i < "
@@ -1379,6 +1394,13 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
             << " == 0) {" << endl;
      inc_indent();
      stream << indent() << "i += 2;" << endl;
+     dec_indent();
+     stream << indent() << "} else if (std::strcmp(argv[i], \"--keepArchives\")"
+            << " == 0 ||" << endl;
+     stream << indent() << "           std::strcmp(argv[i], \"-K\") == 0) {"
+            << endl;
+     inc_indent();
+     stream << indent() << "++i;" << endl;
      dec_indent();
      stream << indent() << "} else {" << endl;
      inc_indent();
