@@ -586,7 +586,8 @@ inline int gquad_energy(const Basic_Subsequence<alphabet, pos_type> &G1,
   int energy = 0;
 
   for (unsigned k = 0; k < G1.seq->rows(); k++)
-    energy += gquad_energy(G1.j - G1.i, (l1.j - l1.i) + (l2.j - l2.i) + (l3.j - l3.i));
+    energy += gquad_energy(G1.j - G1.i,
+                           (l1.j - l1.i) + (l2.j - l2.i) + (l3.j - l3.i));
 
   return energy;
 }
@@ -596,9 +597,10 @@ inline int gquad_energy(const Basic_Subsequence<alphabet, pos_type> &G1,
  *  nodangle=d0, overdangle=d2, microstate=d1
  */
 template<typename alphabet, typename pos_type>
-inline int gquad_penalty_energy(const Basic_Subsequence<alphabet, pos_type> &leftflank,
-		                        const Basic_Subsequence<alphabet, pos_type> &rightflank,
-								int danglemodel) {
+inline int gquad_penalty_energy(
+  const Basic_Subsequence<alphabet, pos_type> &leftflank,
+  const Basic_Subsequence<alphabet, pos_type> &rightflank,
+  int danglemodel) {
   int energy = 0;
 
   for (unsigned k = 0; k < leftflank.seq->rows(); k++)
