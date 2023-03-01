@@ -444,3 +444,12 @@ RUN_CPP_FLAGS=" -f emptyinput "
 echo "" > emptyinput # create an input file with empty word, since '' as parameter is not correctly propagated through bash scripts
 check_new_old_eq empty_ys_issue.gap unused count dummyinput shouldbe1
 check_new_old_eq empty_ys_issue_larger.gap unused count dummyinput shouldbe1
+
+# ensure that previously composed answers are not erased by later application of filters for completely different alternatives, see PR https://github.com/jlab/gapc/pull/123
+GRAMMAR=../../grammar2
+GAPC="../../../gapc"
+RUN_CPP_FLAGS=""
+check_new_old_eq eraseanswers.gap unused ins_count_failing "AC" eraseanswer
+check_new_old_eq eraseanswers.gap unused ins_count_working "AC" eraseanswer
+check_new_old_eq eraseanswers_product.gap unused ins "CaaG" eraseanswer_one
+check_new_old_eq eraseanswers_product.gap unused ins "CaaaG" eraseanswer_four
