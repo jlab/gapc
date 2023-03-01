@@ -1202,11 +1202,11 @@ int gquad_penalty_energy(const char *s, rsize leftflank_i, rsize leftflank_j,
   int energy = 0;
 
   energy += P->internal_loop[(leftflank_j - leftflank_i + 1) +
-							 (rightflank_j - rightflank_i + 1)];
+                             (rightflank_j - rightflank_i + 1)];
 
   if (danglemodel == 2) {
     int out_closingBP = bp_index(s[leftflank_i-1], s[rightflank_j+1]);
-	energy += P->mismatchI[out_closingBP][s[leftflank_i]][s[rightflank_j]];
+      energy += P->mismatchI[out_closingBP][s[leftflank_i]][s[rightflank_j]];
   }
 
   return energy;
