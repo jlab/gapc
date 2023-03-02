@@ -83,9 +83,13 @@ int dr_dangle_dg(enum base_t i, enum base_t j, enum base_t dangle);
 int gquad_energy(rsize g_run_length, rsize combined_linker_length);
 /* for Guanine-Quadruplexes: the quadruplex can be enclosed by a basepair
  * as an alternative hairpin. In this case, flanking bases left and right
- * of the gquad must be present and energy penalties will be added. */
+ * of the gquad must be present and energy penalties will be added.
+ * The dangling model (nodangle=d0, overdangle=d2, microstate=d1) will
+ * define the exact energy penalties, thus the model is passed here as
+ * another parameter */
 int gquad_penalty_energy(const char *s, rsize leftflank_i, rsize leftflank_j,
-                         rsize rightflank_i, rsize rightflank_j);
+                         rsize rightflank_i, rsize rightflank_j,
+                         int danglemodel);
 
 // not in rna.hh
 double mk_pf(double x);
