@@ -591,23 +591,19 @@ inline int gquad_energy(const Basic_Subsequence<alphabet, pos_type> &G1,
 
   return energy;
 }
-/* a quadruplex can be enclosed in a base-pair. If so, it need to have
- * minimal flanking unpaired regions which do impose an energetic penalty
- * which also depends on the dangling model:
- *  nodangle=d0, overdangle=d2, microstate=d1
+/* a penalty against Guanine-Quadruplexes if they are enclosed in other
+ * nested structures
  */
 template<typename alphabet, typename pos_type>
 inline int gquad_penalty_energy(
   const Basic_Subsequence<alphabet, pos_type> &leftflank,
-  const Basic_Subsequence<alphabet, pos_type> &rightflank,
-  int danglemodel) {
+  const Basic_Subsequence<alphabet, pos_type> &rightflank) {
   int energy = 0;
 
   for (unsigned k = 0; k < leftflank.seq->rows(); k++)
     energy += gquad_penalty_energy(leftflank.seq->row(k),
                                    leftflank.i, leftflank.j-1,
-                                   rightflank.i, rightflank.j-1,
-                                   danglemodel);
+                                   rightflank.i, rightflank.j-1);
 
   return energy;
 }

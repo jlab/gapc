@@ -1192,22 +1192,15 @@ int dr_dangle_dg(enum base_t i, enum base_t j, enum base_t dangle) {
 int gquad_energy(rsize g_run_length, rsize combined_linker_length) {
   return P->gquad[g_run_length][combined_linker_length];
 }
-/* depending on the dangling model (nodangle=d0, overdangle=d2, microstate=d1)
- * different energetic penalties will be added for gquads that are enclosed
- * in a basepair
+/* a penalty against Guanine-Quadruplexes if they are enclosed in other
+ * nested structures
  */
 int gquad_penalty_energy(const char *s, rsize leftflank_i, rsize leftflank_j,
-                         rsize rightflank_i, rsize rightflank_j,
-                         int danglemodel) {
+                         rsize rightflank_i, rsize rightflank_j) {
   int energy = 0;
 
   energy += P->internal_loop[(leftflank_j - leftflank_i + 1) +
                              (rightflank_j - rightflank_i + 1)];
-
-  if (danglemodel == 2) {
-    int out_closingBP = bp_index(s[leftflank_i-1], s[rightflank_j+1]);
-      energy += P->mismatchI[out_closingBP][s[leftflank_i]][s[rightflank_j]];
-  }
 
   return energy;
 }
