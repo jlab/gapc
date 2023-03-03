@@ -31,6 +31,8 @@
 #include <utility>
 #include <ostream>
 #include <stack>
+#include <vector>
+#include <cstdint>
 
 // tr1 has it
 #include <boost/cstdint.hpp>
@@ -44,8 +46,32 @@
 
 class String {
  private:
+#if defined(CHECKPOINTING_INTEGRATED)
+    friend class boost::serialization::access;
+
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version) {
+      ar & block;
+      ar & readonly;
+      ar & empty_;
+      ar & block_as_int;
+    }
+#endif
+
+ public:
     class Block {
      private:
+#if defined(CHECKPOINTING_INTEGRATED)
+        friend class boost::serialization::access;
+
+        template<class Archive>
+        void serialize(Archive & ar, const unsigned int version) {
+          ar & pos;
+          for (unsigned char i = 0; i < pos; i++) {
+            ar & array[i];
+          }
+       }
+#endif
         void del(Block *b) {
           assert(b->ref_count);
           b->dec_ref();
@@ -56,8 +82,10 @@ class String {
         Block &operator=(const Block &b);
 
      public:
-        uint32_t ref_count;
-      // enum { size = 27 };
+      uint32_t ref_count;
+
+      // total size of object should be 64 bytes
+      // (refcount: 4 bytes, pos: 1 byte, array: 59 bytes -> 64 bytes total)
       enum { size = 59 };
       enum { SEQ_END, SEQ, LINK, REP };
 
@@ -132,11 +160,9 @@ class String {
       iterator begin() { return iterator(this); }
       iterator end() { return iterator(this, this); }
 
-      Block() : ref_count(1), pos(0) {
-      }
+      Block() : ref_count(1), pos(0) {}
 
-      Block(const Block &b)
-        : ref_count(1), pos(b.pos) {
+      Block(const Block &b) : ref_count(1), pos(b.pos) {
         for (unsigned char i = 0; i < pos; ++i)
           array[i] = b.array[i];
         for (iterator i = begin(); i != end(); ++i)
@@ -183,8 +209,9 @@ class String {
         b->inc_ref();
         assert(pos + 1 + sizeof(Block*) <= size);
         array[pos++] = LINK;
-        for (unsigned char i = 0; i < sizeof(Block*); ++i)
+        for (unsigned char i = 0; i < sizeof(Block*); ++i) {
           array[pos++] = ((unsigned char*)&b)[i];
+        }
       }
 
       void append(char c, uint32_t l) {
@@ -205,6 +232,7 @@ class String {
       void put(std::ostream &s) const;
     };
 
+ private:
     static Pool<Block> pool;
 
     Block *block;
@@ -212,13 +240,17 @@ class String {
     bool empty_;
 
     void del() {
-      if (!block)
+      if (!block) {
         return;
+      }
       assert(block->ref_count);
       block->dec_ref();
       if (!block->ref_count) {
         delete block;
         block = NULL;
+#if defined(CHECKPOINTING_INTEGRATED)
+        block_as_int = 0;
+#endif
       }
     }
 
@@ -227,16 +259,35 @@ class String {
         Block *t = new Block(*block);
         del();
         block = t;
+#if defined(CHECKPOINTING_INTEGRATED)
+        block_as_int = reinterpret_cast<uintptr_t>(block);
+#endif
       }
     }
 
  public:
-    String() : block(NULL), readonly(false), empty_(false) {
+#if defined(CHECKPOINTING_INTEGRATED)
+    // store block ptr as decimal number so
+    // links can be restored after deserialization
+    uintptr_t block_as_int;
+#endif
+
+    String() : block(NULL), readonly(false), empty_(false)
+#if defined(CHECKPOINTING_INTEGRATED)
+               , block_as_int(0)
+#endif
+    {}
+
+    Block *get_block() const {
+      return block;
     }
 
     void lazy_alloc() {
       if (!block)
         block = new Block();
+#if defined(CHECKPOINTING_INTEGRATED)
+        block_as_int = reinterpret_cast<uintptr_t>(block);
+#endif
     }
 
     String(const String &s) {
@@ -248,6 +299,9 @@ class String {
         readonly = false;
       }
       empty_ = s.empty_;
+#if defined(CHECKPOINTING_INTEGRATED)
+      block_as_int = reinterpret_cast<uintptr_t>(block);
+#endif
     }
 
     ~String() {
@@ -442,6 +496,9 @@ class String {
       else
         readonly = false;
       empty_ = s.empty_;
+#if defined(CHECKPOINTING_INTEGRATED)
+      block_as_int = reinterpret_cast<uintptr_t>(block);
+#endif
       return *this;
     }
 

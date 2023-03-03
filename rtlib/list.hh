@@ -53,6 +53,14 @@
 #include "output.hh"
 #include "hash.hh"
 
+#if defined(CHECKPOINTING_INTEGRATED)
+// serialization headers for the checkpointing of ListRef objects
+// (will be included in generated code through rtlib/adp.hh)
+
+#include "boost/serialization/base_object.hpp"  // serialize base obj of class
+#include "boost/serialization/deque.hpp"  // serialize std::deque
+#endif
+
 // FIXME
 // #include <iostream>
 
@@ -66,6 +74,17 @@ template <class T, typename pos_int = unsigned char>
 class List : public std::deque<T> {
  public:
   typedef typename std::deque<T>::reverse_iterator reverse_iterator;
+
+ private:
+#if defined(CHECKPOINTING_INTEGRATED)
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int version) {
+    // serialize the base object (std::deque)
+    ar & boost::serialization::base_object<std::deque<T>>(*this);
+  }
+#endif
 };
 
 
@@ -86,6 +105,19 @@ template<class T, typename pos_int = unsigned char>
 class List_Ref : public ::Ref::Lazy<List<T, pos_int> > {
  public:
   typedef typename List<T, pos_int>::reverse_iterator reverse_iterator;
+
+ private:
+#if defined(CHECKPOINTING_INTEGRATED)
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int version) {
+    // serialize the base object
+    // (basically just a wrapper around boost::shared_ptr)
+    ar &
+    boost::serialization::base_object<::Ref::Lazy<List<T, pos_int>>>(*this);
+  }
+#endif
 };
 
 template<class T, typename pos_int>
@@ -135,7 +167,6 @@ inline void append(List_Ref<T, pos_int> &x, List_Ref<T, pos_int> &e) {
   if (isEmpty(e))
     return;
   assert(&x.ref() != &e.ref());
-
   std::copy(e.ref().begin(), e.ref().end(), std::back_inserter(x.ref()));
 }
 

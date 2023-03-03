@@ -1060,6 +1060,7 @@ void Printer::Cpp::print_window_inc(const Symbol::NT &nt) {
 void Printer::Cpp::print(const Statement::Table_Decl &t) {
   in_class = true;
   bool wmode = ast && ast->window_mode;
+  bool checkpoint = ast && ast->checkpoint && !ast->checkpoint->is_buddy;
 
   std::string tname(t.name() + "_t");
   const Type::Base &dtype = t.datatype();
@@ -1088,6 +1089,16 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   print(ns);
   stream << indent() << dtype << " zero;" << endl;
 
+  if (checkpoint) {
+    stream << indent() << "boost::filesystem::path out_table_path;" << endl;
+    stream << indent() << "boost::filesystem::path tmp_out_table_path;" << endl;
+    stream << indent() << "boost::filesystem::path in_table_path;" << endl;
+    stream << indent() << "std::mutex m;" << endl;
+    stream << indent() << "std::string formatted_interval;" << endl;
+    stream << indent() << "size_t tabulated_vals_counter = 0;" << endl;
+    stream << endl;
+  }
+
   stream << t.fn_size() << endl;
 
   dec_indent();
@@ -1100,6 +1111,21 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   dec_indent();
   stream << indent() << "}" << endl << endl;
 
+  if (checkpoint) {
+    ast->checkpoint->archive(stream);
+    ast->checkpoint->remove(stream);
+    ast->checkpoint->get_out_table_path(stream);
+    ast->checkpoint->get_tabulated_vals_percentage(stream);
+    ast->checkpoint->parse_checkpoint_log(stream);
+    if (ast->checkpoint->strings || ast->checkpoint->subseq) {
+      ast->checkpoint->get_table(stream, dtype);
+    }
+    if (ast->checkpoint->strings) {
+      ast->checkpoint->get_tabulated(stream);
+      ast->checkpoint->get_tabulated_count(stream);
+    }
+  }
+
   // start "void init()"
   stream << indent() << "void init(";
   print_paras(ns, '_');
@@ -1109,6 +1135,13 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   }
 
   stream << ", const std::string &tname";
+  if (checkpoint) {
+    stream << ", const boost::filesystem::path &out_path," << endl
+           << indent() << "          const boost::filesystem::path &in_path, "
+           << "const std::string &arg_string," << endl
+           << indent() << "          const std::string &formatted_interval, "
+           << "const std::string &file_prefix";
+  }
   stream << ") {" << endl;
   inc_indent();
   print_eqs(ns, '_');
@@ -1128,11 +1161,18 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
 
   stream << indent() << ptype << " newsize = size(";
   stream << ");" << endl;
-  stream << indent() << "array.resize(newsize);" << endl;
-  if (!cyk) {
+
+  if (!cyk && !checkpoint) {
     stream << indent() << "tabulated.clear();" << endl;
     stream << indent() << "tabulated.resize(newsize);" << endl;
   }
+
+  if (checkpoint) {
+    ast->checkpoint->init(stream);
+  } else {
+    stream << indent() << "array.resize(newsize);" << endl;
+  }
+
   dec_indent();
   stream << indent() << "}" << endl << endl;
   // end "void init()"
@@ -1316,67 +1356,101 @@ void Printer::Cpp::print_type_defs(const AST &ast) {
         }
         stream << indent() << "bool empty_;" << endl << indent() << *def->name
           << "() : empty_(false) {}" << endl;
-        dec_indent();
+
+        if (ast.checkpoint && ast.checkpoint->user_def &&
+            !ast.checkpoint->is_buddy) {
+          // serialize method for user-defined type
+          stream << indent() << "friend class boost::serialization::access;"
+                 << endl << endl;
+          stream << indent() << "template <class Archive>" << endl;
+          stream << indent() << "void serialize(Archive &ar, "
+                 << "const unsigned int version) {" << endl;
+          inc_indent();
+          for (std::list<std::pair<Type::Name*, std::string*>*>::const_iterator
+             i = tuple->list.begin(); i != tuple->list.end(); ++i) {
+            stream << indent() << "ar & " << *(*i)->second << ";" << endl;
+          }
+          stream << indent() << "ar & empty_;" << endl;
+          dec_indent();
+          stream << indent() << "}" << endl << endl;
+        }
 
         // FIXME let user decide how to compare user defined tuples ...
         if (tuple->list.front()->first->lhs->const_simple()->is(Type::INT) ||
             tuple->list.front()->first->lhs->const_simple()->is(Type::FLOAT) ||
             tuple->list.front()->first->lhs->const_simple()->is(Type::SINGLE)) {
-          stream << "bool operator>(const " << *def->name << "& other) const {"
-            << " return " << *tuple->list.front()->second << " > "
-            << "other." << *tuple->list.front()->second << "; }" << endl;
-          stream << "bool operator<(const " << *def->name << "& other) const {"
-            << " return " << *tuple->list.front()->second << " < "
-            << "other." << *tuple->list.front()->second << "; }" << endl;
-          stream << "bool operator==(const " << *def->name
-            << "& other) const {"
-            << " return " << *tuple->list.front()->second << " == "
-            << "other." << *tuple->list.front()->second << "; }" << endl;
-          stream << "template <typename T> bool operator>(const T &other) "
-            << "const {"
-            << "return " << *tuple->list.front()->second << " > other; }"
-            << endl;
-          stream << "template <typename T> bool operator<(const T &other) "
-            << "const {"
-            << "return " << *tuple->list.front()->second << " < other; }"
-            << endl;
-          stream << "template <typename T> bool operator==(const T &other) "
+          stream << indent()
+                 << "bool operator>(const " << *def->name << "& other) const {"
+                 << " return " << *tuple->list.front()->second << " > "
+                 << "other." << *tuple->list.front()->second << "; }" << endl;
+          stream << indent()
+                 << "bool operator<(const " << *def->name << "& other) const {"
+                 << " return " << *tuple->list.front()->second << " < "
+                 << "other." << *tuple->list.front()->second << "; }" << endl;
+          stream << indent()
+                 << "bool operator==(const " << *def->name
+                 << "& other) const {"
+                 << " return " << *tuple->list.front()->second << " == "
+                 << "other." << *tuple->list.front()->second << "; }" << endl;
+          stream << indent()
+                 << "template <typename T> bool operator>(const T &other) "
+                 << "const {"
+                 << "return " << *tuple->list.front()->second << " > other; }"
+                 << endl;
+          stream << indent()
+                 << "template <typename T> bool operator<(const T &other) "
+                 << "const {"
+                 << "return " << *tuple->list.front()->second << " < other; }"
+                 << endl;
+          stream << indent()
+                 << "template <typename T> bool operator==(const T &other) "
             << "const {"
             << "return " << *tuple->list.front()->second << " == other; }"
             << endl;
 
           // Subopt bt operators
-          stream << endl << endl;
-          stream << *def->name << "(int i) : " << *tuple->list.front()->second
-            << "(i), empty_(false) {}" << endl;
-          stream << *def->name << " operator+(const " << *def->name
-            << " &other) const" << endl << '{' << endl
-            << "assert(!empty_); assert(!other.empty_);" << endl
-            << "return " << *def->name << '(' << *tuple->list.front()->second
-            << " + other." << *tuple->list.front()->second << ");" << endl
-            << '}' << endl;
-          stream << *def->name << " operator-(const " << *def->name
-            << " &other) const" << endl << '{' << endl
-            << "assert(!empty_);" << endl
-            << "if (other.empty_) return " << *def->name << '('
-            << *tuple->list.front()->second << ");" << endl
-            << "return " << *def->name << '(' << *tuple->list.front()->second
-            << " - other." << *tuple->list.front()->second << ");" << endl
-            << '}' << endl;
-          stream << "bool operator<=(const " << *def->name
-            << "& other) const {"
-            << endl
-            << "assert(!empty_); assert(!other.empty_);" << endl
-            << "return " << *tuple->list.front()->second << " <= "
-            << "other." << *tuple->list.front()->second << ";"
-            << endl << "}" << endl;
+          stream << indent() << endl << endl;
+          stream << indent() << *def->name << "(int i) : "
+                 << *tuple->list.front()->second
+                 << "(i), empty_(false) {}" << endl;
+          stream << indent() << *def->name << " operator+(const " << *def->name
+            << " &other) const" << '{' << endl;
+          inc_indent();
+          stream << indent() << "assert(!empty_); assert(!other.empty_);"
+                 << endl;
+          stream << indent() << "return " << *def->name << '('
+                 << *tuple->list.front()->second
+                 << " + other." << *tuple->list.front()->second << ");" << endl;
+          dec_indent();
+          stream << indent() << '}' << endl;
+          stream << indent() << *def->name << " operator-(const " << *def->name
+                 << " &other) const" << '{' << endl;
+          inc_indent();
+          stream << indent() << "assert(!empty_);" << endl;
+          stream << indent() << "if (other.empty_) return " << *def->name << '('
+                 << *tuple->list.front()->second << ");" << endl;
+          stream << indent() << "return " << *def->name << '('
+                 << *tuple->list.front()->second
+                 << " - other." << *tuple->list.front()->second << ");" << endl;
+          dec_indent();
+          stream << indent() << '}' << endl;
+          stream << indent() << "bool operator<=(const " << *def->name
+            << "& other) const {" << endl;
+          inc_indent();
+          stream << indent() << "assert(!empty_); assert(!other.empty_);"
+                 << endl;
+          stream << indent() << "return " << *tuple->list.front()->second
+                 << " <= " << "other." << *tuple->list.front()->second << ";"
+                 << endl;
+          dec_indent();
+          stream << indent() << "}" << endl;
         }
-
-        stream << endl << indent() << "};" << endl << endl;
+        dec_indent();
+        stream << indent() << "};" << endl << endl;
 
         stream << indent()
-          << "inline std::ostream &operator<<(std::ostream &o, const "
-          << *def->name << " &tuple) {" << endl;
+               << "inline std::ostream &operator<<(std::ostream &o, const "
+               << *def->name << " &tuple) {" << endl;
         inc_indent();
         stream << indent() << "o << '('";
         assert(!tuple->list.empty());
@@ -1388,7 +1462,7 @@ void Printer::Cpp::print_type_defs(const AST &ast) {
           stream << indent() << " << \", \" << tuple." << *(*j)->second
             << endl;
         }
-        stream << indent() << " << ')' ;" << endl;
+        stream << indent() << "  << ')' ;" << endl;
         stream << indent() << "return o;" << endl;
         dec_indent();
         stream << indent() << '}' << endl << endl;
@@ -1442,6 +1516,43 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
   stream << indent() << "if (inp.size() != " << ast.seq_decls.size() << ")\n"
     << indent() << indent() << "throw gapc::OptException(\"Number of input "
     << "sequences does not match.\");\n\n";
+
+  if (ast.checkpoint && !ast.checkpoint->is_buddy) {
+    stream << indent() << "start_cpu_time = std::clock();"
+           << endl;
+    stream << indent() << "std::string binary_name = "
+           << "boost::filesystem::path(opts.argv[0]).filename().string();"
+           << endl << endl;
+    stream << indent() << "if (opts.user_file_prefix.empty()) {" << endl;
+    inc_indent();
+    stream << indent() << "file_prefix = binary_name + \"_\" + "
+           << "std::to_string(getpid());" << endl;
+    dec_indent();
+    stream << indent() << "} else {" << endl;
+    inc_indent();
+    stream << indent() << "file_prefix = opts.user_file_prefix;" << endl;
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
+    stream << indent() << "std::string logfile_name = file_prefix + "
+           << "\"_checkpointing_log.txt\";" << endl;
+    stream << indent() << "logfile_path = opts.checkpoint_out_path / "
+           << "logfile_name;" << endl << endl;
+    stream << indent() << "checkpoint_interval = opts.checkpoint_interval;"
+           << endl;
+    stream << indent() << "keep_archives = opts.keep_archives;" << endl;
+    stream << indent() << "std::string arg_string = "
+           << "get_arg_str(opts.argc, opts.argv);" << endl;
+    stream << indent() << "std::string formatted_interval = "
+           << "format_interval(checkpoint_interval);" << endl;
+    stream << indent() << "std::cerr << \"Checkpointing routine has been "
+                       << "integrated. A new checkpoint will be \""
+           << endl;
+    stream << indent() << "          << \"created every \" << "
+           << "formatted_interval << \".\\n\"" << endl;
+    stream << indent() << "          << \"The checkpoints will be saved "
+           << "at \" << opts.checkpoint_out_path << \".\\n\\n\";"
+           << endl << endl;
+  }
 
   size_t track = 0;
   for (std::vector<Statement::Var_Decl*>::const_iterator
@@ -1505,8 +1616,18 @@ void Printer::Cpp::print_table_init(const AST &ast) {
     if (ast.window_mode) {
       stream << " opts.window_size, opts.window_increment, ";
     }
-    stream << "\""<< i->second->table_decl->name() << "\");" << endl;
+
+    stream << "\""<< i->second->table_decl->name() << "\"";
+    if (ast.checkpoint && !ast.checkpoint->is_buddy) {
+      stream << ", opts.checkpoint_out_path," << endl;
+      stream << indent() << "                opts.checkpoint_in_path, "
+             << "arg_string, formatted_interval," << endl;
+      stream << indent() << "                file_prefix";
+    }
+    stream << ");" << endl;
   }
+
+  stream << endl;
 }
 
 
@@ -1584,6 +1705,21 @@ void Printer::Cpp::print_init_fn(const AST &ast) {
   print_seq_init(ast);
   print_filter_init(ast);
   print_table_init(ast);
+  if (ast.checkpoint && !ast.checkpoint->is_buddy) {
+    if (ast.checkpoint->strings || ast.checkpoint->subseq) {
+      stream << indent() << "if (!(opts.checkpoint_in_path.empty())) {" << endl;
+      inc_indent();
+      if (ast.checkpoint->strings) {
+        stream << indent() << "restore_string_links();" << endl;
+      }
+      if (ast.checkpoint->subseq) {
+        stream << indent() << "add_seq_to_subseqs();" << endl;
+      }
+      dec_indent();
+      stream << indent() << "}" << endl;
+    }
+    stream << indent() << "create_checkpoint_log(opts, arg_string);" << endl;
+  }
   print_zero_init(*ast.grammar());
   print_most_init(ast);
   if (ast.window_mode)
@@ -1689,15 +1825,46 @@ void Printer::Cpp::header(const AST &ast) {
            << endl;
     stream << "#define GAPC_VERSION_STRING \"" << gapc_version_string << "\""
            << endl << endl;
+
+    if (ast.checkpoint) {
+      /*
+         this macro always needs to be at the top of the header file
+         so the serialize methods of the rtlib datatypes are visible
+         to the preprocessor
+      */
+      stream << "#define CHECKPOINTING_INTEGRATED" << endl;
+
+      // include required (boost) header files
+      ast.checkpoint->include(stream, ast.grammar()->tabulated);
+    }
+
     includes();
+
     print_subseq_typedef(ast);
     print_type_defs(ast);
+  }
+
+  if (ast.checkpoint) {
+    // insert checkpointing accessor macros
+    ast.checkpoint->macros(stream);
   }
 
   imports(ast);
   print_hash_decls(ast);
 
   stream << indent() << "class " << class_name << " {" << endl;
+  if (ast.checkpoint && !ast.checkpoint->is_buddy) {
+    stream << indent() << " private:" << endl;
+    inc_indent();
+    stream << indent() << "typedef gapc::OptException ParseException;"
+           << endl << endl;
+    stream << indent() << "size_t checkpoint_interval;" << endl;
+    stream << indent() << "boost::filesystem::path logfile_path;" << endl;
+    stream << indent() << "std::clock_t start_cpu_time;" << endl;
+    stream << indent() << "std::string file_prefix;" << endl;
+    stream << indent() << "bool keep_archives;" << endl;
+    dec_indent();
+  }
   stream << indent() << " public:" << endl;
   inc_indent();
 
@@ -2069,7 +2236,18 @@ void Printer::Cpp::print_run_fn(const AST &ast) {
   stream << indent() << *ast.grammar()->axiom->code()->return_type;
   stream << " run() {" << endl;
   inc_indent();
-  stream << indent() << "return nt_" << *ast.grammar()->axiom_name << '(';
+
+  if (ast.checkpoint && !ast.checkpoint->is_buddy) {
+    stream << indent() << "std::atomic_bool cancel_token;" << endl;
+    stream << indent() << "archive_periodically(cancel_token, ";
+    stream << "checkpoint_interval" << ");" << endl;
+    stream << indent() << *ast.grammar()->axiom->code()->return_type;
+    stream << " ans = ";
+  } else {
+    stream << indent() << "return ";
+  }
+
+  stream << "nt_" << *ast.grammar()->axiom_name << '(';
 
   bool first = true;
   size_t track = 0;
@@ -2094,6 +2272,18 @@ void Printer::Cpp::print_run_fn(const AST &ast) {
   }
 
   stream << ");" << endl;
+
+  if (ast.checkpoint && !ast.checkpoint->is_buddy) {
+    stream << indent() << "cancel_token.store(false);  "
+                          "// stop periodic checkpointing" << endl;
+    stream << indent() << "if (!keep_archives) {" << endl;
+    inc_indent();
+    stream << indent() << "remove_tables();" << endl;
+    stream << indent() << "remove_log_file();" << endl;
+    dec_indent();
+    stream << indent() << "}" << endl;
+    stream << indent() << "return ans;" << endl;
+  }
   dec_indent();
   stream << indent() << '}' << endl << endl;
 }
@@ -2124,6 +2314,27 @@ void Printer::Cpp::print_stats_fn(const AST &ast) {
 
 void Printer::Cpp::header_footer(const AST &ast) {
   dec_indent();
+  stream << indent() << " private:" << endl;
+  inc_indent();
+  if (ast.checkpoint && !ast.checkpoint->is_buddy) {
+    nt_tables &tabulated = ast.grammar()->tabulated;
+    ast.checkpoint->archive_periodically(stream, tabulated);
+    ast.checkpoint->remove_tables(stream, tabulated);
+    ast.checkpoint->remove_log_file(stream);
+    ast.checkpoint->format_interval(stream);
+    ast.checkpoint->get_arg_string(stream);
+    if (ast.checkpoint->strings) {
+      ast.checkpoint->restore_string_links(stream, tabulated);
+      ast.checkpoint->find_broken_listrefs(stream, tabulated);
+    }
+    if (ast.checkpoint->subseq) {
+      ast.checkpoint->add_seq_to_subseqs(stream, tabulated);
+    }
+    ast.checkpoint->create_checkpoint_log(stream, tabulated);
+    ast.checkpoint->update_checkpoint_log(stream, tabulated);
+    stream << endl;
+  }
+  dec_indent();
   stream << indent() << " public:" << endl;
   inc_indent();
   print_run_fn(ast);
@@ -2153,6 +2364,7 @@ void Printer::Cpp::footer(const AST &ast) {
     inc_indent();
   }
   print_cyk_fn(ast);
+
   print_id();
 }
 
@@ -2518,7 +2730,10 @@ void Printer::Cpp::makefile(const Options &opts) {
   stream << "DEPS = $(CXXFILES:.cc=.d)" << endl
     << "OFILES = $(CXXFILES:.cc=.o) string.o" << endl << endl;
   stream << opts.class_name << " : $(OFILES)" << endl
-    << "\t$(CXX) -o $@ $^  $(LDFLAGS) $(LDLIBS)";
+      << "\t$(CXX) -o $@ $^  $(LDFLAGS) $(LDLIBS)";
+  if (opts.checkpointing) {
+    stream << " -lboost_serialization -lboost_filesystem -lpthread -ldl";
+  }
 
   // if (opts.sample) {
   //  stream << " $(GSLLIBS) ";
@@ -2599,8 +2814,8 @@ void Printer::Cpp::imports(const AST &ast) {
   }
   stream << endl;
   stream << "#include \"rtlib/generic_opts.hh\"\n";
-        stream << "#include \"rtlib/pareto_dom_sort.hh\"\n";
-        stream << "#include \"rtlib/pareto_yukish_ref.hh\"\n\n";
+  stream << "#include \"rtlib/pareto_dom_sort.hh\"\n";
+  stream << "#include \"rtlib/pareto_yukish_ref.hh\"\n\n";
 }
 
 
@@ -2931,6 +3146,22 @@ void Printer::Cpp::print(const Statement::Hash_Decl &d) {
        i != f.end(); ++i) {
     stream << indent() << *(*i)->type << "<type> " << *(*i)->name << ";"
       << endl;
+  }
+
+  if (ast->checkpoint && !ast->checkpoint->is_buddy) {
+    stream << endl;
+    stream << indent() << "friend class boost::serialization::access;"
+           << endl << endl;
+    stream << indent() << "template <class Archive>" << endl;
+    stream << indent() << "void serialize(Archive &ar, "
+           << "const unsigned int version) {" << endl;
+    inc_indent();
+    for (std::list<Statement::Var_Decl*>::const_iterator i = f.begin();
+       i != f.end(); ++i) {
+    stream << indent() << "ar & " << *(*i)->name << ";" << endl;
+    }
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
   }
 
   if (d.kbest()) {
