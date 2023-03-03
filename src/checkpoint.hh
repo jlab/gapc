@@ -486,20 +486,22 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
             }
           }
         }
-      }
-      c = 0;
-      for (auto i = tables.begin(); i != tables.end(); ++i) {
-        c++;
-        const std::string &table_name = i->second->table_decl->name();
-        if (c == 1) {
-          stream << indent() << "size_t *tabulated_counts[] = {"
-                 << table_name << ".get_tabulated_count()," << endl;
-        } else {
-          stream << indent() << "                                  ";
-          if (c < n_tables) {
-            stream << table_name << ".get_tabulated_count()," << endl;
+
+        c = 0;
+        for (auto i = tables.begin(); i != tables.end(); ++i) {
+          c++;
+          const std::string &table_name = i->second->table_decl->name();
+          if (c == 1) {
+            stream << indent() << "size_t *tabulated_counts[] = {"
+                   << table_name << ".get_tabulated_count()," << endl;
           } else {
-            stream << table_name << ".get_tabulated_count()};" << endl << endl;
+            stream << indent() << "                                  ";
+            if (c < n_tables) {
+              stream << table_name << ".get_tabulated_count()," << endl;
+            } else {
+              stream << table_name << ".get_tabulated_count()};"
+              << endl << endl;
+            }
           }
         }
       }
@@ -795,6 +797,10 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
       dec_indent();
       stream << indent() << "}" << endl;
       dec_indent();
+      stream << indent() << "}" << endl;
+      dec_indent();
+      stream << indent() << "}" << endl;
+      dec_indent();
       stream << indent() << "}" << endl << endl;
       dec_indent();
   }
@@ -979,7 +985,9 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      stream << indent() << "boost::filesystem::rename(tmp_out_table_path, "
             << "out_table_path);" << endl;
      stream << indent() << "std::cerr << \"Info: Archived \\\"\" << tname << "
-            << "\"\\\" table into \" << out_table_path << \".\" "
+            << "\"\\\" table into \" << out_table_path" << endl
+            << indent() << "          << \". Table is \" "
+            << "<< get_tabulated_vals_percentage() << \"% filled.\" "
             << "<< std::endl;" << endl;
      dec_indent();
      stream << indent() << "} catch (const std::ofstream::failure &e) {"

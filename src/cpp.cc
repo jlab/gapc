@@ -2372,17 +2372,6 @@ void Printer::Cpp::print_run_fn(const AST &ast) {
 
   stream << ");" << endl;
 
-  if (ast.checkpoint && !ast.checkpoint->is_buddy) {
-    stream << indent() << "cancel_token.store(false);  "
-                          "// stop periodic checkpointing" << endl;
-    stream << indent() << "if (!keep_archives) {" << endl;
-    inc_indent();
-    stream << indent() << "remove_tables();" << endl;
-    stream << indent() << "remove_log_file();" << endl;
-    dec_indent();
-    stream << indent() << "}" << endl;
-    stream << indent() << "return ans;" << endl;
-  }
   dec_indent();
   stream << indent() << '}' << endl << endl;
 }
@@ -2663,8 +2652,12 @@ void Printer::Cpp::print_subopt_fn(const AST &ast) {
       inc_indent();
       stream << indent() << "cancel_token.store(false);  "
              << "// stop periodic checkpointing" << endl;
+      stream << indent() << "if (!keep_archives) {" << endl;
+      inc_indent();
       stream << indent() << "remove_tables();" << endl;
       stream << indent() << "remove_log_file();" << endl;
+      dec_indent();
+      stream << indent() << "}" << endl;
       dec_indent();
     }
     stream << indent() << '}' << endl;
@@ -2721,8 +2714,12 @@ void Printer::Cpp::print_subopt_fn(const AST &ast) {
   if (ast.checkpoint && !ast.checkpoint->is_buddy) {
     stream << indent() << "cancel_token.store(false);  "
            << "// stop periodic checkpointing" << endl;
+    stream << indent() << "if (!keep_archives) {" << endl;
+    inc_indent();
     stream << indent() << "remove_tables();" << endl;
     stream << indent() << "remove_log_file();" << endl;
+    dec_indent();
+    stream << indent() << "}" << endl;
     }
 
   dec_indent();
