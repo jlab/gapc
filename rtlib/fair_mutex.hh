@@ -41,15 +41,14 @@ class fair_mutex {
   std::condition_variable cv_;
   std::mutex mtx_;
 
-public:
+ public:
   fair_mutex() = default;
   ~fair_mutex() = default;
 
   fair_mutex(const fair_mutex&) = delete;
   fair_mutex& operator=(const fair_mutex&) = delete;
 
-  void lock()
-  {
+  void lock() {
     std::unique_lock<decltype(mtx_)> lk(mtx_);
     const std::size_t request = next_++;
     while (request != curr_) {
@@ -57,8 +56,7 @@ public:
     }
   }
 
-  bool try_lock()
-  {
+  bool try_lock() {
     std::lock_guard<decltype(mtx_)> lk(mtx_);
     if (next_ != curr_)
       return false;
@@ -66,8 +64,7 @@ public:
     return true;
   }
 
-  void unlock()
-  {
+  void unlock() {
     std::lock_guard<decltype(mtx_)> lk(mtx_);
     ++curr_;
     cv_.notify_all();
