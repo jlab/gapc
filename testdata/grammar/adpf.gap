@@ -706,5 +706,7 @@ instance shapemfeppshcl = fold ( (shape5 / mfe) * (pretty*shape5) ) ;
 
 instance prettyshape = fold ( pretty * shape5 ) ;
 
+instance mfepf = fold ( mfe * p_func) ;
+
 
 

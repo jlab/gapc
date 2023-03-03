@@ -30,6 +30,20 @@
 
 template<typename alphabet = char, typename pos_type = unsigned int>
 class Basic_Subsequence {
+#ifdef CHECKPOINTING_INTEGRATED
+
+ private:
+    friend class boost::serialization::access;
+
+    template<class Archive>
+    void serialize(Archive &ar, const unsigned int version) {
+      // only serialize i and j since *seq is the same
+      // for evey Basic_Subsequence object (*seq will be set afterwards)
+      ar & i;
+      ar & j;
+    }
+#endif
+
  public:
     const Basic_Sequence<alphabet, pos_type> *seq;
     pos_type i;

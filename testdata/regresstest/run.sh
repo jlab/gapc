@@ -78,6 +78,53 @@ cmp_new_old_output()
   log diff -u -w -B a b
 }
 
+check_checkpoint_eq()
+{
+  # check if checkpoints are created/loaded correctly and if
+  # answers if the program starts from a checkpoint are still correct
+
+  if [[ `echo $1$3$5 | grep $FILTER` != $1$3$5  ]]; then
+    return
+  fi
+
+  # work around 1 sec timestamp filesystems ... WTF?!?
+  sleep 1
+
+  echo +------------------------------------------------------------------------------+
+  failed=0
+  temp=$failed
+
+  cpp_base=${1%%.*}
+  build_cpp $GRAMMAR/$1 $cpp_base $3
+
+  # run command and create checkpoint archives after $6 seconds
+  RUN_CPP_FLAGS="--checkpointInterval 0:0:0:$6 --keepArchives"
+  ./$cpp_base $RUN_CPP_FLAGS $4 > /dev/null &
+  PID=$!
+
+  # wait for background process to finish
+  wait $PID
+
+  # specify Logfile path and run command again (it will load the checkpoints this time)
+  LOGFILE_PATH=$PWD"/"$cpp_base"_"$PID"_checkpointing_log.txt"
+  TABLE_PATH=$PWD"/"$cpp_base"_"$PID"_*_table"
+  RUN_CPP_FLAGS="--checkpointInput $LOGFILE_PATH"
+
+  run_cpp $cpp_base $3 $4 $5
+  cmp_new_old_output $cpp_base $REF $3 $5
+
+  if [ $temp != $failed ]; then
+    echo --++--FAIL--++--
+    err_count=$((err_count+1))
+  else
+    echo OK
+    succ_count=$((succ_count+1))
+    # remove the table archives and Logfile after successfully finishing the test
+    rm -f string.o $TABLE_PATH $LOGFILE_PATH
+  fi
+  echo +------------------------------------------------------------------------------+
+}
+
 check_new_old_eq()
 {
   if [[ `echo $1$3$5 | grep $FILTER` != $1$3$5  ]]; then

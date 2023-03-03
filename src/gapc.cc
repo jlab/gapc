@@ -53,8 +53,6 @@
 #include "printer/gap.hh"
 #include "specialize_grammar/create_specialized_grammar.hh"
 
-
-
 namespace po = boost::program_options;
 
 
@@ -141,7 +139,16 @@ static void parse_options(int argc, char **argv, Options *rec) {
       "  3 = add data types.\n"
       "  4 = add min/max yield sizes.\n"
       "  5 = add non-terminal table dimensions.\n"
-      "(Use 'dot -Tpdf out.dot' to generate a PDF.)\nDefault file is out.dot");
+      "(Use 'dot -Tpdf out.dot' to generate a PDF.)\nDefault file is out.dot")
+    ("checkpoint", std::string(
+     "enable periodic checkpointing of program progress.\n"
+     "Useful for long running programs that might crash intermediately.\n"
+     "You can continue from last checkpoint when re-executing the program.\n"
+     "Checkpointing interval can be configured in the generated binary\n"
+     "(creates new checkpoint every "
+     + std::to_string(DEFAULT_CP_INTERVAL_MIN)
+     + " minutes by default)\n").c_str());
+
   po::options_description hidden("");
   hidden.add_options()
     ("backtrack", "deprecated for --backtrace")
@@ -275,6 +282,9 @@ static void parse_options(int argc, char **argv, Options *rec) {
     rec->plot_grammar_file = basename(rec->out_file) + ".dot";
   }
 
+  if (vm.count("checkpoint")) {
+    rec->checkpointing = true;
+  }
 
   bool r = rec->check();
   if (!r) {
@@ -572,6 +582,63 @@ class Main {
     // remove lists in the definitions where-ever possible
     // for example for Min or max choice functions
     driver.ast.instance_grammar_eliminate_lists(instance);
+
+    if (opts.checkpointing) {
+      if (driver.ast.checkpoint) {
+        /*
+           delete Checkpoint class if it exists already;
+           this is only the case if a classified/interleaved
+           product is parsed, in which case this method (back)
+           gets called twice: once for the buddy out class (1st call)
+           and once for the regular out class (2nd call)
+        */
+        delete driver.ast.checkpoint;
+      }
+
+      Printer::Checkpoint *cp = new Printer::Checkpoint();
+      driver.ast.checkpoint = cp;
+
+      if (opts.classified) {
+        /*
+           true if product is classified/interleaved product;
+           for this type of product, a buddy class is generated,
+           whose tables don't need to be checkpointed though,
+           so the table types will not be checked for compatibility;
+           this method will be called once more for the actual class,
+           in which case opts.classified will be false,
+           so the tables are regularly checked for compatibility and
+           the checkpointing routine will be inserted if that's the case
+        */
+        cp->is_buddy = true;
+      } else {
+        if (opts.cyk) {
+          // since DP algorithm doesn't do lookups at the beginning of
+          // the nt_* functions in cyk-mode, the current checkpointing mechanism
+          // can't work in this case and won't be integrated
+          Log::instance()->error("Checkpointing routine could not be integrated"
+                                 ", because checkpointing mechanism is "
+                                 "currently incompatible with cyk-style "
+                                 "code generation.");
+          opts.checkpointing = false;
+          delete cp;
+          std::exit(0);
+        }
+        bool answer_type_supported = cp->is_supported(driver.ast.grammar()->
+                                                      tabulated);
+
+        // only enable checkpointing if type of every table is supported
+        if (answer_type_supported) {
+          Log::instance()->normalMessage("Checkpointing routine integrated.");
+        } else {
+          Log::instance()->error("Checkpointing routine could not be "
+                                 "integrated, because (one of) the table "
+                                 "type(s) can't be serialized.");
+          opts.checkpointing = false;
+          delete cp;
+          std::exit(0);
+        }
+      }
+    }
 
     Grammar *grammar = driver.ast.grammar();
     grammar->init_list_sizes();

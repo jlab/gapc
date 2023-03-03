@@ -31,11 +31,43 @@
 
 #include <iterator>
 
+#if defined(CHECKPOINTING_INTEGRATED)
+#include "boost/serialization/split_member.hpp"
+#endif
+
 using std::swap;
 
 template <typename T, typename U = size_t>
 class Stapel {
  private:
+#if defined(CHECKPOINTING_INTEGRATED)
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void save(Archive &ar, const unsigned int version) const {
+    ar << size_;
+    ar << top_;
+    for (size_t i = 0; i < size_; i++) {
+      ar << array[i];
+    }
+  }
+
+  template<class Archive>
+  void load(Archive &ar, const unsigned int version) {
+    // temporarily store size_ value in tmp_size,
+    // because resize method won't execute if its input
+    // is <= size_, so it wouldn't do anything if size_ is set directly
+    U tmp_size;
+    ar >> tmp_size;
+    resize(tmp_size);  // this will set size_
+    ar >> top_;
+    for (size_t i = 0; i < size_; i++) {
+      ar >> array[i];
+    }
+  }
+
+  BOOST_SERIALIZATION_SPLIT_MEMBER()
+#endif
   T *array;
   U top_, size_;
 
@@ -43,8 +75,7 @@ class Stapel {
   Stapel &operator=(const Stapel &);
 
  public:
-  Stapel() : array(0), top_(0), size_(0) {
-  }
+  Stapel() : array(0), top_(0), size_(0) {}
 
   explicit Stapel(U i) : array(0), top_(0), size_(0) {
     resize(i);
@@ -121,6 +152,37 @@ swap(Stapel<T, U> &a, Stapel<T, U> &b) {
 
 template <typename T, typename U = size_t> class Vector_Sparse {
  private:
+#if defined(CHECKPOINTING_INTEGRATED)
+  size_t n_elements;
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void save(Archive &ar, const unsigned int version) const {
+    ar << stack;
+    ar << size_;
+    for (size_t i = 0; i < size_; i++) {
+      ar << array[i];
+    }
+  }
+
+  template<class Archive>
+  void load(Archive &ar, const unsigned int version) {
+    ar >> stack;
+
+    // temporarily store size_ value in tmp_size,
+    // because resize method won't execute if its input
+    // is <= size_, so it wouldn't do anything if size_ is set directly
+    U tmp_size;
+    ar >> tmp_size;
+    resize(tmp_size);  // allocate space for array and set size_
+
+    for (size_t i = 0; i < size_; i++) {
+      ar >> array[i];
+    }
+  }
+
+  BOOST_SERIALIZATION_SPLIT_MEMBER()
+#endif
   T *array;
   U size_;
   Stapel<U> stack;
@@ -131,8 +193,7 @@ template <typename T, typename U = size_t> class Vector_Sparse {
   Vector_Sparse &operator=(const Vector_Sparse &);
 
  public:
-  Vector_Sparse() : array(0), size_(0) {
-  }
+  Vector_Sparse() : array(0), size_(0) {}
 
   explicit Vector_Sparse(U i) : array(0), size_(0) {
     resize(i);
