@@ -900,7 +900,9 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      stream << indent() << "boost::filesystem::rename(tmp_out_table_path, "
             << "out_table_path);" << endl;
      stream << indent() << "std::cerr << \"Info: Archived \\\"\" << tname << "
-            << "\"\\\" table into \" << out_table_path << \".\" "
+            << "\"\\\" table into \" << out_table_path" << endl
+            << indent() << "          << \". Table is \" "
+            << "<< get_tabulated_vals_percentage() << \"% filled.\" "
             << "<< std::endl;" << endl;
      dec_indent();
      stream << indent() << "} catch (const std::ofstream::failure &e) {"
