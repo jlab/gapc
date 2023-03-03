@@ -27,8 +27,11 @@
 extern "C" {
   #include <getopt.h>
   #include <unistd.h>
+  #include <ctype.h>
+  #include <stdio.h>
 }
 
+#include <cstdlib>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -39,9 +42,11 @@ extern "C" {
 #include <utility>
 #include <cassert>
 
-// define _XOPEN_SOURCE=500
+#ifdef CHECKPOINTING_INTEGRATED
+#include "boost/filesystem.hpp"
+#endif
 
-#include <cstdlib>
+// define _XOPEN_SOURCE=500
 
 namespace gapc {
 
@@ -63,6 +68,38 @@ class Opts {
     Opts(const Opts&);
     Opts &operator=(const Opts&);
 
+    int parse_checkpointing_interval(const std::string &interval) {
+      // parse the user-specified checkpointing interval
+      std::stringstream tmp_interval(interval);
+      std::string val;
+      std::vector<int> interval_vals;
+
+      try {
+        // parse the checkpointing interval the user specified
+        while (std::getline(tmp_interval, val, ':')) {
+          // split the interval string at ':' and store values
+          interval_vals.push_back(std::stoi(val));
+        }
+
+        if (interval_vals.size() != 4) {
+          throw std::exception();
+        }
+      } catch (const std::exception &e) {
+        throw OptException("Invalid interval format! "
+                           "Must be d:h:m:s (e.g. 0:0:1:0).");
+      }
+
+      // calculate the interval length (in seconds)
+      int cp_interval = interval_vals[0] * 86400 + interval_vals[1] * 3600 +
+                        interval_vals[2] * 60 + interval_vals[3];
+
+      if (cp_interval <= 0) {
+        throw OptException("Interval cannot be <= 0 (is " +
+                           std::to_string(cp_interval) + ").");
+      }
+      return cp_interval;
+    }
+
  public:
     typedef std::vector<std::pair<const char*, unsigned> > inputs_t;
     inputs_t inputs;
@@ -73,6 +110,16 @@ class Opts {
     unsigned int delta;
     unsigned int repeats;
     unsigned k;
+
+#ifdef CHECKPOINTING_INTEGRATED
+    size_t checkpoint_interval;  // default interval: 3600s (1h)
+    boost::filesystem::path  checkpoint_out_path;  // default path: cwd
+    boost::filesystem::path  checkpoint_in_path;  // default: empty
+    std::string user_file_prefix;
+    bool keep_archives;  // default: delete after calculations completed
+#endif
+    int argc;
+    char **argv;
 
     Opts()
       :
@@ -85,8 +132,16 @@ class Opts {
       window_increment(0),
       delta(0),
       repeats(1),
-      k(3) {
-    }
+      k(3),
+#ifdef CHECKPOINTING_INTEGRATED
+      checkpoint_interval(DEFAULT_CHECKPOINT_INTERVAL),
+      checkpoint_out_path(boost::filesystem::current_path()),
+      checkpoint_in_path(boost::filesystem::path("")),
+      user_file_prefix(""),
+      keep_archives(false),
+#endif
+      argc(0),
+      argv(0) {}
 
     ~Opts() {
       for (inputs_t::iterator i = inputs.begin(); i != inputs.end(); ++i)
@@ -101,7 +156,49 @@ class Opts {
 #ifdef LIBRNA_RNALIB_H_
         << " (-[tT] [0-9]+)? (-P PARAM-file)?"
 #endif
-        << " (-[drk] [0-9]+)* (INPUT|-f INPUT-file)\n\n"
+        << " (-[drk] [0-9]+)* (-h)? (INPUT|-f INPUT-file)\n"
+        << "--help   ,-h                          print this help message\n"
+#ifdef CHECKPOINTING_INTEGRATED
+        << "--checkpointInterval,-p  d:h:m:s      specify the periodic "
+        << "checkpointing\n"
+        << "                                      interval,default: 0:1:0:0 "
+        << "(1h)\n"
+        << "--checkpointOutput,-O   PATH/PREFIX   set path where to store "
+        << "the checkpoints,\n"
+        << "                                      default: current working "
+        << "directory\n"
+        << "                                      Optional: add custom prefix "
+        << "for generated\n"
+        << "                                      files to PATH (e.g. PATH:\n"
+        << "                                      \"/path/to/dir/file_prefix\""
+        << "\n"
+        << "                                      will set PATH to \"/path/to/"
+        << "dir/\"\n"
+        << "                                      and PREFIX to \"file_prefix\""
+        << ").\n"
+        << "                                      Make sure to add a \"/\" to\n"
+        << "                                      the end of PATH if you don't"
+        << "\n"
+        << "                                      wish to add a custom prefix "
+        << "to the files.\n"
+        << "--checkpointInput,-I    LOGFILE       set the path to the Logfile\n"
+        << "                                      of the checkpoints you wish "
+        << "to load.\n"
+        << "                                      (This file was generated "
+        << "along\n"
+        << "                                      with the checkpoint archives."
+        << "\n"
+        << "                                      If it isn't available\n"
+        << "                                      add the path to each archive "
+        << "to a \n"
+        << "                                      text file and provide the \n"
+        << "                                      path to this file).\n"
+        << "--keepArchives,-K                     don't delete checkpointing "
+        << "archives\n"
+        << "                                      after the program finished "
+        << "its calculations\n"
+#endif
+       << "\n"
 #if defined(GAPC_CALL_STRING) && defined(GAPC_VERSION_STRING)
         << "GAPC call:        \"" << GAPC_CALL_STRING << "\"\n"
         << "GAPC version:     \"" << GAPC_VERSION_STRING << "\"\n"
@@ -112,17 +209,30 @@ class Opts {
     void parse(int argc, char **argv) {
       int o = 0;
       char *input = 0;
+      const option long_opts[] = {
+            {"help", no_argument, nullptr, 'h'},
+            {"checkpointInterval", required_argument, nullptr, 'p'},
+            {"checkpointOutput", required_argument, nullptr, 'O'},
+            {"checkpointInput", required_argument, nullptr, 'I'},
+            {"keepArchives", no_argument, nullptr, 'K'},
+            {nullptr, no_argument, nullptr, 0}};
+      this->argc = argc;
+      this->argv = argv;
+
 #ifdef LIBRNA_RNALIB_H_
       char *par_filename = 0;
 #endif
-      while ((o = getopt(argc, argv, ":f:"
+      while ((o = getopt_long(argc, argv, ":f:"
 #ifdef WINDOW_MODE
               "w:i:"
 #endif
 #ifdef LIBRNA_RNALIB_H_
               "t:T:P:"
 #endif
-              "hd:r:k:")) != -1) {
+#ifdef CHECKPOINTING_INTEGRATED
+              "p:I:KO:"
+#endif
+             "hd:r:k:H:", long_opts, nullptr)) != -1) {
         switch (o) {
           case 'f' :
             {
@@ -183,6 +293,69 @@ class Opts {
           case 'r' :
             repeats = std::atoi(optarg);
             break;
+#ifdef CHECKPOINTING_INTEGRATED
+          case 'p' :
+            checkpoint_interval = parse_checkpointing_interval(optarg);
+            break;
+          case 'I' :
+          {
+            boost::filesystem::path arg_path(optarg);
+            if (arg_path.is_absolute()) {
+              checkpoint_in_path = arg_path;
+            } else {
+              checkpoint_in_path = boost::filesystem::current_path() / arg_path;
+            }
+            if (!boost::filesystem::exists(checkpoint_in_path) ||
+                !boost::filesystem::is_regular_file(checkpoint_in_path)) {
+              throw OptException("Logfile could not be found at path \"" +
+                                 checkpoint_in_path.string() +
+                                 "\"!");
+            }
+
+            // check if current user has read permissions
+            // for checkpoint input directory
+            if (access(checkpoint_in_path.c_str(), R_OK) != 0) {
+              throw OptException("Missing read permissions for"
+                                 " Logfile \""
+                                 + checkpoint_in_path.string()
+                                 + "\"!");
+            }
+            break;
+          }
+          case 'O' :
+          {
+              boost::filesystem::path arg_path(optarg);
+              boost::filesystem::path out_path = arg_path.parent_path();
+
+              if (out_path.is_absolute()) {
+                checkpoint_out_path = out_path;
+              } else {
+                checkpoint_out_path /= out_path;
+              }
+
+            user_file_prefix = arg_path.filename().string();
+
+            if (!boost::filesystem::exists(checkpoint_out_path) ||
+                !boost::filesystem::is_directory(checkpoint_out_path)) {
+              throw OptException("The output path \"" +
+                                 checkpoint_out_path.string() +
+                                 "\" is not a directory!");
+            }
+
+            // check if current user has write permissions
+            // for checkpoint output directory
+            if (access(checkpoint_out_path.c_str(), W_OK) != 0) {
+              throw OptException("Missing write permissions for"
+                                 " output path \""
+                                 + checkpoint_out_path.string()
+                                 + "\"!");
+            }
+            break;
+          }
+          case 'K' :
+            keep_archives = true;
+            break;
+#endif
           case '?' :
           case ':' :
             {

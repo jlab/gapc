@@ -45,6 +45,13 @@
 
 #include "hash_stats.hh"
 
+#if defined(CHECKPOINTING_INTEGRATED)
+// serialization headers for the checkpointing of Hash_Ref objects
+// (will be included in generated code through rtlib/adp.hh)
+
+#include "boost/serialization/base_object.hpp"  // serialize base obj of class
+#endif
+
 
 using std::swap;
 
@@ -115,6 +122,21 @@ struct DisableShrink {
 
 template <typename T, typename U = uint32_t>
 struct Default_Inspector {
+#if defined(CHECKPOINTING_INTEGRATED)
+  /*
+     while this default inspector doesn't contain any members,
+     custom inspector objects are often used as template arguments
+     for the Set class that gets wrapped in the Hash::Ref class;
+     these custom inspectors can potentially contain members
+     that need to be serialized, so this default
+     inspector needs an empty serialize method so boost doesn't complain
+  */
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int version) {
+  }
+#endif
   T init(const T &x) const { return x; }
   U hash(const T &x) const {
     return hashable_value(x);
@@ -154,6 +176,17 @@ template <typename T,
           >
 class Set {
  private:
+#if defined(CHECKPOINTING_INTEGRATED)
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int version) {
+    ar & array;
+    ar & init;
+    ar & used_;
+    ar & inspector;
+  }
+#endif
     Vector_Sparse<T, U> array;
     std::vector<bool> init;
     U used_;
@@ -228,6 +261,11 @@ class Set {
     Set &operator=(const Set&);
 
  public:
+#ifdef CHECKPOINTING_INTEGRATED
+    size_t vector_size() const  {
+      return array.size();
+    }
+#endif
     U ref_count;
     Set()
       : used_(0),
@@ -375,6 +413,18 @@ void Set<SET_TEMPLATE_ARGS>::operator delete(void *b) noexcept(false) {
 template<class T, class I>
 class Ref : public ::Ref::Lazy<Set<T, I> > {
  private:
+#if defined(CHECKPOINTING_INTEGRATED)
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int version) {
+    // serialize the base object
+    // (basically just a wrapper around boost::shared_ptr)
+    ar &
+    boost::serialization::base_object<::Ref::Lazy<Set<T, I>>>(*this);
+  }
+#endif
+
  public:
 };
 

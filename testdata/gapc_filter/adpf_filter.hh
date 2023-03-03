@@ -5,6 +5,14 @@
 template <typename T>
 struct p_func_filter
 {
+#ifdef CHECKPOINTING_INTEGRATED
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive &ar, const unsigned int version) {
+    ar & sum;
+  }
+#endif
   double sum;
   p_func_filter()
     : sum(0) {}

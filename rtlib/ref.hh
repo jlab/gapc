@@ -27,10 +27,24 @@
 #include <algorithm>
 #include <boost/shared_ptr.hpp>
 
+#if defined(CHECKPOINTING_INTEGRATED)
+#include "boost/serialization/shared_ptr.hpp"  // serialize boost::shared_ptr
+#endif
+
 namespace Ref {
 template<class T> class Lazy {
  public:
   boost::shared_ptr<T> l;
+
+ private:
+#if defined(CHECKPOINTING_INTEGRATED)
+  friend class boost::serialization::access;
+
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int version) {
+    ar & l;
+  }
+#endif
 
  protected:
   void lazy() {

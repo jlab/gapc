@@ -49,7 +49,8 @@ Tablegen::Tablegen()
   cond(0),
   dtype(0),
   cyk_(false),
-  window_mode_(false) {
+  window_mode_(false),
+  checkpoint_(false) {
   // FIXME?
   type = new ::Type::Size();
 
@@ -351,8 +352,10 @@ void Tablegen::offset(size_t track_pos, itr f, const itr &e) {
 #include "symbol.hh"
 
 Statement::Table_Decl *Tablegen::create(Symbol::NT &nt,
-    std::string *name, bool cyk) {
+    std::string *name, bool cyk, bool checkpoint) {
   cyk_ = cyk;
+  checkpoint_ = checkpoint;  // is checkpointing activated?
+
   std::list<Expr::Base*> ors;
   nt.gen_ys_guards(ors);
   if (!ors.empty())
@@ -466,6 +469,22 @@ Fn_Def *Tablegen::gen_tab() {
   Statement::Fn_Call *a = new Statement::Fn_Call(Statement::Fn_Call::ASSERT);
   a->add_arg(new Expr::Less(off, new Expr::Fn_Call(new std::string("size"))));
   c.push_back(a);
+
+  if (checkpoint_) {
+    // create a std::lock_guard object and lock the table's mutex
+    // to ensure that the archiving thread
+    // can't read the array while the value is being set
+    Statement::Fn_Call *lock_guard = new Statement::Fn_Call(
+                             "std::lock_guard<std::mutex> lock");
+    // "m" is the mutex object
+    lock_guard->add_arg(new std::string("m"));
+    c.push_back(lock_guard);
+
+    // increase the counter tracking how many cells have been tabulated
+    Statement::Increase *inc_tab_c = new Statement::Increase(
+                                     new std::string("tabulated_vals_counter"));
+    c.push_back(inc_tab_c);
+  }
 
   Statement::Var_Assign *x = new Statement::Var_Assign(
       new Var_Acc::Array(new Var_Acc::Plain(new std::string("array")), off),

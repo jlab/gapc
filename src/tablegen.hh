@@ -67,6 +67,7 @@ class Tablegen {
 
     bool cyk_;
     bool window_mode_;
+    bool checkpoint_;
 
     void head(Expr::Base *&i, Expr::Base *&j, Expr::Base *&n,
       const Table &table, size_t track);
@@ -95,7 +96,7 @@ class Tablegen {
     void offset(size_t track_pos, itr first, const itr &end);
 
     Statement::Table_Decl *create(Symbol::NT &nt,
-      std::string *name, bool cyk);
+      std::string *name, bool cyk, bool checkpoint);
 };
 
 
