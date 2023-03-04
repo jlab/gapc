@@ -767,18 +767,6 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
           ++c;
         }
       } else {
-        stream << indent() << "// mark the broken List_Ref's "
-               << "as not tabulated" << endl;
-        stream << indent() << "for (const auto& [table_i, vec_i] : "
-               << "broken_listrefs) {" << endl;
-        inc_indent();
-        stream << indent() << "bool is_tabulated = "
-               << "(*(tabulated[table_i]))[vec_i];" << endl;
-        stream << indent() << "if (is_tabulated) {" << endl;
-        inc_indent();
-        stream << indent() << "(*(tabulated[table_i]))[vec_i] = false;" << endl;
-        stream << indent() << "(*(tabulated_counts[table_i]))--;" << endl;
-      }
       stream << indent() << "// mark the broken ListRefs "
              << "as not tabulated" << endl;
       stream << indent() << "for (const auto& b : "
@@ -792,10 +780,7 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
       inc_indent();
       stream << indent() << "(*(tabulated[table_i]))[vec_i] = false;" << endl;
       stream << indent() << "(*(tabulated_counts[table_i]))--;" << endl;
-      dec_indent();
-      stream << indent() << "}" << endl;
-      dec_indent();
-      stream << indent() << "}" << endl;
+      }
       dec_indent();
       stream << indent() << "}" << endl;
       dec_indent();
