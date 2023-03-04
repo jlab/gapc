@@ -30,10 +30,10 @@
 #define RTLIB_FAIR_MUTEX_HH_
 
 #include <cassert>
-#include <chrono>
-#include <condition_variable>
-#include <mutex>
-#include <thread>
+#include <chrono>  // NOLINT [build/c++11]
+#include <condition_variable>  // NOLINT [build/c++11]
+#include <mutex>  // NOLINT [build/c++11]
+#include <thread>  // NOLINT [build/c++11]
 
 class fair_mutex {
   std::size_t next_ = 0;

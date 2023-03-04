@@ -1520,7 +1520,7 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      dec_indent();
   }
 
-  void parse_checkpoint_log(Printer::Base &stream) {
+  void parse_checkpoint_log(Printer::Base &stream, bool cyk) {
      inc_indent();
      if (!cyk) inc_indent();
      stream << indent() << "void parse_checkpoint_log("

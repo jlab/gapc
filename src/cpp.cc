@@ -1116,7 +1116,7 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
     ast->checkpoint->remove(stream);
     ast->checkpoint->get_out_table_path(stream);
     ast->checkpoint->get_tabulated_vals_percentage(stream);
-    ast->checkpoint->parse_checkpoint_log(stream);
+    ast->checkpoint->parse_checkpoint_log(stream, false);
     if (ast->checkpoint->strings || ast->checkpoint->subseq) {
       ast->checkpoint->get_table(stream, dtype);
     }
@@ -2412,7 +2412,7 @@ void Printer::Cpp::header_footer(const AST &ast) {
       ast.checkpoint->load_cyk_indices(stream,
                                        ast.grammar()->axiom->tracks());
       ast.checkpoint->map_1d_to_2d(stream);
-      ast.checkpoint->parse_checkpoint_log(stream);
+      ast.checkpoint->parse_checkpoint_log(stream, true);
     }
     ast.checkpoint->archive_periodically(stream, tabulated);
     ast.checkpoint->remove_tables(stream, tabulated);
