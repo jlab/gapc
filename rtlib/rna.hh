@@ -569,6 +569,49 @@ inline int dr_dangle_dg(enum base_t i, enum base_t j, enum base_t dangle) {
   return dr_dangle_dg(i, j, dangle);
 }
 
+/* energy contribution of a Guanine-Quadruplex. For single RNA input,
+ * the energy only depends on the
+ *   a) length of the G-run and
+ *   b) combined length of the linkers
+ *
+ */
+template<typename alphabet, typename pos_type>
+inline int gquad_energy(const Basic_Subsequence<alphabet, pos_type> &G1,
+                        const Basic_Subsequence<alphabet, pos_type> &l1,
+                        const Basic_Subsequence<alphabet, pos_type> &G2,
+                        const Basic_Subsequence<alphabet, pos_type> &l2,
+                        const Basic_Subsequence<alphabet, pos_type> &G3,
+                        const Basic_Subsequence<alphabet, pos_type> &l3,
+                        const Basic_Subsequence<alphabet, pos_type> &G4) {
+  int energy = 0;
+
+  for (unsigned k = 0; k < G1.seq->rows(); k++)
+    energy += gquad_energy(G1.j - G1.i,
+                           (l1.j - l1.i) + (l2.j - l2.i) + (l3.j - l3.i));
+
+  return energy;
+}
+/* a quadruplex can be enclosed in a base-pair. If so, it need to have
+ * minimal flanking unpaired regions which do impose an energetic penalty
+ * which also depends on the dangling model:
+ *  nodangle=d0, overdangle=d2, microstate=d1
+ */
+template<typename alphabet, typename pos_type>
+inline int gquad_penalty_energy(
+  const Basic_Subsequence<alphabet, pos_type> &leftflank,
+  const Basic_Subsequence<alphabet, pos_type> &rightflank,
+  int danglemodel) {
+  int energy = 0;
+
+  for (unsigned k = 0; k < leftflank.seq->rows(); k++)
+    energy += gquad_penalty_energy(leftflank.seq->row(k),
+                                   leftflank.i, leftflank.j-1,
+                                   rightflank.i, rightflank.j-1,
+                                   danglemodel);
+
+  return energy;
+}
+
 #include "table.hh"
 
 template<typename alphabet = char, typename pos_type = unsigned int>
