@@ -445,7 +445,8 @@ unsigned int Symbol::Terminal::to_dot(unsigned int *nodeID, std::ostream &out,
                                       int plot_grammar) {
   unsigned int thisID = Symbol::Base::to_dot(nodeID, out, is_rhs, axiom,
     plot_grammar);
-  out << ", color=\"" << COLOR_TERMINAL << "\", fontcolor=\"" << COLOR_TERMINAL << "\" ];\n";
+  out << ", color=\"" << COLOR_TERMINAL << "\", fontcolor=\""
+      << COLOR_TERMINAL << "\" ];\n";
   return thisID;
 }
 unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
@@ -533,7 +534,8 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
       }
       out << ">, fontcolor=\"" << COLOR_EVALFCT << "\", shape=none ];\n";
       out << "    node_" << thisID << " -> node_" << choiceID
-          << " [ arrowhead=none, color=\"" << COLOR_EVALFCT << "\", weight=99 ];\n";
+          << " [ arrowhead=none, color=\""
+          << COLOR_EVALFCT << "\", weight=99 ];\n";
       // choice function will be located on depth+1, i.e. one less
       // invisible fake node necessary
       lhsNT_depth++;
