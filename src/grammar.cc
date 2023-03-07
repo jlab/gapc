@@ -494,6 +494,10 @@ bool Grammar::check_semantic() {
    * parse the empty word, which is the recursion base for all outside
    * candidates */
   b = this->check_outside_parse_empty_word();
+  r = r && b;
+
+  // check that all NTs requested by the user are actually part of the grammar
+  this->check_outside_requested_nonexisting_nts();
 
   return r;
 }

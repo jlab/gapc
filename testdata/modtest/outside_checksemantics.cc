@@ -33,6 +33,9 @@ int main(int argc, char **argv) {
   // activate outside grammar generation
   std::vector<std::string> outside_nts;
   outside_nts.push_back("ALL");
+  if (grammar->name->compare("canonicals_nonamb") == 0) {
+    outside_nts.push_back("idonotexist");
+  }
   driver.ast.set_outside_nt_list(&outside_nts);
 
   // Now check the semantic, which does more than the function
@@ -40,36 +43,14 @@ int main(int argc, char **argv) {
   // that links the grammar graph together, and computes yield-sizes.
   // If the method returns false, there are some semantic errors,
   // which leads to the end of the compilation process.
-  bool r = grammar->check_semantic();
-  return 1;
-//
-//  // inject rules for outside grammar
-//  grammar->inject_outside_nts();
-//
-//  // set approx table design
-//  grammar->approx_table_conf();
-//
-//  // find what type of input is read
-//  // chars, sequence of ints etc.
-//  driver.ast.derive_temp_alphabet();
-//
-//  r = driver.ast.check_signature();
-//  if (!r) {
-//	return 4;
-//  }
-//
-//  // apply this to identify standard functions like Min, Max, Exp etc.
-//  driver.ast.derive_roles();
-//
-//
-//  // ------------- back ------------
-//  grammar->init_list_sizes();
-//
-//  grammar->init_indices();
-//  grammar->init_decls();
-//  // for cyk (ordering of NT for parsing, see page 101 of the thesis)
-//  grammar->dep_analysis();
-//
-//  unsigned int nodeID = 1;
-//  grammar->to_dot(&nodeID, std::cout, 3);
+  bool r;
+  try {
+    r = grammar->check_semantic();
+  } catch (std::exception const &exc) {
+    std::cerr << exc.what();
+  }
+
+  if (!r) {
+    return 1;
+  }
 }

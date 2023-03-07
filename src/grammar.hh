@@ -211,6 +211,12 @@ class Grammar {
   /* semantic check: grammar must be able to parse the empty input in
    * order to provide recursion base for outside candidates */
   bool check_outside_parse_empty_word();
+
+  /* input check: tests if all NTs requested by the user to be reported
+   * actually do exist in the chosen inside grammar.
+   * Throws an error if NTs are not present.
+   */
+  void check_outside_requested_nonexisting_nts();
 };
 
 

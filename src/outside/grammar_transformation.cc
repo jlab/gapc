@@ -22,6 +22,8 @@
 }}} */
 
 #include <vector>
+#include <list>
+#include <string>
 
 #include "grammar_transformation.hh"
 #include "../grammar.hh"
@@ -49,3 +51,45 @@ bool Grammar::check_outside_parse_empty_word() {
   }
   return true;
 }
+
+void Grammar::check_outside_requested_nonexisting_nts() {
+  /* double check that all NTs do exist that the user requested to
+   * be reported in the outside grammar.
+   */
+
+  // a list that collects the names of non existent NTs
+  std::list<std::string> *warn_missing_nts = new std::list<std::string>();
+
+  // iterate through NTs which the user requested to be reported
+  for (std::vector<std::string>::const_iterator i =
+       this->ast.get_outside_nt_list()->begin();
+       i != this->ast.get_outside_nt_list()->end(); ++i) {
+    // ignore the special user input "ALL", since this is per definition not
+    // a non-terminal in the grammar
+    if ((*i).compare(OUTSIDE_ALL) == 0) {
+      continue;
+    }
+
+    // next, check if NT with user given name is present in grammar
+    if (this->NTs.find(*i) == this->NTs.end()) {
+      // if not, add this NT name to the list
+      warn_missing_nts->push_back(*i);
+    }
+  }
+
+  if (warn_missing_nts->size() > 0) {
+    std::string msg = std::string(
+      "You requested outside grammar generation and\nreporting results for "
+      "the following non-terminals, which do NOT exist in your grammar '" +
+      *this->name + "':\n");
+    for (std::list<std::string>::iterator i = warn_missing_nts->begin();
+         i != warn_missing_nts->end(); ++i) {
+      msg += "  '" + *i + "'";
+      if (next(i) != warn_missing_nts->end()) {
+        msg += "\n";
+      }
+    }
+    throw LogError(this->location, msg);
+  }
+}
+

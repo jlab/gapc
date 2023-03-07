@@ -314,6 +314,9 @@ class AST {
   void set_outside_nt_list(std::vector<std::string> *nts) {
     outside_nt_list = nts;
   }
+  const std::vector<std::string> *get_outside_nt_list() {
+    return this->outside_nt_list;
+  }
 };
 
 #endif  // SRC_AST_HH_
