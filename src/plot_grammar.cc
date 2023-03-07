@@ -28,10 +28,19 @@
 #include "fn_arg.hh"
 #include "fn_def.hh"
 
+static const char *COLOR_OVERLAY = "#cc5555";
+static const char *COLOR_INDICES = "#555555";
+static const char *COLOR_FILTER = "magenta";
+static const char *COLOR_TYPE = "orange";
+static const char *COLOR_TERMINAL = "blue";
+static const char *COLOR_ALGFCT = "green";
+static const char *COLOR_NONTERMINAL = "black";
+static const char *COLOR_BLOCK = "gray";
+static const char *COLOR_EVALFCT = "purple";
 
 // the following functions produce graphViz code to represent the grammar
 void Alt::Link::to_dot_overlayindices(std::ostream &out, bool is_left_index) {
-  out << "<td><font point-size='8' color='#cc5555'><b>";
+  out << "<td><font point-size='8' color='" << COLOR_OVERLAY << "'><b>";
   if (is_left_index) {
     this->indices.front()->put(out);
   } else {
@@ -42,7 +51,7 @@ void Alt::Link::to_dot_overlayindices(std::ostream &out, bool is_left_index) {
 // prints left or right indices of a parser to out stream.
 // used as a helper for to_dot functions
 void to_dot_indices(std::vector<Expr::Base*> indices, std::ostream &out) {
-  out << "<td><font point-size='8' color='#555555'>";
+  out << "<td><font point-size='8' color='" << COLOR_INDICES << "'>";
   for (std::vector<Expr::Base*>::const_iterator track = indices.begin();
        track != indices.end(); ++track) {
     // assert(*track != NULL);
@@ -106,16 +115,16 @@ unsigned int Alt::Base::to_dot_semanticfilters(unsigned int *nodeID,
     unsigned int childID = (unsigned int)((*nodeID)++);
     out << "    node_" << childID << " [ label=\"";
     to_dot_filternameargs(*filter, out);
-    out << "\" , fontcolor=\"magenta\" , shape=none ];\n";
+    out << "\" , fontcolor=\"" << COLOR_FILTER << "\" , shape=none ];\n";
     if (childIDs) {
       for (std::vector<unsigned int>::const_iterator i = childIDs->begin();
            i != childIDs->end(); ++i) {
         out << "node_" << *i << " -> node_" << childID
-            << " [ arrowhead=none, color=\"magenta\" ];\n";
+            << " [ arrowhead=none, color=\"" << COLOR_FILTER << "\" ];\n";
       }
     } else {
       out << "    node_" << thisID << " -> node_" << childID
-          << " [ arrowhead=none, color=\"magenta\" ];\n";
+          << " [ arrowhead=none, color=\"" << COLOR_FILTER << "\" ];\n";
     }
     max_depth = 1;
   }
@@ -151,9 +160,9 @@ unsigned int Alt::Base::to_dot_semanticfilters(unsigned int *nodeID,
       }
       out << "</td></tr>";
     }
-    out << "</table>>, fontcolor=\"magenta\", shape=none ];\n";
+    out << "</table>>, fontcolor=\"" << COLOR_FILTER << "\", shape=none ];\n";
     out << "node_" << thisID << " -> node_" << childID
-        << " [ arrowhead=none, color=\"magenta\" ];\n";
+        << " [ arrowhead=none, color=\"" << COLOR_FILTER << "\" ];\n";
     max_depth = 1;
   }
   return max_depth;
@@ -210,7 +219,7 @@ unsigned int* Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out,
   }
   if (plot_grammar > 2) {
     // if we want to also print out datatypes
-    out << "<br/><font color='orange'>";
+    out << "<br/><font color='" << COLOR_TYPE << "'>";
     if (this->datatype == NULL) {
       out << "NULL";
     } else {
@@ -234,21 +243,21 @@ unsigned int* Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out,
   out << "</table>>, color=\"";
   if (simple) {
     if (simple->is_terminal()) {
-      out << "blue";
+      out << COLOR_TERMINAL;
     } else {
-      out << "green";
+      out << COLOR_ALGFCT;
     }
   } else if (link) {
     Symbol::NT *nt = dynamic_cast<Symbol::NT*>(link->nt);
     if (nt) {
-      out << "black";
+      out << COLOR_NONTERMINAL;
     } else {
-      out << "blue";
+      out << COLOR_TERMINAL;
     }
   } else if (block) {
-    out << "gray";
+    out << COLOR_BLOCK;
   } else {
-    out << "black";
+    out << COLOR_NONTERMINAL;
   }
   out << "\" ";
   // indicate index hack via 8-sided polygon instead of circle
@@ -395,7 +404,7 @@ unsigned int Symbol::Base::to_dot(unsigned int *nodeID, std::ostream &out,
     out << "<td>" << *this->name;
     if (plot_grammar > 2) {
       // if we want to also print out datatypes
-      out << "<br/><font color='orange'>";
+      out << "<br/><font color='" << COLOR_TYPE << "'>";
       if (this->datatype == NULL) {
         out << "NULL";
       } else {
@@ -436,7 +445,7 @@ unsigned int Symbol::Terminal::to_dot(unsigned int *nodeID, std::ostream &out,
                                       int plot_grammar) {
   unsigned int thisID = Symbol::Base::to_dot(nodeID, out, is_rhs, axiom,
     plot_grammar);
-  out << ", color=\"blue\", fontcolor=\"blue\" ];\n";
+  out << ", color=\"" << COLOR_TERMINAL << "\", fontcolor=\"" << COLOR_TERMINAL << "\" ];\n";
   return thisID;
 }
 unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
@@ -449,7 +458,7 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
   unsigned int *res = (unsigned int *) malloc(2 * sizeof(int));
   // with "rank" we collect nodes that must be drawn topmost in a cluster
   std::string rank = "";
-  out << ", color=\"black\"";
+  out << ", color=\"" << COLOR_NONTERMINAL << >"\"";
   if (!is_rhs) {
     // a non-terminal "calling" productions, i.e. on the left hand side
     out << ", shape=\"box\"";
@@ -514,7 +523,7 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
       out << "    node_" << choiceID << " [ label=<" << *this->eval_fn;
       if (plot_grammar > 2) {
         // if we want to also print out datatypes
-        out << "<br/><font color='orange'>";
+        out << "<br/><font color='" << COLOR_TYPE << "'>";
         if (this->eval_decl == NULL) {
           out << "NULL";
         } else {
@@ -522,9 +531,9 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
         }
         out << "</font>";
       }
-      out << ">, fontcolor=\"purple\", shape=none ];\n";
+      out << ">, fontcolor=\"" << COLOR_EVALFCT << "\", shape=none ];\n";
       out << "    node_" << thisID << " -> node_" << choiceID
-          << " [ arrowhead=none, color=\"purple\", weight=99 ];\n";
+          << " [ arrowhead=none, color=\"" << COLOR_EVALFCT << "\", weight=99 ];\n";
       // choice function will be located on depth+1, i.e. one less
       // invisible fake node necessary
       lhsNT_depth++;
