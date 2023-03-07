@@ -20,3 +20,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 }}} */
+
+#ifndef SRC_OUTSIDE_GRAMMAR_TRANSFORMATION_HH_
+#define SRC_OUTSIDE_GRAMMAR_TRANSFORMATION_HH_
+
+#endif  // SRC_OUTSIDE_GRAMMAR_TRANSFORMATION_HH_
