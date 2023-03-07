@@ -459,7 +459,7 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
   unsigned int *res = (unsigned int *) malloc(2 * sizeof(int));
   // with "rank" we collect nodes that must be drawn topmost in a cluster
   std::string rank = "";
-  out << ", color=\"" << COLOR_NONTERMINAL << >"\"";
+  out << ", color=\"" << COLOR_NONTERMINAL << "\"";
   if (!is_rhs) {
     // a non-terminal "calling" productions, i.e. on the left hand side
     out << ", shape=\"box\"";
