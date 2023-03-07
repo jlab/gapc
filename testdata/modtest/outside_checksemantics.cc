@@ -29,6 +29,12 @@ int main(int argc, char **argv) {
   // grammar that occurred first in the source code or is the
   // one that was named in the parameters on the command line
   Grammar *grammar = driver.ast.grammar();
+
+  // activate outside grammar generation
+  std::vector<std::string> outside_nts;
+  outside_nts.push_back("ALL");
+  driver.ast.set_outside_nt_list(&outside_nts);
+
   // Now check the semantic, which does more than the function
   // name suggests. The semantic check is embedded in the algorithm
   // that links the grammar graph together, and computes yield-sizes.
