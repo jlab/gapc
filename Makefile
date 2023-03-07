@@ -41,6 +41,7 @@ CXXFILES = $(wildcard src/*.cc) \
 	   $(wildcard src/util/*.cc) \
 	   $(wildcard src/printer/*.cc) \
 	   $(wildcard src/specialize_grammar/*.cc) \
+	   $(wildcard src/outside/*.cc) \
 	   $(UNITTEST_CXX) \
            $(MODTESTS_CXX) \
 	   $(wildcard testdata/test/*.cc) \
