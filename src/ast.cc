@@ -54,16 +54,17 @@ AST::AST()
   :  product_(0),
     grammars_(0),
     selected_grammar(0),
-                back_track_paretosort(Product::NONE),
-                adp_specialization(ADP_Mode::STANDARD),
-                pareto_cutoff(-1),
-                float_acc(0),
+    back_track_paretosort(Product::NONE),
+    adp_specialization(ADP_Mode::STANDARD),
+    pareto_cutoff(-1),
+    float_acc(0),
     signature(NULL),
     first_instance(NULL), instance_(0),
     backtrack_product(0),
     backtrack_filter(0),
     original_product(0),
     char_type(0),
+    outside_nt_list(nullptr),
     checkpoint(nullptr) {
   Type::add_predefined(types);
 }

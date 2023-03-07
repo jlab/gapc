@@ -207,6 +207,10 @@ class Grammar {
   void multi_propagate_max_filter();
 
   unsigned int to_dot(unsigned int *nodeID, std::ostream &out, int plot_level);
+
+  /* semantic check: grammar must be able to parse the empty input in
+   * order to provide recursion base for outside candidates */
+  bool check_outside_parse_empty_word();
 };
 
 

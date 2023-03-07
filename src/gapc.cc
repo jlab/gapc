@@ -102,6 +102,11 @@ static void parse_options(int argc, char **argv, Options *rec) {
       "uses the selected instance and creates a GAP program which creates "
       "specialized GAP programs that recognize a subset of candidates of the "
       "original grammar.")
+    ("outside_grammar", po::value< std::vector<std::string> >(),
+      "generate an outside version of the grammar and report outside results "
+      "for an inside non-terminal. Provide multiple times for lists of "
+      "non-terminals or type \"ALL\" to report results for all non-"
+      "terminals.")
     ("verbose", "show suppressed warnings and messages")
     ("log-level,l", po::value<int>(),
       "the log level, valid values are 0 (VERBOSE), 1 (INFO),  2 (NORMAL), 3 "
@@ -234,6 +239,9 @@ static void parse_options(int argc, char **argv, Options *rec) {
   if (vm.count("specialize_grammar")) {
     rec->specializeGrammar = true;
   }
+  if (vm.count("outside_grammar"))
+    rec->outside_nt_list = vm["outside_grammar"]
+      .as< std::vector<std::string> >();
   if (vm.count("verbose"))
     rec->verbose_mode = true;
   if (vm.count("log-level")) {
@@ -354,6 +362,7 @@ class Main {
     // more information on this see the comment of the method
     // AST::select_grammar (instance_name).
     driver.ast.select_grammar(opts.instance);
+    driver.ast.set_outside_nt_list(&opts.outside_nt_list);
     driver.parse_product(opts.product);
 
     if (driver.is_failing()) {

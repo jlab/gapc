@@ -52,7 +52,6 @@
 #include "symbol.hh"
 
 
-
 void Grammar::add_nt(Symbol::NT *nt) {
   assert(nt->name);
   if (NTs.find(*nt->name) != NTs.end()) {
@@ -490,6 +489,12 @@ bool Grammar::check_semantic() {
       print_links();
     }
   }
+
+  /* when outside grammar is requested, raise warning if inside grammar cannot
+   * parse the empty word, which is the recursion base for all outside
+   * candidates */
+  b = this->check_outside_parse_empty_word();
+
   return r;
 }
 
