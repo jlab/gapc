@@ -1536,7 +1536,9 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
     stream << indent() << "std::string logfile_name = file_prefix + "
            << "\"_checkpointing_log.txt\";" << endl;
     stream << indent() << "logfile_path = opts.checkpoint_out_path / "
-           << "logfile_name;" << endl << endl;
+           << "logfile_name;" << endl;
+    stream << indent() << "load_checkpoint = "
+           << "!(opts.checkpoint_in_path.empty());" << endl << endl;
     if (ast.checkpoint->cyk) {
       stream << indent() << "std::string cyk_archive = "
              << "file_prefix + \"_cyk_indices\";" << endl;
@@ -1720,7 +1722,7 @@ void Printer::Cpp::print_init_fn(const AST &ast) {
   if (ast.checkpoint && !ast.checkpoint->is_buddy) {
     if (ast.checkpoint->strings ||
        ast.checkpoint->subseq || ast.checkpoint->cyk) {
-      stream << indent() << "if (!(opts.checkpoint_in_path.empty())) {" << endl;
+      stream << indent() << "if (load_checkpoint) {" << endl;
       inc_indent();
       if (ast.checkpoint->strings) {
         stream << indent() << "restore_string_links();" << endl;
@@ -1897,6 +1899,7 @@ void Printer::Cpp::header(const AST &ast) {
     stream << indent() << "std::string file_prefix;" << endl;
     stream << indent() << "std::atomic_bool cancel_token;" << endl;
     stream << indent() << "bool keep_archives;" << endl;
+    stream << indent() << "bool load_checkpoint;" << endl;
     dec_indent();
   }
   stream << indent() << " public:" << endl;
@@ -2102,11 +2105,15 @@ std::string Printer::Cpp::multi_index_str(
 void Printer::Cpp::multi_print_inner_cyk(
   const std::list<Symbol::NT*> &l,
   const std::list<Symbol::NT*> &tord,
-  size_t track, size_t tracks, size_t track_pos, Type::Base *t) {
+  size_t track, size_t tracks, size_t track_pos,
+  Type::Base *t, bool checkpoint) {
   assert(track < tracks);
   if (track+1 != tracks) {
     multi_print_cyk(tord, track+1, tracks, track_pos, t);
     return;
+  }
+  if (checkpoint) {
+    stream << indent() << "std::lock_guard<fair_mutex> lock(mutex);" << endl;
   }
   for (std::list<Symbol::NT*>::const_iterator i = l.begin();
        i != l.end(); ++i) {
@@ -2174,21 +2181,36 @@ void Printer::Cpp::multi_print_cyk(
   if (!inner.empty()) {
     if (checkpoint) {
       /*
-         in checkpointing mode, the loop indices (e.g. t_0_i and t_0_j
-         in single-track mode; names can differ in multi-track mode)
+         in checkpointing mode, the loop indices
+         (e.g. t_0_i and t_0_j in single-track mode;
+          names can differ in multi-track mode)
          are members of the out class instead of local loop variables
          so they can be archived/loaded;
-         if they are loaded, the outer loop variable (e.g. t_0_j) starts
-         from whatever value was loaded from the checkpoint
+         if they are loaded, the loop variable (e.g. t_0_j) starts
+         from whatever value was loaded from the checkpoint,
+         which is handled through a boolean
+         for every loop variable (e.g. "t_0_j_loaded");
+         initially, all of these boolean values are set to false, which will
+         set each loop variable to whatever value was loaded from the checkpoint;
+         after that, the respective boolean value will be set to true,
+         so the loop variable will be set to whatever
+         value is usually would be set to
+
+         TODO(fymue): initialize/load loop indices right before the loop
+                      instead of in out::init
       */
-      stream << indent() << "for (; " << js << " < "
-      << ns << "; " << "++" << js << ") {" << endl;
+      stream << indent() << "for (" << js << " = " << js << "_loaded "
+             << "? 0 : " << js << "; "
+             << js << " < " << ns << "; " << "++" << js << ") {"
+             << endl;
+      inc_indent();
+      stream << indent() << js << "_loaded = true;" << endl;
     } else {
       stream << indent() << "for (" << *t << " " << js << " = 0; "
              << js << " < " << ns << "; " << "++" << js << ") {"
              << endl;
+      inc_indent();
     }
-    inc_indent();
 
     stream << indent() << "// A: quadratic loops" << endl;
     if (checkpoint) {
@@ -2200,29 +2222,26 @@ void Printer::Cpp::multi_print_cyk(
          for t_0_i in the first inner loop pass;
          afterwards it will regularly be set to t_0_j + 1;
       */
-      stream << indent() << "for (" << is << " = ("
-             << is << " == 1 ? " << js << " + 1 : " << is << "); "
+      stream << indent() << "for (" << is << " = " << is << "_loaded "
+             << "? " << js << " + 1 : " << is << "; "
              << is << " > 1; " << is << "--) {" << endl;
       inc_indent();
-      stream << indent() << "std::lock_guard<fair_mutex> lock(mutex);" << endl;
+      stream << indent() << is << "_loaded = true;" << endl;
     } else {
       stream << indent() << "for (" << *t << " " << is << " = "
              << js << " + 1; " << is << " > 1; " << is << "--) {" << endl;
       inc_indent();
     }
 
-    multi_print_inner_cyk(inner, tord, track, tracks, track_pos, t);
+    multi_print_inner_cyk(inner, tord, track, tracks, track_pos, t, checkpoint);
     dec_indent();
     stream << indent() << "}" << endl << endl;
 
     if (!left.empty()) {
       stream << indent() << "// B: inner quadratic loops" << endl;
       stream << indent() << *t << " " << is << " = 1;" << endl;
-      if (checkpoint) {
-        stream << indent() << "std::lock_guard<fair_mutex> lock(mutex);"
-               << endl;
-      }
-      multi_print_inner_cyk(left, tord, track, tracks, track_pos, t);
+      multi_print_inner_cyk(left, tord, track, tracks,
+                            track_pos, t, checkpoint);
     }
     dec_indent();
     stream << indent() << "}" << endl << endl;
@@ -2230,8 +2249,8 @@ void Printer::Cpp::multi_print_cyk(
   if (inner.empty() && !left.empty()) {
     stream << indent() << "// C: linear loops" << endl;
     if (checkpoint) {
-      stream << indent() << "for (; "
-             << js << " < " << ns
+      stream << indent() << "for (" << js << " = " << js << "_loaded "
+             << "? 0 : " << js << "; " << js << " < " << ns
              << "; " << "++" << js << ") {" << endl;
     } else {
       stream << indent() << "for (" << *t << " " << js << " = 0; "
@@ -2239,8 +2258,9 @@ void Printer::Cpp::multi_print_cyk(
              << "; " << "++" << js << ") {" << endl;
     }
     inc_indent();
+    stream << indent() << js << "_loaded = true;" << endl;
     stream << indent() << *t << " " << is << " = 1;" << endl;
-    multi_print_inner_cyk(left, tord, track, tracks, track_pos, t);
+    multi_print_inner_cyk(left, tord, track, tracks, track_pos, t, checkpoint);
     dec_indent();
     stream << indent() << "}" << endl << endl;
   }
@@ -2251,23 +2271,19 @@ void Printer::Cpp::multi_print_cyk(
       /*
          in checkpointing mode, the entire quadratic loop (A) will be skipped
          if the loaded value for t_0_j == t_0_n, so this is the loop that
-         would get executed next; here, we once again check if t_0_i equals
-         its default value (1); if it doesn't, we know that we can continue
-         calculating from whatever value t_0_i is set to
+         would get executed next
       */
-      stream << indent() << "for (" << is << " = ("
-             << is << " == 1 ? " << js << " + 1 : " << is << "); "
+      stream << indent() << "for (" << is << " = " << is << "_loaded "
+             << "? " << js << " + 1 : " << is << "; "
              << is << " > 1; " << is << "--) {" << endl;
+      inc_indent();
+      stream << indent() << is << "_loaded = true;" << endl;
     } else {
       stream << indent() << "for (" << *t << " "<< is << " = " << js << " + 1; "
              << is << " > 1; " << is << "--) {" << endl;
+      inc_indent();
     }
-    inc_indent();
-    if (checkpoint) {
-      stream << indent() << "std::lock_guard<fair_mutex> lock(mutex);"
-             << endl;
-    }
-    multi_print_inner_cyk(right, tord, track, tracks, track_pos, t);
+    multi_print_inner_cyk(right, tord, track, tracks, track_pos, t, checkpoint);
     dec_indent();
     stream << indent() << "}" << endl << endl;
   }
@@ -2275,11 +2291,7 @@ void Printer::Cpp::multi_print_cyk(
   if (!all.empty()) {
     stream << indent() << "// D: constant loops" << endl;
     stream << indent() << *t << " " << is << " = 1;" << endl;
-    if (checkpoint) {
-      stream << indent() << "std::lock_guard<fair_mutex> lock(mutex);"
-             << endl;
-    }
-    multi_print_inner_cyk(all, tord, track, tracks, track_pos, t);
+    multi_print_inner_cyk(all, tord, track, tracks, track_pos, t, checkpoint);
   }
 }
 
@@ -2298,6 +2310,28 @@ void Printer::Cpp::print_cyk_fn(const AST &ast) {
     return;
   }
 
+  if (ast.checkpoint && ast.checkpoint->cyk) {
+    /*
+       define bool for every loop idx to allow for the
+       loading of the checkpointed loop indices;
+       if the user want to load a checkpoint (load_checkpoint == true),
+       all booleans will be set to "false", which indicates
+       that the respective loop idx hasn't been loaded yet and
+       should be loaded when it is first requested;
+       if the user does not want to load a checkpoint (load_checkpoint == false),
+       all booleans will be set to "true", which means that
+       are already assumed to be loaded and won't be loaded
+       when they are first requested
+    */
+    for (size_t track_i = 0;
+         track_i < ast.grammar()->axiom->tracks(); ++track_i) {
+      stream << indent() << "bool t_" << track_i
+             << "_i_loaded = !load_checkpoint;" << endl;
+      stream << indent() << "bool t_" << track_i
+             << "_j_loaded = !load_checkpoint;" << endl;
+    }
+  }
+
   stream << "#ifndef _OPENMP" << endl;
 
   // FIXME?
@@ -2313,7 +2347,6 @@ void Printer::Cpp::print_cyk_fn(const AST &ast) {
   stream << "nt_tabulate_" << *(*i)->name << "(i-1, j);" << endl;
   stream << endl << "}" << endl;
   */
-
   if (ast.grammar()->axiom->tracks() > 1) {
     for (size_t track_pos = 0; track_pos < ast.grammar()->axiom->tracks();
          ++track_pos) {
@@ -2411,7 +2444,6 @@ void Printer::Cpp::header_footer(const AST &ast) {
                                           ast.grammar()->axiom->tracks());
       ast.checkpoint->load_cyk_indices(stream,
                                        ast.grammar()->axiom->tracks());
-      ast.checkpoint->map_1d_to_2d(stream);
       ast.checkpoint->parse_checkpoint_log(stream, true);
     }
     ast.checkpoint->archive_periodically(stream, tabulated);

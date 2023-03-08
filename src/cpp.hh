@@ -85,8 +85,7 @@ class Cpp : public Base {
       const Yield::Multi &mys);
     void multi_print_inner_cyk(const std::list<Symbol::NT*> &l,
       const std::list<Symbol::NT*> &tord, size_t track, size_t tracks,
-      size_t track_pos,
-      Type::Base *t);
+      size_t track_pos, Type::Base *t, bool checkpoint);
     void multi_partition_nts(const std::list<Symbol::NT*> &tord,
       std::list<Symbol::NT*> &all, std::list<Symbol::NT*> &inner,
       std::list<Symbol::NT*> &left, std::list<Symbol::NT*> &right,
