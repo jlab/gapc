@@ -132,7 +132,7 @@ bool is_terminal_type(Type::Base *t) {
     return false;
   }
   if (t->is(Type::USAGE)) {
-    return (t->is_terminal()) || (is_terminal_type(t->simple()));
+    return (t->is_terminal()) && (is_terminal_type(t->simple()));
   }
   if (t->is(Type::MULTI)) {
     Type::Multi *tm = dynamic_cast<Type::Multi*>(t);
