@@ -26,6 +26,7 @@
 #include <string>
 
 #include "grammar_transformation.hh"
+#include "../signature.hh"
 #include "../grammar.hh"
 #include "../ast.hh"
 
@@ -56,6 +57,12 @@ void Grammar::check_outside_requested_nonexisting_nts() {
   /* double check that all NTs do exist that the user requested to
    * be reported in the outside grammar.
    */
+
+  if (!this->ast.get_outside_nt_list()) {
+    // the user did not request any outside NT to be reported
+    return;
+  }
+  assert(this->ast.get_outside_nt_list());
 
   // a list that collects the names of non existent NTs
   std::list<std::string> *warn_missing_nts = new std::list<std::string>();
@@ -93,3 +100,22 @@ void Grammar::check_outside_requested_nonexisting_nts() {
   }
 }
 
+bool Grammar::check_multiple_answer_types(Signature_Base &s) {
+//  if (!this->ast.outside_generation()) {
+//    // no need to check, if no outside transformation was requested
+//    return true;
+//  }
+//
+//  Signature *sig = dynamic_cast<Signature*>(&s);
+//  if (sig) {
+//    for (hashtable<std::string, Fn_Decl*>::const_iterator i = sig->decls.begin(); i != sig->decls.end(); ++i) {
+//      Fn_Decl *algfct = (*i).second;
+//      std::cerr << (*i).first << "\n";
+//      for (std::list<Type::Base*>::const_iterator t = algfct->types.begin(); t != algfct->types.end(); ++t) {
+//        std::cerr << "  " << (*t)->getType() << (algfct->return_type == *t) << "\n";
+//      }
+//    }
+//  }
+
+  return true;
+}
