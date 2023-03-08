@@ -83,12 +83,3 @@ void replaceAll(std::string& str, const std::string& from,
   }
 }
 
-// graphViz compatible text representation of datatype
-void Type::Base::to_dot(std::ostream &out) {
-  std::ostringstream dtype_stream;
-  this->put(dtype_stream);
-  std::string dtype = dtype_stream.str();
-  replaceAll(dtype, std::string("<"), std::string("&lt;"));
-  replaceAll(dtype, std::string(">"), std::string("&gt;"));
-  out << dtype;
-}
