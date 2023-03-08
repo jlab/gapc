@@ -1011,30 +1011,4 @@ void Grammar::remove(Symbol::NT *x) {
   tabulated.erase(nt);
 }
 
-unsigned int Grammar::to_dot(unsigned int *nodeID, std::ostream &out,
-        int plot_grammar) {
-  int start_node;
-  unsigned int i = 1;
-  out << "digraph " << *this->name << " {\n";
-  out << "compound = True;\n";
-  out << "newrank = True;\n";
-  out << "ordering = out;\n";
-  for (std::list<Symbol::NT*>::const_iterator nt = this->nt_list.begin();
-       nt != this->nt_list.end(); ++nt, ++i) {
-    if (nt != this->nt_list.begin()) {
-      // except for the first unit, we add an invisible node (anchor) and
-      // invisible edges from the anchor to the lhs non-terminal node of the
-      // next unit to enable vertical alignment
-      out << "node_" << start_node << " -> node_" << std::to_string(*nodeID)
-          << " [ style=invis ];\n";
-    }
-    // let's organize all nodes of a lhs non-terminal in one subgraph cluster
-    // such that it can be plotted as one unit and these units are
-    // vertically stacked, while elements in the unit are horizontally aligned
-    out << "subgraph cluster_" << i << " {\n";
-    start_node = (*nt)->to_dot(nodeID, out, false, this->axiom, plot_grammar);
-    out << "}\n";
-  }
-  out << "}\n";
-  return ((unsigned int)*nodeID);
-}
+
