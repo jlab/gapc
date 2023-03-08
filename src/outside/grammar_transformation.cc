@@ -21,18 +21,7 @@
 
 }}} */
 
-#include <vector>
-#include <list>
-#include <string>
-#include <set>
-
 #include "grammar_transformation.hh"
-#include "../signature.hh"
-#include "../instance.hh"
-#include "../grammar.hh"
-#include "../ast.hh"
-#include "../fn_def.hh"
-#include "../visitor.hh"
 
 bool Grammar::check_outside_parse_empty_word() {
   if (this->ast.outside_generation()) {
@@ -127,6 +116,48 @@ struct AlgfctUsedInGrammar : public Visitor {
   }
 };
 
+
+bool is_terminal_type(Type::Base *t) {
+  if ((t->is(Type::ALPHABET)) || (t->is(Type::VOID)) ||
+      (t->is(Type::REALVOID)) || (t->is(Type::CHAR)) ||
+      (t->is(Type::STRING)) || (t->is(Type::BOOL)) || (t->is(Type::SEQ)) ||
+      (t->is(Type::SUBSEQ)) || (t->is(Type::INT)) || (t->is(Type::FLOAT)) ||
+      (t->is(Type::RATIONAL))) {
+    return true;
+  }
+  if ((t->is(Type::BIGINT)) || (t->is(Type::SHAPE)) || (t->is(Type::INTEGER))) {
+    return false;
+  }
+  if ((t->is(Type::EXTERNAL)) || (t->is(Type::TUPLEDEF))) {
+    return false;
+  }
+  if (t->is(Type::USAGE)) {
+    return (t->is_terminal()) || (is_terminal_type(t->simple()));
+  }
+  if (t->is(Type::MULTI)) {
+    Type::Multi *tm = dynamic_cast<Type::Multi*>(t);
+    for (std::list<Type::Base*>::const_iterator i = tm->types().begin();
+         i != tm->types().end(); ++i) {
+      if (!is_terminal_type(*i)) {
+        return false;
+      }
+    }
+    return true;
+  }
+  if (t->is(Type::SINGLE)) {
+    return t->is_terminal();
+  }
+
+  /* TODO(sjanssen): I need to find out if following types are either terminals
+   * or not: Signature, Table, Base, List, Name, Tuple, Def, Choice, Size,
+   *         Range, Table, Generic, Referencable
+   */
+  assert(false && "I have been lazy and did not yet define if above mentioned"
+                  " types are terminals or not");
+  return false;
+}
+
+
 bool Instance::check_multiple_answer_types(bool for_outside_generation) {
   if (!for_outside_generation) {
     // no need to check, if no outside transformation was requested
@@ -160,13 +191,11 @@ bool Instance::check_multiple_answer_types(bool for_outside_generation) {
 
         // only check algebra functions whose return type is NOT a terminal
         // (type)
-        if (!algfct->return_type->is_terminal()) {
+        if (!is_terminal_type(algfct->return_type)) {
           for (std::list<Type::Base*>::const_iterator t = algfct->types.begin();
                t != algfct->types.end(); ++t) {
             // only check rhs components that are not terminal (types)
-            // TODO(sjanssen) pkiss algfct does contain Subsequence,
-            //                but these are not flagges as terminals?!
-            if ((!(*t)->is_terminal()) && (!(*t)->simple()->is(Type::SUBSEQ))) {
+            if (!is_terminal_type(*t)) {
               // check if return type is NOT equal to non-terminal types on the
               // rhs
               if (!algfct->return_type->simple()->is_eq(*(*t)->simple())) {

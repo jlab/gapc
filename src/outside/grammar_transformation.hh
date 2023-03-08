@@ -24,8 +24,25 @@
 #ifndef SRC_OUTSIDE_GRAMMAR_TRANSFORMATION_HH_
 #define SRC_OUTSIDE_GRAMMAR_TRANSFORMATION_HH_
 
+#include <vector>
+#include <list>
+#include <string>
+#include <set>
+
+#include "grammar_transformation.hh"
+#include "../signature.hh"
+#include "../instance.hh"
+#include "../grammar.hh"
+#include "../ast.hh"
+#include "../fn_def.hh"
+#include "../visitor.hh"
+#include "../type/multi.hh"
+
 static const char *OUTSIDE_NT_PREFIX = "outside_";
 static const char *OUTSIDE_ALL = "ALL";
 
+// check if a type (used in Signature or Algebra) belongs to a terminal parser
+// or a non-terminal parser
+bool is_terminal_type(Type::Base*);
 
 #endif  // SRC_OUTSIDE_GRAMMAR_TRANSFORMATION_HH_
