@@ -1,10 +1,12 @@
-#include "../../src/driver.hh"
-#include "../../src/log.hh"
-
 #include <iostream>
 #include <iomanip>
 #include <sstream>
 #include <cassert>
+
+#include "../../src/driver.hh"
+#include "../../src/log.hh"
+#include "../../src/instance.hh"
+
 
 int main(int argc, char **argv) {
   std::ostringstream o;
@@ -43,14 +45,36 @@ int main(int argc, char **argv) {
   // that links the grammar graph together, and computes yield-sizes.
   // If the method returns false, there are some semantic errors,
   // which leads to the end of the compilation process.
-  bool r;
+  bool r = true;
   try {
     r = grammar->check_semantic();
   } catch (std::exception const &exc) {
     std::cerr << exc.what();
+    return 0;
   }
 
   if (!r) {
     return 1;
+  }
+
+  grammar->approx_table_conf();
+
+  // find what type of input is read
+  // chars, sequence of ints etc.
+  driver.ast.derive_temp_alphabet();
+
+  r = driver.ast.check_signature();
+  r = driver.ast.check_algebras();
+  driver.ast.derive_roles();
+
+  std::string instname = "";
+  if (grammar->name->compare("pknotsRG") == 0) {
+    instname = "mfeppenf";
+  }
+  Instance *instance = driver.ast.instance(instname);
+  try {
+    r = driver.ast.check_instances(instance);
+  } catch (std::exception const &exc) {
+    std::cerr << exc.what();
   }
 }

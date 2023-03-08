@@ -24,11 +24,15 @@
 #include <vector>
 #include <list>
 #include <string>
+#include <set>
 
 #include "grammar_transformation.hh"
 #include "../signature.hh"
+#include "../instance.hh"
 #include "../grammar.hh"
 #include "../ast.hh"
+#include "../fn_def.hh"
+#include "../visitor.hh"
 
 bool Grammar::check_outside_parse_empty_word() {
   if (this->ast.outside_generation()) {
@@ -100,22 +104,101 @@ void Grammar::check_outside_requested_nonexisting_nts() {
   }
 }
 
-bool Grammar::check_multiple_answer_types(Signature_Base &s) {
-//  if (!this->ast.outside_generation()) {
-//    // no need to check, if no outside transformation was requested
-//    return true;
-//  }
-//
-//  Signature *sig = dynamic_cast<Signature*>(&s);
-//  if (sig) {
-//    for (hashtable<std::string, Fn_Decl*>::const_iterator i = sig->decls.begin(); i != sig->decls.end(); ++i) {
-//      Fn_Decl *algfct = (*i).second;
-//      std::cerr << (*i).first << "\n";
-//      for (std::list<Type::Base*>::const_iterator t = algfct->types.begin(); t != algfct->types.end(); ++t) {
-//        std::cerr << "  " << (*t)->getType() << (algfct->return_type == *t) << "\n";
-//      }
-//    }
-//  }
+// traverses the grammar and collect all algebra function names used
+// such that after traversal, we can ask if an algebra function,
+// given its name, is actually part of the grammar
+struct AlgfctUsedInGrammar : public Visitor {
+ private:
+  std::set<std::string> used_algfct;
+  bool is_traversed = false;
 
-  return true;
+ public:
+  void visit(Alt::Base &a) {
+    Alt::Simple *as = dynamic_cast<Alt::Simple*>(&a);
+    if (as) {
+      used_algfct.insert(*as->name);
+    }
+    is_traversed = true;
+  }
+
+  bool is_used(std::string *algfct_name) {
+    assert(is_traversed);
+    return used_algfct.find(*algfct_name) != used_algfct.end();
+  }
+};
+
+bool Instance::check_multiple_answer_types(bool for_outside_generation) {
+  if (!for_outside_generation) {
+    // no need to check, if no outside transformation was requested
+    return true;
+  }
+
+  AlgfctUsedInGrammar v = AlgfctUsedInGrammar();
+  this->grammar_->traverse(v);
+
+  // identify individual algebras used in the algebra product of the instance
+  unsigned int num_errors = 0;
+  for (Product::iterator i = Product::begin(this->product); i != Product::end();
+       ++i) {
+    if ((*i)->is(Product::SINGLE)) {
+      Algebra *alg = dynamic_cast<Product::Single*>(*i)->algebra();
+      for (hashtable<std::string, Fn_Def*>::const_iterator i = alg->fns.begin();
+           i != alg->fns.end(); ++i) {
+        Fn_Decl *algfct = (*i).second;
+
+        // do not check choice functions
+        if (algfct->is_Choice_Fn()) {
+          continue;
+        }
+
+        // ignore algebra function if not used in instance' grammar, i.e.
+        // it might be declared in signature and algebra(s) but not used
+        // in grammar definition
+        if (!v.is_used(algfct->name)) {
+          continue;
+        }
+
+        // only check algebra functions whose return type is NOT a terminal
+        // (type)
+        if (!algfct->return_type->is_terminal()) {
+          for (std::list<Type::Base*>::const_iterator t = algfct->types.begin();
+               t != algfct->types.end(); ++t) {
+            // only check rhs components that are not terminal (types)
+            // TODO(sjanssen) pkiss algfct does contain Subsequence,
+            //                but these are not flagges as terminals?!
+            if ((!(*t)->is_terminal()) && (!(*t)->simple()->is(Type::SUBSEQ))) {
+              // check if return type is NOT equal to non-terminal types on the
+              // rhs
+              if (!algfct->return_type->simple()->is_eq(*(*t)->simple())) {
+                std::ostringstream msg;
+                msg << "return type '"
+                    << *algfct->return_type
+                    << "' is different to the type '"
+                    << *(*t)
+                    << "',\nwhich you are using on the r.h.s. of the function "
+                    << "definition '"
+                    << *(algfct->name)
+                    << "' in algebra '"
+                    << *(alg->name)
+                    << "'.\nThis will lead to a compile error, since"
+                    << " you requested outside grammar generation.\nThe outside"
+                    << " grammar parts will contain production rules where "
+                    << "l.h.s. and r.h.s. non-termials of '" + (*(algfct->name))
+                    << + "' are swapped,\nbut we lack definitions for these "
+                    << "swapped versions in your algebras!";
+                Log::instance()->error(alg->location, "type mismatch");
+                Log::instance()->error((*t)->location, msg.str());
+                num_errors++;
+
+                // one warning per algebra function should be enough
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return num_errors == 0;
 }

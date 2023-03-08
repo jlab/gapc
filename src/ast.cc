@@ -149,6 +149,10 @@ bool AST::check_instances(Instance *instance) {
     bool b = i->second->init(instance);
     r = r && b;
   }
+
+  bool b = instance->check_multiple_answer_types(this->outside_generation());
+  r = r && b;
+
   return r;
 }
 
