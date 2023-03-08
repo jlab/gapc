@@ -2252,13 +2252,14 @@ void Printer::Cpp::multi_print_cyk(
       stream << indent() << "for (" << js << " = " << js << "_loaded "
              << "? 0 : " << js << "; " << js << " < " << ns
              << "; " << "++" << js << ") {" << endl;
+      inc_indent();
+     stream << indent() << js << "_loaded = true;" << endl;
     } else {
       stream << indent() << "for (" << *t << " " << js << " = 0; "
              << js << " < " << ns
              << "; " << "++" << js << ") {" << endl;
+      inc_indent();
     }
-    inc_indent();
-    stream << indent() << js << "_loaded = true;" << endl;
     stream << indent() << *t << " " << is << " = 1;" << endl;
     multi_print_inner_cyk(left, tord, track, tracks, track_pos, t, checkpoint);
     dec_indent();
