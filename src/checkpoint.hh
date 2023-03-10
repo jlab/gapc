@@ -410,14 +410,15 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      stream << "#include <atomic>" << endl;
      stream << "#include <ctime>" << endl;
      stream << "#include <unordered_map>" << endl;
-     stream << "#include <mutex>" << endl;
+     stream << "#include <algorithm>" << endl;
      if (cyk) {
-       stream << "#include <algorithm>" << endl;
        stream << "#ifdef _OPENMP" << endl;
        stream << "#include \"rtlib/fair_shared_mutex.hh\"" << endl;
        stream << "#else" << endl;
        stream << "#include \"rtlib/fair_mutex.hh\"" << endl;
        stream << "#endif" << endl;
+     } else {
+       stream << "#include <mutex>" << endl;
      }
      stream << "#include <thread>" << endl << endl;
   }
