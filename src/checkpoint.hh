@@ -413,7 +413,11 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      stream << "#include <mutex>" << endl;
      if (cyk) {
        stream << "#include <algorithm>" << endl;
+       stream << "#ifdef _OPENMP" << endl;
+       stream << "#include \"rtlib/fair_shared_mutex.hh\"" << endl;
+       stream << "#else" << endl;
        stream << "#include \"rtlib/fair_mutex.hh\"" << endl;
+       stream << "#endif" << endl;
      }
      stream << "#include <thread>" << endl << endl;
   }
@@ -925,10 +929,10 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      stream << indent() << "}" << endl;
      stream << indent() << "boost::archive::binary_oarchive "
                             "array_out(array_fout);" << endl;
-     stream << indent() << "// lock the mutex so main thread can't "
-            << "write during archiving" << endl;
-     stream << indent() << "std::lock_guard<std::mutex> lock(m);" << endl;
      if (!cyk) {
+       stream << indent() << "// lock the mutex so main thread can't "
+            << "write during archiving" << endl;
+       stream << indent() << "std::lock_guard<std::mutex> lock(m);" << endl;
        stream << indent() << "array_out << array << tabulated << "
               << "tabulated_vals_counter;" << endl;
      } else {
@@ -992,8 +996,14 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
        // archive the indices of the prior iteration to ensure
        // that the whole iteration has been completed
        stream << indent() << "array_out << t_" << i << "_i + 1;" << endl;
-       stream << indent() << "array_out << t_" << i << "_j - 1;" << endl;
+       stream << indent() << "array_out << "
+              << "(t_" << i << "_j == 0 ? 0 : t_" << i << "_j - 1);" << endl;
      }
+     stream << indent() << "#ifdef _OPENMP" << endl;
+     stream << indent() << "  array_out << z1_;" << endl;
+     stream << indent() << "  array_out << z2_;" << endl;
+     stream << indent() << "  array_out << y_;" << endl;
+     stream << indent() << "#endif" << endl;
      stream << indent() << "array_fout.close();" << endl;
      stream << indent() << "boost::filesystem::rename(tmp_out_cyk_path, "
             << "out_cyk_path);" << endl;
@@ -1045,6 +1055,11 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
        stream << indent() << "array_in >> t_" << i << "_i;" << endl;
        stream << indent() << "array_in >> t_" << i << "_j;" << endl;
      }
+     stream << indent() << "#ifdef _OPENMP" << endl;
+       stream << indent() << "  array_in >> z1_;" << endl;
+       stream << indent() << "  array_in >> z2_;" << endl;
+       stream << indent() << "  array_in >> y_;" << endl;
+       stream << indent() << "#endif" << endl;
      stream << indent() << "array_fin.close();" << endl << endl;
      stream << indent() << "std::cerr << \"Info: Successfully loaded "
             << "cyk loop indices. \"" << endl;
@@ -1214,11 +1229,18 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
   void archive_periodically(Printer::Base &stream, const nt_tables &tables) {
      inc_indent();
      stream << indent() << "void archive_periodically(std::atomic_bool "
-                            "&cancel_token, size_t interval";
+                            "&cancel_token, size_t interval" << endl;
      if (cyk) {
-       stream << ", fair_mutex &mutex";
+     stream << indent() << "                          "
+            << "#ifdef _OPENMP" << endl
+            << indent() << "                          "
+            << ", fair_shared_mutex &mutex" << endl
+            << indent() << "                          #else" << endl
+            << indent() << "                          "
+            << ", fair_mutex &mutex" << endl
+            << indent() << "                          #endif" << endl;
      }
-     stream << ") {" << endl;
+     stream << indent() << "                          ) {" << endl;
      inc_indent();
      stream << indent() << "// save all tables to the disk periodically "
                             "every interval seconds" << endl;
@@ -1237,8 +1259,13 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      stream << indent() << "              "
                             "if (!cancel_token.load()) break;" << endl;
      if (cyk) {
+       stream << indent() << "            #ifdef _OPENMP" << endl;
+       stream << indent() << "              "
+              << "std::lock_guard<fair_shared_mutex> lock(mutex);" << endl;
+       stream << indent() << "            #else" << endl;
        stream << indent() << "              "
               << "std::lock_guard<fair_mutex> lock(mutex);" << endl;
+       stream << indent() << "            #endif" << endl;
      }
 
      for (auto i = tables.begin(); i != tables.end(); ++i) {
