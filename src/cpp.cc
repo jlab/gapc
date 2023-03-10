@@ -2022,9 +2022,10 @@ void Printer::Cpp::print_openmp_cyk(const AST &ast) {
   /*
    * need ordered clause in omp statement, because this will
    * ensure that each thread syncs with all other threads
-   * before they process their next "batch", which ensures
+   * before they process their next "batch";
+   * this is necessary to guarantee
    * that no other thread writes if the archiving thread
-   * aquires the shared mutex and needs to read the tables
+   * aquired the shared mutex and needs to read the tables
   */
   if (checkpoint) {
     stream << indent() << "#pragma omp for ordered schedule(dynamic)" << endl;
@@ -2295,9 +2296,6 @@ void Printer::Cpp::multi_print_cyk(
          after that, the respective marker value will be set to 1,
          so the loop variable will be set to whatever
          value is usually would be set to
-
-         TODO(fymue): initialize/load loop indices right before the loop
-                      instead of in out::init
       */
       stream << indent() << "for (" << js << " = (" << js << "_loaded++) "
              << "? 0 : " << js << "; "
@@ -2409,12 +2407,12 @@ void Printer::Cpp::print_cyk_fn(const AST &ast) {
 
   if (ast.checkpoint && ast.checkpoint->cyk) {
     /*
-       define bool (as int) marker for every loop idx to allow for the
-       loading of the checkpointed loop indices;
-       if the user want to load a checkpoint (load_checkpoint == true)
+       define a boolean marker (as an int) for every loop idx
+       to allow for the loading of the checkpointed loop indices;
+       if the user wants to load a checkpoint (load_checkpoint == true)
        and the loaded idx value doesn't equal the default value 0
-       (meaning that is has in fact been archived / the checkpointed
-        program made enough progress to get to the current loop),
+       (meaning that the checkpointed program made enough progress
+        to get to the loop where the current idx lives),
        the markers will be set to "false" (== 0), which indicates
        that the respective loop idx hasn't been loaded yet and
        should be loaded when it is first requested;
