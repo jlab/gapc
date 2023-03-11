@@ -277,7 +277,6 @@ class Base {
 
  public:
   // analogous to filters, multi_filter should be public
-  // TODO(sjanssen): check if we really need to expose multi_filter
   std::vector<std::list<Filter*> > multi_filter;
   void add_multitrack_filter(
     const std::list<Filter*> &l, Filter::Type t, const Loc &loc);

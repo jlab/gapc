@@ -330,6 +330,8 @@ void resolve_blocks(Symbol::NT *nt) {
 
     // iterate through all alternatives until no more Alt::Block can be found
     while (v_block.block) {
+      // determine the top level alternative in rhs of NT that holds the
+      // Alt::Block
       std::list<Alt::Base*>::iterator topalt = nt->alts.begin();
       for (; topalt != nt->alts.end(); ++topalt) {
         if ((*topalt) == v_block.topalt) {
