@@ -37,6 +37,7 @@
 #include "../fn_def.hh"
 #include "../visitor.hh"
 #include "../type/multi.hh"
+#include "../fn_arg.hh"
 
 static const char *OUTSIDE_NT_PREFIX = "outside_";
 static const char *OUTSIDE_ALL = "ALL";
@@ -44,5 +45,15 @@ static const char *OUTSIDE_ALL = "ALL";
 // check if a type (used in Signature or Algebra) belongs to a terminal parser
 // or a non-terminal parser
 bool is_terminal_type(Type::Base*);
+
+/* recursively resolve Alt::Blocks (which are short hand notations for
+ * alternative production rules) for a non-terminal. An example would be:
+ *   struct = cadd(dangle, incl({struct | weak}))
+ * which shall be resolved into
+ *   struct = cadd(dangle, incl(struct)) | cadd(dangle, incl(weak))
+ * note that
+ *  a) we do not know the "level" of the Alt::Block use
+ *  b) we can have Alt::Block within Alt::Block */
+void resolve_blocks(Symbol::NT *nt);
 
 #endif  // SRC_OUTSIDE_GRAMMAR_TRANSFORMATION_HH_

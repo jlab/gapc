@@ -217,6 +217,11 @@ class Grammar {
    * Throws an error if NTs are not present.
    */
   void check_outside_requested_nonexisting_nts();
+
+  /* not yet complete: will inject additional production rules such that
+   * the given (inside-) grammar is turned into an outside grammar.
+   */
+  void convert_to_outside();
 };
 
 

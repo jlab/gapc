@@ -52,6 +52,7 @@
 #include "printer/cfg_pretty_print.hh"
 #include "printer/gap.hh"
 #include "specialize_grammar/create_specialized_grammar.hh"
+#include "outside/grammar_transformation.hh"
 
 namespace po = boost::program_options;
 
@@ -381,6 +382,11 @@ class Main {
     bool r = grammar->check_semantic();
     if (!r) {
       throw LogError("Seen semantic errors.");
+    }
+
+    // transform inside grammar into an outside one, if user requests
+    if (driver.ast.outside_generation()) {
+      grammar->convert_to_outside();
     }
 
     // configure the window and k-best mode

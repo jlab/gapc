@@ -231,3 +231,190 @@ bool Instance::check_multiple_answer_types(bool for_outside_generation) {
 
   return num_errors == 0;
 }
+
+/* iterates through one lhs NT and reports the first occurrence of an
+ * Alt::Block, i.e.
+ * - hold a pointer to the Alt::Block,
+ * - hold a pointer to the top level Alt::Base on the rhs of the NT that holds
+ *   the Alt::Block
+ * - and either
+ *   + a pointer to the Symbol::NT, if the Block is on the top level rhs
+ *   + or a pointer to the Alt::Base which is the parent of the Alt::Block
+ *     together with the a pointer to the "Handle" (= Fn_Arg::Alt) enclosing
+ *     the Alt::Block */
+struct FindFirstBlock : public Visitor {
+  // pointer to the first found block
+  Alt::Block *block = nullptr;
+
+  // pointer to the Fn_Arg::Alt that encloses the first found block - iff it's parent is an Alt::Base
+  Fn_Arg::Alt *block_fnarg = nullptr;
+
+  // the top level alternative that contains (somewhere) the first found block
+  Alt::Base *topalt = nullptr;
+
+  // the direct Alt::Base parent of the first found block - iff it is not a Symbol::NT
+  Alt::Base *parent_alt = nullptr;
+
+  // the direct Symbol::NT parent of the first found block - iff it is not an Alt::Block
+  Symbol::NT *parent_nt = nullptr;
+
+  FindFirstBlock() : block(nullptr), block_fnarg(nullptr), parent_alt(nullptr), parent_nt(nullptr) {
+  }
+
+  void visit(Symbol::NT &nt) {
+    if (!block) {
+      parent_alt = nullptr;
+      block_fnarg = nullptr;
+      parent_nt = &nt;
+    }
+  }
+  void visit_itr(Symbol::NT &nt) {
+    if (!block) {
+      parent_alt = nullptr;
+      block_fnarg = nullptr;
+      parent_nt = &nt;
+    }
+  }
+
+  void visit_begin(Alt::Simple &alt) {
+    if (!block) {
+      parent_alt = &alt;
+      parent_nt = nullptr;
+      if (alt.top_level) {
+        topalt = &alt;
+      }
+    }
+  }
+  void visit(Alt::Link &alt) {
+    // can only point to a rhs non-terminal
+  }
+  void visit_begin(Alt::Block &alt) {
+    if ((!block) && (alt.alts.size() > 0)) {
+      block = &alt;
+      if (alt.top_level) {
+        topalt = &alt;
+      }
+    }
+  }
+  void visit(Alt::Multi &alt) {
+    if (!block) {
+      parent_alt = &alt;
+      parent_nt = nullptr;
+      if (alt.top_level) {
+        topalt = &alt;
+      }
+    }
+  }
+
+  void visit(Fn_Arg::Alt &arg) {
+    if (!block) {
+      block_fnarg = &arg;
+    }
+  }
+
+  void visit(Grammar &g) {
+    throw LogError("Please only apply at individual NTs, not the full grammar!");
+  }
+};
+
+void resolve_blocks(Symbol::NT *nt) {
+  if (nt) {
+    // check if there is any Alt::Block at the rhs of the NT
+    FindFirstBlock v_block = FindFirstBlock();
+    nt->traverse(v_block);
+
+    // iterate through all alternatives until no more Alt::Block can be found
+    while (v_block.block) {
+      std::list<Alt::Base*>::iterator topalt = nt->alts.begin();
+      for (; topalt != nt->alts.end(); ++topalt) {
+        if ((*topalt) == v_block.topalt) {
+          break;
+        }
+      }
+
+      // Alt::Block can either occur within an algebra function like struct = cadd(foo, {joe, user})
+      if (v_block.parent_alt && !v_block.parent_nt) {
+        if (v_block.parent_alt->is(Alt::SIMPLE)) {
+          // parent of the block is an Alt::Simple, i.e. has a list of children
+          for (std::list<Alt::Base*>::iterator child = v_block.block->alts.begin(); child != v_block.block->alts.end(); ++child) {
+            // create a clone of the full alternative (up to the top level) that contains this block. This will invalidate all pointer information we have for the block ...
+            Alt::Base *clone = (*v_block.topalt).clone();
+
+            // ... thus acquire these info again, but for the clone, which is not yet part of any non-terminal
+            FindFirstBlock v_clone = FindFirstBlock();
+            clone->traverse(v_clone);
+
+            // now replace the block in the clone with the child of the original block
+            v_clone.block_fnarg->alt = *child;
+
+            // carry over filters that are attached to the block, from the block to the child in the clone
+            v_clone.block_fnarg->alt->filters.insert(v_clone.block_fnarg->alt->filters.end(),
+               v_block.block->filters.begin(),
+               v_block.block->filters.end());
+            v_clone.block_fnarg->alt->multi_filter.insert(v_clone.block_fnarg->alt->multi_filter.end(),
+               v_block.block->multi_filter.begin(),
+               v_block.block->multi_filter.end());
+
+            // insert new (partially, since it can still hold further Blocks) alternative into rhs of the NT
+            nt->alts.insert(topalt, clone);
+          }
+          // remove original top-alternative, which holds the found Alt::Block
+          nt->alts.remove(v_block.topalt);
+        } else if (v_block.parent_alt->is(Alt::LINK)) {
+          throw LogError("a Link is a leaf and thus cannot contain a block!");
+        } else if (v_block.parent_alt->is(Alt::BLOCK)) {
+          throw LogError("parent block should have been removed already!");
+        } else if (v_block.parent_alt->is(Alt::MULTI)) {
+          throw LogError("Alternative is not allowed in Multi-Track link.");
+        } else {
+          throw LogError("this is an unknown Alt subclass");
+        }
+
+      // or directly as a top level alternative of the non-termial, like struct = {joe, user}
+      } else if (!v_block.parent_alt && v_block.parent_nt) {
+        for (std::list<Alt::Base*>::iterator child = v_block.block->alts.begin(); child != v_block.block->alts.end(); ++child) {
+          Alt::Base *clone = (*child)->clone();
+
+          // since parent is lhs non-terminal and block itself will be removed,
+          // children will become top level alternatives
+          clone->top_level = Bool(true);
+
+           // don't forget to carry over filters ...
+          clone->filters.insert(clone->filters.end(),
+              v_block.block->filters.begin(),
+              v_block.block->filters.end());
+
+          // ... and filters for multitrack
+          clone->multi_filter.insert(clone->multi_filter.end(),
+              v_block.block->multi_filter.begin(),
+              v_block.block->multi_filter.end());
+
+          // insert new (partially, since it can still hold further Blocks) alternative into rhs of the NT
+          nt->alts.insert(topalt, clone);
+        }
+
+        nt->alts.remove(*topalt);
+      } else {
+        throw LogError("each Alt::Block should have a parent!");
+      }
+
+      // check if there exist further Alt::Blocks, if not, we exit the while
+      // loop
+      v_block = FindFirstBlock();
+      nt->traverse(v_block);
+    }
+  }
+}
+
+void Grammar::convert_to_outside() {
+  for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin();
+         i != NTs.end(); ++i) {
+    if ((*i).second->is(Symbol::NONTERMINAL)) {
+      std::cerr << ((*i).first) << "\n";
+      resolve_blocks(dynamic_cast<Symbol::NT*>((*i).second));
+    }
+  }
+
+  Log::instance()->verboseMessage(
+    "Grammar has been modified into an outside version.");
+}
