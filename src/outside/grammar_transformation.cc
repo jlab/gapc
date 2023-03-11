@@ -246,19 +246,23 @@ struct FindFirstBlock : public Visitor {
   // pointer to the first found block
   Alt::Block *block = nullptr;
 
-  // pointer to the Fn_Arg::Alt that encloses the first found block - iff it's parent is an Alt::Base
+  // pointer to the Fn_Arg::Alt that encloses the first found block - iff it's
+  // parent is an Alt::Base
   Fn_Arg::Alt *block_fnarg = nullptr;
 
   // the top level alternative that contains (somewhere) the first found block
   Alt::Base *topalt = nullptr;
 
-  // the direct Alt::Base parent of the first found block - iff it is not a Symbol::NT
+  // the direct Alt::Base parent of the first found block - iff it is not a
+  // Symbol::NT
   Alt::Base *parent_alt = nullptr;
 
-  // the direct Symbol::NT parent of the first found block - iff it is not an Alt::Block
+  // the direct Symbol::NT parent of the first found block - iff it is not an
+  // Alt::Block
   Symbol::NT *parent_nt = nullptr;
 
-  FindFirstBlock() : block(nullptr), block_fnarg(nullptr), parent_alt(nullptr), parent_nt(nullptr) {
+  FindFirstBlock() : block(nullptr), block_fnarg(nullptr), parent_alt(nullptr),
+                     parent_nt(nullptr) {
   }
 
   void visit(Symbol::NT &nt) {
@@ -313,7 +317,8 @@ struct FindFirstBlock : public Visitor {
   }
 
   void visit(Grammar &g) {
-    throw LogError("Please only apply at individual NTs, not the full grammar!");
+    throw LogError(
+      "Please only apply at individual NTs, not the full grammar!");
   }
 };
 
@@ -332,30 +337,41 @@ void resolve_blocks(Symbol::NT *nt) {
         }
       }
 
-      // Alt::Block can either occur within an algebra function like struct = cadd(foo, {joe, user})
+      // Alt::Block can either occur within an algebra function like
+      // struct = cadd(foo, {joe, user})
       if (v_block.parent_alt && !v_block.parent_nt) {
         if (v_block.parent_alt->is(Alt::SIMPLE)) {
           // parent of the block is an Alt::Simple, i.e. has a list of children
-          for (std::list<Alt::Base*>::iterator child = v_block.block->alts.begin(); child != v_block.block->alts.end(); ++child) {
-            // create a clone of the full alternative (up to the top level) that contains this block. This will invalidate all pointer information we have for the block ...
+          for (std::list<Alt::Base*>::iterator child =
+               v_block.block->alts.begin();
+               child != v_block.block->alts.end(); ++child) {
+            // create a clone of the full alternative (up to the top level) that
+            // contains this block. This will invalidate all pointer information
+            // we have for the block ...
             Alt::Base *clone = (*v_block.topalt).clone();
 
-            // ... thus acquire these info again, but for the clone, which is not yet part of any non-terminal
+            // ... thus acquire these info again, but for the clone, which is
+            // not yet part of any non-terminal
             FindFirstBlock v_clone = FindFirstBlock();
             clone->traverse(v_clone);
 
-            // now replace the block in the clone with the child of the original block
+            // now replace the block in the clone with the child of the original
+            // block
             v_clone.block_fnarg->alt = *child;
 
-            // carry over filters that are attached to the block, from the block to the child in the clone
-            v_clone.block_fnarg->alt->filters.insert(v_clone.block_fnarg->alt->filters.end(),
-               v_block.block->filters.begin(),
-               v_block.block->filters.end());
-            v_clone.block_fnarg->alt->multi_filter.insert(v_clone.block_fnarg->alt->multi_filter.end(),
-               v_block.block->multi_filter.begin(),
-               v_block.block->multi_filter.end());
+            // carry over filters that are attached to the block, from the block
+            // to the child in the clone
+            v_clone.block_fnarg->alt->filters.insert(
+              v_clone.block_fnarg->alt->filters.end(),
+              v_block.block->filters.begin(),
+              v_block.block->filters.end());
+            v_clone.block_fnarg->alt->multi_filter.insert(
+              v_clone.block_fnarg->alt->multi_filter.end(),
+              v_block.block->multi_filter.begin(),
+              v_block.block->multi_filter.end());
 
-            // insert new (partially, since it can still hold further Blocks) alternative into rhs of the NT
+            // insert new (partially, since it can still hold further Blocks)
+            // alternative into rhs of the NT
             nt->alts.insert(topalt, clone);
           }
           // remove original top-alternative, which holds the found Alt::Block
@@ -370,9 +386,12 @@ void resolve_blocks(Symbol::NT *nt) {
           throw LogError("this is an unknown Alt subclass");
         }
 
-      // or directly as a top level alternative of the non-termial, like struct = {joe, user}
+      // or directly as a top level alternative of the non-termial,
+      // like struct = {joe, user}
       } else if (!v_block.parent_alt && v_block.parent_nt) {
-        for (std::list<Alt::Base*>::iterator child = v_block.block->alts.begin(); child != v_block.block->alts.end(); ++child) {
+        for (std::list<Alt::Base*>::iterator child =
+             v_block.block->alts.begin();
+             child != v_block.block->alts.end(); ++child) {
           Alt::Base *clone = (*child)->clone();
 
           // since parent is lhs non-terminal and block itself will be removed,
@@ -389,7 +408,8 @@ void resolve_blocks(Symbol::NT *nt) {
               v_block.block->multi_filter.begin(),
               v_block.block->multi_filter.end());
 
-          // insert new (partially, since it can still hold further Blocks) alternative into rhs of the NT
+          // insert new (partially, since it can still hold further Blocks)
+          // alternative into rhs of the NT
           nt->alts.insert(topalt, clone);
         }
 
