@@ -187,6 +187,7 @@ grammar gra_elmamun uses sig_elmamun(axiom = formula) {
 	  | add(formula, CHAR, formula)
 	  | mult(formula, CHAR('*'), formula)
 	  | heinz(formula, ROPE("manfred"), formula)
+	  | nil(EMPTY)
 	  # h;
 }
 
