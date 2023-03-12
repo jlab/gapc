@@ -428,12 +428,97 @@ void resolve_blocks(Symbol::NT *nt) {
   }
 }
 
+/* iterates through the rhs alternatives of an NT and creates a clone of an
+ * alternative where ONE (but not all) rhs NT is swapped with the lhs NT, e.g.
+ *   struct = cadd(dangle, weak) | sadd(BASE, struct) will result in
+ * a) outside_dangle = cadd(outside_struct, weak)
+ * b) outside_weak = cadd(dangle, outside_struct)
+ * c) outside_struct = sadd(BASE, outside_struct) */
+struct Flip_lhs_rhs_nonterminals : public Visitor {
+  /* a list to store all newly generated clone alternatives. Each entry is a
+   * pair to save the new lhs non-terminal together with the modified rhs
+   * alternative */
+  std::list<std::pair<std::string, Alt::Base*> > *alt_clones;
+
+  // the inside lhs non terminal
+  Symbol::NT *lhs_nt;
+
+  // the rhs top level alternative
+  Alt::Base *topalt = nullptr;
+
+  Flip_lhs_rhs_nonterminals(Symbol::NT *nt) {
+    alt_clones = new std::list<std::pair<std::string, Alt::Base*> >();
+    lhs_nt = nt->clone(nt->track_pos());
+    lhs_nt->name = new std::string(OUTSIDE_NT_PREFIX + *(lhs_nt->name));
+  }
+  void visit(Alt::Base &alt) {
+    if (alt.top_level) {
+      topalt = &alt;
+    }
+  }
+  void visit_begin(Alt::Simple &alt) {
+  }
+  void visit(Alt::Link &alt) {
+    // skip links to terminal parser
+    if (alt.nt->is(Symbol::NONTERMINAL)) {
+      // copy of current rhs non-terminal name, which will be overwritten next
+      Symbol::NT *rhs_nt = dynamic_cast<Symbol::NT*>(alt.nt)->clone(dynamic_cast<Symbol::NT*>(alt.nt)->track_pos());
+
+      alt.nt = lhs_nt;
+      alt.m_ys = lhs_nt->multi_ys();
+      alt.name = lhs_nt->name;
+
+      alt_clones->push_back(std::make_pair(std::string(OUTSIDE_NT_PREFIX + *(rhs_nt->name)), topalt->clone()));
+
+      alt.nt = rhs_nt;
+      alt.m_ys = rhs_nt->multi_ys();
+      alt.name = rhs_nt->name;
+    }
+  }
+  void visit_begin(Alt::Block &alt) {
+  }
+  void visit(Alt::Multi &alt) {
+  }
+};
+
 void Grammar::convert_to_outside() {
+  unsigned int nodeID = 1;
+
   for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin();
-         i != NTs.end(); ++i) {
+       i != NTs.end(); ++i) {
     if ((*i).second->is(Symbol::NONTERMINAL)) {
-      std::cerr << ((*i).first) << "\n";
-      resolve_blocks(dynamic_cast<Symbol::NT*>((*i).second));
+      Symbol::NT *nt_inside = dynamic_cast<Symbol::NT*>((*i).second);
+
+//      std::cerr << *nt_inside->name << "\n";
+
+      // don't operate on the original inside non-terminal, but on a clone in which Alt::Block applications have been resolved
+      Symbol::NT *nt_inside_resolved = nt_inside->clone(nt_inside->track_pos());
+      resolve_blocks(nt_inside_resolved);
+
+      Flip_lhs_rhs_nonterminals v = Flip_lhs_rhs_nonterminals(nt_inside_resolved);
+      nt_inside_resolved->traverse(v);
+
+      for (std::list<std::pair<std::string, Alt::Base*> >::iterator i = v.alt_clones->begin(); i != v.alt_clones->end(); ++i) {
+        (*i).second->to_dot(&nodeID, std::cerr, 1);
+//        std::string outside_nt_name = (*i).first;
+//        hashtable<std::string, Symbol::Base*>::iterator o = this->NTs.find(outside_nt_name);
+//        Symbol::NT *outside_nt;
+//        if (o == this->NTs.end()) {
+//          outside_nt = new Symbol::NT(&outside_nt_name, Loc());
+//          this->NTs[outside_nt_name] = outside_nt;
+//          this->nt_list.push_back(outside_nt);
+//        } else {
+//          outside_nt = dynamic_cast<Symbol::NT*>((*o).second);
+//        }
+//        outside_nt->alts.push_back((*i).second);
+//
+////        this->NTs.insert(nt);
+////        this->nt_list.push_back(nt_nt);
+//
+//        Alt::Base *kalle = (*i).second;
+//        std::cerr << "  produces: lhs=" << (*i).first << " -> " << (*i).second << "\n";
+      }
+
     }
   }
 
