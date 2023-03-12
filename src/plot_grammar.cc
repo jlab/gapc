@@ -463,7 +463,7 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
   if (!is_rhs) {
     // a non-terminal "calling" productions, i.e. on the left hand side
     out << ", shape=\"box\"";
-    if (this == axiom) {
+    if (axiom && (this == axiom)) {
       out << ", penwidth=3";
     }
     if (!this->tabulated) {
