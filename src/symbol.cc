@@ -1576,11 +1576,15 @@ void Symbol::NT::multi_init_calls() {
 }
 
 
-Symbol::NT *Symbol::NT::clone(size_t track_pos) {
+Symbol::NT *Symbol::NT::clone(size_t track_pos, bool keepname) {
   NT *nt = new NT(*this);
   std::ostringstream o;
   o << *orig_name << '_' << track_pos;
-  nt->name = new std::string(o.str());
+  if (keepname) {
+    nt->name = this->name;
+  } else {
+    nt->name = new std::string(o.str());
+  }
   nt->track_pos_ = track_pos;
   nt->alts.clear();
   for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i)

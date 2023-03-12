@@ -354,7 +354,7 @@ class NT : public Base {
 
     NT(std::string *n, const Loc &l);
 
-    NT *clone(size_t track_pos);
+    NT *clone(size_t track_pos, bool keepname=false);
 
     void set_grammar_index(size_t i) {
       grammar_index_ = i;
