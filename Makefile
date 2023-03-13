@@ -41,7 +41,6 @@ CXXFILES = $(wildcard src/*.cc) \
 	   $(wildcard src/util/*.cc) \
 	   $(wildcard src/printer/*.cc) \
 	   $(wildcard src/specialize_grammar/*.cc) \
-	   $(wildcard src/outside/*.cc) \
 	   $(UNITTEST_CXX) \
            $(MODTESTS_CXX) \
 	   $(wildcard testdata/test/*.cc) \
@@ -129,7 +128,7 @@ gapc: src/gapc.o $(MAIN_OBJ) src/version.o src/prefix.o
 
 stats \
 test_rt_tab \
-multi_cyk multi_deps multi_indices multi_list_size multi_eliminate_lists_more multi_eliminate_lists multi_algebra multi_signature multi_rt_approx multi_rt_all multi_in_out multi_self_rec multi_calls multi_table_dim multi_max_filter multi_loops multi_ys parser outside_checksemantics outside_resolve_blocks: src/version.o src/prefix.o
+multi_cyk multi_deps multi_indices multi_list_size multi_eliminate_lists_more multi_eliminate_lists multi_algebra multi_signature multi_rt_approx multi_rt_all multi_in_out multi_self_rec multi_calls multi_table_dim multi_max_filter multi_loops multi_ys multi_print_grammar outside_resolve_blocks outside_grammar outside_indices parser: src/version.o src/prefix.o
 
 backtrack: src/version.o
 
