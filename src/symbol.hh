@@ -339,6 +339,12 @@ class NT : public Base {
     std::list<Alt::Base*> alts;
     void set_alts(const std::list<Alt::Base*> &a);
 
+    // This flags the table dimension computation as invalid.
+    // Used for outside grammar generation, as table dimensions
+    // have to be re-computed after outside NTs were injected
+    void reset_table_dim() {
+      this->tab_dim_ready = false;
+    }
 
  public:
     std::string *eval_fn;
