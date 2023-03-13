@@ -845,6 +845,7 @@ void Grammar::traverse(Visitor &v) {
        i != NTs.end(); ++i) {
     i->second->traverse(v);
   }
+  v.visit_end(*this);
 }
 
 
