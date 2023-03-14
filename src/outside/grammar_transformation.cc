@@ -22,6 +22,7 @@
 }}} */
 
 #include "grammar_transformation.hh"
+#include <utility>
 
 bool Grammar::check_outside_parse_empty_word() {
   if (this->ast.outside_generation()) {
@@ -116,7 +117,6 @@ struct AlgfctUsedInGrammar : public Visitor {
   }
 };
 
-
 bool is_terminal_type(Type::Base *t) {
   if ((t->is(Type::ALPHABET)) || (t->is(Type::VOID)) ||
       (t->is(Type::REALVOID)) || (t->is(Type::CHAR)) ||
@@ -156,7 +156,6 @@ bool is_terminal_type(Type::Base *t) {
                   " types are terminals or not");
   return false;
 }
-
 
 bool Instance::check_multiple_answer_types(bool for_outside_generation) {
   if (!for_outside_generation) {
@@ -428,26 +427,28 @@ void resolve_blocks(Symbol::NT *nt) {
   }
 }
 
-/* Counts the number of rhs non-terminals and algebra functions, e.g.
+/* Counts the number of components a rule will inject into parse-trees, e.g.
  *   hairpin = hl(BASE, REGION, BASE) : increase by 1 due to hl
  *   plus = CHAR('+') : no increase since only terminal used on rhs
  *   weak = hairpin | bulgeL : increase by 2 due to 2 non-terminals
+ * At least one component is necessary to subject the production rule to
+ * outside generation and/or outside axiom determination
  */
-struct Count_rhsNTs : public Visitor {
-  unsigned int rhs_nts = 0;
+struct Count_parseComponents : public Visitor {
+  unsigned int number_components = 0;
 
-  Count_rhsNTs() {
-    rhs_nts = 0;
+  Count_parseComponents() {
+    number_components = 0;
   }
 
   void visit_begin(Alt::Simple &alt) {
     if (!alt.is_terminal()) {
-      rhs_nts++;
+      number_components++;
     }
   }
   void visit(Alt::Link &alt) {
     if (alt.nt->is(Symbol::NONTERMINAL)) {
-      rhs_nts++;
+      number_components++;
     }
   }
 };
@@ -470,7 +471,7 @@ struct Flip_lhs_rhs_nonterminals : public Visitor {
   // the rhs top level alternative
   Alt::Base *topalt = nullptr;
 
-  Flip_lhs_rhs_nonterminals(Symbol::NT *nt) {
+  explicit Flip_lhs_rhs_nonterminals(Symbol::NT *nt) {
     // initialize the for now empty list of flipped alternative production rules
     alt_clones = new std::list<std::pair<Symbol::NT*, Alt::Base*> >();
 
@@ -499,10 +500,9 @@ struct Flip_lhs_rhs_nonterminals : public Visitor {
        * We therefore here count the number of used non-terminal and algebra
        * functions in the linked non-terminal
        */
-      Count_rhsNTs nrNTs = Count_rhsNTs();
+      Count_parseComponents nrNTs = Count_parseComponents();
       alt.nt->traverse(nrNTs);
-//      std::cerr << *alt.nt->name << ": " << nrNTs.rhs_nts << "\n";
-      if (nrNTs.rhs_nts > 0) {
+      if (nrNTs.number_components > 0) {
         /* a bit hacky: we need to create exact copies of the inside alternative
          * production rule, but if we clone all components will have different
          * pointers as they are different objects. Thus, we
@@ -516,11 +516,14 @@ struct Flip_lhs_rhs_nonterminals : public Visitor {
          */
 
         // a)
-        Symbol::NT *orig_rhs_nt = dynamic_cast<Symbol::NT*>(alt.nt)->clone(dynamic_cast<Symbol::NT*>(alt.nt)->track_pos(), true);
+        Symbol::NT *orig_rhs_nt = dynamic_cast<Symbol::NT*>(alt.nt)->clone(
+            dynamic_cast<Symbol::NT*>(alt.nt)->track_pos(), true);
 
         // b)
-        Symbol::NT *outside_rhs_nt = dynamic_cast<Symbol::NT*>(alt.nt)->clone(dynamic_cast<Symbol::NT*>(alt.nt)->track_pos(), true);
-        outside_rhs_nt->name = new std::string(OUTSIDE_NT_PREFIX + *(outside_rhs_nt->name));
+        Symbol::NT *outside_rhs_nt = dynamic_cast<Symbol::NT*>(alt.nt)->clone(
+            dynamic_cast<Symbol::NT*>(alt.nt)->track_pos(), true);
+        outside_rhs_nt->name = new std::string(
+            OUTSIDE_NT_PREFIX + *(outside_rhs_nt->name));
         outside_rhs_nt->orig_name = outside_rhs_nt->name;
         outside_rhs_nt->alts.clear();
 
@@ -546,14 +549,30 @@ struct Flip_lhs_rhs_nonterminals : public Visitor {
   }
 };
 
-struct Count_rhsNTsXX : public Visitor {
+/* end points of the inside grammar, i.e. production rules that terminate, are
+ * the starting points of the outside grammar. Thus, we here iterate through
+ * the inside part of the grammar, collect the lhs non-terminal names of these
+ * terminating productions and finally create one novel non-terminal which we
+ * designate to be the new outside axiom with as many alternatives as we
+ * have collected lhs non-terminals before.
+ * Edge case: if there is only one lhs non-terminal, we can directly use this
+ * as outside axiom, without creating a new non-terminal first. */
+struct Collect_and_Insert_outside_axioms : public Visitor {
+  // counts the number of non-terminating rhs productions
   unsigned int rhs_nts = 0;
 
-  std::set<Symbol::NT*> *axiom_candidates;
+  // collects the lhs non-terminals that point to terminating rhs,
+  // i.e. end point of inside = starting points of outside
+  std::set<Symbol::NT*> *terminating_lhs_nts;
+
+  // a reference to the already created new outside non-terminals, into which
+  // the new axiom must be added
   hashtable<std::string, Symbol::Base*> outside_nts;
 
-  Count_rhsNTsXX(hashtable<std::string, Symbol::Base*> outside_nts) : outside_nts(outside_nts) {
-    axiom_candidates = new std::set<Symbol::NT*>();
+  Collect_and_Insert_outside_axioms(
+      hashtable<std::string, Symbol::Base*> outside_nts) :
+        outside_nts(outside_nts) {
+    terminating_lhs_nts = new std::set<Symbol::NT*>();
   }
 
   void visit(Alt::Link &alt) {
@@ -564,141 +583,126 @@ struct Count_rhsNTsXX : public Visitor {
 
   void visit_itr(Symbol::NT &nt) {
     if (rhs_nts == 0) {
-      hashtable<std::string, Symbol::Base*>::iterator it_outside_nt = outside_nts.find(std::string(OUTSIDE_NT_PREFIX + *nt.name));
+      // we identified the (inside)nt as one that only points to terminating
+      // productions. Thus, we search for its outside counterparts and add
+      // this counterpart to the set of terminating_lhs_nts
+      hashtable<std::string, Symbol::Base*>::iterator it_outside_nt =
+        outside_nts.find(std::string(OUTSIDE_NT_PREFIX + *nt.name));
       if (it_outside_nt != outside_nts.end()) {
-        axiom_candidates->insert(dynamic_cast<Symbol::NT*>((*it_outside_nt).second));
+        assert((*it_outside_nt).second->is(Symbol::NONTERMINAL));
+        terminating_lhs_nts->insert(
+          dynamic_cast<Symbol::NT*>((*it_outside_nt).second));
       }
     }
     rhs_nts = 0;  // for next iteration
   }
 
-  void visit_end(Grammar &g) {
-    if (axiom_candidates->size() == 1) {
+  void visit_end(Grammar &grammar) {
+    Symbol::NT *nt_axiom;
+    if (terminating_lhs_nts->size() == 1) {
       // if there is only one candidate NT, we simple make this NT the new axiom
-      g.axiom_name = (*axiom_candidates->begin())->name;
-    } else if (axiom_candidates->size() > 1) {
+      hashtable<std::string, Symbol::Base*>::iterator a = grammar.NTs.find(
+          *((*terminating_lhs_nts->begin())->name));
+      // assert that the single found axiom candidate is actually in the NTs of
+      // the grammar
+      assert(a != grammar.NTs.end());
+      // also assert that the axiom candidate is of type Symbol::NT
+      // (not Symbol::Terminal)
+      assert((*a).second->is(Symbol::NONTERMINAL));
+      nt_axiom = dynamic_cast<Symbol::NT*>((*a).second);
+    } else if (terminating_lhs_nts->size() > 1) {
       // it is more complicated if there are several NTs
-      // we then need to create a novel lhs NT ...
-      //std::string *axiom_name = new std::string(*OUTSIDE_NT_PREFIX + "_axioms");
-      std::string *axiom_name = new std::string(OUTSIDE_NT_PREFIX + std::string("axioms"));
-      hashtable<std::string, Symbol::Base*>::iterator it_ntclash = g.NTs.find(*axiom_name);
-      if (it_ntclash != g.NTs.end()) {
-        throw LogError((*it_ntclash).second->location, "Please avoid using '" + *axiom_name + "' as l.h.s. non-terminal name, when requesting outside grammar generation!");
+      // we then need to create a novel lhs NT with the name "outside_axioms"
+      std::string *axiom_name = new std::string(
+          OUTSIDE_NT_PREFIX + std::string("axioms"));
+
+      // we should double check that the user did not already define a NT with
+      // this name
+      hashtable<std::string, Symbol::Base*>::iterator it_ntclash =
+          grammar.NTs.find(*axiom_name);
+      if (it_ntclash != grammar.NTs.end()) {
+        throw LogError((*it_ntclash).second->location, "Please avoid using '"
+            + *axiom_name + "' as l.h.s. non-terminal name, when requesting "
+            + "outside grammar generation!");
       }
-      Symbol::NT *nt_axiom = new Symbol::NT(axiom_name, Loc());
+
+      // let's use the current inside axiom as template ...
+      nt_axiom = grammar.axiom->clone(grammar.axiom->track_pos(), false);
+      // but change its name
       nt_axiom->name = axiom_name;
-      nt_axiom->orig_name = axiom_name;
+      nt_axiom->orig_name = nt_axiom->name;
+      // and clear all current alternatives
+      nt_axiom->alts.clear();
+      // remove choice function, as we chose/sum from/over different axiom
+      // candidates
+      nt_axiom->eval_fn = nullptr;
 
-      // TODO can't I clone inside NT?
-      // carry over tracks from original inside axiom
-      nt_axiom->set_tracks(g.axiom->tracks(), g.axiom->track_pos());
-      nt_axiom->setup_multi_ys();
-
-      for (std::set<Symbol::NT*>::iterator i = axiom_candidates->begin();
-           i != axiom_candidates->end(); ++i) {
+      // add all axiom candidates as alternatives to the new axiom
+      for (std::set<Symbol::NT*>::iterator i = terminating_lhs_nts->begin();
+           i != terminating_lhs_nts->end(); ++i) {
         Alt::Link *link = new Alt::Link((*i)->name, Loc());
         link->nt = *i;
         link->set_tracks((*i)->tracks(), (*i)->track_pos());
         link->init_multi_ys();
+        link->top_level = Bool(true);
         nt_axiom->alts.push_back(link);
       }
+
       // add new lhs non-terminal to grammar
-      g.add_nt(nt_axiom);
-
-      g.axiom_name = axiom_name;
-
+      grammar.add_nt(nt_axiom);
+    } else {
+      throw LogError("You inside grammar does not seem to terminate, which "
+          "should have been reported earlier via semantic checks?!");
     }
-    g.init_axiom();
+
+    // set grammar's axiom non-terminal
+    grammar.axiom = nt_axiom;
+
+    // set grammar's axiom name
+    grammar.axiom_name = nt_axiom->name;
+
+    // redirect grammar's axiom's location
+    grammar.axiom_loc = nt_axiom->location;
+
+    // initialize links of the new axiom
+    grammar.init_axiom();
   }
 };
-
-void inject_outside_axiom(Grammar *grammar, hashtable<std::string, Symbol::Base*> outside_nts) {
-  /* inside production rules that have NO non-terminals on their right hand
-   * sides must be those that parse the final sub-words of the input.
-   * Therefore, they must be the smallest start-points for outside
-   * construction, i.e. the axiom should point to them. */
-  std::set<Symbol::NT*> *axiom_candidates = new std::set<Symbol::NT*>();
-  // check all alternatives, if they do NOT use any non-terminals on their rhs
-  // if so, the NT must become one of the outside axioms
-  for (hashtable<std::string, Symbol::Base*>::iterator i = grammar->NTs.begin();
-       i != grammar->NTs.end(); ++i) {
-    if ((*i).second->is(Symbol::NONTERMINAL)) {
-      Symbol::NT *nt_inside = dynamic_cast<Symbol::NT*>((*i).second);
-      for (std::list<Alt::Base*>::const_iterator a = nt_inside->alts.begin(); a != nt_inside->alts.end(); ++a) {
-        Count_rhsNTsXX v = Count_rhsNTsXX(outside_nts);
-        (*a)->traverse(v);
-        if (v.rhs_nts == 0) {
-          std::string he = std::string(OUTSIDE_NT_PREFIX + *nt_inside->name);
-          hashtable<std::string, Symbol::Base*>::iterator it_outside_nt = outside_nts.find(he);
-          if (it_outside_nt != outside_nts.end()) {
-            axiom_candidates->insert(dynamic_cast<Symbol::NT*>((*it_outside_nt).second));
-          }
-        }
-      }
-    }
-  }
-
-  if (axiom_candidates->size() == 1) {
-    // if there is only one candidate NT, we simple make this NT the new axiom
-    grammar->axiom_name = (*axiom_candidates->begin())->name;
-  } else if (axiom_candidates->size() > 1) {
-    // it is more complicated if there are several NTs
-    // we then need to create a novel lhs NT ...
-    //std::string *axiom_name = new std::string(*OUTSIDE_NT_PREFIX + "_axioms");
-    std::string *axiom_name = new std::string(OUTSIDE_NT_PREFIX + std::string("axioms"));
-    hashtable<std::string, Symbol::Base*>::iterator it_ntclash = grammar->NTs.find(*axiom_name);
-    if (it_ntclash != grammar->NTs.end()) {
-      throw LogError((*it_ntclash).second->location, "Please avoid using '" + *axiom_name + "' as l.h.s. non-terminal name, when requesting outside grammar generation!");
-    }
-    Symbol::NT *nt_axiom = new Symbol::NT(axiom_name, Loc());
-    nt_axiom->name = axiom_name;
-    nt_axiom->orig_name = axiom_name;
-
-    // TODO can't I clone inside NT?
-    // carry over tracks from original inside axiom
-    nt_axiom->set_tracks(grammar->axiom->tracks(), grammar->axiom->track_pos());
-    nt_axiom->setup_multi_ys();
-
-    for (std::set<Symbol::NT*>::iterator i = axiom_candidates->begin();
-         i != axiom_candidates->end(); ++i) {
-      Alt::Link *link = new Alt::Link((*i)->name, Loc());
-      link->nt = *i;
-      link->set_tracks((*i)->tracks(), (*i)->track_pos());
-      link->init_multi_ys();
-      nt_axiom->alts.push_back(link);
-    }
-    // add new lhs non-terminal to grammar
-    grammar->add_nt(nt_axiom);
-
-    grammar->axiom_name = axiom_name;
-
-  }
-  grammar->init_axiom();
-}
 
 /* There must be one production rule that realizes the transition from outside
  * to inside parts of the grammar. The target non-terminal must be the original
  * inside axiom and the source is the outside_ version of the original inside
- * axiom (not the outside axiom). However, this outside_ version does not yet
- * exist, iff the axiom was never called on the rhs of the inside grammar part
+ * axiom (not the outside axiom). However,
  */
-void inject_outside_inside_transition(Grammar *grammar, hashtable<std::string, Symbol::Base*> &outside_nts, std::string name_inside_axiom) {
-  std::string name_lhs_outside = std::string(OUTSIDE_NT_PREFIX + name_inside_axiom);
-//  if (outside_nts.find(name_lhs_outside) == outside_nts.end()) {
-//    outside_nts[name_lhs_outside] = new Symbol::NT(new std::string(name_inside_axiom), Loc());
-//  }
+void inject_outside_inside_transition(
+    Grammar *grammar,
+    hashtable<std::string, Symbol::Base*> &outside_nts,
+    std::string name_inside_axiom) {
+  std::string name_lhs_outside = std::string(
+      OUTSIDE_NT_PREFIX + name_inside_axiom);
+
+  /* if the axiom was never called on the rhs of the inside grammar part, the
+   * outside counterpart of the inside axiom does not yet exist. Thus we create
+   * it here */
   if (outside_nts.find(name_lhs_outside) == outside_nts.end()) {
-    Symbol::NT *nt_lhs_outside = grammar->axiom->clone(grammar->axiom->track_pos(), false);
+    Symbol::NT *nt_lhs_outside = grammar->axiom->clone(
+        grammar->axiom->track_pos(), false);
     nt_lhs_outside->name = new std::string(name_lhs_outside);
     nt_lhs_outside->orig_name = nt_lhs_outside->name;
     nt_lhs_outside->alts.clear();
-    outside_nts[name_lhs_outside] = nt_lhs_outside;// new Symbol::NT(new std::string(name_lhs_outside), Loc());
+    outside_nts[name_lhs_outside] = nt_lhs_outside;
   }
-  Symbol::NT *lhs_outside = dynamic_cast<Symbol::NT*>(outside_nts[name_lhs_outside]);
+
+  Symbol::NT *lhs_outside = dynamic_cast<Symbol::NT*>(
+    outside_nts[name_lhs_outside]);
   assert(lhs_outside);
-  Symbol::NT *rhs_inside = dynamic_cast<Symbol::NT*>(grammar->NTs[name_inside_axiom]);
+  Symbol::NT *rhs_inside = dynamic_cast<Symbol::NT*>(
+    grammar->NTs[name_inside_axiom]);
   assert(rhs_inside);
 
+  /* we need to add a special filter to the transition, to ensure that
+   * it is only invoked with the FULL input sequence(s). Don't forget multi-
+   * track programs. */
   Alt::Link *link = new Alt::Link(new std::string(name_inside_axiom), Loc());
   link->nt = rhs_inside;
   Filter *f = new Filter(new std::string("complete_track"), Loc());
@@ -717,6 +721,7 @@ void inject_outside_inside_transition(Grammar *grammar, hashtable<std::string, S
   }
   link->top_level = Bool(true);
 
+  // finally add this new transition to the list of alternaties
   lhs_outside->alts.push_back(link);
 }
 
@@ -729,17 +734,22 @@ void Grammar::convert_to_outside() {
     if ((*i).second->is(Symbol::NONTERMINAL)) {
       Symbol::NT *nt_inside = dynamic_cast<Symbol::NT*>((*i).second);
 
-      // don't operate on the original inside non-terminal, but on a clone in which Alt::Block applications have been resolved
-      Symbol::NT *nt_inside_resolved = nt_inside->clone(nt_inside->track_pos(), true);
+      // don't operate on the original inside non-terminal, but on a clone in
+      // which Alt::Block applications have been resolved
+      Symbol::NT *nt_inside_resolved = nt_inside->clone(
+          nt_inside->track_pos(), true);
       resolve_blocks(nt_inside_resolved);
 
-      Flip_lhs_rhs_nonterminals v = Flip_lhs_rhs_nonterminals(nt_inside_resolved);
+      Flip_lhs_rhs_nonterminals v = Flip_lhs_rhs_nonterminals(
+          nt_inside_resolved);
       nt_inside_resolved->traverse(v);
 
       // add new alternatives and new non-terminals to existing grammar
-      for (std::list<std::pair<Symbol::NT*, Alt::Base*> >::iterator i = v.alt_clones->begin(); i != v.alt_clones->end(); ++i) {
+      for (std::list<std::pair<Symbol::NT*, Alt::Base*> >::iterator i =
+           v.alt_clones->begin(); i != v.alt_clones->end(); ++i) {
         std::string *nt_name = (*i).first->name;
-        hashtable<std::string, Symbol::Base*>::iterator it_nt = outside_nts.find(*nt_name);
+        hashtable<std::string, Symbol::Base*>::iterator it_nt =
+            outside_nts.find(*nt_name);
         if (it_nt == outside_nts.end()) {
           outside_nts[*nt_name] = (*i).first;
         }
@@ -761,7 +771,8 @@ void Grammar::convert_to_outside() {
   }
 
   // inject new outside axiom
-  Count_rhsNTsXX v = Count_rhsNTsXX(outside_nts);
+  Collect_and_Insert_outside_axioms v = Collect_and_Insert_outside_axioms(
+      outside_nts);
   this->traverse(v);
 
 
