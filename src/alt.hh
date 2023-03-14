@@ -266,7 +266,7 @@ class Base {
  public:
   void set_tracks(size_t t, size_t p);
 
- // set to public, to allow transmission to outside pendants
+  // set to public, to allow transmission to outside pendants
  public:
   Yield::Multi m_ys;
 
