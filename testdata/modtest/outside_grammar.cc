@@ -39,8 +39,8 @@ int main(int argc, char **argv) {
     throw LogError("Seen semantic errors.");
   }
 
-//  // inject rules for outside grammar
-//  grammar->inject_outside_nts();
+  // inject rules for outside grammar
+  grammar->convert_to_outside();
 
 //  // set approx table design
 //  grammar->approx_table_conf();
