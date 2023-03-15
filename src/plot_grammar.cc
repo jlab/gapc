@@ -496,7 +496,7 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
   unsigned int anchorID = 0;
   unsigned int max_depth = 1;
   unsigned int deepest_nodeID = 0;
-  unsigned int *res = (unsigned int *) malloc(2 * sizeof(int));
+  unsigned int *res = (unsigned int *) malloc(3 * sizeof(int));
   // with "rank" we collect nodes that must be drawn topmost in a cluster
   std::string rank = "";
   out << ", color=\"" << COLOR_NONTERMINAL << "\"";
@@ -580,6 +580,11 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
       // choice function will be located on depth+1, i.e. one less
       // invisible fake node necessary
       lhsNT_depth++;
+
+      if (lhsNT_depth > max_depth) {
+        deepest_nodeID = choiceID;
+        max_depth = lhsNT_depth;
+      }
     }
 
     /* In order to align each NT vertically below each other, we inject one
