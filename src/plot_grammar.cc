@@ -122,11 +122,12 @@ void to_dot_filternameargs(Filter *filter, std::ostream &out) {
 unsigned int Alt::Base::to_dot_semanticfilters(unsigned int *nodeID,
     unsigned int thisID, std::ostream &out,
     std::vector<unsigned int> *childIDs) {
-  unsigned int max_depth = 0;
+  unsigned int deepest_nodeID = 0;
   // add syntactic filters
   for (std::list<Filter*>::const_iterator filter = this->filters.begin();
        filter != this->filters.end(); ++filter) {
     unsigned int childID = (unsigned int)((*nodeID)++);
+    deepest_nodeID = childID;
     out << "    node_" << childID << " [ label=\"";
     to_dot_filternameargs(*filter, out);
     out << "\" , fontcolor=\"" << COLOR_FILTER << "\" , shape=none ];\n";
@@ -140,7 +141,6 @@ unsigned int Alt::Base::to_dot_semanticfilters(unsigned int *nodeID,
       out << "    node_" << thisID << " -> node_" << childID
           << " [ arrowhead=none, color=\"" << COLOR_FILTER << "\" ];\n";
     }
-    max_depth = 1;
   }
   // Multiple filter can be added to each track.
   // Unfortunately, filters are stored in a list per track, containing
@@ -159,6 +159,7 @@ unsigned int Alt::Base::to_dot_semanticfilters(unsigned int *nodeID,
   for (unsigned int filterpos = 0; filterpos < max_multifilter_number;
        ++filterpos) {
     unsigned int childID = (unsigned int)((*nodeID)++);
+    deepest_nodeID = childID;
     out << "    node_" << childID << " [ label=<<table border='0'>";
     for (std::vector<std::list<Filter*> >::iterator
          i = this->multi_filter.begin();
@@ -177,14 +178,14 @@ unsigned int Alt::Base::to_dot_semanticfilters(unsigned int *nodeID,
     out << "</table>>, fontcolor=\"" << COLOR_FILTER << "\", shape=none ];\n";
     out << "node_" << thisID << " -> node_" << childID
         << " [ arrowhead=none, color=\"" << COLOR_FILTER << "\" ];\n";
-    max_depth = 1;
   }
-  return max_depth;
+  return deepest_nodeID;
 }
 unsigned int* Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out,
          int plot_grammar) {
   unsigned int max_depth = 1;
   unsigned int thisID = (unsigned int)((*nodeID)++);
+  unsigned int deepest_nodeID = thisID;
   out << "    node_" << thisID << " [ label=<<table border='0'><tr>";
   Alt::Link *link = dynamic_cast<Alt::Link*>(this);
   if (plot_grammar > 1) {
@@ -282,11 +283,19 @@ unsigned int* Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out,
   out << "];\n";
 
   // add syntactic filters
-  max_depth += to_dot_semanticfilters(nodeID, thisID, out);
+  unsigned int filter_nodeID = to_dot_semanticfilters(nodeID, thisID, out);
+  if (filter_nodeID > 0) {
+    // semantic filter can at most add one new level of nodes as all filters
+    // will populate the same level. If no filter is present, no new layer
+    // is added.
+    max_depth++;
+    deepest_nodeID = filter_nodeID;
+  }
 
-  unsigned int* res = (unsigned int*) malloc(2* sizeof(unsigned int*));
+  unsigned int* res = (unsigned int*) malloc(3* sizeof(unsigned int*));
   res[0] = thisID;
   res[1] = max_depth;
+  res[2] = deepest_nodeID;
   return res;
 }
 unsigned int* Alt::Simple::to_dot(unsigned int *nodeID, std::ostream &out,
@@ -294,6 +303,7 @@ unsigned int* Alt::Simple::to_dot(unsigned int *nodeID, std::ostream &out,
   unsigned int* res = Alt::Base::to_dot(nodeID, out, plot_grammar);
   unsigned int thisID = res[0];
   unsigned int max_depth = 0;
+  unsigned int deepest_nodeID = res[2];
   for (std::list<Fn_Arg::Base*>::const_iterator arg = this->args.begin();
        arg != this->args.end(); ++arg) {
     Fn_Arg::Alt *argalt = dynamic_cast<Fn_Arg::Alt*>(*arg);
@@ -304,6 +314,7 @@ unsigned int* Alt::Simple::to_dot(unsigned int *nodeID, std::ostream &out,
           << " [ arrowhead=none ";
       if (childID[1] > max_depth) {
         max_depth = childID[1];
+        deepest_nodeID = childID[2];
       }
       Alt::Multi *multi = dynamic_cast<Alt::Multi*>(argalt->alt_ref());
       if (multi) {
@@ -315,6 +326,7 @@ unsigned int* Alt::Simple::to_dot(unsigned int *nodeID, std::ostream &out,
   if (res[1] < max_depth+1) {
     res[1] = max_depth+1;
   }
+  res[2] = deepest_nodeID;
   return res;
 }
 unsigned int* Alt::Link::to_dot(unsigned int *nodeID, std::ostream &out,
@@ -326,6 +338,7 @@ unsigned int* Alt::Block::to_dot(unsigned int *nodeID, std::ostream &out,
   unsigned int* res = Alt::Base::to_dot(nodeID, out, plot_grammar);
   unsigned int thisID = res[0];
   unsigned int max_depth = 0;
+  unsigned int deepest_nodeID = res[2];
   if (res[1] > max_depth) {
     max_depth = res[1];
   }
@@ -334,12 +347,14 @@ unsigned int* Alt::Block::to_dot(unsigned int *nodeID, std::ostream &out,
     unsigned int* res2 = (*alt)->to_dot(nodeID, out, plot_grammar);
     if (res2[1]+1 > max_depth) {
         max_depth = res2[1]+1;
+        deepest_nodeID = res2[2];
     }
     unsigned int childID = res2[0];
     out << "    node_" << thisID << " -> node_" << childID
         << " [ ];\n";
   }
   res[1] = max_depth;
+  res[2] = deepest_nodeID;
   return res;
 }
 unsigned int* Alt::Multi::to_dot(unsigned int *nodeID, std::ostream &out,
@@ -348,11 +363,13 @@ unsigned int* Alt::Multi::to_dot(unsigned int *nodeID, std::ostream &out,
   out << "subgraph cluster_node_" << thisID << " {\n";
   unsigned int lastID = 0;
   unsigned int max_depth = 0;
+  unsigned int deepest_nodeID = 0;
   std::vector<unsigned int> *childIDs = new std::vector<unsigned int>();
   for (std::list<Alt::Base*>::const_iterator alt = this->list.begin();
        alt != this->list.end(); ++alt) {
     unsigned int* childID = (*alt)->to_dot(nodeID, out, plot_grammar);
     max_depth += childID[1];
+    deepest_nodeID = childID[2];
     childIDs->push_back(childID[0]);
     if (lastID > 0) {
       out << "    node_" << lastID << " -> node_" << childID[0]
@@ -361,12 +378,20 @@ unsigned int* Alt::Multi::to_dot(unsigned int *nodeID, std::ostream &out,
     lastID = childID[0];
   }
   // add syntactic filter and draw an edge to every track component
-  max_depth += to_dot_semanticfilters(nodeID, thisID, out, childIDs);
+  unsigned int filter_nodeID = to_dot_semanticfilters(nodeID, thisID, out, childIDs);
+  if (filter_nodeID > 0) {
+    // semantic filter can at most add one new level of nodes as all filters
+    // will populate the same level. If no filter is present, no new layer
+    // is added.
+    max_depth++;
+    deepest_nodeID = filter_nodeID;
+  }
   out << "};\n";
 
-  unsigned int* res = (unsigned int*) malloc(2*sizeof(unsigned int*));
+  unsigned int* res = (unsigned int*) malloc(3*sizeof(unsigned int*));
   res[0] = thisID+1;
   res[1] = max_depth;
+  res[2] = deepest_nodeID;
 
   // return not the cluster ID but the id of the first element
   return res;
@@ -470,6 +495,7 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
     nodeID, out, is_rhs, axiom, plot_grammar);
   unsigned int anchorID = 0;
   unsigned int max_depth = 1;
+  unsigned int deepest_nodeID = 0;
   unsigned int *res = (unsigned int *) malloc(2 * sizeof(int));
   // with "rank" we collect nodes that must be drawn topmost in a cluster
   std::string rank = "";
@@ -509,6 +535,7 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
       unsigned int childID = res[0];
       if (res[1] > max_depth) {
         max_depth = res[1];
+        deepest_nodeID = res[2];
       }
 
       rank += "node_" + std::to_string(childID) + " ";
@@ -546,25 +573,31 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
         }
         out << "</font>";
       }
-      out << ">, fontcolor=\"" << COLOR_EVALFCT << "\", shape=none ];\n";
+      out << ">, fontcolor=\"" << COLOR_EVALFCT << "\", shape=plain ];\n";
       out << "    node_" << thisID << " -> node_" << choiceID
           << " [ arrowhead=none, color=\""
-          << COLOR_EVALFCT << "\", weight=99 ];\n";
+          << COLOR_EVALFCT << "\" ];\n";
       // choice function will be located on depth+1, i.e. one less
       // invisible fake node necessary
       lhsNT_depth++;
     }
 
-    // in order to align each NT vertically below each other, we have to inject
-    // invisible nodes below the lhs NT (-1 if choice function has been added)
-    // up to the deepest level for any rhs production rule
-    anchorID = choiceID;
-    for (unsigned int depth = lhsNT_depth; depth < max_depth; depth++) {
-      out << "    node_" << anchorID << " -> node_" << *nodeID
-          << " [ " << make_insivible(false) << "weight=99 ];\n";
+    /* In order to align each NT vertically below each other, we inject one
+     * invisible "anchor" node on the same rank as the deepest node on the rhs.
+     * We next connect the lhs NT node with this anchor on "west" = left ports
+     * from south to north. Last, we ensure the invisible anchor and the deepest
+     * node is on the same rank.
+     * Note: it is important that the anchor node has a rectangular shape, we
+     *       also want to make it as small as possible to not shift visible
+     *       nodes unneccesarily far to the right*/
+    if (max_depth > 1) {
       anchorID = (unsigned int)((*nodeID)++);
-      out << "    node_" << anchorID << " [ "
-          << make_insivible(true) << " ];\n";
+      out << "    node_" << anchorID << " [ " << make_insivible(false)
+          << "shape=box, fixedsize=true, width=0.01, label=\"\" ];\n";
+      out << "    node_" << thisID << ":sw -> node_" << anchorID << ":nw ["
+          << make_insivible(false) << "weight=999 ];\n";
+      out << "    { rank=same node_" << anchorID << " node_" << deepest_nodeID
+          << "}\n";
     }
 
     out << "    { rank=same node_" << thisID << " " << rank << "}\n";
@@ -589,8 +622,8 @@ unsigned int Grammar::to_dot(unsigned int *nodeID, std::ostream &out,
       // except for the first unit, we add an invisible node (anchor) and
       // invisible edges from the anchor to the lhs non-terminal node of the
       // next unit to enable vertical alignment
-      out << "node_" << start_node << " -> node_" << std::to_string(*nodeID)
-          << " [ " << make_insivible(true) << " ];\n";
+      out << "node_" << start_node << ":sw -> node_" << std::to_string(*nodeID)
+          << ":nw [ " << make_insivible(true) << " ];\n";
     }
     // let's organize all nodes of a lhs non-terminal in one subgraph cluster
     // such that it can be plotted as one unit and these units are
