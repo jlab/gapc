@@ -609,6 +609,7 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
         out << "    { rank=same node_" << anchorID << " node_" << deepest_nodeID
             << "}\n";
       }
+      assert(anchorID != 0);
       out << "    node_" << thisID << ":sw -> node_" << anchorID << ":nw ["
           << make_insivible(false) << "weight=999 ];\n";
     }
