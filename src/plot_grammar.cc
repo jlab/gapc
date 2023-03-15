@@ -378,7 +378,8 @@ unsigned int* Alt::Multi::to_dot(unsigned int *nodeID, std::ostream &out,
     lastID = childID[0];
   }
   // add syntactic filter and draw an edge to every track component
-  unsigned int filter_nodeID = to_dot_semanticfilters(nodeID, thisID, out, childIDs);
+  unsigned int filter_nodeID = to_dot_semanticfilters(
+      nodeID, thisID, out, childIDs);
   if (filter_nodeID > 0) {
     // semantic filter can at most add one new level of nodes as all filters
     // will populate the same level. If no filter is present, no new layer
