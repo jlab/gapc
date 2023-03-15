@@ -917,12 +917,4 @@ class Multi : public Base {
 
 }  // namespace Alt
 
-// prints left or right indices of a parser to out stream.
-// used as a helper for to_dot functions
-void to_dot_indices(std::vector<Expr::Base*> indices, std::ostream &out);
-
-// adds further lines (one per track) to indicate yield sizes of
-// grammar components
-void to_dot_multiys(Yield::Multi m_ys, std::ostream &out);
-
 #endif  // SRC_ALT_HH_
