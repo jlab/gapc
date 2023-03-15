@@ -38,6 +38,20 @@ static const char *COLOR_NONTERMINAL = "black";
 static const char *COLOR_BLOCK = "gray";
 static const char *COLOR_EVALFCT = "purple";
 
+static const bool HIDEINVISIBLE = true;
+
+std::string make_insivible(bool singlearg) {
+  if (!HIDEINVISIBLE) {
+    return "";
+  } else {
+    if (singlearg) {
+      return "style=\"invis\"";
+    } else {
+      return "style=\"invis\", ";
+    }
+  }
+}
+
 // the following functions produce graphViz code to represent the grammar
 void Alt::Link::to_dot_overlayindices(std::ostream &out, bool is_left_index) {
   out << "<td><font point-size='8' color='" << COLOR_OVERLAY << "'><b>";
@@ -342,7 +356,7 @@ unsigned int* Alt::Multi::to_dot(unsigned int *nodeID, std::ostream &out,
     childIDs->push_back(childID[0]);
     if (lastID > 0) {
       out << "    node_" << lastID << " -> node_" << childID[0]
-          << " [ style=\"invis\" ];\n";
+          << " [ " << make_insivible(true) << " ];\n";
     }
     lastID = childID[0];
   }
@@ -476,7 +490,7 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
       sepNodeID = (unsigned int)((*nodeID)++);
       // add an invisible edge from lhs NT to --> node
       out << "    node_" << thisID << " -> node_" << sepNodeID
-          << " [ style=invis, weight=99 ];\n";
+          << " [ " << make_insivible(false) << "weight=99 ];\n";
       // adding a separator node to draw the --> arrow from lhs NT
       // name to alternatives
       out << "    node_" << sepNodeID << " [ label=<<table border='0'><tr>"
@@ -485,7 +499,7 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
       // add an invisible edge from the --> node to the first
       // alternative production
       out << "    node_" << sepNodeID << " -> node_" << *nodeID
-          << " [ style=invis ];\n";
+          << " [ " << make_insivible(true) << " ];\n";
       rank += "node_" + std::to_string(sepNodeID) + " ";
     }
     for (std::list<Alt::Base*>::const_iterator alt = this->alts.begin();
@@ -504,12 +518,12 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
         // incoming and outgoing invisible edges
         sepNodeID = (unsigned int)((*nodeID)++);
         out << "    node_" << childID << " -> node_" << sepNodeID
-            << " [ style=invis ];\n";
+            << " [ " << make_insivible(true) << " ];\n";
         out << "    node_" << sepNodeID << " [ label=<<table border='0'>"
             << "<tr><td><font point-size='30'>|</font></td></tr></table>>"
             << ", shape=plaintext ];\n";
         out << "    node_" << sepNodeID << " -> node_" << *nodeID
-            << " [ style=invis ];\n";
+            << " [ " << make_insivible(true) << " ];\n";
         rank += "node_" + std::to_string(sepNodeID) + " ";
       }
     }
@@ -547,9 +561,10 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
     anchorID = choiceID;
     for (unsigned int depth = lhsNT_depth; depth < max_depth; depth++) {
       out << "    node_" << anchorID << " -> node_" << *nodeID
-          << " [ style=invis, weight=99 ];\n";
+          << " [ " << make_insivible(false) << "weight=99 ];\n";
       anchorID = (unsigned int)((*nodeID)++);
-      out << "    node_" << anchorID << " [ style=invis ];\n";
+      out << "    node_" << anchorID << " [ "
+          << make_insivible(true) << " ];\n";
     }
 
     out << "    { rank=same node_" << thisID << " " << rank << "}\n";
@@ -575,7 +590,7 @@ unsigned int Grammar::to_dot(unsigned int *nodeID, std::ostream &out,
       // invisible edges from the anchor to the lhs non-terminal node of the
       // next unit to enable vertical alignment
       out << "node_" << start_node << " -> node_" << std::to_string(*nodeID)
-          << " [ style=invis ];\n";
+          << " [ " << make_insivible(true) << " ];\n";
     }
     // let's organize all nodes of a lhs non-terminal in one subgraph cluster
     // such that it can be plotted as one unit and these units are
