@@ -594,15 +594,22 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
      * node is on the same rank.
      * Note: it is important that the anchor node has a rectangular shape, we
      *       also want to make it as small as possible to not shift visible
-     *       nodes unneccesarily far to the right*/
-    if (max_depth > 1) {
-      anchorID = (unsigned int)((*nodeID)++);
-      out << "    node_" << anchorID << " [ " << make_insivible(false)
-          << "shape=box, fixedsize=true, width=0.01, label=\"\" ];\n";
+     *       nodes unnecessarily far to the right
+     * Further note: if lhs and rhs have only one level, the anchor is the lhs
+     *               NT node. No additional node must be added.
+     */
+    if (max_depth > 0) {
+      if (deepest_nodeID == 0) {
+        anchorID = thisID;
+      } else {
+        anchorID = (unsigned int)((*nodeID)++);
+        out << "    node_" << anchorID << " [ " << make_insivible(false)
+            << "shape=box, fixedsize=true, width=0.01, label=\"\" ];\n";
+        out << "    { rank=same node_" << anchorID << " node_" << deepest_nodeID
+            << "}\n";
+      }
       out << "    node_" << thisID << ":sw -> node_" << anchorID << ":nw ["
           << make_insivible(false) << "weight=999 ];\n";
-      out << "    { rank=same node_" << anchorID << " node_" << deepest_nodeID
-          << "}\n";
     }
 
     out << "    { rank=same node_" << thisID << " " << rank << "}\n";
