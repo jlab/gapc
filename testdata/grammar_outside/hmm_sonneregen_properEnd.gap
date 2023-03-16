@@ -134,6 +134,7 @@ algebra alg_fwd extends alg_viterbi {
   }
 }
 
+
 algebra alg_hessians implements sig_weather(alphabet=char, answer=float) {
   float transition_start_hoch(float transition, float emission, float x) {
     return 0.48 * emission * x;
@@ -524,3 +525,4 @@ instance multviterbistates = gra_weather(alg_mult * alg_viterbi * alg_states);
 instance bothD = gra_weather(alg_fwd * alg_hessians);
 instance bothD_log = gra_weather(alg_fwd_log * alg_hessians);
 instance bothD_neglog = gra_weather(alg_fwd_neglog * alg_hessians);
+
