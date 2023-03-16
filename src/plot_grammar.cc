@@ -561,6 +561,7 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
 
     // plot evaluation function
     unsigned int choiceID = thisID;
+    std::string edge_choice = "";
     if (this->eval_fn != NULL) {
       choiceID = (unsigned int)((*nodeID)++);
       out << "    node_" << choiceID << " [ label=<" << *this->eval_fn;
@@ -575,9 +576,14 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
         out << "</font>";
       }
       out << ">, fontcolor=\"" << COLOR_EVALFCT << "\", shape=plain ];\n";
-      out << "    node_" << thisID << " -> node_" << choiceID
-          << " [ arrowhead=none, color=\""
-          << COLOR_EVALFCT << "\" ];\n";
+      /* program "dot" might re-order nodes, which we must prohibit.
+       * It seems like it depends on the occurrence of edge definitions in the
+       * dot file. Since we (often) need an invisible node for proper left
+       * alignment of lhs NTs, we must ensure that edge from lhs NT to choice
+       * happens AFTER definition of edge lhs NT -> invisible node. */
+      edge_choice = "    node_" + std::to_string(thisID) + " -> node_" +
+          std::to_string(choiceID) + " [ arrowhead=none, color=\"" +
+          COLOR_EVALFCT + "\" ];\n";
       // choice function will be located on depth+1, i.e. one less
       // invisible fake node necessary
       lhsNT_depth++;
@@ -613,6 +619,10 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
       out << "    node_" << thisID << ":sw -> node_" << anchorID << ":nw ["
           << make_insivible(false) << "weight=999 ];\n";
     }
+
+    // only after lhs NT -> invisible node edge has been added, we are save to
+    // insert edge: lhs NT -> choice, to preserve child ordering
+    out << edge_choice;
 
     out << "    { rank=same node_" << thisID << " " << rank << "}\n";
   }
