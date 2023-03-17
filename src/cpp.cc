@@ -2528,7 +2528,7 @@ void Printer::Cpp::print_run_derivative_fn(const AST &ast) {
        i = (*ast.grammar()).NTs.begin();
        i != (*ast.grammar()).NTs.end(); ++i) {
     Symbol::NT *nt = dynamic_cast<Symbol::NT*>((*i).second);
-    if (nt && !(nt->is_partof_outside)) {
+    if (nt && nt->is_partof_outside) {
       print_derivative(nt);
       if (ast.as_pytorch_module) {
         std::string &torch_type = get_torch_type(nt->data_type()->getType());
@@ -3244,7 +3244,7 @@ void Printer::Cpp::print_pytorch_forward_fn(const AST &ast) {
   for (auto i = ast.grammar()->NTs.begin();
       i != ast.grammar()->NTs.end(); ++i) {
     Symbol::NT *nt = dynamic_cast<Symbol::NT*>((*i).second);
-    if (nt && nt->is_partof_outside) {
+    if (nt && !(nt->is_partof_outside)) {
       std::string &torch_type = get_torch_type(nt->data_type()->getType());
       stream << indent() << "matrices.push_back(torch::from_blob("
              << *(nt->name) << "_table.get_array_data(), "
