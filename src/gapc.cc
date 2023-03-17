@@ -682,12 +682,14 @@ class Main {
     hh.footer(driver.ast);
     hh.end_fwd_decls();
     hh.header_footer(driver.ast);
-    if (driver.ast.as_pytorch_module) {
-      hh.print_pytorch_forward_fn(driver.ast);
-      hh.print_pytorch_backward_fn(driver.ast);
-    } else if (grammar->is_outside()) {
+    if (grammar->is_outside()) {
       if (driver.ast.current_derivative > 0) {
-        hh.print_run_derivative_fn(driver.ast);
+        if (driver.ast.as_pytorch_module) {
+          hh.print_pytorch_forward_fn(driver.ast);
+          hh.print_pytorch_backward_fn(driver.ast);
+        } else {
+          hh.print_run_derivative_fn(driver.ast);
+        }
       } else {
         hh.print_insideoutside_report_fn(opts.outside_nt_list, driver.ast);
       }

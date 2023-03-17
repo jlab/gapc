@@ -65,6 +65,21 @@ static std::string make_comments(const std::string &s, const std::string &c) {
   return o.str();
 }
 
+static std::string& get_torch_type(Type::Type type) {
+  // get the appropriate pytorch Tensor type (float32, float64 etc.)
+  // based on the table type of the current non-terminal table
+
+  static hashtable<Type::Type, std::string>
+  torch_type = {{Type::Type::FLOAT, "torch::kFloat64"},
+                {Type::Type::FLOAT, "torch::kFloat64"},
+                {Type::Type::SINGLE, "torch::kFloat32"},
+                {Type::Type::INT, "torch::kInt32"},
+                {Type::Type::INTEGER, "torch::kInt32"},
+                {Type::Type::BIGINT, "torch::kInt64"},
+                {Type::Type::CHAR, "torch::kInt8"}};
+
+  return torch_type[type];
+}
 
 void Printer::Cpp::print(const std::list<Statement::Base*> &stmts) {
   stream << '{' << endl;
@@ -1163,7 +1178,9 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   stream << ");" << endl;
   if (pytorch) {
     stream << indent() << "array.clear();" << endl;
-    stream << indent() << "traces.clear();" << endl;
+    if (t.for_derivatives) {
+      stream << indent() << "traces.clear();" << endl;
+    }
   }
   stream << indent() << "array.resize(newsize);" << endl;
   if (t.for_derivatives) {
@@ -2404,11 +2421,13 @@ void Printer::Cpp::print_insideoutside_report_fn(
 }
 
 void Printer::Cpp::print_derivative(Symbol::NT *nt) {
-  stream << indent() << "std::cout << \"" << ast->current_derivative
-         << ". derivatives for non-terminal \\\""
-         << (*nt->name).substr(sizeof(OUTSIDE_NT_PREFIX)-1,
-                               (*nt->name).length())
-         << "\\\":\\n\";" << endl;
+  if (!ast->as_pytorch_module) {
+    stream << indent() << "std::cout << \"" << ast->current_derivative
+           << ". derivatives for non-terminal \\\""
+           << (*nt->name).substr(sizeof(OUTSIDE_NT_PREFIX)-1,
+                                 (*nt->name).length())
+           << "\\\":\\n\";" << endl;
+  }
   // aggregated level (=dim + tracks) of nested loops
   unsigned int nesting = 0;
   std::vector<std::string> *args = new std::vector<std::string>();
@@ -2435,7 +2454,9 @@ void Printer::Cpp::print_derivative(Symbol::NT *nt) {
              << track << "_left_most; t_" << track << "_j < t_" << track
              << "_i; ++t_" << track << "_j) {" << endl;
       inc_indent();
-      stream << indent() << "std::cout << \"\\t\";" << endl;
+      if (!ast->as_pytorch_module) {
+        stream << indent() << "std::cout << \"\\t\";" << endl;
+      }
       dec_indent();
       stream << indent() << "}" << endl;
       stream << indent() << "for (unsigned int t_" << track << "_j = t_"
@@ -2465,29 +2486,38 @@ void Printer::Cpp::print_derivative(Symbol::NT *nt) {
   for (std::list<Fn_Def*>::iterator i = l.begin(); i != l.end(); ++i) {
     std::string res = "res_" + *(nt->name);
     stream << indent() << *((*i)->return_type) << " " << res << " = nt_"
-           << *nt->name << "(" << list_args.str() << ");\n"
-           << indent() << "std::cout << " << res << ";" << endl;
+           << *nt->name << "(" << list_args.str() << ");" << endl;
+    if (!ast->as_pytorch_module) {
+      stream << indent() << "std::cout << " << res << ";" << endl;
+    }
     // only for first return statement
     break;
   }
 
   // close loops
   for (unsigned int d = 0; d < nesting; ++d) {
-    if (d > 0) {
-      stream << indent() << "std::cout << \"\\n\";" << endl;
-    } else {
-      stream << indent() << "std::cout << \"\\t\";" << endl;
+    if (!ast->as_pytorch_module) {
+      if (d > 0) {
+        stream << indent() << "std::cout << \"\\n\";" << endl;
+      } else {
+        stream << indent() << "std::cout << \"\\t\";" << endl;
+      }
     }
     dec_indent();
     stream << indent() << "}" << endl;
   }
-  if (nesting == 1) {
+  if (nesting == 1 && !ast->as_pytorch_module) {
     stream << indent() << "std::cout << \"\\n\";" << endl;
   }
 }
 void Printer::Cpp::print_run_derivative_fn(const AST &ast) {
-  stream << indent() << "void report_derivative(std::ostream &out) {"
-         << endl;
+  if (ast.as_pytorch_module) {
+    stream << indent() << "void get_backward_score_matrices"
+           << "(std::vector<torch::Tensor> &matrices) {" << endl;
+  } else {
+    stream << indent() << "void report_derivative(std::ostream &out) {"
+           << endl;
+  }
   inc_indent();
 
   stream << indent() << "// forward pass has already been executed through "
@@ -2498,11 +2528,16 @@ void Printer::Cpp::print_run_derivative_fn(const AST &ast) {
        i = (*ast.grammar()).NTs.begin();
        i != (*ast.grammar()).NTs.end(); ++i) {
     Symbol::NT *nt = dynamic_cast<Symbol::NT*>((*i).second);
-    if (nt && nt->is_partof_outside) {
+    if (nt && !(nt->is_partof_outside)) {
       print_derivative(nt);
+      if (ast.as_pytorch_module) {
+        std::string &torch_type = get_torch_type(nt->data_type()->getType());
+        stream << indent() << "matrices.push_back(torch::from_blob("
+             << *(nt->name) << "_table.get_array_data(), "
+             << "tensor_size, " << torch_type << "));" << endl;
+      }
     }
   }
-
 
   dec_indent();
   stream << indent() << "}" << endl << endl;
@@ -3060,7 +3095,9 @@ void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
            << "include $(MF)" << endl
        << "endif" << endl << endl;
 
+  // pytorch C++ extension doesn't support C++17 yet
   stream << "CXXFLAGS := $(CXXFLAGS) | sed 's/c++17/c++14/'" << endl;
+
   stream << "compiler_args := $(CXXFLAGS) | sed -e 's/\\s/\", \"/g'" << endl;
   stream << "LDFLAGS := $(LDFLAGS) | sed 's/-L\\//\\//g'" << endl;
   stream << "LDFLAGS := $(LDFLAGS) | sed -E 's/ -Xlinker -rpath -Xlinker.+//'"
@@ -3129,6 +3166,7 @@ void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
 
   stream << "pytorch_interface.cc: $(RTLIB)/generic_pytorch_interface.cc"
          << endl;
+  stream << "\trm -f $@" << endl;
   stream << "\ttouch $@" << endl;
   if (ast.requested_derivative > 1) {
     for (unsigned int i = 1; i <= ast.requested_derivative; ++i) {
@@ -3206,10 +3244,11 @@ void Printer::Cpp::print_pytorch_forward_fn(const AST &ast) {
   for (auto i = ast.grammar()->NTs.begin();
       i != ast.grammar()->NTs.end(); ++i) {
     Symbol::NT *nt = dynamic_cast<Symbol::NT*>((*i).second);
-    if (nt && !(nt->is_partof_outside)) {
+    if (nt && nt->is_partof_outside) {
+      std::string &torch_type = get_torch_type(nt->data_type()->getType());
       stream << indent() << "matrices.push_back(torch::from_blob("
              << *(nt->name) << "_table.get_array_data(), "
-             << "tensor_size, torch::kFloat64));" << endl;
+             << "tensor_size, " << torch_type << "));" << endl;
     }
   }
   dec_indent();
@@ -3217,42 +3256,15 @@ void Printer::Cpp::print_pytorch_forward_fn(const AST &ast) {
 }
 
 void Printer::Cpp::print_pytorch_backward_fn(const AST &ast) {
-  // convert the backward score matrix to a Pytorch tensor
-  stream << indent() << "void get_backward_score_matrices"
-         << "(std::vector<torch::Tensor> &matrices) {" << endl;
-  inc_indent();
-  stream << indent() << "for (int t_0_i = t_0_left_most; "
-         << "t_0_i <= t_0_right_most; ++t_0_i) {" << endl;
-  inc_indent();
-  stream << indent() << "for (int t_1_i = t_1_left_most; "
-         << "t_1_i <= t_1_right_most; ++t_1_i) {" << endl;
-  inc_indent();
-  stream << indent() << "// need to calculate everything first "
-         << "(results will be added to tensor all at once afterwards)"
-         << endl;
-  for (auto i = ast.grammar()->NTs.begin();
-      i != ast.grammar()->NTs.end(); ++i) {
-    Symbol::NT *nt = dynamic_cast<Symbol::NT*>((*i).second);
-    if (nt && nt->is_partof_outside) {
-      stream << indent() << "nt_" << *(nt->name) << "(t_0_i, t_1_i);"
-             << endl;
-    }
-  }
-  dec_indent();
-  stream << indent() << "}" << endl;
-  dec_indent();
-  stream << indent() << "}" << endl;
-  for (auto i = ast.grammar()->NTs.begin();
-      i != ast.grammar()->NTs.end(); ++i) {
-    Symbol::NT *nt = dynamic_cast<Symbol::NT*>((*i).second);
-    if (nt && nt->is_partof_outside) {
-      stream << indent() << "matrices.push_back(torch::from_blob("
-             << *(nt->name) << "_table.get_array_data(), "
-             << "tensor_size, torch::kFloat64));" << endl;
-    }
-  }
-  dec_indent();
-  stream << indent() << "}" << endl << endl;
+  /*
+   * convert the backward score matrix to a Pytorch tenso;
+   * this will get handled internally in the print_run_derivative_fn
+   * function so we don't have two separate functions doing almost
+   * exactly the same;  but, to avoid confusion when reading the code,
+   * wrap this function around print_run_derivative_fn function to emphasize
+   * that this is going to be part of a pytorch module
+   */
+  print_run_derivative_fn(ast);
 }
 
 void Printer::Cpp::imports(const AST &ast) {
