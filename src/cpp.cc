@@ -1586,11 +1586,7 @@ void Printer::Cpp::print_table_init(const AST &ast) {
           a >= i->second->track_pos() + i->second->tracks()) {
         continue;
       }
-      if (ast.as_pytorch_module) {
-        stream << *(*j)->name << ".sizes().back(), ";
-      } else {
-        stream << *(*j)->name << ".size(), ";
-      }
+      stream << *(*j)->name << ".size(), ";
     }
     if (ast.window_mode) {
       stream << " opts.window_size, opts.window_increment, ";
@@ -1835,7 +1831,7 @@ void Printer::Cpp::header(const AST &ast) {
   for (std::vector<Statement::Var_Decl*>::const_iterator i =
         ast.seq_decls.begin(); i != ast.seq_decls.end(); ++i, ++track) {
     if (ast.as_pytorch_module) {
-      stream << indent() << "tensor t_" << track << "_seq;" << endl;
+      stream << indent() << "TensorSlice t_" << track << "_seq;" << endl;
     } else {
       stream << **i << endl;
     }
@@ -3232,7 +3228,17 @@ void Printer::Cpp::print_pytorch_init_fn(const AST &ast) {
   // inputs from Pytorch and makes them accessible
 
   stream << indent() << "void init(";
-  stream << "const tensor &gap_embedding, const tensor &match_embedding";
+
+  size_t track = 0;
+  size_t total_input_tensors = ast.seq_decls.size();
+  for (std::vector<Statement::Var_Decl*>::const_iterator
+       i = ast.seq_decls.begin(); i != ast.seq_decls.end(); ++i, ++track) {
+    stream << "const tensor &__t_" << track << "_tensor";
+    if (track < total_input_tensors - 1) {
+      stream << ", ";
+    }
+  }
+
   for (unsigned int i = 1; i < ast.current_derivative; ++i) {
     stream << ", " << get_class_name_lower_derivative(ast.current_derivative, i)
            << " *derivative" << std::to_string(i);
@@ -3240,6 +3246,16 @@ void Printer::Cpp::print_pytorch_init_fn(const AST &ast) {
   stream << ") {" << endl;
 
   inc_indent();
+  track = 0;
+  for (std::vector<Statement::Var_Decl*>::const_iterator
+       i = ast.seq_decls.begin(); i != ast.seq_decls.end(); ++i, ++track) {
+    const std::string &current_tensor = *(*i)->name;
+    stream << indent()
+           << current_tensor << ".t = &__t_" << track << "_tensor;" << endl;
+    stream << indent() << current_tensor << ".i = 0;" << endl;
+    stream << indent() << current_tensor
+           << ".j = __t_" << track << "_tensor.sizes().back();" << endl << endl;
+  }
 
   print_filter_init(ast);
   print_table_init(ast);
@@ -3250,7 +3266,7 @@ void Printer::Cpp::print_pytorch_init_fn(const AST &ast) {
        j != ns.end(); ++j, ++t) {
     stream << indent() << "t_" << t << "_left_most = 0;\n";
     stream << indent() << "t_" << t << "_right_most = " << "t_" << t
-      << "_seq.sizes().back();\n";
+      << "_seq.j;\n";
     stream << indent() << "tensor_size.push_back(t_" << t
            << "_right_most + 1);" << endl;
   }

@@ -37,16 +37,18 @@
 
 using tensor = torch::Tensor;
 
-template<typename pos_type = int64_t>
+/*
+ * represents a "Slice" of a Tensor with the shape [:, i:j],
+ * (meaning the entire columns of the Tensor from [i, j))
+ */
 class TensorSlice {
  public:
-  pos_type i, j;
+  int64_t i, j;
   const tensor *t;
 
   TensorSlice() : i(0), j(0), t(NULL) {}
-  TensorSlice(
-    const tensor &t, pos_type i, pos_type j) : t(&t), i(i), j(j) {}
-  
+  TensorSlice(const tensor &t, int64_t i, int64_t j) : t(&t), i(i), j(j) {}
+
   void empty() {
     t = NULL;
   }
@@ -55,20 +57,22 @@ class TensorSlice {
     return !t;
   }
 
-  pos_type size() const {
+  int64_t size() const {
     return j - i;
   }
 };
 
-template<typename pos_type = int64_t>
+/*
+ * represents a "Char"/column of a Tensor
+ */
 class TensorChar {
  public:
-  pos_type i;
+  int64_t i;
   const tensor *t;
 
   TensorChar() : i(0), t(NULL) {}
-  TensorChar(const tensor &t, pos_type i) : t(&t), i(i) {}
-  
+  TensorChar(const tensor &t, int64_t i) : t(&t), i(i) {}
+
   void empty() {
     t = NULL;
   }
@@ -77,7 +81,7 @@ class TensorChar {
     return !t;
   }
 
-  constexpr pos_type size() const {
+  constexpr int64_t size() const {
     return 1;
   }
 };

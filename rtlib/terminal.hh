@@ -287,18 +287,20 @@ using Slice = torch::indexing::Slice;
 // tensor == torch::Tensor
 
 template<typename T>
-inline bool EMPTY(const tensor &t, T i, T j) {
+inline bool EMPTY(const TensorSlice &t, T i, T j) {
   return i == j;
 }
 
+// analogous to any terminal parser with Yield 1..n
 template<typename T>
-inline TensorSlice& TSLICE(const tensor &t, T i, T j) {
+inline TensorSlice TSLICE(const TensorSlice &t, T i, T j) {
   assert(i <= j);
   return TensorSlice(t, i, j);  // same as np.ndarray[:, i:j]
 }
 
+// analogous to CHAR (parses column of input tensor)
 template<typename T>
-inline TensorChar& TCHAR(const tensor &t, T i, T j, const TensorChar &c) {
+inline TensorChar TCHAR(const TensorSlice &t, T i, T j, const TensorChar &c) {
   assert(i+1 == j);
   if (torch::equal(t.index({"...", i}), c)) {
     return c;
@@ -307,14 +309,17 @@ inline TensorChar& TCHAR(const tensor &t, T i, T j, const TensorChar &c) {
   }
 }
 
+
+// analogous to CHAR (parses column of input tensor)
 template<typename T>
-inline TensorChar& TCHAR(const tensor &t &t, T i, T j) {
+inline TensorChar TCHAR(const TensorSlice &t, T i, T j) {
   assert(i+1 == j);
-  return t.index({"...", i});  // same as np.ndarray[:, i]
+  return TensorChar(t, i, j);
 }
 
+// analogous to LOC
 template<typename T>
-inline TensorSlice& TLOC(const tensor &t, T i, T j) {
+inline TensorSlice TLOC(const TensorSlice &t, T i, T j) {
   assert(i == j);
   return TensorSlice(t, i, j);
 }

@@ -31,7 +31,7 @@ const char Input::map[][7] = {
   "raw",
   "rna",
   "upper",
-  "tensor"
+  "tensor"  // indicates that (pytorch) Tensors are used for input
 };
 
 

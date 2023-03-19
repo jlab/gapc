@@ -437,6 +437,7 @@ class Subseq : public Base {
     void print(Printer::Base &s) const;
 };
 
+// "Char" analogous when dealing with Tensors
 class TensorChar : public Base {
  public:
     MAKE_CLONE(TensorChar);
@@ -448,6 +449,7 @@ class TensorChar : public Base {
     void print(Printer::Base &s) const;
 };
 
+// replacement for "Seq" type when dealing with Tensors
 class Tensor : public Base {
  public:
     MAKE_CLONE(Tensor);
@@ -461,6 +463,7 @@ class Tensor : public Base {
     void print(Printer::Base &s) const;
 };
 
+// "Subsequence" analogous when dealing with Tensors
 class TensorSlice : public Base {
  private:
     Tensor *tensor;

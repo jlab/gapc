@@ -132,7 +132,7 @@ void Terminal::add_predefined(Grammar &grammar) {
   grammar.NTs[*(t->name)] = t;
 
   /*
-   * Tensor with shape [0, 0] ("empty word")
+   * "empty word" Tensor
   */
   s = new std::string("TLOC");
   t = new Symbol::Terminal(s, l);

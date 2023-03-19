@@ -150,6 +150,8 @@ template <typename X> inline bool isEmpty(const rope::Ref<X> &p) {
 }
 
 #ifdef PYTORCH_MOD
+
+#include "tensor.hh"
 template<typename T> inline void empty(const TensorChar<T> &t) {
   t.empty();
 }
