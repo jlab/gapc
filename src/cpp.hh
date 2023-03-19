@@ -253,6 +253,8 @@ class Cpp : public Base {
     void print(const Type::Eval_List &expr);
     void print(const Type::Backtrace &expr);
     void print(const Type::Backtrace_List &expr);
+    void print(const Type::Tensor &expr);
+    void print(const Type::TensorSlice &expr);
 
     void print(const Type::Multi &expr);
 

@@ -282,5 +282,43 @@ inline int SEQ1(Basic_Sequence<alphabet, pos_type> &seq, T i, T j) {
   return j - i;
 }
 
+#ifdef PYTORCH_MOD
+using Slice = torch::indexing::Slice;
+// tensor == torch::Tensor
+
+template<typename T>
+inline bool EMPTY(tensor &t, T i, T j) {
+  return i == j;
+}
+
+template<typename T>
+inline tensor& TSLICE(tensor &t, T i, T j) {
+  assert(i == j);
+  return t.index({"...", Slice(i, j)});  // same as np.ndarray[:, i:j]
+}
+
+template<typename T>
+inline tensor& TCHAR(const tensor &t, T i, T j, tensor &c) {
+  assert(i+1 == j);
+  if (torch::equal(t.index({"...", i}), c)) {
+    return c;
+  } else {
+    return torch::zeros(0):
+  }
+}
+
+template<typename T>
+inline tensor& TCHAR(const tensor &t, T i, T j) {
+  assert(i+1 == j);
+  return t.index({"...", i});  // same as np.ndarray[:, i]
+}
+
+template<typename T>
+inline tensor& TLOC(const tensor &t, T i, T j) {
+  assert(i == j);
+  return torch::zeros(0);
+}
+#endif
+
 
 #endif  // RTLIB_TERMINAL_HH_

@@ -150,6 +150,10 @@ void Type::add_predefined(hashtable<std::string, Base*> &table) {
   t = new ::Type::BigInt();
   s = "bigint";
   table[s] = t;
+
+  t = new ::Type::TensorSlice();
+  s = "tensorslice";
+  table[s] = t;
 }
 
 
@@ -461,6 +465,15 @@ std::ostream & Type::Bool::put(std::ostream &s) const {
   return s;
 }
 
+std::ostream & Type::Tensor::put(std::ostream &s) const {
+  s << "tensor";
+  return s;
+}
+
+std::ostream & Type::TensorSlice::put(std::ostream &s) const {
+  s << "tensorslice";
+  return s;
+}
 
 std::ostream & Type::Signature::put(std::ostream &s) const {
   Base *t = signature->var_lookup(this);
@@ -653,6 +666,14 @@ void Type::Range::print(Printer::Base &s) const {
 
 
 void Type::Table::print(Printer::Base &s) const {
+  s.print(*this);
+}
+
+void Type::Tensor::print(Printer::Base &s) const {
+  s.print(*this);
+}
+
+void Type::TensorSlice::print(Printer::Base &s) const {
   s.print(*this);
 }
 

@@ -58,7 +58,9 @@ enum Type { NONE, LIST, TUPLE, TUPLEDEF, SIGNATURE, ALPHABET, DEF,
       SINGLE,
 
       MULTI,
-      MULTI_DECL
+      MULTI_DECL,
+      TENSOR,      // input Tensor(s) (for pytorch module generation)
+      TENSORSLICE  // slices of input Tensor (for pytorch module generation)
       };
 
 

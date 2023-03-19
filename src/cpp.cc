@@ -1234,6 +1234,22 @@ void Printer::Cpp::print(const Type::Subseq &t) {
   }
 }
 
+void Printer::Cpp::print(const Type::Tensor &t) {
+  if (in_fn_head) {
+    stream << "const tensor&";
+  } else {
+    stream << "tensor&";
+  }
+}
+
+void Printer::Cpp::print(const Type::TensorSlice &t) {
+  if (in_fn_head) {
+    stream << "const tensor &";
+  } else {
+    stream << "tensor&";
+  }
+}
+
 
 void Printer::Cpp::print(const Type::Shape &t) {
   if (in_fn_head) {
@@ -1562,7 +1578,7 @@ void Printer::Cpp::print_table_init(const AST &ast) {
           a >= i->second->track_pos() + i->second->tracks()) {
         continue;
       }
-      stream << *(*j)->name << ".size(), ";
+      stream << *(*j)->name << ".sizes().back(), ";
     }
     if (ast.window_mode) {
       stream << " opts.window_size, opts.window_increment, ";
@@ -1774,9 +1790,12 @@ void Printer::Cpp::header(const AST &ast) {
            << endl << endl;
     includes();
     if (ast.as_pytorch_module) {
-      stream << "#include \"torch/extension.h\"" << endl;
+      stream << "#define PYTORCH_MOD" << endl;
+      stream << "#include \"torch/extension.h\"" << endl << endl;
+      stream << "using tensor = torch::Tensor;" << endl << endl;
+    } else {
+      print_subseq_typedef(ast);
     }
-    print_subseq_typedef(ast);
     print_type_defs(ast);
   }
 
@@ -1793,9 +1812,14 @@ void Printer::Cpp::header(const AST &ast) {
            << endl;
   }
 
+  int track = 0;
   for (std::vector<Statement::Var_Decl*>::const_iterator i =
-       ast.seq_decls.begin(); i != ast.seq_decls.end(); ++i) {
-    stream << **i << endl;
+        ast.seq_decls.begin(); i != ast.seq_decls.end(); ++i, ++track) {
+    if (ast.as_pytorch_module) {
+      stream << indent() << "tensor t_" << track << "_seq;" << endl;
+    } else {
+      stream << **i << endl;
+    }
   }
 
   print_most_decl(*ast.grammar()->axiom);
@@ -2513,7 +2537,7 @@ void Printer::Cpp::print_derivative(Symbol::NT *nt) {
 void Printer::Cpp::print_run_derivative_fn(const AST &ast) {
   if (ast.as_pytorch_module) {
     stream << indent() << "void get_backward_score_matrices"
-           << "(std::vector<torch::Tensor> &matrices) {" << endl;
+           << "(std::vector<tensor> &matrices) {" << endl;
   } else {
     stream << indent() << "void report_derivative(std::ostream &out) {"
            << endl;
@@ -3177,7 +3201,7 @@ void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
     stream << "\techo '#include " << header_files << "' >> $@" << endl;
   }
   stream << "\tcat $(RTLIB)/generic_pytorch_interface.cc >> $@"
-         << endl << endl;;
+         << endl << endl;
 
   stream << ".PHONY: clean" << endl << "clean:" << endl
     << "\trm -rf build dist *.egg-info pytorch_interface.cc setup.py"
@@ -3189,7 +3213,7 @@ void Printer::Cpp::print_pytorch_init_fn(const AST &ast) {
   // inputs from Pytorch and makes them accessible
 
   stream << indent() << "void init(";
-  stream << "const torch::Tensor &inp, const char *seq1, const char *seq2";
+  stream << "const tensor &gap_embedding, const tensor &match_embedding";
   for (unsigned int i = 1; i < ast.current_derivative; ++i) {
     stream << ", " << get_class_name_lower_derivative(ast.current_derivative, i)
            << " *derivative" << std::to_string(i);
@@ -3198,28 +3222,16 @@ void Printer::Cpp::print_pytorch_init_fn(const AST &ast) {
 
   inc_indent();
 
-  int n = 1;
-  for (std::vector<Statement::Var_Decl*>::const_iterator
-       i = ast.seq_decls.begin(); i != ast.seq_decls.end();
-       ++i, n++) {
-    std::string seq_name = "seq" + std::to_string(n);
-    stream << indent() << *(*i)->name << ".copy(" << seq_name
-           << ", std::strlen(" << seq_name << "));" << endl;
-  }
-
   print_filter_init(ast);
   print_table_init(ast);
   print_zero_init(*ast.grammar());
 
-  if (ast.as_pytorch_module) {
-    stream << indent() << "tensor_size.clear();" << endl;
-  }
   size_t t = 0;
   for (std::vector<Statement::Var_Decl*>::iterator j = ns.begin();
        j != ns.end(); ++j, ++t) {
     stream << indent() << "t_" << t << "_left_most = 0;\n";
     stream << indent() << "t_" << t << "_right_most = " << "t_" << t
-      << "_seq.size();\n";
+      << "_seq.sizes().back();\n";
     stream << indent() << "tensor_size.push_back(t_" << t
            << "_right_most + 1);" << endl;
   }
@@ -3239,7 +3251,7 @@ void Printer::Cpp::print_pytorch_init_fn(const AST &ast) {
 void Printer::Cpp::print_pytorch_forward_fn(const AST &ast) {
   // convert the forward score matrix to a Pytorch tensor
   stream << indent() << "void get_forward_score_matrices"
-         << "(std::vector<torch::Tensor> &matrices) {" << endl;
+         << "(std::vector<tensor> &matrices) {" << endl;
   inc_indent();
   for (auto i = ast.grammar()->NTs.begin();
       i != ast.grammar()->NTs.end(); ++i) {

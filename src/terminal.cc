@@ -111,6 +111,26 @@ void Terminal::add_predefined(Grammar &grammar) {
   t->setPredefinedTerminalParser(true);
   grammar.NTs[*(t->name)] = t;
 
+  /*
+   * torch::Tensor with shape [:, i] (entire i-th column)
+  */
+  s = new std::string("TCHAR");
+  t = new Symbol::Terminal(s, l);
+  t->writeable_ys().set(1, 1);
+  t->set_data_type(new Type::TensorSlice());
+  t->setPredefinedTerminalParser(true);
+  grammar.NTs[*(t->name)] = t;
+
+  /*
+   * torch::Tensor with shape [0, 0] ("empty word")
+  */
+  s = new std::string("TLOC");
+  t = new Symbol::Terminal(s, l);
+  t->writeable_ys().set(0, 0);
+  t->set_data_type(new Type::TensorSlice());
+  t->setPredefinedTerminalParser(true);
+  grammar.NTs[*(t->name)] = t;
+
   s = new std::string("LOC");
   t = new Symbol::Terminal(s, l);
   t->writeable_ys().set(0, 0);

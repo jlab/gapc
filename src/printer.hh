@@ -163,6 +163,8 @@ class Base {
 
   virtual void print(const Type::Multi  &expr);
 
+  virtual void print(const Type::Tensor &expr);
+  virtual void print(const Type::TensorSlice &expr);
 
   virtual void header(const AST &ast);
   virtual void header_footer(const AST &ast);
@@ -262,6 +264,8 @@ Base &operator<<(Base &p, const Type::Backtrace_List &t);
 
 Base &operator<<(Base &p, const Type::Multi &t);
 
+Base &operator<<(Base &p, const Type::TensorSlice &t);
+Base &operator<<(Base &p, const Type::Tensor &t);
 }  // namespace Printer
 
 

@@ -49,6 +49,8 @@ class Range;
 class Seq;
 class Table;
 class Subseq;
+class Tensor;
+class TensorSlice;
 class Shape;
 class Referencable;
 class Rational;

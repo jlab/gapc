@@ -42,63 +42,50 @@ gapc::class_name obj;
   gapc::class_name_D2 obj_D2;
 #endif
 
-/*
-   for now, all functions need to be called with two
-   input strings (just like out when compiling out_main.cc);
-   but they can also take tensors/inputs directly from Python/
-   Pytorch (see const torch::Tensor &inp placerholder argument)
-*/
-
-std::vector<torch::Tensor> forward_D1(const torch::Tensor &inp,
-                                      const char *seq1, const char *seq2) {
+std::vector<torch::Tensor> forward_D1(const torch::Tensor &gap_embedding,
+                                      const torch::Tensor &match_embedding) {
   // execute forward pass and return first derivative forward score matrices
-  obj.init(inp, seq1, seq2);
-// #if defined(__SUNPRO_CC) && __SUNPRO_CC <= 0x5100
-//   #warning Enable sync_with_stdio because of Sun CC 12 Compiler Bug
-// #else
-//   std::ios_base::sync_with_stdio(false);
-// #endif
-//   std::cin.tie(0);
-// #ifdef FLOAT_ACC
-//   std::cout << std::setprecision(FLOAT_ACC) << std::fixed;
-// #endif
-  gapc::add_event("start");
+  obj.init(gap_embedding, match_embedding);
+  #if defined(__SUNPRO_CC) && __SUNPRO_CC <= 0x5100
+    #warning Enable sync_with_stdio because of Sun CC 12 Compiler Bug
+  #else
+    std::ios_base::sync_with_stdio(false);
+  #endif
+    std::cin.tie(0);
+  #ifdef FLOAT_ACC
+    std::cout << std::setprecision(FLOAT_ACC) << std::fixed;
+  #endif
   obj.cyk();
   std::vector<torch::Tensor> forward_score_matrices;
   gapc::return_type ans = obj.run();
   obj.get_forward_score_matrices(forward_score_matrices);
-  gapc::add_event("end_computation");
   return forward_score_matrices;
 }
 
-std::vector<torch::Tensor> backward_D1(const torch::Tensor &inp,
-                                       const char *seq1, const char *seq2) {
+std::vector<torch::Tensor> backward_D1(const torch::Tensor &gap_embedding,
+                                       const torch::Tensor &match_embedding) {
   // execute backward pass and return first derivative backward score matrices
   std::vector<torch::Tensor> backward_score_matrices;
   obj.get_backward_score_matrices(backward_score_matrices);
-  gapc::add_event("end");
   return backward_score_matrices;
 }
 
 #ifdef SECOND_DERIVATIVE
-std::vector<torch::Tensor> forward_D2(const torch::Tensor &inp,
-                                      const char *seq1, const char *seq2) {
+std::vector<torch::Tensor> forward_D2(const torch::Tensor &gap_embedding,
+                                      const torch::Tensor &match_embedding) {
   // execute forward pass and return second derivative forward score matrices
   obj_D2.init(inp, seq1, seq2, &obj);
-  gapc::add_event("start second derivative");
   std::vector<torch::Tensor> forward_score_matrices;
   gapc::return_type ans = obj_D2.run();
   obj_D2.get_forward_score_matrices(forward_score_matrices);
-  gapc::add_event("end_computation of second derivative");
   return forward_score_matrices;
 }
 
-std::vector<torch::Tensor> backward_D2(const torch::Tensor &inp,
-                                       const char *seq1, const char *seq2) {
+std::vector<torch::Tensor> backward_D2(const torch::Tensor &gap_embedding,
+                                       const torch::Tensor &match_embedding) {
   // execute backward pass and return second derivative backward score matrices
   std::vector<torch::Tensor> backward_score_matrices;
   obj_D2.get_backward_score_matrices(backward_score_matrices);
-  gapc::add_event("end_result of second derivative");
   return backward_score_matrices;
 }
 #endif
