@@ -133,4 +133,11 @@ inline bool complete_track(
   return ((i == seq.n) && (j == seq.n));
 }
 
+#ifdef PYTORCH_MOD
+template<typename T>
+inline bool complete_track(const TensorSlice &t, T i, T j) {
+  return (i == t.j && j == t.j);
+}
+#endif
+
 #endif  // RTLIB_FILTER_HH_

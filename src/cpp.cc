@@ -3233,7 +3233,7 @@ void Printer::Cpp::print_pytorch_init_fn(const AST &ast) {
   size_t total_input_tensors = ast.seq_decls.size();
   for (std::vector<Statement::Var_Decl*>::const_iterator
        i = ast.seq_decls.begin(); i != ast.seq_decls.end(); ++i, ++track) {
-    stream << "const tensor &__t_" << track << "_tensor";
+    stream << "tensor &__t_" << track << "_tensor";
     if (track < total_input_tensors - 1) {
       stream << ", ";
     }

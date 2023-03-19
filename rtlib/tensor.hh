@@ -36,6 +36,7 @@
 #include "torch/extension.h"
 
 using tensor = torch::Tensor;
+using Slice = torch::indexing::Slice;
 
 /*
  * represents a "Slice" of a Tensor with the shape [:, i:j],
@@ -44,10 +45,11 @@ using tensor = torch::Tensor;
 class TensorSlice {
  public:
   int64_t i, j;
-  const tensor *t;
+  tensor *t;
 
   TensorSlice() : i(0), j(0), t(NULL) {}
-  TensorSlice(const tensor &t, int64_t i, int64_t j) : t(&t), i(i), j(j) {}
+  TensorSlice(tensor *t, int64_t i, int64_t j) : t(t), i(i), j(j) {}
+  TensorSlice(const TensorSlice &other) : t(other.t), i(other.i), j(other.j) {}
 
   void empty() {
     t = NULL;
@@ -62,16 +64,28 @@ class TensorSlice {
   }
 };
 
+// check if tensor_1[:, i:j] == tensor_2[:, i:j]
+inline bool operator==(const TensorSlice &lhs, const TensorSlice &rhs) {
+  return torch::equal(lhs.t->index({"...", Slice(lhs.i, lhs.j)}),
+                      rhs.t->index({"...", Slice(rhs.i, rhs.j)}));
+}
+
+// check if tensor_1[:, i:j] != tensor_2[:, i:j]
+inline bool operator!=(const TensorSlice &lhs, const TensorSlice &rhs) {
+  return !(lhs == rhs);
+}
+
 /*
  * represents a "Char"/column of a Tensor
  */
 class TensorChar {
  public:
   int64_t i;
-  const tensor *t;
+  tensor *t;
 
   TensorChar() : i(0), t(NULL) {}
-  TensorChar(const tensor &t, int64_t i) : t(&t), i(i) {}
+  TensorChar(tensor *t, int64_t i) : t(t), i(i) {}
+  TensorChar(const TensorChar &other) : t(other.t), i(other.i) {}
 
   void empty() {
     t = NULL;
@@ -85,5 +99,16 @@ class TensorChar {
     return 1;
   }
 };
+
+// check if tensor_1[:, i] == tensor_2[:, i]
+inline bool operator==(const TensorChar &lhs, const TensorChar &rhs) {
+  return torch::equal(lhs.t->index({"...", lhs.i}),
+                      rhs.t->index({"...", rhs.i}));
+}
+
+// check if tensor_1[:, i] != tensor_2[:, i]
+inline bool operator!=(const TensorChar &lhs, const TensorChar &rhs) {
+  return !(lhs == rhs);
+}
 
 #endif  // RTLIB_TENSOR_HH_

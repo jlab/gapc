@@ -152,22 +152,19 @@ template <typename X> inline bool isEmpty(const rope::Ref<X> &p) {
 #ifdef PYTORCH_MOD
 
 #include "tensor.hh"
-template<typename T> inline void empty(const TensorChar<T> &t) {
+inline void empty(TensorChar &t) {
   t.empty();
 }
 
-
-template<typename T> inline bool isEmpty(const TensorChar<T> &t) {
+inline bool isEmpty(const TensorChar &t) {
   return t.isEmpty();
 }
 
-
-template<typename T> inline void empty(const TensorSlice<T> &t) {
+inline void empty(TensorSlice &t) {
   t.empty();
 }
 
-
-template<typename T> inline bool isEmpty(const TensorSlice<T> &t) {
+inline bool isEmpty(const TensorSlice &t) {
   return t.isEmpty();
 }
 #endif
