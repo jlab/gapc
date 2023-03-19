@@ -49,8 +49,6 @@ class Range;
 class Seq;
 class Table;
 class Subseq;
-class Tensor;
-class TensorSlice;
 class Shape;
 class Referencable;
 class Rational;
@@ -64,6 +62,10 @@ class Backtrace_List;
 class Name;
 
 class Multi;
+
+class Tensor;
+class TensorSlice;
+class TensorChar;
 }  // namespace Type
 
 #include <string>

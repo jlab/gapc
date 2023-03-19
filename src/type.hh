@@ -437,12 +437,12 @@ class Subseq : public Base {
     void print(Printer::Base &s) const;
 };
 
-class TensorSlice : public Base {
+class TensorChar : public Base {
  public:
-    MAKE_CLONE(TensorSlice);
+    MAKE_CLONE(TensorChar);
 
-    explicit TensorSlice(Loc &l) : Base(TENSORSLICE, l) {}
-    TensorSlice() : Base(TENSORSLICE) {}
+    explicit TensorChar(Loc &l) : Base(TENSORCHAR, l) {}
+    TensorChar() : Base(TENSORCHAR) {}
 
     std::ostream & put(std::ostream &s) const;
     void print(Printer::Base &s) const;
@@ -454,9 +454,23 @@ class Tensor : public Base {
     Base *element_type;
 
     Tensor() : Base(TENSOR), element_type(NULL) {
-      element_type = new TensorSlice();
+      element_type = new TensorChar();
     }
     explicit Tensor(Base *b) : Base(TENSOR), element_type(b) {}
+    std::ostream & put(std::ostream &s) const;
+    void print(Printer::Base &s) const;
+};
+
+class TensorSlice : public Base {
+ private:
+    Tensor *tensor;
+
+ public:
+    MAKE_CLONE(TensorSlice);
+
+    TensorSlice() : Base(TENSORSLICE), tensor(NULL) {}
+    explicit TensorSlice(Tensor *s) : Base(TENSORSLICE), tensor(s) {}
+
     std::ostream & put(std::ostream &s) const;
     void print(Printer::Base &s) const;
 };

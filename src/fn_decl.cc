@@ -130,7 +130,7 @@ void Fn_Decl::init_table() {
   f->set_yield_size(ys);
   builtins[*s] = f;
 
-  r = new Type::TensorSlice();
+  r = new Type::TensorChar();
   s = new std::string("TCHAR");
   f = new Fn_Decl(r, s, l);
   f->types.push_back(r);

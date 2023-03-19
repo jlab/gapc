@@ -113,6 +113,7 @@ void Printer::Base::print(const Type::Multi &t) {}
 
 void Printer::Base::print(const Type::Tensor &t) {}
 void Printer::Base::print(const Type::TensorSlice &t) {}
+void Printer::Base::print(const Type::TensorChar &t) {}
 
 
 void Printer::Base::header(const AST &ast) {}
@@ -413,6 +414,11 @@ namespace Printer {
   }
 
   Base &operator<<(Base &p, const Type::TensorSlice &t) {
+    p.print(t);
+    return p;
+  }
+
+  Base &operator<<(Base &p, const Type::TensorChar &t) {
     p.print(t);
     return p;
   }

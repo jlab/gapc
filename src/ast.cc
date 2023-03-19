@@ -900,7 +900,7 @@ void AST::derive_temp_alphabet() {
      * if a pytorch module is supposed to be generated,
      * inputs won't be be string (sequences) but Tensors
      */
-    Type::Base *res = new Type::TensorSlice();
+    Type::Base *res = new Type::TensorChar();
     char_type = res;
     update_alphabet_types(res);
     return;

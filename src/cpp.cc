@@ -1238,15 +1238,23 @@ void Printer::Cpp::print(const Type::Tensor &t) {
   if (in_fn_head) {
     stream << "const tensor&";
   } else {
-    stream << "tensor&";
+    stream << "tensor";
   }
 }
 
 void Printer::Cpp::print(const Type::TensorSlice &t) {
   if (in_fn_head) {
-    stream << "const tensor &";
+    stream << "const TensorSlice &";
   } else {
-    stream << "tensor&";
+    stream << "TensorSlice";
+  }
+}
+
+void Printer::Cpp::print(const Type::TensorChar &t) {
+  if (in_fn_head) {
+    stream << "const TensorChar &";
+  } else {
+    stream << "TensorChar";
   }
 }
 
@@ -1578,7 +1586,11 @@ void Printer::Cpp::print_table_init(const AST &ast) {
           a >= i->second->track_pos() + i->second->tracks()) {
         continue;
       }
-      stream << *(*j)->name << ".sizes().back(), ";
+      if (ast.as_pytorch_module) {
+        stream << *(*j)->name << ".sizes().back(), ";
+      } else {
+        stream << *(*j)->name << ".size(), ";
+      }
     }
     if (ast.window_mode) {
       stream << " opts.window_size, opts.window_increment, ";
@@ -1750,11 +1762,17 @@ void Printer::Cpp::print_buddy_decls(const AST &ast) {
 
 
 void Printer::Cpp::print_subseq_typedef(const AST &ast) {
-  hashtable<std::string, Type::Base*>::const_iterator i = ast.types.find(
-    "alphabet");
-  assert(i != ast.types.end());
-  Type::Base *t = dynamic_cast<Type::Alphabet*>(i->second)->temp;
-  assert(t);
+  Type::Base *t;
+
+  if (ast.as_pytorch_module) {
+    t = new Type::Char();
+  } else {
+    hashtable<std::string, Type::Base*>::const_iterator i = ast.types.find(
+      "alphabet");
+    assert(i != ast.types.end());
+    t = dynamic_cast<Type::Alphabet*>(i->second)->temp;
+    assert(t);
+  }
 
   stream << "typedef Basic_Subsequence<" << *t
     << ", unsigned> TUSubsequence;\n\n";
@@ -1788,14 +1806,15 @@ void Printer::Cpp::header(const AST &ast) {
            << endl;
     stream << "#define GAPC_VERSION_STRING \"" << gapc_version_string << "\""
            << endl << endl;
-    includes();
+
     if (ast.as_pytorch_module) {
-      stream << "#define PYTORCH_MOD" << endl;
-      stream << "#include \"torch/extension.h\"" << endl << endl;
-      stream << "using tensor = torch::Tensor;" << endl << endl;
-    } else {
-      print_subseq_typedef(ast);
+      stream << "#define PYTORCH_MOD" << endl << endl;
+      stream << "#include \"torch/extension.h\"" << endl;
+      stream << "#include \"rtlib/tensor.h\"" << endl << endl;
     }
+
+    includes();
+    print_subseq_typedef(ast);
     print_type_defs(ast);
   }
 

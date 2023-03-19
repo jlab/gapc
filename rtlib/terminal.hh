@@ -287,28 +287,28 @@ using Slice = torch::indexing::Slice;
 // tensor == torch::Tensor
 
 template<typename T>
-inline bool EMPTY(tensor &t, T i, T j) {
+inline bool EMPTY(const tensor &t, T i, T j) {
   return i == j;
 }
 
 template<typename T>
-inline tensor& TSLICE(tensor &t, T i, T j) {
-  assert(i == j);
-  return t.index({"...", Slice(i, j)});  // same as np.ndarray[:, i:j]
+inline TensorSlice& TSLICE(const tensor &t, T i, T j) {
+  assert(i <= j);
+  return TensorSlice(t, i, j);  // same as np.ndarray[:, i:j]
 }
 
 template<typename T>
-inline tensor& TCHAR(const tensor &t, T i, T j, tensor &c) {
+inline TensorChar& TCHAR(const tensor &t, T i, T j, const TensorChar &c) {
   assert(i+1 == j);
   if (torch::equal(t.index({"...", i}), c)) {
     return c;
   } else {
-    return torch::zeros(0):
+    return TensorChar();  // default: empty
   }
 }
 
 template<typename T>
-inline tensor& TCHAR(const tensor &t, T i, T j) {
+inline TensorChar& TCHAR(const tensor &t &t, T i, T j) {
   assert(i+1 == j);
   return t.index({"...", i});  // same as np.ndarray[:, i]
 }
@@ -316,7 +316,7 @@ inline tensor& TCHAR(const tensor &t, T i, T j) {
 template<typename T>
 inline tensor& TLOC(const tensor &t, T i, T j) {
   assert(i == j);
-  return torch::zeros(0);
+  return TensorSlice(t, i, j);
 }
 #endif
 

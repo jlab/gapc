@@ -154,6 +154,10 @@ void Type::add_predefined(hashtable<std::string, Base*> &table) {
   t = new ::Type::TensorSlice();
   s = "tensorslice";
   table[s] = t;
+
+  t = new ::Type::TensorChar();
+  s = "tensorchar";
+  table[s] = t;
 }
 
 
@@ -475,6 +479,11 @@ std::ostream & Type::TensorSlice::put(std::ostream &s) const {
   return s;
 }
 
+std::ostream & Type::TensorChar::put(std::ostream &s) const {
+  s << "tensorchar";
+  return s;
+}
+
 std::ostream & Type::Signature::put(std::ostream &s) const {
   Base *t = signature->var_lookup(this);
   if (t) {
@@ -674,6 +683,10 @@ void Type::Tensor::print(Printer::Base &s) const {
 }
 
 void Type::TensorSlice::print(Printer::Base &s) const {
+  s.print(*this);
+}
+
+void Type::TensorChar::print(Printer::Base &s) const {
   s.print(*this);
 }
 

@@ -149,6 +149,27 @@ template <typename X> inline bool isEmpty(const rope::Ref<X> &p) {
   return p.isEmpty();
 }
 
+#ifdef PYTORCH_MOD
+template<typename T> inline void empty(const TensorChar<T> &t) {
+  t.empty();
+}
+
+
+template<typename T> inline bool isEmpty(const TensorChar<T> &t) {
+  return t.isEmpty();
+}
+
+
+template<typename T> inline void empty(const TensorSlice<T> &t) {
+  t.empty();
+}
+
+
+template<typename T> inline bool isEmpty(const TensorSlice<T> &t) {
+  return t.isEmpty();
+}
+#endif
+
 // FIXME this order is needed because of gcc resolution of dependent overloads
 
 template<typename T> inline bool is_not_empty(const T &x) {
