@@ -43,14 +43,14 @@ class Input {
   // the implementation. Please keep in mind that
   // extending the list of modes must leave the MODE_END
   // element at the end of the enumeration.
-  enum Mode { RAW, RNA, UPPER, MODE_END };
+  enum Mode { RAW, RNA, UPPER, TENSOR, MODE_END };
 
  private:
   //
   std::vector<Mode> modes_;
   // Array of strings that represent all allowed
   // modes.
-  static const char map[][6];
+  static const char map[][7];
   Mode str_to_mode(const std::string &s, const Loc &l);
 
  public:

@@ -314,7 +314,7 @@ inline TensorChar& TCHAR(const tensor &t &t, T i, T j) {
 }
 
 template<typename T>
-inline tensor& TLOC(const tensor &t, T i, T j) {
+inline TensorSlice& TLOC(const tensor &t, T i, T j) {
   assert(i == j);
   return TensorSlice(t, i, j);
 }

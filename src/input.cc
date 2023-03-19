@@ -27,10 +27,11 @@
 #include "log.hh"
 
 
-const char Input::map[][6] = {
+const char Input::map[][7] = {
   "raw",
   "rna",
-  "upper"
+  "upper",
+  "tensor"
 };
 
 

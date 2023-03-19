@@ -37,7 +37,7 @@
 
 using tensor = torch::Tensor;
 
-template<typename pos_type = unsigned int>
+template<typename pos_type = int64_t>
 class TensorSlice {
  public:
   pos_type i, j;
@@ -60,7 +60,7 @@ class TensorSlice {
   }
 };
 
-template<typename pos_type = unsigned int>
+template<typename pos_type = int64_t>
 class TensorChar {
  public:
   pos_type i;

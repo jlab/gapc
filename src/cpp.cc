@@ -1810,7 +1810,7 @@ void Printer::Cpp::header(const AST &ast) {
     if (ast.as_pytorch_module) {
       stream << "#define PYTORCH_MOD" << endl << endl;
       stream << "#include \"torch/extension.h\"" << endl;
-      stream << "#include \"rtlib/tensor.h\"" << endl << endl;
+      stream << "#include \"rtlib/tensor.hh\"" << endl << endl;
     }
 
     includes();
