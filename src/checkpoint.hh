@@ -412,6 +412,8 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      stream << "#include <unordered_map>" << endl;
      stream << "#include <algorithm>" << endl;
      if (cyk) {
+       stream << "#include \"boost/archive/text_oarchive.hpp\"" << endl;
+       stream << "#include \"boost/archive/text_iarchive.hpp\"" << endl;
        stream << "#ifdef _OPENMP" << endl;
        stream << "#include \"rtlib/fair_shared_mutex.hh\"" << endl;
        stream << "#else" << endl;
@@ -986,12 +988,11 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      stream << indent() << "try {" << endl;
      inc_indent();
      stream << indent() << "std::ofstream array_fout("
-            << "tmp_out_cyk_path.c_str()"
-            << ", std::ios::binary);" << endl;
+            << "tmp_out_cyk_path.c_str());" << endl;
      stream << indent() << "if (!(array_fout.good())) {" << endl;
      stream << indent() << "  throw std::ofstream::failure(\"\");" << endl;
      stream << indent() << "}" << endl;
-     stream << indent() << "boost::archive::binary_oarchive "
+     stream << indent() << "boost::archive::text_oarchive "
                             "array_out(array_fout);" << endl;
      for (size_t i = 0; i < n_tracks; i++) {
        // archive the indices of the prior iteration to ensure
@@ -1001,9 +1002,9 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
               << "(t_" << i << "_j == 0 ? 0 : t_" << i << "_j - 1);" << endl;
      }
      stream << indent() << "#ifdef _OPENMP" << endl;
-     stream << indent() << "  array_out << z1_;" << endl;
-     stream << indent() << "  array_out << z2_;" << endl;
-     stream << indent() << "  array_out << y_;" << endl;
+     stream << indent() << "  array_out << outer_loop_1_idx;" << endl;
+     stream << indent() << "  array_out << outer_loop_2_idx;" << endl;
+     stream << indent() << "  array_out << inner_loop_2_idx;" << endl;
      stream << indent() << "#endif" << endl;
      stream << indent() << "array_fout.close();" << endl;
      stream << indent() << "boost::filesystem::rename(tmp_out_cyk_path, "
@@ -1045,21 +1046,21 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      stream << indent() << "// read the cyk loop indices from disk " << endl;
      stream << indent() << "try {" << endl;
      inc_indent();
-     stream << indent() << "std::ifstream array_fin(in_archive_path.c_str(), "
-            << "std::ios::binary);" << endl;
+     stream << indent() << "std::ifstream array_fin(in_archive_path.c_str());"
+            << endl;
      stream << indent() << "if (!(array_fin.good())) {" << endl;
      stream << indent() << "  throw std::ifstream::failure(\"\");" << endl;
      stream << indent() << "}" << endl;
-     stream << indent() << "boost::archive::binary_iarchive "
+     stream << indent() << "boost::archive::text_iarchive "
                             "array_in(array_fin);" << endl;
      for (size_t i = 0; i < n_tracks; i++) {
        stream << indent() << "array_in >> t_" << i << "_i;" << endl;
        stream << indent() << "array_in >> t_" << i << "_j;" << endl;
      }
      stream << indent() << "#ifdef _OPENMP" << endl;
-       stream << indent() << "  array_in >> z1_;" << endl;
-       stream << indent() << "  array_in >> z2_;" << endl;
-       stream << indent() << "  array_in >> y_;" << endl;
+       stream << indent() << "  array_in >> outer_loop_1_idx;" << endl;
+       stream << indent() << "  array_in >> outer_loop_2_idx;" << endl;
+       stream << indent() << "  array_in >> inner_loop_2_idx;" << endl;
        stream << indent() << "#endif" << endl;
      stream << indent() << "array_fin.close();" << endl << endl;
      stream << indent() << "std::cerr << \"Info: Successfully loaded "
@@ -1146,10 +1147,14 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
   void get_tabulated_vals_percentage(Printer::Base &stream) {
      inc_indent(); inc_indent();
      stream << indent();
-     stream << "double get_tabulated_vals_percentage() const {" << endl;
+     stream << "std::string get_tabulated_vals_percentage() const {" << endl;
      inc_indent();
-     stream << indent() << "return static_cast<double>(tabulated_vals_counter) "
-            << "/ array.size() * 100.0;" << endl;
+     stream << indent() << "char num_buffer[7];  // holds %.2f" << endl;
+     stream << indent() << "std::snprintf(num_buffer, sizeof(num_buffer), "
+            << "\"%.2f\", "
+            << "static_cast<double>(tabulated_vals_counter) "
+            << "/ array.size() * 100.0);" << endl;
+     stream << indent() << "return std::string(num_buffer);" << endl;
      dec_indent();
      stream << indent() << "}" << endl << endl;
      dec_indent(); dec_indent();

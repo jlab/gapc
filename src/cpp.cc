@@ -1554,9 +1554,9 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
       }
       stream << indent() << "#ifdef _OPENMP" << endl;
       inc_indent();
-      stream << indent() << "z1_ = 0;" << endl;
-      stream << indent() << "z2_ = 0;" << endl;
-      stream << indent() << "y_ = 0;" << endl;
+      stream << indent() << "outer_loop_1_idx = 0;" << endl;
+      stream << indent() << "outer_loop_2_idx = 0;" << endl;
+      stream << indent() << "inner_loop_2_idx = 0;" << endl;
       dec_indent();
       stream << indent() << "#endif" << endl;
     }
@@ -1934,7 +1934,8 @@ void Printer::Cpp::header(const AST &ast) {
       stream << indent() << *type << " t_" << t << "_j;" << endl;
     }
     stream << "#ifdef _OPENMP" << endl;
-    stream << indent() << "int z1_, z2_, y_;" << endl;
+    stream << indent() << "int outer_loop_1_idx, outer_loop_2_idx, "
+           << "inner_loop_2_idx;" << endl;
     stream << "#endif" << endl;
     delete type;
   }
@@ -2035,19 +2036,15 @@ void Printer::Cpp::print_openmp_cyk(const AST &ast) {
   stream << indent() << "// OPENMP < 3 requires signed int here ..." << endl;
   stream << indent();
   if (checkpoint) {
-    stream << "for (int z = z1_start; z < max_tiles_n; z+=tile_size) {";
+    stream << "for (int z = outer_loop_1_idx_start; "
+           << "z < max_tiles_n; z+=tile_size) {";
   } else {
     stream << "for (int z = 0; z < max_tiles_n; z+=tile_size) {";
   }
   stream << endl;
   inc_indent();
   if (checkpoint) {
-    stream << indent() << "#pragma omp ordered" << endl;
-    stream << indent() << "{" << endl;
-    inc_indent();
     stream << indent() << "mutex.lock_shared();" << endl;
-    dec_indent();
-    stream << indent() << "}" << endl;
   }
   stream << indent() << "for (unsigned int t_0_j = z; "
          << "t_0_j < z + tile_size; ++t_0_j) {" << endl;
@@ -2067,7 +2064,7 @@ void Printer::Cpp::print_openmp_cyk(const AST &ast) {
     inc_indent();
     stream << indent() << "// force omp to wait for all threads to finish their"
            << " current batch (of size tile_size)" << endl;
-    stream << indent() << "z1_ += tile_size;" << endl;
+    stream << indent() << "outer_loop_1_idx += tile_size;" << endl;
     stream << indent() << "mutex.unlock_shared();" << endl;
     dec_indent();
     stream << indent() << "}" << endl;
@@ -2079,11 +2076,12 @@ void Printer::Cpp::print_openmp_cyk(const AST &ast) {
   stream << endl;
   if (checkpoint) {
     stream << indent()
-           << "for (int z = z2_start; "
+           << "for (int z = outer_loop_2_idx_start; "
            << "z < max_tiles_n; z+=tile_size) {" << endl;
     inc_indent();
     stream << indent() << "#pragma omp for ordered schedule(dynamic)" << endl;
-    stream << indent() << "for (int y = y_loaded ? z : y_start;"
+    stream << indent() << "for (int y = inner_loop_2_idx_loaded ? "
+           << "z : inner_loop_2_idx_start;"
            << " y < max_tiles_n; y+=tile_size) {" << endl;
     inc_indent();
     stream << indent() << "++y_loaded;" << endl;
@@ -2119,8 +2117,8 @@ void Printer::Cpp::print_openmp_cyk(const AST &ast) {
     stream << indent() << "#pragma omp ordered" << endl;
     stream << indent() << "{" << endl;
     inc_indent();
-    stream << indent() << "y_ += tile_size;" << endl;
-    stream << indent() << "z2_ = z;" << endl;
+    stream << indent() << "inner_loop_2_idx += tile_size;" << endl;
+    stream << indent() << "outer_loop_2_idx = z;" << endl;
     stream << indent() << "mutex.unlock_shared();" << endl;
     dec_indent();
     stream << indent() << "}" << endl;
@@ -2128,7 +2126,7 @@ void Printer::Cpp::print_openmp_cyk(const AST &ast) {
   dec_indent();
   stream << indent() << "}" << endl;
   if (checkpoint) {
-    stream << indent() << "y_ = z + tile_size;" << endl;
+    stream << indent() << "inner_loop_2_idx = z + tile_size;" << endl;
   }
   dec_indent();
   stream << indent() << "}" << endl;
@@ -2438,13 +2436,19 @@ void Printer::Cpp::print_cyk_fn(const AST &ast) {
     stream << "#ifdef TILE_SIZE" << endl;
     stream << indent() << "tile_size = TILE_SIZE;" << endl;
     stream << "#endif" << endl;
-    stream << indent() << "int z1_loaded = !load_checkpoint || !z1_;" << endl;
-    stream << indent() << "int z2_loaded = !load_checkpoint || !z2_;" << endl;
-    stream << indent() << "int y_loaded = !load_checkpoint || !y_;" << endl;
-    stream << indent() << "int z1_start = (z1_loaded++) ? 0 : z1_;" << endl;
-    stream << indent() << "int z2_start = (z2_loaded++) ? tile_size : z2_;"
+    stream << indent() << "int outer_loop_1_idx_loaded = "
+           << "!load_checkpoint || !outer_loop_1_idx;" << endl;
+    stream << indent() << "int outer_loop_2_idx_loaded = "
+           << "!load_checkpoint || !outer_loop_2_idx;" << endl;
+    stream << indent() << "int inner_loop_2_idx_loaded = "
+           << "!load_checkpoint || !inner_loop_2_idx;" << endl;
+    stream << indent() << "int outer_loop_1_idx_start = "
+           << "(outer_loop_1_idx_loaded++) ? 0 : outer_loop_1_idx;" << endl;
+    stream << indent() << "int outer_loop_2_idx_start = "
+           << "(outer_loop_2_idx_loaded++) ? tile_size : outer_loop_2_idx;"
            << endl;
-    stream << indent() << "int y_start = y_;" << endl;
+    stream << indent() << "int inner_loop_2_idx_start = inner_loop_2_idx;"
+           << endl;
     stream << "#endif" << endl << endl;
   }
 
