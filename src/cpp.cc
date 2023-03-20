@@ -71,13 +71,18 @@ static std::string& get_torch_type(Type::Type type) {
 
   static hashtable<Type::Type, std::string>
   torch_type = {{Type::Type::FLOAT, "torch::kFloat64"},
-                {Type::Type::FLOAT, "torch::kFloat64"},
                 {Type::Type::SINGLE, "torch::kFloat32"},
                 {Type::Type::INT, "torch::kInt32"},
                 {Type::Type::INTEGER, "torch::kInt32"},
                 {Type::Type::BIGINT, "torch::kInt64"},
                 {Type::Type::CHAR, "torch::kInt8"}};
 
+  assert(torch_type.find(type) != torch_type.end());
+  if (torch_type.find(type) == torch_type.end()) {
+    Log::instance()->error("Table type cannot be converted to "
+                           "apporpriate torch type!");
+    std::exit(1);
+  }
   return torch_type[type];
 }
 

@@ -282,49 +282,4 @@ inline int SEQ1(Basic_Sequence<alphabet, pos_type> &seq, T i, T j) {
   return j - i;
 }
 
-#ifdef PYTORCH_MOD
-using Slice = torch::indexing::Slice;
-// tensor == torch::Tensor
-
-template<typename T>
-inline bool EMPTY(const TensorSlice &t, T i, T j) {
-  return i == j;
-}
-
-// analogous to any terminal parser with Yield 1..n
-template<typename T>
-inline TensorSlice TSLICE(TensorSlice &t, T i, T j) {
-  assert(i <= j);
-  return TensorSlice(t.t, i, j);  // same as np.ndarray[:, i:j]
-}
-
-// analogous to CHAR (parses column of input tensor)
-template<typename T>
-inline TensorChar TCHAR(TensorSlice &t, T i, T j, const TensorChar &c) {
-  assert(i+1 == j);
-  TensorChar curr_char(t.t, i);
-  if (curr_char == c) {
-    return c;
-  } else {
-    return TensorChar();  // default: empty
-  }
-}
-
-
-// analogous to CHAR (parses column of input tensor)
-template<typename T>
-inline TensorChar TCHAR(TensorSlice &t, T i, T j) {
-  assert(i+1 == j);
-  return TensorChar(t.t, i);
-}
-
-// analogous to LOC
-template<typename T>
-inline TensorSlice TLOC(TensorSlice &t, T i, T j) {
-  assert(i == j);
-  return TensorSlice(t.t, i, j);
-}
-#endif
-
-
 #endif  // RTLIB_TERMINAL_HH_
