@@ -53,9 +53,9 @@ class Checkpoint : public Base {
   /*
      true if table types are wrapped in List_Ref;
      this information is required whenever the String type
-     is part of a table's datatype, because tables containting
-     Strings need to be additionally processed after deserialization,
-     which can only work if the Strings are wrapped in a List_Ref object
+     is part of a table's datatype, because tables containing
+     "String" objects need to be additionally processed after deserialization,
+     which can only work if "String" objects are wrapped in a List_Ref object
   */
   bool list_ref;
 
@@ -85,7 +85,8 @@ class Checkpoint : public Base {
    supported external types (that also don't contain "String"
    or "Subsequence" objects), make sure to provide a "serialize"
    method for them (cf. e.g. rope.hh, line 242 or
-   https://www.boost.org/doc/libs/1_80_0/libs/serialization/doc/tutorial.html);
+   https://www.boost.org/doc/libs/1_80_0/libs/serialization/doc/tutorial.html)
+   and to add their names to this vector;
 */
 const std::vector<std::string>
 SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
@@ -207,11 +208,11 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
 
   /*
      generate accessors for types so they can be indexed/addressed
-     (required for String, Subsequence and user-defined types);
+     (required for "String", "Subsequence" and user-defined types);
      these accessors will be inserted into the generated code
-     as marcos, which will be expanded in the respective target
+     as macros, which will be expanded in the respective target
      functions (restore_string_links for "String" and
-     "add_seq_to_subseqs" for "Subsequence" and used to access
+     "add_seq_to_subseqs" for "Subsequence") and used to access
      these objects efficiently without the need to do any searching
      where exactly these objects are stored
   */
@@ -276,7 +277,7 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
 
  public:
   /*
-     true if tables contain String objects;
+     true if tables contain "String" objects;
      these are a lot more complicated to deserialize than other types as
      they require the manual restoration of the links between Strings
      so this boolean information is needed when generating the
@@ -286,7 +287,7 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
   bool strings;
 
   /*
-    true if tables contain Subsequence objects (require additional processing);
+    true if tables contain "Subsequence" objects (require additional processing)
     this will most likely only be needed if a Subsequence object
     is part of a user-specified type which is tabulated as e.g.
     a pretty-print algebra
@@ -309,9 +310,25 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
   */
   bool is_buddy;
 
+  /*
+     true if cyk-style code generation was requested;
+     this requires an adjustment to the checkpointing mechanism,
+     because the functions that tabulate the non-terminal
+     tables don't peform any lookups for already tabulated
+     cells in cyk mode;
+     instead all tables are filled in a (nested) loop,
+     which ensures that all table values for indices smaller
+     than the current index have already been calculated;
+     in order to checkpoint programs with this codestyle,
+     the loop indices are archived instead of the tabulated
+     vector so the program knows at which point/at which loop
+     iteration to continue calculating
+  */
+  bool cyk;
+
   Checkpoint() : list_ref(false), strings(false),
                  subseq(false), user_def(false),
-                 is_buddy(false) {}
+                 is_buddy(false), cyk(false) {}
 
   bool is_supported(const nt_tables &tables) {
      // check datatypes of every table (all tables must have supported type)
@@ -393,7 +410,18 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      stream << "#include <atomic>" << endl;
      stream << "#include <ctime>" << endl;
      stream << "#include <unordered_map>" << endl;
-     stream << "#include <mutex>" << endl;
+     stream << "#include <algorithm>" << endl;
+     if (cyk) {
+       stream << "#include \"boost/archive/text_oarchive.hpp\"" << endl;
+       stream << "#include \"boost/archive/text_iarchive.hpp\"" << endl;
+       stream << "#ifdef _OPENMP" << endl;
+       stream << "#include \"rtlib/fair_shared_mutex.hh\"" << endl;
+       stream << "#else" << endl;
+       stream << "#include \"rtlib/fair_mutex.hh\"" << endl;
+       stream << "#endif" << endl;
+     } else {
+       stream << "#include <mutex>" << endl;
+     }
      stream << "#include <thread>" << endl << endl;
   }
 
@@ -448,35 +476,39 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
           }
         }
       }
-      c = 0;
-      for (auto i = tables.begin(); i != tables.end(); ++i) {
-        c++;
-        const std::string &table_name = i->second->table_decl->name();
-        if (c == 1) {
-          stream << indent() << "std::vector<bool> *tabulated[] = {"
-                 << table_name << ".get_tabulated()," << endl;
-        } else {
-          stream << indent() << "                                  ";
-          if (c < n_tables) {
-            stream << table_name << ".get_tabulated()," << endl;
+      if (!cyk) {
+        c = 0;
+        for (auto i = tables.begin(); i != tables.end(); ++i) {
+          c++;
+          const std::string &table_name = i->second->table_decl->name();
+          if (c == 1) {
+            stream << indent() << "std::vector<bool> *tabulated[] = {"
+                   << table_name << ".get_tabulated()," << endl;
           } else {
-            stream << table_name << ".get_tabulated()};" << endl << endl;
+            stream << indent() << "                                  ";
+            if (c < n_tables) {
+              stream << table_name << ".get_tabulated()," << endl;
+            } else {
+              stream << table_name << ".get_tabulated()};" << endl << endl;
+            }
           }
         }
-      }
-      c = 0;
-      for (auto i = tables.begin(); i != tables.end(); ++i) {
-        c++;
-        const std::string &table_name = i->second->table_decl->name();
-        if (c == 1) {
-          stream << indent() << "size_t *tabulated_counts[] = {"
-                 << table_name << ".get_tabulated_count()," << endl;
-        } else {
-          stream << indent() << "                                  ";
-          if (c < n_tables) {
-            stream << table_name << ".get_tabulated_count()," << endl;
+
+        c = 0;
+        for (auto i = tables.begin(); i != tables.end(); ++i) {
+          c++;
+          const std::string &table_name = i->second->table_decl->name();
+          if (c == 1) {
+            stream << indent() << "size_t *tabulated_counts[] = {"
+                   << table_name << ".get_tabulated_count()," << endl;
           } else {
-            stream << table_name << ".get_tabulated_count()};" << endl << endl;
+            stream << indent() << "                                  ";
+            if (c < n_tables) {
+              stream << table_name << ".get_tabulated_count()," << endl;
+            } else {
+              stream << table_name << ".get_tabulated_count()};"
+              << endl << endl;
+            }
           }
         }
       }
@@ -570,12 +602,14 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
              << endl;
       inc_indent();
       stream << indent() << "auto &l = curr_table[j].ref();" << endl;
-      stream << indent() << "if (!((*(tabulated[i]))[j])) {" << endl;
-      inc_indent();
-      stream << indent() << "assert(l.size() == 0);" << endl;
-      stream << indent() << "continue;" << endl;
-      dec_indent();
-      stream << indent() << "}" << endl << endl;
+      if (!cyk) {
+        stream << indent() << "if (!((*(tabulated[i]))[j])) {" << endl;
+        inc_indent();
+        stream << indent() << "assert(l.size() == 0);" << endl;
+        stream << indent() << "continue;" << endl;
+        dec_indent();
+        stream << indent() << "}" << endl << endl;
+      }
       stream << indent() << "// true if an unresolvable link was found in "
              << "one of the Strings of the current ListRef" << endl;
       stream << indent() << "bool cant_resolve = false;" << endl;
@@ -683,7 +717,13 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
       stream << indent() << "}" << endl;
       dec_indent();
       stream << indent() << "}" << endl << endl;
-      // only recursively call from the initial elements of broken_listrefs
+      if (!cyk) {
+      /*
+         there won't be any broken links in cyk mode due to the way
+         it fills the tables and we only possibly dump at the end of a
+         complete loop iteration;
+         only recursively call from the initial elements of broken_listrefs
+       */
       stream << indent() << "std::vector<bool> already_checked"
              << "(n_tables * max_table_size);" << endl;
       stream << indent() << "for (auto &ilr : initial_broken_listrefs) {"
@@ -720,6 +760,7 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
       stream << indent() << "}" << endl;
       dec_indent();
       stream << indent() << "}" << endl;
+      }
       dec_indent();
       stream << indent() << "}" << endl << endl;
       dec_indent();
@@ -891,11 +932,16 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      stream << indent() << "}" << endl;
      stream << indent() << "boost::archive::binary_oarchive "
                             "array_out(array_fout);" << endl;
-     stream << indent() << "// lock the mutex so main thread can't "
+     if (!cyk) {
+       stream << indent() << "// lock the mutex so main thread can't "
             << "write during archiving" << endl;
-     stream << indent() << "std::lock_guard<std::mutex> lock(m);" << endl;
-     stream << indent() << "array_out << array << tabulated << "
-            << "tabulated_vals_counter;" << endl;
+       stream << indent() << "std::lock_guard<std::mutex> lock(m);" << endl;
+       stream << indent() << "array_out << array << tabulated << "
+              << "tabulated_vals_counter;" << endl;
+     } else {
+       stream << indent() << "array_out << array << tabulated_vals_counter;"
+              << endl;
+     }
      stream << indent() << "array_fout.close();" << endl;
      stream << indent() << "boost::filesystem::rename(tmp_out_table_path, "
             << "out_table_path);" << endl;
@@ -932,6 +978,116 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      dec_indent();
      stream << indent() << "}" << endl << endl;
      dec_indent(); dec_indent();
+  }
+
+  void archive_cyk_indices(Printer::Base &stream, size_t n_tracks) {
+     inc_indent();
+     stream << indent() << "void archive_cyk_indices() {" << endl;
+     inc_indent();
+     stream << indent() << "// save the cyk loop indidces to disk" << endl;
+     stream << indent() << "try {" << endl;
+     inc_indent();
+     stream << indent() << "std::ofstream array_fout("
+            << "tmp_out_cyk_path.c_str());" << endl;
+     stream << indent() << "if (!(array_fout.good())) {" << endl;
+     stream << indent() << "  throw std::ofstream::failure(\"\");" << endl;
+     stream << indent() << "}" << endl;
+     stream << indent() << "boost::archive::text_oarchive "
+                            "array_out(array_fout);" << endl;
+     for (size_t i = 0; i < n_tracks; i++) {
+       // archive the indices of the prior iteration to ensure
+       // that the whole iteration has been completed
+       stream << indent() << "array_out << t_" << i << "_i + 1;" << endl;
+       stream << indent() << "array_out << "
+              << "(t_" << i << "_j == 0 ? 0 : t_" << i << "_j - 1);" << endl;
+     }
+     stream << indent() << "#ifdef _OPENMP" << endl;
+     stream << indent() << "  array_out << outer_loop_1_idx;" << endl;
+     stream << indent() << "  array_out << outer_loop_2_idx;" << endl;
+     stream << indent() << "  array_out << inner_loop_2_idx;" << endl;
+     stream << indent() << "#endif" << endl;
+     stream << indent() << "array_fout.close();" << endl;
+     stream << indent() << "boost::filesystem::rename(tmp_out_cyk_path, "
+            << "out_cyk_path);" << endl;
+     stream << indent() << "std::cerr << \"Info: Archived cyk loop progress"
+            << " into \" << out_cyk_path << \".\" "
+            << "<< std::endl;" << endl;
+     dec_indent();
+     stream << indent() << "} catch (const std::ofstream::failure &e) {"
+             << endl;
+     stream << indent() << "  std::cerr << \"Couldn't create archive "
+             << "at path \" << out_cyk_path << \".\\n\"" << endl;
+     stream << indent() << "            << \"Please ensure that the directory "
+             << "exists and that you have write permissions "
+             << "for this directory.\\n\";" << endl;
+     stream << indent() << "} catch (const std::exception &e) {" << endl;
+     inc_indent();
+     stream << indent() << "std::time_t curr_time = std::time(nullptr);"
+            << endl;
+     stream << indent() << "char curr_time_str["
+            << "sizeof(\"yyyy-mm-dd, hh:mm:ss\")];" << endl;
+     stream << indent() << "std::strftime(curr_time_str, sizeof(curr_time_str),"
+            << " \"%F, %T\", std::localtime(&curr_time));" << endl;
+     stream << indent() << "std::cerr << \"[\" << curr_time_str << \"] "
+            << "Error trying to archive cyk loop progress.\\n\";" << endl;
+     stream << indent() << "boost::filesystem::remove(tmp_out_cyk_path);"
+            << endl;
+     dec_indent();
+     stream << indent() << "}" << endl;
+     dec_indent();
+     stream << indent() << "}" << endl << endl;
+     dec_indent();
+  }
+
+  void load_cyk_indices(Printer::Base &stream, size_t n_tracks) {
+     inc_indent();
+     stream << indent() << "void load_cyk_indices() {" << endl;
+     inc_indent();
+     stream << indent() << "// read the cyk loop indices from disk " << endl;
+     stream << indent() << "try {" << endl;
+     inc_indent();
+     stream << indent() << "std::ifstream array_fin(in_archive_path.c_str());"
+            << endl;
+     stream << indent() << "if (!(array_fin.good())) {" << endl;
+     stream << indent() << "  throw std::ifstream::failure(\"\");" << endl;
+     stream << indent() << "}" << endl;
+     stream << indent() << "boost::archive::text_iarchive "
+                            "array_in(array_fin);" << endl;
+     for (size_t i = 0; i < n_tracks; i++) {
+       stream << indent() << "array_in >> t_" << i << "_i;" << endl;
+       stream << indent() << "array_in >> t_" << i << "_j;" << endl;
+     }
+     stream << indent() << "#ifdef _OPENMP" << endl;
+       stream << indent() << "  array_in >> outer_loop_1_idx;" << endl;
+       stream << indent() << "  array_in >> outer_loop_2_idx;" << endl;
+       stream << indent() << "  array_in >> inner_loop_2_idx;" << endl;
+       stream << indent() << "#endif" << endl;
+     stream << indent() << "array_fin.close();" << endl << endl;
+     stream << indent() << "std::cerr << \"Info: Successfully loaded "
+            << "cyk loop indices. \"" << endl;
+     stream << indent() << "          << \"Will continue calculating from here."
+            << "\" << std::endl;" << endl;
+     dec_indent();
+     stream << indent() << "} catch (const std::ifstream::failure &e) {"
+            << endl;
+     inc_indent();
+     stream << indent() << "std::cerr << \"Error: \\\"\" + "
+            << "in_archive_path.string() + \"\\\" "
+            << "archive\"" << endl;
+     stream << indent() << "          << " << "\" could not be found.\\n\";"
+            << endl;
+     stream << indent() << "std::exit(1);" << endl;
+     dec_indent();
+     stream << indent() << "} catch (const std::exception &e) {" << endl;
+     inc_indent();
+     stream << indent() << "std::cerr << \"Error \\\"\" << e.what() << \"\\\" "
+                            "trying to read cyk loop indices!\\n\";" << endl;
+     stream << indent() << "std::exit(1);" << endl;
+     dec_indent();
+     stream << indent() << "}" << endl;
+     dec_indent();
+     stream << indent() << "}" << endl << endl;
+     dec_indent();
   }
 
   void remove(Printer::Base &stream) {
@@ -991,10 +1147,14 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
   void get_tabulated_vals_percentage(Printer::Base &stream) {
      inc_indent(); inc_indent();
      stream << indent();
-     stream << "double get_tabulated_vals_percentage() const {" << endl;
+     stream << "std::string get_tabulated_vals_percentage() const {" << endl;
      inc_indent();
-     stream << indent() << "return static_cast<double>(tabulated_vals_counter) "
-            << "/ tabulated.size() * 100.0;" << endl;
+     stream << indent() << "char num_buffer[7];  // holds %.2f" << endl;
+     stream << indent() << "std::snprintf(num_buffer, sizeof(num_buffer), "
+            << "\"%.2f\", "
+            << "static_cast<double>(tabulated_vals_counter) "
+            << "/ array.size() * 100.0);" << endl;
+     stream << indent() << "return std::string(num_buffer);" << endl;
      dec_indent();
      stream << indent() << "}" << endl << endl;
      dec_indent(); dec_indent();
@@ -1016,15 +1176,20 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      inc_indent();
      stream << indent() << "parse_checkpoint_log(tname, arg_string, in_path);"
             << endl << endl;
-     stream << indent() << "std::ifstream array_fin(in_table_path.c_str(), "
+     stream << indent() << "std::ifstream array_fin(in_archive_path.c_str(), "
             << "std::ios::binary);" << endl;
      stream << indent() << "if (!(array_fin.good())) {" << endl;
      stream << indent() << "  throw std::ifstream::failure(\"\");" << endl;
      stream << indent() << "}" << endl;
      stream << indent() << "boost::archive::binary_iarchive "
                             "array_in(array_fin);" << endl;
-     stream << indent() << "array_in >> array >> tabulated >> "
-            << "tabulated_vals_counter;" << endl;
+     if (!cyk) {
+       stream << indent() << "array_in >> array >> tabulated >> "
+              << "tabulated_vals_counter;" << endl;
+     } else  {
+       stream << indent() << "array_in >> array >> tabulated_vals_counter;"
+              << endl;
+     }
      stream << indent() << "array_fin.close();" << endl << endl;
      stream << indent() << "std::cerr << \"Info: Successfully loaded checkpoint"
             << " for \\\"\" << tname << \"\\\" table. \"" << endl;
@@ -1058,8 +1223,10 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      stream << indent() << "} else {" << endl;
      inc_indent();
      stream << indent() << "array.resize(newsize);" << endl;
-     stream << indent() << "tabulated.clear();" << endl;
-     stream << indent() << "tabulated.resize(newsize);" << endl;
+     if (!cyk) {
+       stream << indent() << "tabulated.clear();" << endl;
+       stream << indent() << "tabulated.resize(newsize);" << endl;
+     }
      dec_indent();
      stream << indent() << "}" << endl << endl;
      dec_indent(); dec_indent(); dec_indent();
@@ -1068,24 +1235,53 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
   void archive_periodically(Printer::Base &stream, const nt_tables &tables) {
      inc_indent();
      stream << indent() << "void archive_periodically(std::atomic_bool "
-                            "&cancel_token, size_t interval) {" << endl;
+                            "&cancel_token, size_t interval" << endl;
+     if (cyk) {
+     stream << indent() << "                          "
+            << "#ifdef _OPENMP" << endl
+            << indent() << "                          "
+            << ", fair_shared_mutex &mutex" << endl
+            << indent() << "                          #else" << endl
+            << indent() << "                          "
+            << ", fair_mutex &mutex" << endl
+            << indent() << "                          #endif" << endl;
+     }
+     stream << indent() << "                          ) {" << endl;
      inc_indent();
      stream << indent() << "// save all tables to the disk periodically "
                             "every interval seconds" << endl;
      stream << indent() << "cancel_token.store(true);" << endl;
-     stream << indent() << "std::thread([=, &cancel_token]() mutable {"
-            << endl;
+     if (cyk) {
+       stream << indent() << "std::thread([=, &cancel_token, &mutex]() "
+              << "mutable {" << endl;
+     } else {
+       stream << indent() << "std::thread([=, &cancel_token] () "
+            << "mutable {" << endl;
+     }
      stream << indent() << "            while (cancel_token.load()) {"
             << endl;
      stream << indent() << "              std::this_thread::sleep_for("
                             "std::chrono::seconds(interval));" << endl;
      stream << indent() << "              "
                             "if (!cancel_token.load()) break;" << endl;
+     if (cyk) {
+       stream << indent() << "            #ifdef _OPENMP" << endl;
+       stream << indent() << "              "
+              << "std::lock_guard<fair_shared_mutex> lock(mutex);" << endl;
+       stream << indent() << "            #else" << endl;
+       stream << indent() << "              "
+              << "std::lock_guard<fair_mutex> lock(mutex);" << endl;
+       stream << indent() << "            #endif" << endl;
+     }
 
      for (auto i = tables.begin(); i != tables.end(); ++i) {
        const std::string &table_name = i->second->table_decl->name();
        stream << "              " << indent();
        stream << table_name << ".archive(\"" << table_name << "\");" << endl;
+     }
+     if (cyk) {
+       stream << "              " << indent();
+       stream << "archive_cyk_indices();" << endl;
      }
      stream << "              " << indent();
      stream << "update_checkpoint_log();" << endl;
@@ -1103,6 +1299,10 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      for (auto i = tables.begin(); i != tables.end(); ++i) {
        const std::string &table_name = i->second->table_decl->name();
        stream << indent() << table_name << ".remove();" << endl;
+     }
+     if (cyk) {
+       stream << indent() << "boost::filesystem::remove("
+              << "out_cyk_path);" << endl;
      }
      dec_indent();
      stream << indent() << "}" << endl << endl;
@@ -1219,6 +1419,10 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
        stream << indent() << "fout << \"# [TABLE_NAME] path/to/"
               << table_name << "\\n\";" << endl;
      }
+     if (cyk) {
+       stream << indent() << "fout << \"# [CYK_INDICES] "
+              << "path/to/cyk_indices\\n\";" << endl;
+     }
      stream << indent() << "fout << \"# [GAPC CALL] GAPC call string\\n\";"
             << endl;
      stream << indent() << "fout << \"# [GAPC VERSION] GAPC version\\n\";"
@@ -1236,6 +1440,10 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
        stream << indent() << "fout << \"[" << table_name << "] \" << "
               << table_name << ".get_out_table_path() "
               << "<< \"\\n\";" << endl;
+     }
+     if (cyk) {
+       stream << indent() << "fout << \"[CYK_INDICES] \""
+              << "<< out_cyk_path.string() << \"\\n\";" << endl;
      }
      stream << indent() << "fout << \"[GAPC CALL] \" << GAPC_CALL_STRING "
             << "<< \"\\n\";" << endl;
@@ -1281,10 +1489,11 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      dec_indent();
   }
 
-  void parse_checkpoint_log(Printer::Base &stream) {
-     inc_indent(); inc_indent();
+  void parse_checkpoint_log(Printer::Base &stream, bool cyk) {
+     inc_indent();
+     if (!cyk) inc_indent();
      stream << indent() << "void parse_checkpoint_log("
-            << "const std::string &tname, const std::string &arg_string,"
+            << "const std::string &archive_name, const std::string &arg_string,"
             << endl
             << indent() << "                          "
             << "const boost::filesystem::path &path) {"
@@ -1297,11 +1506,11 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      stream << indent() << "std::ifstream fin(path.c_str());" << endl;
      stream << indent() << "if (!(fin.good())) return;"
             << endl << endl;
-     stream << indent() << "std::string line, curr_tname;" << endl;
+     stream << indent() << "std::string line, curr_archive_name;" << endl;
      stream << indent() << "std::string options_line_start = \"[OPTIONS] \";"
             << endl;
-     stream << indent() << "std::string table_path_start = "
-            << "\"[\" + tname + \"] \";" << endl;
+     stream << indent() << "std::string archive_path_start = "
+            << "\"[\" + archive_name + \"] \";" << endl;
      stream << indent() << "while (std::getline(fin, line)) {" << endl;
      inc_indent();
      stream << indent() << "if (line[0] == '#') continue;" << endl;
@@ -1313,8 +1522,8 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      stream << indent() << "if (line != arg_string) {" << endl;
      inc_indent();
      stream << indent() << "throw ParseException(\"Error: The checkpoint "
-            << "for \\\"\" + tname + \"\\\" table was created with different \""
-            << endl
+            << "for \\\"\" + archive_name + \"\\\" "
+            << "was created with different \"" << endl
             << indent() << "                     \"command line inputs than"
             << " this program was executed with.\\n\");" << endl;
      stream << indent() << "return;" << endl;
@@ -1322,17 +1531,17 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      stream << indent() << "}" << endl;
      dec_indent();
      stream << indent() << "}" << endl;
-     stream << indent() << "i = line.find(table_path_start);" << endl;
+     stream << indent() << "i = line.find(archive_path_start);" << endl;
      stream << indent() << "if (i != line.npos) {" << endl;
      inc_indent();
-     stream << indent() << "curr_tname = line.substr(1, line.find(\"]\") - 1);"
-            << endl;
-     stream << indent() << "if (curr_tname == tname) {"
+     stream << indent() << "curr_archive_name = "
+            << "line.substr(1, line.find(\"]\") - 1);" << endl;
+     stream << indent() << "if (curr_archive_name == archive_name) {"
             << endl;
      inc_indent();
-     stream << indent() << "line.replace(i, table_path_start.length(), "
+     stream << indent() << "line.replace(i, archive_path_start.length(), "
             << "\"\");" << endl;
-     stream << indent() << "in_table_path = boost::filesystem::path(line);"
+     stream << indent() << "in_archive_path = boost::filesystem::path(line);"
             << endl;
      stream << indent() << "return;" << endl;
      dec_indent();
@@ -1343,7 +1552,8 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      stream << indent() << "}" << endl;
      dec_indent();
      stream << indent() << "}" << endl << endl;
-     dec_indent(); dec_indent();
+     dec_indent();
+     if (!cyk) dec_indent();
   }
 };
 }  // namespace Printer

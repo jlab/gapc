@@ -598,23 +598,14 @@ class Main {
         */
         cp->is_buddy = true;
       } else {
-        if (opts.cyk) {
-          // since DP algorithm doesn't do lookups at the beginning of
-          // the nt_* functions in cyk-mode, the current checkpointing mechanism
-          // can't work in this case and won't be integrated
-          Log::instance()->error("Checkpointing routine could not be integrated"
-                                 ", because checkpointing mechanism is "
-                                 "currently incompatible with cyk-style "
-                                 "code generation.");
-          opts.checkpointing = false;
-          delete cp;
-          std::exit(0);
-        }
         bool answer_type_supported = cp->is_supported(driver.ast.grammar()->
                                                       tabulated);
 
         // only enable checkpointing if type of every table is supported
         if (answer_type_supported) {
+          if (opts.cyk) {
+            cp->cyk = true;
+          }
           Log::instance()->normalMessage("Checkpointing routine integrated.");
         } else {
           Log::instance()->error("Checkpointing routine could not be "
