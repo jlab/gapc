@@ -37,8 +37,9 @@
 #include "torch/extension.h"
 
 using tensor = torch::Tensor;
-using Slice = torch::indexing::Slice;
+using Slice = torch::indexing::Slice;  // Python's "Slice" (for indexing)
 using tensoridx = std::initializer_list<at::indexing::TensorIndex>;
+static auto None = torch::indexing::None;  // Python's "None" (for indexing)
 
 /*
  * represents a "Slice" of a Tensor with the shape [:, i:j],
@@ -68,35 +69,73 @@ class TensorSlice {
 
   /*
    * pretty much identical to Python Tensor indexing;
-   * here we need to pass a initializer list though
-   * to enable passing of multiple indices
+   * some usage examples (Python vs. C++):
+   *   tensor[..., 1]  ==  TensorSlice["...", 1]
+   *   tensor[1:2]     ==  TensorSlice[Slice(1, 2)]
+   *   tensor[:, 1::2] ==  TensorSlice[":", Slice(1, None, 2)]
    */
-  tensor operator[](const tensoridx &idx) {
-    return t->index(idx);
+  template <typename... indices>
+  tensor operator[](indices... idx) {
+    return t->index(tensoridx{idx...});
   }
 
   /*
    * pretty much identical to Python Tensor indexing;
-   * here we need to pass a initializer list though
-   * to enable passing of multiple indices
+   * some usage examples (Python vs. C++):
+   *   tensor[..., 1]  ==  TensorSlice["...", 1]
+   *   tensor[1:2]     ==  TensorSlice[Slice(1, 2)]
+   *   tensor[:, 1::2] ==  TensorSlice[":", Slice(1, None, 2)]
    */
-  tensor operator[](const tensoridx &idx) const {
-    return t->index(idx);
+  template <typename... indices>
+  tensor operator[](indices... idx) const {
+    return t->index(tensoridx{idx...});
+  }
+
+  // ### basic tensor ops ###
+
+  tensor operator+(const TensorSlice &other) {
+    return (*this)["...", Slice(i, j)] +
+           other["...", Slice(other.i, other.j)];
+  }
+
+  TensorSlice& operator+=(const TensorSlice &other) {
+    (*this)["...", Slice(i, j)] += other["...", Slice(other.i, other.j)];
+    return *this;
+  }
+
+  tensor operator-(const TensorSlice &other) {
+    return (*this)["...", Slice(i, j)] - other["...", Slice(other.i, other.j)];
+  }
+
+  TensorSlice& operator-=(const TensorSlice &other) {
+    (*this)["...", Slice(i, j)] -= other["...", Slice(other.i, other.j)];
+    return *this;
+  }
+
+  tensor operator*(const TensorSlice &other) {
+    return (*this)["...", Slice(i, j)] * other["...", Slice(other.i, other.j)];
+  }
+
+  TensorSlice& operator*=(const TensorSlice &other) {
+    (*this)["...", Slice(i, j)] *= other["...", Slice(other.i, other.j)];
+    return *this;
+  }
+
+  tensor operator/(const TensorSlice &other) {
+    return (*this)["...", Slice(i, j)] / other["...", Slice(other.i, other.j)];
+  }
+
+  TensorSlice& operator/=(const TensorSlice &other) {
+    (*this)["...", Slice(i, j)] /= other["...", Slice(other.i, other.j)];
+    return *this;
+  }
+
+  // performs matrix multiplication of two TensorSlices
+  tensor matmul(const TensorSlice &other) {
+    return (*this)["...", Slice(i, j)].mm(
+             other["...", Slice(other.i, other.j)]);
   }
 };
-
-// check if columns [i, j) of the two comared tensors are equal
-// (tensor_1[..., i:j] == tensor_2[..., i:j])
-inline bool operator==(const TensorSlice &lhs, const TensorSlice &rhs) {
-  return torch::equal(lhs[{"...", Slice(lhs.i, lhs.j)}],
-                      rhs[{"...", Slice(rhs.i, rhs.j)}]);
-}
-
-// check if columns [i, j) of the two comared tensors are not equal
-// (tensor_1[..., i:j] != tensor_2[..., i:j])
-inline bool operator!=(const TensorSlice &lhs, const TensorSlice &rhs) {
-  return !(lhs == rhs);
-}
 
 /*
  * represents a "Char"/column of a Tensor
@@ -126,23 +165,109 @@ class TensorChar {
 
   /*
    * pretty much identical to Python Tensor indexing;
-   * here we need to pass a initializer list though
-   * to enable passing of multiple indices
+   * some usage examples (Python vs. C++):
+   *   tensor[..., 1]  ==  TensorSlice["...", 1]
+   *   tensor[1:2]     ==  TensorSlice[Slice(1, 2)]
+   *   tensor[:, 1::2] ==  TensorSlice[":", Slice(1, None, 2)]
    */
-  tensor operator[](const tensoridx &idx) {
-    return t->index(idx);
+  template <typename... indices>
+  tensor operator[](indices... idx) {
+    return t->index(tensoridx{idx...});
   }
 
   /*
    * pretty much identical to Python Tensor indexing;
-   * here we need to pass a initializer list though
-   * to enable passing of multiple indices
+   * some usage examples (Python vs. C++):
+   *   tensor[..., 1]  ==  TensorSlice["...", 1]
+   *   tensor[1:2]     ==  TensorSlice[Slice(1, 2)]
+   *   tensor[:, 1::2] ==  TensorSlice[":", Slice(1, None, 2)]
    */
-  tensor operator[](const tensoridx &idx) const {
-    return t->index(idx);
+  template <typename... indices>
+  tensor operator[](indices... idx) const {
+    return t->index(tensoridx{idx...});
+  }
+
+  // ### basic tensor ops ###
+
+  tensor operator+(const TensorChar &other) {
+    return (*this)["...", i] + other["...", other.i];
+  }
+
+  TensorChar& operator+=(const TensorChar &other) {
+    (*this)["...", i] += other["...", other.i];
+    return *this;
+  }
+
+  tensor operator-(const TensorChar &other) {
+    return (*this)["...", i] - other["...", other.i];
+  }
+
+  TensorChar& operator-=(const TensorChar &other) {
+    (*this)["...", i] -= other["...", other.i];
+    return *this;
+  }
+
+  tensor operator*(const TensorChar &other) {
+    return (*this)["...", i] * other["...", other.i];
+  }
+
+  TensorChar& operator*=(const TensorChar &other) {
+    (*this)["...", i] *= other["...", other.i];
+    return *this;
+  }
+
+  tensor operator/(const TensorChar &other) {
+    return (*this)["...", i] / other["...", other.i];
+  }
+
+  TensorChar& operator/=(const TensorChar &other) {
+    (*this)["...", i] /= other["...", other.i];
+    return *this;
+  }
+
+  // calculates dot product of two TensorChars / columns of tensor
+  tensor dot(const TensorChar &other) {
+    return (*this)["...", i].dot(other["...", other.i]);
   }
 };
 
+// ### non-member operator overloads and Tensor ops ###
+
+// check if i-th column of the two compared tensors is equal
+// (tensor_1[..., i] == tensor_2[..., i])
+inline bool operator==(const TensorChar &lhs, const TensorChar &rhs) {
+  return torch::equal(lhs["...", lhs.i], rhs["...", rhs.i]);
+}
+
+// check if i-th column of the two compared tensors is not equal
+// (tensor_1[..., i] != tensor_2[..., i])
+inline bool operator!=(const TensorChar &lhs, const TensorChar &rhs) {
+  return !(lhs == rhs);
+}
+
+// check if columns [i, j) of the two compared tensors are equal
+// (tensor_1[..., i:j] == tensor_2[..., i:j])
+inline bool operator==(const TensorSlice &lhs, const TensorSlice &rhs) {
+  return torch::equal(lhs["...", Slice(lhs.i, lhs.j)],
+                      rhs["...", Slice(rhs.i, rhs.j)]);
+}
+
+// check if columns [i, j) of the two comüared tensors are not equal
+// (tensor_1[..., i:j] != tensor_2[..., i:j])
+inline bool operator!=(const TensorSlice &lhs, const TensorSlice &rhs) {
+  return !(lhs == rhs);
+}
+
+
+// calculates dot product of two TensorChars / columns of tensors
+inline tensor dot(const TensorChar &lhs, const TensorChar &rhs) {
+  return lhs["...", lhs.i].dot(rhs["...", rhs.i]);
+}
+
+// performs matrix multiplication of two TensorSlices
+inline tensor matmul(const TensorSlice &lhs, const TensorSlice &rhs) {
+  return lhs["...", Slice(lhs.i, lhs.j)].mm(rhs["...", Slice(rhs.i, rhs.j)]);
+}
 
 // ### Tensor terminal parsers ###
 
@@ -184,20 +309,6 @@ template<typename T>
 inline TensorSlice TLOC(TensorSlice &t, T i, T j) {
   assert(i == j);
   return TensorSlice(t, i, j);
-}
-
-// ### non-member operator overloads for Tensors ###
-
-// check if i-th column of the two comared tensors is equal
-// (tensor_1[..., i] == tensor_2[..., i])
-inline bool operator==(const TensorChar &lhs, const TensorChar &rhs) {
-  return torch::equal(lhs[{"...", lhs.i}], rhs[{"...", rhs.i}]);
-}
-
-// check if i-th column of the two comared tensors is not equal
-// (tensor_1[..., i] != tensor_2[..., i])
-inline bool operator!=(const TensorChar &lhs, const TensorChar &rhs) {
-  return !(lhs == rhs);
 }
 
 // ### empty.hh overloads ###
