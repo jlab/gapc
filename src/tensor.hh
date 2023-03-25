@@ -1,10 +1,37 @@
-#ifndef SRC_TENSOR_HH
-#define SRC_TENSOR_HH
+/* {{{
+
+    This file is part of gapc (GAPC - Grammars, Algebras, Products - Compiler;
+      a system to compile algebraic dynamic programming programs)
+
+    Copyright (C) 2008-2011  Georg Sauthoff
+         email: gsauthof@techfak.uni-bielefeld.de or gsauthof@sdf.lonestar.org
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    * Author: fymue
+    * handles parsing of Tensor input declaration in GAP-L code
+}}} */
+
+#ifndef SRC_TENSOR_HH_
+#define SRC_TENSOR_HH_
 
 #include <string>
 #include <map>
 #include <cassert>
-#include <regex>
+#include <regex>  // NOLINT [build/c++11]
+#include <utility>
+#include <vector>
 
 class TensorMode {
  public:
@@ -44,10 +71,10 @@ class TensorMode {
                   {"I64", {"torch::kInt64", "long"}},
                   {"F32", {"torch:kFloat32", "float"}},
                   {"F64", {"torch::kFloat64", "double"}}};
-    
+
     // check if input Tensor is batched (default: false)
     bool batched = input.find("batched") != input.npos;
-    
+
     // check the number of dims of the input Tensor (default: 2)
     std::regex regex("[a-zA-Z0-9]*([0-9]{1,2})D[a-zA-Z0-9]*");
     std::smatch match;
@@ -60,13 +87,11 @@ class TensorMode {
       try {
         n_dims = std::stoi(match[1].str());
       } catch (const std::exception &e) {
-        Log::instance()->error("Couldn't convert " +
-                               match[1].str() +
-                               " to a number.");
+        std::cerr << "Couldn't convert " << match[1].str() << " to a number.\n";
         std::exit(1);
       }
     }
-    
+
     // check the datatype of the tensor values
     std::string torch_dtype = "torch::kFloat32";
     std::string cpp_dtype = "float";
@@ -79,7 +104,7 @@ class TensorMode {
         break;
       }
     }
-  
+
     return TensorMode(batched, torch_dtype, cpp_dtype, n_dims);
   }
 };
@@ -106,7 +131,7 @@ class TensorInput {
   void add_mode(TensorMode mode) {
     tensor_modes.push_back(mode);
   }
-  
+
   // check if all input Tensors have the same
   // number of dimensions and the same datatype
   bool same() const {
@@ -131,7 +156,7 @@ class TensorInput {
 
     return true;
   }
-  
+
   /*
    * get the shared data type (as a C++ type) of all input Tensors;
    * if they don't all share the same type, an empty String is returned
@@ -167,7 +192,7 @@ class TensorInput {
       return 0;
     }
   }
-  
+
   // check if all input Tensors are "batched"
   bool all_batched() const {
     bool batched = true;
@@ -179,4 +204,4 @@ class TensorInput {
   }
 };
 
-#endif  // SRC_TENSOR_HH
+#endif  // SRC_TENSOR_HH_

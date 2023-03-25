@@ -65,22 +65,29 @@ static std::string make_comments(const std::string &s, const std::string &c) {
   return o.str();
 }
 
-static std::string& get_torch_type(Type::Type type) {
+static std::string& get_torch_type(const Type::Base &_type) {
   // get the appropriate pytorch Tensor type (float32, float64 etc.)
   // based on the table type of the current non-terminal table
 
-  static hashtable<Type::Type, std::string>
-  torch_type = {{Type::Type::FLOAT, "torch::kFloat64"},
-                {Type::Type::SINGLE, "torch::kFloat32"},
-                {Type::Type::INT, "torch::kInt32"},
-                {Type::Type::INTEGER, "torch::kInt32"},
-                {Type::Type::BIGINT, "torch::kInt64"},
-                {Type::Type::CHAR, "torch::kInt8"}};
+  static hashtable<std::string, std::string>
+  torch_type = {{"double", "torch::kFloat64"},
+                {"float", "torch::kFloat64"},
+                {"single", "torch::kFloat32"},
+                {"int", "torch::kInt32"},
+                {"integer", "torch::kInt32"},
+                {"bigint", "torch::kInt64"},
+                {"char", "torch::kInt8"},
+                {"tensor", "torch::kFloat32"}};
+
+  std::stringstream _dtype;
+  _dtype << _type;
+  std::string type = _dtype.str();
 
   assert(torch_type.find(type) != torch_type.end());
   if (torch_type.find(type) == torch_type.end()) {
-    Log::instance()->error("Table type cannot be converted to "
-                           "apporpriate torch type!");
+    Log::instance()->error("Table type \"" + type + "\" "
+                           "cannot be converted to "
+                           "appropriate torch type!");
     std::exit(1);
   }
   return torch_type[type];
@@ -1101,6 +1108,7 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   in_class = true;
   bool wmode = ast && ast->window_mode;
   bool pytorch = ast && ast->as_pytorch_module;
+  bool batched_input = pytorch && ast->input.tensor_inputs.all_batched();
 
   std::string tname(t.name() + "_t");
   const Type::Base &dtype = t.datatype();
@@ -1122,7 +1130,12 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
 
   print_most_decl(t.nt());
 
-  stream << indent() << "std::vector<" << dtype << "> array;" << endl;
+  if (pytorch && batched_input) {
+    stream << indent() << "tensor array;" << endl;
+    stream << indent() << "int64_t batch_size;" << endl;
+  } else {
+    stream << indent() << "std::vector<" << dtype << "> array;" << endl;
+  }
   if (t.for_derivatives) {
     stream << indent() << "std::vector<std::vector<std::tuple<std::string, "
            << "std::vector<unsigned int>, " << dtype << "> > > traces;" << endl;
@@ -1148,7 +1161,11 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   if (pytorch) {
     stream << indent() << dtype << " *get_array_data() {" << endl;
     inc_indent();
-    stream << indent() << "return array.data();" << endl;
+    if (batched_input) {
+      stream << indent() << "return &array;" << endl;
+    } else {
+      stream << indent() << "return array.data();" << endl;
+    }
     dec_indent();
     stream << indent() << "}" << endl << endl;
   }
@@ -1162,6 +1179,11 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   }
 
   stream << ", const std::string &tname";
+
+  if (batched_input) {
+    stream << ", int64_t batch_size";
+  }
+
   stream << ") {" << endl;
   inc_indent();
   print_eqs(ns, '_');
@@ -1181,13 +1203,29 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
 
   stream << indent() << ptype << " newsize = size(";
   stream << ");" << endl;
-  if (pytorch) {
+  if (pytorch && !batched_input) {
     stream << indent() << "array.clear();" << endl;
     if (t.for_derivatives) {
       stream << indent() << "traces.clear();" << endl;
     }
   }
-  stream << indent() << "array.resize(newsize);" << endl;
+  if (batched_input) {
+    size_t c = 1;
+    stream << indent() << "array = torch::empty({batch_size, ";
+    for (std::list<Statement::Var_Decl*>::const_iterator i = ns.begin();
+      i != ns.end(); ++i) {
+      stream << *(*i)->name;
+      if (c < ns.size()) {
+        stream << ", ";
+      }
+      ++c;
+    }
+
+    stream << "}, torch::dtype("
+           << get_torch_type(dtype) << "));" << endl;
+  } else {
+    stream << indent() << "array.resize(newsize);" << endl;
+  }
   if (t.for_derivatives) {
     stream << indent() << "traces.resize(newsize);" << endl;
   }
@@ -1596,7 +1634,12 @@ void Printer::Cpp::print_table_init(const AST &ast) {
     if (ast.window_mode) {
       stream << " opts.window_size, opts.window_increment, ";
     }
-    stream << "\""<< i->second->table_decl->name() << "\");" << endl;
+    stream << "\""<< i->second->table_decl->name() << "\"";
+
+    if (ast.input.tensor_inputs.all_batched()) {
+      stream << ", batch_size";
+    }
+    stream << ");" << endl;
   }
 }
 
@@ -1846,8 +1889,7 @@ void Printer::Cpp::header(const AST &ast) {
   stream << indent() << " public:" << endl;
   inc_indent();
   if (ast.as_pytorch_module) {
-    stream << indent() << "std::vector<int64_t> tensor_size;"
-           << endl;
+    stream << indent() << "std::vector<int64_t> tensor_size;" << endl;
   }
 
   int track = 0;
@@ -2593,10 +2635,15 @@ void Printer::Cpp::print_run_derivative_fn(const AST &ast) {
     if (nt && nt->is_partof_outside) {
       print_derivative(nt);
       if (ast.as_pytorch_module) {
-        std::string &torch_type = get_torch_type(nt->data_type()->getType());
-        stream << indent() << "matrices.push_back(torch::from_blob("
-             << *(nt->name) << "_table.get_array_data(), "
-             << "tensor_size, " << torch_type << "));" << endl;
+        if (ast.input.tensor_inputs.all_batched()) {
+          stream << indent() << "matrices.push_back(*"
+                 << *(nt->name) << "_table.get_array_data());" << endl;
+        } else {
+          std::string &torch_type = get_torch_type(*nt->data_type());
+          stream << indent() << "matrices.push_back(torch::from_blob("
+               << *(nt->name) << "_table.get_array_data(), "
+               << "tensor_size, " << torch_type << "));" << endl;
+        }
       }
     }
   }
@@ -3280,6 +3327,9 @@ void Printer::Cpp::print_pytorch_init_fn(const AST &ast) {
            << ".j = __t_" << track << "_tensor.sizes().back();" << endl << endl;
   }
 
+  stream << indent() << "int64_t batch_size = __t_0_tensor.sizes().front();"
+         << endl;
+
   print_filter_init(ast);
   print_table_init(ast);
   print_zero_init(*ast.grammar());
@@ -3315,10 +3365,16 @@ void Printer::Cpp::print_pytorch_forward_fn(const AST &ast) {
       i != ast.grammar()->NTs.end(); ++i) {
     Symbol::NT *nt = dynamic_cast<Symbol::NT*>((*i).second);
     if (nt && !(nt->is_partof_outside)) {
-      std::string &torch_type = get_torch_type(nt->data_type()->getType());
-      stream << indent() << "matrices.push_back(torch::from_blob("
-             << *(nt->name) << "_table.get_array_data(), "
-             << "tensor_size, " << torch_type << "));" << endl;
+      if (ast.input.tensor_inputs.all_batched()) {
+        stream << indent() << "matrices.push_back(*"
+               << *(nt->name) << "_table.get_array_data());"
+               << endl;
+      } else {
+        std::string &torch_type = get_torch_type(*nt->data_type());
+        stream << indent() << "matrices.push_back(torch::from_blob("
+               << *(nt->name) << "_table.get_array_data(), "
+               << "tensor_size, " << torch_type << "));" << endl;
+      }
     }
   }
   dec_indent();
