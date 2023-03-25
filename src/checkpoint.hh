@@ -92,7 +92,10 @@ const std::vector<std::string>
 SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
                             "answer_pknot_mfecovar", "mfecovar",
                             "pftuple", "answer_pknot_pfunc",
-                            "shape_t"};
+                            "shape_t", "answer_macrostate_mfe",
+                            "answer_macrostate_pfunc",
+                            "answer_ali_pfunc_macrostate",
+                            "mfecovar_macrostate"};
 
   // check if the currently looked at type is contained
   // in SUPPORTED_TYPES or SUPPORTED_EXTERNAL_TYPES
