@@ -30,7 +30,7 @@
 #include <cassert>
 
 #include "loc.hh"
-
+#include "tensor.hh"
 
 class Input {
  public:
@@ -44,6 +44,9 @@ class Input {
   // extending the list of modes must leave the MODE_END
   // element at the end of the enumeration.
   enum Mode { RAW, RNA, UPPER, TENSOR, MODE_END };
+
+  // contains batch and dtype info for input Tensors
+  TensorInput tensor_inputs;
 
  private:
   //

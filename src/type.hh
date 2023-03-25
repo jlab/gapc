@@ -453,26 +453,21 @@ class TensorChar : public Base {
 class Tensor : public Base {
  public:
     MAKE_CLONE(Tensor);
-    Base *element_type;
 
-    Tensor() : Base(TENSOR), element_type(NULL) {
-      element_type = new TensorChar();
-    }
-    explicit Tensor(Base *b) : Base(TENSOR), element_type(b) {}
+    Tensor() : Base(TENSOR) {}
+    explicit Tensor(Loc &l) : Base(TENSOR, l) {}
+
     std::ostream & put(std::ostream &s) const;
     void print(Printer::Base &s) const;
 };
 
 // "Subsequence" analogous when dealing with Tensors
 class TensorSlice : public Base {
- private:
-    Tensor *tensor;
-
  public:
     MAKE_CLONE(TensorSlice);
 
-    TensorSlice() : Base(TENSORSLICE), tensor(NULL) {}
-    explicit TensorSlice(Tensor *s) : Base(TENSORSLICE), tensor(s) {}
+    TensorSlice() : Base(TENSORSLICE) {}
+    explicit TensorSlice(Loc &l) : Base(TENSORSLICE, l) {}
 
     std::ostream & put(std::ostream &s) const;
     void print(Printer::Base &s) const;

@@ -879,7 +879,8 @@ void AST::set_tracks() {
       std::ostringstream o;
       o << "t_" << i << "_seq";
       seq_decls[i] =
-      new Statement::Var_Decl(new Type::Tensor(), new std::string(o.str()));
+      new Statement::Var_Decl(new Type::TensorSlice(),
+                              new std::string(o.str()));
     }
   } else {
     for (; i < tracks; ++i) {
@@ -996,14 +997,7 @@ void AST::update_seq_type(Instance &inst) {
       << " CHAR() terminal parser type (" << *char_type << ").";
     throw LogError(inst.loc(), o.str());
   }
-  if (as_pytorch_module) {
-    for (std::vector<Statement::Var_Decl*>::iterator x = seq_decls.begin();
-         x != seq_decls.end(); ++x) {
-      Type::Tensor *seq = dynamic_cast<Type::Tensor*>((*x)->type);
-      assert(seq);
-      seq->element_type = type;
-    }
-  } else {
+  if (!as_pytorch_module) {
     for (std::vector<Statement::Var_Decl*>::iterator x = seq_decls.begin();
          x != seq_decls.end(); ++x) {
       Type::Seq *seq = dynamic_cast<Type::Seq*>((*x)->type);

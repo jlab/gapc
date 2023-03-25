@@ -158,6 +158,10 @@ void Type::add_predefined(hashtable<std::string, Base*> &table) {
   t = new ::Type::TensorChar();
   s = "tensorchar";
   table[s] = t;
+
+  t = new ::Type::Tensor();
+  s = "tensor";
+  table[s] = t;
 }
 
 

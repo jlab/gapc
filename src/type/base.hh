@@ -61,7 +61,7 @@ enum Type { NONE, LIST, TUPLE, TUPLEDEF, SIGNATURE, ALPHABET, DEF,
       MULTI_DECL,
 
       // for pytorch module generation:
-      TENSOR,       // input Tensor(s) (analogous to SEQ)
+      TENSOR,       // input/output Tensor(s)
       TENSORSLICE,  // slices of input Tensor (analogous to SUBSEQ)
       TENSORCHAR    // "char"/column of input Tensor (analogous to CHAR)
       };

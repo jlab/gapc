@@ -1241,7 +1241,7 @@ void Printer::Cpp::print(const Type::Subseq &t) {
 
 void Printer::Cpp::print(const Type::Tensor &t) {
   if (in_fn_head) {
-    stream << "const tensor&";
+    stream << "const tensor &";
   } else {
     stream << "tensor";
   }
@@ -1809,7 +1809,25 @@ void Printer::Cpp::header(const AST &ast) {
            << endl << endl;
 
     if (ast.as_pytorch_module) {
-      stream << "#define PYTORCH_MOD" << endl << endl;
+      stream << "#define PYTORCH_MOD" << endl;
+
+      /*
+       * check if all input Tensor have the same number of dimensions
+         and contain values of the same datatype;
+         if so, fast element-wise accessors can be defined, which
+         require compile-time information regarding the number of dims
+         and the underlying datatype of tensor;
+         if not all input Tensors are the same, these accessors won't be
+         visible
+       */
+      const TensorInput &tensor_inputs = ast.input.tensor_inputs;
+      if (tensor_inputs.same()) {
+        stream << "#define ALL_INPUT_TENSORS_SAME" << endl;
+        stream << "#define TENSOR_DIMS " << tensor_inputs.shared_ndims()
+               << endl;
+        stream << "#define TENSOR_TYPE " << tensor_inputs.shared_cpp_dtype()
+               << endl;
+      }
       stream << "#include \"torch/extension.h\"" << endl;
       stream << "#include \"rtlib/tensor.hh\"" << endl << endl;
     }

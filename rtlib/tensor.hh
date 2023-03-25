@@ -36,10 +36,28 @@
 #include <initializer_list>
 #include "torch/extension.h"
 
+/*
+ * if all input Tensor have the same number of dimensions
+ * and contain values of the same data type,
+ * accessors can be created, which allow much faster element-wise
+ * READ access to Tensor values e.g. in a loop;
+ * this will be checked by GAPC when parsing the input<> information
+ * in the GAP-L code;
+ * if all input Tensors are the same, the macros "ALL_INPUT_TENSORS_SAME",
+ * "TENSOR_DIMS N" and "TENSOR_TYPE DTYPE" will be defined,
+ * which enable the "at" methods of the TensorChar and TensorSlice classes,
+ * granting access to their respective accessors;
+ * these accessors require dimension- and datatype-information
+ * at compile time, which is why they can only be defined
+ * if all input Tensors share the same number of dimensions and dtype;
+ * for Tensor-wide ops, the regular indexing methods of the TensorChar
+ * and TensorSlice classes can be used without any concerns regarding speed
+ */
+
 using tensor = torch::Tensor;
 using Slice = torch::indexing::Slice;  // Python's "Slice" (for indexing)
 using tensoridx = std::initializer_list<at::indexing::TensorIndex>;
-static auto None = torch::indexing::None;  // Python's "None" (for indexing)
+inline auto None = torch::indexing::None;  // Python's "None" (for indexing)
 
 /*
  * represents a "Slice" of a Tensor with the shape [:, i:j],
@@ -92,7 +110,6 @@ class TensorSlice {
   }
 
   // ### basic tensor ops ###
-
   tensor operator+(const TensorSlice &other) {
     return (*this)["...", Slice(i, j)] +
            other["...", Slice(other.i, other.j)];
@@ -135,6 +152,15 @@ class TensorSlice {
     return (*this)["...", Slice(i, j)].mm(
              other["...", Slice(other.i, other.j)]);
   }
+
+#ifdef ALL_INPUT_TENSORS_SAME
+  // use for efficient element-wise READ access in loops,
+  // e.g. tensor.at()[i][j]
+  torch::TensorAccessor<TENSOR_TYPE, TENSOR_DIMS>& at() {
+    static auto accessor = t->accessor<TENSOR_TYPE, TENSOR_DIMS>();
+    return accessor;
+  }
+#endif
 };
 
 /*
@@ -229,6 +255,15 @@ class TensorChar {
   tensor dot(const TensorChar &other) {
     return (*this)["...", i].dot(other["...", other.i]);
   }
+
+#ifdef ALL_INPUT_TENSORS_SAME
+  // use for efficient element-wise READ access in loops,
+  // e.g. tensor.at()[i][j]
+  torch::TensorAccessor<TENSOR_TYPE, TENSOR_DIMS>& at() {
+    static auto accessor = t->accessor<TENSOR_TYPE, TENSOR_DIMS>();
+    return accessor;
+  }
+#endif
 };
 
 // ### non-member operator overloads and Tensor ops ###
