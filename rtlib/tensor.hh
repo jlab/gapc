@@ -34,6 +34,7 @@
 #define RTLIB_TENSOR_HH_
 
 #include <initializer_list>
+#include <vector>
 #include "torch/extension.h"
 
 /*
@@ -362,6 +363,15 @@ inline void empty(TensorSlice &t) {
 
 inline bool isEmpty(const TensorSlice &t) {
   return t.isEmpty();
+}
+
+inline void empty(tensor &t) {
+  t = torch::empty(0);
+}
+
+inline bool isEmpty(const tensor &t) {
+  static std::vector<int64_t> zero_shape{0};
+  return t.sizes() == zero_shape;
 }
 
 #endif  // RTLIB_TENSOR_HH_

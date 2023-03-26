@@ -1239,7 +1239,19 @@ void Symbol::NT::codegen(AST &ast) {
   init_table_decl(ast);
   init_zero_decl();
   ::Type::Base *dt = datatype;
-  if (tabulated) {
+  
+  /*
+   * true if not batched Tensor input is being processed;
+   * in that case, the non-terminal functions can't return
+   * references to a tensors since e.g. tensor batches
+   * returned from the get method of a table can't be references,
+   * because PyTorch's indexing methods return tensors by value
+   */
+  bool not_batched = !ast.as_pytorch_module ||
+                     (ast.as_pytorch_module &&
+                      !ast.input.tensor_inputs.all_batched());
+
+  if (tabulated && not_batched) {
     dt = new ::Type::Referencable(datatype);
   }
   if (ast.cyk() && tabulated && ast.code_mode() != Code::Mode::BACKTRACK) {

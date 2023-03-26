@@ -471,6 +471,17 @@ Fn_Def *Tablegen::gen_tab() {
 
   if (batched_) {
     // should look like this: array.index_put_({":", t_0_i, t_0_j}, e);
+    std::stringstream fn_args;
+    fn_args << "{\":\"";
+    for (Statement::Var_Decl* arg : paras) {
+      fn_args << ", static_cast<int64_t>(" << *arg->name << ")";
+    }
+    fn_args << "}, e";
+
+    Statement::Fn_Call *index_call = new Statement::Fn_Call("array.index_put_");
+    index_call->add_arg(new std::string(fn_args.str()));
+
+    c.push_back(index_call);
   } else {
     Statement::Var_Assign *x =
       new Statement::Var_Assign(
@@ -607,7 +618,12 @@ Fn_Def *Tablegen::gen_get_traces() {
 Fn_Def *Tablegen::gen_get_tab() {
   std::list<Statement::Base*> c;
 
-  Fn_Def *f = new Fn_Def(new Type::Referencable(dtype), new std::string("get"));
+  Fn_Def *f;
+  if (batched_) {
+    f = new Fn_Def(dtype, new std::string("get"));
+  } else {
+    f = new Fn_Def(new Type::Referencable(dtype), new std::string("get"));
+  }
   f->add_paras(paras);
 
   if (cond) {
@@ -631,7 +647,20 @@ Fn_Def *Tablegen::gen_get_tab() {
 
   Statement::Return *ret;
   if (batched_) {
-    // should look like this: return array.index({":", t_0_i, t_0_j});
+    // should look like this (if there are two index variables):
+    // return array.index({":", t_0_i, t_0_j});
+    std::stringstream fn_args;
+    fn_args << "{\":\"";
+    for (Statement::Var_Decl* arg : paras) {
+      fn_args << ", static_cast<int64_t>(" << *arg->name << ")";
+    }
+    fn_args << "}";
+
+    Expr::Fn_Call *index_call = new Expr::Fn_Call(
+                                  new std::string("array.index"));
+    index_call->add_arg(new std::string(fn_args.str()));
+
+    ret = new Statement::Return(index_call);
   } else {
     ret = new Statement::Return(new Expr::Vacc(
             new Var_Acc::Array(
