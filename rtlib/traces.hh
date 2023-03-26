@@ -62,7 +62,8 @@ std::vector<unsigned int> *make_index(unsigned int num_components, ...) {
 }
 
 inline
-bool is_same_index(std::vector<unsigned int> a, std::vector<unsigned int> b) {
+bool is_same_index(const std::vector<unsigned int> &a,
+                   const std::vector<unsigned int> &b) {
   if (a.size() != b.size()) {
     return false;
   }
@@ -83,13 +84,9 @@ class candidate {
   std::vector<Trace> sub_components;
 
  public:
-  explicit candidate(double value) {
-    this->value = value;
-  }
+  explicit candidate(double value) : value(value) {}
 
-  candidate() {
-    this->value = 0.0;
-  }
+  candidate() : value(0.0) {}
 
   void set_value(double value) {
     this->value = value;

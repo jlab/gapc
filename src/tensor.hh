@@ -32,6 +32,10 @@
 #include <regex>  // NOLINT [build/c++11]
 #include <utility>
 #include <vector>
+#include <iostream>
+
+#define DEFAULT_TORCH_TYPE "torch::kFloat32"
+#define DEFAULT_CPP_TYPE   "float"
 
 class TensorMode {
  public:
@@ -41,8 +45,8 @@ class TensorMode {
   int n_dims;               // number of dimensions (including batch dimension)
 
   TensorMode() :
-    batched(false), torch_dtype("torch::kFloat32"),
-    cpp_dtype("float"), n_dims(2) {}
+    batched(false), torch_dtype(DEFAULT_TORCH_TYPE),
+    cpp_dtype(DEFAULT_CPP_TYPE), n_dims(2) {}
 
   TensorMode(bool batched, std::string &torch_dtype,
              std::string &cpp_dtype, int n_dims) :
@@ -93,8 +97,8 @@ class TensorMode {
     }
 
     // check the datatype of the tensor values
-    std::string torch_dtype = "torch::kFloat32";
-    std::string cpp_dtype = "float";
+    std::string torch_dtype = DEFAULT_TORCH_TYPE;
+    std::string cpp_dtype = DEFAULT_CPP_TYPE;
 
     size_t i;
     for (auto& key_val : torch_type) {
@@ -125,6 +129,7 @@ class TensorInput {
 
  public:
   const std::vector<TensorMode> &get_modes() const {
+    assert(!tensor_modes.empty());
     return tensor_modes;
   }
 
@@ -135,21 +140,13 @@ class TensorInput {
   // check if all input Tensors have the same
   // number of dimensions and the same datatype
   bool same() const {
-    bool batched, initialized = false;
-    std::string dtype;
-    int n_dims;
+    assert(!tensor_modes.empty());
 
-    for (const TensorMode &mode : tensor_modes) {
-      if (!initialized) {
-        initialized = true;
-        batched = mode.batched;
-        dtype = mode.torch_dtype;
-        n_dims = mode.n_dims;
-        continue;
-      }
-      if (mode.batched != batched ||
-          mode.torch_dtype != dtype ||
-          mode.n_dims != n_dims) {
+    const TensorMode &reference_mode = tensor_modes[0];
+
+    for (size_t i = 1; i < tensor_modes.size(); ++i) {
+      const TensorMode &mode = tensor_modes[i];
+      if (mode != reference_mode) {
         return false;
       }
     }

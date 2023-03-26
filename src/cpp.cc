@@ -1636,7 +1636,7 @@ void Printer::Cpp::print_table_init(const AST &ast) {
     }
     stream << "\""<< i->second->table_decl->name() << "\"";
 
-    if (ast.input.tensor_inputs.all_batched()) {
+    if (ast.as_pytorch_module && ast.input.tensor_inputs.all_batched()) {
       stream << ", batch_size";
     }
     stream << ");" << endl;

@@ -1092,7 +1092,8 @@ void Symbol::NT::init_table_decl(const AST &ast) {
   tg.set_window_mode(ast.window_mode);
   table_decl = tg.create(
     *this, t, ast.code_mode() == Code::Mode::CYK,
-    this->is_partof_outside ? 0 : ast.current_derivative);
+    this->is_partof_outside ? 0 : ast.current_derivative,
+    ast.as_pytorch_module && ast.input.tensor_inputs.all_batched());
 }
 
 #include <boost/algorithm/string/replace.hpp>

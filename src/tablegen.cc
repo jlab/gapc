@@ -348,8 +348,9 @@ void Tablegen::offset(size_t track_pos, itr f, const itr &e) {
 #include "symbol.hh"
 
 Statement::Table_Decl *Tablegen::create(Symbol::NT &nt,
-    std::string *name, bool cyk, int forDerivative) {
+    std::string *name, bool cyk, int forDerivative, bool batched) {
   cyk_ = cyk;
+  batched_ = batched;
   std::list<Expr::Base*> ors;
   nt.gen_ys_guards(ors);
   if (!ors.empty())
@@ -468,10 +469,15 @@ Fn_Def *Tablegen::gen_tab() {
   a->add_arg(new Expr::Less(off, new Expr::Fn_Call(new std::string("size"))));
   c.push_back(a);
 
-  Statement::Var_Assign *x = new Statement::Var_Assign(
-      new Var_Acc::Array(new Var_Acc::Plain(new std::string("array")), off),
-      new Expr::Vacc(new std::string("e")));
-  c.push_back(x);
+  if (batched_) {
+    // should look like this: array.index_put_({":", t_0_i, t_0_j}, e);
+  } else {
+    Statement::Var_Assign *x =
+      new Statement::Var_Assign(
+        new Var_Acc::Array(new Var_Acc::Plain(new std::string("array")), off),
+        new Expr::Vacc(new std::string("e")));
+    c.push_back(x);
+  }
 
   if (!cyk_) {
     Statement::Var_Assign *y = new Statement::Var_Assign(
@@ -623,8 +629,15 @@ Fn_Def *Tablegen::gen_get_tab() {
   a->add_arg(new Expr::Less(off, new Expr::Fn_Call(new std::string("size"))));
   c.push_back(a);
 
-  Statement::Return *ret = new Statement::Return(new Expr::Vacc(
-        new Var_Acc::Array(new Var_Acc::Plain(new std::string("array")), off)));
+  Statement::Return *ret;
+  if (batched_) {
+    // should look like this: return array.index({":", t_0_i, t_0_j});
+  } else {
+    ret = new Statement::Return(new Expr::Vacc(
+            new Var_Acc::Array(
+              new Var_Acc::Plain(new std::string("array")), off)));
+  }
+
   c.push_back(ret);
 
   f->set_statements(c);
