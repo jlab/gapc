@@ -85,7 +85,7 @@ class Tablegen {
     Fn_Def *gen_is_tab();
     Fn_Def *gen_untab();
     Fn_Def *gen_tab();
-    Fn_Def *gen_set_traces(int forDerivative = 1);
+    Fn_Def *gen_set_traces(int forDerivative = 1, bool batched_input = false);
     Fn_Def *gen_get_traces();
     Fn_Def *gen_get_tab();
     Fn_Def *gen_size();

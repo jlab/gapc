@@ -1239,7 +1239,7 @@ void Symbol::NT::codegen(AST &ast) {
   init_table_decl(ast);
   init_zero_decl();
   ::Type::Base *dt = datatype;
-  
+
   /*
    * true if not batched Tensor input is being processed;
    * in that case, the non-terminal functions can't return
@@ -1284,8 +1284,14 @@ void Symbol::NT::codegen(AST &ast) {
   stmts.push_back(ret_decl);
   if (ast.current_derivative > 0) {
     if (!this->is_partof_outside) {
+      std::string *nt_traces;
+      if (ast.as_pytorch_module && ast.input.tensor_inputs.all_batched()) {
+        nt_traces = new std::string("NTtraces<tensor>");
+      } else {
+        nt_traces = new std::string("NTtraces<>");
+      }
       stmts.push_back(new Statement::Var_Decl(new ::Type::External(
-        new std::string("NTtraces")), "candidates"));
+        nt_traces), "candidates"));
     }
   }
   stmts.push_back(new Statement::Fn_Call(

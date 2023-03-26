@@ -370,7 +370,7 @@ Statement::Table_Decl *Tablegen::create(Symbol::NT &nt,
   offset(nt.track_pos(), nt.tables().begin(), nt.tables().end());
   Fn_Def *fn_tab = gen_tab();
 
-  Fn_Def *fn_set_traces = gen_set_traces(forDerivative);
+  Fn_Def *fn_set_traces = gen_set_traces(forDerivative, batched);
 
   ret_zero = new Statement::Return(new Expr::Vacc(new std::string("zero")));
   offset(nt.track_pos(), nt.tables().begin(), nt.tables().end());
@@ -502,11 +502,18 @@ Fn_Def *Tablegen::gen_tab() {
   return f;
 }
 
-Fn_Def *Tablegen::gen_set_traces(int forDerivative) {
+Fn_Def *Tablegen::gen_set_traces(int forDerivative, bool batched_input) {
   Fn_Def *f = new Fn_Def(new Type::RealVoid(), new std::string("set_traces"));
   f->add_paras(paras);
-  f->add_para(new ::Type::External(new std::string("NTtraces")),
-              new std::string("candidates"));
+
+  std::string *nt_traces;
+  if (batched_input) {
+    nt_traces = new std::string("NTtraces<tensor>");
+  } else {
+    nt_traces = new std::string("NTtraces<>");
+  }
+
+  f->add_para(new ::Type::External(nt_traces), new std::string("candidates"));
 
   // FIXME const & in dtype -> see cpp.cc in_fn_head
   f->add_para(dtype, new std::string("e"));

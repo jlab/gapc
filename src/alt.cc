@@ -1860,8 +1860,17 @@ void Alt::Base::init_derivative_recording(
         }
         stmts_record->push_front(x);
 
+        // if batched Pytorch Tensors are processed as input,
+        // the candidate type also needs to process tensors
+        std::string *candidate_name;
+        if (ast.as_pytorch_module && ast.input.tensor_inputs.all_batched()) {
+          candidate_name = new std::string("candidate<tensor>");
+        } else {
+          candidate_name = new std::string("candidate<>");
+        }
+
         Statement::Var_Decl *candidate = new Statement::Var_Decl(
-          new ::Type::External(new std::string("candidate")), "cand");
+          new ::Type::External(candidate_name), "cand");
         stmts_record->push_front(candidate);
 
         Statement::Fn_Call *fn_push = new Statement::Fn_Call("push_back");
