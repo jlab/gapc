@@ -37,6 +37,9 @@
 #include <vector>
 #include "torch/extension.h"
 
+#define DEFAULT_TORCH_TYPE torch::kFloat32
+#define DEFAULT_CPP_TYPE   float
+
 /*
  * if all input Tensor have the same number of dimensions
  * and contain values of the same data type,
@@ -89,69 +92,70 @@ class TensorSlice {
   /*
    * pretty much identical to Python Tensor indexing;
    * some usage examples (Python vs. C++):
-   *   tensor[..., 1]  ==  TensorSlice["...", 1]
-   *   tensor[1:2]     ==  TensorSlice[Slice(1, 2)]
-   *   tensor[:, 1::2] ==  TensorSlice[":", Slice(1, None, 2)]
+   *   tensor[..., 1]  ==  TensorSlice[{"...", 1}]
+   *   tensor[1:2]     ==  TensorSlice[Slice(1, 2)}]
+   *   tensor[:, 1::2] ==  TensorSlice[{Slice(), Slice(1, None, 2)}]
    */
-  template <typename... indices>
-  tensor operator[](indices... idx) {
-    return t->index(tensoridx{idx...});
+  tensor operator[](const tensoridx &idx) {
+    return t->index(idx);
   }
 
   /*
    * pretty much identical to Python Tensor indexing;
    * some usage examples (Python vs. C++):
-   *   tensor[..., 1]  ==  TensorSlice["...", 1]
-   *   tensor[1:2]     ==  TensorSlice[Slice(1, 2)]
-   *   tensor[:, 1::2] ==  TensorSlice[":", Slice(1, None, 2)]
+   *   tensor[..., 1]  ==  TensorSlice[{"...", 1}]
+   *   tensor[1:2]     ==  TensorSlice[Slice(1, 2)}]
+   *   tensor[:, 1::2] ==  TensorSlice[{Slice(), Slice(1, None, 2)}]
    */
-  template <typename... indices>
-  tensor operator[](indices... idx) const {
-    return t->index(tensoridx{idx...});
+  tensor operator[](const tensoridx &idx) const {
+    return t->index(idx);
   }
 
   // ### basic tensor ops ###
   tensor operator+(const TensorSlice &other) {
-    return (*this)["...", Slice(i, j)] +
-           other["...", Slice(other.i, other.j)];
+    return (*this)[{"...", Slice(i, j)}] +
+           other[{"...", Slice(other.i, other.j)}];
   }
 
   TensorSlice& operator+=(const TensorSlice &other) {
-    (*this)["...", Slice(i, j)] += other["...", Slice(other.i, other.j)];
+    (*this)[{"...", Slice(i, j)}] += other[{"...", Slice(other.i, other.j)}];
     return *this;
   }
 
   tensor operator-(const TensorSlice &other) {
-    return (*this)["...", Slice(i, j)] - other["...", Slice(other.i, other.j)];
+    return (*this)[{"...", Slice(i, j)}] -
+           other[{"...", Slice(other.i, other.j)}];
   }
 
   TensorSlice& operator-=(const TensorSlice &other) {
-    (*this)["...", Slice(i, j)] -= other["...", Slice(other.i, other.j)];
+    (*this)[{"...", Slice(i, j)}] -= other[{"...", Slice(other.i, other.j)}];
     return *this;
   }
 
   tensor operator*(const TensorSlice &other) {
-    return (*this)["...", Slice(i, j)] * other["...", Slice(other.i, other.j)];
+    return (*this)[{"...", Slice(i, j)}] *
+           other[{"...", Slice(other.i, other.j)}];
   }
 
   TensorSlice& operator*=(const TensorSlice &other) {
-    (*this)["...", Slice(i, j)] *= other["...", Slice(other.i, other.j)];
+    (*this)[{"...", Slice(i, j)}] *= other[{"...", Slice(other.i, other.j)}];
     return *this;
   }
 
   tensor operator/(const TensorSlice &other) {
-    return (*this)["...", Slice(i, j)] / other["...", Slice(other.i, other.j)];
+    return (*this)[{"...", Slice(i, j)}] /
+           other[{"...", Slice(other.i, other.j)}];
   }
 
   TensorSlice& operator/=(const TensorSlice &other) {
-    (*this)["...", Slice(i, j)] /= other["...", Slice(other.i, other.j)];
+    (*this)[{"...", Slice(i, j)}] /= other[{"...", Slice(other.i, other.j)}];
     return *this;
   }
 
   // performs matrix multiplication of two TensorSlices
   tensor matmul(const TensorSlice &other) {
-    return (*this)["...", Slice(i, j)].mm(
-             other["...", Slice(other.i, other.j)]);
+    return (*this)[{"...", Slice(i, j)}].mm(
+             other[{"...", Slice(other.i, other.j)}]);
   }
 
 #ifdef ALL_INPUT_TENSORS_SAME
@@ -193,68 +197,66 @@ class TensorChar {
   /*
    * pretty much identical to Python Tensor indexing;
    * some usage examples (Python vs. C++):
-   *   tensor[..., 1]  ==  TensorSlice["...", 1]
-   *   tensor[1:2]     ==  TensorSlice[Slice(1, 2)]
-   *   tensor[:, 1::2] ==  TensorSlice[":", Slice(1, None, 2)]
+   *   tensor[..., 1]  ==  TensorSlice[{"...", 1}]
+   *   tensor[1:2]     ==  TensorSlice[Slice(1, 2)}]
+   *   tensor[:, 1::2] ==  TensorSlice[{Slice(), Slice(1, None, 2)}]
    */
-  template <typename... indices>
-  tensor operator[](indices... idx) {
-    return t->index(tensoridx{idx...});
+  tensor operator[](const tensoridx &idx) {
+    return t->index(idx);
   }
 
   /*
    * pretty much identical to Python Tensor indexing;
    * some usage examples (Python vs. C++):
-   *   tensor[..., 1]  ==  TensorSlice["...", 1]
-   *   tensor[1:2]     ==  TensorSlice[Slice(1, 2)]
-   *   tensor[:, 1::2] ==  TensorSlice[":", Slice(1, None, 2)]
+   *   tensor[..., 1]  ==  TensorSlice[{"...", 1}]
+   *   tensor[1:2]     ==  TensorSlice[Slice(1, 2)}]
+   *   tensor[:, 1::2] ==  TensorSlice[{Slice(), Slice(1, None, 2)}]
    */
-  template <typename... indices>
-  tensor operator[](indices... idx) const {
-    return t->index(tensoridx{idx...});
+  tensor operator[](const tensoridx &idx) const {
+    return t->index(idx);
   }
 
   // ### basic tensor ops ###
 
   tensor operator+(const TensorChar &other) {
-    return (*this)["...", i] + other["...", other.i];
+    return (*this)[{"...", i}] + other[{"...", other.i}];
   }
 
   TensorChar& operator+=(const TensorChar &other) {
-    (*this)["...", i] += other["...", other.i];
+    (*this)[{"...", i}] += other[{"...", other.i}];
     return *this;
   }
 
   tensor operator-(const TensorChar &other) {
-    return (*this)["...", i] - other["...", other.i];
+    return (*this)[{"...", i}] - other[{"...", other.i}];
   }
 
   TensorChar& operator-=(const TensorChar &other) {
-    (*this)["...", i] -= other["...", other.i];
+    (*this)[{"...", i}] -= other[{"...", other.i}];
     return *this;
   }
 
   tensor operator*(const TensorChar &other) {
-    return (*this)["...", i] * other["...", other.i];
+    return (*this)[{"...", i}] * other[{"...", other.i}];
   }
 
   TensorChar& operator*=(const TensorChar &other) {
-    (*this)["...", i] *= other["...", other.i];
+    (*this)[{"...", i}] *= other[{"...", other.i}];
     return *this;
   }
 
   tensor operator/(const TensorChar &other) {
-    return (*this)["...", i] / other["...", other.i];
+    return (*this)[{"...", i}] / other[{"...", other.i}];
   }
 
   TensorChar& operator/=(const TensorChar &other) {
-    (*this)["...", i] /= other["...", other.i];
+    (*this)[{"...", i}] /= other[{"...", other.i}];
     return *this;
   }
 
   // calculates dot product of two TensorChars / columns of tensor
   tensor dot(const TensorChar &other) {
-    return (*this)["...", i].dot(other["...", other.i]);
+    return (*this)[{"...", i}].dot(other[{"...", other.i}]);
   }
 
 #ifdef ALL_INPUT_TENSORS_SAME
@@ -270,39 +272,52 @@ class TensorChar {
 // ### non-member operator overloads and Tensor ops ###
 
 // check if i-th column of the two compared tensors is equal
-// (tensor_1[..., i] == tensor_2[..., i])
-inline bool operator==(const TensorChar &lhs, const TensorChar &rhs) {
-  return torch::equal(lhs["...", lhs.i], rhs["...", rhs.i]);
-}
-
-// check if i-th column of the two compared tensors is not equal
-// (tensor_1[..., i] != tensor_2[..., i])
-inline bool operator!=(const TensorChar &lhs, const TensorChar &rhs) {
-  return !(lhs == rhs);
+// (tensor_1[..., i].equal(tensor_2[..., i]))
+inline bool equal(const TensorChar &lhs, const TensorChar &rhs) {
+  return torch::equal(lhs[{"...", lhs.i}], rhs[{"...", rhs.i}]);
 }
 
 // check if columns [i, j) of the two compared tensors are equal
-// (tensor_1[..., i:j] == tensor_2[..., i:j])
-inline bool operator==(const TensorSlice &lhs, const TensorSlice &rhs) {
-  return torch::equal(lhs["...", Slice(lhs.i, lhs.j)],
-                      rhs["...", Slice(rhs.i, rhs.j)]);
+// (tensor_1[..., i:j].equal(tensor_2[..., i:j]))
+inline bool equal(const TensorSlice &lhs, const TensorSlice &rhs) {
+  return torch::equal(lhs[{"...", Slice(lhs.i, lhs.j)}],
+                      rhs[{"...", Slice(rhs.i, rhs.j)}]);
 }
 
-// check if columns [i, j) of the two comüared tensors are not equal
-// (tensor_1[..., i:j] != tensor_2[..., i:j])
-inline bool operator!=(const TensorSlice &lhs, const TensorSlice &rhs) {
-  return !(lhs == rhs);
+// element-wise == comparison for i-th column of the two compared tensors
+inline tensor operator==(const TensorChar &lhs, const TensorChar &rhs) {
+  return lhs[{"...", lhs.i}] == rhs[{"...", rhs.i}];
 }
 
+// element-wise != comparison for i-th column of the two compared tensors
+inline tensor operator!=(const TensorChar &lhs, const TensorChar &rhs) {
+  return ~(lhs == rhs);
+}
+
+// element-wise == comparison for columns [i, j) of the two compared tensors
+inline tensor operator==(const TensorSlice &lhs, const TensorSlice &rhs) {
+  return lhs[{"...", Slice(lhs.i, lhs.j)}] == rhs[{"...", Slice(rhs.i, rhs.j)}];
+}
+
+// element-wise != comparison for columns [i, j) of the two compared tensors
+inline tensor operator!=(const TensorSlice &lhs, const TensorSlice &rhs) {
+  return ~(lhs == rhs);
+}
 
 // calculates dot product of two TensorChars / columns of tensors
 inline tensor dot(const TensorChar &lhs, const TensorChar &rhs) {
-  return lhs["...", lhs.i].dot(rhs["...", rhs.i]);
+  return lhs[{"...", lhs.i}].dot(rhs[{"...", rhs.i}]);
 }
 
 // performs matrix multiplication of two TensorSlices
 inline tensor matmul(const TensorSlice &lhs, const TensorSlice &rhs) {
-  return lhs["...", Slice(lhs.i, lhs.j)].mm(rhs["...", Slice(rhs.i, rhs.j)]);
+  return lhs[{"...", Slice(lhs.i, lhs.j)}].mm(
+           rhs[{"...", Slice(rhs.i, rhs.j)}]);
+}
+
+template<typename T>
+inline tensor tensor_from_scalar(T scalar, int size = 1) {
+  return torch::full(size, scalar, torch::dtype(DEFAULT_TORCH_TYPE));
 }
 
 // ### Tensor terminal parsers ###
@@ -324,8 +339,10 @@ inline TensorSlice TSLICE(TensorSlice &t, T i, T j) {
 template<typename T>
 inline TensorChar TCHAR(TensorSlice &t, T i, T j, const TensorChar &c) {
   assert(i+1 == j);
+  tensor tt;
+  tt[tt];
   TensorChar curr_char(t, i);
-  if (curr_char == c) {
+  if (equal(curr_char, c)) {
     return c;
   } else {
     return TensorChar();  // default: empty
