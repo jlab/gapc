@@ -1211,16 +1211,15 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   }
   if (batched_input) {
     size_t c = 1;
-    stream << indent() << "array = torch::empty({batch_size, ";
+    stream << indent() << "array = torch::zeros({batch_size, ";
     for (std::list<Statement::Var_Decl*>::const_iterator i = ns.begin();
       i != ns.end(); ++i) {
-      stream << *(*i)->name;
+      stream << *(*i)->name << " + 1";
       if (c < ns.size()) {
         stream << ", ";
       }
       ++c;
     }
-
     stream << "}, torch::dtype("
            << get_torch_type(dtype) << "));" << endl;
   } else {
@@ -1279,7 +1278,7 @@ void Printer::Cpp::print(const Type::Subseq &t) {
 
 void Printer::Cpp::print(const Type::Tensor &t) {
   if (in_fn_head) {
-    stream << "const tensor &";
+    stream << "tensor";
   } else {
     stream << "tensor";
   }

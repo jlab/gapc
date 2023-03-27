@@ -470,9 +470,10 @@ Fn_Def *Tablegen::gen_tab() {
   c.push_back(a);
 
   if (batched_) {
-    // should look like this: array.index_put_({":", t_0_i, t_0_j}, e);
+    // should look like this: array.index_put_({Slice(), t_0_i, t_0_j}, e);
+    // Python equivalent: array[:, t_0_i, t_0_j] = e
     std::stringstream fn_args;
-    fn_args << "{\":\"";
+    fn_args << "{Slice()";
     for (Statement::Var_Decl* arg : paras) {
       fn_args << ", static_cast<int64_t>(" << *arg->name << ")";
     }
@@ -537,10 +538,28 @@ Fn_Def *Tablegen::gen_set_traces(int forDerivative, bool batched_input) {
   a->add_arg(new Expr::Less(off, new Expr::Fn_Call(new std::string("size"))));
   c.push_back(a);
 
-  std::string *fn_norm_name = new std::string("normalize_traces");
-  if (forDerivative == 2) {
-    fn_norm_name = new std::string("soft_max_hessian_product");
+  /*
+   * if batched Tensor input is processed, the templated functions
+   * need to know that so we need to pass "tensor" as the template here;
+   * for backwards compatibility, we should add the empty template "<>",
+   * for the default template type (double);
+   * this isn't required anymore in C++17+, but still is required in C++11
+   */
+  std::string *fn_norm_name;
+  if (batched_input) {
+    fn_norm_name = new std::string("normalize_traces<tensor>");
+  } else {
+    fn_norm_name = new std::string("normalize_traces<>");
   }
+
+  if (forDerivative == 2) {
+    if (batched_input) {
+      fn_norm_name = new std::string("soft_max_hessian_product<tensor>");
+    } else {
+      fn_norm_name = new std::string("soft_max_hessian_product<>");
+    }
+  }
+
   Expr::Fn_Call *rhs_norm = new Expr::Fn_Call(fn_norm_name);
   rhs_norm->add_arg(new Var_Acc::Array(new Var_Acc::Plain(
     new std::string("&traces")), off));
@@ -655,9 +674,10 @@ Fn_Def *Tablegen::gen_get_tab() {
   Statement::Return *ret;
   if (batched_) {
     // should look like this (if there are two index variables):
-    // return array.index({":", t_0_i, t_0_j});
+    // return array.index({Slice(), t_0_i, t_0_j})
+    // Python equivalent: return array[:, t_0_i, t_0_j]
     std::stringstream fn_args;
-    fn_args << "{\":\"";
+    fn_args << "{Slice()";
     for (Statement::Var_Decl* arg : paras) {
       fn_args << ", static_cast<int64_t>(" << *arg->name << ")";
     }
