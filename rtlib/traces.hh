@@ -80,7 +80,11 @@ class candidate {
   explicit candidate(answer value) : value(value) {}
 
   void set_value(answer value) {
+#ifdef PYTORCH_MOD
+    this->value = clone(value);
+#else
     this->value = value;
+#endif
   }
 
   void set_q(answer q) {

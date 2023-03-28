@@ -315,9 +315,80 @@ inline tensor matmul(const TensorSlice &lhs, const TensorSlice &rhs) {
            rhs[{"...", Slice(rhs.i, rhs.j)}]);
 }
 
+// create a 1D Tensor from a Scalar value (default size: 1)
 template<typename T>
 inline tensor tensor_from_scalar(T scalar, int size = 1) {
   return torch::full(size, scalar, torch::dtype(DEFAULT_TORCH_TYPE));
+}
+
+/*
+ * add "true_val" to Tensor "t" at indices defined by boolean
+ * index Tensor "condition";
+ * "false_val" will be added to "t" at remaining indices;
+ * "condition" Tensor can be created by e.g. performing element-
+ * wise == comparisons on two Tensors (tensor_a == tensor_b)
+ */
+inline tensor add_if_else(const tensor &condition, tensor &t,
+                          const torch::Scalar &true_val,
+                          const torch::Scalar &false_val) {
+  tensor flipped_condition = ~condition;
+  t.index_put_({condition}, t.index({condition}) + true_val);
+  t.index_put_({flipped_condition}, t.index({flipped_condition}) + false_val);
+  return t;
+}
+
+/*
+ * subtract "true_val" from Tensor "t" at indices defined by boolean
+ * index Tensor "condition";
+ * "false_val" will be subtracted from "t" at remaining indices;
+ * "condition" Tensor can be created by e.g. performing element-
+ * wise == comparisons on two Tensors (tensor_a == tensor_b)
+ */
+inline tensor subtract_if_else(const tensor &condition, tensor &t,
+                               const torch::Scalar &true_val,
+                               const torch::Scalar &false_val) {
+  tensor flipped_condition = ~condition;
+  t.index_put_({condition}, t.index({condition}) - true_val);
+  t.index_put_({flipped_condition}, t.index({flipped_condition}) - false_val);
+  return t;
+}
+
+/*
+ * multiply "true_val" with Tensor "t" at indices defined by boolean
+ * index Tensor "condition";
+ * "false_val" will be multiplied with "t" at remaining indices;
+ * "condition" Tensor can be created by e.g. performing element-
+ * wise == comparisons on two Tensors (tensor_a == tensor_b)
+ */
+inline tensor multiply_if_else(const tensor &condition, tensor &t,
+                               const torch::Scalar &true_val,
+                               const torch::Scalar &false_val) {
+  tensor flipped_condition = ~condition;
+  t.index_put_({condition}, t.index({condition}) * true_val);
+  t.index_put_({flipped_condition}, t.index({flipped_condition}) * false_val);
+  return t;
+}
+
+/*
+ * divide Tensor "t" by "true_val" at indices defined by boolean
+ * index Tensor "condition";
+ * "t" will be divided by "false_val" at remaining indices;
+ * "condition" Tensor can be created by e.g. performing element-
+ * wise == comparisons on two Tensors (tensor_a == tensor_b)
+ */
+inline tensor divide_if_else(const tensor &condition, tensor &t,
+                             const torch::Scalar &true_val,
+                             const torch::Scalar &false_val) {
+  tensor flipped_condition = ~condition;
+  t.index_put_({condition}, t.index({condition}) / true_val);
+  t.index_put_({flipped_condition}, t.index({flipped_condition}) / false_val);
+  return t;
+}
+
+// add src Scalar to dest Tensor at the specified index
+// Example Python analog: dest[i, j] = src_scalar
+inline void put_tensor(const tensoridx &idx, tensor &dest, torch::Scalar src) {
+  dest.index_put_(idx, src);
 }
 
 // ### Tensor terminal parsers ###

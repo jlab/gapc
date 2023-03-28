@@ -370,7 +370,7 @@ Statement::Table_Decl *Tablegen::create(Symbol::NT &nt,
   offset(nt.track_pos(), nt.tables().begin(), nt.tables().end());
   Fn_Def *fn_tab = gen_tab();
 
-  Fn_Def *fn_set_traces = gen_set_traces(forDerivative, batched);
+  Fn_Def *fn_set_traces = gen_set_traces(forDerivative);
 
   ret_zero = new Statement::Return(new Expr::Vacc(new std::string("zero")));
   offset(nt.track_pos(), nt.tables().begin(), nt.tables().end());
@@ -503,12 +503,12 @@ Fn_Def *Tablegen::gen_tab() {
   return f;
 }
 
-Fn_Def *Tablegen::gen_set_traces(int forDerivative, bool batched_input) {
+Fn_Def *Tablegen::gen_set_traces(int forDerivative) {
   Fn_Def *f = new Fn_Def(new Type::RealVoid(), new std::string("set_traces"));
   f->add_paras(paras);
 
   std::string *nt_traces;
-  if (batched_input) {
+  if (batched_) {
     nt_traces = new std::string("NTtraces<tensor>");
   } else {
     nt_traces = new std::string("NTtraces<>");
@@ -546,14 +546,14 @@ Fn_Def *Tablegen::gen_set_traces(int forDerivative, bool batched_input) {
    * this isn't required anymore in C++17+, but still is required in C++11
    */
   std::string *fn_norm_name;
-  if (batched_input) {
+  if (batched_) {
     fn_norm_name = new std::string("normalize_traces<tensor>");
   } else {
     fn_norm_name = new std::string("normalize_traces<>");
   }
 
   if (forDerivative == 2) {
-    if (batched_input) {
+    if (batched_) {
       fn_norm_name = new std::string("soft_max_hessian_product<tensor>");
     } else {
       fn_norm_name = new std::string("soft_max_hessian_product<>");
@@ -634,7 +634,15 @@ Fn_Def *Tablegen::gen_get_traces() {
   r->rhs = fn_norm;
   c.push_back(r);
 
-  Statement::Return *ret = new Statement::Return(new std::string("res"));
+  Statement::Return *ret;
+  if (batched_) {
+    Expr::Fn_Call *clone_call = new Expr::Fn_Call(new std::string("clone"));
+    clone_call->add_arg(new std::string("res"));
+    ret = new Statement::Return(clone_call);
+  } else {
+    ret = new Statement::Return(new std::string("res"));
+  }
+
   c.push_back(ret);
 
   f->set_statements(c);
@@ -687,7 +695,10 @@ Fn_Def *Tablegen::gen_get_tab() {
                                   new std::string("array.index"));
     index_call->add_arg(new std::string(fn_args.str()));
 
-    ret = new Statement::Return(index_call);
+    Expr::Fn_Call *clone_call = new Expr::Fn_Call(new std::string("clone"));
+    clone_call->add_arg(index_call);
+
+    ret = new Statement::Return(clone_call);
   } else {
     ret = new Statement::Return(new Expr::Vacc(
             new Var_Acc::Array(
