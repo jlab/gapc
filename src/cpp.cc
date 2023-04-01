@@ -1151,11 +1151,13 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   stream << indent() << " public:" << endl;
   inc_indent();
 
-  stream << indent() << tname << "() {" << endl;
-  inc_indent();
-  stream << indent() << "empty(zero);" << endl;
-  dec_indent();
-  stream << indent() << "}" << endl << endl;
+  if (!pytorch || (pytorch && !batched_input)) {
+    stream << indent() << tname << "() {" << endl;
+    inc_indent();
+    stream << indent() << "empty(zero);" << endl;
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
+  }
 
   if (pytorch) {
     stream << indent() << dtype << " *get_array_data() {" << endl;
@@ -1205,6 +1207,7 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
     }
   }
   if (batched_input) {
+    stream << indent() << "empty(zero);" << endl;
     size_t c = 1;
     stream << indent() << "array = torch::zeros({BATCH_SIZE, ";
     for (std::list<Statement::Var_Decl*>::const_iterator i = ns.begin();

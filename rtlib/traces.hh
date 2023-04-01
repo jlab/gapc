@@ -208,7 +208,7 @@ tensor get_trace_weights(const std::vector<Trace<tensor>> &traces,
                          const std::string &to_nt,
                          const std::vector<unsigned int> &to_indices,
                          tensor e) {
-  tensor res = torch::zeros(e.sizes());
+  tensor res = torch::zeros(BATCH_SIZE);
 
   for (std::vector<Trace<tensor>>::const_iterator trace = traces.begin();
        trace != traces.end(); ++trace) {
