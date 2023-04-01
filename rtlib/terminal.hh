@@ -282,4 +282,5 @@ inline int SEQ1(Basic_Sequence<alphabet, pos_type> &seq, T i, T j) {
   return j - i;
 }
 
+
 #endif  // RTLIB_TERMINAL_HH_

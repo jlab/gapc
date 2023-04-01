@@ -541,7 +541,7 @@ Fn_Def *Tablegen::gen_set_traces(int forDerivative) {
   /*
    * if batched Tensor input is processed, the templated functions
    * need to know that so we need to pass "tensor" as the template here;
-   * for backwards compatibility, we should add the empty template "<>",
+   * for backwards compatibility, we should add the empty template "<>"
    * for the default template type (double);
    * this isn't required anymore in C++17+, but still is required in C++11
    */
@@ -636,6 +636,11 @@ Fn_Def *Tablegen::gen_get_traces() {
 
   Statement::Return *ret;
   if (batched_) {
+    /*
+     * Tensors returned from the get method need to be wrapped in "clone"
+     * function call, since Pytorch essentially just returns references
+     * when calling tensor.index(...), so we need to explictly copy/clone them
+     */
     Expr::Fn_Call *clone_call = new Expr::Fn_Call(new std::string("clone"));
     clone_call->add_arg(new std::string("res"));
     ret = new Statement::Return(clone_call);
