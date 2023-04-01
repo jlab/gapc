@@ -35,10 +35,16 @@
 
 #include <initializer_list>
 #include <vector>
+#include <limits>
+
 #include "torch/extension.h"
 
 #define DEFAULT_TORCH_TYPE torch::kFloat32
 #define DEFAULT_CPP_TYPE   float
+
+#ifndef BATCHED_INPUT
+inline int64_t BATCH_SIZE = 1;
+#endif
 
 /*
  * if all input Tensor have the same number of dimensions
@@ -385,12 +391,6 @@ inline tensor divide_if_else(const tensor &condition, tensor &t,
   return t;
 }
 
-// add src Scalar to dest Tensor at the specified index
-// Example Python analog: dest[i, j] = src_scalar
-inline void put_tensor(const tensoridx &idx, tensor &dest, torch::Scalar src) {
-  dest.index_put_(idx, src);
-}
-
 // ### Tensor terminal parsers ###
 
 template<typename T>
@@ -410,8 +410,6 @@ inline TensorSlice TSLICE(TensorSlice &t, T i, T j) {
 template<typename T>
 inline TensorChar TCHAR(TensorSlice &t, T i, T j, const TensorChar &c) {
   assert(i+1 == j);
-  tensor tt;
-  tt[tt];
   TensorChar curr_char(t, i);
   if (equal(curr_char, c)) {
     return c;
@@ -454,12 +452,14 @@ inline bool isEmpty(const TensorSlice &t) {
 }
 
 inline void empty(tensor &t) {
-  t = torch::empty(0);
+  t = tensor_from_scalar(
+        std::numeric_limits<DEFAULT_CPP_TYPE>::max(), BATCH_SIZE);
 }
 
 inline bool isEmpty(const tensor &t) {
-  static std::vector<int64_t> zero_shape{0};
-  return t.sizes() == zero_shape;
+  static const tensor EMPTY_TENSOR = tensor_from_scalar(
+    std::numeric_limits<DEFAULT_CPP_TYPE>::max(), BATCH_SIZE);
+  return torch::equal(t, EMPTY_TENSOR);
 }
 
 #endif  // RTLIB_TENSOR_HH_

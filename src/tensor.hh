@@ -20,7 +20,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
     * Author: fymue
-    * handles parsing of Tensor input declaration in GAP-L code
+    * handles parsing of Tensor input declarations in GAP-L code
 }}} */
 
 #ifndef SRC_TENSOR_HH_
@@ -100,9 +100,8 @@ class TensorMode {
     std::string torch_dtype = DEFAULT_TORCH_TYPE;
     std::string cpp_dtype = DEFAULT_CPP_TYPE;
 
-    size_t i;
     for (auto& key_val : torch_type) {
-      if ((i = input.find(key_val.first)) != input.npos) {
+      if (input.find(key_val.first) != input.npos) {
         torch_dtype = key_val.second.first;
         cpp_dtype = key_val.second.second;
         break;

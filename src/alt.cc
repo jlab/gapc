@@ -2629,6 +2629,7 @@ void Alt::Link::codegen(AST &ast, Symbol::NT &calling_nt) {
           Expr::Fn_Call *convert = new Expr::Fn_Call(
                                      new std::string("tensor_from_scalar"));
           convert->add_arg(new Expr::Const(1.0));
+          convert->add_arg(new std::string("BATCH_SIZE"));
           fn_or_const = convert;
         } else {
           fn_or_const = new Expr::Const(1.0);
@@ -2638,6 +2639,7 @@ void Alt::Link::codegen(AST &ast, Symbol::NT &calling_nt) {
           Expr::Fn_Call *convert = new Expr::Fn_Call(
                                      new std::string("tensor_from_scalar"));
           convert->add_arg(new Expr::Const(0.0));
+          convert->add_arg(new std::string("BATCH_SIZE"));
           fn_or_const = convert;
         } else {
           fn_or_const = new Expr::Const(0.0);

@@ -93,7 +93,12 @@ class candidate {
 
   void add_sub_component(const std::string &otherNT,
                          std::vector<unsigned int> *indices) {
+#ifdef PYTORCH_MOD
+    sub_components.emplace_back(otherNT, *indices,
+                                tensor_from_scalar(0.0, BATCH_SIZE));
+#else
     sub_components.emplace_back(otherNT, *indices, answer());
+#endif
   }
 
   std::vector<Trace<answer>> *get_sub_components() {

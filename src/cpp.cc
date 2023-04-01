@@ -1132,7 +1132,6 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
 
   if (pytorch && batched_input) {
     stream << indent() << "tensor array;" << endl;
-    stream << indent() << "int64_t batch_size;" << endl;
   } else {
     stream << indent() << "std::vector<" << dtype << "> array;" << endl;
   }
@@ -1180,10 +1179,6 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
 
   stream << ", const std::string &tname";
 
-  if (batched_input) {
-    stream << ", int64_t batch_size";
-  }
-
   stream << ") {" << endl;
   inc_indent();
   print_eqs(ns, '_');
@@ -1211,7 +1206,7 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   }
   if (batched_input) {
     size_t c = 1;
-    stream << indent() << "array = torch::zeros({batch_size, ";
+    stream << indent() << "array = torch::zeros({BATCH_SIZE, ";
     for (std::list<Statement::Var_Decl*>::const_iterator i = ns.begin();
       i != ns.end(); ++i) {
       stream << *(*i)->name << " + 1";
@@ -1634,10 +1629,6 @@ void Printer::Cpp::print_table_init(const AST &ast) {
       stream << " opts.window_size, opts.window_increment, ";
     }
     stream << "\""<< i->second->table_decl->name() << "\"";
-
-    if (ast.as_pytorch_module && ast.input.tensor_inputs.all_batched()) {
-      stream << ", batch_size";
-    }
     stream << ");" << endl;
   }
 }
@@ -1868,7 +1859,12 @@ void Printer::Cpp::header(const AST &ast) {
         stream << "#define TENSOR_DIMS " << tensor_inputs.shared_ndims()
                << endl;
         stream << "#define TENSOR_TYPE " << tensor_inputs.shared_cpp_dtype()
-               << endl;
+               << endl << endl;
+      }
+      if (tensor_inputs.all_batched()) {
+        stream << "#define BATCHED_INPUT" << endl;
+        stream << "#include <cstdint>" << endl;
+        stream << "inline int64_t BATCH_SIZE;" << endl << endl;
       }
       stream << "#include \"torch/extension.h\"" << endl;
       stream << "#include \"rtlib/tensor.hh\"" << endl << endl;
@@ -3326,8 +3322,10 @@ void Printer::Cpp::print_pytorch_init_fn(const AST &ast) {
            << ".j = __t_" << track << "_tensor.sizes().back();" << endl << endl;
   }
 
-  stream << indent() << "int64_t batch_size = __t_0_tensor.sizes().front();"
-         << endl;
+  if (ast.input.tensor_inputs.all_batched()) {
+    stream << indent()
+           << "BATCH_SIZE = __t_0_tensor.sizes().front();" << endl;
+  }
 
   print_filter_init(ast);
   print_table_init(ast);
