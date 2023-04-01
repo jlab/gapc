@@ -21,13 +21,18 @@
 
     * Author: fymue
     * wrapper types for Pytorch Tensor objects, which are used
-    * when generating a pytorch module from GAPC derivative code;
+    * when generating a Pytorch module from GAPC derivative code;
+    * 
     * there are two wrapper types:
     *   - TensorSlice (analogous to "Subsequence" type)
     *   - TensorChar  (analogous to "char" type)
+    * 
     * these types are essentially drop-in replacements of "Subsequence"
     * and "char" in the generated Pytorch derivative code,
-    * which takes Tensors as input instead of sequences and operates on Tensors
+    * which takes Tensors as input instead of sequences and operates on Tensors;
+    * 
+    * this file also defines Tensor-related functions that can be used in the
+    * GAP-L code to perform Tensor operations when operating on batched inputs;
 }}} */
 
 #ifndef RTLIB_TENSOR_HH_

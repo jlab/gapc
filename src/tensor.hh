@@ -21,6 +21,24 @@
 
     * Author: fymue
     * handles parsing of Tensor input declarations in GAP-L code
+    * Tensor input can be defined in the standard input<...> command;
+    * 
+    * here, the user can specify the following Tensor input properties:
+    *  - batched or non-batched         (default: non-batched)
+    *  - number of dimensions           (default: 2 (includes batch dimension))
+    *  - data type of the Tensor values (default: float32)
+    * 
+    * the order of these individual properties doesn't matter, every declaration
+    * has to contain the word "tensor" tough; Here are a few examples:
+    *  - input<tensor>             : non-batched 2D tensor containing float32 values
+    *  - input<batchedtensorF64>   : batched 2D tensor containing float64 values
+    *  - input<batched4DtensorI32> : batched 4D tensor containing int32 values
+    *  - input<tensorF64>          : non-batched 2D tensor containing float64 values
+    *  - input<batchedtensor>      : batched 2D tensor containing float32 values
+    * 
+    * if multiple input Tensors are specified, they can be separated with a comma:
+    * input<tensor, tensor>        : 2 non-batched 2D tensor containing float32 values
+    * 
 }}} */
 
 #ifndef SRC_TENSOR_HH_
@@ -62,10 +80,10 @@ class TensorMode {
    * allowed dtypes: F32 (default), F64, I32, I64
    * max number of dimensions (includes batch dimension (if it exists)): 99 (default: 2)
    * examples:
-   *  - input<batchedtensorF32> : batched (3D) tensor containing float32 values
+   *  - input<batchedtensorF64> : batched 2D tensor containing float64 values
    *  - input<batched4DtensorI32> : batched 4D tensor containing int32 values
-   *  - input<tensorF64> : non-batched (2D) tensor containing float64 values
-   *  - input<batchedtensor> : batched (2D) tensor containing float32 values
+   *  - input<tensorF64> : non-batched 2D tensor containing float64 values
+   *  - input<batchedtensor> : batched 2D tensor containing float32 values
    */
   static TensorMode get_tensor_mode(const std::string &input) {
     assert(is_tensor(input));
