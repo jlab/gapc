@@ -453,12 +453,12 @@ inline bool isEmpty(const TensorSlice &t) {
 
 inline void empty(tensor &t) {
   t = tensor_from_scalar(
-        std::numeric_limits<DEFAULT_CPP_TYPE>::max(), BATCH_SIZE);
+        std::numeric_limits<DEFAULT_CPP_TYPE>::infinity(), BATCH_SIZE);
 }
 
 inline bool isEmpty(const tensor &t) {
   static const tensor EMPTY_TENSOR = tensor_from_scalar(
-    std::numeric_limits<DEFAULT_CPP_TYPE>::max(), BATCH_SIZE);
+    std::numeric_limits<DEFAULT_CPP_TYPE>::infinity(), BATCH_SIZE);
   return torch::equal(t, EMPTY_TENSOR);
 }
 
