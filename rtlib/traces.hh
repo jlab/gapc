@@ -30,11 +30,56 @@
 #include <cstdarg>
 #include <string>
 
+// efficiently stores NT table indices for tracing
+class index_components {
+ public:
+  unsigned int n;
+  unsigned int indices[3];
+
+  index_components() : n(0) {}
+
+  index_components(unsigned int n, unsigned int i) : n(n) {
+    indices[0] = i;
+  }
+
+  index_components(unsigned int n, unsigned int i,
+                   unsigned int j) : n(n) {
+    indices[0] = i;
+    indices[1] = j;
+  }
+
+  index_components(unsigned int n, unsigned int i,
+                   unsigned int j, unsigned int k) : n(n) {
+    indices[0] = i;
+    indices[1] = j;
+    indices[2] = k;
+  }
+};
+
+inline bool operator==(const index_components &lhs,
+                       const index_components &rhs) {
+  if (lhs.n != rhs.n) {
+    return false;
+  }
+
+  bool equal = true;
+  for (unsigned int i = 0; i < lhs.n; ++i) {
+    equal &= lhs.indices[i] == rhs.indices[i];
+  }
+
+  return equal;
+}
+
+inline bool is_same_index(const index_components &lhs,
+                          const index_components &rhs) {
+  return lhs == rhs;
+}
+
 /* this records the use of a sub-solution of another NT result <name of other 
  * NT, index in other NT table with variable number of dimensions, weight 
  * of edge> */
 template<typename answer = double>
-using Trace = std::tuple<std::string, std::vector<unsigned int>, answer>;
+using Trace = std::tuple<std::string, index_components, answer>;
 /* Since a candidate can be composed of multiple sub-solutions e.g. 
  * mult(A, '*', B), we collect Traces for A and B */
 template<typename answer = double>
@@ -91,13 +136,13 @@ class candidate {
     this->q = q;
   }
 
-  void add_sub_component(const std::string &otherNT,
-                         std::vector<unsigned int> *indices) {
+  void add_sub_component(std::string &&otherNT,
+                         index_components &&indices) {
 #ifdef PYTORCH_MOD
-    sub_components.emplace_back(otherNT, *indices,
+    sub_components.emplace_back(otherNT, indices,
                                 tensor_from_scalar(0.0, BATCH_SIZE));
 #else
-    sub_components.emplace_back(otherNT, *indices, answer());
+    sub_components.emplace_back(otherNT, indices, answer());
 #endif
   }
 
@@ -187,7 +232,7 @@ soft_max_hessian_product(std::vector<Trace<answer>> *tabulated,
 inline
 double get_trace_weights(const std::vector<Trace<>> &traces,
                          const std::string &to_nt,
-                         const std::vector<unsigned int> &to_indices,
+                         const index_components &to_indices,
                          double e) {
   double res = 0.0;
   for (std::vector<Trace<>>::const_iterator trace = traces.begin();

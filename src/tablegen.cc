@@ -584,10 +584,10 @@ Fn_Def *Tablegen::gen_get_traces() {
 
   Fn_Def *f = new Fn_Def(dtype, new std::string("get_traces"));
   f->add_paras(paras);
-  f->add_para(new ::Type::External(new std::string("std::string")),
+  f->add_para(new ::Type::External(new std::string("std::string&")),
               new std::string("to_nt"));
   ::Type::External *idx = new ::Type::External(new std::string(
-    "std::vector<unsigned int>"));
+    "index_components&"));
   f->add_para(idx, new std::string("to_indices"));
 
   // FIXME const & in dtype -> see cpp.cc in_fn_head

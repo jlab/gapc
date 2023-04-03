@@ -1441,7 +1441,7 @@ Expr::Base *Alt::Base::inject_derivative_body(AST &ast,
 
   // abuse mkidx to obtain indices from outside-NT call, i.e. not really
   // calling make_index
-  Expr::Fn_Call *mkidx = new Expr::Fn_Call(new std::string("*make_index"));
+  Expr::Fn_Call *mkidx = new Expr::Fn_Call(new std::string("index_components"));
   outside_alt->add_args(mkidx);
   fn_call->exprs.insert(fn_call->exprs.end(),
                         mkidx->exprs.begin(), mkidx->exprs.end());
@@ -1556,7 +1556,7 @@ std::list<Statement::Base*> *Alt::Simple::derivative_collect_traces(
 
           // calling make_index
           Expr::Fn_Call *mkidx = new Expr::Fn_Call(
-            new std::string("*make_index"));
+            new std::string("index_components"));
           alt_link->add_args(mkidx);
           mkidx->add_arg(new Expr::Const(static_cast<int>(mkidx->exprs.size())),
                          true);
@@ -1797,7 +1797,7 @@ std::list<Statement::Base*> *Alt::Link::derivatives_create_candidate() {
   std::list<Statement::Base*> *stmts_record = new std::list<Statement::Base*>();
 
   Expr::Fn_Call *mkidx = new Expr::Fn_Call(
-    new std::string("make_index"));
+    new std::string("index_components"));
   this->add_args(mkidx);
   // add number of index arguments for elipsis mechanism
   mkidx->add_arg(new Expr::Const(

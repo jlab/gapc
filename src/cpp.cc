@@ -1137,7 +1137,7 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   }
   if (t.for_derivatives) {
     stream << indent() << "std::vector<std::vector<std::tuple<std::string, "
-           << "std::vector<unsigned int>, " << dtype << "> > > traces;" << endl;
+           << "index_components, " << dtype << "> > > traces;" << endl;
   }
   if  (!cyk) {
     stream << indent() << "std::vector<bool> tabulated;" << endl;
@@ -1333,7 +1333,7 @@ void Printer::Cpp::print(const Type::BigInt &t) {
 
 void Printer::Cpp::print(const Type::External &t) {
   if (in_fn_head) {
-    stream << "const " << *t.name << " &";
+    stream << "const " << *t.name << "&";
   } else {
     stream << *t.name;
   }
