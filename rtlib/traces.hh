@@ -165,24 +165,22 @@ class candidate {
   std::vector<Trace<answer>>
   get_normalized_candidate(answer eval,
                            answer (func)(answer a, answer b)) const {
-    const std::vector<Trace<answer>> &sub_comp = this->sub_components;
-    std::vector<Trace<answer>> res(sub_comp.size());
+    std::vector<Trace<answer>> res(this->sub_components);
+    answer val = func(this->get_value() , eval);
 
-    for (size_t i = 0; i < sub_comp.size(); ++i) {
-      res[i] = {std::get<0>(sub_comp[i]), std::get<1>(sub_comp[i]),
-                func(this->get_value() , eval)};
+    for (size_t i = 0; i < res.size(); ++i) {
+      std::get<2>(res[i]) = val;
     }
 
     return res;
   }
 
   std::vector<Trace<answer>> get_soft_max_hessian_candidate(answer eval) const {
-    const std::vector<Trace<answer>> &sub_comp = this->sub_components;
-    std::vector<Trace<answer>> res(sub_comp.size());
+    std::vector<Trace<answer>> res(this->sub_components);
+    answer val = this->get_q() - (eval * this->get_value());
 
-    for (size_t i = 0; i < sub_comp.size(); ++i) {
-      res[i] = {std::get<0>(sub_comp[i]), std::get<1>(sub_comp[i]),
-                this->get_q() - (eval * this->get_value())};
+    for (size_t i = 0; i < res.size(); ++i) {
+      std::get<2>(res[i]) = val;
     }
 
     return res;
