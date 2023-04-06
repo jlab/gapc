@@ -470,19 +470,18 @@ Fn_Def *Tablegen::gen_tab() {
   c.push_back(a);
 
   if (batched_) {
-    // should look like this: array.index_put_({Slice(), t_0_i, t_0_j}, e);
-    // Python equivalent: array[:, t_0_i, t_0_j] = e
-    std::stringstream fn_args;
-    fn_args << "{Slice()";
-    for (Statement::Var_Decl* arg : paras) {
-      fn_args << ", static_cast<int64_t>(" << *arg->name << ")";
-    }
-    fn_args << "}, e";
+    // should look like this:
+    // put(array.data() + offset * BATCH_SIZE, e);
 
-    Statement::Fn_Call *index_call = new Statement::Fn_Call("array.index_put_");
-    index_call->add_arg(new std::string(fn_args.str()));
+    Statement::Fn_Call *put_call = new Statement::Fn_Call("put");
+    Expr::Times *offset = new Expr::Times(
+                            off, new Expr::Vacc(new std::string("BATCH_SIZE")));
+    put_call->add_arg(new Expr::Plus(
+                        new Expr::Fn_Call(new std::string("array.data")),
+                        offset));
+    put_call->add_arg(new std::string("e"));
 
-    c.push_back(index_call);
+    c.push_back(put_call);
   } else {
     Statement::Var_Assign *x =
       new Statement::Var_Assign(
@@ -509,7 +508,7 @@ Fn_Def *Tablegen::gen_set_traces(int forDerivative) {
 
   std::string *nt_traces;
   if (batched_) {
-    nt_traces = new std::string("NTtraces<tensor>");
+    nt_traces = new std::string("NTtraces<TensorBatch>");
   } else {
     nt_traces = new std::string("NTtraces<>");
   }
@@ -540,21 +539,21 @@ Fn_Def *Tablegen::gen_set_traces(int forDerivative) {
 
   /*
    * if batched Tensor input is processed, the templated functions
-   * need to know that so we need to pass "tensor" as the template here;
+   * need to know that so we need to pass "TensorBatch" as the template here;
    * for backwards compatibility, we should add the empty template "<>"
    * for the default template type (double);
    * this isn't required anymore in C++17+, but still is required in C++11
    */
   std::string *fn_norm_name;
   if (batched_) {
-    fn_norm_name = new std::string("normalize_traces<tensor>");
+    fn_norm_name = new std::string("normalize_traces<TensorBatch>");
   } else {
     fn_norm_name = new std::string("normalize_traces<>");
   }
 
   if (forDerivative == 2) {
     if (batched_) {
-      fn_norm_name = new std::string("soft_max_hessian_product<tensor>");
+      fn_norm_name = new std::string("soft_max_hessian_product<TensorBatch>");
     } else {
       fn_norm_name = new std::string("soft_max_hessian_product<>");
     }
@@ -624,8 +623,15 @@ Fn_Def *Tablegen::gen_get_traces() {
   c.push_back(a);
 
   Statement::Var_Decl *r = new Statement::Var_Decl(dtype, "res");
-  Expr::Fn_Call *fn_norm = new Expr::Fn_Call(new std::string(
-    "get_trace_weights"));
+
+  std::string *get_trace_weights;
+  if (batched_) {
+    get_trace_weights = new std::string("get_trace_weights<TensorBatch>");
+  } else {
+    get_trace_weights = new std::string("get_trace_weights<>");
+  }
+
+  Expr::Fn_Call *fn_norm = new Expr::Fn_Call(get_trace_weights);
   fn_norm->add_arg(new Var_Acc::Array(new Var_Acc::Plain(
     new std::string("traces")), off));
   fn_norm->add_arg(new std::string("to_nt"));
@@ -634,19 +640,7 @@ Fn_Def *Tablegen::gen_get_traces() {
   r->rhs = fn_norm;
   c.push_back(r);
 
-  Statement::Return *ret;
-  if (batched_) {
-    /*
-     * Tensors returned from the get method need to be wrapped in "clone"
-     * function call, since Pytorch essentially just returns references
-     * when calling tensor.index(...), so we need to explictly copy/clone them
-     */
-    Expr::Fn_Call *clone_call = new Expr::Fn_Call(new std::string("clone"));
-    clone_call->add_arg(new std::string("res"));
-    ret = new Statement::Return(clone_call);
-  } else {
-    ret = new Statement::Return(new std::string("res"));
-  }
+  Statement::Return *ret = new Statement::Return(new std::string("res"));
 
   c.push_back(ret);
 
@@ -686,24 +680,18 @@ Fn_Def *Tablegen::gen_get_tab() {
 
   Statement::Return *ret;
   if (batched_) {
-    // should look like this (if there are two index variables):
-    // return array.index({Slice(), t_0_i, t_0_j})
-    // Python equivalent: return array[:, t_0_i, t_0_j]
-    std::stringstream fn_args;
-    fn_args << "{Slice()";
-    for (Statement::Var_Decl* arg : paras) {
-      fn_args << ", static_cast<int64_t>(" << *arg->name << ")";
-    }
-    fn_args << "}";
+    // should look like this:
+    // return TensorBatch(array.data() + offset * BATCH_SIZE);
 
-    Expr::Fn_Call *index_call = new Expr::Fn_Call(
-                                  new std::string("array.index"));
-    index_call->add_arg(new std::string(fn_args.str()));
+    Expr::Fn_Call *copy_call = new Expr::Fn_Call(
+                                  new std::string("TensorBatch"));
+    Expr::Times *offset = new Expr::Times(
+                            off, new Expr::Vacc(new std::string("BATCH_SIZE")));
+    copy_call->add_arg(new Expr::Plus(
+                        new Expr::Fn_Call(new std::string("array.data")),
+                        offset));
 
-    Expr::Fn_Call *clone_call = new Expr::Fn_Call(new std::string("clone"));
-    clone_call->add_arg(index_call);
-
-    ret = new Statement::Return(clone_call);
+    ret = new Statement::Return(copy_call);
   } else {
     ret = new Statement::Return(new Expr::Vacc(
             new Var_Acc::Array(

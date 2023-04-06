@@ -1848,9 +1848,15 @@ void Alt::Base::init_derivative_recording(
         x->is_obj = Bool(true);
         assert(result_name);
         if (ast.current_derivative == 1) {
-          x->add_arg(result_name);
+          Expr::Fn_Call *move_call = new Expr::Fn_Call(
+                                       new std::string("std::move"));
+          move_call->add_arg(result_name);
+          x->add_arg(move_call);
         } else {
-          x->add_arg(this->edgeweight_decl->name);
+          Expr::Fn_Call *move_call = new Expr::Fn_Call(
+                                     new std::string("std::move"));
+          move_call->add_arg(this->edgeweight_decl->name);
+          x->add_arg(move_call);
 
           Statement::Fn_Call *y = new Statement::Fn_Call("set_q");
           y->add_arg(new std::string("cand"));
@@ -1861,10 +1867,10 @@ void Alt::Base::init_derivative_recording(
         stmts_record->push_front(x);
 
         // if batched Pytorch Tensors are processed as input,
-        // the candidate type also needs to process tensors
+        // the candidate type also needs to process tensors batches
         std::string *candidate_name;
         if (ast.as_pytorch_module && ast.input.tensor_inputs.all_batched()) {
-          candidate_name = new std::string("candidate<tensor>");
+          candidate_name = new std::string("candidate<TensorBatch>");
         } else {
           candidate_name = new std::string("candidate<>");
         }
@@ -2625,25 +2631,9 @@ void Alt::Link::codegen(AST &ast, Symbol::NT &calling_nt) {
     }
     if (lacking_complete_tracks == 0) {
       if (ast.current_derivative == 1) {
-        if (ast.as_pytorch_module && ast.input.tensor_inputs.all_batched()) {
-          Expr::Fn_Call *convert = new Expr::Fn_Call(
-                                     new std::string("tensor_from_scalar"));
-          convert->add_arg(new Expr::Const(1.0));
-          convert->add_arg(new std::string("BATCH_SIZE"));
-          fn_or_const = convert;
-        } else {
           fn_or_const = new Expr::Const(1.0);
-        }
       } else if (ast.current_derivative == 2) {
-        if (ast.as_pytorch_module && ast.input.tensor_inputs.all_batched()) {
-          Expr::Fn_Call *convert = new Expr::Fn_Call(
-                                     new std::string("tensor_from_scalar"));
-          convert->add_arg(new Expr::Const(0.0));
-          convert->add_arg(new std::string("BATCH_SIZE"));
-          fn_or_const = convert;
-        } else {
           fn_or_const = new Expr::Const(0.0);
-        }
       }
     }
   }

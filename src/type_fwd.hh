@@ -66,6 +66,7 @@ class Multi;
 class Tensor;
 class TensorSlice;
 class TensorChar;
+class TensorBatch;
 }  // namespace Type
 
 #include <string>

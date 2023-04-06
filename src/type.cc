@@ -159,8 +159,20 @@ void Type::add_predefined(hashtable<std::string, Base*> &table) {
   s = "tensorchar";
   table[s] = t;
 
-  t = new ::Type::Tensor();
-  s = "tensor";
+  t = new ::Type::TensorBatch(new ::Type::Single());
+  s = "F32batch";
+  table[s] = t;
+
+  t = new ::Type::TensorBatch(new ::Type::Float());
+  s = "F64batch";
+  table[s] = t;
+
+  t = new ::Type::TensorBatch(new ::Type::Int());
+  s = "I32batch";
+  table[s] = t;
+
+  t = new ::Type::TensorBatch(new ::Type::BigInt());
+  s = "I64batch";
   table[s] = t;
 }
 
@@ -488,6 +500,11 @@ std::ostream & Type::TensorChar::put(std::ostream &s) const {
   return s;
 }
 
+std::ostream & Type::TensorBatch::put(std::ostream &s) const {
+  s << *type;
+  return s;
+}
+
 std::ostream & Type::Signature::put(std::ostream &s) const {
   Base *t = signature->var_lookup(this);
   if (t) {
@@ -691,6 +708,10 @@ void Type::TensorSlice::print(Printer::Base &s) const {
 }
 
 void Type::TensorChar::print(Printer::Base &s) const {
+  s.print(*this);
+}
+
+void Type::TensorBatch::print(Printer::Base &s) const {
   s.print(*this);
 }
 

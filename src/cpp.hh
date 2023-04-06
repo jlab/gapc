@@ -256,6 +256,7 @@ class Cpp : public Base {
     void print(const Type::Tensor &expr);
     void print(const Type::TensorSlice &expr);
     void print(const Type::TensorChar &expr);
+    void print(const Type::TensorBatch &expr);
 
     void print(const Type::Multi &expr);
 

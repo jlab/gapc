@@ -124,12 +124,10 @@ class candidate {
   candidate() = default;
   explicit candidate(answer value) : value(value) {}
 
-  void set_value(answer value) {
-#ifdef PYTORCH_MOD
-    this->value = clone(value);
-#else
+  explicit candidate(answer &&value) : value(value) {}
+
+  void set_value(answer &&value) {
     this->value = value;
-#endif
   }
 
   void set_q(answer q) {
@@ -138,23 +136,18 @@ class candidate {
 
   void add_sub_component(std::string &&otherNT,
                          index_components &&indices) {
-#ifdef PYTORCH_MOD
-    sub_components.emplace_back(otherNT, indices,
-                                tensor_from_scalar(0.0, BATCH_SIZE));
-#else
     sub_components.emplace_back(otherNT, indices, answer());
-#endif
   }
 
   std::vector<Trace<answer>> *get_sub_components() {
     return &sub_components;
   }
 
-  answer get_value() const {
+  const answer& get_value() const {
     return value;
   }
 
-  answer get_q() const {
+  const answer& get_q() const {
     return q;
   }
 
@@ -162,9 +155,8 @@ class candidate {
    * trace values can come in different flavors, depending on what the
    * user uses as scoring schema. See Algebra::check_derivative
    */
-  std::vector<Trace<answer>>
-  get_normalized_candidate(answer eval,
-                           answer (func)(answer a, answer b)) const {
+  std::vector<Trace<answer>> get_normalized_candidate(
+    const answer &eval, answer (func)(const answer &a, const answer &b)) const {
     std::vector<Trace<answer>> res(this->sub_components);
     answer val = func(this->get_value() , eval);
 
@@ -175,7 +167,8 @@ class candidate {
     return res;
   }
 
-  std::vector<Trace<answer>> get_soft_max_hessian_candidate(answer eval) const {
+  std::vector<Trace<answer>> get_soft_max_hessian_candidate(
+    const answer &eval) const {
     std::vector<Trace<answer>> res(this->sub_components);
     answer val = this->get_q() - (eval * this->get_value());
 
@@ -200,7 +193,8 @@ template<typename answer = double>
 inline std::vector<Trace<answer>>
 normalize_traces(std::vector<Trace<answer>> *tabulated,
                  const std::vector<candidate<answer>> &candidates,
-                 answer eval, answer (func)(answer a, answer b)) {
+                 const answer &eval,
+                 answer (func)(const answer &a, const answer &b)) {
   std::vector<Trace<answer>> res;
 
   for (size_t i = 0; i < candidates.size(); ++i) {
@@ -215,7 +209,8 @@ normalize_traces(std::vector<Trace<answer>> *tabulated,
 template<typename answer = double>
 inline std::vector<Trace<answer>>
 soft_max_hessian_product(std::vector<Trace<answer>> *tabulated,
-                         const NTtraces<answer> &candidates, answer eval) {
+                         const NTtraces<answer> &candidates,
+                         const answer &eval) {
   std::vector<Trace<answer>> res;
 
   for (size_t i = 0; i < candidates.size(); ++i) {
@@ -227,43 +222,22 @@ soft_max_hessian_product(std::vector<Trace<answer>> *tabulated,
   return res;
 }
 
-inline
-double get_trace_weights(const std::vector<Trace<>> &traces,
-                         const std::string &to_nt,
-                         const index_components &to_indices,
-                         double e) {
-  double res = 0.0;
-  for (std::vector<Trace<>>::const_iterator trace = traces.begin();
-       trace != traces.end(); ++trace) {
+template<typename answer = double>
+inline answer get_trace_weights(const std::vector<Trace<answer>> &traces,
+                                const std::string &to_nt,
+                                const index_components &to_indices,
+                                const answer &e) {
+  answer res = 0.0;
+  for (size_t trace = 0; trace < traces.size(); ++trace) {
     // TODO(sjanssen): move both conditions into is_same_index
-    if (is_same_index(std::get<1>(*trace), to_indices) &&
-        (std::get<0>(*trace) == to_nt)) {
-      res += e * std::get<2>(*trace);
+    if (is_same_index(std::get<1>(traces[trace]), to_indices) &&
+        (std::get<0>(traces[trace]) == to_nt)) {
+      res += e * std::get<2>(traces[trace]);
     }
   }
 
   return res;
 }
-
-#ifdef PYTORCH_MOD
-inline
-tensor get_trace_weights(const std::vector<Trace<tensor>> &traces,
-                         const std::string &to_nt,
-                         const std::vector<unsigned int> &to_indices,
-                         tensor e) {
-  tensor res = torch::zeros(BATCH_SIZE);
-
-  for (std::vector<Trace<tensor>>::const_iterator trace = traces.begin();
-       trace != traces.end(); ++trace) {
-    if (is_same_index(std::get<1>(*trace), to_indices) &&
-        (std::get<0>(*trace) == to_nt)) {
-      res += e * std::get<2>(*trace);
-    }
-  }
-
-  return res;
-}
-#endif
 
 // template<typename answer>
 // using NTtraces = typename std::vector<candidate<answer> >::NTtraces;

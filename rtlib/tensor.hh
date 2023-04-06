@@ -38,18 +38,16 @@
 #ifndef RTLIB_TENSOR_HH_
 #define RTLIB_TENSOR_HH_
 
+extern "C" {
+  #include <immintrin.h>
+}
+
 #include <initializer_list>
 #include <vector>
 #include <limits>
 
 #include "torch/extension.h"
 
-#define DEFAULT_TORCH_TYPE torch::kFloat32
-#define DEFAULT_CPP_TYPE   float
-
-#ifndef BATCHED_INPUT
-inline int64_t BATCH_SIZE = 1;
-#endif
 
 /*
  * if all input Tensor have the same number of dimensions
@@ -59,8 +57,8 @@ inline int64_t BATCH_SIZE = 1;
  * this will be checked by GAPC when parsing the input<> information
  * in the GAP-L code;
  * if all input Tensors are the same, the macros "ALL_INPUT_TENSORS_SAME",
- * "TENSOR_DIMS N" and "TENSOR_TYPE DTYPE" will be defined,
- * which enable the "at" methods of the TensorChar and TensorSlice classes,
+ * "INPUT_TENSOR_DIMS N" and "INPUT_TENSOR_TYPE DTYPE" will be defined,
+ * which enable the "accessor" methods of the TensorChar and TensorSlice classes,
  * granting access to their respective accessors;
  * these accessors require dimension- and datatype-information
  * at compile time, which is why they can only be defined
@@ -72,7 +70,6 @@ inline int64_t BATCH_SIZE = 1;
 using tensor = torch::Tensor;
 using Slice = torch::indexing::Slice;  // Python's "Slice" (for indexing)
 using tensoridx = std::initializer_list<at::indexing::TensorIndex>;
-inline auto None = torch::indexing::None;  // Python's "None" (for indexing)
 
 /*
  * represents a "Slice" of a Tensor with the shape [:, i:j],
@@ -171,10 +168,9 @@ class TensorSlice {
 
 #ifdef ALL_INPUT_TENSORS_SAME
   // use for efficient element-wise READ access in loops,
-  // e.g. tensor.at()[i][j]
-  torch::TensorAccessor<TENSOR_TYPE, TENSOR_DIMS>& at() {
-    static auto accessor = t->accessor<TENSOR_TYPE, TENSOR_DIMS>();
-    return accessor;
+  // e.g. tensorslice.accessor()[i][j]
+  torch::TensorAccessor<INPUT_TENSOR_TYPE, INPUT_TENSOR_DIMS> accessor() const {
+    return t->accessor<INPUT_TENSOR_TYPE, INPUT_TENSOR_DIMS>();
   }
 #endif
 };
@@ -272,20 +268,368 @@ class TensorChar {
 
 #ifdef ALL_INPUT_TENSORS_SAME
   // use for efficient element-wise READ access in loops,
-  // e.g. tensor.at()[i][j]
-  torch::TensorAccessor<TENSOR_TYPE, TENSOR_DIMS>& at() {
-    static auto accessor = t->accessor<TENSOR_TYPE, TENSOR_DIMS>();
-    return accessor;
+  // e.g. tensorchar.accessor()[i][j]
+  torch::TensorAccessor<INPUT_TENSOR_TYPE, INPUT_TENSOR_DIMS> accessor() const {
+    return t->accessor<INPUT_TENSOR_TYPE, INPUT_TENSOR_DIMS>();
   }
 #endif
 };
 
+#ifndef BATCHED_INPUT
+// if batched input is processed, the global variable BATCH_SIZE will be
+// set to the correct batch size of the input Tensors at runtime in out::init
+inline int64_t BATCH_SIZE = 1;
+inline int64_t count = 0;
+#endif
+
+#define MAX_BATCH_SIZE 256
+
+#if defined(__AVX2__) && defined(BATCHED_INPUT)
+/*
+ * heavily optimized element-wise ops using 256bit registers;
+ * the availabilty of these registers depends on the target CPU,
+ * so this implementation will only be used if they are available;
+ * if that's not the case, the vectorization of the loops will
+ * be left up to the compiler/optimizer
+ */
+
+// define SIMD types and intrinsic functions based on NT table type
+#if OUTPUT_CPP_TYPE == float
+  #define register __m256
+  #define LOOP_STEP 8
+#elif OUTPUT_CPP_TYPE == double
+  #define register __m256d
+  #define LOOP_STEP 4
+#elif OUTPUT_CPP_TYPE == BigInt
+  #define register __m256i
+  #define LOOP_STEP 4
+#elif OUTPUT_CPP_TYPE == int
+  #define register __m256i
+  #define LOOP_STEP 8
+#endif
+
+#define ELEMENT_WISE_ON_BATCH(A, B, C, OPERATOR)
+#define ELEMENT_WISE_ON_SCALAR(A, B, C, OPERATOR)
+
+#else
+/*
+ * platform-independent, element-wise ops using a classic for loop;
+ * these should automatically get vectorized by the compiler/optimizer,
+ * but might not get compiled to optimal assembly;
+ * for that reason, a manual AVX2 compatible implementation
+ * is provided if AVX2/256bit registers are available
+ */
+
+#define ELEMENT_WISE_ON_BATCH(A, B, C, OPERATOR) \
+for (int i = 0; i < BATCH_SIZE; ++i) { \
+  C[i] = A[i] OPERATOR B[i]; \
+}
+
+#define ELEMENT_WISE_ON_SCALAR(A, SCALAR, C, OPERATOR) \
+for (int i = 0; i < BATCH_SIZE; ++i) { \
+  C[i] = A[i] OPERATOR SCALAR; \
+}
+#endif
+
+/*
+ * supports fast element-wise operations on batches of values;
+ * the maximum batch size is defined by the MAX_BATCH_SIZE macro;
+ * in the actual program, the batch size is determined at
+ * runtime and stored in the global BATCH_SIZE variable,
+ * which all objects have access to, so only BATCH_SIZE
+ * elements are stored/processed in a Batch object
+ */
+template<typename T, int SIZE>
+class Batch {
+ public:
+  bool empty_;
+  T batch[SIZE];
+
+  Batch() : empty_(false) {}
+
+  // copy BATCH_SIZE elements from data into batch array
+  explicit Batch(T *data) : empty_(false) {
+    copy_from(data);
+  }
+
+  // fill batch array with BATCH_SIZE * x
+  Batch(T x): empty_(false) {  // NOLINT [runtime/explicit]
+    fill(x);
+  }
+
+  // copy constructor
+  Batch(const Batch &other) {
+    empty_ = other.empty_;
+    if (!empty_) {
+      copy_from(other.batch);
+    }
+  }
+
+  // copy assignment operator
+  Batch& operator=(const Batch &other) {
+    empty_ = other.empty_;
+    if (!empty_) {
+      copy_from(other.batch);
+    }
+    return *this;
+  }
+
+  // move constructor
+  Batch(Batch &&other) = default;
+
+  // move assignment operator
+  Batch& operator=(Batch &&other) = default;
+
+  // fill batch array with BATCH_SIZE * x
+  Batch& operator=(T x) {
+    fill(x);
+    return *this;
+  }
+
+  // fill batch array with Scalar value
+  void fill(T x) {
+    for (int i = 0; i < BATCH_SIZE; ++i) {
+      batch[i] = x;
+    }
+  }
+
+  // copy content of batch array into dest array
+  void copy_to(T *dest) const {
+    memcpy(dest, batch, BATCH_SIZE * sizeof(T));
+  }
+
+  // copy content from src array into batch array
+  void copy_from(const T *src) {
+    memcpy(batch, src, BATCH_SIZE * sizeof(T));
+  }
+
+  void empty() {
+    empty_ = true;
+  }
+
+  bool isEmpty() const {
+    return empty_;
+  }
+
+  T operator[](size_t i) const {
+    return batch[i];
+  }
+
+  T& operator[](size_t i) {
+    return batch[i];
+  }
+
+  // fast element-wise operations on the entire batch
+
+  Batch operator+(T x) const {
+    Batch res;
+    ELEMENT_WISE_ON_SCALAR(batch, x, res, +)
+    return res;
+  }
+
+  Batch& operator+=(T x) {
+    ELEMENT_WISE_ON_SCALAR(batch, x, batch, +)
+    return *this;
+  }
+
+  Batch operator-(T x) const {
+    Batch res;
+    ELEMENT_WISE_ON_SCALAR(batch, x, res, -)
+    return res;
+  }
+
+  Batch& operator-=(T x) {
+    ELEMENT_WISE_ON_SCALAR(batch, x, batch, -)
+    return *this;
+  }
+
+  Batch operator*(T x) const {
+    Batch res;
+    ELEMENT_WISE_ON_SCALAR(batch, x, res, *)
+    return res;
+  }
+
+  Batch& operator*=(T x) {
+    ELEMENT_WISE_ON_SCALAR(batch, x, batch, *)
+    return *this;
+  }
+
+  Batch operator/(T x) const {
+    Batch res;
+    ELEMENT_WISE_ON_SCALAR(batch, x, res, /)
+    return res;
+  }
+
+  Batch& operator/=(T x) {
+    ELEMENT_WISE_ON_SCALAR(batch, x, batch, /)
+    return *this;
+  }
+
+  Batch operator+(const Batch &other) const {
+    Batch res;
+    ELEMENT_WISE_ON_BATCH(batch, other.batch, res, +)
+    return res;
+  }
+
+  Batch& operator+=(const Batch &other) {
+    ELEMENT_WISE_ON_BATCH(batch, other.batch, batch, +)
+    return *this;
+  }
+
+  Batch operator-(const Batch &other) const {
+    Batch res;
+    ELEMENT_WISE_ON_BATCH(batch, other.batch, res, -)
+    return res;
+  }
+
+  Batch& operator-=(const Batch &other) {
+    ELEMENT_WISE_ON_BATCH(batch, other.batch, batch, -)
+    return *this;
+  }
+
+  Batch operator*(const Batch &other) const {
+    Batch res;
+    ELEMENT_WISE_ON_BATCH(batch, other.batch, res, *)
+    return res;
+  }
+
+  Batch& operator*=(const Batch &other) {
+    ELEMENT_WISE_ON_BATCH(batch, other.batch, batch, *)
+    return *this;
+  }
+
+  Batch operator/(const Batch &other) const {
+    Batch res;
+    ELEMENT_WISE_ON_BATCH(batch, other.batch, res, /)
+    return res;
+  }
+
+  Batch& operator/=(const Batch &other) {
+    ELEMENT_WISE_ON_BATCH(batch, other.batch, batch, /)
+    return *this;
+  }
+};
+
 // ### non-member operator overloads and Tensor ops ###
+
+template<typename T = float, int SIZE = MAX_BATCH_SIZE>
+inline bool operator==(const Batch<T, SIZE> &lhs,
+                       const Batch<T, SIZE> &rhs) {
+  if (lhs.empty_ != rhs.empty_) {
+    return false;
+  }
+
+  return true;
+}
+
+template<typename T = float, int SIZE = MAX_BATCH_SIZE>
+inline bool operator!=(const Batch<T, SIZE> &lhs,
+                       const Batch<T, SIZE> &rhs) {
+  return !(lhs == rhs);
+}
+
+template<typename T = float, int SIZE = MAX_BATCH_SIZE>
+inline void put(T *dest, const Batch<T, SIZE> &src) {
+  if (src.empty_) {
+    return;
+  }
+
+  src.copy_to(dest);
+}
+
+// multiply all values of "batch" with "true_scalar" where a == b,
+// else multiply with "false_scalar" where a != b
+template<typename T = float, int SIZE = MAX_BATCH_SIZE, typename SCALAR = float>
+inline Batch<T, SIZE>
+batched_multiply_if_else(const TensorChar &a, const TensorChar &b,
+                         const Batch<T, SIZE> &x,
+                         SCALAR true_scalar, SCALAR false_scalar) {
+  Batch<T, SIZE> res;
+  static auto a_ = a.accessor();
+  static auto b_ = b.accessor();
+  for (int64_t i = 0; i < BATCH_SIZE; ++i) {
+    bool ans = a_[i][a.i] == b_[i][b.i];
+    res[i] = x[i] * (true_scalar * ans + false_scalar * !ans);
+  }
+
+  return res;
+}
+
+// divide all values of "batch" by "true_scalar" where a == b,
+// else divide by "false_scalar" where a != b
+template<typename T = float, int SIZE = MAX_BATCH_SIZE, typename SCALAR = float>
+inline Batch<T, SIZE>
+batched_divide_if_else(const TensorChar &a, const TensorChar &b,
+                         const Batch<T, SIZE> &x,
+                         SCALAR true_scalar, SCALAR false_scalar) {
+  Batch<T, SIZE> res;
+  static auto a_ = a.accessor();
+  static auto b_ = b.accessor();
+  for (int64_t i = 0; i < BATCH_SIZE; ++i) {
+    bool ans = a_[i][a.i] == b_[i][b.i];
+    res[i] = x[i] / (true_scalar * ans + false_scalar * !ans);
+  }
+
+  return res;
+}
+
+// add "true_scalar" to all values of "batch" where a == b,
+// else add "false_scalar" where a != b
+template<typename T = float, int SIZE = MAX_BATCH_SIZE, typename SCALAR = float>
+inline Batch<T, SIZE>
+batched_add_if_else(const TensorChar &a, const TensorChar &b,
+                         const Batch<T, SIZE> &x,
+                         SCALAR true_scalar, SCALAR false_scalar) {
+  Batch<T, SIZE> res;
+  static auto a_ = a.accessor();
+  static auto b_ = b.accessor();
+  for (int64_t i = 0; i < BATCH_SIZE; ++i) {
+    bool ans = a_[i][a.i] == b_[i][b.i];
+    res[i] = x[i] + (true_scalar * ans + false_scalar * !ans);
+  }
+
+  return res;
+}
+
+// subtract "true_scalar" from all values of "batch" where a == b,
+// else subtract "false_scalar" where a != b
+template<typename T = float, int SIZE = MAX_BATCH_SIZE, typename SCALAR = float>
+inline Batch<T, SIZE>
+batched_subtract_if_else(const TensorChar &a, const TensorChar &b,
+                         const Batch<T, SIZE> &x,
+                         SCALAR true_scalar, SCALAR false_scalar) {
+  Batch<T, SIZE> res;
+  static auto a_ = a.accessor();
+  static auto b_ = b.accessor();
+  for (int64_t i = 0; i < BATCH_SIZE; ++i) {
+    bool ans = a_[i][a.i] == b_[i][b.i];
+    res[i] = x[i] - (true_scalar * ans + false_scalar * !ans);
+  }
+
+  return res;
+}
 
 // check if i-th column of the two compared tensors is equal
 // (tensor_1[..., i].equal(tensor_2[..., i]))
 inline bool equal(const TensorChar &lhs, const TensorChar &rhs) {
+#if defined(ALL_INPUT_TENSORS_SAME) && INPUT_TENSOR_DIMS <= 2
+  static auto lhs_ = lhs.accessor();
+  static auto rhs_ = rhs.accessor();
+  bool equal = true;
+
+#if INPUT_TENSOR_DIMS == 2
+  const int64_t n = lhs.t->sizes()[0];
+  for (int64_t i = 0; i < n; ++i) {
+    equal &= lhs_[i][lhs.i] == rhs_[i][rhs.i];
+  }
+#else
+  equal = lhs_[lhs.i] == rhs_[rhs.i];
+#endif
+
+  return equal;
+#else
   return torch::equal(lhs[{"...", lhs.i}], rhs[{"...", rhs.i}]);
+#endif
 }
 
 // check if columns [i, j) of the two compared tensors are equal
@@ -324,76 +668,6 @@ inline tensor dot(const TensorChar &lhs, const TensorChar &rhs) {
 inline tensor matmul(const TensorSlice &lhs, const TensorSlice &rhs) {
   return lhs[{"...", Slice(lhs.i, lhs.j)}].mm(
            rhs[{"...", Slice(rhs.i, rhs.j)}]);
-}
-
-// create a 1D Tensor from a Scalar value (default size: 1)
-template<typename T>
-inline tensor tensor_from_scalar(T scalar, int size = 1) {
-  return torch::full(size, scalar, torch::dtype(DEFAULT_TORCH_TYPE));
-}
-
-/*
- * add "true_val" to Tensor "t" at indices defined by boolean
- * index Tensor "condition";
- * "false_val" will be added to "t" at remaining indices;
- * "condition" Tensor can be created by e.g. performing element-
- * wise == comparisons on two Tensors (tensor_a == tensor_b)
- */
-inline tensor add_if_else(const tensor &condition, tensor &t,
-                          const torch::Scalar &true_val,
-                          const torch::Scalar &false_val) {
-  tensor flipped_condition = ~condition;
-  t.index_put_({condition}, t.index({condition}) + true_val);
-  t.index_put_({flipped_condition}, t.index({flipped_condition}) + false_val);
-  return t;
-}
-
-/*
- * subtract "true_val" from Tensor "t" at indices defined by boolean
- * index Tensor "condition";
- * "false_val" will be subtracted from "t" at remaining indices;
- * "condition" Tensor can be created by e.g. performing element-
- * wise == comparisons on two Tensors (tensor_a == tensor_b)
- */
-inline tensor subtract_if_else(const tensor &condition, tensor &t,
-                               const torch::Scalar &true_val,
-                               const torch::Scalar &false_val) {
-  tensor flipped_condition = ~condition;
-  t.index_put_({condition}, t.index({condition}) - true_val);
-  t.index_put_({flipped_condition}, t.index({flipped_condition}) - false_val);
-  return t;
-}
-
-/*
- * multiply "true_val" with Tensor "t" at indices defined by boolean
- * index Tensor "condition";
- * "false_val" will be multiplied with "t" at remaining indices;
- * "condition" Tensor can be created by e.g. performing element-
- * wise == comparisons on two Tensors (tensor_a == tensor_b)
- */
-inline tensor multiply_if_else(const tensor &condition, tensor &t,
-                               const torch::Scalar &true_val,
-                               const torch::Scalar &false_val) {
-  tensor flipped_condition = ~condition;
-  t.index_put_({condition}, t.index({condition}) * true_val);
-  t.index_put_({flipped_condition}, t.index({flipped_condition}) * false_val);
-  return t;
-}
-
-/*
- * divide Tensor "t" by "true_val" at indices defined by boolean
- * index Tensor "condition";
- * "t" will be divided by "false_val" at remaining indices;
- * "condition" Tensor can be created by e.g. performing element-
- * wise == comparisons on two Tensors (tensor_a == tensor_b)
- */
-inline tensor divide_if_else(const tensor &condition, tensor &t,
-                             const torch::Scalar &true_val,
-                             const torch::Scalar &false_val) {
-  tensor flipped_condition = ~condition;
-  t.index_put_({condition}, t.index({condition}) / true_val);
-  t.index_put_({flipped_condition}, t.index({flipped_condition}) / false_val);
-  return t;
 }
 
 // ### Tensor terminal parsers ###
@@ -456,15 +730,14 @@ inline bool isEmpty(const TensorSlice &t) {
   return t.isEmpty();
 }
 
-inline void empty(tensor &t) {
-  t = tensor_from_scalar(
-        std::numeric_limits<DEFAULT_CPP_TYPE>::infinity(), BATCH_SIZE);
+template<typename T = float, int SIZE = MAX_BATCH_SIZE>
+inline void empty(Batch<T, SIZE> &t) {
+  t.empty();
 }
 
-inline bool isEmpty(const tensor &t) {
-  static const tensor EMPTY_TENSOR = tensor_from_scalar(
-    std::numeric_limits<DEFAULT_CPP_TYPE>::infinity(), BATCH_SIZE);
-  return torch::equal(t, EMPTY_TENSOR);
+template<typename T = float, int SIZE = MAX_BATCH_SIZE>
+inline bool isEmpty(const Batch<T, SIZE> &t) {
+  return t.isEmpty();
 }
 
 #endif  // RTLIB_TENSOR_HH_

@@ -166,6 +166,7 @@ class Base {
   virtual void print(const Type::Tensor &expr);
   virtual void print(const Type::TensorSlice &expr);
   virtual void print(const Type::TensorChar &expr);
+  virtual void print(const Type::TensorBatch &expr);
 
   virtual void header(const AST &ast);
   virtual void header_footer(const AST &ast);
@@ -268,6 +269,7 @@ Base &operator<<(Base &p, const Type::Multi &t);
 Base &operator<<(Base &p, const Type::TensorSlice &t);
 Base &operator<<(Base &p, const Type::TensorChar &t);
 Base &operator<<(Base &p, const Type::Tensor &t);
+Base &operator<<(Base &p, const Type::TensorBatch &t);
 }  // namespace Printer
 
 

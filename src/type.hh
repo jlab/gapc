@@ -473,6 +473,25 @@ class TensorSlice : public Base {
     void print(Printer::Base &s) const;
 };
 
+// represents a batch of Tensor values
+class TensorBatch : public Base {
+ public:
+    MAKE_CLONE(TensorBatch);
+    Base *type;
+
+    TensorBatch() : Base(TENSORBATCH), type(new Single()) {}
+    explicit TensorBatch(Loc &l) : Base(TENSORBATCH, l) {}
+    explicit TensorBatch(Base *type)
+      : Base(TENSORBATCH), type(type) {}
+
+    ~TensorBatch() {
+      delete type;
+    }
+
+    std::ostream & put(std::ostream &s) const;
+    void print(Printer::Base &s) const;
+};
+
 
 class Generic : public Base {
  public:

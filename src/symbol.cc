@@ -1286,7 +1286,7 @@ void Symbol::NT::codegen(AST &ast) {
     if (!this->is_partof_outside) {
       std::string *nt_traces;
       if (ast.as_pytorch_module && ast.input.tensor_inputs.all_batched()) {
-        nt_traces = new std::string("NTtraces<tensor>");
+        nt_traces = new std::string("NTtraces<TensorBatch>");
       } else {
         nt_traces = new std::string("NTtraces<>");
       }
