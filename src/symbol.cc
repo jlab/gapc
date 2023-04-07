@@ -1242,10 +1242,10 @@ void Symbol::NT::codegen(AST &ast) {
 
   /*
    * true if non-batched input Tensors are being processed;
-   * in that's NOT case, the non-terminal functions can't return
-   * references to a Tensor, because Tensor batches
+   * if that's NOT case, the non-terminal functions can't return
+   * references, because batches
    * returned from the get method of a table have to be
-   * copied/returned by value
+   * returned/moved by value
    */
   bool not_batched = !ast.as_pytorch_module ||
                      (ast.as_pytorch_module &&

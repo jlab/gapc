@@ -65,34 +65,6 @@ static std::string make_comments(const std::string &s, const std::string &c) {
   return o.str();
 }
 
-static std::string& get_torch_type(const Type::Base &_type) {
-  // get the appropriate pytorch Tensor type (float32, float64 etc.)
-  // based on the table type of the current non-terminal table
-
-  static hashtable<std::string, std::string>
-  torch_type = {{"double", "torch::kFloat64"},
-                {"float", "torch::kFloat32"},
-                {"single", "torch::kFloat32"},
-                {"int", "torch::kInt32"},
-                {"integer", "torch::kInt32"},
-                {"bigint", "torch::kInt64"},
-                {"char", "torch::kInt8"},
-                {"tensor", "torch::kFloat32"}};
-
-  std::stringstream _dtype;
-  _dtype << _type;
-  std::string type = _dtype.str();
-
-  assert(torch_type.find(type) != torch_type.end());
-  if (torch_type.find(type) == torch_type.end()) {
-    Log::instance()->error("Table type \"" + type + "\" "
-                           "cannot be converted to "
-                           "appropriate torch type!");
-    std::exit(1);
-  }
-  return torch_type[type];
-}
-
 void Printer::Cpp::print(const std::list<Statement::Base*> &stmts) {
   stream << '{' << endl;
   inc_indent();
@@ -1872,8 +1844,16 @@ void Printer::Cpp::header(const AST &ast) {
         stream << "#define BATCHED_INPUT" << endl;
         stream << "#include <cstdint>" << endl;
         stream << "inline int64_t BATCH_SIZE;" << endl << endl;
+        // define macros for primitive types (used in batch.hh)
+        stream << indent() << "#define FLOAT_TYPE     1" << endl;
+        stream << indent() << "#define DOUBLE_TYPE    2" << endl;
+        stream << indent() << "#define INT_TYPE       3" << endl;
+        stream << indent() << "#define BIGINT_TYPE    4" << endl << endl;
+        stream << indent() << "#define __OUTPUT_CPP_TYPE "
+               << get_macro_type(*shared_table_type.type) << endl;
         stream << indent() << "#define OUTPUT_CPP_TYPE "
-               << *shared_table_type.type << endl;
+               << *shared_table_type.type << endl << endl;
+        stream << "#include \"rtlib/batch.hh\"" << endl;
       }
       stream << "#include \"torch/extension.h\"" << endl;
       stream << "#include \"rtlib/tensor.hh\"" << endl << endl;

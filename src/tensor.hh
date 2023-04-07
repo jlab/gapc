@@ -51,6 +51,7 @@
 #include <utility>
 #include <vector>
 #include <iostream>
+#include "type.hh"
 
 #define DEFAULT_TORCH_TYPE "torch::kFloat32"
 #define DEFAULT_CPP_TYPE   "float"
@@ -217,5 +218,59 @@ class TensorInput {
     return batched;
   }
 };
+
+inline std::string& get_torch_type(const Type::Base &_type) {
+  // get the appropriate pytorch Tensor type (float32, float64 etc.)
+  // based on the table type of the current non-terminal table
+
+  static hashtable<std::string, std::string>
+  torch_type = {{"double", "torch::kFloat64"},
+                {"float", "torch::kFloat32"},
+                {"single", "torch::kFloat32"},
+                {"int", "torch::kInt32"},
+                {"integer", "torch::kInt32"},
+                {"bigint", "torch::kInt64"},
+                {"char", "torch::kInt8"},
+                {"tensor", "torch::kFloat32"}};
+
+  std::stringstream _dtype;
+  _dtype << _type;
+  std::string type = _dtype.str();
+
+  assert(torch_type.find(type) != torch_type.end());
+  if (torch_type.find(type) == torch_type.end()) {
+    Log::instance()->error("Table type \"" + type + "\" "
+                           "cannot be converted to "
+                           "appropriate torch type!");
+    std::exit(1);
+  }
+  return torch_type[type];
+}
+
+inline std::string& get_macro_type(const Type::Base &_type) {
+  // get the appropriate pytorch Tensor type (float32, float64 etc.)
+  // based on the table type of the current non-terminal table
+
+  static hashtable<std::string, std::string>
+  torch_type = {{"double", "DOUBLE_TYPE"},
+                {"float", "FLOAT_TYPE"},
+                {"single", "FLOAT_TYPE"},
+                {"int", "INT_TYPE"},
+                {"integer", "INT_TYPE"},
+                {"bigint", "BIGINT_TYPE"}};
+
+  std::stringstream _dtype;
+  _dtype << _type;
+  std::string type = _dtype.str();
+
+  assert(torch_type.find(type) != torch_type.end());
+  if (torch_type.find(type) == torch_type.end()) {
+    Log::instance()->error("Table type \"" + type + "\" "
+                           "cannot be converted to "
+                           "appropriate macro type!");
+    std::exit(1);
+  }
+  return torch_type[type];
+}
 
 #endif  // SRC_TENSOR_HH_
