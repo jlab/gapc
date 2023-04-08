@@ -25,6 +25,14 @@
     * of primitive values;
     * this type is used in the generated derivative code
     * to process batched inputs;
+    * it uses a memory pool for fast (de)allocation of memory;
+    * all "Batch" objects require access to a global variable
+    * "BATCH_SIZE", which determines the size of every batch;
+    * the maximum batch size is controlled by the "MAX_BATCH_SIZE"
+    * macro, which is used to allocate space for every batch
+    * from the memory pool; by default, it is set to 2048,
+    * but can be increased/decreased if needed since the memory
+    * pool can automically expand itself
 }}} */
 
 #ifndef RTLIB_BATCH_HH_
@@ -55,45 +63,45 @@ inline int64_t BATCH_SIZE = 1;
  * be left up to the compiler/optimizer
  */
 
-#if __OUTPUT_CPP_TYPE == FLOAT_TYPE            // 32bit float (F32)
-  #define register         __m256              // 256bit register for F32's
-  #define LOOP_STEP        8                   // register holds 8 F32's
-  #define ADD              _mm256_add_ps       // add
-  #define SUB              _mm256_sub_ps       // subtract
-  #define MUL              _mm256_mul_ps       // multiply
-  #define DIV              _mm256_div_ps       // divide
-  #define FILL_WITH_SCALAR _mm256_set1_ps      // fill register with F32 scalar
+#if __OUTPUT_CPP_TYPE == FLOAT_TYPE             // 32bit float (F32)
+  #define register         __m256               // 256bit register for F32's
+  #define LOOP_STEP        8                    // register holds 8 F32's
+  #define ADD              _mm256_add_ps        // add
+  #define SUB              _mm256_sub_ps        // subtract
+  #define MUL              _mm256_mul_ps        // multiply
+  #define DIV              _mm256_div_ps        // divide
+  #define FILL_WITH_SCALAR _mm256_set1_ps       // fill register with F32 scalar
   #define LOAD             _mm256_loadu_ps      // load 8 F32's from ptr
   #define STORE            _mm256_storeu_ps     // store 8 F32's at ptr
 
-#elif __OUTPUT_CPP_TYPE == DOUBLE_TYPE         // 64bit float (F64)
-  #define register         __m256d             // 256bit register for F64's
-  #define LOOP_STEP        4                   // register holds 4 F64's
-  #define ADD              _mm256_add_pd       // add
-  #define SUB              _mm256_sub_pd       // subtract
-  #define MUL              _mm256_mul_pd       // multiply
-  #define DIV              _mm256_div_pd       // divide
-  #define FILL_WITH_SCALAR _mm256_set1_pd      // fill register with F64 scalar
+#elif __OUTPUT_CPP_TYPE == DOUBLE_TYPE          // 64bit float (F64)
+  #define register         __m256d              // 256bit register for F64's
+  #define LOOP_STEP        4                    // register holds 4 F64's
+  #define ADD              _mm256_add_pd        // add
+  #define SUB              _mm256_sub_pd        // subtract
+  #define MUL              _mm256_mul_pd        // multiply
+  #define DIV              _mm256_div_pd        // divide
+  #define FILL_WITH_SCALAR _mm256_set1_pd       // fill register with F64 scalar
   #define LOAD             _mm256_loadu_pd      // load 4 F64's from ptr
   #define STORE            _mm256_storeu_pd     // store 4 F64's at ptr
 
-#elif __OUTPUT_CPP_TYPE == INT_TYPE            // 32bit integer (I32)
-  #define register         __m256i             // 256bit register for I32's
-  #define LOOP_STEP        8                   // register holds 8 I32's
-  #define ADD              _mm256_add_epi32    // add
-  #define SUB              _mm256_sub_epi32    // subtract
-  #define MUL              _mm256_mul_epi32    // multiply
-  #define FILL_WITH_SCALAR _mm256_set1_epi32   // fill register with I32 scalar
+#elif __OUTPUT_CPP_TYPE == INT_TYPE             // 32bit integer (I32)
+  #define register         __m256i              // 256bit register for I32's
+  #define LOOP_STEP        8                    // register holds 8 I32's
+  #define ADD              _mm256_add_epi32     // add
+  #define SUB              _mm256_sub_epi32     // subtract
+  #define MUL              _mm256_mul_epi32     // multiply
+  #define FILL_WITH_SCALAR _mm256_set1_epi32    // fill register with I32 scalar
   #define LOAD             _mm256_loadu_epi32   // load 8 I32's from ptr
   #define STORE            _mm256_storeu_epi32  // store 8 I32's at ptr
 
-#elif __OUTPUT_CPP_TYPE == BIGINT_TYPE         // 64bit integer (I64)
-  #define register         __m256i             // 256bit register for I64's
-  #define LOOP_STEP        4                   // register holds 4 I64's
-  #define ADD              _mm256_add_epi64    // add
-  #define SUB              _mm256_sub_epi64    // subtract
-  #define MUL              _mm256_mul_epi64    // multiply
-  #define FILL_WITH_SCALAR _mm256_set1_epi64   // fill register with I64 scalar
+#elif __OUTPUT_CPP_TYPE == BIGINT_TYPE          // 64bit integer (I64)
+  #define register         __m256i              // 256bit register for I64's
+  #define LOOP_STEP        4                    // register holds 4 I64's
+  #define ADD              _mm256_add_epi64     // add
+  #define SUB              _mm256_sub_epi64     // subtract
+  #define MUL              _mm256_mul_epi64     // multiply
+  #define FILL_WITH_SCALAR _mm256_set1_epi64    // fill register with I64 scalar
   #define LOAD             _mm256_loadu_epi64   // load 4 I64's from ptr
   #define STORE            _mm256_storeu_epi64  // store 4 I64's at ptr
 
@@ -128,8 +136,8 @@ for (int i = 0; i < BATCH_SIZE; i += LOOP_STEP) {      \
  * is provided if AVX2/256bit registers are available (see above);
  * However, if the "DIV" macro is undefined, the functions below
  * will be used over their AVX2 analogs, even if AVX2 is available;
- * This is because there is no AVX2 SIMD division instruction,
- * so the AVX2 functions can't be used if two batches are supposed
+ * This is because there is no AVX2 SIMD division instruction for integers,
+ * so the AVX2 functions can't be used if two integer batches are supposed
  * to be divided element-wise, so we will just leave it up to
  * the compiler to optimize/vectorize the loops in this case
  */
@@ -152,8 +160,8 @@ for (int i = 0; i < BATCH_SIZE; ++i) {                 \
 
 /*
  * contains the data of a "Batch object";
- * this object gets allocated via a memory pool
- * for fast allocations, so it's "new" and "delete"
+ * this object gets allocated in a memory pool,
+ * so it's "new" and "delete"
  * operators need to be overloaded;
  */
 template<typename T, int SIZE>
@@ -200,7 +208,7 @@ class Batch {
     copy_from(data);
   }
 
-  // fill batch array with BATCH_SIZE * x
+  // fill batch array with calar value
   Batch(T x): empty_(false), batch(nullptr) {  // NOLINT [runtime/explicit]
     fill(x);
   }
@@ -236,19 +244,20 @@ class Batch {
     return *this;
   }
 
-  // fill batch array with BATCH_SIZE * x
+  // fill batch array with scalar value
   Batch& operator=(T x) {
     fill(x);
     return *this;
   }
-
+  
+  // allocate memory from the memory pool
   void alloc() {
     if (!batch) {
       batch = new BatchImpl<T, SIZE>();
     }
   }
 
-  // fill batch array with Scalar value
+  // fill batch array with scalar value
   void fill(T x) {
     alloc();
     assert(batch->data);
@@ -405,7 +414,7 @@ void BatchImpl<T, SIZE>::operator delete(void *b) noexcept(false) {
   Batch<T, SIZE>::pool.free(static_cast<BatchImpl<T, SIZE>*>(b));
 }
 
-// ### non-member operator overloads and Tensor ops ###
+// ### non-member operator/function overloads ###
 
 template<typename T = float, int SIZE = MAX_BATCH_SIZE>
 inline bool operator==(const Batch<T, SIZE> &lhs,
@@ -428,6 +437,7 @@ inline bool operator!=(const Batch<T, SIZE> &lhs,
   return !(lhs == rhs);
 }
 
+// copy content of batch into dest array
 template<typename T = float, int SIZE = MAX_BATCH_SIZE>
 inline void put(T *dest, const Batch<T, SIZE> &src) {
   if (src.empty_) {

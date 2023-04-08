@@ -2631,9 +2631,9 @@ void Alt::Link::codegen(AST &ast, Symbol::NT &calling_nt) {
     }
     if (lacking_complete_tracks == 0) {
       if (ast.current_derivative == 1) {
-          fn_or_const = new Expr::Const(1.0);
+        fn_or_const = new Expr::Const(1.0);
       } else if (ast.current_derivative == 2) {
-          fn_or_const = new Expr::Const(0.0);
+        fn_or_const = new Expr::Const(0.0);
       }
     }
   }

@@ -25,7 +25,7 @@
     * 
     * here, the user can specify the following Tensor input properties:
     *  - batched or non-batched         (default: non-batched)
-    *  - number of dimensions           (default: 2 (includes batch dimension))
+    *  - number of dimensions           (default: 2)
     *  - data type of the Tensor values (default: float32)
     * 
     * the order of these individual properties doesn't matter, every declaration
@@ -38,7 +38,6 @@
     * 
     * if multiple input Tensors are specified, they can be separated with a comma:
     * input<tensor, tensor>        : 2 non-batched 2D tensor containing float32 values
-    * 
 }}} */
 
 #ifndef SRC_TENSOR_HH_
@@ -61,7 +60,7 @@ class TensorMode {
   bool batched;             // true if tensor has batch dimension
   std::string torch_dtype;  // torch datatype of the Tensor
   std::string cpp_dtype;    // C++ analog of the torch datatype
-  int n_dims;               // number of dimensions (including batch dimension)
+  int n_dims;               // number of dimensions
 
   TensorMode() :
     batched(false), torch_dtype(DEFAULT_TORCH_TYPE),
