@@ -249,7 +249,7 @@ class Batch {
     fill(x);
     return *this;
   }
-  
+
   // allocate memory from the memory pool
   void alloc() {
     if (!batch) {
