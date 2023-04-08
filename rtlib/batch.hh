@@ -36,6 +36,7 @@ extern "C" {
 
 #include <cstdint>
 #include <cstring>
+#include "pool.hh"
 
 #ifndef BATCHED_INPUT
 // if batched input is processed, the global variable BATCH_SIZE will be
@@ -43,7 +44,7 @@ extern "C" {
 inline int64_t BATCH_SIZE = 1;
 #endif
 
-#define MAX_BATCH_SIZE 256
+#define MAX_BATCH_SIZE 2048
 
 #if defined(__AVX2__)
 /*
@@ -150,6 +151,34 @@ for (int i = 0; i < BATCH_SIZE; ++i) {                 \
 #endif
 
 /*
+ * contains the data of a "Batch object";
+ * this object gets allocated via a memory pool
+ * for fast allocations, so it's "new" and "delete"
+ * operators need to be overloaded;
+ */
+template<typename T, int SIZE>
+class BatchImpl {
+ public:
+  uint32_t ref_count;
+  T data[SIZE];
+
+  BatchImpl() : ref_count(1) {}
+
+  void inc_ref() {
+    ++ref_count;
+  }
+
+  void dec_ref() {
+    assert(ref_count > 0);
+    --ref_count;
+  }
+
+  void *operator new(size_t t) noexcept(false);
+
+  void operator delete(void *b) noexcept(false);
+};
+
+/*
  * supports fast element-wise operations on batches of values;
  * the maximum batch size is defined by the MAX_BATCH_SIZE macro;
  * in the actual program, the batch size is determined at
@@ -160,43 +189,52 @@ for (int i = 0; i < BATCH_SIZE; ++i) {                 \
 template<typename T, int SIZE>
 class Batch {
  public:
+  static Pool<BatchImpl<T, SIZE>> pool;
   bool empty_;
-  T batch[SIZE];
+  BatchImpl<T, SIZE> *batch;
 
-  Batch() : empty_(false) {}
+  Batch() : empty_(false), batch(nullptr) {}
 
   // copy BATCH_SIZE elements from data into batch array
-  explicit Batch(T *data) : empty_(false) {
+  explicit Batch(T *data) : empty_(false), batch(nullptr) {
     copy_from(data);
   }
 
   // fill batch array with BATCH_SIZE * x
-  Batch(T x): empty_(false) {  // NOLINT [runtime/explicit]
+  Batch(T x): empty_(false), batch(nullptr) {  // NOLINT [runtime/explicit]
     fill(x);
+  }
+
+  ~Batch() {
+    if (!batch) {
+      return;
+    }
+    assert(batch->ref_count);
+    batch->dec_ref();
+    if (!batch->ref_count) {
+      delete batch;
+      batch = nullptr;
+    }
   }
 
   // copy constructor
   Batch(const Batch &other) {
     empty_ = other.empty_;
-    if (!empty_) {
-      copy_from(other.batch);
+    batch = other.batch;
+    if (batch) {
+      batch->inc_ref();
     }
   }
 
   // copy assignment operator
   Batch& operator=(const Batch &other) {
     empty_ = other.empty_;
-    if (!empty_) {
-      copy_from(other.batch);
+    batch = other.batch;
+    if (batch) {
+      batch->inc_ref();
     }
     return *this;
   }
-
-  // move constructor
-  Batch(Batch &&other) = default;
-
-  // move assignment operator
-  Batch& operator=(Batch &&other) = default;
 
   // fill batch array with BATCH_SIZE * x
   Batch& operator=(T x) {
@@ -204,21 +242,32 @@ class Batch {
     return *this;
   }
 
+  void alloc() {
+    if (!batch) {
+      batch = new BatchImpl<T, SIZE>();
+    }
+  }
+
   // fill batch array with Scalar value
   void fill(T x) {
+    alloc();
+    assert(batch->data);
     for (int i = 0; i < BATCH_SIZE; ++i) {
-      batch[i] = x;
+      batch->data[i] = x;
     }
   }
 
   // copy content of batch array into dest array
   void copy_to(T *dest) const {
-    memcpy(dest, batch, BATCH_SIZE * sizeof(T));
+    assert(batch->data);
+    memcpy(dest, batch->data, BATCH_SIZE * sizeof(T));
   }
 
   // copy content from src array into batch array
   void copy_from(const T *src) {
-    memcpy(batch, src, BATCH_SIZE * sizeof(T));
+    alloc();
+    assert(batch->data);
+    memcpy(batch->data, src, BATCH_SIZE * sizeof(T));
   }
 
   void empty() {
@@ -230,103 +279,131 @@ class Batch {
   }
 
   T operator[](size_t i) const {
-    return batch[i];
+    return batch->data[i];
   }
 
   T& operator[](size_t i) {
-    return batch[i];
+    return batch->data[i];
   }
 
   // fast element-wise operations on the entire batch
 
   Batch operator+(T x) const {
     Batch res;
-    ELEMENT_WISE_ON_SCALAR(batch, x, res.batch, ADD)
+    res.alloc();
+    ELEMENT_WISE_ON_SCALAR(batch->data, x, res.batch->data, ADD)
     return res;
   }
 
   Batch& operator+=(T x) {
-    ELEMENT_WISE_ON_SCALAR(batch, x, batch, ADD)
+    ELEMENT_WISE_ON_SCALAR(batch->data, x, batch->data, ADD)
     return *this;
   }
 
   Batch operator-(T x) const {
     Batch res;
-    ELEMENT_WISE_ON_SCALAR(batch, x, res.batch, SUB)
+    res.alloc();
+    ELEMENT_WISE_ON_SCALAR(batch->data, x, res.batch->data, SUB)
     return res;
   }
 
   Batch& operator-=(T x) {
-    ELEMENT_WISE_ON_SCALAR(batch, x, batch, SUB)
+    ELEMENT_WISE_ON_SCALAR(batch->data, x, batch->data, SUB)
     return *this;
   }
 
   Batch operator*(T x) const {
     Batch res;
-    ELEMENT_WISE_ON_SCALAR(batch, x, res.batch, MUL)
+    res.alloc();
+    ELEMENT_WISE_ON_SCALAR(batch->data, x, res.batch->data, MUL)
     return res;
   }
 
   Batch& operator*=(T x) {
-    ELEMENT_WISE_ON_SCALAR(batch, x, batch, MUL)
+    ELEMENT_WISE_ON_SCALAR(batch->data, x, batch->data, MUL)
     return *this;
   }
 
   Batch operator/(T x) const {
     Batch res;
-    ELEMENT_WISE_ON_SCALAR(batch, x, res.batch, DIV)
+    res.alloc();
+    ELEMENT_WISE_ON_SCALAR(batch->data, x, res.batch->data, DIV)
     return res;
   }
 
   Batch& operator/=(T x) {
-    ELEMENT_WISE_ON_SCALAR(batch, x, batch, DIV)
+    ELEMENT_WISE_ON_SCALAR(batch->data, x, batch->data, DIV)
     return *this;
   }
 
   Batch operator+(const Batch &other) const {
     Batch res;
-    ELEMENT_WISE_ON_BATCH(batch, other.batch, res.batch, ADD)
+    res.alloc();
+    ELEMENT_WISE_ON_BATCH(batch->data, other.batch->data, res.batch->data, ADD)
     return res;
   }
 
   Batch& operator+=(const Batch &other) {
-    ELEMENT_WISE_ON_BATCH(batch, other.batch, batch, ADD)
+    ELEMENT_WISE_ON_BATCH(batch->data, other.batch->data, batch->data, ADD)
     return *this;
   }
 
   Batch operator-(const Batch &other) const {
     Batch res;
-    ELEMENT_WISE_ON_BATCH(batch, other.batch, res.batch, SUB)
+    res.alloc();
+    ELEMENT_WISE_ON_BATCH(batch->data, other.batch->data, res.batch->data, SUB)
     return res;
   }
 
   Batch& operator-=(const Batch &other) {
-    ELEMENT_WISE_ON_BATCH(batch, other.batch, batch, SUB)
+    ELEMENT_WISE_ON_BATCH(batch->data, other.batch->data, batch->data, SUB)
     return *this;
   }
 
   Batch operator*(const Batch &other) const {
     Batch res;
-    ELEMENT_WISE_ON_BATCH(batch, other.batch, res.batch, MUL)
+    res.alloc();
+    ELEMENT_WISE_ON_BATCH(batch->data, other.batch->data, res.batch->data, MUL)
     return res;
   }
 
   Batch& operator*=(const Batch &other) {
-    ELEMENT_WISE_ON_BATCH(batch, other.batch, batch, MUL)
+    ELEMENT_WISE_ON_BATCH(batch->data, other.batch->data, batch->data, MUL)
     return *this;
   }
 
   Batch operator/(const Batch &other) const {
     Batch res;
-    ELEMENT_WISE_ON_BATCH(batch, other.batch, res.batch, DIV)
+    res.alloc();
+    ELEMENT_WISE_ON_BATCH(batch->data, other.batch->data, res.batch->data, DIV)
     return res;
   }
 
   Batch& operator/=(const Batch &other) {
-    ELEMENT_WISE_ON_BATCH(batch, other.batch, batch, DIV)
+    ELEMENT_WISE_ON_BATCH(batch->data, other.batch->data, batch->data, DIV)
     return *this;
   }
 };
+
+// ### new and delete overloads for BatchImpl objects ###
+
+template<typename T, int SIZE>
+Pool<BatchImpl<T, SIZE>> Batch<T, SIZE>::pool;
+
+template<typename T, int SIZE>
+void* BatchImpl<T, SIZE>::operator new(size_t t) noexcept(false) {
+  assert(t == sizeof(BatchImpl<T, SIZE>));
+  BatchImpl<T, SIZE> *r = Batch<T, SIZE>::pool.malloc();
+  return r;
+}
+
+template<typename T, int SIZE>
+void BatchImpl<T, SIZE>::operator delete(void *b) noexcept(false) {
+  if (!b) {
+    return;
+  }
+  Batch<T, SIZE>::pool.free(static_cast<BatchImpl<T, SIZE>*>(b));
+}
 
 // ### non-member operator overloads and Tensor ops ###
 
@@ -337,7 +414,12 @@ inline bool operator==(const Batch<T, SIZE> &lhs,
     return false;
   }
 
-  return true;
+  bool equal = true;
+  for (int i = 0; i < BATCH_SIZE; ++i) {
+    equal &= lhs[i] == rhs[i];
+  }
+
+  return equal;
 }
 
 template<typename T = float, int SIZE = MAX_BATCH_SIZE>

@@ -124,14 +124,20 @@ class candidate {
   candidate() = default;
   explicit candidate(answer value) : value(value) {}
 
-  explicit candidate(answer &&value) : value(value) {}
-
   void set_value(answer &&value) {
+#if defined(PYTORCH_MOD) && defined(BATCHED_INPUT)
+    this->value = answer(value.batch->data);
+#else
     this->value = value;
+#endif
   }
 
-  void set_q(answer q) {
-    this->q = q;
+  void set_q(answer &&q) {
+#if defined(PYTORCH_MOD) && defined(BATCHED_INPUT)
+    this->value = answer(value.batch->data);
+#else
+    this->value = value;
+#endif
   }
 
   void add_sub_component(std::string &&otherNT,
@@ -143,11 +149,11 @@ class candidate {
     return &sub_components;
   }
 
-  const answer& get_value() const {
+  answer get_value() const {
     return value;
   }
 
-  const answer& get_q() const {
+  answer get_q() const {
     return q;
   }
 
@@ -156,7 +162,21 @@ class candidate {
    * user uses as scoring schema. See Algebra::check_derivative
    */
   std::vector<Trace<answer>> get_normalized_candidate(
-    const answer &eval, answer (func)(const answer &a, const answer &b)) const {
+    answer eval, answer (func)(answer a, answer b)) const {
+    std::vector<Trace<answer>> res(this->sub_components);
+    answer val = func(this->get_value() , eval);
+
+    for (size_t i = 0; i < res.size(); ++i) {
+      std::get<2>(res[i]) = val;
+    }
+
+    return res;
+  }
+
+  // overload of get_normalized_candidate taking a function ptr argument
+  // with two const reference parameters
+  std::vector<Trace<answer>> get_normalized_candidate(
+    answer eval, answer (func)(const answer &a, const answer &b)) const {
     std::vector<Trace<answer>> res(this->sub_components);
     answer val = func(this->get_value() , eval);
 
@@ -168,7 +188,7 @@ class candidate {
   }
 
   std::vector<Trace<answer>> get_soft_max_hessian_candidate(
-    const answer &eval) const {
+    answer eval) const {
     std::vector<Trace<answer>> res(this->sub_components);
     answer val = this->get_q() - (eval * this->get_value());
 
@@ -193,7 +213,26 @@ template<typename answer = double>
 inline std::vector<Trace<answer>>
 normalize_traces(std::vector<Trace<answer>> *tabulated,
                  const std::vector<candidate<answer>> &candidates,
-                 const answer &eval,
+                 answer eval,
+                 answer (func)(answer a, answer b)) {
+  std::vector<Trace<answer>> res;
+
+  for (size_t i = 0; i < candidates.size(); ++i) {
+    std::vector<Trace<answer>> comp = candidates[i].
+                                        get_normalized_candidate(eval, func);
+    res.insert(res.end(), comp.begin(), comp.end());
+  }
+
+  return res;
+}
+
+// overload of normalize_traces taking a function ptr argument
+// with two const reference parameters
+template<typename answer = double>
+inline std::vector<Trace<answer>>
+normalize_traces(std::vector<Trace<answer>> *tabulated,
+                 const std::vector<candidate<answer>> &candidates,
+                 answer eval,
                  answer (func)(const answer &a, const answer &b)) {
   std::vector<Trace<answer>> res;
 
@@ -210,7 +249,7 @@ template<typename answer = double>
 inline std::vector<Trace<answer>>
 soft_max_hessian_product(std::vector<Trace<answer>> *tabulated,
                          const NTtraces<answer> &candidates,
-                         const answer &eval) {
+                         answer eval) {
   std::vector<Trace<answer>> res;
 
   for (size_t i = 0; i < candidates.size(); ++i) {
@@ -226,7 +265,7 @@ template<typename answer = double>
 inline answer get_trace_weights(const std::vector<Trace<answer>> &traces,
                                 const std::string &to_nt,
                                 const index_components &to_indices,
-                                const answer &e) {
+                                answer e) {
   answer res = 0.0;
   for (size_t trace = 0; trace < traces.size(); ++trace) {
     // TODO(sjanssen): move both conditions into is_same_index

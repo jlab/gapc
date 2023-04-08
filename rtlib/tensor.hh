@@ -339,6 +339,7 @@ batched_multiply_if_else(const TensorChar &a, const TensorChar &b,
                          const Batch<T, SIZE> &x,
                          SCALAR true_scalar, SCALAR false_scalar) {
   Batch<T, SIZE> res;
+  res.alloc();
   static auto a_ = a.accessor();
   static auto b_ = b.accessor();
   for (int64_t i = 0; i < BATCH_SIZE; ++i) {
@@ -357,6 +358,7 @@ batched_divide_if_else(const TensorChar &a, const TensorChar &b,
                          const Batch<T, SIZE> &x,
                          SCALAR true_scalar, SCALAR false_scalar) {
   Batch<T, SIZE> res;
+  res.alloc();
   static auto a_ = a.accessor();
   static auto b_ = b.accessor();
   for (int64_t i = 0; i < BATCH_SIZE; ++i) {
@@ -375,6 +377,7 @@ batched_add_if_else(const TensorChar &a, const TensorChar &b,
                          const Batch<T, SIZE> &x,
                          SCALAR true_scalar, SCALAR false_scalar) {
   Batch<T, SIZE> res;
+  res.alloc();
   static auto a_ = a.accessor();
   static auto b_ = b.accessor();
   for (int64_t i = 0; i < BATCH_SIZE; ++i) {
@@ -393,6 +396,7 @@ batched_subtract_if_else(const TensorChar &a, const TensorChar &b,
                          const Batch<T, SIZE> &x,
                          SCALAR true_scalar, SCALAR false_scalar) {
   Batch<T, SIZE> res;
+  res.alloc();
   static auto a_ = a.accessor();
   static auto b_ = b.accessor();
   for (int64_t i = 0; i < BATCH_SIZE; ++i) {
