@@ -1848,15 +1848,9 @@ void Alt::Base::init_derivative_recording(
         x->is_obj = Bool(true);
         assert(result_name);
         if (ast.current_derivative == 1) {
-          Expr::Fn_Call *move_call = new Expr::Fn_Call(
-                                       new std::string("std::move"));
-          move_call->add_arg(result_name);
-          x->add_arg(move_call);
+          x->add_arg(result_name);
         } else {
-          Expr::Fn_Call *move_call = new Expr::Fn_Call(
-                                     new std::string("std::move"));
-          move_call->add_arg(this->edgeweight_decl->name);
-          x->add_arg(move_call);
+          x->add_arg(this->edgeweight_decl->name);
 
           Statement::Fn_Call *y = new Statement::Fn_Call("set_q");
           y->add_arg(new std::string("cand"));

@@ -124,7 +124,7 @@ class candidate {
   candidate() = default;
   explicit candidate(answer value) : value(value) {}
 
-  void set_value(answer &&value) {
+  void set_value(answer value) {
 #if defined(PYTORCH_MOD) && defined(BATCHED_INPUT)
     this->value = answer(value.batch->data);
 #else
@@ -132,7 +132,7 @@ class candidate {
 #endif
   }
 
-  void set_q(answer &&q) {
+  void set_q(answer q) {
 #if defined(PYTORCH_MOD) && defined(BATCHED_INPUT)
     this->value = answer(value.batch->data);
 #else
