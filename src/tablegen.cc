@@ -538,10 +538,10 @@ Fn_Def *Tablegen::gen_set_traces(int forDerivative) {
   c.push_back(a);
 
   /*
-   * if batched Tensor input is processed, the templated functions
+   * if batched Tensor input is processed, the templated trace functions
    * need to know that so we need to pass "TensorBatch" as the template here;
-   * for backwards compatibility, we should add the empty template "<>"
-   * for the default template type (double);
+   * for backwards compatibility, we also need to add the empty template "<>"
+   * to instruct the compiler to use the default template type (double);
    * this isn't required anymore in C++17+, but still is required in C++11
    */
   std::string *fn_norm_name;
@@ -583,6 +583,15 @@ Fn_Def *Tablegen::gen_get_traces() {
 
   Fn_Def *f = new Fn_Def(dtype, new std::string("get_traces"));
   f->add_paras(paras);
+
+  /*
+   * since the "to_nt" and "to_indices" arguments are created in-place
+   * in the generated code and are thus regarded as rvalue references,
+   * we can specify these function args as rvalue references;
+   * this allows the compiler to move them directly into the function,
+   * which avoids an extra dereferencing step and thus saves us
+   * a little bit of time
+   */
   f->add_para(new ::Type::External(new std::string("std::string&")),
               new std::string("to_nt"));
   ::Type::External *idx = new ::Type::External(new std::string(

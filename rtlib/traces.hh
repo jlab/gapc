@@ -134,9 +134,9 @@ class candidate {
 
   void set_q(answer q) {
 #if defined(PYTORCH_MOD) && defined(BATCHED_INPUT)
-    this->value = answer(value.batch->data);
+    this->q = answer(value.batch->data);
 #else
-    this->value = value;
+    this->q = q;
 #endif
   }
 

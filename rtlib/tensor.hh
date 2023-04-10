@@ -449,6 +449,11 @@ inline TensorSlice TLOC(TensorSlice &t, T i, T j) {
   return TensorSlice(t, i, j);
 }
 
+template<typename T>
+inline bool complete_track(const TensorSlice &t, T i, T j) {
+  return (i == t.j && j == t.j);
+}
+
 // ### empty.hh overloads ###
 
 inline void empty(TensorChar &t) {
