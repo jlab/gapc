@@ -2043,6 +2043,7 @@ void Printer::Cpp::print_openmp_cyk_loops_diag(const AST &ast,
   } else {
     stream << "for (int z = 0; z < max_tiles_n; z+=tile_size) {";
   }
+  stream << endl;
   inc_indent();
   if (checkpoint) {
     stream << indent() << "mutex.lock_shared();" << endl;
@@ -2709,17 +2710,7 @@ void Printer::Cpp::print_run_fn(const AST &ast) {
   stream << " run() {" << endl;
   inc_indent();
 
-  if (ast.checkpoint && !ast.checkpoint->is_buddy) {
-    stream << indent() << "std::atomic_bool cancel_token;" << endl;
-    stream << indent() << "archive_periodically(cancel_token, ";
-    stream << "checkpoint_interval" << ");" << endl;
-    stream << indent() << *ast.grammar()->axiom->code()->return_type;
-    stream << " ans = ";
-  } else {
-    stream << indent() << "return ";
-  }
-
-  stream << "nt_" << *ast.grammar()->axiom_name << '(';
+  stream << indent() << "return nt_" << *ast.grammar()->axiom_name << '(';
 
   bool first = true;
   size_t track = 0;
@@ -2745,17 +2736,6 @@ void Printer::Cpp::print_run_fn(const AST &ast) {
 
   stream << ");" << endl;
 
-  if (ast.checkpoint && !ast.checkpoint->is_buddy) {
-    stream << indent() << "cancel_token.store(false);  "
-                          "// stop periodic checkpointing" << endl;
-    stream << indent() << "if (!keep_archives) {" << endl;
-    inc_indent();
-    stream << indent() << "remove_tables();" << endl;
-    stream << indent() << "remove_log_file();" << endl;
-    dec_indent();
-    stream << indent() << "}" << endl;
-    stream << indent() << "return ans;" << endl;
-  }
   dec_indent();
   stream << indent() << '}' << endl << endl;
 }
