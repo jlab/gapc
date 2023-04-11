@@ -38,8 +38,21 @@ static const char *COLOR_NONTERMINAL = "black";
 static const char *COLOR_BLOCK = "gray";
 static const char *COLOR_EVALFCT = "purple";
 
-static const bool HIDEINVISIBLE = true;
+// a mechanism to properly indent dot code
+static int indent_depth = 0;
+std::string indent() {
+  return std::string(indent_depth * 2, ' ');
+}
+void inc_indent() {
+  indent_depth++;
+}
+void dec_indent() {
+  indent_depth--;
+  assert(indent_depth >= 0);
+}
 
+// decide if invisible edges shall become visible for debugging
+static const bool HIDEINVISIBLE = true;
 std::string make_insivible(bool singlearg) {
   if (!HIDEINVISIBLE) {
     return "";
@@ -51,6 +64,65 @@ std::string make_insivible(bool singlearg) {
     }
   }
 }
+
+// produce a legend explaining types of nodes
+void legend(unsigned int nodeID, std::ostream &out, int plot_grammar) {
+  out << indent() << "node_" << (nodeID-1) << " -> ln_anchor [ "
+      << make_insivible(true) << " ];\n";
+
+  out << indent() << "subgraph cluster_legend {\n";
+  inc_indent();
+  out << indent() << "labeljust=\"l\";\n";
+  out << indent() << "fontsize=\"18.0\";\n";
+  out << indent() << "label=\"Legend\";\n";
+  out << indent() << "ln_anchor [ " << make_insivible(false)
+                  << "shape=box, fixedsize=true, width=0.01, label=\"\" ];\n";
+  out << indent() << "ln_terminal [ label=\"terminal\", color=\""
+      << COLOR_TERMINAL << "\" ];\n";
+  out << indent() << "ln_algfct [ label=\"algebra function\", color=\""
+      << COLOR_ALGFCT << "\" ];\n";
+  out << indent() << "ln_nt [ label=\"non-terminal\", color=\""
+      << COLOR_NONTERMINAL << "\" ];\n";
+  out << indent() << "ln_axiom [ label=\"axiom\", color=\""
+      << COLOR_NONTERMINAL << "\", penwidth=3, shape=\"box\" ];\n";
+  out << indent() << "ln_overlay [ label=\"index overlay\", color=\""
+      << COLOR_INDICES << "\", shape=\"polygon\", sides=8 ];\n";
+  out << indent() << "ln_block [ label=\"block\", color=\""
+      << COLOR_BLOCK << "\" ];\n";
+  out << indent() << "ln_lhs_nt_tab [ label=\"tabulated\", color=\""
+      << COLOR_NONTERMINAL << "\", shape=\"box\", style=\"dotted\" ];\n";
+  out << indent() << "ln_lhs_nt_nontab [ label=\"not tabulated\", color=\""
+      << COLOR_NONTERMINAL << "\", shape=\"box\" ];\n";
+  out << indent() << "ln_filter [ label=\"filter\", fontcolor=\""
+      << COLOR_FILTER << "\", shape=none ];\n";
+  out << indent() << "ln_choice [ label=\"evaluation function\", fontcolor=\""
+      << COLOR_EVALFCT << "\", shape=none ];\n";
+  out << indent() << "ln_type [ label=\"data type\", fontcolor=\""
+      << COLOR_TYPE << "\", shape=none ];\n";
+
+  // defines plotting order of legend elements
+  out << indent()
+      << "ln_anchor "
+      << "-> ln_axiom "
+      << "-> ln_lhs_nt_tab "
+      << "-> ln_lhs_nt_nontab "
+      << "-> ln_nt "
+      << "-> ln_overlay "
+      << "-> ln_terminal "
+      << "-> ln_algfct "
+      << "-> ln_block "
+      << "-> ln_filter "
+      << "-> ln_choice "
+      << "-> ln_type "
+      << "[ " << make_insivible(true) << " ];\n";
+  out << indent() << "{ rank=same ln_anchor ln_terminal ln_algfct ln_nt "
+      << "ln_axiom ln_overlay ln_block ln_lhs_nt_tab ln_lhs_nt_nontab "
+      << "ln_filter ln_choice ln_type };\n";
+
+  dec_indent();
+  out << indent() << "};\n";
+}
+
 
 // the following functions produce graphViz code to represent the grammar
 void Alt::Link::to_dot_overlayindices(std::ostream &out, bool is_left_index) {
@@ -128,17 +200,17 @@ unsigned int Alt::Base::to_dot_semanticfilters(unsigned int *nodeID,
        filter != this->filters.end(); ++filter) {
     unsigned int childID = (unsigned int)((*nodeID)++);
     deepest_nodeID = childID;
-    out << "    node_" << childID << " [ label=\"";
+    out << indent() << "node_" << childID << " [ label=\"";
     to_dot_filternameargs(*filter, out);
     out << "\" , fontcolor=\"" << COLOR_FILTER << "\" , shape=none ];\n";
     if (childIDs) {
       for (std::vector<unsigned int>::const_iterator i = childIDs->begin();
            i != childIDs->end(); ++i) {
-        out << "node_" << *i << " -> node_" << childID
+        out << indent() << "node_" << *i << " -> node_" << childID
             << " [ arrowhead=none, color=\"" << COLOR_FILTER << "\" ];\n";
       }
     } else {
-      out << "    node_" << thisID << " -> node_" << childID
+      out << indent() << "node_" << thisID << " -> node_" << childID
           << " [ arrowhead=none, color=\"" << COLOR_FILTER << "\" ];\n";
     }
   }
@@ -160,7 +232,7 @@ unsigned int Alt::Base::to_dot_semanticfilters(unsigned int *nodeID,
        ++filterpos) {
     unsigned int childID = (unsigned int)((*nodeID)++);
     deepest_nodeID = childID;
-    out << "    node_" << childID << " [ label=<<table border='0'>";
+    out << indent() << "node_" << childID << " [ label=<<table border='0'>";
     for (std::vector<std::list<Filter*> >::iterator
          i = this->multi_filter.begin();
          i != this->multi_filter.end(); ++i) {
@@ -176,7 +248,7 @@ unsigned int Alt::Base::to_dot_semanticfilters(unsigned int *nodeID,
       out << "</td></tr>";
     }
     out << "</table>>, fontcolor=\"" << COLOR_FILTER << "\", shape=none ];\n";
-    out << "node_" << thisID << " -> node_" << childID
+    out << indent() << "node_" << thisID << " -> node_" << childID
         << " [ arrowhead=none, color=\"" << COLOR_FILTER << "\" ];\n";
   }
   return deepest_nodeID;
@@ -186,7 +258,7 @@ unsigned int* Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out,
   unsigned int max_depth = 1;
   unsigned int thisID = (unsigned int)((*nodeID)++);
   unsigned int deepest_nodeID = thisID;
-  out << "    node_" << thisID << " [ label=<<table border='0'><tr>";
+  out << indent() << "node_" << thisID << " [ label=<<table border='0'><tr>";
   Alt::Link *link = dynamic_cast<Alt::Link*>(this);
   if (plot_grammar > 1) {
     if (link && (link->is_explicit() == true)) {
@@ -310,7 +382,7 @@ unsigned int* Alt::Simple::to_dot(unsigned int *nodeID, std::ostream &out,
     if (argalt) {
       unsigned int* childID = argalt->alt_ref()->to_dot(nodeID, out,
               plot_grammar);
-      out << "    node_" << thisID << " -> node_" << childID[0]
+      out << indent() << "node_" << thisID << " -> node_" << childID[0]
           << " [ arrowhead=none ";
       if (childID[1] > max_depth) {
         max_depth = childID[1];
@@ -350,7 +422,7 @@ unsigned int* Alt::Block::to_dot(unsigned int *nodeID, std::ostream &out,
         deepest_nodeID = res2[2];
     }
     unsigned int childID = res2[0];
-    out << "    node_" << thisID << " -> node_" << childID
+    out << indent() << "node_" << thisID << " -> node_" << childID
         << " [ ];\n";
   }
   res[1] = max_depth;
@@ -360,7 +432,9 @@ unsigned int* Alt::Block::to_dot(unsigned int *nodeID, std::ostream &out,
 unsigned int* Alt::Multi::to_dot(unsigned int *nodeID, std::ostream &out,
         int plot_grammar) {
   unsigned int thisID = (unsigned int)((*nodeID)++);
-  out << "subgraph cluster_node_" << thisID << " {\n";
+  out << indent() << "subgraph cluster_node_" << thisID << " {\n";
+  inc_indent();
+  out << indent() << "peripheries=1;\n";
   unsigned int lastID = 0;
   unsigned int max_depth = 0;
   unsigned int deepest_nodeID = 0;
@@ -372,7 +446,7 @@ unsigned int* Alt::Multi::to_dot(unsigned int *nodeID, std::ostream &out,
     deepest_nodeID = childID[2];
     childIDs->push_back(childID[0]);
     if (lastID > 0) {
-      out << "    node_" << lastID << " -> node_" << childID[0]
+      out << indent() << "node_" << lastID << " -> node_" << childID[0]
           << " [ " << make_insivible(true) << " ];\n";
     }
     lastID = childID[0];
@@ -387,7 +461,8 @@ unsigned int* Alt::Multi::to_dot(unsigned int *nodeID, std::ostream &out,
     max_depth++;
     deepest_nodeID = filter_nodeID;
   }
-  out << "};\n";
+  dec_indent();
+  out << indent() << "};\n";
 
   unsigned int* res = (unsigned int*) malloc(3*sizeof(unsigned int*));
   res[0] = thisID+1;
@@ -438,7 +513,7 @@ void Alt::Link::ntparas_to_dot(std::ostream &out) {
 unsigned int Symbol::Base::to_dot(unsigned int *nodeID, std::ostream &out,
         bool is_rhs, Symbol::NT *axiom, int plot_grammar) {
   unsigned int thisID = (unsigned int)((*nodeID)++);
-  out << "    node_" << thisID << " [ label=<<table border='0'><tr>";
+  out << indent() << "node_" << thisID << " [ label=<<table border='0'><tr>";
   if (plot_grammar > 1) {
     to_dot_indices(this->left_indices, out);
     out << "<td>" << *this->name;
@@ -516,21 +591,30 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
     if (this->alts.size() > 0) {
       sepNodeID = (unsigned int)((*nodeID)++);
       // add an invisible edge from lhs NT to --> node
-      out << "    node_" << thisID << " -> node_" << sepNodeID
+      out << indent() << "node_" << thisID << " -> node_" << sepNodeID
           << " [ " << make_insivible(false) << "weight=99 ];\n";
       // adding a separator node to draw the --> arrow from lhs NT
       // name to alternatives
-      out << "    node_" << sepNodeID << " [ label=<<table border='0'><tr>"
+      out << indent() << "node_" << sepNodeID
+          << " [ label=<<table border='0'><tr>"
           << "<td><font point-size='30'>&rarr;</font></td></tr></table>>,"
           << " shape=plaintext ];\n";
       // add an invisible edge from the --> node to the first
       // alternative production
-      out << "    node_" << sepNodeID << " -> node_" << *nodeID
-          << " [ " << make_insivible(true) << " ];\n";
+      // out << "    node_" << sepNodeID << " -> node_" << *nodeID
+      //     << " [ " << make_insivible(true) << " ];\n";
       rank += "node_" + std::to_string(sepNodeID) + " ";
     }
-    for (std::list<Alt::Base*>::const_iterator alt = this->alts.begin();
-         alt != this->alts.end(); ++alt) {
+    // smj: I could not find a better way than to print cluster in reverse order
+    // to maintain user defined order of alternatives
+    for (std::list<Alt::Base*>::const_reverse_iterator
+         alt = this->alts.rbegin();
+         alt != this->alts.rend(); ++alt) {
+      // wrap each alternative in a cluster to avoid reordering of children
+      out << indent() << "subgraph cluster_alt_" << *nodeID << " {\n";
+      inc_indent();
+      out << indent() << "peripheries=0;\n";
+
       // drawing the alternative
       res = (*alt)->to_dot(nodeID, out, plot_grammar);
       unsigned int childID = res[0];
@@ -539,19 +623,29 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
         deepest_nodeID = res[2];
       }
 
+      // close cluster wrap
+      dec_indent();
+      out << indent() << "};\n";
+
       rank += "node_" + std::to_string(childID) + " ";
-      if (std::next(alt) != this->alts.end()) {
+      if (std::next(alt) != this->alts.rend()) {
         // add a separator node to draw a | symbol between every
         // two alternatives. This is similar to the --> node, i.e. with
         // incoming and outgoing invisible edges
         sepNodeID = (unsigned int)((*nodeID)++);
-        out << "    node_" << childID << " -> node_" << sepNodeID
-            << " [ " << make_insivible(true) << " ];\n";
-        out << "    node_" << sepNodeID << " [ label=<<table border='0'>"
+        // out << "    node_" << childID << " -> node_" << sepNodeID
+        //     << " [ " << make_insivible(true) << " ];\n";
+        out << indent() << "subgraph cluster_bar_" << sepNodeID << " {\n";
+        inc_indent();
+        out << indent() << "peripheries=0;\n";
+        out << indent() << "node_" << sepNodeID
+            << " [ label=<<table border='0'>"
             << "<tr><td><font point-size='30'>|</font></td></tr></table>>"
             << ", shape=plaintext ];\n";
-        out << "    node_" << sepNodeID << " -> node_" << *nodeID
-            << " [ " << make_insivible(true) << " ];\n";
+        dec_indent();
+        out << indent() << "};\n";
+        // out << "    node_" << sepNodeID << " -> node_" << *nodeID
+        //     << " [ " << make_insivible(true) << " ];\n";
         rank += "node_" + std::to_string(sepNodeID) + " ";
       }
     }
@@ -564,7 +658,7 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
     std::string edge_choice = "";
     if (this->eval_fn != NULL) {
       choiceID = (unsigned int)((*nodeID)++);
-      out << "    node_" << choiceID << " [ label=<" << *this->eval_fn;
+      out << indent() << "node_" << choiceID << " [ label=<" << *this->eval_fn;
       if (plot_grammar > 2) {
         // if we want to also print out datatypes
         out << "<br/><font color='" << COLOR_TYPE << "'>";
@@ -581,7 +675,7 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
        * dot file. Since we (often) need an invisible node for proper left
        * alignment of lhs NTs, we must ensure that edge from lhs NT to choice
        * happens AFTER definition of edge lhs NT -> invisible node. */
-      edge_choice = "    node_" + std::to_string(thisID) + " -> node_" +
+      edge_choice = "node_" + std::to_string(thisID) + " -> node_" +
           std::to_string(choiceID) + " [ arrowhead=none, color=\"" +
           COLOR_EVALFCT + "\" ];\n";
       // choice function will be located on depth+1, i.e. one less
@@ -610,21 +704,21 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
         anchorID = thisID;
       } else {
         anchorID = (unsigned int)((*nodeID)++);
-        out << "    node_" << anchorID << " [ " << make_insivible(false)
+        out << indent() << "node_" << anchorID << " [ " << make_insivible(false)
             << "shape=box, fixedsize=true, width=0.01, label=\"\" ];\n";
-        out << "    { rank=same node_" << anchorID << " node_" << deepest_nodeID
-            << "}\n";
+        out << indent() << "{ rank=same node_" << anchorID << " node_"
+            << deepest_nodeID << " }\n";
       }
       assert(anchorID != 0);
-      out << "    node_" << thisID << ":sw -> node_" << anchorID << ":nw ["
-          << make_insivible(false) << "weight=999 ];\n";
+      out << indent() << "node_" << thisID << ":sw -> node_"
+          << anchorID << ":nw [" << make_insivible(false) << "weight=999 ];\n";
     }
 
     // only after lhs NT -> invisible node edge has been added, we are save to
     // insert edge: lhs NT -> choice, to preserve child ordering
-    out << edge_choice;
+    out << indent() << edge_choice;
 
-    out << "    { rank=same node_" << thisID << " " << rank << "}\n";
+    out << indent() << "{ rank=same node_" << thisID << " " << rank << "}\n";
   }
   // if is_rhs = True, name will be drawn by alt::Base
   free(res);
@@ -637,26 +731,37 @@ unsigned int Grammar::to_dot(unsigned int *nodeID, std::ostream &out,
   int start_node;
   unsigned int i = 1;
   out << "digraph " << *this->name << " {\n";
-  out << "compound = True;\n";
-  out << "newrank = True;\n";
-  out << "ordering = out;\n";
+  inc_indent();
+  out << indent() << "compound = True;\n";
+  out << indent() << "newrank = True;\n";
+  out << indent() << "ordering = out;\n";
+  out << indent() << "label=\"grammar '" << *this->name << "'\";\n";
+  out << indent() << "labelloc=\"top\"\n";
+  out << indent() << "fontsize=\"20.0\"\n";
   for (std::list<Symbol::NT*>::const_iterator nt = this->nt_list.begin();
        nt != this->nt_list.end(); ++nt, ++i) {
     if (nt != this->nt_list.begin()) {
       // except for the first unit, we add an invisible node (anchor) and
       // invisible edges from the anchor to the lhs non-terminal node of the
       // next unit to enable vertical alignment
-      out << "node_" << start_node << ":sw -> node_" << std::to_string(*nodeID)
-          << ":nw [ " << make_insivible(true) << " ];\n";
+      out << indent() << "node_" << start_node << ":sw -> node_"
+          << std::to_string(*nodeID) << ":nw [ " << make_insivible(true)
+          << " ];\n";
     }
     // let's organize all nodes of a lhs non-terminal in one subgraph cluster
     // such that it can be plotted as one unit and these units are
     // vertically stacked, while elements in the unit are horizontally aligned
-    out << "subgraph cluster_" << i << " {\n";
+    out << indent() << "subgraph cluster_" << i << " {\n";
+    inc_indent();
+    out << indent() << "peripheries=1;\n";
+    out << indent() << "label=\"\";\n";
     start_node = (*nt)->to_dot(nodeID, out, false, this->axiom, plot_grammar);
-    out << "}\n";
+    dec_indent();
+    out << indent() << "}\n";
   }
-  out << "}\n";
+  legend(*nodeID, out, plot_grammar);
+  dec_indent();
+  out << indent() << "}\n";
   return ((unsigned int)*nodeID);
 }
 
@@ -669,3 +774,4 @@ void Type::Base::to_dot(std::ostream &out) {
   replaceAll(dtype, std::string(">"), std::string("&gt;"));
   out << dtype;
 }
+
