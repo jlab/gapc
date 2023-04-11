@@ -67,7 +67,7 @@ std::string make_insivible(bool singlearg) {
 
 // produce a legend explaining types of nodes
 void legend(unsigned int nodeID, std::ostream &out, int plot_grammar) {
-  out << indent() << "node_" << nodeID << " -> ln_anchor [ "
+  out << indent() << "node_" << nodeID << ":sw -> ln_anchor:nw [ "
       << make_insivible(true) << " ];\n";
 
   out << indent() << "subgraph cluster_legend {\n";
