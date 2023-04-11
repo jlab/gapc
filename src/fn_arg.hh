@@ -125,7 +125,10 @@ class Base {
 
     virtual void traverse(Visitor &v) = 0;
     virtual void init_indices(Expr::Base *left, Expr::Base *right,
-    unsigned int &k, size_t track);
+      unsigned int &k, size_t track);
+    virtual void init_indices_outside(Expr::Base *left, Expr::Base *right,
+      unsigned int &k, size_t track, Expr::Base *center_left,
+      Expr::Base *center_right, bool is_right_of_outside_nt = false);
 
     virtual void init_ret_decl(unsigned int i, const std::string &prefix);
 
@@ -180,6 +183,9 @@ class Alt : public Base {
     void traverse(Visitor &v);
     void init_indices(
       Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
+    virtual void init_indices_outside(Expr::Base *left, Expr::Base *right,
+      unsigned int &k, size_t track, Expr::Base *center_left,
+      Expr::Base *center_right, bool is_right_of_outside_nt = false);
 
     void codegen(AST &ast);
     std::list<Statement::Base*> &statements();
@@ -230,7 +236,10 @@ class Const : public Base {
 
     void traverse(Visitor &v);
     void init_indices(Expr::Base *left, Expr::Base *right,
-    unsigned int &k, size_t track);
+      unsigned int &k, size_t track);
+    virtual void init_indices_outside(Expr::Base *left, Expr::Base *right,
+     unsigned int &k, size_t track, Expr::Base *center_left,
+     Expr::Base *center_right, bool is_right_of_outside_nt = false);
 
     void codegen(AST &ast);
     std::list<Statement::Base*> &statements();

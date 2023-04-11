@@ -76,27 +76,78 @@ class Cpp : public Base {
 
     void print_window_inc_fn(const AST &ast);
 
-    void print_openmp_cyk_nt_calls(const AST &ast);
-    void print_openmp_cyk_all_nt_calls(const AST &ast);
-    void print_openmp_cyk_helpervars();
+    void print_openmp_cyk_nt_calls(const AST &ast, bool for_outsideNTs = false);
+    void print_openmp_cyk_all_nt_calls(const AST &ast,
+                                       bool for_outsideNTs = false);
+    void print_openmp_cyk_helpervars(bool for_outsideNTs = false);
+    void print_openmp_cyk_loops_diag(const AST &ast, bool checkpoint,
+                                     bool for_outsideNTs = false);
+    void print_openmp_cyk_loops_middle(const AST &ast, bool checkpoint,
+                                       bool for_outsideNTs = false);
+    void print_openmp_cyk_loops_single(const AST &ast, bool checkpoint,
+                                       bool for_outsideNTs = false);
     void print_openmp_cyk(const AST &ast);
 
     std::string multi_index_str(const std::vector<Table> &tables,
-      const Yield::Multi &mys);
+      const Yield::Multi &mys, bool is_outside = false);
     void multi_print_inner_cyk(const std::list<Symbol::NT*> &l,
       const std::list<Symbol::NT*> &tord, size_t track, size_t tracks,
-      size_t track_pos, Type::Base *t, bool checkpoint);
+      size_t track_pos, Type::Base *t, bool checkpoint,
+      bool for_outsideNTs = false);
     void multi_partition_nts(const std::list<Symbol::NT*> &tord,
       std::list<Symbol::NT*> &all, std::list<Symbol::NT*> &inner,
       std::list<Symbol::NT*> &left, std::list<Symbol::NT*> &right,
       size_t track, size_t tracks, size_t track_pos);
+    void multi_print_cyk_loops_quadratic(
+      const std::list<Symbol::NT*> &tord,
+      size_t track,
+      size_t tracks,
+      size_t track_pos,
+      Type::Base *t,
+      std::list<Symbol::NT*> *inner,
+      std::list<Symbol::NT*> *left,
+      std::string *is,
+      std::string *js,
+      std::string *ns, bool for_outsideNTs = false);
+    void multi_print_cyk_loops_quadratic_inner(
+      const std::list<Symbol::NT*> &tord,
+      size_t track,
+      size_t tracks,
+      size_t track_pos,
+      Type::Base *t,
+      std::list<Symbol::NT*> *left,
+      std::string *is,
+      bool for_outsideNTs = false);
+    void multi_print_cyk_loops_linear(
+      const std::list<Symbol::NT*> &tord,
+      size_t track,
+      size_t tracks,
+      size_t track_pos,
+      Type::Base *t,
+      std::list<Symbol::NT*> *inner,
+      std::list<Symbol::NT*> *left,
+      std::list<Symbol::NT*> *right,
+      std::string *is,
+      std::string *js,
+      std::string *ns, bool for_outsideNTs = false);
+    void multi_print_cyk_loops_constant(
+      const std::list<Symbol::NT*> &tord,
+      size_t track,
+      size_t tracks,
+      size_t track_pos,
+      Type::Base *t,
+      std::list<Symbol::NT*> *all,
+      std::string *is, bool for_outsideNTs = false);
     void multi_print_cyk(const std::list<Symbol::NT*> &tord,
       size_t track, size_t tracks, size_t track_pos, Type::Base *t);
 
  public:
     void print_cyk_fn(const AST &ast);
+    void print_insideoutside_report_fn(
+      std::vector<std::string> outside_nt_list, const AST &ast);
 
  private:
+    void print_insideoutside(Symbol::NT *nt);
     void print_run_fn(const AST &ast);
     void print_stats_fn(const AST &ast);
 

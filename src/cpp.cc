@@ -1855,6 +1855,9 @@ void Printer::Cpp::header(const AST &ast) {
     if (ast.get_float_acc() > 0) {
             stream << "#define FLOAT_ACC " << ast.get_float_acc() << "\n";
     }
+    if ((*ast.grammar()).is_outside()) {
+      stream << "#define OUTSIDE\n";
+    }
 
     stream << "#define GAPC_CALL_STRING \"" << gapc_call_string << "\""
            << endl;
@@ -1960,40 +1963,52 @@ void Printer::Cpp::header(const AST &ast) {
 }
 
 
-void Printer::Cpp::print_openmp_cyk_nt_calls(const AST &ast) {
+void Printer::Cpp::print_openmp_cyk_nt_calls(const AST &ast,
+                                             bool for_outsideNTs) {
   std::list<Symbol::NT*> &tord = ast.grammar()->topological_ord();
   assert(tord.size() <= ast.grammar()->NTs.size());
   std::ostringstream o1;
   for (std::list<Symbol::NT*>::iterator i = tord.begin();
        i != tord.end(); ++i) {
-    assert(!(*i)->tables().empty());
-    if ((*i)->is_tabulated() && !(*i)->tables().front().is_cyk_right()) {
-      o1 << indent() << "nt_tabulate_" << *(*i)->name << "("
-        << multi_index_str((*i)->tables(), (*i)->multi_ys())
-        << ");\n";
+    if ((*i)->is_partof_outside == for_outsideNTs) {
+      assert(!(*i)->tables().empty());
+      if ((*i)->is_tabulated() && !(*i)->tables().front().is_cyk_right()) {
+        o1 << indent() << "nt_tabulate_" << *(*i)->name << "("
+          << multi_index_str((*i)->tables(), (*i)->multi_ys(),
+                             (*i)->is_partof_outside)
+          << ");\n";
+      }
     }
   }
   std::string nt_calls = o1.str();
   stream << nt_calls;
 }
 
-void Printer::Cpp::print_openmp_cyk_all_nt_calls(const AST &ast) {
+void Printer::Cpp::print_openmp_cyk_all_nt_calls(const AST &ast,
+                                                 bool for_outsideNTs) {
   std::list<Symbol::NT*> &tord = ast.grammar()->topological_ord();
   std::ostringstream o2;
   for (std::list<Symbol::NT*>::iterator i = tord.begin();
        i != tord.end(); ++i) {
-    if ((*i)->is_tabulated()) {
-      o2 << indent() << "nt_tabulate_" << *(*i)->name << "("
-        << multi_index_str((*i)->tables(), (*i)->multi_ys())
-        << ");\n";
+    if ((*i)->is_partof_outside == for_outsideNTs) {
+      if ((*i)->is_tabulated()) {
+        o2 << indent() << "nt_tabulate_" << *(*i)->name << "("
+          << multi_index_str((*i)->tables(), (*i)->multi_ys(),
+                             (*i)->is_partof_outside)
+          << ");\n";
+      }
     }
   }
   std::string all_nt_calls = o2.str();
   stream << all_nt_calls;
 }
 
-void Printer::Cpp::print_openmp_cyk_helpervars() {
-  stream << indent() << "unsigned int n = t_0_seq.size();" << endl;
+void Printer::Cpp::print_openmp_cyk_helpervars(bool for_outsideNTs) {
+  stream << indent() << "unsigned int ";
+  if (for_outsideNTs) {
+    stream << "t_0_";
+  }
+  stream << "n = t_0_seq.size();" << endl;
   if (!ast->checkpoint) {
     stream << indent() << "unsigned int tile_size = 32;" << endl;
     stream << "#ifdef TILE_SIZE" << endl;
@@ -2004,22 +2019,9 @@ void Printer::Cpp::print_openmp_cyk_helpervars() {
   stream << indent() << "unsigned int max_tiles = n / tile_size;" << endl;
   stream << indent() << "int max_tiles_n = max_tiles * tile_size;" << endl;
 }
-
-// FIXME adjust for multi-track (> 1 track)
-void Printer::Cpp::print_openmp_cyk(const AST &ast) {
-  // FIXME abstract from unsigned int, int -> perhaps wait for OpenMP 3
-  // since OpenMP < 3 doesn't allow unsigned int in workshared fors
-
-  // paral_start
-  stream << indent() << "#pragma omp parallel" << endl;
-  stream << indent() << '{' << endl;
-  inc_indent();
-
-  // helper_vars
-  print_openmp_cyk_helpervars();
-
-  bool checkpoint = ast.checkpoint && ast.checkpoint->cyk;
-
+void Printer::Cpp::print_openmp_cyk_loops_diag(const AST &ast,
+                                               bool checkpoint,
+                                               bool for_outsideNTs) {
   /*
    * need ordered clause in omp statement, because this will
    * ensure that each thread syncs with all other threads
@@ -2031,7 +2033,7 @@ void Printer::Cpp::print_openmp_cyk(const AST &ast) {
   if (checkpoint) {
     stream << indent() << "#pragma omp for ordered schedule(dynamic)" << endl;
   } else {
-  stream << indent() << "#pragma omp for" << endl;
+    stream << indent() << "#pragma omp for" << endl;
   }
   stream << indent() << "// OPENMP < 3 requires signed int here ..." << endl;
   stream << indent();
@@ -2041,18 +2043,18 @@ void Printer::Cpp::print_openmp_cyk(const AST &ast) {
   } else {
     stream << "for (int z = 0; z < max_tiles_n; z+=tile_size) {";
   }
-  stream << endl;
   inc_indent();
   if (checkpoint) {
     stream << indent() << "mutex.lock_shared();" << endl;
   }
-  stream << indent() << "for (unsigned int t_0_j = z; "
-         << "t_0_j < z + tile_size; ++t_0_j) {" << endl;
+  stream << indent();
+  stream << "for (unsigned int t_0_j = z; t_0_j < z + tile_size; ++t_0_j) {";
+  stream << endl;
   inc_indent();
-  stream << indent() << "for (int t_0_i = t_0_j + 1; "
-         << "t_0_i > z; --t_0_i) {" << endl;
+  stream << indent() << "for (int t_0_i = t_0_j + 1; t_0_i > z; --t_0_i) {";
+  stream << endl;
   inc_indent();
-  print_openmp_cyk_nt_calls(ast);
+  print_openmp_cyk_nt_calls(ast, for_outsideNTs);
   dec_indent();
   stream << indent() << "}" << endl;
   dec_indent();
@@ -2071,8 +2073,10 @@ void Printer::Cpp::print_openmp_cyk(const AST &ast) {
   }
   dec_indent();
   stream << indent() << "}" << endl;
-
-  // middle
+}
+void Printer::Cpp::print_openmp_cyk_loops_middle(const AST &ast,
+                                                 bool checkpoint,
+                                                 bool for_outsideNTs) {
   stream << endl;
   if (checkpoint) {
     stream << indent()
@@ -2088,25 +2092,26 @@ void Printer::Cpp::print_openmp_cyk(const AST &ast) {
     stream << indent() << "mutex.lock_shared();" << endl;
   } else {
     stream << indent()
-           << "for (int z = tile_size; "
-           << "z < max_tiles_n; z+=tile_size) {" << endl;
+           << "for (int z = tile_size; z < max_tiles_n; z+=tile_size) {"
+           << endl;
     inc_indent();
     stream << indent() << "#pragma omp for" << endl;
-    stream << indent() << "for (int y = z; y < max_tiles_n; y+=tile_size) {"
-           << endl;
+    stream << indent()
+           << "for (int y = z; y < max_tiles_n; y+=tile_size) {" << endl;
     inc_indent();
   }
   stream << indent() << "unsigned int x = y - z + tile_size;" << endl;
   stream << indent()
-         << "for (unsigned int t_0_j = y; "
-         << "t_0_j < y + tile_size; ++t_0_j) {" << endl;
+         << "for (unsigned int t_0_j = y; t_0_j < y + tile_size; ++t_0_j) {"
+         << endl;
   inc_indent();
   stream << indent()
-         << "for (unsigned int t_0_i = x; "
-         << "t_0_i > x - tile_size; --t_0_i) {" << endl;
+         << "for (unsigned int t_0_i = x; t_0_i > x - tile_size;"
+         << " --t_0_i) {"
+         << endl;
   inc_indent();
 
-  print_openmp_cyk_nt_calls(ast);
+  print_openmp_cyk_nt_calls(ast, for_outsideNTs);
 
   // paral_end
   dec_indent();
@@ -2133,11 +2138,10 @@ void Printer::Cpp::print_openmp_cyk(const AST &ast) {
   dec_indent();
   stream << indent() << "}  // end parallel" << endl;
   stream << endl;
-
-  // REPEAT: helper_vars
-  print_openmp_cyk_helpervars();
-
-  // single
+}
+void Printer::Cpp::print_openmp_cyk_loops_single(const AST &ast,
+                                                 bool checkpoint,
+                                                 bool for_outsideNTs) {
   if (checkpoint) {
     stream << indent()
            << "for (t_0_j = (t_0_j_loaded++) ? max_tiles_n : t_0_j; "
@@ -2162,9 +2166,7 @@ void Printer::Cpp::print_openmp_cyk(const AST &ast) {
   if (ast.checkpoint && ast.checkpoint->cyk) {
     stream << indent() << "mutex.lock_shared();" << endl;
   }
-
-  print_openmp_cyk_all_nt_calls(ast);
-
+  print_openmp_cyk_all_nt_calls(ast, for_outsideNTs);
   if (ast.checkpoint && ast.checkpoint->cyk) {
     stream << indent() << "mutex.unlock_shared();" << endl;
   }
@@ -2176,9 +2178,62 @@ void Printer::Cpp::print_openmp_cyk(const AST &ast) {
   stream << indent() << "}" << endl;
 }
 
+// FIXME adjust for multi-track (> 1 track)
+void Printer::Cpp::print_openmp_cyk(const AST &ast) {
+  // FIXME abstract from unsigned int, int -> perhaps wait for OpenMP 3
+  // since OpenMP < 3 doesn't allow unsigned int in workshared fors
+
+  // paral_start
+  stream << indent() << "#pragma omp parallel" << endl;
+  stream << indent() << '{' << endl;
+  inc_indent();
+
+  // helper_vars
+  print_openmp_cyk_helpervars();
+
+  bool checkpoint = ast.checkpoint && ast.checkpoint->cyk;
+
+  // diag
+  print_openmp_cyk_loops_diag(ast, checkpoint);
+
+  // middle
+  print_openmp_cyk_loops_middle(ast, checkpoint);
+
+  // REPEAT: helper_vars
+  print_openmp_cyk_helpervars();
+
+  // single
+  print_openmp_cyk_loops_single(ast, checkpoint);
+
+  // same as above but for outside non terminals
+  if (ast.grammar()->is_outside()) {
+    // paral_start
+    stream << endl << indent() << "// repeat for outside non-terminals" << endl;
+    stream << indent() << "#pragma omp parallel" << endl;
+    stream << indent() << '{' << endl;
+    inc_indent();
+
+    // helper_vars
+    print_openmp_cyk_helpervars(true);
+
+    // diag
+    print_openmp_cyk_loops_diag(ast, checkpoint, true);
+
+    // middle
+    print_openmp_cyk_loops_middle(ast, checkpoint, true);
+
+    // REPEAT: helper_vars
+    print_openmp_cyk_helpervars(true);
+
+    // single
+    print_openmp_cyk_loops_single(ast, checkpoint, true);
+  }
+}
+
 
 std::string Printer::Cpp::multi_index_str(
-  const std::vector<Table> &tables, const Yield::Multi &mys) {
+  const std::vector<Table> &tables, const Yield::Multi &mys,
+  bool is_outside) {
   assert(tables.size() == mys.tracks());
   std::ostringstream o;
   size_t track = 0;
@@ -2186,10 +2241,18 @@ std::string Printer::Cpp::multi_index_str(
   for (std::vector<Table>::const_iterator i = tables.begin();
        i != tables.end(); ++i, ++j, ++track) {
     if (!(*i).delete_left_index()) {
-      o << ", t_" << track << "_i-1";
+      if (is_outside == false) {
+        o << ", t_" << track << "_i-1";
+      } else {
+        o << ", (t_" << track << "_j - t_" << track << "_i + 1)";
+      }
     }
     if (!(*i).delete_right_index()) {
-      o << ", t_" << track << "_j";
+      if (is_outside == false) {
+        o << ", t_" << track << "_j";
+      } else {
+        o << ", (t_" << track << "_n - t_" << track << "_i + 1)";
+      }
     }
   }
   std::string r(o.str());
@@ -2205,7 +2268,7 @@ void Printer::Cpp::multi_print_inner_cyk(
   const std::list<Symbol::NT*> &l,
   const std::list<Symbol::NT*> &tord,
   size_t track, size_t tracks, size_t track_pos,
-  Type::Base *t, bool checkpoint) {
+  Type::Base *t, bool checkpoint, bool for_outsideNTs) {
   assert(track < tracks);
   if (track+1 != tracks) {
     multi_print_cyk(tord, track+1, tracks, track_pos, t);
@@ -2216,9 +2279,12 @@ void Printer::Cpp::multi_print_inner_cyk(
   }
   for (std::list<Symbol::NT*>::const_iterator i = l.begin();
        i != l.end(); ++i) {
-    std::string index_str = multi_index_str((*i)->tables(), (*i)->multi_ys());
-    stream << indent() << "nt_tabulate_" << *(*i)->name << '('
-           << index_str << ");" << endl;
+    if ((*i)->is_partof_outside == for_outsideNTs) {
+      std::string index_str = multi_index_str((*i)->tables(), (*i)->multi_ys(),
+                                              (*i)->is_partof_outside);
+      stream << indent() << "nt_tabulate_" << *(*i)->name << '('
+             << index_str << ");" << endl;
+    }
   }
 }
 
@@ -2493,13 +2559,167 @@ void Printer::Cpp::print_cyk_fn(const AST &ast) {
   stream << endl;
 }
 
+void Printer::Cpp::print_insideoutside(Symbol::NT *nt) {
+  std::stringstream list_args;
+  std::stringstream list_args_print;
+  std::list<Fn_Def*> &l = nt->code_list();
+  std::vector<std::string> *args = new std::vector<std::string>();
+  std::vector<std::string> *args_call = new std::vector<std::string>();
+
+  // aggregated level (=dim + tracks) of nested loops
+  unsigned int nesting = 0;
+
+  // opening for loops
+  for (size_t track = 0; track < nt->tracks(); ++track) {
+    unsigned int dim = 2;
+    if (nt->table_dims_inside[track].delete_left_index()) {
+      dim--;
+    }
+    if (nt->table_dims_inside[track].delete_right_index()) {
+      dim--;
+    }
+    if (dim >= 1) {
+      stream << indent() << "for (unsigned int t_" << track << "_i = t_"
+             << track << "_left_most; t_" << track << "_i <= t_" << track
+             << "_right_most; ++t_" << track << "_i) {" << endl;
+      inc_indent();
+      args->push_back("t_" + std::to_string(track) + "_i");
+    }
+    if (dim >= 2) {
+      stream << indent() << "for (unsigned int t_" << track << "_j = t_"
+             << track << "_i; t_" << track << "_j <= t_" << track
+             << "_right_most; ++t_" << track << "_j) {" << endl;
+      inc_indent();
+      args->push_back("t_" + std::to_string(track) + "_j");
+    }
+    nesting += dim;
+  }
+
+  for (size_t track = 0; track < nt->tracks(); ++track) {
+    std::string nextLoopVar = "i";
+    if (nt->table_dims_inside[track].delete_left_index()) {
+      if (!nt->tables()[track].delete_left_index()) {
+        args_call->push_back("t_" + std::to_string(track) + "_left_most");
+      }
+    } else {
+      args_call->push_back("t_" + std::to_string(track) + "_" + nextLoopVar);
+      nextLoopVar = "j";
+    }
+    if (nt->table_dims_inside[track].delete_right_index()) {
+      if (!nt->tables()[track].delete_right_index()) {
+        args_call->push_back("t_" + std::to_string(track) + "_right_most");
+      }
+    } else {
+      args_call->push_back("t_" + std::to_string(track) + "_" + nextLoopVar);
+    }
+  }
+
+  // loop body
+  bool first = true;
+  for (std::vector<std::string>::const_iterator a = args->begin();
+       a != args->end(); ++a) {
+    if (!first) {
+      list_args_print << " << \",\"";
+    }
+    first = false;
+    list_args_print << " << " << *a;
+  }
+  first = true;
+  for (std::vector<std::string>::const_iterator a = args_call->begin();
+         a != args_call->end(); ++a) {
+    if (!first) {
+      list_args << ", ";
+    }
+    first = false;
+    list_args << *a;
+  }
+  stream << indent() << "out << \"start answers " << *nt->name
+         << "(\"" << list_args_print.str() << " << \"):\\n\";\n";
+  for (std::list<Fn_Def*>::iterator i = l.begin(); i != l.end(); ++i) {
+    std::string res = "res_" + *(nt->name);
+    stream << indent() << *((*i)->return_type) << " " << res << " = nt_"
+           << *nt->name << "(" << list_args.str() << ");\n"
+           << indent() << "print_result(std::cout, " << res << ");\n";
+    // only for first return statement
+    break;
+  }
+  stream << indent() << "out << \"//end answers " << *nt->name << "(\""
+         << list_args_print.str() << " << \")\\n\";\n";
+
+  // close loops
+  for (unsigned int d = 0; d < nesting; ++d) {
+    dec_indent();
+    stream << indent() << "}" << endl;
+  }
+}
+void Printer::Cpp::print_insideoutside_report_fn(
+    std::vector<std::string> outside_nt_list, const AST &ast) {
+  stream << indent() << "void report_insideoutside(std::ostream &out) {"
+         << endl;
+  inc_indent();
+  std::list<Symbol::NT*> *reported_nts = new std::list<Symbol::NT*>();
+  for (std::vector<std::string>::iterator i = outside_nt_list.begin();
+       i != outside_nt_list.end(); ++i) {
+    if ((*i).compare(std::string("ALL")) == 0) {
+      reported_nts->clear();
+      for (hashtable<std::string, Symbol::Base*>::iterator
+           j = (*ast.grammar()).NTs.begin();
+           j != (*ast.grammar()).NTs.end(); ++j) {
+        Symbol::NT *inside_nt = dynamic_cast<Symbol::NT*>(j->second);
+        if (inside_nt) {
+          if (inside_nt->name->compare(std::string("outside_axioms")) == 0) {
+            continue;
+          }
+          if (!inside_nt->is_partof_outside) {
+            reported_nts->push_back(inside_nt);
+          }
+        }
+      }
+      break;
+    } else {
+      reported_nts->push_back(
+        dynamic_cast<Symbol::NT*>((*ast.grammar()->NTs.find(*i)).second));
+    }
+  }
+
+  for (std::list<Symbol::NT*>::iterator nt_inside = reported_nts->begin();
+       nt_inside != reported_nts->end(); ++nt_inside) {
+    hashtable<std::string, Symbol::Base*>::iterator outside_ntpair =
+      ast.grammar()->NTs.find(std::string("outside_") + *((*nt_inside)->name));
+    if (outside_ntpair == ast.grammar()->NTs.end()) {
+      // not all inside NTs will be translated into outside NTs, e.g.
+      // times = CHAR('*') won't have an outside counterpart.
+      continue;
+    }
+
+    print_insideoutside(*nt_inside);
+    Symbol::NT *nt_outside =
+      dynamic_cast<Symbol::NT*>((*outside_ntpair).second);
+    print_insideoutside(nt_outside);
+  }
+  dec_indent();
+  stream << indent() << "}" << endl << endl;
+}
 
 void Printer::Cpp::print_run_fn(const AST &ast) {
+  // TODO(sjanssen) can we redesign this function and use Expr::Base
+  // fn_arg functions?!
+
   stream << indent() << *ast.grammar()->axiom->code()->return_type;
   stream << " run() {" << endl;
   inc_indent();
 
-  stream << indent() << "return nt_" << *ast.grammar()->axiom_name << '(';
+  if (ast.checkpoint && !ast.checkpoint->is_buddy) {
+    stream << indent() << "std::atomic_bool cancel_token;" << endl;
+    stream << indent() << "archive_periodically(cancel_token, ";
+    stream << "checkpoint_interval" << ");" << endl;
+    stream << indent() << *ast.grammar()->axiom->code()->return_type;
+    stream << " ans = ";
+  } else {
+    stream << indent() << "return ";
+  }
+
+  stream << "nt_" << *ast.grammar()->axiom_name << '(';
 
   bool first = true;
   size_t track = 0;
@@ -2525,6 +2745,17 @@ void Printer::Cpp::print_run_fn(const AST &ast) {
 
   stream << ");" << endl;
 
+  if (ast.checkpoint && !ast.checkpoint->is_buddy) {
+    stream << indent() << "cancel_token.store(false);  "
+                          "// stop periodic checkpointing" << endl;
+    stream << indent() << "if (!keep_archives) {" << endl;
+    inc_indent();
+    stream << indent() << "remove_tables();" << endl;
+    stream << indent() << "remove_log_file();" << endl;
+    dec_indent();
+    stream << indent() << "}" << endl;
+    stream << indent() << "return ans;" << endl;
+  }
   dec_indent();
   stream << indent() << '}' << endl << endl;
 }

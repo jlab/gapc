@@ -1,0 +1,1 @@
+../grammar/loco3stem.gap

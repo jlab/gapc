@@ -93,8 +93,12 @@ int main(int argc, char **argv) {
 
   gapc::add_event("end_computation");
 
+#ifndef OUTSIDE
   std::cout << "Answer: \n";
   obj.print_result(std::cout, res);
+#else
+  obj.report_insideoutside(std::cout);
+#endif
 
   gapc::add_event("end_result_pp");
 

@@ -28,6 +28,7 @@
 #include <list>
 #include <vector>
 #include <string>
+#include <utility>
 
 #include "grammar.hh"
 #include "runtime.hh"
@@ -136,6 +137,10 @@ class Base {
  protected:
   std::vector<Expr::Base*> left_indices;
   std::vector<Expr::Base*> right_indices;
+  // for outside non-terminals: store original inner left/right indices for
+  // guards construction
+  std::vector<Expr::Base*> left_inside_indices;
+  std::vector<Expr::Base*> right_inside_indices;
 
  public:
   Statement::Var_Decl *ret_decl;
@@ -219,6 +224,22 @@ class Base {
 
   virtual void init_indices(
     Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
+  // recurses into alternatives, finds the single outside NT and updates
+  // only its left and right indices used after init_indices_outside
+  // initializes all other incides
+  // e.g. foo(k1_REGION_i, i_bar_j, j_REGION_k2) --> foo(k1_REGION_i,
+  //                       ^     ^
+  //          k1_bar_k2, j_REGION_k2)
+  //          ^^     ^^
+  virtual void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right,
+    size_t track);
+  virtual std::pair<Yield::Size*, Yield::Size*> *get_outside_accum_yieldsizes(
+    size_t track, bool is_right_of_outside_nt = false);
+  // sets indices for outside rules, respecting yield sizes
+  virtual void init_indices_outside(
+    Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track,
+    Expr::Base *center_left, Expr::Base *center_right,
+    bool is_right_of_outside_nt = false);
 
   virtual void init_ret_decl(unsigned int i, const std::string &prefix);
 
@@ -269,13 +290,15 @@ class Base {
  protected:
   Yield::Multi m_ys;
 
+
  public:
   virtual void init_multi_ys();
   const Yield::Multi &multi_ys() const {
     return m_ys;
   }
+  Yield::Multi m_ys_inside;
 
- private:
+ public:
   std::vector<std::list<Filter*> > multi_filter;
 
  public:
@@ -316,8 +339,45 @@ class Base {
   bool choice_set();
   unsigned int to_dot_semanticfilters(unsigned int *nodeID, unsigned int thisID,
     std::ostream &out, std::vector<unsigned int> *childIDs = NULL);
+
   virtual unsigned int* to_dot(unsigned int *nodeID, std::ostream &out,
-          int plot_level);
+    int plot_level);
+
+  // traverses the alternative (=rhs of a production) and collects pointers
+  // to all referenced non-terminals e.g.
+  // ml_comps = cadd(incl(dangle), ml_comps1)
+  // should return [*dangle, *ml_comps1]
+  virtual void get_nonterminals(std::list<Symbol::NT*> *nt_list);
+
+  // flag alternative as being part of a generated outside non-terminal
+  // such that code generation can discriminate between inside (default)
+  // and outside.
+  virtual void set_partof_outside(bool is_outside);
+  // traverses the alternative (=rhs of a production), iff non-terminal find
+  // is contained, replace with first occurence of non-terminal replace
+  virtual bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace,
+    hashtable<std::string, unsigned int> &skip_occurences);
+
+  // returns either the single outside non-terminal or NULL
+  Symbol::NT *get_outside_nt(Alt::Base *alt);
+
+ protected:
+  // private flag to indicate if alternative is for inside (the default) or
+  // outside production rules. See set_partof_outside()
+  bool is_partof_outside;
+
+ public:
+  bool get_is_partof_outside() {
+    return this->is_partof_outside;
+  }
+  // traverses production rule and returns pointer to topmost Alt::Block IFF
+  // production rule contains an Alt::Block, otherwise NULL
+  virtual Alt::Base* find_block();
+  // given a Alt::Block reference, returns the Alt::Base reference of the
+  // parent with child Alt::Block (necessary to change pointer when resolving
+  // blocks)
+  virtual Alt::Base *find_block_parent(const Alt::Base &block);
+  bool inside_end = false;
 };
 
 
@@ -402,6 +462,7 @@ class Simple : public Base {
   std::list<Statement::Base*> body_stmts;
 
   Statement::If *guards;
+  Statement::If *guards_inside;
   void ret_decl_empty_block(Statement::If *stmt);
   void deep_erase_if_backtrace(
     Statement::If *stmt, std::vector<Fn_Arg::Base*>::iterator start,
@@ -432,6 +493,20 @@ class Simple : public Base {
  public:
   void init_indices(
     Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
+  Expr::Base *get_next_var_right2left(Expr::Base *left_index,
+    Expr::Base *innermost_left_index, unsigned &k, size_t track,
+    Yield::Size ys_this, Yield::Size *ys_lefts);
+  Expr::Base *get_next_var_left2right(Expr::Base *right_index,
+    Expr::Base *innermost_right_index, unsigned &k, size_t track,
+    Yield::Size ys_this, Yield::Size *ys_rights);
+  void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right,
+    size_t track);
+  std::pair<Yield::Size*, Yield::Size*> *get_outside_accum_yieldsizes(
+    size_t track, bool is_right_of_outside_nt = false);
+  void init_indices_outside(
+    Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track,
+    Expr::Base *center_left, Expr::Base *center_right,
+    bool is_right_of_outside_nt = false);
   void put_indices(std::ostream &s);
 
   void reset();
@@ -458,6 +533,9 @@ class Simple : public Base {
     std::list<Statement::Base*> *stmts,
     std::list<Statement::For *> loops,
     bool has_index_overlay);
+  std::list<Statement::Base*> *add_guards(
+    std::list<Statement::Base*> *stmts,
+    Statement::If *guards);
   void sum_rhs(
     Yield::Multi &y, std::list<Fn_Arg::Base*>::const_iterator i,
     const std::list<Fn_Arg::Base*>::const_iterator &end) const;
@@ -465,6 +543,14 @@ class Simple : public Base {
     Yield::Size &y, std::list<Fn_Arg::Base*>::const_iterator i,
     const std::list<Fn_Arg::Base*>::const_iterator &end,
     size_t track) const;
+  Yield::Size *sum_ys_lefts(
+    Yield::Size *y, std::list<Fn_Arg::Base*>::const_reverse_iterator i,
+    const std::list<Fn_Arg::Base*>::const_reverse_iterator &end, size_t track)
+    const;
+  Yield::Size *sum_ys_rights(
+    Yield::Size *y, std::list<Fn_Arg::Base*>::const_iterator i,
+    const std::list<Fn_Arg::Base*>::const_iterator &end, size_t track) const;
+
 
  public:
   bool multi_detect_loop(
@@ -500,6 +586,14 @@ class Simple : public Base {
   unsigned int* to_dot(unsigned int *nodeID, std::ostream &out,
           int plot_level);
 
+  void get_nonterminals(std::list<Symbol::NT*> *nt_list);
+  void set_partof_outside(bool is_outside);
+  bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace,
+    hashtable<std::string, unsigned int> &skip_occurences);
+
+  Alt::Base* find_block();
+  Alt::Base *find_block_parent(const Alt::Base &block);
+
  private:
   std::list<Statement::Base*> *insert_index_stmts(
     std::list<Statement::Base*> *stmts);
@@ -526,9 +620,9 @@ class Link : public Base {
   Symbol::Base *nt;
 
 
-  // Inits the insatnce and sets the local fields according to
+  // Inits the instance and sets the local fields according to
   // the parameter values of the non-terminal name. It also sets
-  // the pointer to the non-terminal grammar-node explicitely
+  // the pointer to the non-terminal grammar-node explicitly
   // to NULL.
   Link(std::string *n, const Loc&l)
     : Base(LINK, l), name(n), nt(NULL) {
@@ -575,6 +669,14 @@ class Link : public Base {
 
   void init_indices(
     Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
+  std::pair<Yield::Size*, Yield::Size*> *get_outside_accum_yieldsizes(
+    size_t track, bool is_right_of_outside_nt = false);
+  void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right,
+    size_t track);
+  void init_indices_outside(
+    Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track,
+    Expr::Base *center_left, Expr::Base *center_right,
+    bool is_right_of_outside_nt = false);
 
   // void init_ret_decl(unsigned int i);
 
@@ -599,7 +701,7 @@ class Link : public Base {
   void multi_init_calls(const Runtime::Poly &p, size_t base_tracks);
 
  private:
-  void add_args(Expr::Fn_Call *fn);
+  void add_args(Expr::Fn_Call *fn, bool for_outside_grammar = false);
 
  private:
   std::list<Expr::Base*> indices;
@@ -615,6 +717,7 @@ class Link : public Base {
 
  private:
   std::list<Expr::Base*> ntparas;
+  Statement::If *guards;
 
  public:
   void set_ntparas(const Loc &loc, std::list<Expr::Base*> *l);
@@ -622,8 +725,22 @@ class Link : public Base {
   bool check_ntparas();
 
   void optimize_choice();
+
+  void get_nonterminals(std::list<Symbol::NT*> *nt_list);
+  void set_partof_outside(bool is_outside);
+  bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace,
+    hashtable<std::string, unsigned int> &skip_occurences);
   unsigned int* to_dot(unsigned int *nodeID, std::ostream &out,
           int plot_level);
+  void init_outside_guards();
+  Alt::Base* find_block();
+  Alt::Base *find_block_parent(const Alt::Base &block);
+
+  /* flags the one and only situation where outside grammar
+   * transitions into inside rules, i.e. user defined axiom.
+   * we need to ensure that according NT call asks for the
+   * empy word. */
+  bool is_outside_inside_transition = false;
 };
 
 
@@ -674,6 +791,14 @@ class Block : public Base {
   void traverse(Visitor &v);
   void init_indices(
     Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
+  void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right,
+    size_t track);
+  std::pair<Yield::Size*, Yield::Size*> *get_outside_accum_yieldsizes(
+    size_t track, bool is_right_of_outside_nt = false);
+  void init_indices_outside(
+    Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track,
+    Expr::Base *center_left, Expr::Base *center_right,
+    bool is_right_of_outside_nt = false);
 
   void codegen(AST &ast);
 
@@ -691,8 +816,15 @@ class Block : public Base {
 
   void multi_collect_factors(Runtime::Poly &p);
   void multi_init_calls(const Runtime::Poly &p, size_t base_tracks);
+
+  void get_nonterminals(std::list<Symbol::NT*> *nt_list);
+  void set_partof_outside(bool is_outside);
+  bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace,
+    hashtable<std::string, unsigned int> &skip_occurences);
   unsigned int* to_dot(unsigned int *nodeID, std::ostream &out,
           int plot_level);
+  Alt::Base* find_block();
+  Alt::Base *find_block_parent(const Alt::Base &block);
 };
 
 
@@ -744,6 +876,15 @@ class Multi : public Base {
 
   void init_indices(
     Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track);
+  void expand_outside_nt_indices(Expr::Base *left, Expr::Base *right,
+    size_t track);
+  std::pair<Yield::Size*, Yield::Size*> *get_outside_accum_yieldsizes(
+    size_t track, bool is_right_of_outside_nt = false);
+  void init_indices_outside(
+    Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track,
+    Expr::Base *center_left, Expr::Base *center_right,
+    bool is_right_of_outside_nt = false);
+
   void codegen(AST &ast);
   void print_dot_edge(std::ostream &out, Symbol::NT &nt);
   void print(std::ostream &s);
@@ -763,8 +904,15 @@ class Multi : public Base {
   void types(std::list< ::Type::Base*> &) const;
   const std::list<Statement::Var_Decl*> &ret_decls() const;
   void init_ret_decl(unsigned int i, const std::string &prefix);
+
+  void get_nonterminals(std::list<Symbol::NT*> *nt_list);
+  void set_partof_outside(bool is_outside);
+  bool replace_nonterminal(Symbol::NT *find, Symbol::NT *replace,
+    hashtable<std::string, unsigned int> &skip_occurences);
   unsigned int* to_dot(unsigned int *nodeID, std::ostream &out,
           int plot_level);
+  Alt::Base* find_block();
+  Alt::Base *find_block_parent(const Alt::Base &block);
 };
 
 }  // namespace Alt

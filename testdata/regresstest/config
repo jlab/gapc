@@ -481,3 +481,77 @@ check_new_old_eq eraseanswers.gap unused ins_count_failing "AC" eraseanswer
 check_new_old_eq eraseanswers.gap unused ins_count_working "AC" eraseanswer
 check_new_old_eq eraseanswers_product.gap unused ins "CaaG" eraseanswer_one
 check_new_old_eq eraseanswers_product.gap unused ins "CaaaG" eraseanswer_four
+
+# results have been verified against "RNAfold -p -d0 --bppmThreshold=0" v2.4.17 and Stefan's manual python outside version of nodangle
+GRAMMAR=../../grammar_outside
+GAPC="../../../gapc --outside_grammar weak --outside_grammar struct"
+check_new_old_eq nodangle.gap unused pfunc "CCaCCaaaGGaCCaaaGGaCCaaaGGaGG" outside
+check_new_old_eq nodangle.gap unused mfe "CCaCCaaaGGaCCaaaGGaCCaaaGGaGG" outside
+check_new_old_eq nodangle.gap unused count "CCaCCaaaGGaCCaaaGGaCCaaaGGaGG" outside
+
+# check that fn_arg (with alt) instead of only alt gets initialized
+check_new_old_eq nodangle_withoverlay.gap unused ins_pfunc "CCaCCaaaGGaCCaaaGGaCCaaaGGaGG" outside_overlay
+
+# same as above, but with CYK code generation
+GAPC="../../../gapc --outside_grammar weak --outside_grammar struct --cyk"
+check_new_old_eq nodangle.gap unused pfunc "CCaCCaaaGGaCCaaaGGaCCaaaGGaGG" outside
+
+# same as above, but with CYK code generation AND openMP parallelization
+GAPC="../../../gapc --outside_grammar weak --outside_grammar struct --cyk"
+CPPFLAGS_EXTRA="$DEFAULT_CPPFLAGS_EXTRA -fopenmp"
+LDLIBS_EXTRA="$DEFAULT_LDLIBS_EXTRA -fopenmp"
+if [ $(uname) = "Darwin" ]; then
+	CPPFLAGS_EXTRA="$DEFAULT_CPPFLAGS_EXTRA -Xpreprocessor -fopenmp -lomp "
+	LDLIBS_EXTRA="$DEFAULT_LDLIBS_EXTRA -Xpreprocessor -fopenmp -lomp -I\"$(brew --prefix libomp)/include\" -L\"$(brew --prefix libomp)/lib\""
+fi
+OMP_NUM_THREADS=2
+export OMP_NUM_THREADS
+check_new_old_eq nodangle.gap unused pfunc "CCaCCaaaGGaCCaaaGGaCCaaaGGaGG" outside
+
+
+GAPC="../../../gapc --outside_grammar ALL"
+CPPFLAGS_EXTRA=""
+LDLIBS_EXTRA=""
+check_new_old_eq hmm_sonneregen.gap unused count "SS" outside
+check_new_old_eq hmm_sonneregen.gap unused fwd "SS" outside
+check_new_old_eq hmm_sonneregen.gap unused fwd "SSRR" outside_ssrr
+
+# example in which inside and outside NTs have different dimensions
+check_new_old_eq tmhmm_debug.gap unused count "AA" outside_report
+
+# example with multiple tracks for outside report function
+check_new_old_eq_twotrack alignments.gap unused count "AAAA" outside_2track "BBB"
+check_new_old_eq_twotrack alignments.gap unused sim_enum "AA" outside_undefvar "B"
+
+# example with parameterized terminals e.g. ROPE("manfred")
+check_new_old_eq elmamun.gap unused count "1+2*3" outside_elm
+
+# check correct indices for multiple CONST_FLOAT args for outside generation; caused by incorrectly set yield size when replacing NTs
+check_new_old_eq nonzero_constsize.gap unused count "G" outside_constissue
+
+# test if outside to inside transitions works also for constant non-terminal tables, i.e. those missing t_0_i t_0_j parameters which should be replaced via dummies in this one and only situation
+check_new_old_eq constAxiom.gap unused enum "G" outside_out2in
+
+# check TMHMM outside with real sequence which previously revealed < 1.0 prob sums
+CPPFLAGS_EXTRA=$DEFAULT_CPPFLAGS_EXTRA
+check_new_old_eq tmhmm.gap unused fwd_scaled "MENLNMDLLYMAAAVMMGLAAIGAAIGIGILGGKFLEGAARQPDLIPLLRTQFFIVMGLVDAIPMIAVGLGLYVMFAVA" outside_tmhmm
+
+check_new_old_eq RFmini.gap unused enum "G" outside_cm
+check_new_old_eq RFmini.gap unused count "G" outside_cm
+
+# Results can be converted into probabilities via nt_inside(i,j) + nt_outside(i,j) - axiom(0,n) - axiom(0,0)
+# where axiom(0,0) is the pfunc value of the empty word. This words because we are in log2-space.
+# Converted to probabilities: 2^nt_inside(i,j) * 2^nt_outside(i,j) / 2^axiom(0,n) / 2^axiom(0,0)
+# The important aspect is that we have to also normalize by axiom(0,0) since the inside result of
+# the empty word "" != 0 <-- log2-space but will be integrated in each and every outside candidate
+check_new_old_eq RFmini.gap unused inside "G" outside_cm
+
+# more extensive example as before, also checked against cm_OutsideAlign of Infernal
+GAPC="../../../gapc --outside_grammar state_MR_3 --outside_grammar state_MP_6 --outside_grammar state_S_0 --outside_grammar state_E_120"
+check_new_old_eq RF00005.gap unused inside "GACGGUAU" outside_cm5
+
+GAPC="../../../gapc --outside_grammar a_1 --outside_grammar a_47 --outside_grammar a_82"
+# not yet explored
+#check_new_old_eq acmsearch_RF00005.gap unused inside "GACGGUAU" outside_acm
+
+CPPFLAGS_EXTRA=""

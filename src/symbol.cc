@@ -46,6 +46,7 @@
 
 #include "type/backtrace.hh"
 #include "alt.hh"
+#include "fn_arg.hh"
 
 
 Symbol::Base::Base(std::string *n, Type t, const Loc &l)
@@ -56,7 +57,7 @@ Symbol::Base::Base(std::string *n, Type t, const Loc &l)
     terminal_type(false), rt_computed(false),
     name(n), orig_name(n), location(l),
     tracks_(0),
-    track_pos_(0) {
+    track_pos_(0), is_partof_outside(false) {
   assert(name);
 }
 
@@ -750,8 +751,21 @@ void Symbol::NT::init_indices(Expr::Vacc *left, Expr::Vacc *right,
   left_indices[track] = left;
   right_indices[track] = right;
 
-  for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i)
-    (*i)->init_indices(left, right, k, track);
+  for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
+    if (this->is_partof_outside) {
+      if ((*i)->get_is_partof_outside() == false) {
+        // special treatment for a link to the original inside axiom, ensure
+        // that it has to consume the full input sequence(s)
+        (*i)->init_indices_outside(
+          left->plus(right), right->minus(left), k, track, NULL, NULL, false);
+        dynamic_cast<Alt::Link*>(*i)->init_outside_guards();
+      } else {
+        (*i)->init_indices_outside(left, right, k, track, NULL, NULL, false);
+      }
+    } else {
+      (*i)->init_indices(left, right, k, track);
+    }
+  }
 }
 
 Statement::Base *Symbol::NT::build_return_empty(const Code::Mode &mode) {
@@ -1193,6 +1207,9 @@ struct SetADPDisabled : public Visitor {
 };
 
 void Symbol::NT::codegen(AST &ast) {
+  // moving this uninizialized list to the front of the method to avoid issues with gdb within eclipse: https://www.eclipse.org/forums/index.php/t/1109346/
+  std::list<Statement::Base*> stmts;
+
   // disable specialisation if needed in backtrace mode
   SetADPDisabled v = SetADPDisabled(ast.code_mode() == Code::Mode::BACKTRACK &&
     tabulated, ast.code_mode().keep_cooptimal());
@@ -1222,8 +1239,6 @@ void Symbol::NT::codegen(AST &ast) {
     f = new Fn_Def(dt, new std::string("nt_" + *name));
   }
   f->add_para(*this);
-
-  std::list<Statement::Base*> stmts;
 
   subopt_header(ast, score_code, f, stmts);
 
@@ -1635,4 +1650,138 @@ bool Symbol::Terminal::isPredefinedTerminalParser() {
   return this->predefinedTerminalParser;
 }
 
+// a user provided grammar might contain production rules that use blocks
+//   e.g. NT = sadd(BASE, {hairpin | iloop})
+// this basically is a short hand notation for multiple alternatives, e.g.
+//   NT = sadd(BASE, hairpin) | sadd(BASE, iloop)
+// For outside grammar generation, we first want to make short-hand notations
+// explicit by applying this function to the selected grammar.
+// This only applies for NTs, not for Base or Terminal
+void Symbol::Base::resolve_blocks() {
+}
+void Symbol::Terminal::resolve_blocks() {
+}
+void Symbol::NT::resolve_blocks() {
+  for (std::list<Alt::Base*>::iterator alt = this->alts.begin();
+       alt != this->alts.end(); ++alt) {
+    // check if alternative contains any Alt::Block
+    Alt::Block *block = dynamic_cast<Alt::Block*>((*alt)->find_block());
+    while (block) {
+      // locate parent of found Alt::Block
+      Alt::Base *parent = (*alt)->find_block_parent(*block);
+      if (block->alts.size() == 1) {
+        // if a Alt::Block holds only one alternative,
+        // we can simply remove Alt::Block altogether
+        if (parent == NULL) {
+          // parent is the non-terminal
+          Alt::Base *child = block->alts.front();
+          child->top_level = Bool(true);
+          child->filters.insert(child->filters.end(), block->filters.begin(),
+                                block->filters.end());
+          child->multi_filter.insert(child->multi_filter.end(),
+                                     block->multi_filter.begin(),
+                                     block->multi_filter.end());
+          // keep original ordering, i.e. delete block and push
+          // single = last alt to the end
+          this->alts.push_back(child);
+          this->alts.erase(alt);
+          // reset iterator to first element
+          alt = this->alts.begin();
+        } else {
+          Alt::Simple *p_simple = dynamic_cast<Alt::Simple*>(parent);
+          if (p_simple) {
+            // if parent is of type Alt::Simple
+            for (std::list<Fn_Arg::Base*>::iterator j =
+                 p_simple->args.begin();
+                 j != p_simple->args.end(); ++j) {
+              Fn_Arg::Alt *p_simple_fnarg = dynamic_cast<Fn_Arg::Alt*>(*j);
+              if (p_simple_fnarg && (p_simple_fnarg->alt == block)) {
+                Alt::Base *child = block->alts.front();
+                child->filters.insert(child->filters.end(),
+                                      block->filters.begin(),
+                                      block->filters.end());
+                child->multi_filter.insert(child->multi_filter.end(),
+                                           block->multi_filter.begin(),
+                                           block->multi_filter.end());
+                p_simple_fnarg->alt = child;
+                break;
+              }
+            }
+          }
 
+          // a Link is a leaf and thus cannot contain a block
+          // Alt::Link *p_link = dynamic_cast<Alt::Link*>(parent);
+
+          // parent block should have been removed first!
+          // Alt::Block *p_block = dynamic_cast<Alt::Block*>(parent);
+
+          // Alternative is not allowed in Multi-Track link.
+          // Alt::Multi *p_multi = dynamic_cast<Alt::Multi*>(parent);
+        }
+      } else {
+        // the Alt::Block holds multiple alternatives.
+        if (parent == NULL) {
+          Alt::Base *child = block->alts.front()->clone();
+          child->top_level = Bool(true);
+          child->filters.insert(child->filters.end(),
+                                block->filters.begin(),
+                                block->filters.end());
+          child->multi_filter.insert(child->multi_filter.end(),
+                                     block->multi_filter.begin(),
+                                     block->multi_filter.end());
+          this->alts.push_back(child);
+          block->alts.pop_front();
+        } else {
+          Alt::Simple *p_simple = dynamic_cast<Alt::Simple*>(parent);
+          if (p_simple) {
+            // if parent is of type Alt::Simple
+            // 1) clone the full existing alternative
+            Alt::Base *newalt = (*alt)->clone();
+
+            // 2) remove first block alternative from original object
+            Alt::Base *first_block_alt = block->alts.front();
+            first_block_alt->filters.insert(first_block_alt->filters.end(),
+                                            block->filters.begin(),
+                                            block->filters.end());
+            first_block_alt->multi_filter.insert(
+                  first_block_alt->multi_filter.end(),
+                  block->multi_filter.begin(),
+                  block->multi_filter.end());
+            block->alts.pop_front();
+
+            // 3) remove Alt::Block and connect first block
+            // alternative to cloned object
+            Alt::Base *cloned_block = newalt->find_block();
+            // a clone of the alt rule containing block should have this
+            // block as well!
+            assert(cloned_block);
+            Alt::Simple *cloned_p_simple = dynamic_cast<Alt::Simple*>(
+              newalt->find_block_parent(*cloned_block));
+            // must exist and be Alt::Simple for above reasons
+            assert(cloned_p_simple);
+            for (std::list<Fn_Arg::Base*>::iterator j =
+                 cloned_p_simple->args.begin();
+                 j != cloned_p_simple->args.end(); ++j) {
+              Fn_Arg::Alt *cloned_p_simple_fnarg =
+                dynamic_cast<Fn_Arg::Alt*>(*j);
+              if (cloned_p_simple_fnarg &&
+                  (cloned_p_simple_fnarg->alt == cloned_block)) {
+                cloned_p_simple_fnarg->alt = first_block_alt;
+                break;
+              }
+            }
+
+            this->alts.insert(alt, newalt);
+          }
+
+          // as with the single case above, Link, Block,
+          // Multi cannot be parents
+        }
+      }
+
+      // for next iteration: check if production rules might still
+      // contain other blocks
+      block = dynamic_cast<Alt::Block*>((*alt)->find_block());
+    }
+  }
+}
