@@ -90,9 +90,9 @@ void legend(unsigned int nodeID, std::ostream &out, int plot_grammar) {
   out << indent() << "ln_block [ label=\"block\", color=\""
       << COLOR_BLOCK << "\" ];\n";
   out << indent() << "ln_lhs_nt_tab [ label=\"tabulated\", color=\""
-      << COLOR_NONTERMINAL << "\", shape=\"box\", style=\"dotted\" ];\n";
-  out << indent() << "ln_lhs_nt_nontab [ label=\"not tabulated\", color=\""
       << COLOR_NONTERMINAL << "\", shape=\"box\" ];\n";
+  out << indent() << "ln_lhs_nt_nontab [ label=\"not tabulated\", color=\""
+      << COLOR_NONTERMINAL << "\", shape=\"box\", style=\"dotted\" ];\n";
   out << indent() << "ln_filter [ label=\"filter\", fontcolor=\""
       << COLOR_FILTER << "\", shape=none ];\n";
   out << indent() << "ln_choice [ label=\"evaluation function\", fontcolor=\""
