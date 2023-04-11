@@ -735,6 +735,9 @@ unsigned int Grammar::to_dot(unsigned int *nodeID, std::ostream &out,
   out << indent() << "compound = True;\n";
   out << indent() << "newrank = True;\n";
   out << indent() << "ordering = out;\n";
+  out << indent() << "label=\"grammar '" << *this->name << "'\";\n";
+  out << indent() << "labelloc=\"top\"\n";
+  out << indent() << "fontsize=\"20.0\"\n";
   for (std::list<Symbol::NT*>::const_iterator nt = this->nt_list.begin();
        nt != this->nt_list.end(); ++nt, ++i) {
     if (nt != this->nt_list.begin()) {
@@ -751,6 +754,7 @@ unsigned int Grammar::to_dot(unsigned int *nodeID, std::ostream &out,
     out << indent() << "subgraph cluster_" << i << " {\n";
     inc_indent();
     out << indent() << "peripheries=1;\n";
+    out << indent() << "label=\"\";\n";
     start_node = (*nt)->to_dot(nodeID, out, false, this->axiom, plot_grammar);
     dec_indent();
     out << indent() << "}\n";
