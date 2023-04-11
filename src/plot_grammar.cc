@@ -67,7 +67,7 @@ std::string make_insivible(bool singlearg) {
 
 // produce a legend explaining types of nodes
 void legend(unsigned int nodeID, std::ostream &out, int plot_grammar) {
-  out << indent() << "node_" << (nodeID-1) << " -> ln_anchor [ "
+  out << indent() << "node_" << nodeID << " -> ln_anchor [ "
       << make_insivible(true) << " ];\n";
 
   out << indent() << "subgraph cluster_legend {\n";
@@ -710,13 +710,18 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
             << deepest_nodeID << " }\n";
       }
       assert(anchorID != 0);
-      out << indent() << "node_" << thisID << ":sw -> node_"
-          << anchorID << ":nw [" << make_insivible(false) << "weight=999 ];\n";
+      if (thisID != anchorID) {
+        out << indent() << "node_" << thisID << ":sw -> node_"
+            << anchorID << ":nw [" << make_insivible(false)
+            << "weight=999 ];\n";
+      }
     }
 
     // only after lhs NT -> invisible node edge has been added, we are save to
     // insert edge: lhs NT -> choice, to preserve child ordering
-    out << indent() << edge_choice;
+    if (this->eval_fn != NULL) {
+      out << indent() << edge_choice;
+    }
 
     out << indent() << "{ rank=same node_" << thisID << " " << rank << "}\n";
   }
@@ -759,7 +764,7 @@ unsigned int Grammar::to_dot(unsigned int *nodeID, std::ostream &out,
     dec_indent();
     out << indent() << "}\n";
   }
-  legend(*nodeID, out, plot_grammar);
+  legend(start_node, out, plot_grammar);
   dec_indent();
   out << indent() << "}\n";
   return ((unsigned int)*nodeID);
