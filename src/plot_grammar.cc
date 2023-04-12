@@ -733,7 +733,7 @@ unsigned int Symbol::NT::to_dot(unsigned int *nodeID, std::ostream &out,
 
 unsigned int Grammar::to_dot(unsigned int *nodeID, std::ostream &out,
         int plot_grammar) {
-  int start_node;
+  int start_node = *nodeID;
   unsigned int i = 1;
   out << "digraph " << *this->name << " {\n";
   inc_indent();
