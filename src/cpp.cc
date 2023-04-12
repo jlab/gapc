@@ -2139,7 +2139,9 @@ void Printer::Cpp::print_openmp_cyk_loops_middle(const AST &ast,
     inc_indent();
     stream << indent() << "inner_loop_2_idx += tile_size;" << endl;
     stream << indent() << "outer_loop_2_idx = z;" << endl;
-    stream << indent() << "mutex.unlock_shared();" << endl;
+    if (for_outsideNTs) {
+      stream << indent() << "mutex.unlock_shared();" << endl;
+    }
     dec_indent();
     stream << indent() << "}" << endl;
   }
@@ -2182,7 +2184,7 @@ void Printer::Cpp::print_openmp_cyk_loops_single(const AST &ast,
     stream << indent() << "mutex.lock_shared();" << endl;
   }
   print_openmp_cyk_all_nt_calls(ast, for_outsideNTs);
-  if (ast.checkpoint && ast.checkpoint->cyk) {
+  if (ast.checkpoint && ast.checkpoint->cyk && for_outsideNTs) {
     stream << indent() << "mutex.unlock_shared();" << endl;
   }
 
@@ -2566,7 +2568,7 @@ void Printer::Cpp::multi_print_cyk(
   multi_print_cyk_loops_constant(
     tord, track, tracks, track_pos, t, &all, &is,
     checkpoint, false);
-  if (checkpoint) {
+  if (checkpoint && this->ast->grammar()->is_outside()) {
     stream << indent() << "mutex.unlock();" << endl;
   }
 
