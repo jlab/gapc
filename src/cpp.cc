@@ -2352,22 +2352,23 @@ void Printer::Cpp::multi_print_cyk_loops_quadratic(
   if (!inner->empty()) {
     if (checkpoint) {
       /*
-         in checkpointing mode, the loop indices
-         (e.g. t_0_i and t_0_j in single-track mode;
-          names can differ in multi-track mode)
-         are members of the out class instead of local loop variables
-         so they can be archived/loaded;
-         if they are loaded, the loop variable (e.g. t_0_j) starts
-         from whatever value was loaded from the checkpoint,
-         which is handled through a marker
-         for every loop variable (e.g. "t_0_j_loaded");
-         initially, all of these marker values are set to 0, which will
-         set each loop variable to whatever value was loaded from the checkpoint;
-         after that, the respective marker value will be set to 1,
-         so the loop variable will be set to whatever
-         value is usually would be set to
+       in checkpointing mode, the loop indices
+       (e.g. t_0_i and t_0_j in single-track mode;
+        names can differ in multi-track mode)
+       are members of the out class instead of local loop variables
+       so they can be archived/loaded;
+       if they are loaded, the loop variable (e.g. t_0_j) starts
+       from whatever value was loaded from the checkpoint,
+       which is handled through a marker
+       for every loop variable (e.g. "t_0_j_loaded");
+       initially, all of these marker values are set to 0, which will
+       set each loop variable to whatever value was loaded from the checkpoint;
+       after that, the respective marker value will be set to 1,
+       so the loop variable will be set to whatever
+       value is usually would be set to
       */
-      stream << indent() << "for (" << *js << " = (" << oprefix << *js << "_loaded++) "
+      stream << indent() << "for (" << *js << " = (" << oprefix << *js
+             << "_loaded++) "
              << "? 0 : " << oprefix << *js << "; "
              << *js << " < " << *ns << "; " << "++" << *js << ") {"
              << endl;
@@ -2391,7 +2392,8 @@ void Printer::Cpp::multi_print_cyk_loops_quadratic(
          for t_0_i in the first inner loop pass;
          afterwards it will regularly be set to t_0_j + 1;
       */
-      stream << indent() << "for (" << *is << " = (" << oprefix << *is << "_loaded++) "
+      stream << indent() << "for (" << *is << " = (" << oprefix << *is
+             << "_loaded++) "
              << "? " << *js << " + 1 : " << oprefix << *is << "; "
              << *is << " > 1; " << *is << "--) {" << endl;
     } else {
@@ -2457,7 +2459,8 @@ void Printer::Cpp::multi_print_cyk_loops_linear(
   if (inner->empty() && !left->empty()) {
     stream << indent() << "// C: linear loops" << endl;
     if (checkpoint) {
-      stream << indent() << "for (" << *js << " = (" << oprefix << *js << "_loaded++) "
+      stream << indent() << "for (" << *js << " = (" << oprefix << *js
+             << "_loaded++) "
              << "? 0 : " << oprefix << *js << "; " << *js << " < " << *ns
              << "; " << "++" << *js << ") {" << endl;
     } else {
@@ -2489,7 +2492,8 @@ void Printer::Cpp::multi_print_cyk_loops_linear(
          if the loaded value for t_0_j == t_0_n, so this is the loop that
          would get executed next
       */
-      stream << indent() << "for (" << *is << " = (" << oprefix << *is << "_loaded++) "
+      stream << indent() << "for (" << *is << " = (" << oprefix << *is
+             << "_loaded++) "
              << "? " << *js << " + 1 : " << oprefix << *is << "; "
              << *is << " > 1; " << *is << "--) {" << endl;
     } else {
