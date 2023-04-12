@@ -1,5 +1,6 @@
 ![example branch parameter](https://github.com/jlab/gapc/actions/workflows/c-cpp.yml/badge.svg)
-[![Anaconda-Server Badge](https://anaconda.org/bioconda/bellmans-gapc/badges/installer/conda.svg)](https://anaconda.org/bioconda/bellmans-gapc)
+[![Anaconda-Server Badge](https://anaconda.org/bioconda/bellmans-gapc/badges/version.svg)](https://anaconda.org/bioconda/bellmans-gapc)
+<a href="https://launchpad.net/~janssenlab/+archive/ubuntu/software" style="border: none;"><img src="http://media.launchpad.net/lp-badge-kit/launchpad-badge-w160px.png" alt="Launchpad logo" style="border: none;" height="20px;"/></a>
 ```
   ____       _ _                       _        _____          _____  
  |  _ \     | | |                     ( )      / ____|   /\   |  __ \ 

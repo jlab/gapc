@@ -27,7 +27,7 @@ run_cpp()
   log2 $1.$2.$4.out $1.$2.$4.err ./$1 $RUN_CPP_FLAGS $3
 }
 
-run_cpp_twotrack()
+run_cpp_two_track()
 {
   log2 $1.$2.$4.out $1.$2.$4.err ./$1 $RUN_CPP_FLAGS $3 $5
 }

@@ -80,11 +80,11 @@ class Cpp : public Base {
     void print_openmp_cyk_all_nt_calls(const AST &ast,
                                        bool for_outsideNTs = false);
     void print_openmp_cyk_helpervars(bool for_outsideNTs = false);
-    void print_openmp_cyk_loops_diag(const AST &ast,
+    void print_openmp_cyk_loops_diag(const AST &ast, bool checkpoint,
                                      bool for_outsideNTs = false);
-    void print_openmp_cyk_loops_middle(const AST &ast,
+    void print_openmp_cyk_loops_middle(const AST &ast, bool checkpoint,
                                        bool for_outsideNTs = false);
-    void print_openmp_cyk_loops_single(const AST &ast,
+    void print_openmp_cyk_loops_single(const AST &ast, bool checkpoint,
                                        bool for_outsideNTs = false);
     void print_openmp_cyk(const AST &ast);
 
@@ -92,8 +92,9 @@ class Cpp : public Base {
       const Yield::Multi &mys, bool is_outside = false);
     void multi_print_inner_cyk(const std::list<Symbol::NT*> &l,
       const std::list<Symbol::NT*> &tord, size_t track, size_t tracks,
-      size_t track_pos,
-      Type::Base *t, bool for_outsideNTs = false);
+      size_t track_pos, Type::Base *t,
+      bool checkpoint, bool no_mutex_def,
+      bool for_outsideNTs = false);
     void multi_partition_nts(const std::list<Symbol::NT*> &tord,
       std::list<Symbol::NT*> &all, std::list<Symbol::NT*> &inner,
       std::list<Symbol::NT*> &left, std::list<Symbol::NT*> &right,
@@ -108,7 +109,9 @@ class Cpp : public Base {
       std::list<Symbol::NT*> *left,
       std::string *is,
       std::string *js,
-      std::string *ns, bool for_outsideNTs = false);
+      std::string *ns,
+      bool checkpoint,
+      bool for_outsideNTs = false);
     void multi_print_cyk_loops_quadratic_inner(
       const std::list<Symbol::NT*> &tord,
       size_t track,
@@ -117,6 +120,7 @@ class Cpp : public Base {
       Type::Base *t,
       std::list<Symbol::NT*> *left,
       std::string *is,
+      bool checkpoint,
       bool for_outsideNTs = false);
     void multi_print_cyk_loops_linear(
       const std::list<Symbol::NT*> &tord,
@@ -129,7 +133,9 @@ class Cpp : public Base {
       std::list<Symbol::NT*> *right,
       std::string *is,
       std::string *js,
-      std::string *ns, bool for_outsideNTs = false);
+      std::string *ns,
+      bool checkpoint,
+      bool for_outsideNTs = false);
     void multi_print_cyk_loops_constant(
       const std::list<Symbol::NT*> &tord,
       size_t track,
@@ -137,7 +143,9 @@ class Cpp : public Base {
       size_t track_pos,
       Type::Base *t,
       std::list<Symbol::NT*> *all,
-      std::string *is, bool for_outsideNTs = false);
+      std::string *is,
+      bool checkpoint,
+      bool for_outsideNTs = false);
     void multi_print_cyk(const std::list<Symbol::NT*> &tord,
       size_t track, size_t tracks, size_t track_pos, Type::Base *t);
 

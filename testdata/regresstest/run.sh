@@ -99,7 +99,13 @@ check_checkpoint_eq()
 
   # run command and create checkpoint archives after $6 seconds
   RUN_CPP_FLAGS="--checkpointInterval 0:0:0:$6 --keepArchives"
-  ./$cpp_base $RUN_CPP_FLAGS $4 > /dev/null &
+
+  if [ $# == 7 ]; then
+    # if there are 7 function arguments, run in two-track mode
+    ./$cpp_base $RUN_CPP_FLAGS $4 $7 > /dev/null &
+  else
+    ./$cpp_base $RUN_CPP_FLAGS $4 > /dev/null &
+  fi
   PID=$!
 
   # wait for background process to finish
@@ -107,10 +113,16 @@ check_checkpoint_eq()
 
   # specify Logfile path and run command again (it will load the checkpoints this time)
   LOGFILE_PATH=$PWD"/"$cpp_base"_"$PID"_checkpointing_log.txt"
-  TABLE_PATH=$PWD"/"$cpp_base"_"$PID"_*_table"
+  TABLE_PATH=$PWD"/"$cpp_base"_"$PID"*"
   RUN_CPP_FLAGS="--checkpointInput $LOGFILE_PATH"
+  
+  if [ $# == 7 ]; then
+    # if there are 7 function arguments, run in two-track mode
+    run_cpp_two_track $cpp_base $3 $4 $5 $7
+  else
+    run_cpp $cpp_base $3 $4 $5
+  fi
 
-  run_cpp $cpp_base $3 $4 $5
   cmp_new_old_output $cpp_base $REF $3 $5
 
   if [ $temp != $failed ]; then
@@ -169,7 +181,7 @@ check_new_old_eq_twotrack()
 
   cpp_base=${1%%.*}
   build_cpp $GRAMMAR/$1 $cpp_base $3
-  run_cpp_twotrack $cpp_base $3 $4 $5 $6
+  run_cpp_two_track $cpp_base $3 $4 $5 $6
   cmp_new_old_output $cpp_base $REF $3 $5 $6
 
   if [ $temp != $failed ]; then
