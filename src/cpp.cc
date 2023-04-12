@@ -1552,6 +1552,12 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
         stream << indent() << "t_" << i << "_i = 0;" << endl;
         stream << indent() << "t_" << i << "_j = 0;" << endl;
       }
+      if (ast.grammar()->is_outside()) {
+        for (size_t i = 0; i < ast.grammar()->axiom->tracks(); i++) {
+          stream << indent() << "outside_t_" << i << "_i = 0;" << endl;
+          stream << indent() << "outside_t_" << i << "_j = 0;" << endl;
+        }
+      }
       stream << indent() << "#ifdef _OPENMP" << endl;
       inc_indent();
       stream << indent() << "outer_loop_1_idx = 0;" << endl;
@@ -1936,6 +1942,12 @@ void Printer::Cpp::header(const AST &ast) {
       stream << indent() << *type << " t_" << t << "_i;" << endl;
       stream << indent() << *type << " t_" << t << "_j;" << endl;
     }
+    if (ast.grammar()->is_outside()) {
+      for (size_t t = 0; t < ast.grammar()->axiom->tracks(); t++) {
+        stream << indent() << *type << " outside_t_" << t << "_i;" << endl;
+        stream << indent() << *type << " outside_t_" << t << "_j;" << endl;
+      }
+    }
     stream << "#ifdef _OPENMP" << endl;
     stream << indent() << "int outer_loop_1_idx, outer_loop_2_idx, "
            << "inner_loop_2_idx;" << endl;
@@ -2269,13 +2281,13 @@ void Printer::Cpp::multi_print_inner_cyk(
   const std::list<Symbol::NT*> &l,
   const std::list<Symbol::NT*> &tord,
   size_t track, size_t tracks, size_t track_pos,
-  Type::Base *t, bool checkpoint, bool for_outsideNTs) {
+  Type::Base *t, bool checkpoint, bool no_mutex_def, bool for_outsideNTs) {
   assert(track < tracks);
   if (track+1 != tracks) {
     multi_print_cyk(tord, track+1, tracks, track_pos, t);
     return;
   }
-  if (checkpoint) {
+  if (checkpoint && !no_mutex_def) {
     stream << indent() << "std::lock_guard<fair_mutex> lock(mutex);" << endl;
   }
   for (std::list<Symbol::NT*>::const_iterator i = l.begin();
@@ -2322,6 +2334,202 @@ void Printer::Cpp::multi_partition_nts(
   }
 }
 
+void Printer::Cpp::multi_print_cyk_loops_quadratic(
+    const std::list<Symbol::NT*> &tord,
+    size_t track,
+    size_t tracks,
+    size_t track_pos,
+    Type::Base *t,
+    std::list<Symbol::NT*> *inner,
+    std::list<Symbol::NT*> *left,
+    std::string *is,
+    std::string *js,
+    std::string *ns, bool checkpoint, bool for_outsideNTs) {
+  std::string oprefix = "";
+  if (for_outsideNTs) {
+    oprefix = "outside_";
+  }
+  if (!inner->empty()) {
+    if (checkpoint) {
+      /*
+         in checkpointing mode, the loop indices
+         (e.g. t_0_i and t_0_j in single-track mode;
+          names can differ in multi-track mode)
+         are members of the out class instead of local loop variables
+         so they can be archived/loaded;
+         if they are loaded, the loop variable (e.g. t_0_j) starts
+         from whatever value was loaded from the checkpoint,
+         which is handled through a marker
+         for every loop variable (e.g. "t_0_j_loaded");
+         initially, all of these marker values are set to 0, which will
+         set each loop variable to whatever value was loaded from the checkpoint;
+         after that, the respective marker value will be set to 1,
+         so the loop variable will be set to whatever
+         value is usually would be set to
+      */
+      stream << indent() << "for (" << *js << " = (" << oprefix << *js << "_loaded++) "
+             << "? 0 : " << oprefix << *js << "; "
+             << *js << " < " << *ns << "; " << "++" << *js << ") {"
+             << endl;
+    } else {
+      stream << indent() << "for (" << *t << " " << *js << " = 0; " << *js
+             << " < " << *ns << "; " << "++" << *js << ") {" << endl;
+    }
+    inc_indent();
+    if (for_outsideNTs) {
+      multi_print_cyk_loops_quadratic_inner(
+        tord, track, tracks, track_pos, t, left, is,
+        checkpoint, for_outsideNTs);
+    }
+    stream << indent() << "// A: quadratic loops" << endl;
+    if (checkpoint) {
+      /*
+         in checkpointing mode, the inner loop variable (e.g. t_0_i)
+         is either regularly set to e.g. t_0_j + 1 or to whatever value
+         was loaded from the checkpoint archive;
+         however, this loaded checkpoint value will only be the start value
+         for t_0_i in the first inner loop pass;
+         afterwards it will regularly be set to t_0_j + 1;
+      */
+      stream << indent() << "for (" << *is << " = (" << oprefix << *is << "_loaded++) "
+             << "? " << *js << " + 1 : " << oprefix << *is << "; "
+             << *is << " > 1; " << *is << "--) {" << endl;
+    } else {
+      stream << indent() << "for (" << *t << " " << *is << " = " << *js
+             << " + 1; " << *is << " > 1; " << *is << "--) {" << endl;
+    }
+    inc_indent();
+
+    multi_print_inner_cyk(*inner, tord, track, tracks, track_pos, t,
+                          checkpoint, false, for_outsideNTs);
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
+
+    if (!for_outsideNTs) {
+      multi_print_cyk_loops_quadratic_inner(
+        tord, track, tracks, track_pos, t, left, is,
+        checkpoint, for_outsideNTs);
+    }
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
+  }
+}
+void Printer::Cpp::multi_print_cyk_loops_quadratic_inner(
+    const std::list<Symbol::NT*> &tord,
+    size_t track,
+    size_t tracks,
+    size_t track_pos,
+    Type::Base *t,
+    std::list<Symbol::NT*> *left,
+    std::string *is,
+    bool checkpoint,
+    bool for_outsideNTs) {
+  if (!left->empty()) {
+    stream << indent() << "// B: inner quadratic loops" << endl;
+    stream << indent();
+    if (!for_outsideNTs) {
+      stream << *t << " ";
+    }
+    stream << *is << " = 1;" << endl;
+    multi_print_inner_cyk(*left, tord, track, tracks, track_pos, t,
+                          checkpoint, for_outsideNTs, for_outsideNTs);
+  }
+}
+void Printer::Cpp::multi_print_cyk_loops_linear(
+    const std::list<Symbol::NT*> &tord,
+    size_t track,
+    size_t tracks,
+    size_t track_pos,
+    Type::Base *t,
+    std::list<Symbol::NT*> *inner,
+    std::list<Symbol::NT*> *left,
+    std::list<Symbol::NT*> *right,
+    std::string *is,
+    std::string *js,
+    std::string *ns,
+    bool checkpoint,
+    bool for_outsideNTs
+    ) {
+  std::string oprefix = "";
+  if (for_outsideNTs) {
+    oprefix = "outside_";
+  }
+  if (inner->empty() && !left->empty()) {
+    stream << indent() << "// C: linear loops" << endl;
+    if (checkpoint) {
+      stream << indent() << "for (" << *js << " = (" << oprefix << *js << "_loaded++) "
+             << "? 0 : " << oprefix << *js << "; " << *js << " < " << *ns
+             << "; " << "++" << *js << ") {" << endl;
+    } else {
+      stream << indent() << "for (" << *t << " " << *js << " = 0; "
+             << *js << " < " << *ns
+             << "; " << "++" << *js << ") {" << endl;
+    }
+    inc_indent();
+    stream << indent();
+    if (!for_outsideNTs) {
+      stream << *t << " ";
+    }
+    stream << *is << " = 1;" << endl;
+    multi_print_inner_cyk(*left, tord, track, tracks, track_pos, t,
+                          checkpoint, false, for_outsideNTs);
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
+  }
+  if (!right->empty()) {
+    stream << indent() << "// C: linear loops" << endl;
+    stream << indent();
+    if (!for_outsideNTs) {
+      stream << *t << " ";
+    }
+    stream << *js << " = " << *ns << ";" << endl;
+    if (checkpoint) {
+      /*
+         in checkpointing mode, the entire quadratic loop (A) will be skipped
+         if the loaded value for t_0_j == t_0_n, so this is the loop that
+         would get executed next
+      */
+      stream << indent() << "for (" << *is << " = (" << oprefix << *is << "_loaded++) "
+             << "? " << *js << " + 1 : " << oprefix << *is << "; "
+             << *is << " > 1; " << *is << "--) {" << endl;
+    } else {
+      stream << indent() << "for (" << *t << " "<< *is << " = " << *js
+             << " + 1; " << *is << " > 1; " << *is << "--) {" << endl;
+    }
+    inc_indent();
+    multi_print_inner_cyk(*right, tord, track, tracks, track_pos, t,
+                          checkpoint, false, for_outsideNTs);
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
+  }
+}
+void Printer::Cpp::multi_print_cyk_loops_constant(
+    const std::list<Symbol::NT*> &tord,
+    size_t track,
+    size_t tracks,
+    size_t track_pos,
+    Type::Base *t,
+    std::list<Symbol::NT*> *all,
+    std::string *is,
+    bool checkpoint,
+    bool for_outsideNTs
+    ) {
+  if (!all->empty()) {
+    stream << indent() << "// D: constant loops" << endl;
+    stream << indent();
+    if (!for_outsideNTs) {
+      stream << *t << " ";
+    }
+    stream << *is << " = 1;" << endl;
+    /* when constructing commands to compute constant results, there is no
+     * enclosing loop context, i.e. mutex definition will occure in function
+     * context. Since we repeat these commands for outside contexts, the
+     * mutex would be defined twice. We avoid this here. */
+    bool no_mutex_def = for_outsideNTs;
+    multi_print_inner_cyk(*all, tord, track, tracks, track_pos, t,
+                          checkpoint, no_mutex_def, for_outsideNTs);
+  }
+}
 
 void Printer::Cpp::multi_print_cyk(
   const std::list<Symbol::NT*> &tord, size_t track, size_t tracks,
@@ -2342,116 +2550,39 @@ void Printer::Cpp::multi_print_cyk(
 
   bool checkpoint = ast->checkpoint && ast->checkpoint->cyk;
 
-  // SMJ 2023-02-18: I've added the x: xxx loops comments, but
-  // am not 100% sure if they are correct in multitrack contexts
-  if (!inner.empty()) {
-    if (checkpoint) {
-      /*
-         in checkpointing mode, the loop indices
-         (e.g. t_0_i and t_0_j in single-track mode;
-          names can differ in multi-track mode)
-         are members of the out class instead of local loop variables
-         so they can be archived/loaded;
-         if they are loaded, the loop variable (e.g. t_0_j) starts
-         from whatever value was loaded from the checkpoint,
-         which is handled through a marker
-         for every loop variable (e.g. "t_0_j_loaded");
-         initially, all of these marker values are set to 0, which will
-         set each loop variable to whatever value was loaded from the checkpoint;
-         after that, the respective marker value will be set to 1,
-         so the loop variable will be set to whatever
-         value is usually would be set to
-      */
-      stream << indent() << "for (" << js << " = (" << js << "_loaded++) "
-             << "? 0 : " << js << "; "
-             << js << " < " << ns << "; " << "++" << js << ") {"
-             << endl;
-      inc_indent();
-    } else {
-      stream << indent() << "for (" << *t << " " << js << " = 0; "
-             << js << " < " << ns << "; " << "++" << js << ") {"
-             << endl;
-      inc_indent();
-    }
-
-    stream << indent() << "// A: quadratic loops" << endl;
-    if (checkpoint) {
-      /*
-         in checkpointing mode, the inner loop variable (e.g. t_0_i)
-         is either regularly set to e.g. t_0_j + 1 or to whatever value
-         was loaded from the checkpoint archive;
-         however, this loaded checkpoint value will only be the start value
-         for t_0_i in the first inner loop pass;
-         afterwards it will regularly be set to t_0_j + 1;
-      */
-      stream << indent() << "for (" << is << " = (" << is << "_loaded++) "
-             << "? " << js << " + 1 : " << is << "; "
-             << is << " > 1; " << is << "--) {" << endl;
-      inc_indent();
-    } else {
-      stream << indent() << "for (" << *t << " " << is << " = "
-             << js << " + 1; " << is << " > 1; " << is << "--) {" << endl;
-      inc_indent();
-    }
-
-    multi_print_inner_cyk(inner, tord, track, tracks, track_pos, t, checkpoint);
-    dec_indent();
-    stream << indent() << "}" << endl << endl;
-
-    if (!left.empty()) {
-      stream << indent() << "// B: inner quadratic loops" << endl;
-      stream << indent() << *t << " " << is << " = 1;" << endl;
-      multi_print_inner_cyk(left, tord, track, tracks,
-                            track_pos, t, checkpoint);
-    }
-    dec_indent();
-    stream << indent() << "}" << endl << endl;
-  }
-  if (inner.empty() && !left.empty()) {
-    stream << indent() << "// C: linear loops" << endl;
-    if (checkpoint) {
-      stream << indent() << "for (" << js << " = (" << js << "_loaded++) "
-             << "? 0 : " << js << "; " << js << " < " << ns
-             << "; " << "++" << js << ") {" << endl;
-      inc_indent();
-    } else {
-      stream << indent() << "for (" << *t << " " << js << " = 0; "
-             << js << " < " << ns
-             << "; " << "++" << js << ") {" << endl;
-      inc_indent();
-    }
-    stream << indent() << *t << " " << is << " = 1;" << endl;
-    multi_print_inner_cyk(left, tord, track, tracks, track_pos, t, checkpoint);
-    dec_indent();
-    stream << indent() << "}" << endl << endl;
-  }
-  if (!right.empty()) {
-    stream << indent() << "// C: linear loops" << endl;
-    stream << indent() << *t << " " << js << " = " << ns << ";" << endl;
-    if (checkpoint) {
-      /*
-         in checkpointing mode, the entire quadratic loop (A) will be skipped
-         if the loaded value for t_0_j == t_0_n, so this is the loop that
-         would get executed next
-      */
-      stream << indent() << "for (" << is << " = (" << is << "_loaded++) "
-             << "? " << js << " + 1 : " << is << "; "
-             << is << " > 1; " << is << "--) {" << endl;
-      inc_indent();
-    } else {
-      stream << indent() << "for (" << *t << " "<< is << " = " << js << " + 1; "
-             << is << " > 1; " << is << "--) {" << endl;
-      inc_indent();
-    }
-    multi_print_inner_cyk(right, tord, track, tracks, track_pos, t, checkpoint);
-    dec_indent();
-    stream << indent() << "}" << endl << endl;
+  // inside NTs
+  multi_print_cyk_loops_quadratic(
+    tord, track, tracks, track_pos, t, &inner, &left, &is, &js, &ns,
+    checkpoint, false);
+  multi_print_cyk_loops_linear(
+    tord, track, tracks, track_pos, t, &inner, &left, &right, &is, &js, &ns,
+    checkpoint, false);
+  multi_print_cyk_loops_constant(
+    tord, track, tracks, track_pos, t, &all, &is,
+    checkpoint, false);
+  if (checkpoint) {
+    stream << indent() << "mutex.unlock();" << endl;
   }
 
-  if (!all.empty()) {
-    stream << indent() << "// D: constant loops" << endl;
-    stream << indent() << *t << " " << is << " = 1;" << endl;
-    multi_print_inner_cyk(all, tord, track, tracks, track_pos, t, checkpoint);
+  // outside NTs (which access inside NT values)
+  if (this->ast->grammar()->is_outside()) {
+    stream << endl << endl;
+    stream << indent() << "// now compute for outside non-terminals" << endl;
+    multi_print_cyk_loops_quadratic(
+      tord, track, tracks, track_pos, t, &inner, &left, &is, &js, &ns,
+      checkpoint, true);
+    multi_print_cyk_loops_linear(
+      tord, track, tracks, track_pos, t, &inner, &left, &right, &is, &js, &ns,
+      checkpoint, true);
+    if (checkpoint) {
+      stream << indent() << "mutex.lock();" << endl;
+    }
+    multi_print_cyk_loops_constant(
+      tord, track, tracks, track_pos, t, &all, &is,
+      checkpoint, true);
+    if (checkpoint) {
+      stream << indent() << "mutex.unlock();" << endl;
+    }
   }
 }
 
@@ -2497,6 +2628,17 @@ void Printer::Cpp::print_cyk_fn(const AST &ast) {
       stream << indent() << "int t_" << track_i
              << "_j_loaded = !load_checkpoint ||"
              << " !t_" << track_i << "_j;" << endl;
+    }
+    if (ast.grammar()->is_outside()) {
+      for (size_t track_i = 0;
+           track_i < ast.grammar()->axiom->tracks(); ++track_i) {
+        stream << indent() << "int outside_t_" << track_i
+               << "_i_loaded = !load_checkpoint ||"
+               << " !outside_t_" << track_i << "_i;" << endl;
+        stream << indent() << "int outside_t_" << track_i
+               << "_j_loaded = !load_checkpoint ||"
+               << " !outside_t_" << track_i << "_j;" << endl;
+      }
     }
     stream << "#ifdef _OPENMP" << endl;
     stream << indent() << "unsigned int tile_size = 32;" << endl;
@@ -2772,9 +2914,11 @@ void Printer::Cpp::header_footer(const AST &ast) {
     nt_tables &tabulated = ast.grammar()->tabulated;
     if (ast.checkpoint->cyk) {
       ast.checkpoint->archive_cyk_indices(stream,
-                                          ast.grammar()->axiom->tracks());
+                                          ast.grammar()->axiom->tracks(),
+                                          ast.grammar()->is_outside());
       ast.checkpoint->load_cyk_indices(stream,
-                                       ast.grammar()->axiom->tracks());
+                                       ast.grammar()->axiom->tracks(),
+                                       ast.grammar()->is_outside());
       ast.checkpoint->parse_checkpoint_log(stream, true);
     }
     ast.checkpoint->archive_periodically(stream, tabulated);
