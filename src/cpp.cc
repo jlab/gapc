@@ -2103,7 +2103,7 @@ void Printer::Cpp::print_openmp_cyk_loops_middle(const AST &ast,
            << "z : inner_loop_2_idx_start;"
            << " y < max_tiles_n; y+=tile_size) {" << endl;
     inc_indent();
-    stream << indent() << "++y;" << endl;
+    stream << indent() << "++inner_loop_2_idx_loaded;" << endl;
     stream << indent() << "mutex.lock_shared();" << endl;
   } else {
     stream << indent()
