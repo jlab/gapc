@@ -512,6 +512,9 @@ OMP_NUM_THREADS=2
 export OMP_NUM_THREADS
 check_new_old_eq nodangle.gap unused pfunc "CCaCCaaaGGaCCaaaGGaCCaaaGGaGG" outside
 
+# same as above, but with activated checkpointing
+GAPC="../../../gapc --outside_grammar weak --outside_grammar struct --cyk --checkpoint"
+check_new_old_eq nodangle.gap unused pfunc "CCaCCaaaGGaCCaaaGGaCCaaaGGaGG" outside
 
 GAPC="../../../gapc --outside_grammar ALL"
 CPPFLAGS_EXTRA=""
