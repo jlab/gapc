@@ -2021,15 +2021,17 @@ void Printer::Cpp::print_openmp_cyk_helpervars(bool for_outsideNTs) {
     stream << "t_0_";
   }
   stream << "n = t_0_seq.size();" << endl;
-  if (!ast->checkpoint) {
-    stream << indent() << "unsigned int tile_size = 32;" << endl;
-    stream << "#ifdef TILE_SIZE" << endl;
-    stream << indent() << "tile_size = TILE_SIZE;" << endl;
-    stream << "#endif" << endl;
+  if (!for_outsideNTs) {
+    if (!ast->checkpoint) {
+      stream << indent() << "unsigned int tile_size = 32;" << endl;
+      stream << "#ifdef TILE_SIZE" << endl;
+      stream << indent() << "tile_size = TILE_SIZE;" << endl;
+      stream << "#endif" << endl;
+    }
+    stream << indent() << "assert(tile_size);" << endl;
+    stream << indent() << "unsigned int max_tiles = n / tile_size;" << endl;
+    stream << indent() << "int max_tiles_n = max_tiles * tile_size;" << endl;
   }
-  stream << indent() << "assert(tile_size);" << endl;
-  stream << indent() << "unsigned int max_tiles = n / tile_size;" << endl;
-  stream << indent() << "int max_tiles_n = max_tiles * tile_size;" << endl;
 }
 void Printer::Cpp::print_openmp_cyk_loops_diag(const AST &ast,
                                                bool checkpoint,
@@ -2101,7 +2103,7 @@ void Printer::Cpp::print_openmp_cyk_loops_middle(const AST &ast,
            << "z : inner_loop_2_idx_start;"
            << " y < max_tiles_n; y+=tile_size) {" << endl;
     inc_indent();
-    stream << indent() << "++y_loaded;" << endl;
+    stream << indent() << "++y;" << endl;
     stream << indent() << "mutex.lock_shared();" << endl;
   } else {
     stream << indent()
