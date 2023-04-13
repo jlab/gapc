@@ -664,7 +664,11 @@ void Grammar::put_table_conf(std::ostream &s) {
       hashtable<std::string, Symbol::NT*>::iterator a = tabulated.find(
         *i->second->name);
       if (a == tabulated.end()) {
-        assert(false);
+        // user might not have considered outside NTs to be tabulated in
+        // his/her manual annotated table-design
+        if (i->second->is_partof_outside() == false) {
+          assert(false);
+        }
       }
     }
   }
