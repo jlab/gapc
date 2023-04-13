@@ -549,6 +549,21 @@ struct Flip_lhs_rhs_nonterminals : public Visitor {
   }
 };
 
+struct Flag_Outside_Grammar_Components : public Visitor {
+  void visit(Symbol::Terminal &s) {
+    s.set_partof_outside();
+  }
+  void visit(Symbol::NT &s) {
+    s.set_partof_outside();
+  }
+  void visit(Alt::Base &a) {
+    a.set_partof_outside();
+  }
+  void visit(Fn_Arg::Base &f) {
+    f.set_partof_outside();
+  }
+};
+
 /* end points of the inside grammar, i.e. production rules that terminate, are
  * the starting points of the outside grammar. Thus, we here iterate through
  * the inside part of the grammar, collect the lhs non-terminal names of these
@@ -648,6 +663,11 @@ struct Collect_and_Insert_outside_axioms : public Visitor {
         nt_axiom->alts.push_back(link);
       }
 
+      // a visitor to flag all sub-components as being outside
+      Flag_Outside_Grammar_Components v_flag =
+        Flag_Outside_Grammar_Components();
+      nt_axiom->traverse(v_flag);
+
       // add new lhs non-terminal to grammar
       grammar.add_nt(nt_axiom);
     } else {
@@ -721,11 +741,14 @@ void inject_outside_inside_transition(
   }
   link->top_level = Bool(true);
 
-  // finally add this new transition to the list of alternaties
+  // finally add this new transition to the list of alternatives
   lhs_outside->alts.push_back(link);
 }
 
 void Grammar::convert_to_outside() {
+  // a visitor to later flag all sub-components as being outside
+  Flag_Outside_Grammar_Components v_flag = Flag_Outside_Grammar_Components();
+
   hashtable<std::string, Symbol::Base*> outside_nts;
   std::string name_inside_axiom = *this->axiom_name;
 
@@ -767,14 +790,23 @@ void Grammar::convert_to_outside() {
   // now add the new outside NTs to the grammar
   for (hashtable<std::string, Symbol::Base*>::iterator i = outside_nts.begin();
        i != outside_nts.end(); ++i) {
+    /* flag the new NT as being outside, to tell apart automatically generated
+     * NTs for outside parts from user defined inside parts. Necessary for e.g.
+     *  - reverse index construction
+     */
+    (*i).second->traverse(v_flag);
+
+    // finally add new outside non-terminal to the grammar
     this->add_nt(dynamic_cast<Symbol::NT*>((*i).second));
   }
 
-  // inject new outside axiom
+  // inject new outside axiom (also flag as being outside)
   Collect_and_Insert_outside_axioms v = Collect_and_Insert_outside_axioms(
       outside_nts);
   this->traverse(v);
 
+  // flag the grammar itself as being an outside version
+  this->set_partof_outside();
 
 
   /* NT-table dimension optimization (all start quadratic, but depending on

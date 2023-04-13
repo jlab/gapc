@@ -55,6 +55,10 @@ class Base {
  private:
   Type type;
 
+  /* Flag this function argument as being part of an outside grammar
+   * component */
+  bool _is_partof_outside = false;
+
  protected:
   bool productive;
   ::Type::Base *datatype;
@@ -144,6 +148,13 @@ class Base {
  public:
     virtual void init_multi_ys() = 0;
     virtual const Yield::Multi &multi_ys() const { return m_ys; }
+
+    const bool is_partof_outside() {
+      return _is_partof_outside;
+    }
+    void set_partof_outside() {
+      _is_partof_outside = true;
+    }
 };
 
 

@@ -64,6 +64,9 @@ class Grammar {
   void renumber_nts();
   void move_new_nts();
 
+  /* Flag this Grammar as being converted into an outside version */
+  bool _is_partof_outside = false;
+
  public:
   // The name of the grammar as defined in the grammar name of
   // the gap-source-code file.
@@ -222,6 +225,13 @@ class Grammar {
    * the given (inside-) grammar is turned into an outside grammar.
    */
   void convert_to_outside();
+
+  const bool is_partof_outside() {
+    return _is_partof_outside;
+  }
+  void set_partof_outside() {
+    _is_partof_outside = true;
+  }
 };
 
 

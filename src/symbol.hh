@@ -74,6 +74,9 @@ class Base {
  private:
     Type type;
 
+    /* Flag this Symbol as being part of an outside grammar component */
+    bool _is_partof_outside = false;
+
  protected:
     ADP_Mode::Adp_Specialization adp_specialization;
     ADP_Mode::Adp_Join adp_join;
@@ -252,6 +255,13 @@ class Base {
     virtual unsigned int to_dot(unsigned int *nodeID, std::ostream &out,
                                 bool is_rhs, Symbol::NT *axiom,
                                 int plot_grammar);
+
+    const bool is_partof_outside() {
+      return _is_partof_outside;
+    }
+    void set_partof_outside() {
+      _is_partof_outside = true;
+    }
 };
 
 

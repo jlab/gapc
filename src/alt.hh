@@ -76,6 +76,9 @@ class Base {
    */
   Type type;
 
+  /* Flag this alternative as being part of an outside grammar component */
+  bool _is_partof_outside = false;
+
  protected:
   ADP_Mode::Adp_Specialization adp_specialization;
   ADP_Mode::Adp_Join adp_join;
@@ -318,6 +321,13 @@ class Base {
     std::ostream &out, std::vector<unsigned int> *childIDs = NULL);
   virtual unsigned int* to_dot(unsigned int *nodeID, std::ostream &out,
           int plot_level);
+
+  const bool is_partof_outside() {
+    return _is_partof_outside;
+  }
+  void set_partof_outside() {
+    _is_partof_outside = true;
+  }
 };
 
 
