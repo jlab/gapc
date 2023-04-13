@@ -825,7 +825,7 @@ void Grammar::convert_to_outside() {
     (*i).second->init_links(*this);
   }
 
-  //TODO(smj): is this the proper location?
+  // TODO(smj): is this the proper location?
   /* NT-table dimension optimization (all start quadratic, but depending on
    * yield size, some NT-tables can be reduced to linear or even constant
    * "tables") must be re-considered, since original inside NTs will now
@@ -842,7 +842,7 @@ void Grammar::convert_to_outside() {
     }
   }
 
-  //TODO(smj): double check if this is necessary or at least do a silent test
+  // TODO(smj): double check if this is necessary or at least do a silent test
   /* re-run "check_semantics" to properly initialize novel non-
    * terminals, links to non-terminals, update yield size analysis and
    * update table dimensions for NTs
