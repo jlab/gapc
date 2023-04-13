@@ -1865,6 +1865,29 @@ void Printer::Cpp::header(const AST &ast) {
         stream << indent() << "typedef Batch<OUTPUT_CPP_TYPE, MAX_BATCH_SIZE>"
                << " TensorBatch;" << endl << endl;
       }
+      // InputTensor object will contain ptrs and accessors to
+      // all input tensors so they can be accessed from everywhere
+      const std::vector<TensorMode> &inp_tensors =
+        ast.input.tensor_inputs.get_modes();
+      stream << indent() << "struct InputTensor {" << endl;
+      inc_indent();
+      for (size_t i = 0; i < ast.seq_decls.size(); ++i) {
+        stream << indent() << "tensor *__" << i << ";" << endl;
+        std::string curr_cpp_type = inp_tensors[i].cpp_dtype;
+        int curr_n_dims = inp_tensors[i].n_dims;
+        stream << indent() << "torch::TensorAccessor<" << curr_cpp_type
+               << ", " << curr_n_dims << "> _" << i << ";" << endl;
+      }
+      stream << indent() << "InputTensor() : ";
+      for (size_t i = 0; i < ast.seq_decls.size(); ++i) {
+        stream << "_" << i << "(nullptr, nullptr, nullptr)";
+        if (i < ast.seq_decls.size() - 1) {
+          stream << ", ";
+        }
+      }
+      stream << " {}" << endl;
+      dec_indent();
+      stream << indent() << "};" << endl << endl;
     }
 
     includes();
@@ -1882,6 +1905,7 @@ void Printer::Cpp::header(const AST &ast) {
   inc_indent();
   if (ast.as_pytorch_module) {
     stream << indent() << "std::vector<int64_t> tensor_size;" << endl;
+    stream << indent() << "InputTensor INPUT_TENSORS;" << endl;
   }
 
   int track = 0;
@@ -3312,6 +3336,13 @@ void Printer::Cpp::print_pytorch_init_fn(const AST &ast) {
   for (std::vector<Statement::Var_Decl*>::const_iterator
        i = ast.seq_decls.begin(); i != ast.seq_decls.end(); ++i, ++track) {
     const std::string &current_tensor = *(*i)->name;
+    stream << indent() << "INPUT_TENSORS.__" << track
+           << " = &__t_" << track << "_tensor;" << endl;
+    TensorMode curr_inp_tensor = ast.input.tensor_inputs.get_modes()[track];
+    stream << indent() << "INPUT_TENSORS._" << track
+           << " = INPUT_TENSORS.__" << track << "->accessor<"
+           << curr_inp_tensor.cpp_dtype << ", " << curr_inp_tensor.n_dims
+           << ">();" << endl;
     stream << indent()
            << current_tensor << ".t = &__t_" << track << "_tensor;" << endl;
     stream << indent() << current_tensor << ".i = 0;" << endl;

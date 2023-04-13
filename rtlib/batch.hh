@@ -32,7 +32,7 @@
     * macro, which is used to allocate space for every batch
     * from the memory pool; by default, it is set to 2048,
     * but can be increased/decreased if needed since the memory
-    * pool can automically expand itself
+    * pool can automatically expand itself
 }}} */
 
 #ifndef RTLIB_BATCH_HH_
