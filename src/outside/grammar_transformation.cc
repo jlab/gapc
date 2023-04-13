@@ -528,7 +528,8 @@ struct Flip_lhs_rhs_nonterminals : public Visitor {
         outside_rhs_nt->alts.clear();
 
         // c)
-        alt.nt = lhs_nt;
+        // don't set NT here, since we don't know the correct lhs pointer
+        alt.nt = nullptr;
         alt.m_ys = lhs_nt->multi_ys();
         alt.name = lhs_nt->name;
 
@@ -591,7 +592,10 @@ struct Collect_and_Insert_outside_axioms : public Visitor {
   }
 
   void visit(Alt::Link &alt) {
-    if (alt.nt->is(Symbol::NONTERMINAL)) {
+    /* also check that alt.nt is not NULL as at this stage outside NTs are not
+     * yet initialized, i.e. name is set correctly but the pointer to the NT
+     * is null. */
+    if (alt.nt && alt.nt->is(Symbol::NONTERMINAL)) {
       rhs_nts++;
     }
   }
@@ -656,9 +660,11 @@ struct Collect_and_Insert_outside_axioms : public Visitor {
       for (std::set<Symbol::NT*>::iterator i = terminating_lhs_nts->begin();
            i != terminating_lhs_nts->end(); ++i) {
         Alt::Link *link = new Alt::Link((*i)->name, Loc());
-        link->nt = *i;
-        link->set_tracks((*i)->tracks(), (*i)->track_pos());
-        link->init_multi_ys();
+        link->name = (*i)->name;
+        /* TODO(smj): check if really not necessary */
+//        link->nt = *i;
+//        link->set_tracks((*i)->tracks(), (*i)->track_pos());
+//        link->init_multi_ys();
         link->top_level = Bool(true);
         nt_axiom->alts.push_back(link);
       }
@@ -724,17 +730,21 @@ void inject_outside_inside_transition(
    * it is only invoked with the FULL input sequence(s). Don't forget multi-
    * track programs. */
   Alt::Link *link = new Alt::Link(new std::string(name_inside_axiom), Loc());
-  link->nt = rhs_inside;
+  /* nullptr as we don't know the pointer to lhs NT.
+   * Will be resolved through init_nt_links(), just provide the correct name! */
+  link->nt = nullptr;
+  link->name = rhs_inside->name;
   Filter *f = new Filter(new std::string("complete_track"), Loc());
   f->type = Filter::WITH;
   std::list<Filter*> *comptracks = new std::list<Filter*>();
   for (unsigned int track = 0; track < rhs_inside->tracks(); ++track) {
     comptracks->push_back(f);
   }
-  link->set_tracks(rhs_inside->tracks(), rhs_inside->track_pos());
-  link->init_multi_ys();
+  // TODO(smj): check of really done via check_semantics()
+//  link->set_tracks(rhs_inside->tracks(), rhs_inside->track_pos());
+//  link->init_multi_ys();
 //  //link->is_outside_inside_transition = true;
-  if (link->nt->tracks() == 1) {
+  if (rhs_inside->tracks() == 1) {
     link->filters.push_back(f);
   } else {
     link->add_multitrack_filter(*comptracks, f->type, Loc());
@@ -796,7 +806,7 @@ void Grammar::convert_to_outside() {
      */
     (*i).second->traverse(v_flag);
 
-    // finally add new outside non-terminal to the grammar
+    // add new outside non-terminal to the grammar
     this->add_nt(dynamic_cast<Symbol::NT*>((*i).second));
   }
 
@@ -808,7 +818,14 @@ void Grammar::convert_to_outside() {
   // flag the grammar itself as being an outside version
   this->set_partof_outside();
 
+  // initialize rhs non-terminals, i.e. point to the correct NT from the used
+  // name.
+  for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin();
+       i != NTs.end(); ++i) {
+    (*i).second->init_links(*this);
+  }
 
+  //TODO(smj): is this the proper location?
   /* NT-table dimension optimization (all start quadratic, but depending on
    * yield size, some NT-tables can be reduced to linear or even constant
    * "tables") must be re-considered, since original inside NTs will now
@@ -818,22 +835,20 @@ void Grammar::convert_to_outside() {
    * We therefore here reset the flag of all NTs to enable re-computation
    * of optimal table dimensions ... within the outside context.
    */
-//  for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin();
-//       i != NTs.end(); ++i) {
-//    if ((*i).second->is(Symbol::NONTERMINAL)) {
-//      dynamic_cast<Symbol::NT*>((*i).second)->reset_table_dim();
-//    }
-//  }
-//
-//  /* re-run "check_semantics" to properly initialize novel non-
-//   * terminals, links to non-terminals, update yield size analysis and
-//   * update table dimensions for NTs
-//   */
-//  this->check_semantic();
+  for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin();
+       i != NTs.end(); ++i) {
+    if ((*i).second->is(Symbol::NONTERMINAL)) {
+      dynamic_cast<Symbol::NT*>((*i).second)->reset_table_dim();
+    }
+  }
+
+  //TODO(smj): double check if this is necessary or at least do a silent test
+  /* re-run "check_semantics" to properly initialize novel non-
+   * terminals, links to non-terminals, update yield size analysis and
+   * update table dimensions for NTs
+   */
+  this->check_semantic();
 
   Log::instance()->verboseMessage(
     "Grammar has been modified into an outside version.");
-
-//  unsigned int nodeID = 1;
-//  this->to_dot(&nodeID, std::cerr, 1);
 }
