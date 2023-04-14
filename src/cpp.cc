@@ -1132,7 +1132,7 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   }
 
   if (pytorch) {
-    if (ast->input.tensor_inputs.all_batched()) {
+    if (batched_input) {
       stream << indent()
              << "OUTPUT_CPP_TYPE *get_array_data() {" << endl;
     } else {
@@ -1173,7 +1173,7 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
 
   stream << indent() << ptype << " newsize = size(";
   stream << ");" << endl;
-  if (pytorch && !batched_input) {
+  if (pytorch) {
     stream << indent() << "array.clear();" << endl;
     if (t.for_derivatives) {
       stream << indent() << "traces.clear();" << endl;
@@ -1601,8 +1601,7 @@ void Printer::Cpp::print_table_init(const AST &ast) {
     if (ast.window_mode) {
       stream << " opts.window_size, opts.window_increment, ";
     }
-    stream << "\""<< i->second->table_decl->name() << "\"";
-    stream << ");" << endl;
+    stream << "\""<< i->second->table_decl->name() << "\");" << endl;
   }
 }
 
@@ -1829,10 +1828,6 @@ void Printer::Cpp::header(const AST &ast) {
       const TensorInput &tensor_inputs = ast.input.tensor_inputs;
       bool all_batched = tensor_inputs.all_batched();
 
-      const Type::Base &__shared_table_type =
-         ast.grammar()->tabulated.begin()->second->table_decl->datatype();
-      const Type::TensorBatch &shared_table_type =
-        dynamic_cast<const Type::TensorBatch &>(__shared_table_type);
       if (tensor_inputs.same()) {
         stream << "#define ALL_INPUT_TENSORS_SAME" << endl;
         stream << "#define INPUT_TENSOR_DIMS "
@@ -1841,6 +1836,10 @@ void Printer::Cpp::header(const AST &ast) {
                << tensor_inputs.shared_cpp_dtype() << endl << endl;
       }
       if (all_batched) {
+        const Type::Base &__shared_table_type =
+          ast.grammar()->tabulated.begin()->second->table_decl->datatype();
+        const Type::TensorBatch &shared_table_type =
+          dynamic_cast<const Type::TensorBatch &>(__shared_table_type);
         stream << "#define BATCHED_INPUT" << endl;
         stream << "#include <cstdint>" << endl;
         stream << "inline int64_t BATCH_SIZE;" << endl << endl;
@@ -1854,17 +1853,18 @@ void Printer::Cpp::header(const AST &ast) {
         stream << indent() << "#define OUTPUT_CPP_TYPE "
                << *shared_table_type.type << endl << endl;
         stream << "#include \"rtlib/batch.hh\"" << endl;
-      }
-      stream << "#include \"torch/extension.h\"" << endl;
-      stream << "#include \"rtlib/tensor.hh\"" << endl << endl;
-
-      if (all_batched) {
+        stream << "#include \"torch/extension.h\"" << endl;
+        stream << "#include \"rtlib/tensor.hh\"" << endl << endl;
         stream << indent()
                << "inline constexpr torch::ScalarType OUTPUT_TORCH_TYPE = "
                << get_torch_type(shared_table_type) << ";" << endl;
         stream << indent() << "typedef Batch<OUTPUT_CPP_TYPE, MAX_BATCH_SIZE>"
                << " TensorBatch;" << endl << endl;
+      } else {
+        stream << "#include \"torch/extension.h\"" << endl;
+        stream << "#include \"rtlib/tensor.hh\"" << endl << endl;
       }
+
       // InputTensor object will contain ptrs and accessors to
       // all input tensors so they can be accessed from everywhere
       const std::vector<TensorMode> &inp_tensors =
@@ -1900,7 +1900,6 @@ void Printer::Cpp::header(const AST &ast) {
   print_hash_decls(ast);
 
   stream << indent() << "class " << class_name << " {" << endl;
-
   stream << indent() << " public:" << endl;
   inc_indent();
   if (ast.as_pytorch_module) {
@@ -1908,14 +1907,9 @@ void Printer::Cpp::header(const AST &ast) {
     stream << indent() << "InputTensor INPUT_TENSORS;" << endl;
   }
 
-  int track = 0;
   for (std::vector<Statement::Var_Decl*>::const_iterator i =
-        ast.seq_decls.begin(); i != ast.seq_decls.end(); ++i, ++track) {
-    if (ast.as_pytorch_module) {
-      stream << indent() << "TensorSlice t_" << track << "_seq;" << endl;
-    } else {
+        ast.seq_decls.begin(); i != ast.seq_decls.end(); ++i) {
       stream << **i << endl;
-    }
   }
 
   print_most_decl(*ast.grammar()->axiom);
@@ -3408,12 +3402,13 @@ void Printer::Cpp::print_pytorch_forward_fn(const AST &ast) {
 
 void Printer::Cpp::print_pytorch_backward_fn(const AST &ast) {
   /*
-   * convert the backward score matrix to a Pytorch tenso;
+   * convert the backward score matrices to Pytorch tensors;
    * this will get handled internally in the print_run_derivative_fn
-   * function so we don't have two separate functions doing almost
-   * exactly the same;  but, to avoid confusion when reading the code,
-   * wrap this function around print_run_derivative_fn function to emphasize
-   * that this is going to be part of a pytorch module
+   * function; To avoid confusion when reading the code,
+   * this function is wrapped around the
+   * print_run_derivative_fn function to emphasize
+   * that code for a Pytorch module is going to be generated
+   * whenever this function is called
    */
   print_run_derivative_fn(ast);
 }

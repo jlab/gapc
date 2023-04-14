@@ -88,7 +88,7 @@ class TensorMode {
   static TensorMode get_tensor_mode(const std::string &input) {
     assert(is_tensor(input));
 
-    static std::map<std::string, std::pair<std::string, std::string>>
+    static hashtable<std::string, std::pair<std::string, std::string>>
     torch_type = {{"I32", {"torch:kInt32", "int"}},
                   {"I64", {"torch::kInt64", "long"}},
                   {"F32", {"torch:kFloat32", "float"}},
@@ -224,7 +224,7 @@ inline std::string& get_torch_type(const Type::Base &_type) {
 
   static hashtable<std::string, std::string>
   torch_type = {{"double", "torch::kFloat64"},
-                {"float", "torch::kFloat32"},
+                {"float", "torch::kFloat64"},
                 {"single", "torch::kFloat32"},
                 {"int", "torch::kInt32"},
                 {"integer", "torch::kInt32"},

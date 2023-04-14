@@ -1243,7 +1243,7 @@ void Symbol::NT::codegen(AST &ast) {
   /*
    * true if regular input OR non-batched input Tensors
    * are being processed;
-   * if batched input Tensor are being processed,
+   * if batched input Tensors are being processed,
    * the non-terminal table get functions can't return references,
    * because batches returned from these functions have to be
    * explicitly copied to avoid modifying the DP table in-place

@@ -110,7 +110,7 @@ class TensorSlice {
    *   tensor[:, 1::2] ==  TensorSlice[{Slice(), Slice(1, None, 2)}]
    */
   tensor operator[](const tensoridx &idx) const {
-    return t->index(idx);
+    return t->index(idx).clone();
   }
 
   // ### basic tensor ops ###
@@ -214,7 +214,7 @@ class TensorChar {
    *   tensor[:, 1::2] ==  TensorSlice[{Slice(), Slice(1, None, 2)}]
    */
   tensor operator[](const tensoridx &idx) const {
-    return t->index(idx);
+    return t->index(idx).clone();
   }
 
   // ### basic tensor ops ###
@@ -331,6 +331,7 @@ inline tensor matmul(const TensorSlice &lhs, const TensorSlice &rhs) {
 }
 
 
+#if defined(BATCHED_INPUT) && defined(ALL_INPUT_TENSORS_SAME)
 // multiply all values of "batch" with "true_scalar" where a == b,
 // else multiply with "false_scalar" where a != b
 template<typename T = float, int SIZE = MAX_BATCH_SIZE, typename SCALAR = float>
@@ -355,8 +356,8 @@ batched_multiply_if_else(const TensorChar &a, const TensorChar &b,
 template<typename T = float, int SIZE = MAX_BATCH_SIZE, typename SCALAR = float>
 inline Batch<T, SIZE>
 batched_divide_if_else(const TensorChar &a, const TensorChar &b,
-                         const Batch<T, SIZE> &x,
-                         SCALAR true_scalar, SCALAR false_scalar) {
+                       const Batch<T, SIZE> &x,
+                       SCALAR true_scalar, SCALAR false_scalar) {
   Batch<T, SIZE> res;
   res.alloc();
   static auto a_ = a.accessor();
@@ -374,8 +375,8 @@ batched_divide_if_else(const TensorChar &a, const TensorChar &b,
 template<typename T = float, int SIZE = MAX_BATCH_SIZE, typename SCALAR = float>
 inline Batch<T, SIZE>
 batched_add_if_else(const TensorChar &a, const TensorChar &b,
-                         const Batch<T, SIZE> &x,
-                         SCALAR true_scalar, SCALAR false_scalar) {
+                    const Batch<T, SIZE> &x,
+                    SCALAR true_scalar, SCALAR false_scalar) {
   Batch<T, SIZE> res;
   res.alloc();
   static auto a_ = a.accessor();
@@ -406,6 +407,12 @@ batched_subtract_if_else(const TensorChar &a, const TensorChar &b,
 
   return res;
 }
+#endif
+
+template<typename T>
+inline bool complete_track(const TensorSlice &t, T i, T j) {
+  return (i == t.j && j == t.j);
+}
 
 // ### Tensor terminal parsers ###
 
@@ -434,7 +441,6 @@ inline TensorChar TCHAR(TensorSlice &t, T i, T j, const TensorChar &c) {
   }
 }
 
-
 // analogous to CHAR (parses column of input tensor)
 template<typename T>
 inline TensorChar TCHAR(TensorSlice &t, T i, T j) {
@@ -447,11 +453,6 @@ template<typename T>
 inline TensorSlice TLOC(TensorSlice &t, T i, T j) {
   assert(i == j);
   return TensorSlice(t, i, j);
-}
-
-template<typename T>
-inline bool complete_track(const TensorSlice &t, T i, T j) {
-  return (i == t.j && j == t.j);
 }
 
 // ### empty.hh overloads ###

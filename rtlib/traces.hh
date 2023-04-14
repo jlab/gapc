@@ -70,9 +70,11 @@ inline bool operator==(const index_components &lhs,
   return equal;
 }
 
-inline bool is_same_index(const index_components &lhs,
-                          const index_components &rhs) {
-  return lhs == rhs;
+inline bool is_same_index(const index_components &lhs_idx,
+                          const index_components &rhs_idx,
+                          const std::string &lhs_nt,
+                          const std::string &rhs_nt) {
+  return lhs_idx == rhs_idx && lhs_nt == rhs_nt;
 }
 
 /* this records the use of a sub-solution of another NT result <name of other 
@@ -86,8 +88,6 @@ template<typename answer = double>
 using NTtrace = std::tuple<answer, std::vector<Trace<answer>>>;
 /* collection of all traces of an NT in forward pass, together with their
  * values. This later normalized into edge weights. */
-// typedef std::vector<NTtrace> NTtraces;
-
 
 /* create a vector of index components (one or multitrack, linear or quadratic
  * tables) for a variable number of components therefore, the first argument
@@ -109,8 +109,9 @@ std::vector<unsigned int> *make_index(unsigned int num_components, ...) {
 }
 
 inline bool is_same_index(const std::vector<unsigned int> &a,
-                          const std::vector<unsigned int> &b) {
-  return a == b;
+                          const std::vector<unsigned int> &b,
+                          const std::string &a_nt, const std::string &b_nt) {
+  return a == b && a_nt == b_nt;
 }
 
 template<typename answer = double>
@@ -163,9 +164,13 @@ class candidate {
    */
   std::vector<Trace<answer>> get_normalized_candidate(
     answer eval, answer (func)(answer a, answer b)) const {
+    // copy sub_components content into res vector
     std::vector<Trace<answer>> res(this->sub_components);
+
+    // calculate func result
     answer val = func(this->get_value() , eval);
 
+    // add calculated result to every element of res vector
     for (size_t i = 0; i < res.size(); ++i) {
       std::get<2>(res[i]) = val;
     }
@@ -177,9 +182,13 @@ class candidate {
   // with two const reference parameters
   std::vector<Trace<answer>> get_normalized_candidate(
     answer eval, answer (func)(const answer &a, const answer &b)) const {
+    // copy sub_components content into res vector
     std::vector<Trace<answer>> res(this->sub_components);
+
+    // calculate func result
     answer val = func(this->get_value() , eval);
 
+    // add calculated result to every element of res vector
     for (size_t i = 0; i < res.size(); ++i) {
       std::get<2>(res[i]) = val;
     }
@@ -189,9 +198,13 @@ class candidate {
 
   std::vector<Trace<answer>> get_soft_max_hessian_candidate(
     answer eval) const {
+    // copy sub_components content into res vector
     std::vector<Trace<answer>> res(this->sub_components);
+
+    // calculate func result
     answer val = this->get_q() - (eval * this->get_value());
 
+    // add calculated result to every element of res vector
     for (size_t i = 0; i < res.size(); ++i) {
       std::get<2>(res[i]) = val;
     }
@@ -268,22 +281,14 @@ inline answer get_trace_weights(const std::vector<Trace<answer>> &traces,
                                 answer e) {
   answer res = 0.0;
   for (size_t trace = 0; trace < traces.size(); ++trace) {
-    // TODO(sjanssen): move both conditions into is_same_index
-    if (is_same_index(std::get<1>(traces[trace]), to_indices) &&
-        (std::get<0>(traces[trace]) == to_nt)) {
-      res += e * std::get<2>(traces[trace]);
+    const Trace<answer> &curr_trace = traces[trace];
+    if (is_same_index(std::get<1>(curr_trace), to_indices,
+                      std::get<0>(curr_trace), to_nt)) {
+      res += e * std::get<2>(curr_trace);
     }
   }
 
   return res;
 }
-
-// template<typename answer>
-// using NTtraces = typename std::vector<candidate<answer> >::NTtraces;
-/* collection of all traces of an NT in forward pass, together with their
- * values. This later normalized into edge weights. */
-/* collection of all traces of an NT in forward pass, together with their
- * values. This later normalized into edge weights. */
-// typedef std::vector<candidate<double> > NTtraces;
 
 #endif  // RTLIB_TRACES_HH_
