@@ -84,6 +84,7 @@ class TensorMode {
     torch_dtype = other.torch_dtype;
     cpp_dtype = other.cpp_dtype;
     n_dims = other.n_dims;
+    return *this;
   }
 
   static bool is_tensor(const std::string &input) {
