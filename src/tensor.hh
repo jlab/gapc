@@ -71,6 +71,21 @@ class TensorMode {
              batched(batched), torch_dtype(torch_dtype),
              cpp_dtype(cpp_dtype), n_dims(n_dims) {}
 
+  TensorMode(const TensorMode &other) :
+    batched(other.batched), torch_dtype(other.torch_dtype),
+    cpp_dtype(other.cpp_dtype), n_dims(other.n_dims) {}
+
+  TensorMode(TensorMode &&other) :
+    batched(other.batched), torch_dtype(std::move(other.torch_dtype)),
+    cpp_dtype(std::move(other.cpp_dtype)), n_dims(other.n_dims) {}
+
+  TensorMode& operator=(const TensorMode &other) {
+    batched = other.batched;
+    torch_dtype = other.torch_dtype;
+    cpp_dtype = other.cpp_dtype;
+    n_dims = other.n_dims;
+  }
+
   static bool is_tensor(const std::string &input) {
     return input.find("tensor") != input.npos;
   }
@@ -150,8 +165,12 @@ class TensorInput {
     return tensor_modes;
   }
 
-  void add_mode(TensorMode mode) {
+  void add_mode(const TensorMode &mode) {
     tensor_modes.push_back(mode);
+  }
+
+  void add_mode(TensorMode &&mode) {
+    tensor_modes.emplace_back(std::move(mode));
   }
 
   // check if all input Tensors have the same
@@ -247,8 +266,8 @@ inline std::string& get_torch_type(const Type::Base &_type) {
 }
 
 inline std::string& get_macro_type(const Type::Base &_type) {
-  // get the appropriate pytorch Tensor type (float32, float64 etc.)
-  // based on the table type of the current non-terminal table
+  // get the appropriate macro type based on the table type
+  // of the current non-terminal table (used for preprocessor #if stmts)
 
   static hashtable<std::string, std::string>
   torch_type = {{"double", "DOUBLE_TYPE"},

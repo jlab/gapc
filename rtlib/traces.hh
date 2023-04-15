@@ -29,6 +29,7 @@
 #include <tuple>
 #include <cstdarg>
 #include <string>
+#include <utility>
 
 // efficiently stores NT table indices for tracing
 class index_components {
@@ -53,6 +54,12 @@ class index_components {
     indices[0] = i;
     indices[1] = j;
     indices[2] = k;
+  }
+
+  index_components(const index_components &other) : n(other.n) {
+    for (int i = 0; i < n; ++i) {
+      indices[i] = other.indices[i];
+    }
   }
 };
 
@@ -143,7 +150,8 @@ class candidate {
 
   void add_sub_component(std::string &&otherNT,
                          index_components &&indices) {
-    sub_components.emplace_back(otherNT, indices, answer());
+    sub_components.emplace_back(std::move(otherNT),
+                                std::move(indices), answer());
   }
 
   std::vector<Trace<answer>> *get_sub_components() {
