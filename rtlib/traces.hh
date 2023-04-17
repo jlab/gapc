@@ -30,36 +30,45 @@
 #include <cstdarg>
 #include <string>
 #include <utility>
+#include <cassert>
+
+#define MAX_INDEX_COMPONENTS 3  // max indices for an index_components object
 
 // efficiently stores NT table indices for tracing
 class index_components {
- public:
+ private:
   unsigned int n;
-  unsigned int indices[3];
+  unsigned int indices[MAX_INDEX_COMPONENTS];
 
+  friend bool operator==(const index_components &lhs,
+                         const index_components &rhs);
+
+ public:
   index_components() : n(0) {}
 
   index_components(unsigned int n, unsigned int i) : n(n) {
+    assert(n <= MAX_INDEX_COMPONENTS);
     indices[0] = i;
   }
 
   index_components(unsigned int n, unsigned int i,
                    unsigned int j) : n(n) {
+    assert(n <= MAX_INDEX_COMPONENTS);
     indices[0] = i;
     indices[1] = j;
   }
 
   index_components(unsigned int n, unsigned int i,
                    unsigned int j, unsigned int k) : n(n) {
+    assert(n <= MAX_INDEX_COMPONENTS);
     indices[0] = i;
     indices[1] = j;
     indices[2] = k;
   }
 
-  index_components(const index_components &other) : n(other.n) {
-    for (int i = 0; i < n; ++i) {
-      indices[i] = other.indices[i];
-    }
+  void add(unsigned int idx) {
+    assert(n <= MAX_INDEX_COMPONENTS);
+    indices[n++] = idx;
   }
 };
 
@@ -121,6 +130,7 @@ inline bool is_same_index(const std::vector<unsigned int> &a,
   return a == b && a_nt == b_nt;
 }
 
+// answer type can be any primitve number type or "Batch"
 template<typename answer = double>
 class candidate {
  private:
@@ -178,7 +188,7 @@ class candidate {
     // calculate func result
     answer val = func(this->get_value() , eval);
 
-    // add calculated result to every element of res vector
+    // add calculated result to every Trace of res vector
     for (size_t i = 0; i < res.size(); ++i) {
       std::get<2>(res[i]) = val;
     }
@@ -196,7 +206,7 @@ class candidate {
     // calculate func result
     answer val = func(this->get_value() , eval);
 
-    // add calculated result to every element of res vector
+    // add calculated result to every Trace of res vector
     for (size_t i = 0; i < res.size(); ++i) {
       std::get<2>(res[i]) = val;
     }
@@ -212,7 +222,7 @@ class candidate {
     // calculate func result
     answer val = this->get_q() - (eval * this->get_value());
 
-    // add calculated result to every element of res vector
+    // add calculated result to every Trace of res vector
     for (size_t i = 0; i < res.size(); ++i) {
       std::get<2>(res[i]) = val;
     }

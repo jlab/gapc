@@ -25,14 +25,19 @@
     * of primitive values;
     * this type is used in the generated derivative code
     * to process batched inputs;
+    * it can be used as an answer type in GAP-L algebra functions
+    * using the typenames
+    * "I32batch", "I64batch", "F32batch" or "F64batch";
     * it uses a memory pool for fast (de)allocation of memory;
     * all "Batch" objects require access to a global variable
-    * "BATCH_SIZE", which determines the size of every batch;
+    * "BATCH_SIZE", which determines the size of every batch
+    * (gets set at runtime in the generated derivative code);
     * the maximum batch size is controlled by the "MAX_BATCH_SIZE"
     * macro, which is used to allocate space for every batch
-    * from the memory pool; by default, it is set to 2048,
-    * but can be increased/decreased if needed since the memory
-    * pool can automatically expand itself
+    * from the memory pool and thus needs to be a fixed size;
+    * by default, it is set to 2048, but can be
+    * increased/decreased if needed since the memory pool
+    * can automatically expand itself
 }}} */
 
 #ifndef RTLIB_BATCH_HH_
@@ -56,7 +61,7 @@ inline int64_t BATCH_SIZE = 1;
 
 #if defined(__AVX2__)
 /*
- * SIMD element-wise operations using 256bit registers;
+ * SIMD element-wise operations on batches using 256bit registers;
  * the availabilty of these registers depends on the target CPU,
  * so this implementation will only be used if they are available;
  * if that's not the case, the vectorization of the loops will
@@ -189,7 +194,7 @@ class BatchImpl {
 /*
  * supports fast element-wise operations on batches of values;
  * the maximum batch size is defined by the MAX_BATCH_SIZE macro;
- * in the actual program, the batch size is determined at
+ * in the generated derivative code, the batch size is determined at
  * runtime and stored in the global BATCH_SIZE variable,
  * which all objects have access to; so only BATCH_SIZE
  * elements are stored/processed in a Batch object
@@ -208,7 +213,7 @@ class Batch {
     copy_from(data);
   }
 
-  // fill batch array with calar value
+  // fill batch array with scalar value
   Batch(T x): empty_(false), batch(nullptr) {  // NOLINT [runtime/explicit]
     fill(x);
   }
@@ -250,7 +255,7 @@ class Batch {
     return *this;
   }
 
-  // allocate memory from the memory pool
+  // allocate memory for batch array from the memory pool
   void alloc() {
     if (!batch) {
       batch = new BatchImpl<T, SIZE>();
