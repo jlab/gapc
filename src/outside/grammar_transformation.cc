@@ -662,7 +662,6 @@ struct Collect_and_Insert_outside_axioms : public Visitor {
         Alt::Link *link = new Alt::Link((*i)->name, Loc());
         link->name = (*i)->name;
         link->set_tracks((*i)->tracks(), (*i)->track_pos());
-        link->init_multi_ys();
         link->top_level = Bool(true);
         nt_axiom->alts.push_back(link);
       }
@@ -738,10 +737,8 @@ void inject_outside_inside_transition(
   for (unsigned int track = 0; track < rhs_inside->tracks(); ++track) {
     comptracks->push_back(f);
   }
-  // TODO(smj): check of really done via check_semantics()
   link->set_tracks(rhs_inside->tracks(), rhs_inside->track_pos());
-  // link->init_multi_ys();
-  // link->is_outside_inside_transition = true;
+  link->set_outside_inside_transition();
   if (rhs_inside->tracks() == 1) {
     link->filters.push_back(f);
   } else {
@@ -824,6 +821,16 @@ void Grammar::convert_to_outside() {
   for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin();
        i != NTs.end(); ++i) {
     (*i).second->init_links(*this);
+  }
+
+  // initialize yield sizes for the outside-inside transition, which is one of
+  // the alternatives of the new outside axiom
+  for (std::list<Alt::Base*>::iterator a = axiom->alts.begin();
+       a != axiom->alts.end(); ++a) {
+    if ((*a)->is(Alt::LINK) &&
+        (dynamic_cast<Alt::Link*>(*a)->is_outside_inside_transition())) {
+      (*a)->init_multi_ys();
+    }
   }
 
   // TODO(smj): is this the proper location?
