@@ -46,6 +46,7 @@
 
 #include "type/backtrace.hh"
 #include "alt.hh"
+#include "outside/middle_end.hh"
 
 
 Symbol::Base::Base(std::string *n, Type t, const Loc &l)
@@ -750,8 +751,16 @@ void Symbol::NT::init_indices(Expr::Vacc *left, Expr::Vacc *right,
   left_indices[track] = left;
   right_indices[track] = right;
 
-  for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i)
-    (*i)->init_indices(left, right, k, track);
+  for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
+    if ((*i)->is_partof_outside()) {
+      Init_Indices_Outside v = Init_Indices_Outside();
+      (*i)->traverse(v);
+      //v.assert_one_outside_nt();
+      v.init_indices(left, right, k, track);
+    } else {
+      (*i)->init_indices(left, right, k, track);
+    }
+  }
 }
 
 Statement::Base *Symbol::NT::build_return_empty(const Code::Mode &mode) {

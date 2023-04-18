@@ -644,6 +644,12 @@ class Main {
     }
 
     grammar->init_indices();
+          unsigned int nodeID = 1;
+          grammar->to_dot(&nodeID, opts.plotgrammar_stream(), opts.plot_grammar);
+
+          opts.plotgrammar_stream_->flush();
+          exit(99);
+
     grammar->init_decls();
     // for cyk (ordering of NT for parsing, see page 101 of the thesis)
     grammar->dep_analysis();
