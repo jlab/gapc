@@ -661,10 +661,8 @@ struct Collect_and_Insert_outside_axioms : public Visitor {
            i != terminating_lhs_nts->end(); ++i) {
         Alt::Link *link = new Alt::Link((*i)->name, Loc());
         link->name = (*i)->name;
-        /* TODO(smj): check if really not necessary */
-//        link->nt = *i;
-//        link->set_tracks((*i)->tracks(), (*i)->track_pos());
-//        link->init_multi_ys();
+        link->set_tracks((*i)->tracks(), (*i)->track_pos());
+        link->init_multi_ys();
         link->top_level = Bool(true);
         nt_axiom->alts.push_back(link);
       }
@@ -741,15 +739,18 @@ void inject_outside_inside_transition(
     comptracks->push_back(f);
   }
   // TODO(smj): check of really done via check_semantics()
-//  link->set_tracks(rhs_inside->tracks(), rhs_inside->track_pos());
-//  link->init_multi_ys();
-//  //link->is_outside_inside_transition = true;
+  link->set_tracks(rhs_inside->tracks(), rhs_inside->track_pos());
+  // link->init_multi_ys();
+  // link->is_outside_inside_transition = true;
   if (rhs_inside->tracks() == 1) {
     link->filters.push_back(f);
   } else {
     link->add_multitrack_filter(*comptracks, f->type, Loc());
   }
   link->top_level = Bool(true);
+
+  // flag this single link as the transition from outside to inside
+  link->set_outside_inside_transition();
 
   // finally add this new transition to the list of alternatives
   lhs_outside->alts.push_back(link);
