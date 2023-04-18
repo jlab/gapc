@@ -525,6 +525,12 @@ class Link : public Base {
  private:
   Runtime::Poly calls;
 
+  /* flags the one and only situation where outside grammar
+   * transitions into inside rules, i.e. user defined axiom.
+   * we need to ensure that according NT call asks for the
+   * empy word. */
+  bool _is_outside_inside_transition = false;
+
  public:
   // The name of the non-terminal this instance wrappes. This
   // name will be resolved when the method Link::init_links(Grammar*)
@@ -634,6 +640,13 @@ class Link : public Base {
   void optimize_choice();
   unsigned int* to_dot(unsigned int *nodeID, std::ostream &out,
           int plot_level);
+
+  const bool is_outside_inside_transition() {
+    return _is_outside_inside_transition;
+  }
+  void set_outside_inside_transition() {
+    _is_outside_inside_transition = true;
+  }
 };
 
 
