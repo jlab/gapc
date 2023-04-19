@@ -533,6 +533,30 @@ struct Flip_lhs_rhs_nonterminals : public Visitor {
         alt.m_ys = lhs_nt->multi_ys();
         alt.name = lhs_nt->name;
 
+        /* the inside lhs NT might have nt Parameters. If so we need to ensure
+         * that the rhs call of the now outside NT is done with the same nt
+         * parameters. The body is copy & paste from Expr/new.cc
+         */
+        if (lhs_nt->ntargs().size() > 0) {
+          std::list<Expr::Base*> *_args = new std::list<Expr::Base*>();
+          for (std::list<Para_Decl::Base*>::const_iterator i =
+               lhs_nt->ntargs().begin();
+               i != lhs_nt->ntargs().end(); ++i) {
+            Para_Decl::Simple *p = dynamic_cast<Para_Decl::Simple*>(*i);
+            if (p) {
+              _args->push_back(new Expr::Vacc(p->name()));
+            } else {
+              Para_Decl::Multi *p = dynamic_cast<Para_Decl::Multi*>(*i);
+              for (std::list<Para_Decl::Simple*>::const_iterator j =
+                   p->list().begin();
+                   j != p->list().end(); ++j) {
+                _args->push_back(new Expr::Vacc((*j)->name()));
+              }
+            }
+          }
+          alt.set_ntparas(Loc(), _args);
+        }
+
         // d)
         alt_clones->push_back(std::make_pair(outside_rhs_nt, topalt->clone()));
 
@@ -823,8 +847,10 @@ void Grammar::convert_to_outside() {
     (*i).second->init_links(*this);
   }
 
-  // initialize yield sizes for the outside-inside transition, which is one of
-  // the alternatives of the new outside axiom
+  /* initialize yield sizes for the outside-inside transition, which is one of
+   * the alternatives of the new outside axiom.
+   * Can only be done AFTER links have been initialized, i.e. nt members are
+   * no longer nullptr. */
   for (std::list<Alt::Base*>::iterator a = axiom->alts.begin();
        a != axiom->alts.end(); ++a) {
     if ((*a)->is(Alt::LINK) &&
