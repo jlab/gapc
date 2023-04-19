@@ -40,10 +40,14 @@ struct Init_Indices_Outside_Args : public Visitor {
   size_t track;
   unsigned int k;
   Alt::Base *topalt;
+  Expr::Vacc *left;
+  Expr::Vacc *right;
 
-  Init_Indices_Outside_Args(unsigned int &k, size_t track) {
+  Init_Indices_Outside_Args(Expr::Vacc *left, Expr::Vacc *right, unsigned int &k, size_t track) {
     this->track = track;
     this->k = k;
+    this->left = left;
+    this->right = right;
   }
 
   void visit_end(Alt::Simple &a) {
@@ -58,8 +62,15 @@ struct Init_Indices_Outside_Args : public Visitor {
   }
 
   void visit(Fn_Arg::Alt &f) {
-    f.left_indices = f.alt->left_indices;
-    f.right_indices = f.alt->right_indices;
+//    if (f.alt_ref()->is(Alt::LINK) && (dynamic_cast<Alt::Link*>(f.alt_ref()))->nt->is_partof_outside()) {
+//      // fallback if linking to the ouside NT
+//      f.init_indices(left, right, k, track);
+//    } else {
+    if ((f.alt->left_indices.at(track) != nullptr) && (f.alt->right_indices.at(track) != nullptr)) {
+      f.init_indices(f.alt->left_indices.at(track), f.alt->right_indices.at(track), k, track);
+    } else {
+      f.init_indices(left, right, k, track);
+    }
   }
 };
 
@@ -80,7 +91,7 @@ struct Init_Indices_OutsideNT : public Visitor {
 
   void visit(Alt::Link &s) {
     if (s.nt->is(Symbol::NONTERMINAL) && s.nt->is_partof_outside()) {
-      std::cerr << *s.nt->name << "\n";
+      //std::cerr << *s.nt->name << "\n";
       if (topalt->left_indices.at(track) && topalt->right_indices.at(track)) {
       (&s)->Base::init_indices(
           topalt->left_indices.at(track),
@@ -124,8 +135,8 @@ struct Init_Indices_Outside : public Visitor {
   void init_indices(Expr::Base *left, Expr::Base *right, unsigned int &k, size_t track) {
     assert_one_outside_nt();
 
-    Yield::Size ys_all = sum_ys_left(nullptr, nullptr, track);
-    Expr::Base *last_var = next_index_var(k, track, NULL, left, right, ys_all, Yield::Size(), ys_all);
+    Yield::Size ys_all = sum_ys_left(*_left.begin(), nullptr, track);
+    Expr::Base *last_var = next_index_var(k, track, left, left, right, ys_all, Yield::Size(), ys_all);
     Expr::Base *next_var = last_var;
 
     Yield::Size lhs;
@@ -195,7 +206,8 @@ struct Init_Indices_Outside : public Visitor {
 
 
     // RIGHT of outside NT
-    lhs = sum_ys_right(nullptr, nullptr, track);
+    if (_right.size() > 0) {
+    lhs = sum_ys_right(*_right.begin(), nullptr, track);
 //    next_var = right;
     last_var = right;
     lhs.set(0, 0);
@@ -264,6 +276,7 @@ struct Init_Indices_Outside : public Visitor {
       }
 
 //      std::cerr << "\n";
+    }
     }
 
 //    std::vector<Type>::reverse_iterator ir_type = _left_types.rbegin();
@@ -344,8 +357,8 @@ struct Init_Indices_Outside : public Visitor {
     Yield::Size ys;
 
     bool seen_start = false;
-    if (start == nullptr) {
-      seen_start = true;
+    if (start == *_left.end()) {
+      return ys;
     }
     std::vector<Type>::iterator i_type = _left_types.begin();
     for (std::vector<void*>::iterator i = _left.begin(); i != _left.end(); ++i, ++i_type) {
@@ -374,8 +387,8 @@ struct Init_Indices_Outside : public Visitor {
     Yield::Size ys;
 
     bool seen_start = false;
-    if (start == nullptr) {
-      seen_start = true;
+    if (start == *_right.end()) {
+      return ys;
     }
     std::vector<Type>::iterator i_type = _right_types.begin();
     for (std::vector<void*>::iterator i = _right.begin(); i != _right.end(); ++i, ++i_type) {
@@ -413,7 +426,7 @@ struct Init_Indices_Outside : public Visitor {
   void visit(Alt::Link &a) {
     if (a.nt->is_partof_outside() || a.is_outside_inside_transition()) {
       num_outside_nts++;
-      std::cerr << "gefunden: " << *a.nt->name << "\n";
+      //std::cerr << "gefunden: " << *a.nt->name << "\n";
       /* drop the link itself as it has been previously added via the
        * visit(Alt::Base) call */
       _left.pop_back();
