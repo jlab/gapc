@@ -44,6 +44,7 @@ CXXFILES = $(wildcard src/*.cc) \
 	   $(wildcard src/outside/*.cc) \
 	   $(UNITTEST_CXX) \
            $(MODTESTS_CXX) \
+           $(MODOUTSIDETESTS_CXX) \
 	   $(wildcard testdata/test/*.cc) \
 	   rtlib/string.cc \
 
@@ -98,6 +99,7 @@ TEMP = $(GEN_CXXFILES) $(OFILES) $(DEPS)\
        src/position.hh \
        gapc \
        $(MODTESTS) \
+       $(MODOUTSIDETESTS) \
        stats testdata/modtest/stats.o \
        src/version.txt src/version.cc src/version.d src/version.o \
        testdata/config-tests/config.finished \
