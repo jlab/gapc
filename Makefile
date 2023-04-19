@@ -334,3 +334,11 @@ testdata/test/shapemfepfx/nowindow testdata/test/shapemfepfx/main:
 
 testdata/test/shrepmfesample/main:
 	$(MAKE) -C testdata/test/shrepmfesample all
+
+test-pytorch:
+	cd testdata/regresstest &&\
+	$(SHELL) test_pytorch_module.sh $(TRUTH_DIR)
+
+test-pytorch-batched:
+	cd testdata/regresstest &&\
+	$(SHELL) test_pytorch_module.sh $(TRUTH_DIR) ""
