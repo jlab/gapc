@@ -757,6 +757,13 @@ void Symbol::NT::init_indices(Expr::Vacc *left, Expr::Vacc *right,
       (*i)->traverse(v);
       //v.assert_one_outside_nt();
       v.init_indices(left, right, k, track);
+
+      Init_Indices_Outside_Args v2 = Init_Indices_Outside_Args(k, track);
+      (*i)->traverse(v2);
+
+      Init_Indices_OutsideNT v3 = Init_Indices_OutsideNT(*i, k, track);
+      (*i)->traverse(v3);
+
     } else {
       (*i)->init_indices(left, right, k, track);
     }

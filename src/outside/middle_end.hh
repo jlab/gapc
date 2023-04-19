@@ -36,6 +36,62 @@ Expr::Base *next_index_var(unsigned &k, size_t track,
   Expr::Base *next_var, Expr::Base *last_var, Expr::Base *right,
   const Yield::Size &ys, const Yield::Size &lhs, const Yield::Size &rhs);
 
+struct Init_Indices_Outside_Args : public Visitor {
+  size_t track;
+  unsigned int k;
+  Alt::Base *topalt;
+
+  Init_Indices_Outside_Args(unsigned int &k, size_t track) {
+    this->track = track;
+    this->k = k;
+  }
+
+  void visit_end(Alt::Simple &a) {
+    /* initialize left and right indices, simply by taking the
+     *   left index of the left-most argument and
+     *   right index of the right-most argument */
+    (&a)->Base::init_indices(
+        (*a.args.begin())->left_indices.at(track),
+        (*a.args.rbegin())->right_indices.at(track),
+        k,
+        track);
+  }
+
+  void visit(Fn_Arg::Alt &f) {
+    f.left_indices = f.alt->left_indices;
+    f.right_indices = f.alt->right_indices;
+  }
+};
+
+struct Init_Indices_OutsideNT : public Visitor {
+  size_t track;
+  unsigned int k;
+  Alt::Base *topalt;
+
+  Init_Indices_OutsideNT(Alt::Base *topalt, unsigned int &k, size_t track) {
+    this->track = track;
+    this->k = k;
+    this->topalt = topalt;
+  }
+
+//  void visit(Fn_Arg::Alt &f) {
+//
+//  }
+
+  void visit(Alt::Link &s) {
+    if (s.nt->is(Symbol::NONTERMINAL) && s.nt->is_partof_outside()) {
+      std::cerr << *s.nt->name << "\n";
+      if (topalt->left_indices.at(track) && topalt->right_indices.at(track)) {
+      (&s)->Base::init_indices(
+          topalt->left_indices.at(track),
+          topalt->right_indices.at(track),
+          k,
+          track);
+      }
+    }
+  }
+};
+
 struct Init_Indices_Outside : public Visitor {
  private:
   int num_outside_nts = 0;
@@ -44,6 +100,8 @@ struct Init_Indices_Outside : public Visitor {
   std::vector<Type> _left_types;
   std::vector<void*> _right;
   std::vector<Type> _right_types;
+
+  Alt::Link *_outsideNT = nullptr;
 
   void stack_component(void *ptr_component, Type t) {
     if (num_outside_nts < 1) {
@@ -79,15 +137,15 @@ struct Init_Indices_Outside : public Visitor {
       Yield::Size rhs_ys(rhs);
       rhs_ys += ys;
 
-      std::cerr << "L: " << lhs << " - " << ys << " - " << rhs;
+//      std::cerr << "L: " << lhs << " - " << ys << " - " << rhs;
 
       if (*i_type == ALT) {
         Alt::Base *a = static_cast<Alt::Base*>(*i);
         //std::cerr << (*a).left_indices.size() << " <- Alt\n";
         if (a->is(Alt::LINK)) {
-          std::cerr << " : " << *(dynamic_cast<Alt::Link*>(a)->name);
+//          std::cerr << " : " << *(dynamic_cast<Alt::Link*>(a)->name);
           next_var = next_index_var(k, track, next_var, last_var, left, ys, lhs, rhs);
-          std::cerr << " next_var = " <<  *next_var;
+//          std::cerr << " next_var = " <<  *next_var;
 
           // copy and paste from Alt::Simple::init_indices
           std::pair<Expr::Base*, Expr::Base*> res(0, 0);
@@ -116,23 +174,23 @@ struct Init_Indices_Outside : public Visitor {
           a->init_indices(res.first, res.second, k, track);
           // end copy and paste
 
-          std::cerr << " (left = " << *res.first << ", right = " << *res.second << ") ";
+//          std::cerr << " (left = " << *res.first << ", right = " << *res.second << ") ";
         } else if (a->is(Alt::SIMPLE)) {
-          std::cerr << " : Alt::Simple " << *(dynamic_cast<Alt::Simple*>(a)->name);
+//          std::cerr << " : Alt::Simple " << *(dynamic_cast<Alt::Simple*>(a)->name);
         }
       } else if (*i_type == FN_ARG) {
         Fn_Arg::Base *f = static_cast<Fn_Arg::Base*>(*i);
-        std::cerr << " : Fn_Arg";
+//        std::cerr << " : Fn_Arg";
         //std::cerr << (*f).left_indices.size() << " <- Fn_Arg\n";
         //continue;
       } else if (*i_type == SYMBOL) {
         Symbol::Base *s = static_cast<Symbol::Base*>(*i);
-        std::cerr << " : Symbol";
+//        std::cerr << " : Symbol";
         //std::cerr << (*s).left_indices.size() << " <- Symbol\n";
 //        accum_ys_center_to_left += (*s).multi_ys()(track);
       }
 
-      std::cerr << "\n";
+//      std::cerr << "\n";
     }
 
 
@@ -149,15 +207,15 @@ struct Init_Indices_Outside : public Visitor {
       Yield::Size rhs_ys(rhs);
       rhs_ys += ys;
 
-      std::cerr << "R: " << lhs << " - " << ys << " - " << rhs;
+//      std::cerr << "R: " << lhs << " - " << ys << " - " << rhs;
 
       if (*i_type == ALT) {
         Alt::Base *a = static_cast<Alt::Base*>(*i);
         //std::cerr << (*a).left_indices.size() << " <- Alt\n";
         if (a->is(Alt::LINK)) {
-          std::cerr << " : " << *(dynamic_cast<Alt::Link*>(a)->name);
+//          std::cerr << " : " << *(dynamic_cast<Alt::Link*>(a)->name);
           next_var = next_index_var(k, track, next_var, last_var, right, ys, lhs, rhs);
-          std::cerr << " next_var = " <<  *next_var;
+//          std::cerr << " next_var = " <<  *next_var;
 
           // copy and paste from Alt::Simple::init_indices
           std::pair<Expr::Base*, Expr::Base*> res(0, 0);
@@ -189,23 +247,23 @@ struct Init_Indices_Outside : public Visitor {
           a->init_indices(res.first, res.second, k, track);
           // end copy and paste
 
-          std::cerr << " (left = " << *res.first << ", right = " << *res.second << ") ";
+//          std::cerr << " (left = " << *res.first << ", right = " << *res.second << ") ";
         } else if (a->is(Alt::SIMPLE)) {
-          std::cerr << " : Alt::Simple " << *(dynamic_cast<Alt::Simple*>(a)->name);
+//          std::cerr << " : Alt::Simple " << *(dynamic_cast<Alt::Simple*>(a)->name);
         }
       } else if (*i_type == FN_ARG) {
         Fn_Arg::Base *f = static_cast<Fn_Arg::Base*>(*i);
-        std::cerr << " : Fn_Arg";
+//        std::cerr << " : Fn_Arg";
         //std::cerr << (*f).left_indices.size() << " <- Fn_Arg\n";
         //continue;
       } else if (*i_type == SYMBOL) {
         Symbol::Base *s = static_cast<Symbol::Base*>(*i);
-        std::cerr << " : Symbol";
+//        std::cerr << " : Symbol";
         //std::cerr << (*s).left_indices.size() << " <- Symbol\n";
 //        accum_ys_center_to_left += (*s).multi_ys()(track);
       }
 
-      std::cerr << "\n";
+//      std::cerr << "\n";
     }
 
 //    std::vector<Type>::reverse_iterator ir_type = _left_types.rbegin();
@@ -271,6 +329,15 @@ struct Init_Indices_Outside : public Visitor {
 //
 //      std::cerr << "\n";
 //    }
+
+    if ((_left.size() == 0) && (_right.size() == 0) && _outsideNT) {
+      if (_outsideNT->is_outside_inside_transition()) {
+        _outsideNT->Base::init_indices(left->plus(right), right->minus(left), k, track);
+      } else {
+        // must be a direct link to an non-terminal
+        _outsideNT->Base::init_indices(left, right, k, track);
+      }
+    }
   }
 
   Yield::Size sum_ys_left(void* start, void* end, size_t track) {
@@ -333,40 +400,6 @@ struct Init_Indices_Outside : public Visitor {
 
     return ys;
   }
-//  Yield::Size sum_ys_right(void* start, void* end, size_t track, bool exclude_end) {
-//      Yield::Size ys;
-//
-//      bool seen_start = false;
-//      if (start == nullptr) {
-//        seen_start = true;
-//      }
-//      std::vector<Type>::reverse_iterator i_type = _right_types.rbegin();
-//      std::vector<void*>::reverse_iterator i_end = _right.rend();
-//      if (exclude_end && (_right.size() > 1)) {
-//        i_end = std::prev(std::prev(_right.rend()));
-//      }
-//      for (std::vector<void*>::reverse_iterator i = _right.rbegin(); i != i_end; ++i, ++i_type) {
-//        if (*i == start) {
-//          seen_start = true;
-//        }
-//        if (seen_start) {
-//          if (*i_type == ALT) {
-//            Alt::Base *a = static_cast<Alt::Base*>(*i);
-//            if (a->is(Alt::LINK)) {
-//              ys += (*a).multi_ys()(track);
-//            }
-//          } else if (*i_type == SYMBOL) {
-//            Symbol::Base *s = static_cast<Symbol::Base*>(*i);
-//            ys += (*s).multi_ys()(track);
-//          }
-//        }
-//        if (*i == end) {
-//          break;
-//        }
-//      }
-//
-//      return ys;
-//    }
 
   Init_Indices_Outside() : num_outside_nts(0) {
   }
@@ -385,6 +418,7 @@ struct Init_Indices_Outside : public Visitor {
        * visit(Alt::Base) call */
       _left.pop_back();
       _left_types.pop_back();
+      _outsideNT = &a;
     }
   }
   void visit(Alt::Base &a) {

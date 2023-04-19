@@ -136,7 +136,7 @@ class Base {
 
   virtual Base *clone() = 0;
 
- protected:
+ public:
   std::vector<Expr::Base*> left_indices;
   std::vector<Expr::Base*> right_indices;
 
