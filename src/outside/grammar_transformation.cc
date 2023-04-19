@@ -533,6 +533,30 @@ struct Flip_lhs_rhs_nonterminals : public Visitor {
         alt.m_ys = lhs_nt->multi_ys();
         alt.name = lhs_nt->name;
 
+        /* the inside lhs NT might have nt Parameters. If so we need to ensure
+         * that the rhs call of the now outside NT is done with the same nt
+         * parameters. The body is copy & paste from Expr/new.cc
+         */
+        if (lhs_nt->ntargs().size() > 0) {
+          std::list<Expr::Base*> *_args = new std::list<Expr::Base*>();
+          for (std::list<Para_Decl::Base*>::const_iterator i =
+               lhs_nt->ntargs().begin();
+               i != lhs_nt->ntargs().end(); ++i) {
+            Para_Decl::Simple *p = dynamic_cast<Para_Decl::Simple*>(*i);
+            if (p) {
+              _args->push_back(new Expr::Vacc(p->name()));
+            } else {
+              Para_Decl::Multi *p = dynamic_cast<Para_Decl::Multi*>(*i);
+              for (std::list<Para_Decl::Simple*>::const_iterator j =
+                   p->list().begin();
+                   j != p->list().end(); ++j) {
+                _args->push_back(new Expr::Vacc((*j)->name()));
+              }
+            }
+          }
+          alt.set_ntparas(Loc(), _args);
+        }
+
         // d)
         alt_clones->push_back(std::make_pair(outside_rhs_nt, topalt->clone()));
 
@@ -662,7 +686,6 @@ struct Collect_and_Insert_outside_axioms : public Visitor {
         Alt::Link *link = new Alt::Link((*i)->name, Loc());
         link->name = (*i)->name;
         link->set_tracks((*i)->tracks(), (*i)->track_pos());
-        link->init_multi_ys();
         link->top_level = Bool(true);
         nt_axiom->alts.push_back(link);
       }
@@ -738,10 +761,8 @@ void inject_outside_inside_transition(
   for (unsigned int track = 0; track < rhs_inside->tracks(); ++track) {
     comptracks->push_back(f);
   }
-  // TODO(smj): check of really done via check_semantics()
   link->set_tracks(rhs_inside->tracks(), rhs_inside->track_pos());
-  // link->init_multi_ys();
-  // link->is_outside_inside_transition = true;
+  link->set_outside_inside_transition();
   if (rhs_inside->tracks() == 1) {
     link->filters.push_back(f);
   } else {
@@ -824,6 +845,18 @@ void Grammar::convert_to_outside() {
   for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin();
        i != NTs.end(); ++i) {
     (*i).second->init_links(*this);
+  }
+
+  /* initialize yield sizes for the outside-inside transition, which is one of
+   * the alternatives of the new outside axiom.
+   * Can only be done AFTER links have been initialized, i.e. nt members are
+   * no longer nullptr. */
+  for (std::list<Alt::Base*>::iterator a = axiom->alts.begin();
+       a != axiom->alts.end(); ++a) {
+    if ((*a)->is(Alt::LINK) &&
+        (dynamic_cast<Alt::Link*>(*a)->is_outside_inside_transition())) {
+      (*a)->init_multi_ys();
+    }
   }
 
   // TODO(smj): is this the proper location?
