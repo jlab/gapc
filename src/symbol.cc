@@ -756,9 +756,10 @@ void Symbol::NT::init_indices(Expr::Vacc *left, Expr::Vacc *right,
       Init_Indices_Outside v = Init_Indices_Outside();
       (*i)->traverse(v);
       //v.assert_one_outside_nt();
+      //std::cerr << "NT: " << *this->name << "\n";
       v.init_indices(left, right, k, track);
 
-      Init_Indices_Outside_Args v2 = Init_Indices_Outside_Args(k, track);
+      Init_Indices_Outside_Args v2 = Init_Indices_Outside_Args(left, right, k, track);
       (*i)->traverse(v2);
 
       Init_Indices_OutsideNT v3 = Init_Indices_OutsideNT(*i, k, track);
