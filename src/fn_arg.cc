@@ -283,6 +283,7 @@ void Fn_Arg::Alt::traverse(Visitor &v) {
   v.visit(*dynamic_cast<Base*>(this));
   v.visit(*this);
   alt->traverse(v);
+  v.visit_end(*this);
 }
 
 void Fn_Arg::Const::traverse(Visitor &v) {

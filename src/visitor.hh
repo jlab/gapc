@@ -57,6 +57,7 @@ class Visitor {
 
     virtual void visit(Fn_Arg::Const &f);
     virtual void visit(Fn_Arg::Alt &f);
+    virtual void visit_end(Fn_Arg::Alt &f);
 
     virtual void visit_end(Grammar &g);
 };
