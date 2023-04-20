@@ -664,8 +664,8 @@ struct Collect_and_Insert_outside_axioms : public Visitor {
             + "outside grammar generation!");
       }
 
-      // let's use the current inside axiom as template ...
-      nt_axiom = grammar.axiom->clone(grammar.axiom->track_pos(), false);
+      // create a fresh new non terminal which will become the outside axiom
+      nt_axiom = new Symbol::NT(axiom_name, Loc());
       // but change its name
       nt_axiom->name = axiom_name;
       nt_axiom->orig_name = nt_axiom->name;
