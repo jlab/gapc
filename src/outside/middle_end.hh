@@ -61,7 +61,7 @@ struct Init_Indices_Outside_Args : public Visitor {
         track);
   }
 
-  void visit(Fn_Arg::Alt &f) {
+  void visit_end(Fn_Arg::Alt &f) {
 //    if (f.alt_ref()->is(Alt::LINK) && (dynamic_cast<Alt::Link*>(f.alt_ref()))->nt->is_partof_outside()) {
 //      // fallback if linking to the ouside NT
 //      f.init_indices(left, right, k, track);
@@ -155,31 +155,39 @@ struct Init_Indices_Outside : public Visitor {
         //std::cerr << (*a).left_indices.size() << " <- Alt\n";
         if (a->is(Alt::LINK)) {
 //          std::cerr << " : " << *(dynamic_cast<Alt::Link*>(a)->name);
+
           next_var = next_index_var(k, track, next_var, last_var, left, ys, lhs, rhs);
 //          std::cerr << " next_var = " <<  *next_var;
 
           // copy and paste from Alt::Simple::init_indices
           std::pair<Expr::Base*, Expr::Base*> res(0, 0);
-          if (lhs.low() == lhs.high()) {
-            res.first = last_var->plus(lhs.low());
-            if (ys.low() == ys.high()) {
-              res.second = last_var->plus(lhs.low())->plus(ys.low());
-              lhs += ys;
-            } else {
-              if (rhs.low() == rhs.high()) {
-                res.second = next_var->minus(rhs.low());
+          if (ys_all.low() == ys_all.high()) {
+            // no moving boundary between here and the outside_nt
+            res.first = last_var->minus(rhs_ys.low());
+            res.second = last_var->minus(rhs.low());
+            lhs += ys;
+          } else {
+            if (lhs.low() == lhs.high()) {
+              res.first = last_var->plus(lhs.low());
+              if (ys.low() == ys.high()) {
+                res.second = last_var->plus(lhs.low())->plus(ys.low());
                 lhs += ys;
               } else {
-                res.second = next_var;
-                lhs.set(0, 0);
-                last_var = next_var;
+                if (rhs.low() == rhs.high()) {
+                  res.second = next_var->minus(rhs.low());
+                  lhs += ys;
+                } else {
+                  res.second = next_var;
+                  lhs.set(0, 0);
+                  last_var = next_var;
+                }
               }
+            } else {
+              assert(rhs_ys.low() == rhs_ys.high());
+              res.first = next_var->minus(rhs_ys.low());
+              res.second = next_var->minus(rhs.low());
+              lhs += ys;
             }
-          } else {
-            assert(rhs_ys.low() == rhs_ys.high());
-            res.first = next_var->minus(rhs_ys.low());
-            res.second = next_var->minus(rhs.low());
-            lhs += ys;
           }
 
           a->init_indices(res.first, res.second, k, track);
