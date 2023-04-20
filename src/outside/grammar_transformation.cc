@@ -22,6 +22,7 @@
 }}} */
 
 #include "grammar_transformation.hh"
+#include "../expr/new.hh"
 #include <utility>
 
 bool Grammar::check_outside_parse_empty_word() {
@@ -507,17 +508,20 @@ struct Flip_lhs_rhs_nonterminals : public Visitor {
          * production rule, but if we clone all components will have different
          * pointers as they are different objects. Thus, we
          *   a) safely store the original rhs NT (orig_rhs_nt) away
+         *      + non-terminal parameters
          *   b) create a second clone of the rhs NT, but prefix its name with
          *      "outside_" and remove all alternatives
          *   c) next, we overwrite the current rhs NT of the Alt::Link with the
          *      lhs NT (which was already prefixed with "outside_")
          *   d) NOW clone the modified production rule
          *   e) restore the state before cloning of the inside production rule
+         *      + non-terminal parameters
          */
 
         // a)
         Symbol::NT *orig_rhs_nt = dynamic_cast<Symbol::NT*>(alt.nt)->clone(
             dynamic_cast<Symbol::NT*>(alt.nt)->track_pos(), true);
+        std::list<Expr::Base*> orig_alt_ntparas = alt.get_ntparas();
 
         // b)
         Symbol::NT *outside_rhs_nt = dynamic_cast<Symbol::NT*>(alt.nt)->clone(
@@ -537,25 +541,11 @@ struct Flip_lhs_rhs_nonterminals : public Visitor {
          * that the rhs call of the now outside NT is done with the same nt
          * parameters. The body is copy & paste from Expr/new.cc
          */
+        alt.remove_ntparas();
         if (lhs_nt->ntargs().size() > 0) {
-          std::list<Expr::Base*> *_args = new std::list<Expr::Base*>();
-          for (std::list<Para_Decl::Base*>::const_iterator i =
-               lhs_nt->ntargs().begin();
-               i != lhs_nt->ntargs().end(); ++i) {
-            Para_Decl::Simple *p = dynamic_cast<Para_Decl::Simple*>(*i);
-            if (p) {
-              _args->push_back(new Expr::Vacc(p->name()));
-            } else {
-              Para_Decl::Multi *p = dynamic_cast<Para_Decl::Multi*>(*i);
-              for (std::list<Para_Decl::Simple*>::const_iterator j =
-                   p->list().begin();
-                   j != p->list().end(); ++j) {
-                _args->push_back(new Expr::Vacc((*j)->name()));
-              }
-            }
-          }
-          alt.set_ntparas(Loc(), _args);
+          alt.set_ntparas(Loc(), sync_ntparams(lhs_nt->ntargs()));
         }
+
 
         // d)
         alt_clones->push_back(std::make_pair(outside_rhs_nt, topalt->clone()));
@@ -564,6 +554,11 @@ struct Flip_lhs_rhs_nonterminals : public Visitor {
         alt.nt = orig_rhs_nt;
         alt.m_ys = orig_rhs_nt->multi_ys();
         alt.name = orig_rhs_nt->name;
+        if (orig_alt_ntparas.size() > 0) {
+          alt.set_ntparas(alt.location, &orig_alt_ntparas);
+        } else {
+          alt.remove_ntparas();
+        }
       }
     }
   }
@@ -687,6 +682,9 @@ struct Collect_and_Insert_outside_axioms : public Visitor {
         link->name = (*i)->name;
         link->set_tracks((*i)->tracks(), (*i)->track_pos());
         link->top_level = Bool(true);
+        if ((*i)->ntargs().size() > 0) {
+          link->set_ntparas(Loc(), sync_ntparams((*i)->ntargs()));
+        }
         nt_axiom->alts.push_back(link);
       }
 

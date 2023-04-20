@@ -506,6 +506,12 @@ class Simple : public Base {
 
  public:
   void set_ntparas(std::list<Expr::Base*> *l);
+  const std::list<Expr::Base*> get_ntparas() {
+    return ntparas;
+  }
+  void remove_ntparas() {
+    ntparas.clear();
+  }
   void ntparas_to_dot(std::ostream &out);
   unsigned int* to_dot(unsigned int *nodeID, std::ostream &out,
           int plot_level);
@@ -634,6 +640,12 @@ class Link : public Base {
 
  public:
   void set_ntparas(const Loc &loc, std::list<Expr::Base*> *l);
+  const std::list<Expr::Base*> get_ntparas() {
+    return ntparas;
+  }
+  void remove_ntparas() {
+    ntparas.clear();
+  }
   void ntparas_to_dot(std::ostream &out);
   bool check_ntparas();
 
