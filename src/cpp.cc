@@ -3155,6 +3155,10 @@ void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
            << "include $(MF)" << endl
        << "endif" << endl << endl;
 
+  // enable platform-specific optimized functions (turns on AVX2 if available)
+  if (ast.input.tensor_inputs.all_batched()) {
+    stream << "CXXFLAGS += \"-march=native\"" << endl;
+  }
   // pytorch C++ extension doesn't support C++17 yet
   stream << "CXXFLAGS := $(CXXFLAGS) | sed 's/c++17/c++14/'" << endl;
 
