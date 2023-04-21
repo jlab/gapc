@@ -150,12 +150,12 @@ struct Init_Indices_Outside : public Visitor {
 
 //      std::cerr << "L: " << lhs << " - " << ys << " - " << rhs;
 
-      if (*i_type == ALT) {
+      if ((*i_type == ALT) || (*i_type == FN_ARG)) {
         Alt::Base *a = static_cast<Alt::Base*>(*i);
+        Fn_Arg::Base *f = static_cast<Fn_Arg::Base*>(*i);
         //std::cerr << (*a).left_indices.size() << " <- Alt\n";
-        if (a->is(Alt::LINK)) {
+        if (a->is(Alt::LINK) || f->is(Fn_Arg::CONST)) {
 //          std::cerr << " : " << *(dynamic_cast<Alt::Link*>(a)->name);
-
           next_var = next_index_var(k, track, next_var, last_var, left, ys, lhs, rhs);
 //          std::cerr << " next_var = " <<  *next_var;
 
@@ -190,20 +190,24 @@ struct Init_Indices_Outside : public Visitor {
             }
           }
 
-          a->init_indices(res.first, res.second, k, track);
+          if (*i_type == ALT) {
+            a->init_indices(res.first, res.second, k, track);
+          } else {
+            f->init_indices(res.first, res.second, k, track);
+          }
           // end copy and paste
 
 //          std::cerr << " (left = " << *res.first << ", right = " << *res.second << ") ";
-        } else if (a->is(Alt::SIMPLE)) {
-//          std::cerr << " : Alt::Simple " << *(dynamic_cast<Alt::Simple*>(a)->name);
+//        } else if (a->is(Alt::SIMPLE)) {
+////          std::cerr << " : Alt::Simple " << *(dynamic_cast<Alt::Simple*>(a)->name);
         }
-      } else if (*i_type == FN_ARG) {
-        Fn_Arg::Base *f = static_cast<Fn_Arg::Base*>(*i);
-//        std::cerr << " : Fn_Arg";
-        //std::cerr << (*f).left_indices.size() << " <- Fn_Arg\n";
-        //continue;
-      } else if (*i_type == SYMBOL) {
-        Symbol::Base *s = static_cast<Symbol::Base*>(*i);
+//      } else if (*i_type == FN_ARG) {
+//        Fn_Arg::Base *f = static_cast<Fn_Arg::Base*>(*i);
+////        std::cerr << " : Fn_Arg";
+//        //std::cerr << (*f).left_indices.size() << " <- Fn_Arg\n";
+//        //continue;
+//      } else if (*i_type == SYMBOL) {
+//        Symbol::Base *s = static_cast<Symbol::Base*>(*i);
 //        std::cerr << " : Symbol";
         //std::cerr << (*s).left_indices.size() << " <- Symbol\n";
 //        accum_ys_center_to_left += (*s).multi_ys()(track);
@@ -229,10 +233,11 @@ struct Init_Indices_Outside : public Visitor {
 
 //      std::cerr << "R: " << lhs << " - " << ys << " - " << rhs;
 
-      if (*i_type == ALT) {
+      if ((*i_type == ALT) || (*i_type == FN_ARG)) {
         Alt::Base *a = static_cast<Alt::Base*>(*i);
+        Fn_Arg::Base *f = static_cast<Fn_Arg::Base*>(*i);
         //std::cerr << (*a).left_indices.size() << " <- Alt\n";
-        if (a->is(Alt::LINK)) {
+        if (a->is(Alt::LINK) || f->is(Fn_Arg::CONST)) {
 //          std::cerr << " : " << *(dynamic_cast<Alt::Link*>(a)->name);
           next_var = next_index_var(k, track, next_var, last_var, right, ys, lhs, rhs);
 //          std::cerr << " next_var = " <<  *next_var;
@@ -264,20 +269,24 @@ struct Init_Indices_Outside : public Visitor {
             lhs += ys;
           }
 
-          a->init_indices(res.first, res.second, k, track);
+          if (*i_type == ALT) {
+            a->init_indices(res.first, res.second, k, track);
+          } else {
+            f->init_indices(res.first, res.second, k, track);
+          }
           // end copy and paste
 
 //          std::cerr << " (left = " << *res.first << ", right = " << *res.second << ") ";
-        } else if (a->is(Alt::SIMPLE)) {
-//          std::cerr << " : Alt::Simple " << *(dynamic_cast<Alt::Simple*>(a)->name);
+//        } else if (a->is(Alt::SIMPLE)) {
+////          std::cerr << " : Alt::Simple " << *(dynamic_cast<Alt::Simple*>(a)->name);
         }
-      } else if (*i_type == FN_ARG) {
-        Fn_Arg::Base *f = static_cast<Fn_Arg::Base*>(*i);
-//        std::cerr << " : Fn_Arg";
-        //std::cerr << (*f).left_indices.size() << " <- Fn_Arg\n";
-        //continue;
-      } else if (*i_type == SYMBOL) {
-        Symbol::Base *s = static_cast<Symbol::Base*>(*i);
+//      } else if (*i_type == FN_ARG) {
+//        Fn_Arg::Base *f = static_cast<Fn_Arg::Base*>(*i);
+////        std::cerr << " : Fn_Arg";
+//        //std::cerr << (*f).left_indices.size() << " <- Fn_Arg\n";
+//        //continue;
+//      } else if (*i_type == SYMBOL) {
+//        Symbol::Base *s = static_cast<Symbol::Base*>(*i);
 //        std::cerr << " : Symbol";
         //std::cerr << (*s).left_indices.size() << " <- Symbol\n";
 //        accum_ys_center_to_left += (*s).multi_ys()(track);
@@ -382,6 +391,15 @@ struct Init_Indices_Outside : public Visitor {
         } else if (*i_type == SYMBOL) {
           Symbol::Base *s = static_cast<Symbol::Base*>(*i);
           ys += (*s).multi_ys()(track);
+        } else if (*i_type == FN_ARG) {
+          Fn_Arg::Base *f = static_cast<Fn_Arg::Base*>(*i);
+          if (f->is(Fn_Arg::CONST)) {
+            // TODO(sjanssen) isn't there a better method to check for constants?
+//            dynamic_cast<Fn_Arg::Const*>(f)->alt_ref()
+//            if (name->rfind("CONST_", 0) != 0) {
+
+            ys += (*f).multi_ys()(track);
+          }
         }
       }
       if (*i == end) {
@@ -412,6 +430,11 @@ struct Init_Indices_Outside : public Visitor {
         } else if (*i_type == SYMBOL) {
           Symbol::Base *s = static_cast<Symbol::Base*>(*i);
           ys += (*s).multi_ys()(track);
+        } else if (*i_type == FN_ARG) {
+          Fn_Arg::Base *f = static_cast<Fn_Arg::Base*>(*i);
+          if (f->is(Fn_Arg::CONST)) {  // and not Fn_Arg::Alt
+            ys += (*f).multi_ys()(track);
+          }
         }
       }
       if (*i == end) {
