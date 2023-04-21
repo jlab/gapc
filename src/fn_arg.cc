@@ -41,11 +41,14 @@ Fn_Arg::Base::Base(Type t, const Loc &l)
 Fn_Arg::Base::~Base() {}
 
 
-Fn_Arg::Const::Const(::Const::Base *e, const Loc &l)
+Fn_Arg::Const::Const(::Const::Base *e, const Loc &l,
+                     const std::string &child_token)
   : Base(CONST, l), expr_(e) {
   productive = true;
   terminal_type = true;
   list_size_ = 1;
+
+  is_inject_argument = (child_token.rfind("CONST_") == 0);
 
   init_multi_ys();
 }
@@ -417,7 +420,9 @@ void Fn_Arg::Alt::print(std::ostream &s) {
 
 void Fn_Arg::Const::init_multi_ys() {
   m_ys.set_tracks(1);
-  m_ys(0) = expr_->yield_size();
+  if (!is_inject_argument) {
+    m_ys(0) = expr_->yield_size();
+  }
 }
 const Yield::Multi &Fn_Arg::Alt::multi_ys() const {
   return alt->multi_ys();

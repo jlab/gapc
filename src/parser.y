@@ -1666,7 +1666,11 @@ rhs_args: rhs_arg
 rhs_arg: alt /* NT or block ... */
          { $$ = new Fn_Arg::Alt($1, @1); } |
          const
-         { $$ = new Fn_Arg::Const($1, @1); } /* term parse arg */ ;
+         /* smj: also pass child token ($<sval>0) to infer if the constant
+          * a) is a parameterized terminal e.g. CHAR('x') or
+          * b) injects an argument to the algebra function without
+          *    parse anything */
+         { $$ = new Fn_Arg::Const($1, @1, *$<sval>0); } /* term parse arg */ ;
 
 /* for consts as arguments in terminal parsers */
 const: number { $$ = $1;} |
