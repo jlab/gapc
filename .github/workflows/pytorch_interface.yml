@@ -2,7 +2,7 @@ name: pytorch interface
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, pytorch_interface ]
   pull_request:
     branches: [ master, pytorch_interface ]
   workflow_dispatch:
