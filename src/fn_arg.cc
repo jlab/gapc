@@ -42,13 +42,11 @@ Fn_Arg::Base::~Base() {}
 
 
 Fn_Arg::Const::Const(::Const::Base *e, const Loc &l,
-                     const std::string &child_token)
-  : Base(CONST, l), expr_(e) {
+                     const bool is_inject_argument)
+  : Base(CONST, l), expr_(e), is_inject_argument(is_inject_argument) {
   productive = true;
   terminal_type = true;
   list_size_ = 1;
-
-  is_inject_argument = (child_token.rfind("CONST_") == 0);
 
   init_multi_ys();
 }

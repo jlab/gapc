@@ -208,7 +208,7 @@ class Const : public Base {
     bool is_inject_argument;
 
  public:
-    Const(::Const::Base *e, const Loc &l, const std::string &child_token);
+    Const(::Const::Base *e, const Loc &l, const bool is_inject_argument);
 
     Base *clone();
 

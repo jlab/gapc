@@ -1670,7 +1670,8 @@ rhs_arg: alt /* NT or block ... */
           * a) is a parameterized terminal e.g. CHAR('x') or
           * b) injects an argument to the algebra function without
           *    parse anything */
-         { $$ = new Fn_Arg::Const($1, @1, *$<sval>0); } /* term parse arg */ ;
+         /* term parse arg */
+         { $$ = new Fn_Arg::Const($1, @1, $<sval>0->rfind("CONST_") == 0); } ;
 
 /* for consts as arguments in terminal parsers */
 const: number { $$ = $1;} |
