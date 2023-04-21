@@ -67,9 +67,9 @@ struct Init_Indices_Outside_Args : public Visitor {
 //      f.init_indices(left, right, k, track);
 //    } else {
     if ((f.alt->left_indices.at(track) != nullptr) && (f.alt->right_indices.at(track) != nullptr)) {
-      f.init_indices(f.alt->left_indices.at(track), f.alt->right_indices.at(track), k, track);
+      f.Base::init_indices(f.alt->left_indices.at(track), f.alt->right_indices.at(track), k, track);
     } else {
-      f.init_indices(left, right, k, track);
+      f.Base::init_indices(left, right, k, track);
     }
   }
 };
