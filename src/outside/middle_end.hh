@@ -42,6 +42,9 @@ struct Init_Indices_Outside_Args : public Visitor {
   Alt::Base *topalt;
   Expr::Vacc *left;
   Expr::Vacc *right;
+  bool inMulti = false;
+  std::vector<Expr::Base*> left_indices;
+  std::vector<Expr::Base*> right_indices;
 
   Init_Indices_Outside_Args(Expr::Vacc *left, Expr::Vacc *right, unsigned int &k, size_t track) {
     this->track = track;
@@ -60,6 +63,24 @@ struct Init_Indices_Outside_Args : public Visitor {
         k,
         track);
   }
+
+  void visit(Alt::Multi &a) {
+    inMulti = true;
+    left_indices.clear();
+    right_indices.clear();
+  }
+  void visit(Alt::Base &a) {
+    if (inMulti && a.multi_ys().tracks() == 1) {
+      left_indices.push_back(a.left_indices.front());
+      right_indices.push_back(a.right_indices.front());
+    }
+  }
+  void visit_end(Alt::Multi &a) {
+    inMulti = false;
+    a.left_indices = left_indices;
+    a.right_indices = right_indices;
+  }
+
 
   void visit_end(Fn_Arg::Alt &f) {
 //    if (f.alt_ref()->is(Alt::LINK) && (dynamic_cast<Alt::Link*>(f.alt_ref()))->nt->is_partof_outside()) {
@@ -106,6 +127,9 @@ struct Init_Indices_OutsideNT : public Visitor {
 struct Init_Indices_Outside : public Visitor {
  private:
   int num_outside_nts = 0;
+  size_t track;
+  size_t tracks;
+
   std::vector<void*> _left;
   enum Type { ALT, FN_ARG, SYMBOL };
   std::vector<Type> _left_types;
@@ -191,7 +215,11 @@ struct Init_Indices_Outside : public Visitor {
           }
 
           if (*i_type == ALT) {
-            a->init_indices(res.first, res.second, k, track);
+            if (a->multi_ys().tracks() != this->tracks) {
+              a->init_indices(res.first, res.second, k, 0);
+            } else {
+              a->init_indices(res.first, res.second, k, track);
+            }
           } else {
             f->init_indices(res.first, res.second, k, track);
           }
@@ -270,7 +298,11 @@ struct Init_Indices_Outside : public Visitor {
           }
 
           if (*i_type == ALT) {
-            a->init_indices(res.first, res.second, k, track);
+            if (a->multi_ys().tracks() != this->tracks) {
+              a->init_indices(res.first, res.second, k, 0);
+            } else {
+              a->init_indices(res.first, res.second, k, track);
+            }
           } else {
             f->init_indices(res.first, res.second, k, track);
           }
@@ -386,6 +418,13 @@ struct Init_Indices_Outside : public Visitor {
         if (*i_type == ALT) {
           Alt::Base *a = static_cast<Alt::Base*>(*i);
           if (a->is(Alt::LINK)) {
+            if ((*a).multi_ys().tracks() != this->tracks) {
+              // must be single track
+              ys += (*a).multi_ys()(0);
+            } else {
+              ys += (*a).multi_ys()(track);
+            }
+          } else if (a->is(Alt::MULTI)) {
             ys += (*a).multi_ys()(track);
           }
         } else if (*i_type == SYMBOL) {
@@ -426,6 +465,8 @@ struct Init_Indices_Outside : public Visitor {
           Alt::Base *a = static_cast<Alt::Base*>(*i);
           if (a->is(Alt::LINK)) {
             ys += (*a).multi_ys()(track);
+          } else if (a->is(Alt::MULTI)) {
+            ys += (*a).multi_ys()(track);
           }
         } else if (*i_type == SYMBOL) {
           Symbol::Base *s = static_cast<Symbol::Base*>(*i);
@@ -445,16 +486,21 @@ struct Init_Indices_Outside : public Visitor {
     return ys;
   }
 
-  Init_Indices_Outside() : num_outside_nts(0) {
+  Init_Indices_Outside(size_t track, size_t tracks) : num_outside_nts(0), track(track), tracks(tracks) {
   }
 
   void visit(Symbol::Terminal &s) {
-    stack_component(&s, SYMBOL);
+    if (s.track_pos() == this->track) {
+      stack_component(&s, SYMBOL);
+    }
   }
   void visit(Symbol::NT &s) {
+    if ((s.tracks() == this->tracks) || (s.track_pos() == this->track)) {
     stack_component(&s, SYMBOL);
+    }
   }
   void visit(Alt::Link &a) {
+//    if (a.track_pos() == track) {
     if (a.nt->is_partof_outside() || a.is_outside_inside_transition()) {
       num_outside_nts++;
       //std::cerr << "gefunden: " << *a.nt->name << "\n";
@@ -464,9 +510,12 @@ struct Init_Indices_Outside : public Visitor {
       _left_types.pop_back();
       _outsideNT = &a;
     }
+//    }
   }
   void visit(Alt::Base &a) {
+    if ((a.multi_ys().tracks() == this->tracks) || (a.track_pos() == this->track)) {
     stack_component(&a, ALT);
+    }
   }
   void visit(Fn_Arg::Base &f) {
     stack_component(&f, FN_ARG);

@@ -751,9 +751,10 @@ void Symbol::NT::init_indices(Expr::Vacc *left, Expr::Vacc *right,
   left_indices[track] = left;
   right_indices[track] = right;
 
-  for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
+  unsigned int c = 0;
+  for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i, ++c) {
     if ((*i)->is_partof_outside()) {
-      Init_Indices_Outside v = Init_Indices_Outside();
+      Init_Indices_Outside v = Init_Indices_Outside(track, this->tracks_);
       (*i)->traverse(v);
       //v.assert_one_outside_nt();
       //std::cerr << "NT: " << *this->name << "\n";

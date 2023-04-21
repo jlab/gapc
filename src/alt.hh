@@ -268,6 +268,9 @@ class Base {
 
  public:
   void set_tracks(size_t t, size_t p);
+  size_t track_pos() const  {
+    return track_pos_;
+  }
 
   // set to public, to allow transmission to outside pendants
  public:
