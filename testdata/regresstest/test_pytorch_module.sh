@@ -64,7 +64,7 @@ execute_test() {
 
 # execute tests for all supported alignment modes/algorithms
 execute_test "nw" 1 "nw_gapc"$BATCHED_SUFFIX
-# execute_test "gotoh" 1 "gotoh_gapc"$BATCHED_SUFFIX
+execute_test "gotoh" 1 "gotoh_gapc"$BATCHED_SUFFIX
 
 # check if/how many tests failed and exit accordingly
 . ../../stats.sh
