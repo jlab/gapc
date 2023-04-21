@@ -105,30 +105,9 @@ using NTtrace = std::tuple<answer, std::vector<Trace<answer>>>;
 /* collection of all traces of an NT in forward pass, together with their
  * values. This later normalized into edge weights. */
 
-/* create a vector of index components (one or multitrack, linear or quadratic
- * tables) for a variable number of components therefore, the first argument
- * must be the number of those components!
- * https://stackoverflow.com/questions/1579719/variable-number-of-parameters\
- * -in-function-in-c */
-inline
-std::vector<unsigned int> *make_index(unsigned int num_components, ...) {
-  std::vector<unsigned int> *indices = new std::vector<unsigned int>();
-  // Requires the last fixed parameter (to get the address)
-  va_list idx_components;
-  va_start(idx_components, num_components);
-  for (unsigned int j = 0; j < num_components; j++) {
-    indices->push_back(va_arg(idx_components, unsigned int));
-  }
-  va_end(idx_components);
-
-  return indices;
-}
-
-inline bool is_same_index(const std::vector<unsigned int> &a,
-                          const std::vector<unsigned int> &b,
-                          const std::string &a_nt, const std::string &b_nt) {
-  return a == b && a_nt == b_nt;
-}
+// type for "traces" vector in NT tables
+template<typename answer = double>
+using Traces = std::vector<Trace<answer>>;
 
 // answer type can be any primitve number type or "Batch"
 template<typename answer = double>

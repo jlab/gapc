@@ -1108,8 +1108,9 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
     stream << indent() << "std::vector<" << dtype << "> array;" << endl;
   }
   if (t.for_derivatives) {
-    stream << indent() << "std::vector<std::vector<std::tuple<std::string, "
-           << "index_components, " << dtype << "> > > traces;" << endl;
+    // Traces type is defined in traces.hh
+    stream << indent() << "std::vector<Traces<" << dtype << ">> traces;"
+           << endl;
   }
   if  (!cyk) {
     stream << indent() << "std::vector<bool> tabulated;" << endl;
@@ -1123,13 +1124,11 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   stream << indent() << " public:" << endl;
   inc_indent();
 
-  if (!pytorch || (pytorch && !batched_input)) {
-    stream << indent() << tname << "() {" << endl;
-    inc_indent();
-    stream << indent() << "empty(zero);" << endl;
-    dec_indent();
-    stream << indent() << "}" << endl << endl;
-  }
+  stream << indent() << tname << "() {" << endl;
+  inc_indent();
+  stream << indent() << "empty(zero);" << endl;
+  dec_indent();
+  stream << indent() << "}" << endl << endl;
 
   if (pytorch) {
     if (batched_input) {
@@ -1171,27 +1170,38 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
     stream << indent() << "t_0_right_most = wsize;" << endl;
   }
 
-  stream << indent() << ptype << " newsize = size(";
-  stream << ");" << endl;
+  stream << indent() << ptype << " newsize = size();" << endl;
+
+  /*
+   * to allow for e.g. iterative calling of forward and backward,
+   * all vectors need to be explictly reset/emptied;
+   * the "clear" and "resize" methods are not required to do that,
+   * so we reassign the vectors to new zero-initialized vectors here
+   */
   if (pytorch) {
-    stream << indent() << "array.clear();" << endl;
+    stream << indent() << "array = std::vector<";
+    if (batched_input) {
+      stream << "OUTPUT_CPP_TYPE>(newsize * BATCH_SIZE);" << endl;
+    } else {
+      stream << dtype << ">(newsize);" << endl;
+    }
+    if (t.for_derivatives) {
+      stream << indent()
+             << "traces = std::vector<Traces<ANSWER_TYPE>>(newsize);" << endl;
+    }
+    stream << indent() << "tabulated = std::vector<bool>(newsize);" << endl;
+  } else  {
+    stream << indent() << "array.resize(newsize);" << endl;
     if (t.for_derivatives) {
       stream << indent() << "traces.clear();" << endl;
+      stream << indent() << "traces.resize(newsize);" << endl;
+    }
+    if (!cyk) {
+      stream << indent() << "tabulated.clear();" << endl;
+      stream << indent() << "tabulated.resize(newsize);" << endl;
     }
   }
-  if (batched_input) {
-    stream << indent() << "empty(zero);" << endl;
-    stream << indent() << "array.resize(newsize * BATCH_SIZE);" << endl;
-  } else {
-    stream << indent() << "array.resize(newsize);" << endl;
-  }
-  if (t.for_derivatives) {
-    stream << indent() << "traces.resize(newsize);" << endl;
-  }
-  if (!cyk) {
-    stream << indent() << "tabulated.clear();" << endl;
-    stream << indent() << "tabulated.resize(newsize);" << endl;
-  }
+
   dec_indent();
   stream << indent() << "}" << endl << endl;
   // end "void init()"
@@ -1814,80 +1824,7 @@ void Printer::Cpp::header(const AST &ast) {
            << endl << endl;
 
     if (ast.as_pytorch_module) {
-      stream << "#define PYTORCH_MOD" << endl;
-
-      /*
-       * check if all input Tensor have the same number of dimensions
-         and contain values of the same datatype;
-         if so, fast element-wise accessors can be defined, which
-         require compile-time information regarding the number of dims
-         and the underlying datatype of tensor;
-         if not all input Tensors are the same, these accessors won't be
-         visible
-       */
-      const TensorInput &tensor_inputs = ast.input.tensor_inputs;
-      bool all_batched = tensor_inputs.all_batched();
-
-      if (tensor_inputs.same()) {
-        stream << "#define ALL_INPUT_TENSORS_SAME" << endl;
-        stream << "#define INPUT_TENSOR_DIMS "
-               << tensor_inputs.shared_ndims() << endl;
-        stream << "#define INPUT_TENSOR_TYPE "
-               << tensor_inputs.shared_cpp_dtype() << endl << endl;
-      }
-      if (all_batched) {
-        const Type::Base &__shared_table_type =
-          ast.grammar()->tabulated.begin()->second->table_decl->datatype();
-        const Type::TensorBatch &shared_table_type =
-          dynamic_cast<const Type::TensorBatch &>(__shared_table_type);
-        stream << "#define BATCHED_INPUT" << endl;
-        stream << "#include <cstdint>" << endl;
-        stream << "inline int64_t BATCH_SIZE;" << endl << endl;
-        // define macros for primitive types (used in batch.hh)
-        stream << indent() << "#define FLOAT_TYPE     1" << endl;
-        stream << indent() << "#define DOUBLE_TYPE    2" << endl;
-        stream << indent() << "#define INT_TYPE       3" << endl;
-        stream << indent() << "#define BIGINT_TYPE    4" << endl << endl;
-        stream << indent() << "#define __OUTPUT_CPP_TYPE "
-               << get_macro_type(*shared_table_type.type) << endl;
-        stream << indent() << "#define OUTPUT_CPP_TYPE "
-               << *shared_table_type.type << endl << endl;
-        stream << "#include \"rtlib/batch.hh\"" << endl;
-        stream << "#include \"torch/extension.h\"" << endl;
-        stream << "#include \"rtlib/tensor.hh\"" << endl << endl;
-        stream << indent()
-               << "inline constexpr torch::ScalarType OUTPUT_TORCH_TYPE = "
-               << get_torch_type(shared_table_type) << ";" << endl;
-        stream << indent() << "typedef Batch<OUTPUT_CPP_TYPE, MAX_BATCH_SIZE>"
-               << " TensorBatch;" << endl << endl;
-      } else {
-        stream << "#include \"torch/extension.h\"" << endl;
-        stream << "#include \"rtlib/tensor.hh\"" << endl << endl;
-      }
-
-      // InputTensor object will contain ptrs and accessors to
-      // all input tensors so they can be accessed from everywhere
-      const std::vector<TensorMode> &inp_tensors =
-        ast.input.tensor_inputs.get_modes();
-      stream << indent() << "struct InputTensor {" << endl;
-      inc_indent();
-      for (size_t i = 0; i < ast.seq_decls.size(); ++i) {
-        stream << indent() << "tensor *__" << i << ";" << endl;
-        std::string curr_cpp_type = inp_tensors[i].cpp_dtype;
-        int curr_n_dims = inp_tensors[i].n_dims;
-        stream << indent() << "torch::TensorAccessor<" << curr_cpp_type
-               << ", " << curr_n_dims << "> _" << i << ";" << endl;
-      }
-      stream << indent() << "InputTensor() : ";
-      for (size_t i = 0; i < ast.seq_decls.size(); ++i) {
-        stream << "_" << i << "(nullptr, nullptr, nullptr)";
-        if (i < ast.seq_decls.size() - 1) {
-          stream << ", ";
-        }
-      }
-      stream << " {}" << endl;
-      dec_indent();
-      stream << indent() << "};" << endl << endl;
+      print_pytorch_macros(ast);
     }
 
     includes();
@@ -2626,13 +2563,15 @@ void Printer::Cpp::print_derivative(Symbol::NT *nt) {
 }
 void Printer::Cpp::print_run_derivative_fn(const AST &ast) {
   if (ast.as_pytorch_module) {
-    stream << indent() << "void get_backward_score_matrices"
-           << "(std::vector<tensor> &matrices) {" << endl;
+    stream << indent() << "std::vector<tensor> "
+           << "get_backward_score_matrices() {" << endl;
+    inc_indent();
+    stream << indent() << "std::vector<tensor> matrices;" << endl;
   } else {
     stream << indent() << "void report_derivative(std::ostream &out) {"
            << endl;
+    inc_indent();
   }
-  inc_indent();
 
   stream << indent() << "// forward pass has already been executed through "
          << "obj.run(), called via XXX_main.cc" << endl;
@@ -2653,11 +2592,13 @@ void Printer::Cpp::print_run_derivative_fn(const AST &ast) {
         }
         stream << indent() << "matrices.push_back(torch::from_blob("
                << *(nt->name) << "_table.get_array_data(), "
-               << "tensor_size, " << torch_type << "));" << endl;
+               << "tensor_size, " << torch_type << ").clone());" << endl;
       }
     }
   }
-
+  if (ast.as_pytorch_module) {
+    stream << indent() << "return matrices;" << endl;
+  }
   dec_indent();
   stream << indent() << "}" << endl << endl;
 }
@@ -3303,6 +3244,84 @@ void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
     << endl << endl;
 }
 
+void Printer::Cpp::print_pytorch_macros(const AST &ast) {
+  stream << "#define PYTORCH_MOD" << endl;
+
+  /*
+   * check if all input Tensor have the same number of dimensions
+     and contain values of the same datatype;
+     if so, fast element-wise accessors can be defined, which
+     require compile-time information regarding the number of dims
+     and the underlying datatype of tensor;
+     if not all input Tensors are the same, these accessors won't be
+     visible
+   */
+  const TensorInput &tensor_inputs = ast.input.tensor_inputs;
+  bool all_batched = tensor_inputs.all_batched();
+
+  if (tensor_inputs.same()) {
+    stream << "#define ALL_INPUT_TENSORS_SAME" << endl;
+    stream << "#define INPUT_TENSOR_DIMS "
+           << tensor_inputs.shared_ndims() << endl;
+    stream << "#define INPUT_TENSOR_TYPE "
+           << tensor_inputs.shared_cpp_dtype() << endl << endl;
+  }
+  const Type::Base &__shared_table_type =
+    ast.grammar()->tabulated.begin()->second->table_decl->datatype();
+  if (all_batched) {
+    const Type::TensorBatch &shared_table_type =
+      dynamic_cast<const Type::TensorBatch &>(__shared_table_type);
+    stream << "#define BATCHED_INPUT" << endl;
+    stream << "#include <cstdint>" << endl;
+    stream << "inline int64_t BATCH_SIZE;" << endl << endl;
+    // define macros for primitive types (used in batch.hh)
+    stream << indent() << "#define FLOAT_TYPE     1" << endl;
+    stream << indent() << "#define DOUBLE_TYPE    2" << endl;
+    stream << indent() << "#define INT_TYPE       3" << endl;
+    stream << indent() << "#define BIGINT_TYPE    4" << endl << endl;
+    stream << indent() << "#define __OUTPUT_CPP_TYPE "
+           << get_macro_type(*shared_table_type.type) << endl;
+    stream << indent() << "#define OUTPUT_CPP_TYPE "
+           << *shared_table_type.type << endl << endl;
+    stream << "#include \"rtlib/batch.hh\"" << endl;
+    stream << "#include \"torch/extension.h\"" << endl;
+    stream << "#include \"rtlib/tensor.hh\"" << endl << endl;
+    stream << indent()
+           << "inline constexpr torch::ScalarType OUTPUT_TORCH_TYPE = "
+           << get_torch_type(shared_table_type) << ";" << endl;
+    stream << indent() << "typedef Batch<OUTPUT_CPP_TYPE, MAX_BATCH_SIZE>"
+           << " TensorBatch;" << endl << endl;
+    stream << "#define ANSWER_TYPE TensorBatch" << endl << endl;
+  } else {
+    stream << "#define ANSWER_TYPE " << __shared_table_type << endl << endl;
+    stream << "#include \"torch/extension.h\"" << endl;
+    stream << "#include \"rtlib/tensor.hh\"" << endl << endl;
+  }
+  // InputTensor object will contain ptrs and accessors to
+  // all input tensors so they can be accessed from everywhere
+  const std::vector<TensorMode> &inp_tensors =
+    ast.input.tensor_inputs.get_modes();
+  stream << indent() << "struct InputTensor {" << endl;
+  inc_indent();
+  for (size_t i = 0; i < ast.seq_decls.size(); ++i) {
+    stream << indent() << "tensor *__" << i << ";" << endl;
+    std::string curr_cpp_type = inp_tensors[i].cpp_dtype;
+    int curr_n_dims = inp_tensors[i].n_dims;
+    stream << indent() << "torch::TensorAccessor<" << curr_cpp_type
+           << ", " << curr_n_dims << "> _" << i << ";" << endl;
+  }
+  stream << indent() << "InputTensor() : ";
+  for (size_t i = 0; i < ast.seq_decls.size(); ++i) {
+    stream << "_" << i << "(nullptr, nullptr, nullptr)";
+    if (i < ast.seq_decls.size() - 1) {
+      stream << ", ";
+    }
+  }
+  stream << " {}" << endl;
+  dec_indent();
+  stream << indent() << "};" << endl << endl;
+}
+
 void Printer::Cpp::print_pytorch_init_fn(const AST &ast) {
   // print init function which handles the
   // inputs from Pytorch and makes them accessible
@@ -3344,6 +3363,8 @@ void Printer::Cpp::print_pytorch_init_fn(const AST &ast) {
            << ".j = __t_" << track << "_tensor.sizes().back();" << endl << endl;
   }
 
+  stream << indent() << "tensor_size.clear();" << endl;
+
   size_t t = 0;
   for (std::vector<Statement::Var_Decl*>::iterator j = ns.begin();
        j != ns.end(); ++j, ++t) {
@@ -3378,9 +3399,10 @@ void Printer::Cpp::print_pytorch_init_fn(const AST &ast) {
 
 void Printer::Cpp::print_pytorch_forward_fn(const AST &ast) {
   // convert the forward score matrix to a Pytorch tensor
-  stream << indent() << "void get_forward_score_matrices"
-         << "(std::vector<tensor> &matrices) {" << endl;
+  stream << indent() << "std::vector<tensor> get_forward_score_matrices() {"
+         << endl;
   inc_indent();
+  stream << indent() << "std::vector<tensor> matrices;" << endl;
   for (auto i = ast.grammar()->NTs.begin();
       i != ast.grammar()->NTs.end(); ++i) {
     Symbol::NT *nt = dynamic_cast<Symbol::NT*>((*i).second);
@@ -3393,9 +3415,10 @@ void Printer::Cpp::print_pytorch_forward_fn(const AST &ast) {
       }
       stream << indent() << "matrices.push_back(torch::from_blob("
              << *(nt->name) << "_table.get_array_data(), "
-             << "tensor_size, " << torch_type << "));" << endl;
+             << "tensor_size, " << torch_type << ").clone());" << endl;
     }
   }
+  stream << indent() << "return matrices;" << endl;
   dec_indent();
   stream << indent() << "}" << endl << endl;
 }
