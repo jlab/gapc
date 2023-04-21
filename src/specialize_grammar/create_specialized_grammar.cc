@@ -397,7 +397,7 @@ std::pair<Alt::Base*, SpecializeGrammar::CreateSpecializedGrammar::
         this->algebraFunctionInfoAttribute = attribute;
       }
 
-      // OMG, once again a spacial case handled here!
+      // OMG, once again a special case handled here!
       // If this is a wrapped non-terminal, just create directly an algebra
       // function for it. We need to do this here, because the wrapper
       // itself is needed as the root node for the createAlgebraFunction
@@ -476,7 +476,7 @@ std::pair<Alt::Base*, SpecializeGrammar::CreateSpecializedGrammar::
         Alt::Simple* simple = new Alt::Simple(
           new std::string("CHAR"), location);
         Fn_Arg::Const* parameter = new Fn_Arg::Const(
-          new ::Const::Char(terminalValue->at(0)), location);
+          new ::Const::Char(terminalValue->at(0)), location, false);
         // This is the list of arguments we pass to the GAP AST algebra
         // function application.
         std::list<Fn_Arg::Base*> args;

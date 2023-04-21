@@ -202,8 +202,13 @@ class Const : public Base {
     Yield::Poly list_size_;
     ::Const::Base *expr_;
 
+    /* true for CONST_* terminal parser, which do NOT actually consume subwords
+     * of the input sequence, e.g. CONST_FLOAT(0.5), as opposed to parameterized
+     * terminal parser like CHAR('A'). */
+    bool is_inject_argument;
+
  public:
-    Const(::Const::Base *e, const Loc &l);
+    Const(::Const::Base *e, const Loc &l, const bool is_inject_argument);
 
     Base *clone();
 
