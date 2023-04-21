@@ -19,92 +19,80 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+    * Author: fymue
+    * Generic interface that allows GAPC derivative code to be compiled
+    * to a Python module exposing a forward and backward function
+    * for every derivative;
+    * requires the Pytorch C++ Extension API and uses pybind11 to compile
+    * the GAPC forward and backward functions to Python functions
+
 }}} */
 
 #include <iostream>
 #include <cassert>
 #include <vector>
-#ifdef FLOAT_ACC
-  #include <iomanip>
-  #include <limits>
-#endif
-
-#include "rtlib/string.hh"
-#include "rtlib/list.hh"
-#include "rtlib/hash.hh"
-#include "rtlib/asymptotics.hh"
+#include <utility>
 #include "rtlib/generic_opts.hh"
 #include "torch/extension.h"
 
-// main objects need to be global so both functions have access
-gapc::class_name obj;
-#ifdef SECOND_DERIVATIVE
-  gapc::class_name_D2 obj_D2;
+// answer type will be defined in out.hh, which gets
+// included into this file during the make process
+#ifndef ANSWER_TYPE
+#define ANSWER_TYPE double
 #endif
 
-std::vector<torch::Tensor> forward_D1(torch::Tensor &gap_embedding,
-                                      torch::Tensor &match_embedding) {
-  // execute forward pass and return first derivative forward score matrices
-  obj.init(gap_embedding, match_embedding);
-  #if defined(__SUNPRO_CC) && __SUNPRO_CC <= 0x5100
-    #warning Enable sync_with_stdio because of Sun CC 12 Compiler Bug
-  #else
-    std::ios_base::sync_with_stdio(false);
-  #endif
-    std::cin.tie(0);
-  #ifdef FLOAT_ACC
-    std::cout << std::setprecision(FLOAT_ACC) << std::fixed;
-  #endif
-  obj.cyk();
-  std::vector<torch::Tensor> forward_score_matrices;
-  gapc::return_type ans = obj.run();
-  obj.get_forward_score_matrices(forward_score_matrices);
-  return forward_score_matrices;
-}
+// main objects need to be global so all functions have access to it
+static gapc::class_name obj;
+#ifdef SECOND_DERIVATIVE
+static gapc::class_name obj_D2;
+#endif
 
-std::vector<torch::Tensor> backward_D1(torch::Tensor &gap_embedding,
-                                       torch::Tensor &match_embedding) {
+std::vector<torch::Tensor> forward_D1(torch::Tensor &inp_1,
+                                      torch::Tensor &inp_2) {
+  // execute forward pass and return first derivative forward score matrices
+  obj.init(inp_1, inp_2);
+  obj.cyk();
+  gapc::return_type ans = obj.run();
+
+  return obj.get_forward_score_matrices();
+}
+std::vector<torch::Tensor> backward_D1() {
   // execute backward pass and return first derivative backward score matrices
-  std::vector<torch::Tensor> backward_score_matrices;
-  obj.get_backward_score_matrices(backward_score_matrices);
-  return backward_score_matrices;
+  return obj.get_backward_score_matrices();
 }
 
 #ifdef SECOND_DERIVATIVE
-std::vector<torch::Tensor> forward_D2(torch::Tensor &gap_embedding,
-                                      torch::Tensor &match_embedding) {
+std::vector<torch::Tensor> forward_D2(torch::Tensor &inp_1,
+                                      torch::Tensor &inp_2) {
   // execute forward pass and return second derivative forward score matrices
-  obj_D2.init(inp, seq1, seq2, &obj);
-  std::vector<torch::Tensor> forward_score_matrices;
+  obj_D2.init(inp_1, inp_2, &obj);
   gapc::return_type ans = obj_D2.run();
-  obj_D2.get_forward_score_matrices(forward_score_matrices);
-  return forward_score_matrices;
+
+  return obj_D2.get_forward_score_matrices();
 }
 
-std::vector<torch::Tensor> backward_D2(torch::Tensor &gap_embedding,
-                                       torch::Tensor &match_embedding) {
+std::vector<torch::Tensor> backward_D2() {
   // execute backward pass and return second derivative backward score matrices
-  std::vector<torch::Tensor> backward_score_matrices;
-  obj_D2.get_backward_score_matrices(backward_score_matrices);
-  return backward_score_matrices;
+  return obj_D2.get_backward_score_matrices();
 }
 #endif
 
 // pybind11 binding instructions
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   m.def("forward_D1", &forward_D1,
-        "Calculate the 1st derivative score matrix for the forward pass");
+        "Calculate the 1st derivative score matrices for the forward pass");
   m.def("backward_D1", &backward_D1,
-        "Calculate the 1st derivative score matrix for the backward pass.\n"
-        "Make sure to execute forward_D1 beforehand!");
+        "Calculate the 1st derivative score matrices for the backward pass.\n"
+        "This function doesn't require any inputs since it uses data \n"
+        " that gets internally created when calling 'forward_D1',\n"
+        "so make sure to execute 'forward_D1' beforehand!");
 #ifdef SECOND_DERIVATIVE
   m.def("forward_D2", &forward_D2,
-        "Calculate the 2nd derivative score matrix for the forward pass.\n"
-        "Make sure to execute forward_D1 and backward_D1 beforehand!");
+        "Calculate the 2nd derivative score matrices for the forward pass.\n"
+        "Make sure to execute 'forward_D1' and 'backward_D1' beforehand!");
   m.def("backward_D2", &backward_D2,
-        "Calculate the 2nd derivative score matrix for the backward pass.\n"
-        "Make sure to execute forward_D1, backward_D1 and "
-        "forward_D2 beforehand!");
+        "Calculate the 2nd derivative score matrices for the backward pass.\n"
+        "Make sure to execute 'forward_D1', 'backward_D1' and "
+        "'forward_D2' beforehand!");
 #endif
 }
-

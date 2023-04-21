@@ -109,8 +109,8 @@ def run_tests(mode: str, batched: bool) -> int:
         inp_1: torch.Tensor = encode_input(seq_1)
         inp_2: torch.Tensor = encode_input(seq_2)
 
-        _ = forward(inp_1, inp_2)             # execute forward pass
-        bw_matrices = backward(inp_1, inp_2)  # execute backward pass
+        _ = forward(inp_1, inp_2)  # execute forward pass
+        bw_matrices = backward()   # execute backward pass
 
         bw_shape = bw_matrices[0].shape
         ref_matrix_file = os.path.join(TRUTH_DIR, ref_file)
