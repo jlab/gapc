@@ -273,8 +273,8 @@ class TensorChar {
 // (tensor_1[..., i].equal(tensor_2[..., i]))
 inline bool equal(const TensorChar &lhs, const TensorChar &rhs) {
 #if defined(ALL_INPUT_TENSORS_SAME) && INPUT_TENSOR_DIMS <= 2
-  static auto lhs_ = lhs.accessor();
-  static auto rhs_ = rhs.accessor();
+  auto lhs_ = lhs.accessor();
+  auto rhs_ = rhs.accessor();
   bool equal = true;
 
 #if INPUT_TENSOR_DIMS == 2
@@ -341,8 +341,8 @@ batched_multiply_if_else(const TensorChar &a, const TensorChar &b,
                          SCALAR true_scalar, SCALAR false_scalar) {
   Batch<T, SIZE> res;
   res.alloc();
-  static auto a_ = a.accessor();
-  static auto b_ = b.accessor();
+  auto a_ = a.accessor();
+  auto b_ = b.accessor();
   for (int64_t i = 0; i < BATCH_SIZE; ++i) {
     bool ans = a_[i][a.i] == b_[i][b.i];
     res[i] = x[i] * (true_scalar * ans + false_scalar * !ans);
@@ -360,8 +360,8 @@ batched_divide_if_else(const TensorChar &a, const TensorChar &b,
                        SCALAR true_scalar, SCALAR false_scalar) {
   Batch<T, SIZE> res;
   res.alloc();
-  static auto a_ = a.accessor();
-  static auto b_ = b.accessor();
+  auto a_ = a.accessor();
+  auto b_ = b.accessor();
   for (int64_t i = 0; i < BATCH_SIZE; ++i) {
     bool ans = a_[i][a.i] == b_[i][b.i];
     res[i] = x[i] / (true_scalar * ans + false_scalar * !ans);
@@ -379,8 +379,8 @@ batched_add_if_else(const TensorChar &a, const TensorChar &b,
                     SCALAR true_scalar, SCALAR false_scalar) {
   Batch<T, SIZE> res;
   res.alloc();
-  static auto a_ = a.accessor();
-  static auto b_ = b.accessor();
+  auto a_ = a.accessor();
+  auto b_ = b.accessor();
   for (int64_t i = 0; i < BATCH_SIZE; ++i) {
     bool ans = a_[i][a.i] == b_[i][b.i];
     res[i] = x[i] + (true_scalar * ans + false_scalar * !ans);
@@ -398,8 +398,8 @@ batched_subtract_if_else(const TensorChar &a, const TensorChar &b,
                          SCALAR true_scalar, SCALAR false_scalar) {
   Batch<T, SIZE> res;
   res.alloc();
-  static auto a_ = a.accessor();
-  static auto b_ = b.accessor();
+  auto a_ = a.accessor();
+  auto b_ = b.accessor();
   for (int64_t i = 0; i < BATCH_SIZE; ++i) {
     bool ans = a_[i][a.i] == b_[i][b.i];
     res[i] = x[i] - (true_scalar * ans + false_scalar * !ans);
