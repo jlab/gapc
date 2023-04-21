@@ -476,7 +476,7 @@ std::pair<Alt::Base*, SpecializeGrammar::CreateSpecializedGrammar::
         Alt::Simple* simple = new Alt::Simple(
           new std::string("CHAR"), location);
         Fn_Arg::Const* parameter = new Fn_Arg::Const(
-          new ::Const::Char(terminalValue->at(0)), location, "dummy");
+          new ::Const::Char(terminalValue->at(0)), location, false);
         // This is the list of arguments we pass to the GAP AST algebra
         // function application.
         std::list<Fn_Arg::Base*> args;
