@@ -172,16 +172,11 @@ struct Init_Indices_Outside : public Visitor {
       Yield::Size rhs_ys(rhs);
       rhs_ys += ys;
 
-//      std::cerr << "L: " << lhs << " - " << ys << " - " << rhs;
-
       if ((*i_type == ALT) || (*i_type == FN_ARG)) {
         Alt::Base *a = static_cast<Alt::Base*>(*i);
         Fn_Arg::Base *f = static_cast<Fn_Arg::Base*>(*i);
-        //std::cerr << (*a).left_indices.size() << " <- Alt\n";
         if (a->is(Alt::LINK) || f->is(Fn_Arg::CONST)) {
-//          std::cerr << " : " << *(dynamic_cast<Alt::Link*>(a)->name);
           next_var = next_index_var(k, track, next_var, last_var, left, ys, lhs, rhs);
-//          std::cerr << " next_var = " <<  *next_var;
 
           // copy and paste from Alt::Simple::init_indices
           std::pair<Expr::Base*, Expr::Base*> res(0, 0);
@@ -224,51 +219,30 @@ struct Init_Indices_Outside : public Visitor {
             f->init_indices(res.first, res.second, k, track);
           }
           // end copy and paste
-
-//          std::cerr << " (left = " << *res.first << ", right = " << *res.second << ") ";
-//        } else if (a->is(Alt::SIMPLE)) {
-////          std::cerr << " : Alt::Simple " << *(dynamic_cast<Alt::Simple*>(a)->name);
         }
-//      } else if (*i_type == FN_ARG) {
-//        Fn_Arg::Base *f = static_cast<Fn_Arg::Base*>(*i);
-////        std::cerr << " : Fn_Arg";
-//        //std::cerr << (*f).left_indices.size() << " <- Fn_Arg\n";
-//        //continue;
-//      } else if (*i_type == SYMBOL) {
-//        Symbol::Base *s = static_cast<Symbol::Base*>(*i);
-//        std::cerr << " : Symbol";
-        //std::cerr << (*s).left_indices.size() << " <- Symbol\n";
-//        accum_ys_center_to_left += (*s).multi_ys()(track);
       }
-
-//      std::cerr << "\n";
     }
 
 
     // RIGHT of outside NT
     if (_right.size() > 0) {
     lhs = sum_ys_right(*_right.begin(), nullptr, track);
-//    next_var = right;
     last_var = right;
     lhs.set(0, 0);
     i_type = _right_types.begin();
     for (std::vector<void*>::iterator i = _right.begin(); i != _right.end(); ++i, ++i_type) {
       Yield::Size ys = sum_ys_right(*i, *i, track);
-//      Yield::Size rhs = Yield::Size(Yield::UP); //sum_ys_right(*std::next(i), nullptr, track);
       Yield::Size rhs = sum_ys_right(*std::next(i), nullptr, track);
       Yield::Size rhs_ys(rhs);
       rhs_ys += ys;
 
-//      std::cerr << "R: " << lhs << " - " << ys << " - " << rhs;
 
       if ((*i_type == ALT) || (*i_type == FN_ARG)) {
         Alt::Base *a = static_cast<Alt::Base*>(*i);
         Fn_Arg::Base *f = static_cast<Fn_Arg::Base*>(*i);
-        //std::cerr << (*a).left_indices.size() << " <- Alt\n";
         if (a->is(Alt::LINK) || f->is(Fn_Arg::CONST)) {
-//          std::cerr << " : " << *(dynamic_cast<Alt::Link*>(a)->name);
           next_var = next_index_var(k, track, next_var, last_var, right, ys, lhs, rhs);
-//          std::cerr << " next_var = " <<  *next_var;
+
 
           // copy and paste from Alt::Simple::init_indices
           std::pair<Expr::Base*, Expr::Base*> res(0, 0);
@@ -306,91 +280,10 @@ struct Init_Indices_Outside : public Visitor {
           } else {
             f->init_indices(res.first, res.second, k, track);
           }
-          // end copy and paste
-
-//          std::cerr << " (left = " << *res.first << ", right = " << *res.second << ") ";
-//        } else if (a->is(Alt::SIMPLE)) {
-////          std::cerr << " : Alt::Simple " << *(dynamic_cast<Alt::Simple*>(a)->name);
         }
-//      } else if (*i_type == FN_ARG) {
-//        Fn_Arg::Base *f = static_cast<Fn_Arg::Base*>(*i);
-////        std::cerr << " : Fn_Arg";
-//        //std::cerr << (*f).left_indices.size() << " <- Fn_Arg\n";
-//        //continue;
-//      } else if (*i_type == SYMBOL) {
-//        Symbol::Base *s = static_cast<Symbol::Base*>(*i);
-//        std::cerr << " : Symbol";
-        //std::cerr << (*s).left_indices.size() << " <- Symbol\n";
-//        accum_ys_center_to_left += (*s).multi_ys()(track);
       }
-
-//      std::cerr << "\n";
     }
     }
-
-//    std::vector<Type>::reverse_iterator ir_type = _left_types.rbegin();
-//    //Expr::Base *last_var = next_index_var(k, track, NULL, left, right, ys_all, Yield::Size(), ys_all);
-//    for (std::vector<void*>::reverse_iterator ir = _right.rbegin(); ir != _right.rend(); ++ir, ++ir_type) {
-//      Yield::Size ys = sum_ys_right(*ir, *ir, track, false);
-//      Yield::Size rhs = sum_ys_right(*std::next(ir), nullptr, track, false);
-//      Yield::Size rhs_ys(rhs);
-//      rhs_ys += ys;
-//
-//      std::cerr << lhs << " - " << ys << " - " << rhs;
-//
-//      if (*i_type == ALT) {
-//        Alt::Base *a = static_cast<Alt::Base*>(*ir);
-//        //std::cerr << (*a).left_indices.size() << " <- Alt\n";
-//        if (a->is(Alt::LINK)) {
-//          std::cerr << " : " << *(dynamic_cast<Alt::Link*>(a)->name);
-//          next_var = next_index_var(k, track, next_var, last_var, last_var, ys, lhs, rhs);
-//          std::cerr << " next_var = " <<  *next_var;
-//
-//          // copy and paste from Alt::Simple::init_indices
-//          std::pair<Expr::Base*, Expr::Base*> res(0, 0);
-//          if (lhs.low() == lhs.high()) {
-//            res.first = last_var->plus(lhs.low());
-//            if (ys.low() == ys.high()) {
-//              res.second = last_var->plus(lhs.low())->plus(ys.low());
-//              lhs += ys;
-//            } else {
-//              if (rhs.low() == rhs.high()) {
-//                res.second = next_var->minus(rhs.low());
-//                lhs += ys;
-//              } else {
-//                res.second = next_var;
-//                lhs.set(0, 0);
-//                last_var = next_var;
-//              }
-//            }
-//          } else {
-//            assert(rhs_ys.low() == rhs_ys.high());
-//            res.first = next_var->minus(rhs_ys.low());
-//            res.second = next_var->minus(rhs.low());
-//            lhs += ys;
-//          }
-//
-//          a->init_indices(res.first, res.second, k, track);
-//          // end copy and paste
-//
-//          std::cerr << " (left = " << *res.first << ", right = " << *res.second << ") ";
-//        } else if (a->is(Alt::SIMPLE)) {
-//          std::cerr << " : Alt::Simple " << *(dynamic_cast<Alt::Simple*>(a)->name);
-//        }
-//      } else if (*i_type == FN_ARG) {
-//        Fn_Arg::Base *f = static_cast<Fn_Arg::Base*>(*ir);
-//        std::cerr << " : Fn_Arg";
-//        //std::cerr << (*f).left_indices.size() << " <- Fn_Arg\n";
-//        //continue;
-//      } else if (*i_type == SYMBOL) {
-//        Symbol::Base *s = static_cast<Symbol::Base*>(*ir);
-//        std::cerr << " : Symbol";
-//        //std::cerr << (*s).left_indices.size() << " <- Symbol\n";
-////        accum_ys_center_to_left += (*s).multi_ys()(track);
-//      }
-//
-//      std::cerr << "\n";
-//    }
 
     if ((_left.size() == 0) && (_right.size() == 0) && _outsideNT) {
       if (_outsideNT->is_outside_inside_transition()) {
