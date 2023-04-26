@@ -155,14 +155,14 @@ void Alt::Multi::outside_uppropagate_indices(Expr::Vacc *left, Expr::Vacc *right
   // each component is in a single-track context
   (*i)->outside_uppropagate_indices(left, right, 0);
 
-  left_indices[track] = (*i)->left_indices[0];
-  right_indices[track] = (*i)->right_indices[0];
+  left_indices[track] = (*i)->get_left_index(0);
+  right_indices[track] = (*i)->get_right_index(0);
 }
 void Fn_Arg::Base::outside_uppropagate_indices(Expr::Vacc *left, Expr::Vacc *right, size_t track) {}
 void Fn_Arg::Alt::outside_uppropagate_indices(Expr::Vacc *left, Expr::Vacc *right, size_t track) {
   alt->outside_uppropagate_indices(left, right, track);
-  this->left_indices[track] = alt->left_indices[track];
-  this->right_indices[track] = alt->right_indices[track];
+  this->left_indices[track] = alt->get_left_index(track);
+  this->right_indices[track] = alt->get_right_index(track);
 }
 void Fn_Arg::Const::outside_uppropagate_indices(Expr::Vacc *left, Expr::Vacc *right, size_t track) {}
 
@@ -301,8 +301,7 @@ void outside_init_indices(Alt::Base *alt, Expr::Vacc *left, Expr::Vacc *right, u
   alt->outside_uppropagate_indices(left, right, track);
 
   // Phase 4: set left/right indices of outside NT to the top level left/right indices
-  v.outside_link->left_indices[track] = alt->left_indices[track];
-  v.outside_link->right_indices[track] = alt->right_indices[track];
+  v.outside_link->init_indices(alt->get_left_index(track), alt->get_right_index(track), k, track);
 }
 
 

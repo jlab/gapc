@@ -138,11 +138,19 @@ class Base {
 
   virtual Base *clone() = 0;
 
- public:
+ protected:
   std::vector<Expr::Base*> left_indices;
   std::vector<Expr::Base*> right_indices;
 
  public:
+  Expr::Base *get_left_index(size_t track) {
+    assert(left_indices.size() > track);
+    return left_indices[track];
+  }
+  Expr::Base *get_right_index(size_t track) {
+    assert(right_indices.size() > track);
+    return right_indices[track];
+  }
   Statement::Var_Decl *ret_decl;
 
   inline bool is(Type t) {
@@ -270,9 +278,6 @@ class Base {
 
  public:
   void set_tracks(size_t t, size_t p);
-  size_t track_pos() const  {
-    return track_pos_;
-  }
 
   // set to public, to allow transmission to outside pendants
  public:
