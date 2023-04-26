@@ -983,7 +983,8 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      dec_indent(); dec_indent();
   }
 
-  void archive_cyk_indices(Printer::Base &stream, size_t n_tracks) {
+  void archive_cyk_indices(Printer::Base &stream, size_t n_tracks,
+                           bool for_outside) {
      inc_indent();
      stream << indent() << "void archive_cyk_indices() {" << endl;
      inc_indent();
@@ -1003,6 +1004,17 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
        stream << indent() << "array_out << t_" << i << "_i + 1;" << endl;
        stream << indent() << "array_out << "
               << "(t_" << i << "_j == 0 ? 0 : t_" << i << "_j - 1);" << endl;
+     }
+     if (for_outside) {
+       for (size_t i = 0; i < n_tracks; i++) {
+         // archive the indices of the prior iteration to ensure
+         // that the whole iteration has been completed
+         stream << indent() << "array_out << outside_t_" << i << "_i + 1;"
+                << endl;
+         stream << indent() << "array_out << "
+                << "(outside_t_" << i << "_j == 0 ? 0 : outside_t_" << i
+                << "_j - 1);" << endl;
+       }
      }
      stream << indent() << "#ifdef _OPENMP" << endl;
      stream << indent() << "  array_out << outer_loop_1_idx;" << endl;
@@ -1042,7 +1054,8 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      dec_indent();
   }
 
-  void load_cyk_indices(Printer::Base &stream, size_t n_tracks) {
+  void load_cyk_indices(Printer::Base &stream, size_t n_tracks,
+                        bool for_outside) {
      inc_indent();
      stream << indent() << "void load_cyk_indices() {" << endl;
      inc_indent();
@@ -1059,6 +1072,12 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      for (size_t i = 0; i < n_tracks; i++) {
        stream << indent() << "array_in >> t_" << i << "_i;" << endl;
        stream << indent() << "array_in >> t_" << i << "_j;" << endl;
+     }
+     if (for_outside) {
+       for (size_t i = 0; i < n_tracks; i++) {
+         stream << indent() << "array_in >> outside_t_" << i << "_i;" << endl;
+         stream << indent() << "array_in >> outside_t_" << i << "_j;" << endl;
+       }
      }
      stream << indent() << "#ifdef _OPENMP" << endl;
        stream << indent() << "  array_in >> outer_loop_1_idx;" << endl;

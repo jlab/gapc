@@ -62,7 +62,7 @@ void List_Warn::visit_begin(Alt::Block &a) {
     return;
   if (a.alts.size() > 1 && a.list_size() == Yield::UP) {
     Log::instance()->warning(a.location, "Block has an answer list >= n, "
-        "consider moving this block into an extra NT and"
+        "consider moving this block into an extra NT and "
         "applying choice function to it.");
   }
 }

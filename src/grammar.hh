@@ -64,7 +64,14 @@ class Grammar {
   void renumber_nts();
   void move_new_nts();
 
+  // flag the grammar as being an outside version
+  // default is false, will be set to true by function inject_outside_nts
+  bool outside = false;
+
  public:
+  bool is_outside() {
+    return this->outside;
+  }
   // The name of the grammar as defined in the grammar name of
   // the gap-source-code file.
   std::string *name;
@@ -206,7 +213,21 @@ class Grammar {
 
   void multi_propagate_max_filter();
 
+  // traverse grammar and flag those NTs (and production rules)
+  // that only use terminal parsers, because these shall not be
+  // translated into outside NTs, e.g. times = CHAR('*')
+  void flag_inside_terminal_ends();
+  // inject additional non-terminals to grammar, to automatically create
+  // an outside version for user provided grammar
+  void inject_outside_nts(std::vector<std::string> outside_nt_list);
+  // same as above, without checking user provided NT list
+  void inject_outside_nts();
   unsigned int to_dot(unsigned int *nodeID, std::ostream &out, int plot_level);
+
+  // blocks allow alternatives for sub-productions. This function shell free
+  // a grammar of Alt::Block by explicitly adding alternatives as top level
+  // alternative production rules for non-terminals.
+  void resolve_blocks();
 };
 
 

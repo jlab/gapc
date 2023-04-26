@@ -102,6 +102,11 @@ static void parse_options(int argc, char **argv, Options *rec) {
       "uses the selected instance and creates a GAP program which creates "
       "specialized GAP programs that recognize a subset of candidates of the "
       "original grammar.")
+    ("outside_grammar", po::value< std::vector<std::string> >(),
+      "generate an outside version of the grammar and report outside results "
+      "for an inside non-terminal. Provide multiple times for lists of "
+      "non-terminals or type \"ALL\" to report results for all non-"
+      "terminals.")
     ("verbose", "show suppressed warnings and messages")
     ("log-level,l", po::value<int>(),
       "the log level, valid values are 0 (VERBOSE), 1 (INFO),  2 (NORMAL), 3 "
@@ -234,6 +239,9 @@ static void parse_options(int argc, char **argv, Options *rec) {
   if (vm.count("specialize_grammar")) {
     rec->specializeGrammar = true;
   }
+  if (vm.count("outside_grammar"))
+    rec->outside_nt_list = vm["outside_grammar"]
+      .as< std::vector<std::string> >();
   if (vm.count("verbose"))
     rec->verbose_mode = true;
   if (vm.count("log-level")) {
@@ -361,7 +369,7 @@ class Main {
     }
 
     // simply gets the selected grammar, which is either the
-    // grammar that occured first in the source code or is the
+    // grammar that occurred first in the source code or is the
     // one that was named in the parameters on the command line
     Grammar *grammar = driver.ast.grammar();
     // Now check the semantic, which does more than the function
@@ -372,6 +380,11 @@ class Main {
     bool r = grammar->check_semantic();
     if (!r) {
       throw LogError("Seen semantic errors.");
+    }
+
+    // inject rules for outside grammar
+    if (opts.outside_nt_list.size() > 0) {
+      grammar->inject_outside_nts(opts.outside_nt_list);
     }
 
     // configure the window and k-best mode
@@ -682,6 +695,9 @@ class Main {
     hh.footer(driver.ast);
     hh.end_fwd_decls();
     hh.header_footer(driver.ast);
+    if (grammar->is_outside()) {
+      hh.print_insideoutside_report_fn(opts.outside_nt_list, driver.ast);
+    }
 
     // Write out the C++ implementation file of the
     // compile-result.
