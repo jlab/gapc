@@ -52,7 +52,6 @@
 
 #include "outside/middle_end_fwd.hh"
 
-
 class Grammar;
 class Signature_Base;
 class Visitor;
