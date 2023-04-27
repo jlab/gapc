@@ -282,14 +282,6 @@ void outside_init_indices(
   std::vector<Parser*> right_parser;
   unsigned int num_outside_nts = 0;
 
-//  //TODO(smj): how about has_index_overlay?!
-//  if (alt->is(Alt::SIMPLE)) {
-//    if (dynamic_cast<Alt::Simple*>(alt)->has_index_overlay()) {
-//      std::cerr << "hier hab ich den Salat "
-//                << *dynamic_cast<Alt::Simple*>(alt)->name << " ==========\n";
-//    }
-//  }
-
   /* phase 1: traverse whole sub-tree of alternative (can include multiple
    * levels) and collect
    * all grammar components that "parse" subwords from the input (can
