@@ -1068,9 +1068,10 @@ void Alt::Simple::reset() {
 // by local ys-guards
 
 
-Expr::Base *Alt::Simple::next_index_var(unsigned &k, size_t track,
+Expr::Base *Alt::next_index_var(unsigned &k, size_t track,
   Expr::Base *next_var, Expr::Base *last_var, Expr::Base *right,
-  const Yield::Size &ys, const Yield::Size &lhs, const Yield::Size &rhs) {
+  const Yield::Size &ys, const Yield::Size &lhs, const Yield::Size &rhs,
+  std::list<Statement::For*> *loops) {
   if (ys.low() != ys.high()) {
     if (rhs.low() == rhs.high()) {
       return right;
@@ -1106,13 +1107,15 @@ Expr::Base *Alt::Simple::next_index_var(unsigned &k, size_t track,
           cond, new Expr::Less_Eq (ivar, last_var->plus(lhs_ys.high())));
       }
 
-      Statement::Var_Decl *loopvariable = new Statement::Var_Decl(
-        new ::Type::Size(), ivar, index.first);
-      // flag this variable as being an iterator e.g. in for-loops,
-      // such that it won't have a trailing indent for code generation
-      loopvariable->set_itr(true);
-      Statement::For *f = new Statement::For (loopvariable, cond);
-      loops.push_back(f);
+      if (loops != nullptr) {
+        Statement::Var_Decl *loopvariable = new Statement::Var_Decl(
+          new ::Type::Size(), ivar, index.first);
+        // flag this variable as being an iterator e.g. in for-loops,
+        // such that it won't have a trailing indent for code generation
+        loopvariable->set_itr(true);
+        Statement::For *f = new Statement::For (loopvariable, cond);
+        loops->push_back(f);
+      }
       return ivar;
     }
   } else {
@@ -1144,7 +1147,7 @@ void Alt::Simple::init_indices(
     rhs_ys += ys;
 
     next_var = next_index_var(
-      k, track, next_var, last_var, right, ys, lhs, rhs);
+      k, track, next_var, last_var, right, ys, lhs, rhs, &this->loops);
 
     std::pair<Expr::Base*, Expr::Base*> res(0, 0);
     if (lhs.low() == lhs.high()) {

@@ -68,6 +68,11 @@ namespace Alt {
  */
 enum Type { SIMPLE, LINK, BLOCK, MULTI };
 
+Expr::Base *next_index_var(unsigned &k, size_t track,
+  Expr::Base *next_var, Expr::Base *last_var, Expr::Base *right,
+  const Yield::Size &ys, const Yield::Size &lhs, const Yield::Size &rhs,
+  std::list<Statement::For*> *loops);
+
 class Base {
  private:
   /*
@@ -413,11 +418,6 @@ class Simple : public Base {
   void traverse(Visitor &v);
 
  private:
-  Expr::Base *next_index_var(
-    unsigned &k, size_t track, Expr::Base *next_var,
-    Expr::Base *last_var, Expr::Base *right, const Yield::Size &ys,
-    const Yield::Size &lhs, const Yield::Size &rhs);
-
   // FIXME convert callers
   Yield::Poly rhs_ys_min_rest(
     const std::list<Fn_Arg::Base*>::iterator &i,

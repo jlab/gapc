@@ -171,7 +171,12 @@ void outside_init_indices(Alt::Base *alt, Expr::Vacc *left, Expr::Vacc *right, u
   std::vector<Parser*> right_parser;
   unsigned int num_outside_nts = 0;
 
-  //TODO(smj): how about has_index_overlay?!
+//  //TODO(smj): how about has_index_overlay?!
+//  if (alt->is(Alt::SIMPLE)) {
+//    if (dynamic_cast<Alt::Simple*>(alt)->has_index_overlay()) {
+//      std::cerr << "hier hab ich den Salat " << *dynamic_cast<Alt::Simple*>(alt)->name << " ==========\n";
+//    }
+//  }
 
   // phase 1: traverse whole sub-tree of alternative (can include multiple levels) and collect
   // all grammar components that "parse" subwords from the input (can be empty)
@@ -183,7 +188,7 @@ void outside_init_indices(Alt::Base *alt, Expr::Vacc *left, Expr::Vacc *right, u
 
   // phase 2: based on the collected Parsers, assign left and right indices to Parsers
   Yield::Size ys_all = sum_ys(left_parser, left_parser.begin(), left_parser.end(), track);
-  Expr::Base *last_var = next_index_var(k, track, left, left, right, ys_all, Yield::Size(), ys_all);
+  Expr::Base *last_var = Alt::next_index_var(k, track, left, left, right, ys_all, Yield::Size(), ys_all, nullptr);
   Expr::Base *next_var = last_var;
 
   Yield::Size lhs;
@@ -194,7 +199,7 @@ void outside_init_indices(Alt::Base *alt, Expr::Vacc *left, Expr::Vacc *right, u
     Yield::Size rhs_ys(rhs);
     rhs_ys += ys;
 
-    next_var = next_index_var(k, track, next_var, last_var, left, ys, lhs, rhs);
+    next_var = Alt::next_index_var(k, track, next_var, last_var, left, ys, lhs, rhs, nullptr);
 
     // copy and paste from Alt::Simple::init_indices
     std::pair<Expr::Base*, Expr::Base*> res(0, 0);
@@ -247,7 +252,7 @@ void outside_init_indices(Alt::Base *alt, Expr::Vacc *left, Expr::Vacc *right, u
       Yield::Size rhs_ys(rhs);
       rhs_ys += ys;
 
-      next_var = next_index_var(k, track, next_var, last_var, right, ys, lhs, rhs);
+      next_var = Alt::next_index_var(k, track, next_var, last_var, right, ys, lhs, rhs, nullptr);
 
       // copy and paste from Alt::Simple::init_indices
       std::pair<Expr::Base*, Expr::Base*> res(0, 0);
@@ -259,7 +264,7 @@ void outside_init_indices(Alt::Base *alt, Expr::Vacc *left, Expr::Vacc *right, u
         } else {
           if (rhs.low() == rhs.high()) {
             // edge case: we encounter right end but need another moving boundary for outside context
-            next_var = next_index_var(k, track, next_var, last_var, right, ys, lhs, Yield::Size(Yield::UP));
+            next_var = Alt::next_index_var(k, track, next_var, last_var, right, ys, lhs, Yield::Size(Yield::UP), nullptr);
 
             res.second = next_var->minus(rhs.low());
             lhs += ys;
@@ -304,55 +309,3 @@ void outside_init_indices(Alt::Base *alt, Expr::Vacc *left, Expr::Vacc *right, u
   v.outside_link->init_indices(alt->get_left_index(track), alt->get_right_index(track), k, track);
 }
 
-
-Expr::Base *next_index_var(unsigned &k, size_t track,
-  Expr::Base *next_var, Expr::Base *last_var, Expr::Base *right,
-  const Yield::Size &ys, const Yield::Size &lhs, const Yield::Size &rhs) {
-  if (ys.low() != ys.high()) {
-    if (rhs.low() == rhs.high()) {
-      return right;
-    } else {
-      std::ostringstream o;
-      o << "t_" << track << "_k_" << k;
-      k++;
-      Expr::Vacc *ivar = new Expr::Vacc(new std::string(o.str()));
-
-      assert(lhs.low() == lhs.high());
-      std::pair<Expr::Base*, Expr::Base*> index(0, 0);
-
-      Yield::Size lhs_ys(lhs);
-      lhs_ys += ys;
-
-      if (rhs.high() == Yield::UP) {
-        index.first = last_var->plus(lhs_ys.low());
-      } else {
-        // e.g. second maxsize filter in grammar/forloops5
-        Expr::Cond *ce = new Expr::Cond(
-          new Expr::Greater_Eq(right->minus(
-            last_var->plus(lhs_ys.low())), rhs.high()),
-          right->minus(rhs.high()), last_var->plus(lhs_ys.low()));
-        index.first = ce;
-      }
-
-      index.second = right->minus(rhs.low());
-
-      Expr::Base *cond = new Expr::Less_Eq(ivar, index.second);
-      // e.g. first maxsize filter in grammar/forloops5
-      if (lhs_ys.high() < Yield::UP) {
-        cond = new Expr::And(
-          cond, new Expr::Less_Eq (ivar, last_var->plus(lhs_ys.high())));
-      }
-
-      Statement::Var_Decl *loopvariable = new Statement::Var_Decl(
-        new ::Type::Size(), ivar, index.first);
-      // flag this variable as being an iterator e.g. in for-loops,
-      // such that it won't have a trailing indent for code generation
-      loopvariable->set_itr(true);
-      Statement::For *f = new Statement::For (loopvariable, cond);
-      //loops.push_back(f);
-      return ivar;
-    }
-  } else {
-    return next_var;
-  }
-}

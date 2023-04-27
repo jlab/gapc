@@ -47,11 +47,6 @@ class Parser {
 
 void outside_init_indices(Alt::Base *alt, Expr::Vacc *left, Expr::Vacc *right, unsigned int &k, size_t track);
 
-// copy and paste from alt.cc
-Expr::Base *next_index_var(unsigned &k, size_t track,
-  Expr::Base *next_var, Expr::Base *last_var, Expr::Base *right,
-  const Yield::Size &ys, const Yield::Size &lhs, const Yield::Size &rhs);
-
 struct GetOutsideLink : public Visitor {
   Alt::Link *outside_link = nullptr;
 
