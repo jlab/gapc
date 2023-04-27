@@ -232,6 +232,33 @@ bool Instance::check_multiple_answer_types(bool for_outside_generation) {
   return num_errors == 0;
 }
 
+void Grammar::check_overlays_exists() {
+  struct FindOverlay : public Visitor {
+    std::vector<Loc> overlay_locations;
+
+    void visit_begin(Alt::Simple &alt) {
+      if (alt.has_index_overlay() && !alt.is_partof_outside()) {
+        overlay_locations.push_back(alt.location);
+      }
+    }
+  };
+
+  if (this->ast.outside_generation() && (!this->is_partof_outside())) {
+    FindOverlay v = FindOverlay();
+    this->traverse(v);
+    if (v.overlay_locations.size() > 0) {
+      for (std::vector<Loc>::const_iterator i = v.overlay_locations.begin();
+           i != v.overlay_locations.end(); ++i) {
+        Log::instance()->warning(*i,
+            "You requested outside grammar generation, but your inside grammar "
+            "contains manual index overlays. As these cannot be automatically "
+            "converted from an inside to an outside fashion, the resulting "
+            "program most likely produces wrong results!");
+      }
+    }
+  }
+}
+
 /* iterates through one lhs NT and reports the first occurrence of an
  * Alt::Block, i.e.
  * - hold a pointer to the Alt::Block,

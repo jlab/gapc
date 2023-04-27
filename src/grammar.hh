@@ -232,6 +232,13 @@ class Grammar {
   void set_partof_outside() {
     _is_partof_outside = true;
   }
+
+  /* search for Alt::Simple in the grammar that are annotated with manual index
+   * overlay to warn the user when requesting outside grammar that computation
+   * most likely will be wrong, since running indices cannot be transformed
+   * from inside to outside.
+   */
+  void check_overlays_exists();
 };
 
 

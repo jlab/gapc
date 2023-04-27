@@ -499,6 +499,10 @@ bool Grammar::check_semantic() {
   // check that all NTs requested by the user are actually part of the grammar
   this->check_outside_requested_nonexisting_nts();
 
+  // warn user about manual overlays that probably lead to wrong results when
+  // outside grammar generation is requested
+  this->check_overlays_exists();
+
   return r;
 }
 
