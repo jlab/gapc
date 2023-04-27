@@ -58,7 +58,7 @@ void Alt::Link::outside_collect_parsers(
     if (num_outside_nts < 1) {
       left_parsers.push_back(p);
     } else {
-      right_parsers.push_back(p);
+      right_parsers.insert(right_parsers.begin(), p);
     }
   }
 }
@@ -103,7 +103,7 @@ void Fn_Arg::Const::outside_collect_parsers(
   if (num_outside_nts < 1) {
     left_parsers.push_back(p);
   } else {
-    right_parsers.push_back(p);
+    right_parsers.insert(right_parsers.begin(), p);
   }
 }
 void Fn_Arg::Alt::outside_collect_parsers(
@@ -187,35 +187,57 @@ void iterate_indices(bool is_left_not_right, std::vector<Parser*> *parser, unsig
 
     // copy and paste from Alt::Simple::init_indices
     std::pair<Expr::Base*, Expr::Base*> res(0, 0);
-    if (is_left_not_right && (ys_all.low() == ys_all.high())) {
+    if ((ys_all.low() == ys_all.high())) {
       // no moving boundary between here and the outside_nt
-      res.first = last_var->minus(rhs_ys.low());
-      res.second = last_var->minus(rhs.low());
+      if (is_left_not_right) {
+        res.first = last_var->minus(rhs_ys.low());
+        res.second = last_var->minus(rhs.low());
+      } else {
+        res.second = last_var->plus(rhs_ys.low());
+        res.first = last_var->plus(rhs.low());
+      }
       lhs += ys;
     } else {
       if (lhs.low() == lhs.high()) {
-        res.first = last_var->plus(lhs.low());
+        if (is_left_not_right) {
+          res.first = last_var->plus(lhs.low());
+        } else {
+          res.second = last_var->minus(lhs.low());
+        }
         if (ys.low() == ys.high()) {
-          res.second = last_var->plus(lhs.low())->plus(ys.low());
+          if (is_left_not_right) {
+            res.second = last_var->plus(lhs.low())->plus(ys.low());
+          } else {
+            res.first = last_var->minus(lhs.low())->minus(ys.low());
+          }
           lhs += ys;
         } else {
           if (rhs.low() == rhs.high()) {
-            if (!is_left_not_right) {
-              // edge case: we encounter right end but need another moving boundary for outside context
-              next_var = Alt::next_index_var(k, track, next_var, last_var, upstream_index, ys, lhs, Yield::Size(Yield::UP), &((*i)->simple_loops));
+            if (is_left_not_right) {
+              res.second = next_var->minus(rhs.low());
+            } else {
+              res.first = next_var->plus(rhs.low());
             }
-            res.second = next_var->minus(rhs.low());
             lhs += ys;
           } else {
-            res.second = next_var;
+            if (is_left_not_right) {
+              res.second = next_var;
+            } else {
+              res.first = next_var;
+            }
             lhs.set(0, 0);
             last_var = next_var;
           }
         }
       } else {
         assert(rhs_ys.low() == rhs_ys.high());
-        res.first = next_var->minus(rhs_ys.low());
-        res.second = next_var->minus(rhs.low());
+        if (is_left_not_right) {
+          res.first = next_var->minus(rhs_ys.low());
+          res.second = next_var->minus(rhs.low());
+        } else {
+          res.second = next_var->plus(rhs_ys.low());
+          res.first = next_var->plus(rhs.low());
+        }
         lhs += ys;
       }
     }
@@ -245,6 +267,9 @@ void outside_init_indices(Alt::Base *alt, Expr::Vacc *left, Expr::Vacc *right, u
   // phase 1: traverse whole sub-tree of alternative (can include multiple levels) and collect
   // all grammar components that "parse" subwords from the input (can be empty)
   std::list<Statement::For *> loops;
+  if (alt->is(Alt::SIMPLE)) {
+    loops = dynamic_cast<Alt::Simple*>(alt)->loops;
+  }
   alt->outside_collect_parsers(left_parser, right_parser, num_outside_nts, track, loops);
 
   // by design, there must be exactly one rhs outside NT in each alternative
@@ -252,15 +277,15 @@ void outside_init_indices(Alt::Base *alt, Expr::Vacc *left, Expr::Vacc *right, u
   assert(num_outside_nts == 1);
 
   // phase 2: based on the collected Parsers, assign left and right indices to Parsers
+  // for grammar components LEFT of outside NT
   Yield::Size ys_all = sum_ys(left_parser, left_parser.begin(), left_parser.end(), track);
   Expr::Base *last_var = Alt::next_index_var(k, track, left, left, right, ys_all, Yield::Size(), ys_all, &loops);
   Expr::Base *next_var = last_var;
-
-  // for grammar components LEFT of outside NT
   iterate_indices(true, &left_parser, k, track, alt->multi_ys().tracks(), next_var, last_var, left, ys_all);
   // for grammar components RIGHT of outside NT
   if (right_parser.size() > 0) {
-    last_var = right;
+    ys_all = sum_ys(right_parser, right_parser.begin(), right_parser.end(), track);
+    last_var = Alt::next_index_var(k, track, right, last_var, right, ys_all, Yield::Size(), ys_all, &loops);
     iterate_indices(false, &right_parser, k, track, alt->multi_ys().tracks(), next_var, last_var, right, ys_all);
   }
 
@@ -280,5 +305,10 @@ void outside_init_indices(Alt::Base *alt, Expr::Vacc *left, Expr::Vacc *right, u
 
   // Phase 4: set left/right indices of outside NT to the top level left/right indices
   v.outside_link->init_indices(alt->get_left_index(track), alt->get_right_index(track), k, track);
+
+  if (alt->is(Alt::SIMPLE)) {
+    dynamic_cast<Alt::Simple*>(alt)->loops.insert(dynamic_cast<Alt::Simple*>(alt)->loops.begin(), loops.begin(), loops.end());
+  }
+
 }
 

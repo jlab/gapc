@@ -424,8 +424,11 @@ class Simple : public Base {
     const std::list<Fn_Arg::Base*>::iterator &i,
     const std::list<Fn_Arg::Base*>::iterator &end) const;
 
-  std::list<Statement::For *> loops;
+ public:
   std::list<Statement::Foreach *> foreach_loops;
+
+ private:
+  std::list<Statement::For *> loops;
   std::list<Statement::Base*> body_stmts;
 
   Statement::If *guards;
