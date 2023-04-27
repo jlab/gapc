@@ -37,9 +37,9 @@ class Parser {
   Yield::Size yield_size;
   std::vector<Expr::Base*> &left_indices;
   std::vector<Expr::Base*> &right_indices;
+  std::list<Statement::For*> &simple_loops;
 
-  Parser(Yield::Size ys, std::vector<Expr::Base*> &left_indices, std::vector<Expr::Base*> &right_indices) : left_indices(left_indices), right_indices(right_indices) {
-    this->yield_size = ys;
+  Parser(Yield::Size ys, std::vector<Expr::Base*> &left_indices, std::vector<Expr::Base*> &right_indices, std::list<Statement::For*> &simple_loops) : yield_size(ys), left_indices(left_indices), right_indices(right_indices), simple_loops(simple_loops) {
   }
 };
 

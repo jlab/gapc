@@ -28,29 +28,33 @@ void Alt::Base::outside_collect_parsers(
     std::vector<Parser*> &left_parsers,
     std::vector<Parser*> &right_parsers,
     unsigned int &num_outside_nts,
-    size_t track) {
+    size_t track,
+    std::list<Statement::For*> &simple_loops) {
 }
 void Alt::Simple::outside_collect_parsers(
     std::vector<Parser*> &left_parsers,
     std::vector<Parser*> &right_parsers,
     unsigned int &num_outside_nts,
-    size_t track) {
+    size_t track,
+    std::list<Statement::For*> &simple_loops
+    ) {
 
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end();
        ++i) {
-    (*i)->outside_collect_parsers(left_parsers, right_parsers, num_outside_nts, track);
+    (*i)->outside_collect_parsers(left_parsers, right_parsers, num_outside_nts, track, this->loops);
   }
 }
 void Alt::Link::outside_collect_parsers(
     std::vector<Parser*> &left_parsers,
     std::vector<Parser*> &right_parsers,
     unsigned int &num_outside_nts,
-    size_t track) {
+    size_t track,
+    std::list<Statement::For*> &simple_loops) {
 
   if (this->nt->is_partof_outside() || this->is_outside_inside_transition()) {
     num_outside_nts++;
   } else {
-    Parser *p = new Parser(this->multi_ys()(track), (this->left_indices), (this->right_indices));
+    Parser *p = new Parser(this->multi_ys()(track), (this->left_indices), (this->right_indices), simple_loops);
     if (num_outside_nts < 1) {
       left_parsers.push_back(p);
     } else {
@@ -62,7 +66,8 @@ void Alt::Block::outside_collect_parsers(
     std::vector<Parser*> &left_parsers,
     std::vector<Parser*> &right_parsers,
     unsigned int &num_outside_nts,
-    size_t track) {
+    size_t track,
+    std::list<Statement::For*> &simple_loops) {
   // as Blocks should have been resolved for all outside components
   assert(false);
 }
@@ -70,28 +75,31 @@ void Alt::Multi::outside_collect_parsers(
     std::vector<Parser*> &left_parsers,
     std::vector<Parser*> &right_parsers,
     unsigned int &num_outside_nts,
-    size_t track) {
+    size_t track,
+    std::list<Statement::For*> &simple_loops) {
   size_t j = 0;
   assert(track < list.size());
   std::list<Base*>::iterator i = list.begin();
   for (; j < track; ++i, ++j) {}
 
   // each component is in a single-track context
-  (*i)->outside_collect_parsers(left_parsers, right_parsers, num_outside_nts, 0);
+  (*i)->outside_collect_parsers(left_parsers, right_parsers, num_outside_nts, 0, simple_loops);
 }
 
 void Fn_Arg::Base::outside_collect_parsers(
     std::vector<Parser*> &left_parsers,
     std::vector<Parser*> &right_parsers,
     unsigned int &num_outside_nts,
-    size_t track) {
+    size_t track,
+    std::list<Statement::For*> &simple_loops) {
 }
 void Fn_Arg::Const::outside_collect_parsers(
     std::vector<Parser*> &left_parsers,
     std::vector<Parser*> &right_parsers,
     unsigned int &num_outside_nts,
-    size_t track) {
-  Parser *p = new Parser(this->multi_ys()(track), (this->left_indices), (this->right_indices));
+    size_t track,
+    std::list<Statement::For*> &simple_loops) {
+  Parser *p = new Parser(this->multi_ys()(track), (this->left_indices), (this->right_indices), simple_loops);
   if (num_outside_nts < 1) {
     left_parsers.push_back(p);
   } else {
@@ -102,8 +110,9 @@ void Fn_Arg::Alt::outside_collect_parsers(
     std::vector<Parser*> &left_parsers,
     std::vector<Parser*> &right_parsers,
     unsigned int &num_outside_nts,
-    size_t track) {
-  alt->outside_collect_parsers(left_parsers, right_parsers, num_outside_nts, track);
+    size_t track,
+    std::list<Statement::For*> &simple_loops) {
+  alt->outside_collect_parsers(left_parsers, right_parsers, num_outside_nts, track, simple_loops);
 }
 
 Yield::Size sum_ys(std::vector<Parser*> parser,
@@ -166,6 +175,61 @@ void Fn_Arg::Alt::outside_uppropagate_indices(Expr::Vacc *left, Expr::Vacc *righ
 }
 void Fn_Arg::Const::outside_uppropagate_indices(Expr::Vacc *left, Expr::Vacc *right, size_t track) {}
 
+void iterate_indices(bool is_left_not_right, std::vector<Parser*> *parser, unsigned int &k, size_t track, unsigned int tracks, Expr::Base *next_var, Expr::Base *last_var, Expr::Vacc *upstream_index, Yield::Size ys_all) {
+  Yield::Size lhs;
+  for (std::vector<Parser*>::iterator i = parser->begin(); i != parser->end(); ++i) {
+    Yield::Size ys = (*i)->yield_size;
+    Yield::Size rhs = sum_ys(*parser, std::next(i), parser->end(), track);
+    Yield::Size rhs_ys(rhs);
+    rhs_ys += ys;
+
+    next_var = Alt::next_index_var(k, track, next_var, last_var, upstream_index, ys, lhs, rhs, &((*i)->simple_loops));
+
+    // copy and paste from Alt::Simple::init_indices
+    std::pair<Expr::Base*, Expr::Base*> res(0, 0);
+    if (is_left_not_right && (ys_all.low() == ys_all.high())) {
+      // no moving boundary between here and the outside_nt
+      res.first = last_var->minus(rhs_ys.low());
+      res.second = last_var->minus(rhs.low());
+      lhs += ys;
+    } else {
+      if (lhs.low() == lhs.high()) {
+        res.first = last_var->plus(lhs.low());
+        if (ys.low() == ys.high()) {
+          res.second = last_var->plus(lhs.low())->plus(ys.low());
+          lhs += ys;
+        } else {
+          if (rhs.low() == rhs.high()) {
+            if (!is_left_not_right) {
+              // edge case: we encounter right end but need another moving boundary for outside context
+              next_var = Alt::next_index_var(k, track, next_var, last_var, upstream_index, ys, lhs, Yield::Size(Yield::UP), &((*i)->simple_loops));
+            }
+            res.second = next_var->minus(rhs.low());
+            lhs += ys;
+          } else {
+            res.second = next_var;
+            lhs.set(0, 0);
+            last_var = next_var;
+          }
+        }
+      } else {
+        assert(rhs_ys.low() == rhs_ys.high());
+        res.first = next_var->minus(rhs_ys.low());
+        res.second = next_var->minus(rhs.low());
+        lhs += ys;
+      }
+    }
+    if (tracks > (*i)->left_indices.size()) {
+      // must be a single track component in a multitrack context
+      (*i)->left_indices.at(0) = res.first;
+      (*i)->right_indices.at(0) = res.second;
+    } else {
+      (*i)->left_indices.at(track) = res.first;
+      (*i)->right_indices.at(track) = res.second;
+    }
+  }
+}
+
 void outside_init_indices(Alt::Base *alt, Expr::Vacc *left, Expr::Vacc *right, unsigned int &k, size_t track) {
   std::vector<Parser*> left_parser;
   std::vector<Parser*> right_parser;
@@ -180,7 +244,8 @@ void outside_init_indices(Alt::Base *alt, Expr::Vacc *left, Expr::Vacc *right, u
 
   // phase 1: traverse whole sub-tree of alternative (can include multiple levels) and collect
   // all grammar components that "parse" subwords from the input (can be empty)
-  alt->outside_collect_parsers(left_parser, right_parser, num_outside_nts, track);
+  std::list<Statement::For *> loops;
+  alt->outside_collect_parsers(left_parser, right_parser, num_outside_nts, track, loops);
 
   // by design, there must be exactly one rhs outside NT in each alternative
   // only exception is the transition from outside to inside grammar parts
@@ -188,107 +253,15 @@ void outside_init_indices(Alt::Base *alt, Expr::Vacc *left, Expr::Vacc *right, u
 
   // phase 2: based on the collected Parsers, assign left and right indices to Parsers
   Yield::Size ys_all = sum_ys(left_parser, left_parser.begin(), left_parser.end(), track);
-  Expr::Base *last_var = Alt::next_index_var(k, track, left, left, right, ys_all, Yield::Size(), ys_all, nullptr);
+  Expr::Base *last_var = Alt::next_index_var(k, track, left, left, right, ys_all, Yield::Size(), ys_all, &loops);
   Expr::Base *next_var = last_var;
 
-  Yield::Size lhs;
-  // LEFT of outside NT
-  for (std::vector<Parser*>::iterator i = left_parser.begin(); i != left_parser.end(); ++i) {
-    Yield::Size ys = (*i)->yield_size;
-    Yield::Size rhs = sum_ys(left_parser, std::next(i), left_parser.end(), track);
-    Yield::Size rhs_ys(rhs);
-    rhs_ys += ys;
-
-    next_var = Alt::next_index_var(k, track, next_var, last_var, left, ys, lhs, rhs, nullptr);
-
-    // copy and paste from Alt::Simple::init_indices
-    std::pair<Expr::Base*, Expr::Base*> res(0, 0);
-    if (ys_all.low() == ys_all.high()) {
-      // no moving boundary between here and the outside_nt
-      res.first = last_var->minus(rhs_ys.low());
-      res.second = last_var->minus(rhs.low());
-      lhs += ys;
-    } else {
-      if (lhs.low() == lhs.high()) {
-        res.first = last_var->plus(lhs.low());
-        if (ys.low() == ys.high()) {
-          res.second = last_var->plus(lhs.low())->plus(ys.low());
-          lhs += ys;
-        } else {
-          if (rhs.low() == rhs.high()) {
-            res.second = next_var->minus(rhs.low());
-            lhs += ys;
-          } else {
-            res.second = next_var;
-            lhs.set(0, 0);
-            last_var = next_var;
-          }
-        }
-      } else {
-        assert(rhs_ys.low() == rhs_ys.high());
-        res.first = next_var->minus(rhs_ys.low());
-        res.second = next_var->minus(rhs.low());
-        lhs += ys;
-      }
-    }
-    if (alt->multi_ys().tracks() > (*i)->left_indices.size()) {
-      // must be a single track component in a multitrack context
-      (*i)->left_indices.at(0) = res.first;
-      (*i)->right_indices.at(0) = res.second;
-    } else {
-      (*i)->left_indices.at(track) = res.first;
-      (*i)->right_indices.at(track) = res.second;
-    }
-  }
-
-  // RIGHT of outside NT
+  // for grammar components LEFT of outside NT
+  iterate_indices(true, &left_parser, k, track, alt->multi_ys().tracks(), next_var, last_var, left, ys_all);
+  // for grammar components RIGHT of outside NT
   if (right_parser.size() > 0) {
-    lhs = sum_ys(right_parser, right_parser.begin(), right_parser.end(), track);
     last_var = right;
-    lhs.set(0, 0);
-    for (std::vector<Parser*>::iterator i = right_parser.begin(); i != right_parser.end(); ++i) {
-      Yield::Size ys = (*i)->yield_size;
-      Yield::Size rhs = sum_ys(right_parser, std::next(i), right_parser.end(), track);
-      Yield::Size rhs_ys(rhs);
-      rhs_ys += ys;
-
-      next_var = Alt::next_index_var(k, track, next_var, last_var, right, ys, lhs, rhs, nullptr);
-
-      // copy and paste from Alt::Simple::init_indices
-      std::pair<Expr::Base*, Expr::Base*> res(0, 0);
-      if (lhs.low() == lhs.high()) {
-        res.first = last_var->plus(lhs.low());
-        if (ys.low() == ys.high()) {
-          res.second = last_var->plus(lhs.low())->plus(ys.low());
-          lhs += ys;
-        } else {
-          if (rhs.low() == rhs.high()) {
-            // edge case: we encounter right end but need another moving boundary for outside context
-            next_var = Alt::next_index_var(k, track, next_var, last_var, right, ys, lhs, Yield::Size(Yield::UP), nullptr);
-
-            res.second = next_var->minus(rhs.low());
-            lhs += ys;
-          } else {
-            res.second = next_var;
-            lhs.set(0, 0);
-            last_var = next_var;
-          }
-        }
-      } else {
-        assert(rhs_ys.low() == rhs_ys.high());
-        res.first = next_var->minus(rhs_ys.low());
-        res.second = next_var->minus(rhs.low());
-        lhs += ys;
-      }
-      if (alt->multi_ys().tracks() > (*i)->left_indices.size()) {
-        // must be a single track component in a multitrack context
-        (*i)->left_indices.at(0) = res.first;
-        (*i)->right_indices.at(0) = res.second;
-      } else {
-        (*i)->left_indices.at(track) = res.first;
-        (*i)->right_indices.at(track) = res.second;
-      }
-    }
+    iterate_indices(false, &right_parser, k, track, alt->multi_ys().tracks(), next_var, last_var, right, ys_all);
   }
 
   GetOutsideLink v = GetOutsideLink();

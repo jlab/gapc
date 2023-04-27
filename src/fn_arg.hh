@@ -160,7 +160,8 @@ class Base {
         std::vector<Parser*> &left_parsers,
         std::vector<Parser*> &right_parsers,
         unsigned int &num_outside_nts,
-        size_t track);
+        size_t track,
+        std::list<Statement::For*> &simple_loops);
     virtual void outside_uppropagate_indices(Expr::Vacc *left, Expr::Vacc *right, size_t track);
 };
 
@@ -215,7 +216,8 @@ class Alt : public Base {
     void outside_collect_parsers(std::vector<Parser*> &left_parsers,
                                  std::vector<Parser*> &right_parsers,
                                  unsigned int &num_outside_nts,
-                                 size_t track);
+                                 size_t track,
+                                 std::list<Statement::For*> &simple_loops);
     void outside_uppropagate_indices(Expr::Vacc *left, Expr::Vacc *right, size_t track);
 };
 
@@ -271,7 +273,8 @@ class Const : public Base {
     void outside_collect_parsers(std::vector<Parser*> &left_parsers,
                                  std::vector<Parser*> &right_parsers,
                                  unsigned int &num_outside_nts,
-                                 size_t track);
+                                 size_t track,
+                                 std::list<Statement::For*> &simple_loops);
     void outside_uppropagate_indices(Expr::Vacc *left, Expr::Vacc *right, size_t track);
 };
 }  // namespace Fn_Arg
