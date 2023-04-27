@@ -162,7 +162,8 @@ class Base {
         unsigned int &num_outside_nts,
         size_t track,
         std::list<Statement::For*> &simple_loops);
-    virtual void outside_uppropagate_indices(Expr::Vacc *left, Expr::Vacc *right, size_t track);
+    virtual void outside_uppropagate_indices(
+        Expr::Vacc *left, Expr::Vacc *right, size_t track);
 };
 
 
@@ -218,7 +219,8 @@ class Alt : public Base {
                                  unsigned int &num_outside_nts,
                                  size_t track,
                                  std::list<Statement::For*> &simple_loops);
-    void outside_uppropagate_indices(Expr::Vacc *left, Expr::Vacc *right, size_t track);
+    void outside_uppropagate_indices(
+        Expr::Vacc *left, Expr::Vacc *right, size_t track);
 };
 
 
@@ -275,7 +277,8 @@ class Const : public Base {
                                  unsigned int &num_outside_nts,
                                  size_t track,
                                  std::list<Statement::For*> &simple_loops);
-    void outside_uppropagate_indices(Expr::Vacc *left, Expr::Vacc *right, size_t track);
+    void outside_uppropagate_indices(
+        Expr::Vacc *left, Expr::Vacc *right, size_t track);
 };
 }  // namespace Fn_Arg
 

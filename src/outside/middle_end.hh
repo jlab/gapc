@@ -24,7 +24,9 @@
 #ifndef SRC_OUTSIDE_MIDDLE_END_HH_
 #define SRC_OUTSIDE_MIDDLE_END_HH_
 
-
+#include <vector>
+#include <list>
+#include <utility>
 #include "../symbol.hh"
 #include "../expr.hh"
 #include "../fn_arg.hh"
@@ -39,13 +41,19 @@ class Parser {
   std::vector<Expr::Base*> &right_indices;
   std::list<Statement::For*> &simple_loops;
 
-  Parser(Yield::Size ys, std::vector<Expr::Base*> &left_indices, std::vector<Expr::Base*> &right_indices, std::list<Statement::For*> &simple_loops) : yield_size(ys), left_indices(left_indices), right_indices(right_indices), simple_loops(simple_loops) {
+  Parser(Yield::Size ys,
+         std::vector<Expr::Base*> &left_indices,
+         std::vector<Expr::Base*> &right_indices,
+         std::list<Statement::For*> &simple_loops) :
+           yield_size(ys),
+           left_indices(left_indices),
+           right_indices(right_indices),
+           simple_loops(simple_loops) {
   }
 };
 
-#include "../alt.hh"
-
-void outside_init_indices(Alt::Base *alt, Expr::Vacc *left, Expr::Vacc *right, unsigned int &k, size_t track);
+void outside_init_indices(Alt::Base *alt, Expr::Vacc *left, Expr::Vacc *right,
+                          unsigned int &k, size_t track);
 
 struct GetOutsideLink : public Visitor {
   Alt::Link *outside_link = nullptr;

@@ -21,9 +21,9 @@
 
 }}} */
 
+#include <utility>
 #include "grammar_transformation.hh"
 #include "../expr/new.hh"
-#include <utility>
 
 bool Grammar::check_outside_parse_empty_word() {
   if (this->ast.outside_generation()) {

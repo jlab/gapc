@@ -38,10 +38,10 @@ void Alt::Simple::outside_collect_parsers(
     size_t track,
     std::list<Statement::For*> &simple_loops
     ) {
-
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end();
        ++i) {
-    (*i)->outside_collect_parsers(left_parsers, right_parsers, num_outside_nts, track, this->loops);
+    (*i)->outside_collect_parsers(left_parsers, right_parsers, num_outside_nts,
+                                  track, this->loops);
   }
 }
 void Alt::Link::outside_collect_parsers(
@@ -54,7 +54,8 @@ void Alt::Link::outside_collect_parsers(
   if (this->nt->is_partof_outside() || this->is_outside_inside_transition()) {
     num_outside_nts++;
   } else {
-    Parser *p = new Parser(this->multi_ys()(track), (this->left_indices), (this->right_indices), simple_loops);
+    Parser *p = new Parser(this->multi_ys()(track), this->left_indices,
+                           this->right_indices, simple_loops);
     if (num_outside_nts < 1) {
       left_parsers.push_back(p);
     } else {
@@ -83,7 +84,8 @@ void Alt::Multi::outside_collect_parsers(
   for (; j < track; ++i, ++j) {}
 
   // each component is in a single-track context
-  (*i)->outside_collect_parsers(left_parsers, right_parsers, num_outside_nts, 0, simple_loops);
+  (*i)->outside_collect_parsers(left_parsers, right_parsers, num_outside_nts,
+                                0, simple_loops);
 }
 
 void Fn_Arg::Base::outside_collect_parsers(
@@ -99,7 +101,8 @@ void Fn_Arg::Const::outside_collect_parsers(
     unsigned int &num_outside_nts,
     size_t track,
     std::list<Statement::For*> &simple_loops) {
-  Parser *p = new Parser(this->multi_ys()(track), (this->left_indices), (this->right_indices), simple_loops);
+  Parser *p = new Parser(this->multi_ys()(track), this->left_indices,
+                         this->right_indices, simple_loops);
   if (num_outside_nts < 1) {
     left_parsers.push_back(p);
   } else {
@@ -112,7 +115,8 @@ void Fn_Arg::Alt::outside_collect_parsers(
     unsigned int &num_outside_nts,
     size_t track,
     std::list<Statement::For*> &simple_loops) {
-  alt->outside_collect_parsers(left_parsers, right_parsers, num_outside_nts, track, simple_loops);
+  alt->outside_collect_parsers(left_parsers, right_parsers, num_outside_nts,
+                               track, simple_loops);
 }
 
 Yield::Size sum_ys(std::vector<Parser*> parser,
@@ -121,15 +125,18 @@ Yield::Size sum_ys(std::vector<Parser*> parser,
     size_t track) {
   Yield::Size ys;
 
-  for (std::vector<Parser*>::iterator i = itr_start; (i != parser.end()) && (i != itr_end); ++i) {
+  for (std::vector<Parser*>::iterator i = itr_start;
+       (i != parser.end()) && (i != itr_end); ++i) {
     ys += (*i)->yield_size;
   }
 
   return ys;
 }
 
-void Alt::Base::outside_uppropagate_indices(Expr::Vacc *left, Expr::Vacc *right, size_t track) {}
-void Alt::Simple::outside_uppropagate_indices(Expr::Vacc *left, Expr::Vacc *right, size_t track) {
+void Alt::Base::outside_uppropagate_indices(
+    Expr::Vacc *left, Expr::Vacc *right, size_t track) {}
+void Alt::Simple::outside_uppropagate_indices(
+    Expr::Vacc *left, Expr::Vacc *right, size_t track) {
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin(); i != args.end();
          ++i) {
     (*i)->outside_uppropagate_indices(left, right, track);
@@ -145,17 +152,21 @@ void Alt::Simple::outside_uppropagate_indices(Expr::Vacc *left, Expr::Vacc *righ
     right_indices[track] = right;
   }
 }
-void Alt::Link::outside_uppropagate_indices(Expr::Vacc *left, Expr::Vacc *right, size_t track) {
-  // Links point to grammar leaves and should already have left/right indices set in phase 2
+void Alt::Link::outside_uppropagate_indices(
+    Expr::Vacc *left, Expr::Vacc *right, size_t track) {
+  // Links point to grammar leaves and should already have left/right indices
+  // set in phase 2
   if (!this->nt->is_partof_outside()) {
     assert(this->left_indices[track]);
     assert(this->right_indices[track]);
   }
 }
-void Alt::Block::outside_uppropagate_indices(Expr::Vacc *left, Expr::Vacc *right, size_t track) {
+void Alt::Block::outside_uppropagate_indices(
+    Expr::Vacc *left, Expr::Vacc *right, size_t track) {
   assert(false);  // Alt::Block should have been resolved already
 }
-void Alt::Multi::outside_uppropagate_indices(Expr::Vacc *left, Expr::Vacc *right, size_t track) {
+void Alt::Multi::outside_uppropagate_indices(
+    Expr::Vacc *left, Expr::Vacc *right, size_t track) {
   size_t j = 0;
   assert(track < list.size());
   std::list<Base*>::iterator i = list.begin();
@@ -167,23 +178,35 @@ void Alt::Multi::outside_uppropagate_indices(Expr::Vacc *left, Expr::Vacc *right
   left_indices[track] = (*i)->get_left_index(0);
   right_indices[track] = (*i)->get_right_index(0);
 }
-void Fn_Arg::Base::outside_uppropagate_indices(Expr::Vacc *left, Expr::Vacc *right, size_t track) {}
-void Fn_Arg::Alt::outside_uppropagate_indices(Expr::Vacc *left, Expr::Vacc *right, size_t track) {
+void Fn_Arg::Base::outside_uppropagate_indices(
+    Expr::Vacc *left, Expr::Vacc *right, size_t track) {}
+void Fn_Arg::Alt::outside_uppropagate_indices(
+    Expr::Vacc *left, Expr::Vacc *right, size_t track) {
   alt->outside_uppropagate_indices(left, right, track);
   this->left_indices[track] = alt->get_left_index(track);
   this->right_indices[track] = alt->get_right_index(track);
 }
-void Fn_Arg::Const::outside_uppropagate_indices(Expr::Vacc *left, Expr::Vacc *right, size_t track) {}
+void Fn_Arg::Const::outside_uppropagate_indices(
+    Expr::Vacc *left, Expr::Vacc *right, size_t track) {}
 
-void iterate_indices(bool is_left_not_right, std::vector<Parser*> *parser, unsigned int &k, size_t track, unsigned int tracks, Expr::Base *next_var, Expr::Base *last_var, Expr::Vacc *upstream_index, Yield::Size ys_all) {
+void iterate_indices(bool is_left_not_right,
+                     std::vector<Parser*> *parser,
+                     unsigned int &k, size_t track,
+                     unsigned int tracks,
+                     Expr::Base *next_var,
+                     Expr::Base *last_var,
+                     Expr::Vacc *upstream_index,
+                     Yield::Size ys_all) {
   Yield::Size lhs;
-  for (std::vector<Parser*>::iterator i = parser->begin(); i != parser->end(); ++i) {
+  for (std::vector<Parser*>::iterator i = parser->begin();
+       i != parser->end(); ++i) {
     Yield::Size ys = (*i)->yield_size;
     Yield::Size rhs = sum_ys(*parser, std::next(i), parser->end(), track);
     Yield::Size rhs_ys(rhs);
     rhs_ys += ys;
 
-    next_var = Alt::next_index_var(k, track, next_var, last_var, upstream_index, ys, lhs, rhs, &((*i)->simple_loops));
+    next_var = Alt::next_index_var(k, track, next_var, last_var, upstream_index,
+                                   ys, lhs, rhs, &((*i)->simple_loops));
 
     // copy and paste from Alt::Simple::init_indices
     std::pair<Expr::Base*, Expr::Base*> res(0, 0);
@@ -252,7 +275,9 @@ void iterate_indices(bool is_left_not_right, std::vector<Parser*> *parser, unsig
   }
 }
 
-void outside_init_indices(Alt::Base *alt, Expr::Vacc *left, Expr::Vacc *right, unsigned int &k, size_t track) {
+void outside_init_indices(
+    Alt::Base *alt, Expr::Vacc *left, Expr::Vacc *right, unsigned int &k,
+    size_t track) {
   std::vector<Parser*> left_parser;
   std::vector<Parser*> right_parser;
   unsigned int num_outside_nts = 0;
@@ -260,40 +285,53 @@ void outside_init_indices(Alt::Base *alt, Expr::Vacc *left, Expr::Vacc *right, u
 //  //TODO(smj): how about has_index_overlay?!
 //  if (alt->is(Alt::SIMPLE)) {
 //    if (dynamic_cast<Alt::Simple*>(alt)->has_index_overlay()) {
-//      std::cerr << "hier hab ich den Salat " << *dynamic_cast<Alt::Simple*>(alt)->name << " ==========\n";
+//      std::cerr << "hier hab ich den Salat "
+//                << *dynamic_cast<Alt::Simple*>(alt)->name << " ==========\n";
 //    }
 //  }
 
-  // phase 1: traverse whole sub-tree of alternative (can include multiple levels) and collect
-  // all grammar components that "parse" subwords from the input (can be empty)
+  /* phase 1: traverse whole sub-tree of alternative (can include multiple
+   * levels) and collect
+   * all grammar components that "parse" subwords from the input (can
+   * be empty) */
   std::list<Statement::For *> loops;
   if (alt->is(Alt::SIMPLE)) {
     loops = dynamic_cast<Alt::Simple*>(alt)->loops;
   }
-  alt->outside_collect_parsers(left_parser, right_parser, num_outside_nts, track, loops);
+  alt->outside_collect_parsers(left_parser, right_parser, num_outside_nts,
+                               track, loops);
 
   // by design, there must be exactly one rhs outside NT in each alternative
   // only exception is the transition from outside to inside grammar parts
   assert(num_outside_nts == 1);
 
-  // phase 2: based on the collected Parsers, assign left and right indices to Parsers
-  // for grammar components LEFT of outside NT
-  Yield::Size ys_all = sum_ys(left_parser, left_parser.begin(), left_parser.end(), track);
-  Expr::Base *last_var = Alt::next_index_var(k, track, left, left, right, ys_all, Yield::Size(), ys_all, &loops);
+  // phase 2: based on the collected Parsers, assign left and right indices
+  // to Parsers for grammar components LEFT of outside NT
+  Yield::Size ys_all = sum_ys(left_parser, left_parser.begin(),
+                              left_parser.end(), track);
+  Expr::Base *last_var = Alt::next_index_var(k, track, left, left, right,
+                                             ys_all, Yield::Size(), ys_all,
+                                             &loops);
   Expr::Base *next_var = last_var;
-  iterate_indices(true, &left_parser, k, track, alt->multi_ys().tracks(), next_var, last_var, left, ys_all);
+  iterate_indices(true, &left_parser, k, track, alt->multi_ys().tracks(),
+                  next_var, last_var, left, ys_all);
   // for grammar components RIGHT of outside NT
   if (right_parser.size() > 0) {
-    ys_all = sum_ys(right_parser, right_parser.begin(), right_parser.end(), track);
-    last_var = Alt::next_index_var(k, track, right, last_var, right, ys_all, Yield::Size(), ys_all, &loops);
-    iterate_indices(false, &right_parser, k, track, alt->multi_ys().tracks(), next_var, last_var, right, ys_all);
+    ys_all = sum_ys(right_parser, right_parser.begin(), right_parser.end(),
+                    track);
+    last_var = Alt::next_index_var(k, track, right, last_var, right, ys_all,
+                                   Yield::Size(), ys_all, &loops);
+    iterate_indices(false, &right_parser, k, track, alt->multi_ys().tracks(),
+                    next_var, last_var, right, ys_all);
   }
 
   GetOutsideLink v = GetOutsideLink();
   alt->traverse(v);
-  if ((left_parser.size() == 0) && (right_parser.size() == 0) && v.outside_link) {
+  if ((left_parser.size() == 0) && (right_parser.size() == 0) &&
+      v.outside_link) {
     if (v.outside_link->is_outside_inside_transition()) {
-      v.outside_link->Base::init_indices(left->plus(right), right->minus(left), k, track);
+      v.outside_link->Base::init_indices(left->plus(right), right->minus(left),
+                                         k, track);
     } else {
       // must be a direct link to an non-terminal
       v.outside_link->Base::init_indices(left, right, k, track);
@@ -303,12 +341,15 @@ void outside_init_indices(Alt::Base *alt, Expr::Vacc *left, Expr::Vacc *right, u
   // Phase 3: propagate left/right indices from Parser towards the top
   alt->outside_uppropagate_indices(left, right, track);
 
-  // Phase 4: set left/right indices of outside NT to the top level left/right indices
-  v.outside_link->init_indices(alt->get_left_index(track), alt->get_right_index(track), k, track);
+  // Phase 4: set left/right indices of outside NT to the top level left/right
+  // indices
+  v.outside_link->init_indices(alt->get_left_index(track),
+                               alt->get_right_index(track), k, track);
 
   if (alt->is(Alt::SIMPLE)) {
-    dynamic_cast<Alt::Simple*>(alt)->loops.insert(dynamic_cast<Alt::Simple*>(alt)->loops.begin(), loops.begin(), loops.end());
+    dynamic_cast<Alt::Simple*>(alt)->loops.insert(
+        dynamic_cast<Alt::Simple*>(alt)->loops.begin(),
+        loops.begin(), loops.end());
   }
-
 }
 
