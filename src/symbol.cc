@@ -1215,6 +1215,8 @@ struct SetADPDisabled : public Visitor {
 };
 
 void Symbol::NT::codegen(AST &ast) {
+  std::list<Statement::Base*> stmts;
+
   // disable specialisation if needed in backtrace mode
   SetADPDisabled v = SetADPDisabled(ast.code_mode() == Code::Mode::BACKTRACK &&
     tabulated, ast.code_mode().keep_cooptimal());
@@ -1244,8 +1246,6 @@ void Symbol::NT::codegen(AST &ast) {
     f = new Fn_Def(dt, new std::string("nt_" + *name));
   }
   f->add_para(*this);
-
-  std::list<Statement::Base*> stmts;
 
   subopt_header(ast, score_code, f, stmts);
 

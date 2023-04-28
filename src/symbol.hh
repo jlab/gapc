@@ -129,6 +129,8 @@ class Base {
     Loc location;
     std::vector<Expr::Base*> left_indices;
     std::vector<Expr::Base*> right_indices;
+    std::vector<Expr::Base*> left_most_indices;
+    std::vector<Expr::Base*> right_most_indices;
     bool is(Type t) const {
       return type == t;
     }
