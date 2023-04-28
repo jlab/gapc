@@ -1071,9 +1071,57 @@ void Alt::Simple::reset() {
 Expr::Base *Alt::next_index_var(unsigned &k, size_t track,
   Expr::Base *next_var, Expr::Base *last_var, Expr::Base *right,
   const Yield::Size &ys, const Yield::Size &lhs, const Yield::Size &rhs,
-  std::list<Statement::For*> *loops) {
-  if (ys.low() != ys.high()) {
-    if (rhs.low() == rhs.high()) {
+  std::list<Statement::For*> *loops, bool for_outside_generation, bool outmost, bool is_left_not_right) {
+#ifdef LOOPDEBUG
+  std::cerr << "    next_index_var next_var=";
+  if (next_var) {
+    std::cerr << *next_var;
+  } else {
+    std::cerr << "NULL";
+  }
+  std::cerr << ", last_var=";
+  if (last_var) {
+    std::cerr << *last_var;
+  } else {
+    std::cerr << "NULL";
+  }
+  std::cerr << ", lhs=" << lhs;
+  std::cerr << ", ys=" << ys;
+  std::cerr << ", rhs=" << rhs;
+  std::cerr << ", outmost=" << (outmost ? "yes": "no");
+//std::cerr << "\n";
+#endif
+
+  /* only for outside NTs:
+   * If left/right of the rhs outside NT are grammar components with at least
+   * one moving boundary, we need to start leftmost/rightmost with a new
+   * loop variable t_x_k.
+   * Note that empty grammar components might occur on left/rightmost positions
+   * like LOC. Once we encounter these components, we already did increase k
+   * previously. Thus, it is not sufficient to "just" look at lhs, ys and rhs.
+   */
+  if (for_outside_generation &&
+      outmost &&
+       // nothing on the left, but moving boundary on the right
+      (((lhs.low() == 0) && (lhs.high() == 0) && (rhs.low() != rhs.high())) ||
+       // nothing on the right, but moving boundary on the left
+       ((rhs.low() == 0) && (rhs.high() == 0) && (lhs.low() != lhs.high()))
+      )
+     ) {
+    outmost = true;
+  } else {
+    outmost = false;
+  }
+
+#ifdef LOOPDEBUG
+  std::cerr << ", outmost_l2=" << (outmost ? "yes": "no");
+#endif
+
+  if ((ys.low() != ys.high()) || outmost) {
+    if ((rhs.low() == rhs.high()) && !outmost) {
+#ifdef LOOPDEBUG
+      std::cerr << " --> " << *right << "\n";
+#endif
       return right;
     } else {
       std::ostringstream o;
@@ -1081,13 +1129,23 @@ Expr::Base *Alt::next_index_var(unsigned &k, size_t track,
       k++;
       Expr::Vacc *ivar = new Expr::Vacc(new std::string(o.str()));
 
-      assert(lhs.low() == lhs.high());
+      // start generating for-loop
+      assert((lhs.low() == lhs.high()) || outmost);
       std::pair<Expr::Base*, Expr::Base*> index(0, 0);
 
       Yield::Size lhs_ys(lhs);
       lhs_ys += ys;
 
-      if (rhs.high() == Yield::UP) {
+      /* flip next/last variables for loops that belong to outside NTs and
+       * are right of the rhs outside NT, since we need to iterate towards the
+       * right end of the input sequence */
+      if (for_outside_generation && !is_left_not_right) {
+        Expr::Base* tmp = last_var;
+        last_var = right;
+        right = tmp;
+      }
+
+      if (outmost || (rhs.high() == Yield::UP)) {
         index.first = last_var->plus(lhs_ys.low());
       } else {
         // e.g. second maxsize filter in grammar/forloops5
@@ -1102,7 +1160,7 @@ Expr::Base *Alt::next_index_var(unsigned &k, size_t track,
 
       Expr::Base *cond = new Expr::Less_Eq(ivar, index.second);
       // e.g. first maxsize filter in grammar/forloops5
-      if (lhs_ys.high() < Yield::UP) {
+      if ((lhs_ys.high() < Yield::UP) && !outmost) {
         cond = new Expr::And(
           cond, new Expr::Less_Eq (ivar, last_var->plus(lhs_ys.high())));
       }
@@ -1115,9 +1173,21 @@ Expr::Base *Alt::next_index_var(unsigned &k, size_t track,
       Statement::For *f = new Statement::For (loopvariable, cond);
       loops->push_back(f);
 
+#ifdef LOOPDEBUG
+      std::cerr << " --> " << *ivar << "\n";
+#endif
       return ivar;
     }
   } else {
+#ifdef LOOPDEBUG
+    std::cerr << " --> ";
+    if (next_var) {
+      std::cerr << *next_var;
+    } else {
+      std::cerr << "NULL";
+    }
+    std::cerr << "\n";
+#endif
     return next_var;
   }
 }
@@ -1146,7 +1216,7 @@ void Alt::Simple::init_indices(
     rhs_ys += ys;
 
     next_var = next_index_var(
-      k, track, next_var, last_var, right, ys, lhs, rhs, &this->loops);
+      k, track, next_var, last_var, right, ys, lhs, rhs, &this->loops, false, false, false);
 
     std::pair<Expr::Base*, Expr::Base*> res(0, 0);
     if (lhs.low() == lhs.high()) {

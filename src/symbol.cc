@@ -743,20 +743,34 @@ bool Symbol::NT::is_inlineable() {
 }
 
 void Symbol::NT::init_indices(Expr::Vacc *left, Expr::Vacc *right,
-                              unsigned int &k, size_t track) {
+                              unsigned int &k, size_t track,
+                              Expr::Vacc *left_most, Expr::Vacc *right_most) {
   assert(track < left_indices.size());
   assert(left);
   assert(right);
 
   left_indices[track] = left;
   right_indices[track] = right;
-
+#ifdef LOOPDEBUG
+//  if (this->is_partof_outside()) {
+    std::cerr << "init_indices for NT " << *this->name << ": (left=" << *left << ", right=" << *right << ")\n";
+//  }
+#endif
   unsigned int c = 0;
   for (std::list<Alt::Base*>::iterator i = alts.begin();
        i != alts.end(); ++i, ++c) {
     if ((*i)->is_partof_outside()) {
-      outside_init_indices(*i, left, right, k, track);
+      outside_init_indices(*i, left, right, k, track, left_most, right_most);
     } else {
+#ifdef LOOPDEBUG
+      if ((*i)->is(Alt::SIMPLE)) {
+        std::cerr << "  alt::Simple '" << *(dynamic_cast<Alt::Simple*>(*i)->name) << "':\n";
+      } else if ((*i)->is(Alt::LINK)) {
+        std::cerr << "  alt::Link '" << *(dynamic_cast<Alt::Link*>(*i)->name) << "':\n";
+      } else {
+        std::cerr << "  alt '?':\n";
+      }
+#endif
       (*i)->init_indices(left, right, k, track);
     }
   }

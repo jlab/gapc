@@ -906,7 +906,7 @@ void Grammar::init_indices() {
       unsigned k = 0;
 
       // built up loops and boundaries to loop over inductively
-      (*i)->init_indices(l, r, k, idx);
+      (*i)->init_indices(l, r, k, idx, left_most, right_most);
     }
   }
 }

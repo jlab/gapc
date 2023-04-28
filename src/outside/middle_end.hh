@@ -52,8 +52,12 @@ class Parser {
   }
 };
 
-void outside_init_indices(Alt::Base *alt, Expr::Vacc *left, Expr::Vacc *right,
-                          unsigned int &k, size_t track);
+void outside_init_indices(
+    Alt::Base *alt,  // the top level alternative
+    Expr::Vacc *left, Expr::Vacc *right,  // indices of lhs NT
+    unsigned int &k, size_t track,
+    // left/right borders of user input
+    Expr::Vacc *left_most, Expr::Vacc *right_most);
 
 struct GetOutsideLink : public Visitor {
   Alt::Link *outside_link = nullptr;

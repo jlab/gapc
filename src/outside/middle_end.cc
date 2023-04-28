@@ -124,6 +124,8 @@ Yield::Size sum_ys(std::vector<Parser*> parser,
     std::vector<Parser*>::iterator itr_end,
     size_t track) {
   Yield::Size ys;
+  // don't risk undefined yield sizes!
+  ys.set(0, 0);
 
   for (std::vector<Parser*>::iterator i = itr_start;
        (i != parser.end()) && (i != itr_end); ++i) {
@@ -198,6 +200,7 @@ void iterate_indices(bool is_left_not_right,
                      Expr::Vacc *upstream_index,
                      Yield::Size ys_all) {
   Yield::Size lhs;
+  lhs.set(0, 0);
   for (std::vector<Parser*>::iterator i = parser->begin();
        i != parser->end(); ++i) {
     Yield::Size ys = (*i)->yield_size;
@@ -205,8 +208,11 @@ void iterate_indices(bool is_left_not_right,
     Yield::Size rhs_ys(rhs);
     rhs_ys += ys;
 
+#ifdef LOOPDEBUG
+  std::cerr << (is_left_not_right ? "2" : "4") << ") ";
+#endif
     next_var = Alt::next_index_var(k, track, next_var, last_var, upstream_index,
-                                   ys, lhs, rhs, &((*i)->simple_loops));
+                                   ys, lhs, rhs, &((*i)->simple_loops), true, false, is_left_not_right);
 
     // copy and paste from Alt::Simple::init_indices
     std::pair<Expr::Base*, Expr::Base*> res(0, 0);
@@ -277,7 +283,16 @@ void iterate_indices(bool is_left_not_right,
 
 void outside_init_indices(
     Alt::Base *alt, Expr::Vacc *left, Expr::Vacc *right, unsigned int &k,
-    size_t track) {
+    size_t track, Expr::Vacc *left_most, Expr::Vacc *right_most) {
+#ifdef LOOPDEBUG
+  if (alt->is(Alt::SIMPLE)) {
+    std::cerr << "  alt::Simple '" << *(dynamic_cast<Alt::Simple*>(alt)->name) << "':\n";
+  } else if (alt->is(Alt::LINK)) {
+    std::cerr << "  alt::Link '" << *(dynamic_cast<Alt::Link*>(alt)->name) << "':\n";
+  } else {
+    std::cerr << "  alt '?':\n";
+  }
+#endif
   std::vector<Parser*> left_parser;
   std::vector<Parser*> right_parser;
   unsigned int num_outside_nts = 0;
@@ -301,18 +316,29 @@ void outside_init_indices(
   // to Parsers for grammar components LEFT of outside NT
   Yield::Size ys_all = sum_ys(left_parser, left_parser.begin(),
                               left_parser.end(), track);
-  Expr::Base *last_var = Alt::next_index_var(k, track, left, left, right,
-                                             ys_all, Yield::Size(), ys_all,
-                                             &loops);
-  Expr::Base *next_var = last_var;
+#ifdef LOOPDEBUG
+  std::cerr << "1) ";
+#endif
+  Yield::Size ys_lhs = sum_ys(left_parser, left_parser.begin(), left_parser.begin(), track);
+  Yield::Size ys;
+  ys.set(0,0);
+  Expr::Base *next_var = Alt::next_index_var(k, track, left, left_most, left,
+                                             ys, ys_lhs, ys_all,
+                                             &loops, true, true, true);
+  Expr::Base *last_var = next_var;
   iterate_indices(true, &left_parser, k, track, alt->multi_ys().tracks(),
                   next_var, last_var, left, ys_all);
   // for grammar components RIGHT of outside NT
   if (right_parser.size() > 0) {
     ys_all = sum_ys(right_parser, right_parser.begin(), right_parser.end(),
                     track);
-    last_var = Alt::next_index_var(k, track, right, last_var, right, ys_all,
-                                   Yield::Size(), ys_all, &loops);
+#ifdef LOOPDEBUG
+  std::cerr << "3) ";
+#endif
+    Yield::Size ys_rhs = sum_ys(right_parser, right_parser.begin(), right_parser.begin(), track);
+    last_var = Alt::next_index_var(k, track, right, right_most, right,
+                                   ys, ys_all, ys_rhs,
+                                   &loops, true, true, false);
     iterate_indices(false, &right_parser, k, track, alt->multi_ys().tracks(),
                     next_var, last_var, right, ys_all);
   }
