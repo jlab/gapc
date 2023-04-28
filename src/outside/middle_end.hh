@@ -61,10 +61,16 @@ void outside_init_indices(
 
 struct GetOutsideLink : public Visitor {
   Alt::Link *outside_link = nullptr;
+  Fn_Arg::Alt *outside_fn_arg = nullptr;
 
   void visit(Alt::Link &a) {
     if (a.nt->is_partof_outside() || a.is_outside_inside_transition()) {
       this->outside_link = &a;
+    }
+  }
+  void visit_end(Fn_Arg::Alt &f) {
+    if (outside_link && !outside_fn_arg) {
+      this->outside_fn_arg = &f;
     }
   }
 };

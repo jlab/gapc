@@ -361,8 +361,13 @@ void outside_init_indices(
 
   // Phase 4: set left/right indices of outside NT to the top level left/right
   // indices
-  v.outside_link->init_indices(alt->get_left_index(track),
-                               alt->get_right_index(track), k, track);
+  if (v.outside_fn_arg) {
+    v.outside_fn_arg->init_indices(alt->get_left_index(track),
+                                   alt->get_right_index(track), k, track);
+  } else {
+    v.outside_link->init_indices(alt->get_left_index(track),
+                                 alt->get_right_index(track), k, track);
+  }
 
   if (alt->is(Alt::SIMPLE)) {
     dynamic_cast<Alt::Simple*>(alt)->loops.insert(
