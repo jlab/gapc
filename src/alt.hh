@@ -475,7 +475,8 @@ class Simple : public Base {
   void init_body(AST &ast);
   void init_guards();
   void init_outside_guards();
-  std::list<Statement::Base*> *add_guards(std::list<Statement::Base*> *stmts, bool add_outside_guards);
+  std::list<Statement::Base*> *add_guards(
+      std::list<Statement::Base*> *stmts, bool add_outside_guards);
   void codegen(AST &ast);
 
   void print_dot_edge(std::ostream &out, Symbol::NT &nt);

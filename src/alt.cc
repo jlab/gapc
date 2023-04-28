@@ -1071,7 +1071,8 @@ void Alt::Simple::reset() {
 Expr::Base *Alt::next_index_var(unsigned &k, size_t track,
   Expr::Base *next_var, Expr::Base *last_var, Expr::Base *right,
   const Yield::Size &ys, const Yield::Size &lhs, const Yield::Size &rhs,
-  std::list<Statement::For*> *loops, bool for_outside_generation, bool outmost, bool is_left_not_right) {
+  std::list<Statement::For*> *loops,
+  bool for_outside_generation, bool outmost, bool is_left_not_right) {
 #ifdef LOOPDEBUG
   std::cerr << "    next_index_var next_var=";
   if (next_var) {
@@ -1089,7 +1090,6 @@ Expr::Base *Alt::next_index_var(unsigned &k, size_t track,
   std::cerr << ", ys=" << ys;
   std::cerr << ", rhs=" << rhs;
   std::cerr << ", outmost=" << (outmost ? "yes": "no");
-//std::cerr << "\n";
 #endif
 
   /* only for outside NTs:
@@ -1216,7 +1216,8 @@ void Alt::Simple::init_indices(
     rhs_ys += ys;
 
     next_var = next_index_var(
-      k, track, next_var, last_var, right, ys, lhs, rhs, &this->loops, false, false, false);
+      k, track, next_var, last_var, right, ys, lhs, rhs,
+      &this->loops, false, false, false);
 
     std::pair<Expr::Base*, Expr::Base*> res(0, 0);
     if (lhs.low() == lhs.high()) {
@@ -1622,16 +1623,19 @@ void Alt::Simple::init_outside_guards() {
     this->traverse(v);
 
     // create conditions like
-    // if (((t_0_i >= (t_0_left_most + 6)) && ((t_0_j + 4) <= t_0_right_most))) {
+    // if (((t_0_i >= (t_0_left_most + 6)) &&
+    //     ((t_0_j + 4) <= t_0_right_most))) {
     l.push_back(
       new Expr::Greater_Eq(
           v.outside_link->nt->left_indices[track],
           v.outside_link->nt->left_most_indices[track]->plus(
-              sum_ys(left_parser, left_parser.begin(), left_parser.end(), track).low())));
+              sum_ys(left_parser, left_parser.begin(),
+                     left_parser.end(), track).low())));
     l.push_back(
       new Expr::Less_Eq(
           v.outside_link->nt->right_indices[track]->plus(
-              sum_ys(right_parser, right_parser.begin(), right_parser.end(), track).low()),
+              sum_ys(right_parser, right_parser.begin(),
+                     right_parser.end(), track).low()),
           v.outside_link->nt->right_most_indices[track]));
   }
 
@@ -1965,7 +1969,8 @@ std::list<Statement::Base*> *Alt::Simple::add_for_loops(
   return stmts;
 }
 
-std::list<Statement::Base*> *Alt::Simple::add_guards(std::list<Statement::Base*> *stmts, bool add_outside_guards) {
+std::list<Statement::Base*> *Alt::Simple::add_guards(
+    std::list<Statement::Base*> *stmts, bool add_outside_guards) {
   Statement::If *use_guards = guards;
   if (add_outside_guards) {
     use_guards = guards_outside;

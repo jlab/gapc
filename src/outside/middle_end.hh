@@ -80,4 +80,4 @@ struct GetOutsideLink : public Visitor {
   }
 };
 
-#endif /* SRC_OUTSIDE_MIDDLE_END_HH_ */
+#endif  // SRC_OUTSIDE_MIDDLE_END_HH_

@@ -211,8 +211,9 @@ void iterate_indices(bool is_left_not_right,
 #ifdef LOOPDEBUG
   std::cerr << (is_left_not_right ? "2" : "4") << ") ";
 #endif
-    next_var = Alt::next_index_var(k, track, next_var, last_var, upstream_index,
-                                   ys, lhs, rhs, &((*i)->simple_loops), true, false, is_left_not_right);
+    next_var = Alt::next_index_var(
+        k, track, next_var, last_var, upstream_index,
+        ys, lhs, rhs, &((*i)->simple_loops), true, false, is_left_not_right);
 
     // copy and paste from Alt::Simple::init_indices
     std::pair<Expr::Base*, Expr::Base*> res(0, 0);
@@ -286,9 +287,11 @@ void outside_init_indices(
     size_t track, Expr::Vacc *left_most, Expr::Vacc *right_most) {
 #ifdef LOOPDEBUG
   if (alt->is(Alt::SIMPLE)) {
-    std::cerr << "  alt::Simple '" << *(dynamic_cast<Alt::Simple*>(alt)->name) << "':\n";
+    std::cerr << "  alt::Simple '"
+              << *(dynamic_cast<Alt::Simple*>(alt)->name) << "':\n";
   } else if (alt->is(Alt::LINK)) {
-    std::cerr << "  alt::Link '" << *(dynamic_cast<Alt::Link*>(alt)->name) << "':\n";
+    std::cerr << "  alt::Link '"
+              << *(dynamic_cast<Alt::Link*>(alt)->name) << "':\n";
   } else {
     std::cerr << "  alt '?':\n";
   }
@@ -319,9 +322,10 @@ void outside_init_indices(
 #ifdef LOOPDEBUG
   std::cerr << "1) ";
 #endif
-  Yield::Size ys_lhs = sum_ys(left_parser, left_parser.begin(), left_parser.begin(), track);
+  Yield::Size ys_lhs = sum_ys(left_parser, left_parser.begin(),
+      left_parser.begin(), track);
   Yield::Size ys;
-  ys.set(0,0);
+  ys.set(0, 0);
   Expr::Base *next_var = Alt::next_index_var(k, track, left, left_most, left,
                                              ys, ys_lhs, ys_all,
                                              &loops, true, true, true);
@@ -335,7 +339,8 @@ void outside_init_indices(
 #ifdef LOOPDEBUG
   std::cerr << "3) ";
 #endif
-    Yield::Size ys_rhs = sum_ys(right_parser, right_parser.begin(), right_parser.begin(), track);
+    Yield::Size ys_rhs = sum_ys(right_parser, right_parser.begin(),
+        right_parser.begin(), track);
     last_var = Alt::next_index_var(k, track, right, right_most, right,
                                    ys, ys_all, ys_rhs,
                                    &loops, true, true, false);
