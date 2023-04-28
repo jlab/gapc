@@ -59,6 +59,11 @@ void outside_init_indices(
     // left/right borders of user input
     Expr::Vacc *left_most, Expr::Vacc *right_most);
 
+Yield::Size sum_ys(std::vector<Parser*> parser,
+    std::vector<Parser*>::iterator itr_start,
+    std::vector<Parser*>::iterator itr_end,
+    size_t track);
+
 struct GetOutsideLink : public Visitor {
   Alt::Link *outside_link = nullptr;
   Fn_Arg::Alt *outside_fn_arg = nullptr;
