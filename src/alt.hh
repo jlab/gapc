@@ -435,6 +435,7 @@ class Simple : public Base {
   std::list<Statement::Base*> body_stmts;
 
   Statement::If *guards;
+  Statement::If *guards_outside;
   void ret_decl_empty_block(Statement::If *stmt);
   void deep_erase_if_backtrace(
     Statement::If *stmt, std::vector<Fn_Arg::Base*>::iterator start,
@@ -473,6 +474,8 @@ class Simple : public Base {
   bool has_arg_list();
   void init_body(AST &ast);
   void init_guards();
+  void init_outside_guards();
+  std::list<Statement::Base*> *add_guards(std::list<Statement::Base*> *stmts, bool add_outside_guards);
   void codegen(AST &ast);
 
   void print_dot_edge(std::ostream &out, Symbol::NT &nt);

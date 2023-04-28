@@ -1602,6 +1602,45 @@ void Alt::Simple::init_guards() {
   ret_decl_empty_block(guards);
 }
 
+void Alt::Simple::init_outside_guards() {
+  std::list<Expr::Base*> l;
+  assert(m_ys.tracks() == left_indices.size());
+
+  size_t track = 0;
+  for (std::vector<Expr::Base*>::iterator i = left_indices.begin();
+       i != left_indices.end(); ++i, ++track) {
+    // obtain yield sizes for components left/right of outside NT
+    std::vector<Parser*> left_parser;
+    std::vector<Parser*> right_parser;
+    unsigned int num_outside_nts = 0;
+    std::list<Statement::For *> loops;
+    this->outside_collect_parsers(left_parser, right_parser, num_outside_nts,
+                                  track, loops);
+
+    // obtain outside NT
+    GetOutsideLink v = GetOutsideLink();
+    this->traverse(v);
+
+    // create conditions like
+    // if (((t_0_i >= (t_0_left_most + 6)) && ((t_0_j + 4) <= t_0_right_most))) {
+    l.push_back(
+      new Expr::Greater_Eq(
+          v.outside_link->nt->left_indices[track],
+          v.outside_link->nt->left_most_indices[track]->plus(
+              sum_ys(left_parser, left_parser.begin(), left_parser.end(), track).low())));
+    l.push_back(
+      new Expr::Less_Eq(
+          v.outside_link->nt->right_indices[track]->plus(
+              sum_ys(right_parser, right_parser.begin(), right_parser.end(), track).low()),
+          v.outside_link->nt->right_most_indices[track]));
+  }
+
+  Expr::Base *cond  = Expr::seq_to_tree<Expr::Base, Expr::And>(
+    l.begin(), l.end());
+
+  guards_outside = new Statement::If(cond);
+  ret_decl_empty_block(guards_outside);
+}
 
 void Alt::Base::push_back_ret_decl() {
   statements.push_back(ret_decl);
@@ -1926,6 +1965,27 @@ std::list<Statement::Base*> *Alt::Simple::add_for_loops(
   return stmts;
 }
 
+std::list<Statement::Base*> *Alt::Simple::add_guards(std::list<Statement::Base*> *stmts, bool add_outside_guards) {
+  Statement::If *use_guards = guards;
+  if (add_outside_guards) {
+    use_guards = guards_outside;
+  }
+  if (use_guards) {
+    stmts->push_back(use_guards);
+    if (datatype->simple()->is(::Type::LIST)) {
+      // only call finalize on hash lists
+      if (!ret_decl->rhs && adp_specialization == ADP_Mode::STANDARD) {
+        Statement::Fn_Call *f = new Statement::Fn_Call(
+          Statement::Fn_Call::FINALIZE);
+        f->add_arg(*ret_decl);
+        stmts->push_back(f);
+      }
+    }
+    stmts = &use_guards->then;
+  }
+  return stmts;
+}
+
 void Alt::Simple::codegen(AST &ast) {
   // std::cout << "-----------Simple IN" << std::endl;
 
@@ -1948,19 +2008,10 @@ void Alt::Simple::codegen(AST &ast) {
 
 
   init_guards();
-  if (guards) {
-    stmts->push_back(guards);
-    if (datatype->simple()->is(::Type::LIST)) {
-      // only call finalize on hash lists
-      if (!ret_decl->rhs && adp_specialization == ADP_Mode::STANDARD) {
-        Statement::Fn_Call *f = new Statement::Fn_Call(
-          Statement::Fn_Call::FINALIZE);
-        f->add_arg(*ret_decl);
-        stmts->push_back(f);
-      }
-    }
-    stmts = &guards->then;
+  if (this->is_partof_outside()) {
+    init_outside_guards();
   }
+  stmts = add_guards(stmts, this->is_partof_outside());
 
   init_filter_guards(ast);
 
@@ -2000,11 +2051,21 @@ void Alt::Simple::codegen(AST &ast) {
             }
         }
 
-  // add filter_guards
-  stmts = add_filter_guards(stmts, filter_guards);
+  if (this->is_partof_outside()) {
+    // add for loops for moving boundaries
+    stmts = add_for_loops(stmts, loops, has_index_overlay());
 
-  // add for loops for moving boundaries
-  stmts = add_for_loops(stmts, loops, has_index_overlay());
+    stmts = add_guards(stmts, false);
+
+    // add filter_guards
+    stmts = add_filter_guards(stmts, filter_guards);
+  } else {
+    // add filter_guards
+    stmts = add_filter_guards(stmts, filter_guards);
+
+    // add for loops for moving boundaries
+    stmts = add_for_loops(stmts, loops, has_index_overlay());
+  }
 
   add_subopt_guards(stmts, ast);
 
