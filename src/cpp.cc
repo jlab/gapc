@@ -545,6 +545,9 @@ void Printer::Cpp::print(const Statement::Block &stmt) {
   stream << indent() << "}" << endl;
 }
 
+void Printer::Cpp::print(const Statement::CustomeCode &stmt) {
+  stream << indent() << stmt.line_of_code;
+}
 
 void Printer::Cpp::print(const std::list<Type::Base*> &types,
                          const std::list<std::string*> &names) {
@@ -1854,6 +1857,9 @@ void Printer::Cpp::header(const AST &ast) {
     }
     if (ast.get_float_acc() > 0) {
             stream << "#define FLOAT_ACC " << ast.get_float_acc() << "\n";
+    }
+    if (ast.outside_generation()) {
+      stream << "#define OUTSIDE\n";
     }
 
     stream << "#define GAPC_CALL_STRING \"" << gapc_call_string << "\""

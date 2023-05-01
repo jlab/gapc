@@ -138,6 +138,9 @@ void Statement::Block::print(Printer::Base &p) const {
   p.print(*this);
 }
 
+void Statement::CustomeCode::print(Printer::Base &p) const {
+  p.print(*this);
+}
 
 Statement::Var_Assign::Var_Assign(Var_Decl &a)
   : Base(VAR_ASSIGN), op_(Expr::EQ), rhs(NULL) {

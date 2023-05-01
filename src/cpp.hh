@@ -144,6 +144,7 @@ class Cpp : public Base {
     void print(const Statement::Var_Assign &stmt);
     void print(const Statement::Fn_Call &stmt);
     void print(const Statement::Block &stmt);
+    void print(const Statement::CustomeCode &stmt);
     void print(const Statement::Backtrace_Decl &stmt);
     void print(const Statement::Backtrace_NT_Decl &stmt);
     void print(const Statement::Hash_Decl &stmt);
