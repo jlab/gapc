@@ -305,7 +305,7 @@ class AST {
 
   Printer::Checkpoint *checkpoint;
 
-  bool outside_generation() {
+  bool outside_generation() const {
     if (!outside_nt_list) {
       return false;
     }
@@ -314,7 +314,7 @@ class AST {
   void set_outside_nt_list(std::vector<std::string> *nts) {
     outside_nt_list = nts;
   }
-  const std::vector<std::string> *get_outside_nt_list() {
+  std::vector<std::string> *get_outside_nt_list() const {
     return this->outside_nt_list;
   }
 };
