@@ -905,11 +905,10 @@ void Grammar::init_indices() {
 
       unsigned k = 0;
 
-      if ((*i)->is_partof_outside()) {
-        // store names for left/right most input boundaries for outside NTs
-        (*i)->left_most_indices.push_back(left_most);
-        (*i)->right_most_indices.push_back(right_most);
-      }
+      // store names for left/right most input boundaries
+      (*i)->left_most_indices.push_back(left_most);
+      (*i)->right_most_indices.push_back(right_most);
+
       // built up loops and boundaries to loop over inductively
       (*i)->init_indices(l, r, k, idx, left_most, right_most);
     }
