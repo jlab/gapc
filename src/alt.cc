@@ -1617,6 +1617,15 @@ void Alt::Simple::init_outside_guards() {
     std::list<Statement::For *> loops;
     this->outside_collect_parsers(left_parser, right_parser, num_outside_nts,
                                   track, loops);
+    if (num_outside_nts != 1) {
+      /* we branched into a pure inside context, this will always happen if
+       * where an inside production uses multiple non terminals on its rhs, e.g.
+       * an inside rule like struct = cadd(dangle, struct) will lead to two
+       * outside rules: outside_dangle = cadd(outside_struct, struct) and
+       *                outside_struct = cadd(dangle, outside_struct)
+       * which hold inside and outside parts. */
+      continue;
+    }
 
     // obtain outside NT
     GetOutsideLink v = GetOutsideLink();
@@ -1639,11 +1648,15 @@ void Alt::Simple::init_outside_guards() {
           v.outside_link->nt->right_most_indices[track]));
   }
 
-  Expr::Base *cond  = Expr::seq_to_tree<Expr::Base, Expr::And>(
-    l.begin(), l.end());
+  // only create guards for outside situations, but not for inside parts in an
+  // outside context. See above comment.
+  if (l.size() > 0) {
+    Expr::Base *cond  = Expr::seq_to_tree<Expr::Base, Expr::And>(
+      l.begin(), l.end());
 
-  guards_outside = new Statement::If(cond);
-  ret_decl_empty_block(guards_outside);
+    guards_outside = new Statement::If(cond);
+    ret_decl_empty_block(guards_outside);
+  }
 }
 
 void Alt::Base::push_back_ret_decl() {
