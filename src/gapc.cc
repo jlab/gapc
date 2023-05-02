@@ -645,7 +645,6 @@ class Main {
     }
 
     grammar->init_indices();
-
     grammar->init_decls();
     // for cyk (ordering of NT for parsing, see page 101 of the thesis)
     grammar->dep_analysis();
