@@ -35,18 +35,21 @@ std::list<Symbol::NT*> *NTs_to_report(const AST &ast) {
   std::list<Symbol::NT*> *report_nts = new std::list<Symbol::NT*>();
 
   // iterate through user arguments
-  for (std::vector<std::string>::const_iterator name_param = ast.get_outside_nt_list()->begin();
+  for (std::vector<std::string>::const_iterator name_param =
+       ast.get_outside_nt_list()->begin();
       name_param != ast.get_outside_nt_list()->end(); ++name_param) {
     if (name_param->compare(OUTSIDE_ALL) == 0) {
       // edge case: user requested to report ALL non terminals, by providing the
       // keyword "ALL"
-      for (std::list<Symbol::NT*>::const_iterator i = ast.grammar()->nts().begin(); i != ast.grammar()->nts().end(); ++i) {
+      for (std::list<Symbol::NT*>::const_iterator i =
+           ast.grammar()->nts().begin(); i != ast.grammar()->nts().end(); ++i) {
         // skip outside NTs
         if ((*i)->is_partof_outside()) {
           continue;
         }
         bool already_in = false;
-        for (std::list<Symbol::NT*>::iterator rnt = report_nts->begin(); rnt != report_nts->end(); ++rnt) {
+        for (std::list<Symbol::NT*>::iterator rnt = report_nts->begin();
+             rnt != report_nts->end(); ++rnt) {
           if (*rnt == *i) {
             already_in = true;
             break;
@@ -57,20 +60,27 @@ std::list<Symbol::NT*> *NTs_to_report(const AST &ast) {
         }
       }
     } else {
-      report_nts->push_back(dynamic_cast<Symbol::NT*>(ast.grammar()->NTs.find(*name_param)->second));
+      report_nts->push_back(dynamic_cast<Symbol::NT*>(
+          ast.grammar()->NTs.find(*name_param)->second));
     }
   }
 
   std::list<Symbol::NT*> nts_no_outside;
-  for (std::list<Symbol::NT*>::iterator i = report_nts->begin(); i != report_nts->end(); ++i) {
-    hashtable<std::string, Symbol::Base*>::iterator outside = ast.grammar()->NTs.find(OUTSIDE_NT_PREFIX + *(*i)->name);
+  for (std::list<Symbol::NT*>::iterator i = report_nts->begin();
+       i != report_nts->end(); ++i) {
+    hashtable<std::string, Symbol::Base*>::iterator outside =
+        ast.grammar()->NTs.find(OUTSIDE_NT_PREFIX + *(*i)->name);
     if (outside == ast.grammar()->NTs.end()) {
       nts_no_outside.push_back(*i);
     }
   }
   if (nts_no_outside.size() > 0) {
-    std::string msg = "Outside generation of your grammar will NOT lead to outside versions of the following " + std::to_string(nts_no_outside.size()) + " non-terminals: ";
-    for (std::list<Symbol::NT*>::iterator i = nts_no_outside.begin(); i != nts_no_outside.end(); ++i) {
+    std::string msg = "Outside generation of your grammar will NOT lead to out"
+                      "side versions of the following " +
+                      std::to_string(nts_no_outside.size()) +
+                      " non-terminals: ";
+    for (std::list<Symbol::NT*>::iterator i = nts_no_outside.begin();
+         i != nts_no_outside.end(); ++i) {
       msg += *(*i)->name;
       if (i != std::next(nts_no_outside.end())) {
         msg += ", ";
@@ -90,8 +100,9 @@ void print_insideoutside_report_fn(Printer::Cpp &stream, const AST &ast) {
 
   std::list<Symbol::NT*> *report_nts = NTs_to_report(ast);
 
-  Fn_Def *fn = new Fn_Def(new Type::RealVoid(), new std::string("report_insideoutside"));
-  //fn->set
+  Fn_Def *fn = new Fn_Def(new Type::RealVoid(), new std::string(
+      "report_insideoutside"));
+  // fn->set
   // a hacky way to "inject" the non constant "std::ostream &out" parameter
   // into the function
   Type::TupleDef *t2 = new Type::TupleDef(Loc());
@@ -99,12 +110,14 @@ void print_insideoutside_report_fn(Printer::Cpp &stream, const AST &ast) {
   fn->add_para(t2, new std::string("&out"));
 
 
-  for (std::list<Symbol::NT*>::iterator i = report_nts->begin(); i != report_nts->end(); ++i) {
+  for (std::list<Symbol::NT*>::iterator i = report_nts->begin();
+       i != report_nts->end(); ++i) {
     // do the same for inside and outside version of NT
     for (unsigned int inout = 0; inout <= 1; ++inout) {
       Symbol::NT *nt = (*i);
       if (inout == 1) {
-        hashtable<std::string, Symbol::Base*>::iterator outside_nt = ast.grammar()->NTs.find(OUTSIDE_NT_PREFIX + *nt->name);
+        hashtable<std::string, Symbol::Base*>::iterator outside_nt =
+            ast.grammar()->NTs.find(OUTSIDE_NT_PREFIX + *nt->name);
         if (outside_nt != ast.grammar()->NTs.end()) {
           nt = dynamic_cast<Symbol::NT*>(outside_nt->second);
         } else {
@@ -113,41 +126,50 @@ void print_insideoutside_report_fn(Printer::Cpp &stream, const AST &ast) {
       }
 
       Expr::Fn_Call *fn_nt = new Expr::Fn_Call((nt->code()->name));
-      //Expr::Fn_Call *fn_report = new Expr::Fn_Call(new std::string("outside_report_answer"));
 
       // build up loops. For example:
-      //  for (unsigned int t_0_i = t_0_left_most; t_0_i <= t_0_right_most; ++t_0_i) {
-      //    for (unsigned int t_0_j = t_0_i; t_0_j <= t_0_right_most; ++t_0_j) {
+      //  for (unsigned int t_0_i = t_0_left_most;
+      //       t_0_i <= t_0_right_most; ++t_0_i) {
+      //    for (unsigned int t_0_j = t_0_i;
+      //         t_0_j <= t_0_right_most; ++t_0_j) {
       std::list<Statement::For*> *loops = new std::list<Statement::For*>();
       std::vector<std::string*> *idx = new std::vector<std::string*>();
       for (size_t track = nt->track_pos(); track < nt->tracks(); ++track) {
         Statement::Var_Decl *loopvariable = new Statement::Var_Decl(
-          new ::Type::Size(), nt->left_indices[track], nt->left_most_indices[track]);
+          new ::Type::Size(), nt->left_indices[track],
+                              nt->left_most_indices[track]);
         loopvariable->set_itr(true);
-        Expr::Less_Eq *cond = new Expr::Less_Eq(nt->left_indices[track], nt->right_most_indices[track]);
+        Expr::Less_Eq *cond = new Expr::Less_Eq(nt->left_indices[track],
+                                                nt->right_most_indices[track]);
         loops->push_back(new Statement::For(loopvariable, cond));
         fn_nt->add_arg(nt->left_indices[track]);
         idx->push_back(nt->left_indices[track]->vacc()->name());
 
         loopvariable = new Statement::Var_Decl(
-          new ::Type::Size(), nt->right_indices[track], nt->left_indices[track]);
+          new ::Type::Size(), nt->right_indices[track],
+                              nt->left_indices[track]);
         loopvariable->set_itr(true);
-        cond = new Expr::Less_Eq(nt->right_indices[track], nt->right_most_indices[track]);
+        cond = new Expr::Less_Eq(nt->right_indices[track],
+                                 nt->right_most_indices[track]);
         loops->push_back(new Statement::For(loopvariable, cond));
         fn_nt->add_arg(nt->right_indices[track]);
         idx->push_back(nt->right_indices[track]->vacc()->name());
       }
 
       std::string idx_param = "";
-      for (std::vector<std::string*>::iterator i_idx = idx->begin(); i_idx != idx->end(); ++i_idx) {
+      for (std::vector<std::string*>::iterator i_idx = idx->begin();
+           i_idx != idx->end(); ++i_idx) {
         idx_param += " << " + *(*i_idx) + " << ";
         if (std::next(i_idx) != idx->end()) {
           idx_param += "\",\"";
         }
       }
-      (*loops->rbegin())->statements.push_back(new Statement::CustomeCode("out << \"start answers " + *nt->name + "(\"" + idx_param + "\"):\\n\";"));
+      (*loops->rbegin())->statements.push_back(new Statement::CustomeCode(
+          "out << \"start answers " + *nt->name + "(\"" + idx_param +
+          "\"):\\n\";"));
 
-      Statement::Var_Decl *res = new Statement::Var_Decl(nt->return_decl().type, "res_" + *nt->name, fn_nt);
+      Statement::Var_Decl *res = new Statement::Var_Decl(
+          nt->return_decl().type, "res_" + *nt->name, fn_nt);
       (*loops->rbegin())->statements.push_back(res);
 
       // produce call of "print_result"
@@ -161,9 +183,11 @@ void print_insideoutside_report_fn(Printer::Cpp &stream, const AST &ast) {
       // add outmost for loop into body of report function
       fn->stmts.push_back(*loops->begin());
 
-      // produce: out << "//end answers outside_iloop(" << t_0_i << "," << t_0_j << ")\n";
-      (*loops->rbegin())->statements.push_back(new Statement::CustomeCode("out << \"//end answers " + *nt->name + "(\"" + idx_param + "\")\\n\";"));
-
+      // produce: out << "//end answers outside_iloop(" << t_0_i << ","
+      //              << t_0_j << ")\n";
+      (*loops->rbegin())->statements.push_back(new Statement::CustomeCode(
+          "out << \"//end answers " + *nt->name + "(\"" + idx_param +
+          "\")\\n\";"));
     }
   }
   stream << *fn << "\n";

@@ -24,13 +24,16 @@
 #ifndef SRC_OUTSIDE_CODEGEN_HH_
 #define SRC_OUTSIDE_CODEGEN_HH_
 
+#include <list>
+#include <vector>
+#include <string>
+
 #include "../ast.hh"
 #include "../printer.hh"
 #include "../cpp.hh"
 #include "../statement_fwd.hh"
 #include "../expr.hh"
 #include "../fn_def.hh"
-#include "../statement_fwd.hh"
 #include "../statement/fn_call.hh"
 #include "grammar_transformation.hh"
 
