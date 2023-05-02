@@ -499,6 +499,10 @@ bool Grammar::check_semantic() {
   // check that all NTs requested by the user are actually part of the grammar
   this->check_outside_requested_nonexisting_nts();
 
+  // warn user about manual overlays that probably lead to wrong results when
+  // outside grammar generation is requested
+  this->check_overlays_exists();
+
   return r;
 }
 
@@ -901,8 +905,12 @@ void Grammar::init_indices() {
 
       unsigned k = 0;
 
+      // store names for left/right most input boundaries
+      (*i)->left_most_indices.push_back(left_most);
+      (*i)->right_most_indices.push_back(right_most);
+
       // built up loops and boundaries to loop over inductively
-      (*i)->init_indices(l, r, k, idx);
+      (*i)->init_indices(l, r, k, idx, left_most, right_most);
     }
   }
 }

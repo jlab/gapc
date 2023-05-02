@@ -129,6 +129,8 @@ class Base {
     Loc location;
     std::vector<Expr::Base*> left_indices;
     std::vector<Expr::Base*> right_indices;
+    std::vector<Expr::Base*> left_most_indices;
+    std::vector<Expr::Base*> right_most_indices;
     bool is(Type t) const {
       return type == t;
     }
@@ -438,9 +440,11 @@ class NT : public Base {
     void inline_nts(Grammar *grammar);
     bool is_inlineable();
 
-    void init_indices(Expr::Vacc *left, Expr::Vacc *right,
-    unsigned int &k, size_t track);
-
+    void init_indices(
+        Expr::Vacc *left, Expr::Vacc *right,
+        unsigned int &k, size_t track,
+        // pass left/right user input borders for outside NTs
+        Expr::Vacc *left_most, Expr::Vacc *right_most);
 
     void gen_ys_guards(std::list<Expr::Base*> &ors) const;
     void init_guards(Code::Mode mode);

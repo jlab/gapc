@@ -33,6 +33,8 @@
 
 namespace Type { class Base; }
 
+std::list<Expr::Base*> *sync_ntparams(const std::list<Para_Decl::Base*> &args);
+
 namespace Expr {
 class New : public Base {
  private:

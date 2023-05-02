@@ -46,6 +46,7 @@
 
 #include "type/backtrace.hh"
 #include "alt.hh"
+#include "outside/middle_end.hh"
 
 
 Symbol::Base::Base(std::string *n, Type t, const Loc &l)
@@ -742,16 +743,38 @@ bool Symbol::NT::is_inlineable() {
 }
 
 void Symbol::NT::init_indices(Expr::Vacc *left, Expr::Vacc *right,
-                              unsigned int &k, size_t track) {
+                              unsigned int &k, size_t track,
+                              Expr::Vacc *left_most, Expr::Vacc *right_most) {
   assert(track < left_indices.size());
   assert(left);
   assert(right);
 
   left_indices[track] = left;
   right_indices[track] = right;
-
-  for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i)
-    (*i)->init_indices(left, right, k, track);
+#ifdef LOOPDEBUG
+    std::cerr << "init_indices for NT " << *this->name
+              << ": (left=" << *left << ", right=" << *right << ")\n";
+#endif
+  unsigned int c = 0;
+  for (std::list<Alt::Base*>::iterator i = alts.begin();
+       i != alts.end(); ++i, ++c) {
+    if ((*i)->is_partof_outside()) {
+      outside_init_indices(*i, left, right, k, track, left_most, right_most);
+    } else {
+#ifdef LOOPDEBUG
+      if ((*i)->is(Alt::SIMPLE)) {
+        std::cerr << "  alt::Simple '"
+                  << *(dynamic_cast<Alt::Simple*>(*i)->name) << "':\n";
+      } else if ((*i)->is(Alt::LINK)) {
+        std::cerr << "  alt::Link '"
+                  << *(dynamic_cast<Alt::Link*>(*i)->name) << "':\n";
+      } else {
+        std::cerr << "  alt '?':\n";
+      }
+#endif
+      (*i)->init_indices(left, right, k, track);
+    }
+  }
 }
 
 Statement::Base *Symbol::NT::build_return_empty(const Code::Mode &mode) {
@@ -1193,6 +1216,8 @@ struct SetADPDisabled : public Visitor {
 };
 
 void Symbol::NT::codegen(AST &ast) {
+  std::list<Statement::Base*> stmts;
+
   // disable specialisation if needed in backtrace mode
   SetADPDisabled v = SetADPDisabled(ast.code_mode() == Code::Mode::BACKTRACK &&
     tabulated, ast.code_mode().keep_cooptimal());
@@ -1222,8 +1247,6 @@ void Symbol::NT::codegen(AST &ast) {
     f = new Fn_Def(dt, new std::string("nt_" + *name));
   }
   f->add_para(*this);
-
-  std::list<Statement::Base*> stmts;
 
   subopt_header(ast, score_code, f, stmts);
 

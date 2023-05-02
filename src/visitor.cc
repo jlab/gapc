@@ -47,5 +47,6 @@ void Visitor::visit_end(Alt::Multi &a) {}
 void Visitor::visit(Fn_Arg::Base &f) {}
 void Visitor::visit(Fn_Arg::Const &f) {}
 void Visitor::visit(Fn_Arg::Alt &f) {}
+void Visitor::visit_end(Fn_Arg::Alt &f) {}
 
 void Visitor::visit_end(Grammar &g) {}

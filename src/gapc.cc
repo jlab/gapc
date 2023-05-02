@@ -53,6 +53,7 @@
 #include "printer/gap.hh"
 #include "specialize_grammar/create_specialized_grammar.hh"
 #include "outside/grammar_transformation.hh"
+#include "outside/codegen.hh"
 
 namespace po = boost::program_options;
 
@@ -697,6 +698,9 @@ class Main {
     hh.footer(driver.ast);
     hh.end_fwd_decls();
     hh.header_footer(driver.ast);
+    if (driver.ast.outside_generation()) {
+      print_insideoutside_report_fn(hh, driver.ast);
+    }
 
     // Write out the C++ implementation file of the
     // compile-result.

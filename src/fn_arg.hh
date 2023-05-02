@@ -42,6 +42,7 @@
 #include "expr_fwd.hh"
 #include "statement_fwd.hh"
 #include "type_fwd.hh"
+#include "outside/middle_end.hh"
 
 
 class Visitor;
@@ -155,6 +156,14 @@ class Base {
     void set_partof_outside() {
       _is_partof_outside = true;
     }
+    virtual void outside_collect_parsers(
+        std::vector<Parser*> &left_parsers,
+        std::vector<Parser*> &right_parsers,
+        unsigned int &num_outside_nts,
+        size_t track,
+        std::list<Statement::For*> &simple_loops);
+    virtual void outside_uppropagate_indices(
+        Expr::Vacc *left, Expr::Vacc *right, size_t track);
 };
 
 
@@ -204,6 +213,14 @@ class Alt : public Base {
 
     void init_ret_decl(unsigned int i, const std::string &prefix);
     bool choice_set();
+
+    void outside_collect_parsers(std::vector<Parser*> &left_parsers,
+                                 std::vector<Parser*> &right_parsers,
+                                 unsigned int &num_outside_nts,
+                                 size_t track,
+                                 std::list<Statement::For*> &simple_loops);
+    void outside_uppropagate_indices(
+        Expr::Vacc *left, Expr::Vacc *right, size_t track);
 };
 
 
@@ -255,6 +272,13 @@ class Const : public Base {
 
     void init_multi_ys();
     bool choice_set();
+    void outside_collect_parsers(std::vector<Parser*> &left_parsers,
+                                 std::vector<Parser*> &right_parsers,
+                                 unsigned int &num_outside_nts,
+                                 size_t track,
+                                 std::list<Statement::For*> &simple_loops);
+    void outside_uppropagate_indices(
+        Expr::Vacc *left, Expr::Vacc *right, size_t track);
 };
 }  // namespace Fn_Arg
 

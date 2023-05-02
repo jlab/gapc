@@ -1068,11 +1068,60 @@ void Alt::Simple::reset() {
 // by local ys-guards
 
 
-Expr::Base *Alt::Simple::next_index_var(unsigned &k, size_t track,
+Expr::Base *Alt::next_index_var(unsigned &k, size_t track,
   Expr::Base *next_var, Expr::Base *last_var, Expr::Base *right,
-  const Yield::Size &ys, const Yield::Size &lhs, const Yield::Size &rhs) {
-  if (ys.low() != ys.high()) {
-    if (rhs.low() == rhs.high()) {
+  const Yield::Size &ys, const Yield::Size &lhs, const Yield::Size &rhs,
+  std::list<Statement::For*> *loops,
+  bool for_outside_generation, bool outmost, bool is_left_not_right) {
+#ifdef LOOPDEBUG
+  std::cerr << "    next_index_var next_var=";
+  if (next_var) {
+    std::cerr << *next_var;
+  } else {
+    std::cerr << "NULL";
+  }
+  std::cerr << ", last_var=";
+  if (last_var) {
+    std::cerr << *last_var;
+  } else {
+    std::cerr << "NULL";
+  }
+  std::cerr << ", lhs=" << lhs;
+  std::cerr << ", ys=" << ys;
+  std::cerr << ", rhs=" << rhs;
+  std::cerr << ", outmost=" << (outmost ? "yes": "no");
+#endif
+
+  /* only for outside NTs:
+   * If left/right of the rhs outside NT are grammar components with at least
+   * one moving boundary, we need to start leftmost/rightmost with a new
+   * loop variable t_x_k.
+   * Note that empty grammar components might occur on left/rightmost positions
+   * like LOC. Once we encounter these components, we already did increase k
+   * previously. Thus, it is not sufficient to "just" look at lhs, ys and rhs.
+   */
+  if (for_outside_generation &&
+      outmost &&
+       // nothing on the left, but moving boundary on the right
+      (((lhs.low() == 0) && (lhs.high() == 0) && (rhs.low() != rhs.high())) ||
+       // nothing on the right, but moving boundary on the left
+       ((rhs.low() == 0) && (rhs.high() == 0) && (lhs.low() != lhs.high()))
+      )
+     ) {
+    outmost = true;
+  } else {
+    outmost = false;
+  }
+
+#ifdef LOOPDEBUG
+  std::cerr << ", outmost_l2=" << (outmost ? "yes": "no");
+#endif
+
+  if ((ys.low() != ys.high()) || outmost) {
+    if ((rhs.low() == rhs.high()) && !outmost) {
+#ifdef LOOPDEBUG
+      std::cerr << " --> " << *right << "\n";
+#endif
       return right;
     } else {
       std::ostringstream o;
@@ -1080,13 +1129,23 @@ Expr::Base *Alt::Simple::next_index_var(unsigned &k, size_t track,
       k++;
       Expr::Vacc *ivar = new Expr::Vacc(new std::string(o.str()));
 
-      assert(lhs.low() == lhs.high());
+      // start generating for-loop
+      assert((lhs.low() == lhs.high()) || outmost);
       std::pair<Expr::Base*, Expr::Base*> index(0, 0);
 
       Yield::Size lhs_ys(lhs);
       lhs_ys += ys;
 
-      if (rhs.high() == Yield::UP) {
+      /* flip next/last variables for loops that belong to outside NTs and
+       * are right of the rhs outside NT, since we need to iterate towards the
+       * right end of the input sequence */
+      if (for_outside_generation && !is_left_not_right) {
+        Expr::Base* tmp = last_var;
+        last_var = right;
+        right = tmp;
+      }
+
+      if (outmost || (rhs.high() == Yield::UP)) {
         index.first = last_var->plus(lhs_ys.low());
       } else {
         // e.g. second maxsize filter in grammar/forloops5
@@ -1101,7 +1160,7 @@ Expr::Base *Alt::Simple::next_index_var(unsigned &k, size_t track,
 
       Expr::Base *cond = new Expr::Less_Eq(ivar, index.second);
       // e.g. first maxsize filter in grammar/forloops5
-      if (lhs_ys.high() < Yield::UP) {
+      if ((lhs_ys.high() < Yield::UP) && !outmost) {
         cond = new Expr::And(
           cond, new Expr::Less_Eq (ivar, last_var->plus(lhs_ys.high())));
       }
@@ -1112,10 +1171,23 @@ Expr::Base *Alt::Simple::next_index_var(unsigned &k, size_t track,
       // such that it won't have a trailing indent for code generation
       loopvariable->set_itr(true);
       Statement::For *f = new Statement::For (loopvariable, cond);
-      loops.push_back(f);
+      loops->push_back(f);
+
+#ifdef LOOPDEBUG
+      std::cerr << " --> " << *ivar << "\n";
+#endif
       return ivar;
     }
   } else {
+#ifdef LOOPDEBUG
+    std::cerr << " --> ";
+    if (next_var) {
+      std::cerr << *next_var;
+    } else {
+      std::cerr << "NULL";
+    }
+    std::cerr << "\n";
+#endif
     return next_var;
   }
 }
@@ -1144,7 +1216,8 @@ void Alt::Simple::init_indices(
     rhs_ys += ys;
 
     next_var = next_index_var(
-      k, track, next_var, last_var, right, ys, lhs, rhs);
+      k, track, next_var, last_var, right, ys, lhs, rhs,
+      &this->loops, false, false, false);
 
     std::pair<Expr::Base*, Expr::Base*> res(0, 0);
     if (lhs.low() == lhs.high()) {
@@ -1854,6 +1927,28 @@ std::list<Statement::Base*> *Alt::Simple::add_for_loops(
   return stmts;
 }
 
+std::list<Statement::Base*> *Alt::Simple::add_guards(
+    std::list<Statement::Base*> *stmts, bool add_outside_guards) {
+  Statement::If *use_guards = guards;
+  if (add_outside_guards) {
+    use_guards = guards_outside;
+  }
+  if (use_guards) {
+    stmts->push_back(use_guards);
+    if (datatype->simple()->is(::Type::LIST)) {
+      // only call finalize on hash lists
+      if (!ret_decl->rhs && adp_specialization == ADP_Mode::STANDARD) {
+        Statement::Fn_Call *f = new Statement::Fn_Call(
+          Statement::Fn_Call::FINALIZE);
+        f->add_arg(*ret_decl);
+        stmts->push_back(f);
+      }
+    }
+    stmts = &use_guards->then;
+  }
+  return stmts;
+}
+
 void Alt::Simple::codegen(AST &ast) {
   // std::cout << "-----------Simple IN" << std::endl;
 
@@ -1876,19 +1971,10 @@ void Alt::Simple::codegen(AST &ast) {
 
 
   init_guards();
-  if (guards) {
-    stmts->push_back(guards);
-    if (datatype->simple()->is(::Type::LIST)) {
-      // only call finalize on hash lists
-      if (!ret_decl->rhs && adp_specialization == ADP_Mode::STANDARD) {
-        Statement::Fn_Call *f = new Statement::Fn_Call(
-          Statement::Fn_Call::FINALIZE);
-        f->add_arg(*ret_decl);
-        stmts->push_back(f);
-      }
-    }
-    stmts = &guards->then;
+  if (this->is_partof_outside()) {
+    init_outside_guards();
   }
+  stmts = add_guards(stmts, this->is_partof_outside());
 
   init_filter_guards(ast);
 
@@ -1928,11 +2014,21 @@ void Alt::Simple::codegen(AST &ast) {
             }
         }
 
-  // add filter_guards
-  stmts = add_filter_guards(stmts, filter_guards);
+  if (this->is_partof_outside()) {
+    // add for loops for moving boundaries
+    stmts = add_for_loops(stmts, loops, has_index_overlay());
 
-  // add for loops for moving boundaries
-  stmts = add_for_loops(stmts, loops, has_index_overlay());
+    stmts = add_guards(stmts, false);
+
+    // add filter_guards
+    stmts = add_filter_guards(stmts, filter_guards);
+  } else {
+    // add filter_guards
+    stmts = add_filter_guards(stmts, filter_guards);
+
+    // add for loops for moving boundaries
+    stmts = add_for_loops(stmts, loops, has_index_overlay());
+  }
 
   add_subopt_guards(stmts, ast);
 
