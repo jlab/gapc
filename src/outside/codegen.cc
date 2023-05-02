@@ -168,7 +168,7 @@ void print_insideoutside_report_fn(Printer::Cpp &stream, const AST &ast) {
       fn->stmts.push_back(*loops->begin());
 
       // produce: out << "//end answers outside_iloop(" << t_0_i << "," << t_0_j << ")\n";
-      (*loops->rbegin())->statements.push_back(new Statement::CustomeCode("out << \"//end answers " + *nt->name + "(\"" + idx_param + "\"):\\n\";"));
+      (*loops->rbegin())->statements.push_back(new Statement::CustomeCode("out << \"//end answers " + *nt->name + "(\"" + idx_param + "\")\\n\";"));
 
     }
   }
