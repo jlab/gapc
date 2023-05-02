@@ -27,6 +27,12 @@
 #include "../ast.hh"
 #include "../printer.hh"
 #include "../cpp.hh"
+#include "../statement_fwd.hh"
+#include "../expr.hh"
+#include "../fn_def.hh"
+#include "../statement_fwd.hh"
+#include "../statement/fn_call.hh"
+#include "grammar_transformation.hh"
 
 void print_insideoutside_report_fn(Printer::Cpp &stream, const AST &ast);
 

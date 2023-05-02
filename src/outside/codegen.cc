@@ -22,13 +22,7 @@
 }}} */
 
 #include "codegen.hh"
-#include "../statement_fwd.hh"
-#include "../expr.hh"
-#include "../fn_def.hh"
-#include "../statement_fwd.hh"
-#include "../statement/fn_call.hh"
-#include "../cpp.hh"
-#include "grammar_transformation.hh"
+
 
 std::list<Symbol::NT*> *NTs_to_report(const AST &ast) {
   /* define which non-terminals shell be reported to the user
