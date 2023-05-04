@@ -481,6 +481,22 @@ struct Count_parseComponents : public Visitor {
   }
 };
 
+/* let all Alt::Simple grammar elements know which left hand NT called this
+ * alternative. Necessary to construct proper outside guards, which need to know
+ * lhs NT table dimensions.
+ */
+struct Propagate_lhsNT : public Visitor {
+  Symbol::NT *lhsNT;
+
+  Propagate_lhsNT(Symbol::NT *lhsNT) : lhsNT(lhsNT) {
+  }
+
+  void visit_begin(Alt::Simple &alt) {
+    alt.outside_lhsNT = this->lhsNT;
+  }
+};
+
+
 /* iterates through the rhs alternatives of an NT and creates a clone of an
  * alternative where ONE (but not all) rhs NT is swapped with the lhs NT, e.g.
  *   struct = cadd(dangle, weak) | sadd(BASE, struct) will result in
@@ -575,7 +591,13 @@ struct Flip_lhs_rhs_nonterminals : public Visitor {
 
 
         // d)
-        alt_clones->push_back(std::make_pair(outside_rhs_nt, topalt->clone()));
+        Alt::Base *topaltclone = topalt->clone();
+        /* if the topaltclone is Alt::Simple, we need to let it know its lhs
+         * calling NT (or better its table dimensions) for downstream
+         * construction of outside guards in the generated code */
+        Propagate_lhsNT vlhsnt = Propagate_lhsNT(outside_rhs_nt);
+        topaltclone->traverse(vlhsnt);
+        alt_clones->push_back(std::make_pair(outside_rhs_nt, topaltclone));
 
         // e)
         alt.nt = orig_rhs_nt;
@@ -708,6 +730,7 @@ struct Collect_and_Insert_outside_axioms : public Visitor {
         Alt::Link *link = new Alt::Link((*i)->name, Loc());
         link->name = (*i)->name;
         link->set_tracks((*i)->tracks(), (*i)->track_pos());
+        link->m_ys = Yield::Multi((*i)->tracks());
         link->top_level = Bool(true);
         if ((*i)->ntargs().size() > 0) {
           link->set_ntparas(Loc(), sync_ntparams((*i)->ntargs()));
@@ -746,7 +769,7 @@ struct Collect_and_Insert_outside_axioms : public Visitor {
  * inside axiom and the source is the outside_ version of the original inside
  * axiom (not the outside axiom). However,
  */
-void inject_outside_inside_transition(
+Alt::Link *inject_outside_inside_transition(
     Grammar *grammar,
     hashtable<std::string, Symbol::Base*> &outside_nts,
     std::string name_inside_axiom) {
@@ -800,6 +823,10 @@ void inject_outside_inside_transition(
 
   // finally add this new transition to the list of alternatives
   lhs_outside->alts.push_back(link);
+
+  // return pointer to the new outside_inside transition to later initialize
+  // multi yield sizes, once the linked NT has been initialized
+  return link;
 }
 
 void Grammar::convert_to_outside() {
@@ -842,7 +869,8 @@ void Grammar::convert_to_outside() {
 
   /* inject one alternative to the inside axiom which enables the transition
    * from outside parts into the original inside part of the grammar */
-  inject_outside_inside_transition(this, outside_nts, name_inside_axiom);
+  Alt::Link *ln_transition = inject_outside_inside_transition(
+      this, outside_nts, name_inside_axiom);
 
   // now add the new outside NTs to the grammar
   for (hashtable<std::string, Symbol::Base*>::iterator i = outside_nts.begin();
@@ -871,6 +899,11 @@ void Grammar::convert_to_outside() {
        i != NTs.end(); ++i) {
     (*i).second->init_links(*this);
   }
+
+  // initialize m_ys arrays for newly constructed axiom + outside->inside
+  // transition
+  this->axiom->init_multi_ys();
+  ln_transition->init_multi_ys();
 
   /* initialize yield sizes for the outside-inside transition, which is one of
    * the alternatives of the new outside axiom.

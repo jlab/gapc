@@ -559,6 +559,16 @@ class Simple : public Base {
   std::list<Statement::Base*> *insert_index_stmts(
     std::list<Statement::Base*> *stmts);
   std::list<Statement::Base*> *inner_code;
+
+  // a copy of the original inside yield sizes, without re-execution of yield
+  // size analysis with the outside compontents added to the grammar.
+  Yield::Multi m_ys_inside;
+
+ public:
+  // a reference to the left hand side non terminal from which this alternative
+  // get's "called". Necessary to construct correct outside guards, i.e.
+  // we need to know the table dimension of the lhs NT.
+  Symbol::NT *outside_lhsNT;
 };
 
 
