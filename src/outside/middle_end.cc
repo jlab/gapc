@@ -412,18 +412,30 @@ void Alt::Simple::init_outside_guards() {
     // create conditions like
     // if (((t_0_i >= (t_0_left_most + 6)) &&
     //     ((t_0_j + 4) <= t_0_right_most))) {
-    l.push_back(
-      new Expr::Greater_Eq(
-          v.outside_link->nt->left_indices[track],
-          v.outside_link->nt->left_most_indices[track]->plus(
-              sum_ys(left_parser, left_parser.begin(),
-                     left_parser.end(), track).low())));
-    l.push_back(
-      new Expr::Less_Eq(
-          v.outside_link->nt->right_indices[track]->plus(
-              sum_ys(right_parser, right_parser.begin(),
-                     right_parser.end(), track).low()),
-          v.outside_link->nt->right_most_indices[track]));
+    if (!this->outside_lhsNT->tables()[track].delete_left_index()) {
+      // no guard if left index is identical with leftmost index
+      if (v.outside_link->nt->left_indices[track] !=
+          v.outside_link->nt->left_most_indices[track]) {
+        l.push_back(
+          new Expr::Greater_Eq(
+              v.outside_link->nt->left_indices[track],
+              v.outside_link->nt->left_most_indices[track]->plus(
+                  sum_ys(left_parser, left_parser.begin(),
+                         left_parser.end(), track).low())));
+      }
+    }
+    if (!this->outside_lhsNT->tables()[track].delete_right_index()) {
+      // no guard if right index is identical with rightmost index
+      if (v.outside_link->nt->right_indices[track] !=
+          v.outside_link->nt->right_most_indices[track]) {
+        l.push_back(
+        new Expr::Less_Eq(
+            v.outside_link->nt->right_indices[track]->plus(
+                sum_ys(right_parser, right_parser.begin(),
+                       right_parser.end(), track).low()),
+            v.outside_link->nt->right_most_indices[track]));
+      }
+    }
   }
 
   // only create guards for outside situations, but not for inside parts in an
