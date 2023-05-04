@@ -170,30 +170,36 @@ void print_insideoutside_report_fn(Printer::Cpp &stream, const AST &ast) {
           idx_param += "\",\"";
         }
       }
-      (*loops->rbegin())->statements.push_back(new Statement::CustomeCode(
+      std::list<Statement::Base*> *stmts = &((*loops->rbegin())->statements);
+
+      stmts->push_back(new Statement::CustomeCode(
           "out << \"start answers " + *nt->name + "(\"" + idx_param +
           "\"):\\n\";"));
 
       Statement::Var_Decl *res = new Statement::Var_Decl(
           nt->return_decl().type, "res_" + *nt->name, fn_nt);
-      (*loops->rbegin())->statements.push_back(res);
+      stmts->push_back(res);
 
       // produce call of "print_result"
       Statement::Fn_Call *fnp = new Statement::Fn_Call("print_result");
       fnp->add_arg(new std::string("std::cout"));
       fnp->add_arg(res->name);
-      (*loops->rbegin())->statements.push_back(fnp);
-
-      // nest for loops, first will then contain the others
-      nest_for_loops(loops->begin(), loops->end());
-      // add outmost for loop into body of report function
-      fn->stmts.push_back(*loops->begin());
+      stmts->push_back(fnp);
 
       // produce: out << "//end answers outside_iloop(" << t_0_i << ","
       //              << t_0_j << ")\n";
-      (*loops->rbegin())->statements.push_back(new Statement::CustomeCode(
+      stmts->push_back(new Statement::CustomeCode(
           "out << \"//end answers " + *nt->name + "(\"" + idx_param +
           "\")\\n\";"));
+
+      // nest for loops, first will then contain the others
+      if (loops->size() > 0) {
+        nest_for_loops(loops->begin(), loops->end());
+        // add outmost for loop into body of report function
+        fn->stmts.push_back(*loops->begin());
+      } else {
+        fn->stmts = *stmts;
+      }
     }
   }
   stream << *fn << "\n";
