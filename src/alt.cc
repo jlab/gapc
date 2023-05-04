@@ -84,6 +84,8 @@ Alt::Base *Alt::Simple::clone() {
        i != args.end(); ++i) {
     a->args.push_back((*i)->clone());
   }
+  // necessary to construct correct guards for outside code generation
+  this->m_ys_inside = this->m_ys;
   return a;
 }
 
@@ -1586,6 +1588,9 @@ void Alt::Simple::init_guards() {
   std::list<Expr::Base*> l;
   assert(m_ys.tracks() == left_indices.size());
   Yield::Multi::iterator k = m_ys.begin();
+  if (this->is_partof_outside()) {
+    k = m_ys_inside.begin();
+  }
   std::vector<Expr::Base*>::iterator j = right_indices.begin();
   for (std::vector<Expr::Base*>::iterator i = left_indices.begin();
        i != left_indices.end(); ++i, ++j, ++k) {
@@ -2609,7 +2614,14 @@ void Alt::Simple::init_multi_ys() {
 
 
 void Alt::Link::init_multi_ys() {
-  m_ys = nt->multi_ys();
+  if (nt->is_partof_outside()) {
+    m_ys.set_tracks(tracks_);
+    for (Yield::Multi::iterator i = m_ys.begin(); i != m_ys.end(); ++i) {
+      *i = Yield::Size(0, Yield::UP);
+    }
+  } else {
+    m_ys = nt->multi_ys();
+  }
   Base::init_multi_ys();
 }
 
