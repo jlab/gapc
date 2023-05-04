@@ -258,7 +258,7 @@ class Base {
                                 bool is_rhs, Symbol::NT *axiom,
                                 int plot_grammar);
 
-    const bool is_partof_outside() {
+    bool is_partof_outside() const {
       return _is_partof_outside;
     }
     void set_partof_outside() {
