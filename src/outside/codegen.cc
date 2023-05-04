@@ -135,28 +135,32 @@ void print_insideoutside_report_fn(Printer::Cpp &stream, const AST &ast) {
       std::list<Statement::For*> *loops = new std::list<Statement::For*>();
       std::vector<std::string*> *idx = new std::vector<std::string*>();
       for (size_t track = nt->track_pos(); track < nt->tracks(); ++track) {
-        if (!nt->tables()[track].delete_left_index() ||
-            !nt->tables()[track].delete_right_index()) {
-          // linear and quadratic tables
-          Statement::Var_Decl *loopvariable = new Statement::Var_Decl(
-            new ::Type::Size(), nt->left_indices[track],
-                                nt->left_most_indices[track]);
-          loopvariable->set_itr(true);
-          Expr::Less_Eq *cond = new Expr::Less_Eq(
-              nt->left_indices[track],
-              nt->right_most_indices[track]);
-          loops->push_back(new Statement::For(loopvariable, cond));
-          fn_nt->add_arg(nt->left_indices[track]);
-          idx->push_back(nt->left_indices[track]->vacc()->name());
+        if (!nt->tables()[track].delete_left_index()) {
+          // we don't need a for loop, if left index is leftmost end
+          // (which is constant)
+          if (nt->left_indices[track] != nt->left_most_indices[track]) {
+            // linear and quadratic tables
+            Statement::Var_Decl *loopvariable = new Statement::Var_Decl(
+              new ::Type::Size(), nt->left_indices[track],
+                                  nt->left_most_indices[track]);
+            loopvariable->set_itr(true);
+            Expr::Less_Eq *cond = new Expr::Less_Eq(
+                nt->left_indices[track],
+                nt->right_most_indices[track]);
+            loops->push_back(new Statement::For(loopvariable, cond));
+            fn_nt->add_arg(nt->left_indices[track]);
+            idx->push_back(nt->left_indices[track]->vacc()->name());
+          }
+        }
 
-          if (!nt->tables()[track].delete_left_index() &&
-              !nt->tables()[track].delete_right_index()) {
+        if (!nt->tables()[track].delete_right_index()) {
+          if (nt->right_indices[track] != nt->right_most_indices[track]) {
             // only quadratic tables
-            loopvariable = new Statement::Var_Decl(
+            Statement::Var_Decl *loopvariable = new Statement::Var_Decl(
               new ::Type::Size(), nt->right_indices[track],
                                   nt->left_indices[track]);
             loopvariable->set_itr(true);
-            cond = new Expr::Less_Eq(nt->right_indices[track],
+            Expr::Less_Eq *cond = new Expr::Less_Eq(nt->right_indices[track],
                                      nt->right_most_indices[track]);
             loops->push_back(new Statement::For(loopvariable, cond));
             fn_nt->add_arg(nt->right_indices[track]);
@@ -173,7 +177,10 @@ void print_insideoutside_report_fn(Printer::Cpp &stream, const AST &ast) {
           idx_param += "\",\"";
         }
       }
-      std::list<Statement::Base*> *stmts = &((*loops->rbegin())->statements);
+      std::list<Statement::Base*> *stmts = new std::list<Statement::Base*>();
+      if (loops->size() > 0) {
+        stmts = &((*loops->rbegin())->statements);
+      }
 
       stmts->push_back(new Statement::CustomeCode(
           "out << \"start answers " + *nt->name + "(\"" + idx_param +
