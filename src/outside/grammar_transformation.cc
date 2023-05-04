@@ -488,7 +488,7 @@ struct Count_parseComponents : public Visitor {
 struct Propagate_lhsNT : public Visitor {
   Symbol::NT *lhsNT;
 
-  Propagate_lhsNT(Symbol::NT *lhsNT) : lhsNT(lhsNT) {
+  explicit Propagate_lhsNT(Symbol::NT *lhsNT) : lhsNT(lhsNT) {
   }
 
   void visit_begin(Alt::Simple &alt) {
