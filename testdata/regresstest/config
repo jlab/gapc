@@ -510,5 +510,5 @@ check_new_old_eq hmm_sonneregen.gap unused count "SS" outside
 check_new_old_eq hmm_sonneregen.gap unused fwd "SS" outside
 check_new_old_eq hmm_sonneregen.gap unused fwd "SSRR" outside_ssrr
 
-# example in which inside and outside NTs have different dimensions
-#check_new_old_eq tmhmm_debug.gap unused count "AA" outside_report
+# example in which inside and outside NTs have different dimensions, don't use tmhmm_debug.gap as new semantic checks will prevent producing code
+check_new_old_eq tmhmm_debug_nil.gap unused count "AA" outside_report
