@@ -187,7 +187,7 @@ void print_insideoutside_report_fn(Printer::Cpp &stream, const AST &ast) {
           "\"):\\n\";"));
 
       Statement::Var_Decl *res = new Statement::Var_Decl(
-          nt->return_decl().type, "res_" + *nt->name, fn_nt);
+          (*nt->code_list().begin())->return_type, "res_" + *nt->name, fn_nt);
       stmts->push_back(res);
 
       // produce call of "print_result"
