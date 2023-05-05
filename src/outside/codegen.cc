@@ -212,7 +212,126 @@ void print_insideoutside_report_fn(Printer::Cpp &stream, const AST &ast) {
       }
     }
   }
-  stream << *fn << "\n";
+  stream << *fn << endl;
 
   stream.in_class = old_in_class;
+}
+
+
+Fn_Def *print_CYK(const AST &ast) {
+  Fn_Def *fn_cyk = new Fn_Def(new Type::RealVoid(), new std::string("cyk"));
+
+  std::list<Statement::Var_Decl*>::const_iterator it_stmt_n = (*ast.grammar()->topological_ord().begin())->table_decl->ns().begin();
+  std::vector<Statement::Var_Decl*>::const_iterator it_stmt_seq = ast.seq_decls.begin();
+  for (size_t track = 0; track < ast.grammar()->axiom->tracks(); ++track, ++it_stmt_n, ++it_stmt_seq) {
+    std::list<Statement::Base*> *stmts_const = new std::list<Statement::Base*>();
+    std::list<Statement::Base*> *stmts_linear = new std::list<Statement::Base*>();
+    std::list<Statement::Base*> *stmts_quadratic = new std::list<Statement::Base*>();
+
+    // A: quadratic loops
+    Statement::For *loop_quadratic_outer = nullptr;
+    Statement::For *loop_quadratic_inner = nullptr;
+    Statement::For *loop_linear = nullptr;
+    Statement::Var_Decl *t_i = nullptr;
+    Statement::Var_Decl *t_j = nullptr;
+    for (std::list<Symbol::NT*>::const_iterator it_nt = ast.grammar()->topological_ord().begin(); it_nt != ast.grammar()->topological_ord().end(); ++it_nt) {
+      if ((*it_nt)->is_tabulated()) {
+        if (!(*it_nt)->tables()[track].delete_right_index()) {
+          if (!loop_quadratic_outer) {
+            // create outer J loop
+            Statement::Var_Decl *loopvariable = new Statement::Var_Decl(
+                new ::Type::Size(),
+                (*it_nt)->right_indices[track],
+                (*it_nt)->left_most_indices[track]);
+            loopvariable->set_itr(true);
+            Expr::Less *cond = new Expr::Less(
+                (*it_nt)->right_indices[track],
+                (*it_nt)->right_most_indices[track]);
+            loop_quadratic_outer = new Statement::For(loopvariable, cond);
+            loop_quadratic_outer->statements.push_back(new Statement::CustomeCode("// A: quadratic loops"));
+
+            t_j = (*loopvariable).clone();
+            t_j->rhs = (*it_nt)->right_most_indices[track];
+            t_j->set_itr(false);
+          }
+        }
+
+        if (!(*it_nt)->tables()[track].delete_right_index() &&
+            !(*it_nt)->tables()[track].delete_left_index()) {
+          if (!loop_quadratic_inner) {
+            Statement::Var_Decl *loopvariable = new Statement::Var_Decl(
+              new ::Type::Size(),
+              (*it_nt)->left_indices[track],
+              (*(*it_nt)->right_indices[track]).plus(new Expr::Const(1)));
+            loopvariable->set_itr(true);
+            Expr::Greater *cond = new Expr::Greater(
+                (*it_nt)->left_indices[track],
+                new Expr::Const(1));
+            loop_quadratic_inner = new Statement::For(loopvariable, cond);
+            loop_quadratic_inner->decrement = true;
+
+            loop_linear = dynamic_cast<Statement::For*>(loop_quadratic_inner->copy());
+
+            t_i = (*loopvariable).clone();
+            t_i->rhs = new Expr::Const(1);
+            t_i->set_itr(false);
+          }
+        }
+
+        // produce: nt_tabulate_iloop(t_0_i-1, t_0_j);
+        std::list<Expr::Base*> *args = new std::list<Expr::Base*>();
+        // t_0_i - 1
+        Statement::Var_Decl *idx_i = (*loop_quadratic_inner->var_decl).clone();
+        idx_i->set_itr(false);
+        if (!(*it_nt)->tables()[track].delete_left_index()) {
+          args->push_back((new Expr::Vacc(*idx_i))->minus(new Expr::Const(1)));
+        }
+        // t_0_j
+        Statement::Var_Decl *idx_j = (*loop_quadratic_outer->var_decl).clone();
+        idx_j->set_itr(false);
+        if (!(*it_nt)->tables()[track].delete_right_index()) {
+          args->push_back(new Expr::Vacc(*idx_j));
+        }
+        Statement::Fn_Call *nt_call = new Statement::Fn_Call((*(*it_nt)->code_list().rbegin())->name, args, Loc());
+        //stmts->push_back(nt_call);
+
+        if (!(*it_nt)->tables()[track].delete_right_index() &&
+            !(*it_nt)->tables()[track].delete_left_index()) {
+          stmts_quadratic->push_back(nt_call);
+        }
+        if (!(*it_nt)->tables()[track].delete_right_index() ||
+            !(*it_nt)->tables()[track].delete_left_index()) {
+          stmts_linear->push_back(nt_call);
+        }
+        stmts_const->push_back(nt_call);
+      }
+    }
+
+    if (loop_quadratic_outer && loop_quadratic_inner) {
+      loop_quadratic_inner->statements = *stmts_quadratic;
+      std::list<Statement::For*> *loops = new std::list<Statement::For*>();
+      loops->push_back(loop_quadratic_outer);
+      loops->push_back(loop_quadratic_inner);
+      nest_for_loops(loops->begin(), loops->end());
+
+      loop_quadratic_outer->statements.push_back(new Statement::CustomeCode("// B: inner quadratic loops"));
+      loop_quadratic_outer->statements.push_back(t_i);
+      loop_quadratic_outer->statements.insert(loop_quadratic_outer->statements.end(), stmts_quadratic->begin(), stmts_quadratic->end());
+
+      fn_cyk->stmts.push_back(*loops->begin());
+    }
+
+    if (loop_linear) {
+      fn_cyk->stmts.push_back(new Statement::CustomeCode("// C: linear loops"));
+      fn_cyk->stmts.push_back(t_j);
+      loop_linear->statements = *stmts_linear;
+      fn_cyk->stmts.push_back(loop_linear);
+    }
+
+    fn_cyk->stmts.push_back(new Statement::CustomeCode("// D: constant loops"));
+    fn_cyk->stmts.push_back(t_i);
+    fn_cyk->stmts.insert(fn_cyk->stmts.end(), stmts_const->begin(), stmts_const->end());
+  }
+
+  return fn_cyk;
 }

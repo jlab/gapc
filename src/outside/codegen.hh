@@ -38,5 +38,6 @@
 #include "grammar_transformation.hh"
 
 void print_insideoutside_report_fn(Printer::Cpp &stream, const AST &ast);
+Fn_Def *print_CYK(const AST &ast);
 
 #endif  // SRC_OUTSIDE_CODEGEN_HH_
