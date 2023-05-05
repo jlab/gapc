@@ -272,6 +272,7 @@ class For : public Block_Base {
   Var_Decl *var_decl;
   Expr::Base *cond;
   Statement::Base *inc;
+  bool decrement = false;
 
   For(Var_Decl *v, Expr::Base* e)
   : Block_Base(FOR), var_decl(v), cond(e), inc(NULL) {
