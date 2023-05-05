@@ -530,8 +530,11 @@ check_new_old_eq nonzero_constsize.gap unused count "G" outside_constissue
 check_new_old_eq constAxiom.gap unused enum "G" outside_out2in
 
 # check TMHMM outside with real sequence which previously revealed < 1.0 prob sums
+# to not exceed file size of truth, just report 5 random NTs
 CPPFLAGS_EXTRA=$DEFAULT_CPPFLAGS_EXTRA
+GAPC="../../../gapc --outside_grammar state_in21 --outside_grammar state_ihelixi7 --outside_grammar state_ihelix5 --outside_grammar state_in13 --outside_grammar state_outglob14 "
 check_new_old_eq tmhmm.gap unused fwd_scaled "MENLNMDLLYMAAAVMMGLAAIGAAIGIGILGGKFLEGAARQPDLIPLLRTQFFIVMGLVDAIPMIAVGLGLYVMFAVA" outside_tmhmm
+GAPC="../../../gapc --outside_grammar ALL"
 
 check_new_old_eq RFmini.gap unused enum "G" outside_cm
 check_new_old_eq RFmini.gap unused count "G" outside_cm
