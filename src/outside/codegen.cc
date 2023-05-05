@@ -217,6 +217,259 @@ void print_insideoutside_report_fn(Printer::Cpp &stream, const AST &ast) {
   stream.in_class = old_in_class;
 }
 
+std::vector<std::list<Statement::Base*> *> *CYK_body(const AST &ast, Expr::Vacc *tile_size, Expr::Vacc *z, Expr::Vacc *var_x, std::string *maxtilen) {
+  std::list<Statement::Base*> *res_quadratic = new std::list<Statement::Base*>();
+  std::list<Statement::Base*> *res_linear = new std::list<Statement::Base*>();
+  std::list<Statement::Base*> *res_const = new std::list<Statement::Base*>();
+
+  std::list<Statement::Var_Decl*>::const_iterator it_stmt_n = (*ast.grammar()->topological_ord().begin())->table_decl->ns().begin();
+  std::vector<Statement::Var_Decl*>::const_iterator it_stmt_seq = ast.seq_decls.begin();
+  for (size_t track = 0; track < ast.grammar()->axiom->tracks(); ++track, ++it_stmt_n, ++it_stmt_seq) {
+    std::list<Statement::Base*> *stmts_const = new std::list<Statement::Base*>();
+    std::list<Statement::Base*> *stmts_linear = new std::list<Statement::Base*>();
+    std::list<Statement::Base*> *stmts_quadratic = new std::list<Statement::Base*>();
+    std::list<Statement::Base*> *stmts_checkpoint_outer = new std::list<Statement::Base*>();
+    std::list<Statement::Base*> *stmts_checkpoint_inner = new std::list<Statement::Base*>();
+
+    // A: quadratic loops
+    Statement::For *loop_quadratic_outer = nullptr;
+    Statement::For *loop_quadratic_inner = nullptr;
+    Statement::For *loop_linear = nullptr;
+    Statement::For *loop_omp_j = nullptr;
+    Statement::Var_Decl *t_i = nullptr;
+    Statement::Var_Decl *t_j = nullptr;
+    for (std::list<Symbol::NT*>::const_iterator it_nt = ast.grammar()->topological_ord().begin(); it_nt != ast.grammar()->topological_ord().end(); ++it_nt) {
+      if ((*it_nt)->is_tabulated()) {
+        if (!(*it_nt)->tables()[track].delete_right_index()) {
+          if (!loop_quadratic_outer) {
+            Statement::Var_Decl *checkpoint_help_var = nullptr;
+            if (ast.checkpoint && ast.checkpoint->cyk) {
+              /*
+                 in checkpointing mode, the loop indices
+                 (e.g. t_0_i and t_0_j in single-track mode;
+                  names can differ in multi-track mode)
+                 are members of the out class instead of local loop variables
+                 so they can be archived/loaded;
+                 if they are loaded, the loop variable (e.g. t_0_j) starts
+                 from whatever value was loaded from the checkpoint,
+                 which is handled through a marker
+                 for every loop variable (e.g. "t_0_j_loaded");
+                 initially, all of these marker values are set to 0, which will
+                 set each loop variable to whatever value was loaded from the checkpoint;
+                 after that, the respective marker value will be set to 1,
+                 so the loop variable will be set to whatever
+                 value is usually would be set to
+              */
+              checkpoint_help_var = new Statement::Var_Decl(
+                  new ::Type::Size(),
+                  "help_" + *(*it_nt)->right_indices[track]->vacc()->name(),
+                  (*it_nt)->right_indices[track]);
+              stmts_checkpoint_outer->push_back(checkpoint_help_var);
+              stmts_checkpoint_outer->push_back(
+                  new Statement::If(
+                      (new Expr::Vacc(new std::string("t_" + std::to_string(track) + "_j_loaded")))->plus(new Expr::Const(1)),
+                      new Statement::Var_Assign(*checkpoint_help_var, (*it_nt)->left_most_indices[track])));
+            }
+
+            // create outer J loop
+            Expr::Base *init_j = (*it_nt)->left_most_indices[track];
+            if (tile_size) {
+              init_j = z;
+            }
+            if (checkpoint_help_var) {
+              init_j = new Expr::Vacc(checkpoint_help_var->name);
+            }
+            Statement::Var_Decl *loopvariable = new Statement::Var_Decl(
+                new ::Type::Size(),
+                (*it_nt)->right_indices[track],
+                init_j);
+            loopvariable->set_itr(true);
+            Expr::Less *cond = new Expr::Less(
+                (*it_nt)->right_indices[track],
+                tile_size ? z->plus(tile_size) : (*it_nt)->right_most_indices[track]);
+            loop_quadratic_outer = new Statement::For(loopvariable, cond);
+            loop_quadratic_outer->statements.push_back(new Statement::CustomeCode("// A: quadratic loops"));
+
+            t_j = (*loopvariable).clone();
+            t_j->rhs = (*it_nt)->right_most_indices[track];
+            t_j->set_itr(false);
+          }
+        }
+
+        if (!(*it_nt)->tables()[track].delete_right_index() &&
+            !(*it_nt)->tables()[track].delete_left_index()) {
+          if (!loop_quadratic_inner) {
+            Statement::Var_Decl *checkpoint_help_var = nullptr;
+            if (ast.checkpoint && ast.checkpoint->cyk) {
+              /*
+                 in checkpointing mode, the inner loop variable (e.g. t_0_i)
+                 is either regularly set to e.g. t_0_j + 1 or to whatever value
+                 was loaded from the checkpoint archive;
+                 however, this loaded checkpoint value will only be the start value
+                 for t_0_i in the first inner loop pass;
+                 afterwards it will regularly be set to t_0_j + 1;
+              */
+              checkpoint_help_var = new Statement::Var_Decl(
+                  new ::Type::Size(),
+                  "help_" + *(*it_nt)->left_indices[track]->vacc()->name(),
+                  (*it_nt)->left_indices[track]);
+              stmts_checkpoint_inner->push_back(checkpoint_help_var);
+              //loop_quadratic_outer->statements.push_back(checkpoint_help_var);
+              //loop_quadratic_outer->push_back(
+              stmts_checkpoint_inner->push_back(
+                  new Statement::If(
+                      (new Expr::Vacc(new std::string("t_" + std::to_string(track) + "_i_loaded")))->plus(new Expr::Const(1)),
+                      new Statement::Var_Assign(*checkpoint_help_var, (*(*it_nt)->right_indices[track]).plus(new Expr::Const(1)))));
+            }
+
+            Expr::Base *init_i = (*(*it_nt)->right_indices[track]).plus(new Expr::Const(1));
+            if (tile_size && var_x) {
+              init_i = var_x;
+            }
+            if (checkpoint_help_var) {
+              init_i = new Expr::Vacc(checkpoint_help_var->name);
+            }
+            Statement::Var_Decl *loopvariable = new Statement::Var_Decl(
+              new ::Type::Size(),
+              (*it_nt)->left_indices[track],
+              init_i);
+            loopvariable->set_itr(true);
+            Expr::Base *greater = new Expr::Const(1);
+            if (tile_size) {
+              greater = z;
+              if (var_x) {
+                greater = var_x->minus(tile_size);
+              }
+            }
+            Expr::Greater *cond = new Expr::Greater(
+                (*it_nt)->left_indices[track],
+                greater);
+            loop_quadratic_inner = new Statement::For(loopvariable, cond);
+            loop_quadratic_inner->decrement = true;
+
+            loop_linear = dynamic_cast<Statement::For*>(loop_quadratic_inner->copy());
+
+            t_i = (*loopvariable).clone();
+            t_i->rhs = new Expr::Const(1);
+            t_i->set_itr(false);
+          }
+        }
+
+        if (loop_omp_j == nullptr) {
+          Statement::Var_Decl *loopvar_j = new Statement::Var_Decl(
+              new ::Type::Size(),
+              (*it_nt)->right_indices[track],
+              new Expr::Vacc(maxtilen));
+          loopvar_j->set_itr(true);
+          Expr::Less_Eq *cond = new Expr::Less_Eq(
+              (*it_nt)->right_indices[track],
+              (*it_nt)->right_most_indices[track]);
+          loop_omp_j = new Statement::For(loopvar_j, cond);
+        }
+
+        // produce: nt_tabulate_iloop(t_0_i-1, t_0_j);
+        std::list<Expr::Base*> *args = new std::list<Expr::Base*>();
+        // t_0_i - 1
+        Statement::Var_Decl *idx_i = (*loop_quadratic_inner->var_decl).clone();
+        idx_i->set_itr(false);
+        if (!(*it_nt)->tables()[track].delete_left_index()) {
+          args->push_back((new Expr::Vacc(*idx_i))->minus(new Expr::Const(1)));
+        }
+        // t_0_j
+        Statement::Var_Decl *idx_j = (*loop_quadratic_outer->var_decl).clone();
+        idx_j->set_itr(false);
+        if (!(*it_nt)->tables()[track].delete_right_index()) {
+          args->push_back(new Expr::Vacc(*idx_j));
+        }
+        Statement::Fn_Call *nt_call = new Statement::Fn_Call((*(*it_nt)->code_list().rbegin())->name, args, Loc());
+        //stmts->push_back(nt_call);
+
+        if (!(*it_nt)->tables()[track].delete_right_index() &&
+            !(*it_nt)->tables()[track].delete_left_index()) {
+          stmts_quadratic->push_back(nt_call);
+        }
+        if (!(*it_nt)->tables()[track].delete_right_index() ||
+            !(*it_nt)->tables()[track].delete_left_index()) {
+          stmts_linear->push_back(nt_call);
+        }
+        stmts_const->push_back(nt_call);
+      }
+    }
+
+    if (ast.checkpoint && ast.checkpoint->cyk) {
+      Statement::CustomeCode *mutex = new Statement::CustomeCode("std::lock_guard<fair_mutex> lock(mutex);");
+      stmts_quadratic->push_front(mutex);
+      stmts_linear->push_front(mutex);
+      stmts_const->push_front(mutex);
+    }
+
+    if (loop_quadratic_outer && loop_quadratic_inner) {
+      res_quadratic->insert(res_quadratic->end(), stmts_checkpoint_outer->begin(), stmts_checkpoint_outer->end());
+
+      loop_quadratic_outer->statements.insert(loop_quadratic_outer->statements.end(), stmts_checkpoint_inner->begin(), stmts_checkpoint_inner->end());
+      loop_quadratic_inner->statements = *stmts_quadratic;
+      std::list<Statement::For*> *loops = new std::list<Statement::For*>();
+      loops->push_back(loop_quadratic_outer);
+      loops->push_back(loop_quadratic_inner);
+      nest_for_loops(loops->begin(), loops->end());
+
+      if (!tile_size) {
+        loop_quadratic_outer->statements.push_back(new Statement::CustomeCode("// B: inner quadratic loops"));
+        loop_quadratic_outer->statements.push_back(t_i);
+        loop_quadratic_outer->statements.insert(loop_quadratic_outer->statements.end(), stmts_quadratic->begin(), stmts_quadratic->end());
+      }
+
+      res_quadratic->push_back(*loops->begin());
+    }
+
+    if (loop_linear) {
+      loop_linear->statements = *stmts_linear;
+      if (!maxtilen) {
+        res_linear->push_back(new Statement::CustomeCode("// C: linear loops"));
+        res_linear->insert(res_linear->end(), stmts_checkpoint_inner->begin(), stmts_checkpoint_inner->end());
+        res_linear->push_back(t_j);
+        res_linear->push_back(loop_linear);
+      } else {
+        loop_omp_j->statements.push_back(loop_linear);
+        res_linear->push_back(loop_omp_j);
+      }
+    }
+
+    res_const->push_back(new Statement::CustomeCode("// D: constant loops"));
+    res_const->push_back(t_i);
+    res_const->insert(res_const->end(), stmts_const->begin(), stmts_const->end());
+  }
+
+  std::vector<std::list<Statement::Base*> *> *res = new std::vector<std::list<Statement::Base*> *>();
+  res->push_back(res_quadratic);
+  res->push_back(res_linear);
+  res->push_back(res_const);
+
+  return res;
+}
+
+std::list<Statement::Base*> *get_tile_computation(const AST &ast, size_t track, Statement::Var_Decl *tile_size, std::string *name_maxtilen) {
+  std::list<Statement::Base*> *res = new std::list<Statement::Base*>();
+
+
+  res->push_back(tile_size);
+  res->push_back(new Statement::CustomeCode("#ifdef TILE_SIZE"));
+  res->push_back(new Statement::Var_Assign(*tile_size, new Expr::Const("TILE_SIZE")));
+  res->push_back(new Statement::CustomeCode("#endif"));
+  res->push_back(new Statement::Fn_Call(Statement::Fn_Call::ASSERT, *tile_size));
+  Statement::Var_Decl *max_tiles = new Statement::Var_Decl(
+      new Type::Size(),
+      "max_tiles",
+      new Expr::Div(ast.grammar()->axiom->right_indices[track]->vacc(), new Expr::Vacc(*tile_size)));
+  res->push_back(max_tiles);
+  Statement::Var_Decl *max_tiles_n = new Statement::Var_Decl(
+      new Type::Int(),
+      *name_maxtilen,
+      new Expr::Times(new Expr::Vacc(*max_tiles), new Expr::Vacc(*tile_size)));
+  res->push_back(max_tiles_n);
+
+  return res;
+}
 
 Fn_Def *print_CYK(const AST &ast) {
   Fn_Def *fn_cyk = new Fn_Def(new Type::RealVoid(), new std::string("cyk"));
@@ -260,184 +513,64 @@ Fn_Def *print_CYK(const AST &ast) {
 
   fn_cyk->stmts.push_back(new Statement::CustomeCode("#ifndef _OPENMP"));
 
-  std::list<Statement::Var_Decl*>::const_iterator it_stmt_n = (*ast.grammar()->topological_ord().begin())->table_decl->ns().begin();
-  std::vector<Statement::Var_Decl*>::const_iterator it_stmt_seq = ast.seq_decls.begin();
-  for (size_t track = 0; track < ast.grammar()->axiom->tracks(); ++track, ++it_stmt_n, ++it_stmt_seq) {
-    std::list<Statement::Base*> *stmts_const = new std::list<Statement::Base*>();
-    std::list<Statement::Base*> *stmts_linear = new std::list<Statement::Base*>();
-    std::list<Statement::Base*> *stmts_quadratic = new std::list<Statement::Base*>();
-    std::list<Statement::Base*> *stmts_checkpoint_outer = new std::list<Statement::Base*>();
-    std::list<Statement::Base*> *stmts_checkpoint_inner = new std::list<Statement::Base*>();
-
-    // A: quadratic loops
-    Statement::For *loop_quadratic_outer = nullptr;
-    Statement::For *loop_quadratic_inner = nullptr;
-    Statement::For *loop_linear = nullptr;
-    Statement::Var_Decl *t_i = nullptr;
-    Statement::Var_Decl *t_j = nullptr;
-    for (std::list<Symbol::NT*>::const_iterator it_nt = ast.grammar()->topological_ord().begin(); it_nt != ast.grammar()->topological_ord().end(); ++it_nt) {
-      if ((*it_nt)->is_tabulated()) {
-        if (!(*it_nt)->tables()[track].delete_right_index()) {
-          if (!loop_quadratic_outer) {
-            Statement::Var_Decl *checkpoint_help_var = nullptr;
-            if (ast.checkpoint && ast.checkpoint->cyk) {
-              /*
-                 in checkpointing mode, the loop indices
-                 (e.g. t_0_i and t_0_j in single-track mode;
-                  names can differ in multi-track mode)
-                 are members of the out class instead of local loop variables
-                 so they can be archived/loaded;
-                 if they are loaded, the loop variable (e.g. t_0_j) starts
-                 from whatever value was loaded from the checkpoint,
-                 which is handled through a marker
-                 for every loop variable (e.g. "t_0_j_loaded");
-                 initially, all of these marker values are set to 0, which will
-                 set each loop variable to whatever value was loaded from the checkpoint;
-                 after that, the respective marker value will be set to 1,
-                 so the loop variable will be set to whatever
-                 value is usually would be set to
-              */
-              checkpoint_help_var = new Statement::Var_Decl(
-                  new ::Type::Size(),
-                  "help_" + *(*it_nt)->right_indices[track]->vacc()->name(),
-                  (*it_nt)->right_indices[track]);
-              stmts_checkpoint_outer->push_back(checkpoint_help_var);
-              stmts_checkpoint_outer->push_back(
-                  new Statement::If(
-                      (new Expr::Vacc(new std::string("t_" + std::to_string(track) + "_j_loaded")))->plus(new Expr::Const(1)),
-                      new Statement::Var_Assign(*checkpoint_help_var, (*it_nt)->left_most_indices[track])));
-            }
-
-            // create outer J loop
-            Statement::Var_Decl *loopvariable = new Statement::Var_Decl(
-                new ::Type::Size(),
-                (*it_nt)->right_indices[track],
-                checkpoint_help_var ? new Expr::Vacc(checkpoint_help_var->name) : (*it_nt)->left_most_indices[track]);
-            loopvariable->set_itr(true);
-            Expr::Less *cond = new Expr::Less(
-                (*it_nt)->right_indices[track],
-                (*it_nt)->right_most_indices[track]);
-            loop_quadratic_outer = new Statement::For(loopvariable, cond);
-            loop_quadratic_outer->statements.push_back(new Statement::CustomeCode("// A: quadratic loops"));
-
-            t_j = (*loopvariable).clone();
-            t_j->rhs = (*it_nt)->right_most_indices[track];
-            t_j->set_itr(false);
-          }
-        }
-
-        if (!(*it_nt)->tables()[track].delete_right_index() &&
-            !(*it_nt)->tables()[track].delete_left_index()) {
-          if (!loop_quadratic_inner) {
-            Statement::Var_Decl *checkpoint_help_var = nullptr;
-            if (ast.checkpoint && ast.checkpoint->cyk) {
-              /*
-                 in checkpointing mode, the inner loop variable (e.g. t_0_i)
-                 is either regularly set to e.g. t_0_j + 1 or to whatever value
-                 was loaded from the checkpoint archive;
-                 however, this loaded checkpoint value will only be the start value
-                 for t_0_i in the first inner loop pass;
-                 afterwards it will regularly be set to t_0_j + 1;
-              */
-              checkpoint_help_var = new Statement::Var_Decl(
-                  new ::Type::Size(),
-                  "help_" + *(*it_nt)->left_indices[track]->vacc()->name(),
-                  (*it_nt)->left_indices[track]);
-              stmts_checkpoint_inner->push_back(checkpoint_help_var);
-              //loop_quadratic_outer->statements.push_back(checkpoint_help_var);
-              //loop_quadratic_outer->push_back(
-              stmts_checkpoint_inner->push_back(
-                  new Statement::If(
-                      (new Expr::Vacc(new std::string("t_" + std::to_string(track) + "_i_loaded")))->plus(new Expr::Const(1)),
-                      new Statement::Var_Assign(*checkpoint_help_var, (*(*it_nt)->right_indices[track]).plus(new Expr::Const(1)))));
-            }
-
-            Statement::Var_Decl *loopvariable = new Statement::Var_Decl(
-              new ::Type::Size(),
-              (*it_nt)->left_indices[track],
-              checkpoint_help_var ? new Expr::Vacc(checkpoint_help_var->name) : (*(*it_nt)->right_indices[track]).plus(new Expr::Const(1)));
-            loopvariable->set_itr(true);
-            Expr::Greater *cond = new Expr::Greater(
-                (*it_nt)->left_indices[track],
-                new Expr::Const(1));
-            loop_quadratic_inner = new Statement::For(loopvariable, cond);
-            loop_quadratic_inner->decrement = true;
-
-            loop_linear = dynamic_cast<Statement::For*>(loop_quadratic_inner->copy());
-
-            t_i = (*loopvariable).clone();
-            t_i->rhs = new Expr::Const(1);
-            t_i->set_itr(false);
-          }
-        }
-
-        // produce: nt_tabulate_iloop(t_0_i-1, t_0_j);
-        std::list<Expr::Base*> *args = new std::list<Expr::Base*>();
-        // t_0_i - 1
-        Statement::Var_Decl *idx_i = (*loop_quadratic_inner->var_decl).clone();
-        idx_i->set_itr(false);
-        if (!(*it_nt)->tables()[track].delete_left_index()) {
-          args->push_back((new Expr::Vacc(*idx_i))->minus(new Expr::Const(1)));
-        }
-        // t_0_j
-        Statement::Var_Decl *idx_j = (*loop_quadratic_outer->var_decl).clone();
-        idx_j->set_itr(false);
-        if (!(*it_nt)->tables()[track].delete_right_index()) {
-          args->push_back(new Expr::Vacc(*idx_j));
-        }
-        Statement::Fn_Call *nt_call = new Statement::Fn_Call((*(*it_nt)->code_list().rbegin())->name, args, Loc());
-        //stmts->push_back(nt_call);
-
-        if (!(*it_nt)->tables()[track].delete_right_index() &&
-            !(*it_nt)->tables()[track].delete_left_index()) {
-          stmts_quadratic->push_back(nt_call);
-        }
-        if (!(*it_nt)->tables()[track].delete_right_index() ||
-            !(*it_nt)->tables()[track].delete_left_index()) {
-          stmts_linear->push_back(nt_call);
-        }
-        stmts_const->push_back(nt_call);
-      }
-    }
-
-    if (ast.checkpoint && ast.checkpoint->cyk) {
-      Statement::CustomeCode *mutex = new Statement::CustomeCode("std::lock_guard<fair_mutex> lock(mutex);");
-      stmts_quadratic->push_front(mutex);
-      stmts_linear->push_front(mutex);
-      stmts_const->push_front(mutex);
-    }
-
-    if (loop_quadratic_outer && loop_quadratic_inner) {
-      fn_cyk->stmts.insert(fn_cyk->stmts.end(), stmts_checkpoint_outer->begin(), stmts_checkpoint_outer->end());
-
-      loop_quadratic_outer->statements.insert(loop_quadratic_outer->statements.end(), stmts_checkpoint_inner->begin(), stmts_checkpoint_inner->end());
-      loop_quadratic_inner->statements = *stmts_quadratic;
-      std::list<Statement::For*> *loops = new std::list<Statement::For*>();
-      loops->push_back(loop_quadratic_outer);
-      loops->push_back(loop_quadratic_inner);
-      nest_for_loops(loops->begin(), loops->end());
-
-      loop_quadratic_outer->statements.push_back(new Statement::CustomeCode("// B: inner quadratic loops"));
-      loop_quadratic_outer->statements.push_back(t_i);
-      loop_quadratic_outer->statements.insert(loop_quadratic_outer->statements.end(), stmts_quadratic->begin(), stmts_quadratic->end());
-
-      fn_cyk->stmts.push_back(*loops->begin());
-    }
-
-    if (loop_linear) {
-      fn_cyk->stmts.push_back(new Statement::CustomeCode("// C: linear loops"));
-      fn_cyk->stmts.insert(fn_cyk->stmts.end(), stmts_checkpoint_inner->begin(), stmts_checkpoint_inner->end());
-      fn_cyk->stmts.push_back(t_j);
-      loop_linear->statements = *stmts_linear;
-      fn_cyk->stmts.push_back(loop_linear);
-    }
-
-    fn_cyk->stmts.push_back(new Statement::CustomeCode("// D: constant loops"));
-    fn_cyk->stmts.push_back(t_i);
-    fn_cyk->stmts.insert(fn_cyk->stmts.end(), stmts_const->begin(), stmts_const->end());
+  std::vector<std::list<Statement::Base*> *> *body = CYK_body(ast, nullptr, nullptr, nullptr, nullptr);
+  for (std::vector<std::list<Statement::Base*> *>::const_iterator it_s = body->begin(); it_s != body->end(); ++it_s) {
+    fn_cyk->stmts.insert(fn_cyk->stmts.end(), (*it_s)->begin(), (*it_s)->end());
   }
 
   fn_cyk->stmts.push_back(new Statement::CustomeCode("#else"));
+  // FIXME abstract from unsigned int, int -> perhaps wait for OpenMP 3
+  // since OpenMP < 3 doesn't allow unsigned int in workshared fors
+  fn_cyk->stmts.push_back(new Statement::CustomeCode("#pragma omp parallel"));
+  Statement::Block *blk_omp = new Statement::Block();
+  // FIXME adjust for multi-track (> 1 track)
+  unsigned int track = 0;
+  Statement::Var_Decl *tile_size = new Statement::Var_Decl(
+        new Type::Size(),
+        "tile_size",
+        new Expr::Const(32));
+  std::string *maxtilen = new std::string("max_tiles_n");
+  std::list<Statement::Base*> *stmts_tile = get_tile_computation(ast, track, tile_size, maxtilen);
+  blk_omp->statements.insert(blk_omp->statements.end(), stmts_tile->begin(), stmts_tile->end());
+  blk_omp->push_back(new Statement::CustomeCode("#pragma omp for"));
+  blk_omp->push_back(new Statement::CustomeCode("// OPENMP < 3 requires signed int here ..."));
+
+  // for loops
+  Expr::Vacc *var_z = new Expr::Vacc(new std::string("z"));
+  body = CYK_body(ast, new Expr::Vacc(*tile_size), var_z, nullptr, nullptr);
+
+  // this loop was too complicated to be realized via proper Statements
+  blk_omp->push_back(new Statement::CustomeCode("for (int z = 0; z < max_tiles_n; z+=tile_size)"));
+  Statement::Block *blk_loop_tile = new Statement::Block();
+  blk_loop_tile->statements.insert(blk_loop_tile->statements.end(), body->at(0)->begin(), body->at(0)->end());
+  blk_omp->push_back(blk_loop_tile);
+
+  blk_omp->push_back(new Statement::CustomeCode("for (int z = tile_size; z < max_tiles_n; z+=tile_size)"));
+  Statement::Block *blk_loop_tile2_outer = new Statement::Block();
+  blk_loop_tile2_outer->statements.push_back(new Statement::CustomeCode("#pragma omp for"));
+  blk_loop_tile2_outer->statements.push_back(new Statement::CustomeCode("for (int y = z; y < max_tiles_n; y+=tile_size)"));
+  Statement::Block *blk_loop_tile2_inner = new Statement::Block();
+  Expr::Vacc *var_y = new Expr::Vacc(new std::string("y"));
+  Statement::Var_Decl *var_x = new Statement::Var_Decl(
+        new Type::Size(),
+        "x",
+        var_y->minus(var_z)->plus(new Expr::Vacc(*tile_size)));
+  blk_loop_tile2_inner->statements.push_back(var_x);
+  body = CYK_body(ast, new Expr::Vacc(*tile_size), var_y, new Expr::Vacc(*var_x), nullptr);
+  blk_loop_tile2_inner->statements.insert(blk_loop_tile2_inner->statements.end(), body->at(0)->begin(), body->at(0)->end());
+  blk_loop_tile2_outer->statements.push_back(blk_loop_tile2_inner);
+  blk_omp->push_back(blk_loop_tile2_outer);
+
+  blk_omp->push_back(new Statement::CustomeCode("// end parallel"));
+
+  blk_omp->statements.insert(blk_omp->statements.end(), stmts_tile->begin(), stmts_tile->end());
+  body = CYK_body(ast, nullptr, nullptr, nullptr, maxtilen);
+
+  blk_omp->statements.insert(blk_omp->statements.end(), body->at(1)->begin(), body->at(1)->end());
+
+
+  fn_cyk->stmts.push_back(blk_omp);
+  //fn_cyk->stmts.push_back(new Statement::CustomeCode("} //  end parallel"));
   fn_cyk->stmts.push_back(new Statement::CustomeCode("#endif"));
 
   return fn_cyk;
