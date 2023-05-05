@@ -48,6 +48,7 @@
 #include "grammar.hh"
 
 #include "options.hh"
+#include "outside/codegen.hh"
 
 
 static std::string make_comments(const std::string &s, const std::string &c) {
@@ -81,7 +82,11 @@ void Printer::Cpp::print(const Statement::For &stmt) {
   stream << *stmt.var_decl;
   stream << ' ' << *stmt.cond << "; ";
   if (!stmt.inc) {
-    stream << "++" << *stmt.var_decl->name << ")";
+    if (!stmt.decrement) {
+      stream << "++" << *stmt.var_decl->name << ")";
+    } else {
+      stream << *stmt.var_decl->name << "--" << ")";
+    }
   } else {
     bool t = in_fn_head;
     in_fn_head = true;
@@ -546,7 +551,10 @@ void Printer::Cpp::print(const Statement::Block &stmt) {
 }
 
 void Printer::Cpp::print(const Statement::CustomeCode &stmt) {
-  stream << indent() << stmt.line_of_code;
+  if (stmt.line_of_code.at(0) != '#') {
+    stream << indent();
+  }
+  stream << stmt.line_of_code;
 }
 
 void Printer::Cpp::print(const std::list<Type::Base*> &types,
@@ -2617,7 +2625,8 @@ void Printer::Cpp::footer(const AST &ast) {
     stream << indent() << " public:" << endl;
     inc_indent();
   }
-  print_cyk_fn(ast);
+  //print_cyk_fn(ast);
+  stream << *print_CYK(ast) << endl;
 
   print_id();
 }
