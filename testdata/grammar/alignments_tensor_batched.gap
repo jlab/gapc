@@ -108,25 +108,25 @@ algebra alg_jacobian extends alg_score_batched {
 
 // pair-wise global alignment with affine gap costs
 grammar gra_gotoh uses sig_alignments(axiom=A) {
-  A = Ins(<TCHAR, EMPTY>, <TLOC, EMPTY>, xIns)
-    | Del(<EMPTY, TCHAR>, <EMPTY, TLOC>, xDel)
+  A = Ins(<TCHAR, EMPTY>, <TLOC, TLOC>, xIns)
+    | Del(<EMPTY, TCHAR>, <TLOC, TLOC>, xDel)
     | Ers(<TCHAR, TCHAR>, <TLOC, TLOC>, A)
     | Sto(<EMPTY, EMPTY>)
     # h;
 
-  xIns = Insx(<TCHAR, EMPTY>, <TLOC, EMPTY>, xIns)
+  xIns = Insx(<TCHAR, EMPTY>, <TLOC, TLOC>, xIns)
        | A
        # h;
 
-  xDel = Delx(<EMPTY, TCHAR>, <EMPTY, TLOC>, xDel)
+  xDel = Delx(<EMPTY, TCHAR>, <TLOC, TLOC>, xDel)
        | A
        # h;
 }
 
 // pair-wise global alignment
 grammar gra_needlemanwunsch uses sig_alignments(axiom=A) {
-  A = Ins(<TCHAR, EMPTY>, <TLOC, EMPTY>, A)
-    | Del(<EMPTY, TCHAR>, <EMPTY, TLOC>, A)
+  A = Ins(<TCHAR, EMPTY>, <TLOC, TLOC>, A)
+    | Del(<EMPTY, TCHAR>, <TLOC, TLOC>, A)
     | Ers(<TCHAR, TCHAR>, <TLOC, TLOC>, A)
     | Sto(<EMPTY, EMPTY>)
     # h;
