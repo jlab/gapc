@@ -3090,7 +3090,7 @@ void Printer::Cpp::makefile(const Options &opts, const AST &ast) {
     << base << "_main.cc : $(RTLIB)/generic_main.cc " << out_file << endl;
   if (ast.requested_derivative > 1) {
     for (unsigned int i = 1; i <= ast.requested_derivative; ++i) {
-      stream << "\techo '#include \"" << basename(remove_dir(opts.out_file))
+      stream << "\t@echo '#include \"" << basename(remove_dir(opts.out_file))
              << "_derivative" << std::to_string(i) << ".hh\"' >";
       if (i > 1) {
         stream << ">";
@@ -3098,7 +3098,7 @@ void Printer::Cpp::makefile(const Options &opts, const AST &ast) {
       stream << " $@" << endl;
     }
   } else {
-    stream << "\techo '#include " << "\"" << header_file << "\""
+    stream << "\t@echo '#include " << "\"" << header_file << "\""
            << "' > $@" << endl;
   }
 
@@ -3177,70 +3177,70 @@ void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
          << endl << endl;
 
   stream << "gen_files: setup.py pytorch_interface.cc" << endl;
-  stream << "\techo 'Generated setup.py and python_interface.cc'"
+  stream << "\t@echo 'Generated setup.py and python_interface.cc'"
          << endl << endl;
   stream << "install:" << endl;
   stream << "\tpip3 install ." << endl << endl;
 
   stream << "setup.py:" << endl;
-  stream << "\techo 'from setuptools import setup' > $@" << endl;
-  stream << "\techo -e 'from torch.utils.cpp_extension import "
+  stream << "\t@echo 'from setuptools import setup' > $@" << endl;
+  stream << "\t@echo -e 'from torch.utils.cpp_extension import "
          << "BuildExtension, CppExtension\\n' >> $@" << endl;
-  stream << "\techo -n 'compiler_args = [\"' >> $@" << endl;
-  stream << "\techo -n $(compiler_args) >> $@" << endl;
-  stream << "\techo -e '\"]\\n' >> $@" << endl;
-  stream << "\techo -n 'library_dirs = [\"' >> $@" << endl;
-  stream << "\techo -n $(library_dirs) >> $@" << endl;
-  stream << "\techo -e '\"]\\n' >> $@" << endl;
-  stream << "\techo -n 'xlinker_args = "
+  stream << "\t@echo -n 'compiler_args = [\"' >> $@" << endl;
+  stream << "\t@echo -n $(compiler_args) >> $@" << endl;
+  stream << "\t@echo -e '\"]\\n' >> $@" << endl;
+  stream << "\t@echo -n 'library_dirs = [\"' >> $@" << endl;
+  stream << "\t@echo -n $(library_dirs) >> $@" << endl;
+  stream << "\t@echo -e '\"]\\n' >> $@" << endl;
+  stream << "\t@echo -n 'xlinker_args = "
          << "[\"-Xlinker\", \"-rpath\", \"-Xlinker\", \"' >> $@"
          << endl;
-  stream << "\techo -n $(xlinker_args) >> $@" << endl;
-  stream << "\techo -e '\"]\\n' >> $@" << endl;
-  stream << "\techo -n 'libraries = [\"' >> $@" << endl;
-  stream << "\techo -n $(libraries) >> $@" << endl;
-  stream << "\techo -e '\"]\\n' >> $@" << endl;
-  stream << "\techo -n 'include_dirs = [\"' >> $@" << endl;
-  stream << "\techo -n $(include_dirs) >> $@" << endl;
-  stream << "\techo -e '\"]\\n' >> $@" << endl;
-  stream << "\techo -e 'gapc_extension = CppExtension(name = \""
+  stream << "\t@echo -n $(xlinker_args) >> $@" << endl;
+  stream << "\t@echo -e '\"]\\n' >> $@" << endl;
+  stream << "\t@echo -n 'libraries = [\"' >> $@" << endl;
+  stream << "\t@echo -n $(libraries) >> $@" << endl;
+  stream << "\t@echo -e '\"]\\n' >> $@" << endl;
+  stream << "\t@echo -n 'include_dirs = [\"' >> $@" << endl;
+  stream << "\t@echo -n $(include_dirs) >> $@" << endl;
+  stream << "\t@echo -e '\"]\\n' >> $@" << endl;
+  stream << "\t@echo -e 'gapc_extension = CppExtension(name = \""
          << opts.pytorch_module_mame << "\",' >> $@" << endl;
-  stream << "\techo -n '                              depends = [' >> $@"
+  stream << "\t@echo -n '                              depends = [' >> $@"
          << endl;
-  stream << "\techo '" << header_files << "],' >> $@" << endl;
-  stream << "\techo -n '                              sources = "
+  stream << "\t@echo '" << header_files << "],' >> $@" << endl;
+  stream << "\t@echo -n '                              sources = "
          << "[\"pytorch_interface.cc\", ' >> $@" << endl;
-  stream << "\techo '" << out_files << "],' >> $@" << endl;
-  stream << "\techo -e '                              include_dirs = "
+  stream << "\t@echo '" << out_files << "],' >> $@" << endl;
+  stream << "\t@echo -e '                              include_dirs = "
          << "include_dirs,' >> $@" << endl;
-  stream << "\techo -e '                              extra_compile_args = "
+  stream << "\t@echo -e '                              extra_compile_args = "
          << "compiler_args,' >> $@" << endl;
-  stream << "\techo -e '                              extra_link_args = "
+  stream << "\t@echo -e '                              extra_link_args = "
          << "xlinker_args,' >> $@" << endl;
-  stream << "\techo -e '                              libraries = "
+  stream << "\t@echo -e '                              libraries = "
          << "libraries,' >> $@" << endl;
-  stream << "\techo -e '                              library_dirs = "
+  stream << "\t@echo -e '                              library_dirs = "
          << "library_dirs)\\n' >> $@" << endl;
-  stream << "\techo 'setup(name = \"" << opts.pytorch_module_mame
+  stream << "\t@echo 'setup(name = \"" << opts.pytorch_module_mame
          << "\",' >> $@" << endl;
-  stream << "\techo '      version = \"0.0.1\",' >> $@" << endl;
-  stream << "\techo '      ext_modules = [gapc_extension],' >> $@" << endl;
-  stream << "\techo '      cmdclass = {\"build_ext\": "
+  stream << "\t@echo '      version = \"0.0.1\",' >> $@" << endl;
+  stream << "\t@echo '      ext_modules = [gapc_extension],' >> $@" << endl;
+  stream << "\t@echo '      cmdclass = {\"build_ext\": "
          << "BuildExtension})' >> $@" << endl << endl;
 
   stream << "pytorch_interface.cc: $(RTLIB)/generic_pytorch_interface.cc"
          << endl;
-  stream << "\trm -f $@" << endl;
-  stream << "\ttouch $@" << endl;
+  stream << "\t@rm -f $@" << endl;
+  stream << "\t@touch $@" << endl;
   if (ast.requested_derivative > 1) {
     for (unsigned int i = 1; i <= ast.requested_derivative; ++i) {
-      stream << "\techo '#include \"" << basename(remove_dir(opts.header_file))
+      stream << "\t@echo '#include \"" << basename(remove_dir(opts.header_file))
                 + "_derivative" + std::to_string(i) + ".hh\"' >> $@" << endl;
     }
   } else if (ast.requested_derivative == 1) {
-    stream << "\techo '#include " << header_files << "' >> $@" << endl;
+    stream << "\t@echo '#include " << header_files << "' >> $@" << endl;
   }
-  stream << "\tcat $(RTLIB)/generic_pytorch_interface.cc >> $@"
+  stream << "\t@cat $(RTLIB)/generic_pytorch_interface.cc >> $@"
          << endl << endl;
 
   stream << ".PHONY: clean" << endl << "clean:" << endl
@@ -3250,6 +3250,35 @@ void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
 
 void Printer::Cpp::print_pytorch_macros(const AST &ast) {
   stream << "#define PYTORCH_MOD" << endl;
+
+  /*
+   * define macros containing all input parameters of the forward functions;
+   * since the number of inputs can be specified in the GAP-L input<>
+   * declaration, these macros will be inserted in the forward_DX functions
+   * in generic_pytorch_interface.cc, so all forward functions receive the
+   * correct number of input paramters
+   */
+  stream << "#define INPUT_PARAMS ";
+  size_t track = 0;
+  size_t total_inputs = ast.seq_decls.size();
+  for (std::vector<Statement::Var_Decl*>::const_iterator
+       i = ast.seq_decls.begin(); i != ast.seq_decls.end(); ++i, ++track) {
+    stream << "tensor &__t_" << track << "_tensor";
+    if (track < total_inputs - 1) {
+      stream << ", ";
+    }
+  }
+  stream << endl;
+  stream << "#define INPUT_ARGS ";
+  track = 0;
+  for (std::vector<Statement::Var_Decl*>::const_iterator
+       i = ast.seq_decls.begin(); i != ast.seq_decls.end(); ++i, ++track) {
+    stream << "__t_" << track << "_tensor";
+    if (track < total_inputs - 1) {
+      stream << ", ";
+    }
+  }
+  stream << endl;
 
   /*
    * check if all input Tensor have the same number of dimensions
@@ -3303,27 +3332,29 @@ void Printer::Cpp::print_pytorch_macros(const AST &ast) {
   }
   // InputTensor object will contain ptrs and accessors to
   // all input tensors so they can be accessed from everywhere
-  const std::vector<TensorMode> &inp_tensors =
-    ast.input.tensor_inputs.get_modes();
-  stream << indent() << "struct InputTensor {" << endl;
-  inc_indent();
-  for (size_t i = 0; i < ast.seq_decls.size(); ++i) {
-    stream << indent() << "tensor *__" << i << ";" << endl;
-    std::string curr_cpp_type = inp_tensors[i].cpp_dtype;
-    int curr_n_dims = inp_tensors[i].n_dims;
-    stream << indent() << "torch::TensorAccessor<" << curr_cpp_type
-           << ", " << curr_n_dims << "> _" << i << ";" << endl;
-  }
-  stream << indent() << "InputTensor() : ";
-  for (size_t i = 0; i < ast.seq_decls.size(); ++i) {
-    stream << "_" << i << "(nullptr, nullptr, nullptr)";
-    if (i < ast.seq_decls.size() - 1) {
-      stream << ", ";
+  if (ast.current_derivative == 1) {
+    const std::vector<TensorMode> &inp_tensors =
+      ast.input.tensor_inputs.get_modes();
+    stream << indent() << "struct InputTensor {" << endl;
+    inc_indent();
+    for (size_t i = 0; i < ast.seq_decls.size(); ++i) {
+      stream << indent() << "tensor *__" << i << ";" << endl;
+      std::string curr_cpp_type = inp_tensors[i].cpp_dtype;
+      int curr_n_dims = inp_tensors[i].n_dims;
+      stream << indent() << "torch::TensorAccessor<" << curr_cpp_type
+             << ", " << curr_n_dims << "> _" << i << ";" << endl;
     }
+    stream << indent() << "InputTensor() : ";
+    for (size_t i = 0; i < ast.seq_decls.size(); ++i) {
+      stream << "_" << i << "(nullptr, nullptr, nullptr)";
+      if (i < ast.seq_decls.size() - 1) {
+        stream << ", ";
+      }
+    }
+    stream << " {}" << endl;
+    dec_indent();
+    stream << indent() << "};" << endl << endl;
   }
-  stream << " {}" << endl;
-  dec_indent();
-  stream << indent() << "};" << endl << endl;
 }
 
 void Printer::Cpp::print_pytorch_init_fn(const AST &ast) {
@@ -3333,11 +3364,11 @@ void Printer::Cpp::print_pytorch_init_fn(const AST &ast) {
   stream << indent() << "void init(";
 
   size_t track = 0;
-  size_t total_input_tensors = ast.seq_decls.size();
+  size_t total_inputs = ast.seq_decls.size();
   for (std::vector<Statement::Var_Decl*>::const_iterator
        i = ast.seq_decls.begin(); i != ast.seq_decls.end(); ++i, ++track) {
     stream << "tensor &__t_" << track << "_tensor";
-    if (track < total_input_tensors - 1) {
+    if (track < total_inputs - 1) {
       stream << ", ";
     }
   }

@@ -35,7 +35,7 @@
     * the maximum batch size is controlled by the "MAX_BATCH_SIZE"
     * macro, which is used to allocate space for every batch
     * from the memory pool and thus needs to be a fixed size;
-    * by default, it is set to 2048, but can be
+    * by default, it is set to 512, but can be
     * increased/decreased if needed since the memory pool
     * can automatically expand itself
 }}} */
@@ -57,7 +57,7 @@ extern "C" {
 inline int64_t BATCH_SIZE = 1;
 #endif
 
-#define MAX_BATCH_SIZE 2048
+#define MAX_BATCH_SIZE 512
 
 #if defined(__AVX2__)
 /*

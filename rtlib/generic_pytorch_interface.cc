@@ -41,18 +41,33 @@
 #define ANSWER_TYPE double
 #endif
 
+/*
+ * the number of input parameters of the forward
+ * functions depend on the GAP-L input<> declaration;
+ * to ensure that the correct number of inputs are
+ * declared in the function signatures,
+ * the macro "INPUT_PARAMS" will be defined in
+ * the included header file and insert the correct
+ * number of input parameters into the forward
+ * functions
+ */
+#if !defined(INPUT_PARAMS) && !defined(INPUT_ARGS)
+using tensor = torch::Tensor;
+#define INPUT_PARAMS tensor &inp_1, tensor &inp_2
+#define INPUT_ARGS   inp_1, inp_2
+#endif
+
 // main objects need to be global so all functions have access to it
 static gapc::class_name obj;
 #ifdef SECOND_DERIVATIVE
-static gapc::class_name obj_D2;
+static gapc::class_name_D2 obj_D2;
 #endif
 
-std::vector<torch::Tensor> forward_D1(torch::Tensor &inp_1,
-                                      torch::Tensor &inp_2) {
+std::vector<torch::Tensor> forward_D1(INPUT_PARAMS) {
   // execute forward pass and return first derivative forward score matrices
-  obj.init(inp_1, inp_2);
+  obj.init(INPUT_ARGS);
   obj.cyk();
-  gapc::return_type ans = obj.run();
+  obj.run();
 
   return obj.get_forward_score_matrices();
 }
@@ -62,11 +77,10 @@ std::vector<torch::Tensor> backward_D1() {
 }
 
 #ifdef SECOND_DERIVATIVE
-std::vector<torch::Tensor> forward_D2(torch::Tensor &inp_1,
-                                      torch::Tensor &inp_2) {
+std::vector<torch::Tensor> forward_D2(INPUT_PARAMS) {
   // execute forward pass and return second derivative forward score matrices
-  obj_D2.init(inp_1, inp_2, &obj);
-  gapc::return_type ans = obj_D2.run();
+  obj_D2.init(INPUT_ARGS, &obj);
+  obj_D2.run();
 
   return obj_D2.get_forward_score_matrices();
 }
@@ -92,6 +106,8 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
         "Make sure to execute 'forward_D1' and 'backward_D1' beforehand!");
   m.def("backward_D2", &backward_D2,
         "Calculate the 2nd derivative score matrices for the backward pass.\n"
+        "This function doesn't require any inputs since it uses data \n"
+        " that gets internally created when calling 'forward_D2',\n"
         "Make sure to execute 'forward_D1', 'backward_D1' and "
         "'forward_D2' beforehand!");
 #endif

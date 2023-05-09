@@ -2,8 +2,8 @@ input <batchedtensorF32, batchedtensorF32>
 type Rope = extern
 
 signature sig_alignments(alphabet, answer) {
-  answer Ins(<alphabet, void>, <tensorslice, void>, answer);
-  answer Del(<void, alphabet>, <void, tensorslice>, answer);
+  answer Ins(<alphabet, void>, <tensorslice, tensorslice>, answer);
+  answer Del(<void, alphabet>, <tensorslice, tensorslice>, answer);
   answer Ers(<alphabet, alphabet>, <tensorslice, tensorslice>, answer);
   answer Sto(<void, void>);
 	
@@ -11,8 +11,8 @@ signature sig_alignments(alphabet, answer) {
   answer Region_Pr(<Rope, void>, answer, <void, Rope>);
   answer Region_Pr_Pr(<void, Rope>, answer, <void, Rope>);
 	
-  answer Insx(<alphabet, void>, <tensorslice, void>, answer);
-  answer Delx(<void, alphabet>, <void, tensorslice>, answer);
+  answer Insx(<alphabet, void>, <tensorslice, tensorslice>, answer);
+  answer Delx(<void, alphabet>, <tensorslice, tensorslice>, answer);
 
   choice [answer] h([answer]);
 }
@@ -20,44 +20,40 @@ signature sig_alignments(alphabet, answer) {
 algebra alg_enum auto enum;
 algebra alg_count auto count;
 
-algebra alg_hessian implements sig_alignments(alphabet=tensorchar, answer=float) {
-  float Ins(<alphabet a, void>, <tensorslice locA, void>, float x) {
+algebra alg_hessian implements sig_alignments(alphabet=tensorchar, answer=F32batch) {
+  F32batch Ins(<alphabet a, void>, <tensorslice locA, tensorslice locB>, F32batch x) {
     return x + -2.0;
   }
-  float Del(<void, alphabet b>, <void, tensorslice locB>, float x) {
+  F32batch Del(<void, alphabet b>, <tensorslice locA, tensorslice locB>, F32batch x) {
     return x + -2.0;
   }
-  float Ers(<alphabet a, alphabet b>, <tensorslice locA, tensorslice locB>, float x) {
-    if (a == b) {
-      return x +2.0;
-    } else {
-      return x +1.0;
-    }
+  F32batch Ers(<alphabet a, alphabet b>, <tensorslice locA, tensorslice locB>, F32batch x) {
+    return batched_add_if_else(a, b, x, 2.0, 1.0);
   }
-  float Sto(<void, void>) {
+  F32batch Sto(<void, void>) {
     return 0.0;
   }
 
-  float Region(<Rope aleft, void>, float x, <Rope aright, void>) {
+  F32batch Region(<Rope aleft, void>, F32batch x, <Rope aright, void>) {
     return x;
   }
-  float Region_Pr(<Rope aleft, void>, float x, <void, Rope bright>) {
+  F32batch Region_Pr(<Rope aleft, void>, F32batch x, <void, Rope bright>) {
     return x;
   }
-  float Region_Pr_Pr(<void, Rope bleft>, float x, <void, Rope bright>) {
+  F32batch Region_Pr_Pr(<void, Rope bleft>, F32batch x, <void, Rope bright>) {
     return x;
   }
 
   // this is slightly different form http://rna.informatik.uni-freiburg.de/Teaching/index.jsp?toolName=Gotoh#
   // as there Ins + Insx is computed for first blank, we here score Ins for first blank and Insx for all following ones
-  float Insx(<alphabet a, void>, <tensorslice locA, void>, float x) {
+  F32batch Insx(<alphabet a, void>, <tensorslice locA, tensorslice locB>, F32batch x) {
     return x + -1.0;
   }
-  float Delx(<void, alphabet b>, <void, tensorslice locB>, float x) {
+  F32batch Delx(<void, alphabet b>, <tensorslice locA, tensorslice locB>, F32batch x) {
     return x + -1.0;
   }
 
-  choice [float] h([float] candidates) {
+  choice [F32batch] h([F32batch] candidates) {
     return list(sum(candidates));
   }
 }
@@ -66,10 +62,10 @@ algebra alg_score_batched implements sig_alignments(alphabet=tensorchar, answer=
   F32batch normalize_derivative(F32batch q, F32batch pfunc) {
     return q / pfunc;
   }
-  F32batch Ins(<alphabet a, void>, <tensorslice locA, void>, F32batch x) {
+  F32batch Ins(<alphabet a, void>, <tensorslice locA, tensorslice locB>, F32batch x) {
     return x * exp(-2.0);
   }
-  F32batch Del(<void, alphabet b>, <void, tensorslice locB>, F32batch x) {
+  F32batch Del(<void, alphabet b>, <tensorslice locA, tensorslice locB>, F32batch x) {
     return x * exp(-2.0);
   }
   F32batch Ers(<alphabet a, alphabet b>, <tensorslice locA, tensorslice locB>, F32batch x) {
@@ -91,10 +87,10 @@ algebra alg_score_batched implements sig_alignments(alphabet=tensorchar, answer=
 	
   // this is slightly different form http://rna.informatik.uni-freiburg.de/Teaching/index.jsp?toolName=Gotoh#
   // as there Ins + Insx is computed for first blank, we here score Ins for first blank and Insx for all following ones
-  F32batch Insx(<alphabet a, void>, <tensorslice locA, void>, F32batch x) {
+  F32batch Insx(<alphabet a, void>, <tensorslice locA, tensorslice locB>, F32batch x) {
     return x * exp(-1.0);
   }
-  F32batch Delx(<void, alphabet b>, <void, tensorslice locB>, F32batch x) {
+  F32batch Delx(<void, alphabet b>, <tensorslice locA, tensorslice locB>, F32batch x) {
     return x * exp(-1.0);
   }
 
@@ -138,3 +134,6 @@ grammar gra_needlemanwunsch uses sig_alignments(axiom=A) {
 
 instance firstD_nw_batched = gra_needlemanwunsch(alg_score_batched);
 instance firstD_gotoh_batched = gra_gotoh(alg_score_batched);
+
+instance bothD_nw_batched = gra_needlemanwunsch(alg_jacobian * alg_hessian);
+instance bothD_gotoh_batched = gra_gotoh(alg_jacobian * alg_hessian);

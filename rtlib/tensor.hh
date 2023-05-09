@@ -37,6 +37,7 @@
 
 #include <initializer_list>
 #include <limits>
+#include <cmath>
 
 #include "torch/extension.h"
 #include "batch.hh"
@@ -114,7 +115,7 @@ class TensorSlice {
   }
 
   // ### basic tensor ops ###
-  tensor operator+(const TensorSlice &other) {
+  tensor operator+(const TensorSlice &other) const {
     return (*this)[{"...", Slice(i, j)}] +
            other[{"...", Slice(other.i, other.j)}];
   }
@@ -124,7 +125,7 @@ class TensorSlice {
     return *this;
   }
 
-  tensor operator-(const TensorSlice &other) {
+  tensor operator-(const TensorSlice &other) const {
     return (*this)[{"...", Slice(i, j)}] -
            other[{"...", Slice(other.i, other.j)}];
   }
@@ -134,7 +135,7 @@ class TensorSlice {
     return *this;
   }
 
-  tensor operator*(const TensorSlice &other) {
+  tensor operator*(const TensorSlice &other) const {
     return (*this)[{"...", Slice(i, j)}] *
            other[{"...", Slice(other.i, other.j)}];
   }
@@ -144,7 +145,7 @@ class TensorSlice {
     return *this;
   }
 
-  tensor operator/(const TensorSlice &other) {
+  tensor operator/(const TensorSlice &other) const {
     return (*this)[{"...", Slice(i, j)}] /
            other[{"...", Slice(other.i, other.j)}];
   }
@@ -219,7 +220,7 @@ class TensorChar {
 
   // ### basic tensor ops ###
 
-  tensor operator+(const TensorChar &other) {
+  tensor operator+(const TensorChar &other) const {
     return (*this)[{"...", i}] + other[{"...", other.i}];
   }
 
@@ -228,7 +229,7 @@ class TensorChar {
     return *this;
   }
 
-  tensor operator-(const TensorChar &other) {
+  tensor operator-(const TensorChar &other) const {
     return (*this)[{"...", i}] - other[{"...", other.i}];
   }
 
@@ -237,7 +238,7 @@ class TensorChar {
     return *this;
   }
 
-  tensor operator*(const TensorChar &other) {
+  tensor operator*(const TensorChar &other) const {
     return (*this)[{"...", i}] * other[{"...", other.i}];
   }
 
@@ -246,7 +247,7 @@ class TensorChar {
     return *this;
   }
 
-  tensor operator/(const TensorChar &other) {
+  tensor operator/(const TensorChar &other) const {
     return (*this)[{"...", i}] / other[{"...", other.i}];
   }
 
