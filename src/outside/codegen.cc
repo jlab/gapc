@@ -452,10 +452,12 @@ std::list<Statement::Base*> *get_tile_computation(const AST &ast, size_t track, 
   std::list<Statement::Base*> *res = new std::list<Statement::Base*>();
 
 
-  res->push_back(tile_size);
-  res->push_back(new Statement::CustomeCode("#ifdef TILE_SIZE"));
-  res->push_back(new Statement::Var_Assign(*tile_size, new Expr::Const("TILE_SIZE")));
-  res->push_back(new Statement::CustomeCode("#endif"));
+  if (!(ast.checkpoint && ast.checkpoint->cyk)) {
+    res->push_back(tile_size);
+    res->push_back(new Statement::CustomeCode("#ifdef TILE_SIZE"));
+    res->push_back(new Statement::Var_Assign(*tile_size, new Expr::Const("TILE_SIZE")));
+    res->push_back(new Statement::CustomeCode("#endif"));
+  }
   res->push_back(new Statement::Fn_Call(Statement::Fn_Call::ASSERT, *tile_size));
   Statement::Var_Decl *max_tiles = new Statement::Var_Decl(
       new Type::Size(),
@@ -532,7 +534,11 @@ Fn_Def *print_CYK(const AST &ast) {
   std::string *maxtilen = new std::string("max_tiles_n");
   std::list<Statement::Base*> *stmts_tile = get_tile_computation(ast, track, tile_size, maxtilen);
   blk_omp->statements.insert(blk_omp->statements.end(), stmts_tile->begin(), stmts_tile->end());
-  blk_omp->push_back(new Statement::CustomeCode("#pragma omp for"));
+  if (ast.checkpoint && ast.checkpoint->cyk) {
+    blk_omp->push_back(new Statement::CustomeCode("#pragma omp for ordered schedule(dynamic)"));
+  } else {
+    blk_omp->push_back(new Statement::CustomeCode("#pragma omp for"));
+  }
   blk_omp->push_back(new Statement::CustomeCode("// OPENMP < 3 requires signed int here ..."));
 
   // for loops
@@ -540,8 +546,15 @@ Fn_Def *print_CYK(const AST &ast) {
   body = CYK_body(ast, new Expr::Vacc(*tile_size), var_z, nullptr, nullptr);
 
   // this loop was too complicated to be realized via proper Statements
-  blk_omp->push_back(new Statement::CustomeCode("for (int z = 0; z < max_tiles_n; z+=tile_size)"));
+  if (ast.checkpoint && ast.checkpoint->cyk) {
+    blk_omp->push_back(new Statement::CustomeCode("for (int z = outer_loop_1_idx_start; z < max_tiles_n; z+=tile_size)"));
+  } else {
+    blk_omp->push_back(new Statement::CustomeCode("for (int z = 0; z < max_tiles_n; z+=tile_size)"));
+  }
   Statement::Block *blk_loop_tile = new Statement::Block();
+  if (ast.checkpoint && ast.checkpoint->cyk) {
+    blk_loop_tile->statements.push_back(new Statement::CustomeCode("mutex.lock_shared()"));
+  }
   blk_loop_tile->statements.insert(blk_loop_tile->statements.end(), body->at(0)->begin(), body->at(0)->end());
   blk_omp->push_back(blk_loop_tile);
 
