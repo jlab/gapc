@@ -48,6 +48,7 @@
 #include "grammar.hh"
 
 #include "options.hh"
+#include "cyk.hh"
 
 
 static std::string make_comments(const std::string &s, const std::string &c) {
@@ -543,6 +544,14 @@ void Printer::Cpp::print(const Statement::Block &stmt) {
   }
   dec_indent();
   stream << indent() << "}" << endl;
+}
+
+
+void Printer::Cpp::print(const Statement::CustomeCode &stmt) {
+  if (stmt.line_of_code.at(0) != '#') {
+    stream << indent();
+  }
+  stream << stmt.line_of_code;
 }
 
 
@@ -2611,7 +2620,8 @@ void Printer::Cpp::footer(const AST &ast) {
     stream << indent() << " public:" << endl;
     inc_indent();
   }
-  print_cyk_fn(ast);
+  stream << *print_CYK(ast);
+  //print_cyk_fn(ast);
 
   print_id();
 }
