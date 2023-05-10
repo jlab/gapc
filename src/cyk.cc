@@ -345,6 +345,9 @@ Fn_Def *print_CYK(const AST &ast) {
   fn_cyk->stmts.push_back(new Statement::CustomeCode("#else"));
   // FIXME generalize for multi-track ...
   if (ast.grammar()->axiom->tracks() == 1) {
+    // FIXME abstract from unsigned int, int -> perhaps wait for OpenMP 3
+    // since OpenMP < 3 doesn't allow unsigned int in workshared fors
+
     // header
     fn_cyk->stmts.push_back(new Statement::CustomeCode("#pragma omp parallel"));
     Statement::Block *blk_parallel = new Statement::Block();
