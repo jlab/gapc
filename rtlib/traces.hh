@@ -118,11 +118,12 @@ class candidate {
   std::vector<Trace<answer>> sub_components;
 
  public:
-  candidate() = default;
-  explicit candidate(answer value) : value(value) {}
+  candidate() : value(0.0), q(0.0) {}
+  explicit candidate(answer value) : value(value), q(0.0) {}
 
   void set_value(answer value) {
 #if defined(PYTORCH_MOD) && defined(BATCHED_INPUT)
+    // need to copy batch data here
     this->value = answer(value.batch->data);
 #else
     this->value = value;
@@ -131,7 +132,8 @@ class candidate {
 
   void set_q(answer q) {
 #if defined(PYTORCH_MOD) && defined(BATCHED_INPUT)
-    this->q = answer(value.batch->data);
+    // need to copy batch data here
+    this->q = answer(q.batch->data);
 #else
     this->q = q;
 #endif
