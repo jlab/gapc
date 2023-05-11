@@ -55,12 +55,12 @@ std::tuple<std::list<Statement::Base*>*, Statement::Var_Decl*> get_tile_computat
   return std::make_tuple(res, tile_size);
 }
 
-std::tuple<Statement::For*, Statement::Var_Decl*> get_for_column(size_t track, Symbol::NT *first_nt, Statement::Var_Decl *input_seq, Expr::Base *col_start, Expr::Base *col_end, bool for_openMP, bool endp1 = false) {
+std::tuple<Statement::For*, Statement::Var_Decl*> get_for_column(Expr::Base *running_boundary, Statement::Var_Decl *input_seq, Expr::Base *col_start, Expr::Base *col_end, bool for_openMP, bool endp1 = false) {
   // create loop variable addressing the DP column (=2nd index)
   // e.g.: for (unsigned int t_0_j = 0; t_0_j < t_0_seq.size(); ++t_0_j) {
   Statement::Var_Decl *var_col = new Statement::Var_Decl(
       new Type::Size(),
-      first_nt->right_indices.at(track)->vacc(),
+      running_boundary,
       col_start);
 
   // create end point for loop variable
@@ -84,7 +84,7 @@ std::tuple<Statement::For*, Statement::Var_Decl*> get_for_column(size_t track, S
   return std::make_tuple(loop, var_nonloop);
 }
 
-std::tuple<Statement::For*, Statement::Var_Decl*> get_for_row(size_t track, Symbol::NT *first_nt, Statement::Var_Decl *input_seq, Expr::Base *start, Expr::Base *row_end, bool for_openMP) {
+std::tuple<Statement::For*, Statement::Var_Decl*> get_for_row(Expr::Base *running_boundary, Statement::Var_Decl *input_seq, Expr::Base *start, Expr::Base *row_end, bool for_openMP) {
   // create loop variable addressing the DP row (=1st index)
   // e.g.: for (unsigned int t_0_i = t_0_j + 1; t_0_i > 1; t_0_i--) {
   Type::Base *t = new Type::Size();
@@ -93,7 +93,7 @@ std::tuple<Statement::For*, Statement::Var_Decl*> get_for_row(size_t track, Symb
   }
   Statement::Var_Decl *var_row = new Statement::Var_Decl(
       t,
-      first_nt->left_indices.at(track)->vacc(),
+      running_boundary,
       start);
 
   // create end point for loop variable
@@ -130,31 +130,34 @@ Statement::For *get_for_openMP(Expr::Vacc *loopvar, Expr::Base *start, Expr::Bas
   return loop;
 }
 
+enum TabDim {BOTH, LEFT, RIGHT, CONSTANT};
 
-void add_nts(size_t tracks, std::list<Statement::Base*> &stmts, std::list<Symbol::NT*> &nts, Table::Dim type) {
-  for (std::list<Symbol::NT*>::const_iterator i = nts.begin(); i != nts.end(); ++i) {
-    if (!(*i)->is_tabulated()) {
-      continue;
-    }
-    std::list<Expr::Base*> *args = new std::list<Expr::Base*>();
-    for (size_t track = 0; track < tracks; ++track) {
-      if (!(*i)->tables()[track].delete_left_index()) {
-        args->push_back((*i)->left_indices.at(track)->vacc()->minus(new Expr::Const(1)));
-      }
-      if (!(*i)->tables()[track].delete_right_index()) {
-        args->push_back((*i)->right_indices.at(track)->vacc());
-      }
-    }
-    Statement::Fn_Call *nt_call = new Statement::Fn_Call((*(*i)->code_list().rbegin())->name, args, Loc());
-
-    if ((type == Table::Dim::QUADRATIC) && (!(*i)->tables()[0].delete_left_index() && !(*i)->tables()[0].delete_right_index())) {
-      stmts.push_back(nt_call);
-    } else if ((type == Table::Dim::LINEAR) && (!(*i)->tables()[0].delete_left_index() || !(*i)->tables()[0].delete_right_index())) {
-      stmts.push_back(nt_call);
-    } else if (type == Table::Dim::CONSTANT) {
-      stmts.push_back(nt_call);
-    }
-  }
+void add_nts(size_t track, std::list<Statement::Base*> &stmts, std::list<Symbol::NT*> &nts, TabDim type) {
+//  for (std::list<Symbol::NT*>::const_iterator i = nts.begin(); i != nts.end(); ++i) {
+//    if (!(*i)->is_tabulated()) {
+//      continue;
+//    }
+//    std::list<Expr::Base*> *args = new std::list<Expr::Base*>();
+//    for (size_t t = 0; t < (*i)->tracks(); ++t) {
+//      if (!(*i)->tables()[t].delete_left_index()) {
+//        args->push_back((*i)->left_indices.at(t)->vacc()->minus(new Expr::Const(1)));
+//      }
+//      if (!(*i)->tables()[t].delete_right_index()) {
+//        args->push_back((*i)->right_indices.at(t)->vacc());
+//      }
+//    }
+//    Statement::Fn_Call *nt_call = new Statement::Fn_Call((*(*i)->code_list().rbegin())->name, args, Loc());
+//
+//    if ((type == BOTH) && (!(*i)->tables()[track].delete_left_index() && !(*i)->tables()[track].delete_right_index())) {
+//      stmts.push_back(nt_call);
+//    } else if ((type == LEFT) && (*i)->tables()[track].delete_left_index() && !(*i)->tables()[track].delete_right_index()) {
+//      stmts.push_back(nt_call);
+//    } else if ((type == RIGHT) && !(*i)->tables()[track].delete_left_index() && (*i)->tables()[track].delete_right_index()) {
+//      stmts.push_back(nt_call);
+//    } else if ((type == CONSTANT) && (*i)->tables()[track].delete_left_index() && (*i)->tables()[track].delete_right_index()) {
+//      stmts.push_back(nt_call);
+//    }
+//  }
 }
 
 /*
@@ -172,42 +175,59 @@ std::list<Statement::Base*> *get_cyk_singletrack(size_t track, const AST &ast, S
 
   Expr::Base *row_start = (*ast.grammar()->topological_ord().begin())->right_indices.at(track)->vacc()->plus(new Expr::Const(1));
 
-  std::tuple<Statement::For*, Statement::Var_Decl*> row = get_for_row(track, *ast.grammar()->topological_ord().begin(), seq, row_start, new Expr::Const(1), false);
+  std::tuple<Statement::For*, Statement::Var_Decl*> row = get_for_row(ast.grammar()->left_running_indices[track], seq, row_start, new Expr::Const(1), false);
   // A
-  if (nested_stmts->size() == 0) {
-    add_nts(ast.grammar()->axiom->tracks(), std::get<0>(row)->statements, ast.grammar()->topological_ord(), Table::Dim::QUADRATIC);
-  } else {
-    std::get<0>(row)->statements.insert(std::get<0>(row)->statements.end(), nested_stmts->begin(), nested_stmts->end());
-  }
+//  if (nested_stmts->size() == 0) {
+//    add_nts(track, std::get<0>(row)->statements, ast.grammar()->topological_ord(), BOTH);
+//  } else {
+    std::list<Statement::Base*> *co = new std::list<Statement::Base*>();
+    for (std::list<Statement::Base*>::iterator i = nested_stmts->begin(); i != nested_stmts->end(); ++i) {
+      co->push_back((*i)->copy());
+    }
+    std::get<0>(row)->statements.insert(std::get<0>(row)->statements.end(), co->begin(), co->end());
+//  }
 
-  std::tuple<Statement::For*, Statement::Var_Decl*> col = get_for_column(track, *ast.grammar()->topological_ord().begin(), seq, new Expr::Const(0), nullptr, false);
+  std::tuple<Statement::For*, Statement::Var_Decl*> col = get_for_column(ast.grammar()->right_running_indices[track], seq, new Expr::Const(0), nullptr, false);
   std::get<0>(col)->statements.push_back(std::get<0>(row));
   std::get<0>(col)->statements.push_back(std::get<1>(row));
+
   // B
-  if (nested_stmts->size() == 0) {
-    add_nts(ast.grammar()->axiom->tracks(), std::get<0>(col)->statements, ast.grammar()->topological_ord(), Table::Dim::QUADRATIC);
-  } else {
-    std::get<0>(col)->statements.insert(std::get<0>(col)->statements.end(), nested_stmts->begin(), nested_stmts->end());
-  }
+//  if (nested_stmts->size() == 0) {
+//    add_nts(track, std::get<0>(col)->statements, ast.grammar()->topological_ord(), LEFT);
+//  } else {
+    co = new std::list<Statement::Base*>();
+    for (std::list<Statement::Base*>::iterator i = nested_stmts->begin(); i != nested_stmts->end(); ++i) {
+      co->push_back((*i)->copy());
+    }
+    std::get<0>(col)->statements.insert(std::get<0>(col)->statements.end(), co->begin(), co->end());
+//  }
   stmts->push_back(std::get<0>(col));
   stmts->push_back(std::get<1>(col));
 
   // C
-  std::tuple<Statement::For*, Statement::Var_Decl*> rowC = get_for_row(track, *ast.grammar()->topological_ord().begin(), seq, row_start, new Expr::Const(1), false);
-  if (nested_stmts->size() == 0) {
-    add_nts(ast.grammar()->axiom->tracks(), std::get<0>(rowC)->statements, ast.grammar()->topological_ord(), Table::Dim::LINEAR);
-  } else {
-    std::get<0>(rowC)->statements.insert(std::get<0>(rowC)->statements.end(), nested_stmts->begin(), nested_stmts->end());
-  }
+  std::tuple<Statement::For*, Statement::Var_Decl*> rowC = get_for_row(ast.grammar()->left_running_indices[track], seq, row_start, new Expr::Const(1), false);
+//  if (nested_stmts->size() == 0) {
+//    add_nts(track, std::get<0>(rowC)->statements, ast.grammar()->topological_ord(), RIGHT);
+//  } else {
+    co = new std::list<Statement::Base*>();
+    for (std::list<Statement::Base*>::iterator i = nested_stmts->begin(); i != nested_stmts->end(); ++i) {
+      co->push_back((*i)->copy());
+    }
+    std::get<0>(rowC)->statements.insert(std::get<0>(rowC)->statements.end(), co->begin(), co->end());
+//  }
   stmts->push_back(std::get<0>(rowC));
   stmts->push_back(std::get<1>(rowC));
 
   // D
-  if (nested_stmts->size() == 0) {
-    add_nts(ast.grammar()->axiom->tracks(), *stmts, ast.grammar()->topological_ord(), Table::Dim::CONSTANT);
-  } else {
-    stmts->insert(stmts->end(), nested_stmts->begin(), nested_stmts->end());
-  }
+//  if (nested_stmts->size() == 0) {
+//    add_nts(track, *stmts, ast.grammar()->topological_ord(), CONSTANT);
+//  } else {
+    co = new std::list<Statement::Base*>();
+    for (std::list<Statement::Base*>::iterator i = nested_stmts->begin(); i != nested_stmts->end(); ++i) {
+      co->push_back((*i)->copy());
+    }
+    stmts->insert(stmts->end(), co->begin(), co->end());
+//  }
 
   return stmts;
 }
@@ -261,10 +281,10 @@ std::list<Statement::Base*> *get_cyk_openmp_parallel(const AST &ast, Statement::
   Statement::Var_Decl *x = new Statement::Var_Decl(new Type::Size(), "x", (y->minus(z))->plus(new Expr::Vacc(*tile_size)));
 
   // A
-  std::tuple<Statement::For*, Statement::Var_Decl*> row = get_for_row(track, *ast.grammar()->topological_ord().begin(), seq, row_start, z, true);
-  add_nts(ast.grammar()->axiom->tracks(), std::get<0>(row)->statements, ast.grammar()->topological_ord(), Table::Dim::QUADRATIC);
+  std::tuple<Statement::For*, Statement::Var_Decl*> row = get_for_row(ast.grammar()->left_running_indices[track], seq, row_start, z, true);
+  add_nts(ast.grammar()->axiom->tracks(), std::get<0>(row)->statements, ast.grammar()->topological_ord(), BOTH);
 
-  std::tuple<Statement::For*, Statement::Var_Decl*> col = get_for_column(track, *ast.grammar()->topological_ord().begin(), seq, z, z->plus(new Expr::Vacc(*tile_size)), true);
+  std::tuple<Statement::For*, Statement::Var_Decl*> col = get_for_column(ast.grammar()->right_running_indices[track], seq, z, z->plus(new Expr::Vacc(*tile_size)), true);
   std::get<0>(col)->statements.push_back(std::get<0>(row));
 
   Statement::For *loop_z = get_for_openMP(z, new Expr::Const(0), new Expr::Vacc(name_maxtilen), tile_size);
@@ -273,10 +293,10 @@ std::list<Statement::Base*> *get_cyk_openmp_parallel(const AST &ast, Statement::
   stmts->push_back(loop_z);
 
   // B
-  std::tuple<Statement::For*, Statement::Var_Decl*> rowB = get_for_row(track, *ast.grammar()->topological_ord().begin(), seq, new Expr::Vacc(*x), (new Expr::Vacc(*x))->minus(new Expr::Vacc(*tile_size)), true);
-  add_nts(ast.grammar()->axiom->tracks(), std::get<0>(rowB)->statements, ast.grammar()->topological_ord(), Table::Dim::QUADRATIC);
+  std::tuple<Statement::For*, Statement::Var_Decl*> rowB = get_for_row(ast.grammar()->left_running_indices[track], seq, new Expr::Vacc(*x), (new Expr::Vacc(*x))->minus(new Expr::Vacc(*tile_size)), true);
+  add_nts(ast.grammar()->axiom->tracks(), std::get<0>(rowB)->statements, ast.grammar()->topological_ord(), BOTH);
 
-  std::tuple<Statement::For*, Statement::Var_Decl*> colB = get_for_column(track, *ast.grammar()->topological_ord().begin(), seq, y, y->plus(new Expr::Vacc(*tile_size)), true);
+  std::tuple<Statement::For*, Statement::Var_Decl*> colB = get_for_column(ast.grammar()->right_running_indices[track], seq, y, y->plus(new Expr::Vacc(*tile_size)), true);
   std::get<0>(colB)->statements.push_back(std::get<0>(rowB));
 
   Statement::For *loop_y = get_for_openMP(y, z, new Expr::Vacc(name_maxtilen), tile_size);
@@ -319,15 +339,66 @@ std::list<Statement::Base*> *get_cyk_openmp_serial(const AST &ast, Statement::Va
 
   Expr::Base *row_start = (*ast.grammar()->topological_ord().begin())->right_indices.at(track)->vacc()->plus(new Expr::Const(1));
 
-  std::tuple<Statement::For*, Statement::Var_Decl*> row = get_for_row(track, *ast.grammar()->topological_ord().begin(), seq, row_start, new Expr::Const(0), false);
-  add_nts(ast.grammar()->axiom->tracks(), std::get<0>(row)->statements, ast.grammar()->topological_ord(), Table::Dim::CONSTANT);
+  std::tuple<Statement::For*, Statement::Var_Decl*> row = get_for_row(ast.grammar()->left_running_indices[track], seq, row_start, new Expr::Const(0), false);
+  add_nts(ast.grammar()->axiom->tracks(), std::get<0>(row)->statements, ast.grammar()->topological_ord(), BOTH);
 
-  std::tuple<Statement::For*, Statement::Var_Decl*> col = get_for_column(track, *ast.grammar()->topological_ord().begin(), seq, new Expr::Vacc(name_maxtilen), nullptr, false, true);
+  std::tuple<Statement::For*, Statement::Var_Decl*> col = get_for_column(ast.grammar()->right_running_indices[track], seq, new Expr::Vacc(name_maxtilen), nullptr, false, true);
   std::get<0>(col)->statements.push_back(std::get<0>(row));
 
   stmts->push_back(std::get<0>(col));
 
   return stmts;
+}
+
+std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts, std::list<std::string*> *loop_vars, std::list<Symbol::NT*> orderedNTs) {
+  int ns = 1;
+  for (std::list<Statement::Base*>::iterator s = stmts.begin(); s != stmts.end(); ++s, ++ns) {
+    // recurse into next for loop
+    if ((*s)->is(Statement::FOR)) {
+      Statement::For *fl = dynamic_cast<Statement::For*>(*s);
+      std::list<std::string*> *next_loop_vars = new std::list<std::string*>();
+      next_loop_vars->insert(next_loop_vars->end(), loop_vars->begin(), loop_vars->end());
+      next_loop_vars->push_back(fl->var_decl->name);
+      std::list<Statement::Base*> *new_stmts = add_nt_calls(fl->statements, next_loop_vars, orderedNTs);
+      if (new_stmts->size() > 0) {
+        fl->statements.insert(fl->statements.end(), new_stmts->begin(), new_stmts->end());
+      } else {
+        // remove for loops without any NT calls
+        s = stmts.erase(s);
+      }
+    }
+  }
+
+  // add NTs
+  std::list<Statement::Base*> *nt_stmts = new std::list<Statement::Base*>();
+  for (std::list<Symbol::NT*>::const_iterator i = orderedNTs.begin(); i != orderedNTs.end(); ++i) {
+    if (!(*i)->is_tabulated()) {
+      continue;
+    }
+    std::list<Expr::Base*> *args = new std::list<Expr::Base*>();
+    size_t used_indices = 0;
+    for (size_t t = 0; t < (*i)->tracks(); ++t) {
+      if (!(*i)->tables()[t].delete_left_index()) {
+        Expr::Vacc *idx = (*i)->left_indices.at(t)->vacc();
+        if (std::find(loop_vars->begin(), loop_vars->end(), idx->name()) != loop_vars->end()) {
+          used_indices++;
+        }
+        args->push_back(idx->minus(new Expr::Const(1)));
+      }
+      if (!(*i)->tables()[t].delete_right_index()) {
+        Expr::Vacc *idx = (*i)->right_indices.at(t)->vacc();
+        if (std::find(loop_vars->begin(), loop_vars->end(), idx->name()) != loop_vars->end()) {
+          used_indices++;
+        }
+        args->push_back(idx);
+      }
+    }
+    if (used_indices == loop_vars->size()) {
+      Statement::Fn_Call *nt_call = new Statement::Fn_Call((*(*i)->code_list().rbegin())->name, args, Loc());
+      nt_stmts->push_back(nt_call);
+    }
+  }
+  return nt_stmts;
 }
 
 Fn_Def *print_CYK(const AST &ast) {
@@ -340,6 +411,9 @@ Fn_Def *print_CYK(const AST &ast) {
   for (int track = ast.grammar()->axiom->tracks() - 1; track >= 0; track--, ++it_stmt_seq) {
     stmts = get_cyk_singletrack(track, ast, *it_stmt_seq, stmts);
   }
+  // add NT calls
+  std::list<Statement::Base*> *new_stmts = add_nt_calls(*stmts, new std::list<std::string*>(), ast.grammar()->topological_ord());
+  stmts->insert(stmts->end(), new_stmts->begin(), new_stmts->end());
   fn_cyk->stmts.insert(fn_cyk->stmts.end(), stmts->begin(), stmts->end());
 
   fn_cyk->stmts.push_back(new Statement::CustomeCode("#else"));
