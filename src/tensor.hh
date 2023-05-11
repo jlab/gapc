@@ -269,7 +269,7 @@ inline std::string& get_torch_type(const Type::Base &_type) {
 inline std::string& get_macro_type(const Type::Base &_type) {
   // get the appropriate macro type based on the table type
   // of the current non-terminal table (used for preprocessor #if stmts)
-  
+
   // to prevent confusion: GAP-C compiles "float" answer
   // type to double and "single" answer type to float
   static hashtable<std::string, std::string>

@@ -158,12 +158,12 @@ void Type::add_predefined(hashtable<std::string, Base*> &table) {
   t = new ::Type::TensorChar();
   s = "tensorchar";
   table[s] = t;
-  
+
   // GAP-C compiles "single" answer type to float (here: F32)
   t = new ::Type::TensorBatch(new ::Type::Single());
   s = "F32batch";
   table[s] = t;
-  
+
   // GAP-C compiles "float" answer type to double (here: F64)
   t = new ::Type::TensorBatch(new ::Type::Float());
   s = "F64batch";
