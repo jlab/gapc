@@ -50,6 +50,7 @@ extern "C" {
 #include <cstdint>
 #include <cstring>
 #include "pool.hh"
+#include "empty.hh"
 
 #ifndef BATCHED_INPUT
 // if batched input is processed, the global variable BATCH_SIZE will be
@@ -201,20 +202,27 @@ class BatchImpl {
  */
 template<typename T, int SIZE>
 class Batch {
+ private:
+  T _empty_val;
+
  public:
   static Pool<BatchImpl<T, SIZE>> pool;
   bool empty_;
   BatchImpl<T, SIZE> *batch;
 
-  Batch() : empty_(false), batch(nullptr) {}
+  Batch() : empty_(false), batch(nullptr) {
+    empty(_empty_val);
+  }
 
   // copy BATCH_SIZE elements from data into batch array
   explicit Batch(T *data) : empty_(false), batch(nullptr) {
+    empty(_empty_val);
     copy_from(data);
   }
 
   // fill batch array with scalar value
   Batch(T x): empty_(false), batch(nullptr) {  // NOLINT [runtime/explicit]
+    empty(_empty_val);
     fill(x);
   }
 
@@ -232,6 +240,7 @@ class Batch {
 
   // copy constructor
   Batch(const Batch &other) {
+    _empty_val = other._empty_val;
     empty_ = other.empty_;
     batch = other.batch;
     if (batch) {
@@ -284,7 +293,9 @@ class Batch {
     memcpy(batch->data, src, BATCH_SIZE * sizeof(T));
   }
 
-  void empty() {
+  void _empty() {
+    // fill batch with "empty" T val
+    fill(_empty_val);
     empty_ = true;
   }
 
@@ -454,7 +465,7 @@ inline void put(T *dest, const Batch<T, SIZE> &src) {
 
 template<typename T = float, int SIZE = MAX_BATCH_SIZE>
 inline void empty(Batch<T, SIZE> &t) {
-  t.empty();
+  t._empty();
 }
 
 template<typename T = float, int SIZE = MAX_BATCH_SIZE>
