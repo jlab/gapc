@@ -868,7 +868,9 @@ void Grammar::init_indices() {
     lm << "t_" << track << "_left_most";
     rm << "t_" << track << "_right_most";
     Expr::Vacc *left = new Expr::Vacc(new std::string(i.str()));
+    this->left_running_indices.push_back(left);
     Expr::Vacc *right = new Expr::Vacc(new std::string(j.str()));
+    this->right_running_indices.push_back(right);
     Expr::Vacc *left_most = new Expr::Vacc(new std::string(lm.str()));
     Expr::Vacc *right_most = new Expr::Vacc(new std::string(rm.str()));
 
