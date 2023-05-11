@@ -20,87 +20,87 @@ signature sig_alignments(alphabet, answer) {
 algebra alg_enum auto enum;
 algebra alg_count auto count;
 
-algebra alg_hessian implements sig_alignments(alphabet=tensorchar, answer=F32batch) {
-  F32batch Ins(<alphabet a, void>, <tensorslice locA, tensorslice locB>, F32batch x) {
-    return x + -2.0;
+algebra alg_hessian implements sig_alignments(alphabet=tensorchar, answer=F64batch) {
+  F64batch Ins(<alphabet a, void>, <tensorslice locA, tensorslice locB>, F64batch x) {
+    return x - 2.0;
   }
-  F32batch Del(<void, alphabet b>, <tensorslice locA, tensorslice locB>, F32batch x) {
-    return x + -2.0;
+  F64batch Del(<void, alphabet b>, <tensorslice locA, tensorslice locB>, F64batch x) {
+    return x - 2.0;
   }
-  F32batch Ers(<alphabet a, alphabet b>, <tensorslice locA, tensorslice locB>, F32batch x) {
+  F64batch Ers(<alphabet a, alphabet b>, <tensorslice locA, tensorslice locB>, F64batch x) {
     return batched_add_if_else(a, b, x, 2.0, 1.0);
   }
-  F32batch Sto(<void, void>) {
+  F64batch Sto(<void, void>) {
     return 0.0;
   }
 
-  F32batch Region(<Rope aleft, void>, F32batch x, <Rope aright, void>) {
+  F64batch Region(<Rope aleft, void>, F64batch x, <Rope aright, void>) {
     return x;
   }
-  F32batch Region_Pr(<Rope aleft, void>, F32batch x, <void, Rope bright>) {
+  F64batch Region_Pr(<Rope aleft, void>, F64batch x, <void, Rope bright>) {
     return x;
   }
-  F32batch Region_Pr_Pr(<void, Rope bleft>, F32batch x, <void, Rope bright>) {
+  F64batch Region_Pr_Pr(<void, Rope bleft>, F64batch x, <void, Rope bright>) {
     return x;
   }
 
   // this is slightly different form http://rna.informatik.uni-freiburg.de/Teaching/index.jsp?toolName=Gotoh#
   // as there Ins + Insx is computed for first blank, we here score Ins for first blank and Insx for all following ones
-  F32batch Insx(<alphabet a, void>, <tensorslice locA, tensorslice locB>, F32batch x) {
-    return x + -1.0;
+  F64batch Insx(<alphabet a, void>, <tensorslice locA, tensorslice locB>, F64batch x) {
+    return x - 1.0;
   }
-  F32batch Delx(<void, alphabet b>, <tensorslice locA, tensorslice locB>, F32batch x) {
-    return x + -1.0;
+  F64batch Delx(<void, alphabet b>, <tensorslice locA, tensorslice locB>, F64batch x) {
+    return x - 1.0;
   }
 
-  choice [F32batch] h([F32batch] candidates) {
+  choice [F64batch] h([F64batch] candidates) {
     return list(sum(candidates));
   }
 }
 
-algebra alg_score_batched implements sig_alignments(alphabet=tensorchar, answer=F32batch) {
-  F32batch normalize_derivative(F32batch q, F32batch pfunc) {
+algebra alg_score_batched implements sig_alignments(alphabet=tensorchar, answer=F64batch) {
+  F64batch normalize_derivative(F64batch q, F64batch pfunc) {
     return q / pfunc;
   }
-  F32batch Ins(<alphabet a, void>, <tensorslice locA, tensorslice locB>, F32batch x) {
+  F64batch Ins(<alphabet a, void>, <tensorslice locA, tensorslice locB>, F64batch x) {
     return x * exp(-2.0);
   }
-  F32batch Del(<void, alphabet b>, <tensorslice locA, tensorslice locB>, F32batch x) {
+  F64batch Del(<void, alphabet b>, <tensorslice locA, tensorslice locB>, F64batch x) {
     return x * exp(-2.0);
   }
-  F32batch Ers(<alphabet a, alphabet b>, <tensorslice locA, tensorslice locB>, F32batch x) {
+  F64batch Ers(<alphabet a, alphabet b>, <tensorslice locA, tensorslice locB>, F64batch x) {
     return batched_multiply_if_else(a, b, x, exp(2.0), exp(1.0));
   }
-  F32batch Sto(<void, void>) {
+  F64batch Sto(<void, void>) {
     return exp(0.0);
   }
 	
-  F32batch Region(<Rope aleft, void>, F32batch x, <Rope aright, void>) {
+  F64batch Region(<Rope aleft, void>, F64batch x, <Rope aright, void>) {
     return x;
   }
-  F32batch Region_Pr(<Rope aleft, void>, F32batch x, <void, Rope bright>) {
+  F64batch Region_Pr(<Rope aleft, void>, F64batch x, <void, Rope bright>) {
     return x;
   }
-  F32batch Region_Pr_Pr(<void, Rope bleft>, F32batch x, <void, Rope bright>) {
+  F64batch Region_Pr_Pr(<void, Rope bleft>, F64batch x, <void, Rope bright>) {
     return x;
   }
 	
   // this is slightly different form http://rna.informatik.uni-freiburg.de/Teaching/index.jsp?toolName=Gotoh#
   // as there Ins + Insx is computed for first blank, we here score Ins for first blank and Insx for all following ones
-  F32batch Insx(<alphabet a, void>, <tensorslice locA, tensorslice locB>, F32batch x) {
+  F64batch Insx(<alphabet a, void>, <tensorslice locA, tensorslice locB>, F64batch x) {
     return x * exp(-1.0);
   }
-  F32batch Delx(<void, alphabet b>, <tensorslice locA, tensorslice locB>, F32batch x) {
+  F64batch Delx(<void, alphabet b>, <tensorslice locA, tensorslice locB>, F64batch x) {
     return x * exp(-1.0);
   }
 
-  choice [F32batch] h([F32batch] candidates) {
+  choice [F64batch] h([F64batch] candidates) {
     return list(sum(candidates));
   }
 }
 
 algebra alg_jacobian extends alg_score_batched {
-  choice [F32batch] h([F32batch] candidates) {
+  choice [F64batch] h([F64batch] candidates) {
     return list(sum(candidates));
   }
 }
@@ -132,8 +132,8 @@ grammar gra_needlemanwunsch uses sig_alignments(axiom=A) {
     # h;
 }
 
-instance firstD_nw_batched = gra_needlemanwunsch(alg_score_batched);
-instance firstD_gotoh_batched = gra_gotoh(alg_score_batched);
+instance nw_batched_deriv_1 = gra_needlemanwunsch(alg_score_batched);
+instance gotoh_batched_deriv_1 = gra_gotoh(alg_score_batched);
 
-instance bothD_nw_batched = gra_needlemanwunsch(alg_jacobian * alg_hessian);
-instance bothD_gotoh_batched = gra_gotoh(alg_jacobian * alg_hessian);
+instance nw_batched_deriv_2 = gra_needlemanwunsch(alg_jacobian * alg_hessian);
+instance gotoh_batched_deriv_2 = gra_gotoh(alg_jacobian * alg_hessian);

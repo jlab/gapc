@@ -140,9 +140,8 @@ grammar gra_needlemanwunsch uses sig_alignments(axiom=A) {
     # h;
 }
 
-instance firstD_nw = gra_needlemanwunsch(alg_score);
-instance firstD_gotoh = gra_gotoh(alg_score);
+instance nw_deriv_1 = gra_needlemanwunsch(alg_score);
+instance gotoh_deriv_1 = gra_gotoh(alg_score);
 
-instance bothD_nw = gra_needlemanwunsch(alg_jacobian * alg_hessian);
-instance bothD_gotoh = gra_gotoh(alg_jacobian * alg_hessian);
-
+instance nw_deriv_2 = gra_needlemanwunsch(alg_jacobian * alg_hessian);
+instance gotoh_deriv_2 = gra_gotoh(alg_jacobian * alg_hessian);

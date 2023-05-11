@@ -3306,7 +3306,11 @@ void Printer::Cpp::print_pytorch_macros(const AST &ast) {
       dynamic_cast<const Type::TensorBatch &>(__shared_table_type);
     stream << "#define BATCHED_INPUT" << endl;
     stream << "#include <cstdint>" << endl;
-    stream << "inline int64_t BATCH_SIZE;" << endl << endl;
+    if (ast.current_derivative == 1) {
+      stream << "inline int64_t BATCH_SIZE;" << endl;
+    } else {
+      stream << "extern int64_t BATCH_SIZE;" << endl;
+    }
     // define macros for primitive types (used in batch.hh)
     stream << indent() << "#define FLOAT_TYPE     1" << endl;
     stream << indent() << "#define DOUBLE_TYPE    2" << endl;
@@ -3320,8 +3324,8 @@ void Printer::Cpp::print_pytorch_macros(const AST &ast) {
     stream << "#include \"torch/extension.h\"" << endl;
     stream << "#include \"rtlib/tensor.hh\"" << endl << endl;
     stream << indent()
-           << "inline constexpr torch::ScalarType OUTPUT_TORCH_TYPE = "
-           << get_torch_type(shared_table_type) << ";" << endl;
+           << "#define OUTPUT_TORCH_TYPE "
+           << get_torch_type(shared_table_type) << endl;
     stream << indent() << "typedef Batch<OUTPUT_CPP_TYPE, MAX_BATCH_SIZE>"
            << " TensorBatch;" << endl << endl;
     stream << "#define ANSWER_TYPE TensorBatch" << endl << endl;
