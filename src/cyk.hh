@@ -36,6 +36,7 @@
 #include "const.hh"
 #include "fn_def.hh"
 #include "statement/fn_call.hh"
+#include "var_acc.hh"
 
 Fn_Def *print_CYK(const AST &ast);
 
