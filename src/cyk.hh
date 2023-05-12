@@ -27,6 +27,7 @@
 #include <list>
 #include <vector>
 #include <string>
+#include <tuple>
 
 #include "ast.hh"
 #include "printer.hh"
