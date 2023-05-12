@@ -24,6 +24,9 @@
 #include "cyk.hh"
 
 static const char *MUTEX = "mutex";
+static const char *VARNAME_OuterLoop1 = "outer_loop_1_idx";
+static const char *VARNAME_OuterLoop2 = "outer_loop_2_idx";
+static const char *VARNAME_InnerLoop2 = "inner_loop_2_idx";
 
 Statement::Fn_Call *mutex_lock() {
   Statement::Fn_Call *fn = new Statement::Fn_Call("lock_shared");
@@ -38,7 +41,7 @@ Statement::Fn_Call *mutex_unlock() {
   return fn;
 }
 
-std::tuple<std::list<Statement::Base*>*, Statement::Var_Decl*> get_tile_computation(const AST &ast, std::string name_maxtilen, Statement::Var_Decl *input_seq) {
+std::tuple<std::list<Statement::Base*>*, Statement::Var_Decl*> get_tile_computation(const AST &ast, std::string name_maxtilen, Statement::Var_Decl *input_seq, bool just_tilesize) {
   Statement::Var_Decl *tile_size = new Statement::Var_Decl(
         new Type::Size(),
         "tile_size",
@@ -46,11 +49,14 @@ std::tuple<std::list<Statement::Base*>*, Statement::Var_Decl*> get_tile_computat
 
   std::list<Statement::Base*> *res = new std::list<Statement::Base*>();
 
-  if (!(ast.checkpoint && ast.checkpoint->cyk)) {
+  if (!(ast.checkpoint && ast.checkpoint->cyk) || just_tilesize) {
     res->push_back(tile_size);
     res->push_back(new Statement::CustomeCode("#ifdef TILE_SIZE"));
     res->push_back(new Statement::Var_Assign(*tile_size, new Expr::Vacc(new std::string("TILE_SIZE"))));
     res->push_back(new Statement::CustomeCode("#endif"));
+    if (just_tilesize) {
+      return std::make_tuple(res, tile_size);;
+    }
   }
   res->push_back(new Statement::Fn_Call(Statement::Fn_Call::ASSERT, *tile_size));
   Expr::Fn_Call *end = new Expr::Fn_Call(new std::string("size"));
@@ -258,7 +264,11 @@ std::list<Statement::Base*> *cyk_traversal_singlethread(const AST &ast) {
 
 
 
-/*
+/* Construct the loop traversal structure for CYK parsing of one track in
+ * multi-threaded mode. Before we can start operating in parallel, we need to
+ * compute all predecessor cells (part A). Thus, tiles of the DP matrix on the
+ * diagonal can then be processed in parallel (part B)
+ * Note: currently only works for single track!
  *  A: tile_size = 4, input = aaaaccccgggg
  *    |  0   1   2   3   4   5   6   7   8   9  10  11  12
  * ---|----------------------------------------------------
@@ -293,7 +303,6 @@ std::list<Statement::Base*> *cyk_traversal_singlethread(const AST &ast) {
  * 11 |
  * 12 |
  *
-
  */
 std::list<Statement::Base*> *cyk_traversal_multithread_parallel(const AST &ast, Statement::Var_Decl *seq, Statement::Var_Decl *tile_size, std::string *name_maxtilen, bool with_checkpoint) {
   size_t track = 0; // as openMP currently only works for single track grammars
@@ -305,43 +314,42 @@ std::list<Statement::Base*> *cyk_traversal_multithread_parallel(const AST &ast, 
   Expr::Vacc *y = new Expr::Vacc(new std::string("y"));
   Statement::Var_Decl *x = new Statement::Var_Decl(new Type::Size(), "x", (y->minus(z))->plus(new Expr::Vacc(*tile_size)));
 
-  // A
+  // part A: prepare for parallel tile phase, prepare predecessor DP cells for
+  // later parallel computation
   CYKloop row = get_for_row(ast.grammar()->left_running_indices[track], row_start, z, true, with_checkpoint);
-//  add_nts(ast.grammar()->axiom->tracks(), std::get<0>(row)->statements, ast.grammar()->topological_ord(), BOTH);
-
   CYKloop col = get_for_column(ast.grammar()->right_running_indices[track], seq, z, z->plus(new Expr::Vacc(*tile_size)), true, false, with_checkpoint);
   col.loop->statements.push_back(row.loop);
-
   Expr::Base *start_z = new Expr::Const(0);
   if (with_checkpoint) {
-    start_z = new Expr::Vacc(new std::string("outer_loop_1_idx_start"));
+    start_z = new Expr::Vacc(new std::string(std::string(VARNAME_OuterLoop1) + "_start"));
   }
   Statement::For *loop_z = get_for_openMP(z, start_z, new Expr::Vacc(name_maxtilen), tile_size);
   if (with_checkpoint) {
     loop_z->statements.push_back(mutex_lock());
   }
   loop_z->statements.push_back(col.loop);
+  // code to wait for threads to finish
   if (with_checkpoint) {
     loop_z->statements.push_back(new Statement::CustomeCode("#pragma omp ordered"));
     Statement::Block *blk_omp = new Statement::Block();
     blk_omp->statements.push_back(new Statement::CustomeCode("// force omp to wait for all threads to finish their current batch (of size tile_size)"));
-    blk_omp->statements.push_back(new Statement::CustomeCode("outer_loop_1_idx += tile_size;"));
+    blk_omp->statements.push_back(new Statement::Var_Assign(new Var_Acc::Plain(new std::string(VARNAME_OuterLoop1)), start_z->plus(new Expr::Vacc(tile_size->var_decl()->name))));
     blk_omp->statements.push_back(mutex_unlock());
     loop_z->statements.push_back(blk_omp);
   }
-
   stmts->push_back(loop_z);
 
-  // B
+  // part B: code for the actual parallel tile computation
   CYKloop rowB = get_for_row(ast.grammar()->left_running_indices[track], new Expr::Vacc(*x), (new Expr::Vacc(*x))->minus(new Expr::Vacc(*tile_size)), true, with_checkpoint);
-//  add_nts(ast.grammar()->axiom->tracks(), std::get<0>(rowB)->statements, ast.grammar()->topological_ord(), BOTH);
-
   CYKloop colB = get_for_column(ast.grammar()->right_running_indices[track], seq, y, y->plus(new Expr::Vacc(*tile_size)), true, false, with_checkpoint);
   colB.loop->statements.push_back(rowB.loop);
 
-  Expr::Vacc *start_y = z;
+  Expr::Base *start_y = z;
   if (with_checkpoint) {
-    start_y = new Expr::Vacc(new std::string("inner_loop_2_idx_loaded ? z : inner_loop_2_idx_start"));
+    start_y = new Expr::Cond(
+        new Expr::Vacc(new std::string(std::string(VARNAME_InnerLoop2) + "_loaded")),
+        z,
+        new Expr::Vacc(new std::string(std::string(VARNAME_InnerLoop2) + "_start")));
   }
   Statement::For *loop_y = get_for_openMP(y, start_y, new Expr::Vacc(name_maxtilen), tile_size);
   // produce: unsigned int x = y - z + tile_size;
@@ -354,8 +362,8 @@ std::list<Statement::Base*> *cyk_traversal_multithread_parallel(const AST &ast, 
   if (with_checkpoint) {
     loop_y->statements.push_back(new Statement::CustomeCode("#pragma omp ordered"));
     Statement::Block *blk_omp2 = new Statement::Block();
-    blk_omp2->statements.push_back(new Statement::CustomeCode("inner_loop_2_idx += tile_size;"));
-    blk_omp2->statements.push_back(new Statement::CustomeCode("outer_loop_2_idx = z;"));
+    blk_omp2->statements.push_back(new Statement::Var_Assign(new Var_Acc::Plain(new std::string(VARNAME_InnerLoop2)), (new Expr::Vacc(new std::string(VARNAME_InnerLoop2)))->plus(new Expr::Vacc(tile_size->var_decl()->name))));
+    blk_omp2->statements.push_back(new Statement::Var_Assign(new Var_Acc::Plain(new std::string(VARNAME_OuterLoop2)), z));
     blk_omp2->statements.push_back(mutex_unlock());
     loop_y->statements.push_back(blk_omp2);
   }
@@ -363,7 +371,7 @@ std::list<Statement::Base*> *cyk_traversal_multithread_parallel(const AST &ast, 
 
   Expr::Vacc *start_z2 = new Expr::Vacc(*tile_size);
   if (with_checkpoint) {
-    start_z2 = new Expr::Vacc(new std::string("outer_loop_2_idx_start"));
+    start_z2 = new Expr::Vacc(new std::string(std::string(VARNAME_OuterLoop2) + "_start"));
   }
   loop_z = get_for_openMP(z, start_z2, new Expr::Vacc(name_maxtilen), tile_size);
   if (with_checkpoint) {
@@ -373,7 +381,7 @@ std::list<Statement::Base*> *cyk_traversal_multithread_parallel(const AST &ast, 
   }
   loop_z->statements.push_back(loop_y);
   if (with_checkpoint) {
-    loop_z->statements.push_back(new Statement::CustomeCode("inner_loop_2_idx = z + tile_size;"));
+    loop_z->statements.push_back(new Statement::Var_Assign(new Var_Acc::Plain(new std::string(VARNAME_InnerLoop2)), z->plus(new Expr::Vacc(tile_size->var_decl()->name))));
   }
 
   stmts->push_back(loop_z);
@@ -382,7 +390,9 @@ std::list<Statement::Base*> *cyk_traversal_multithread_parallel(const AST &ast, 
 }
 
 
-/*
+/* Construct the loop traversal structure for the non-parallel part in multi-
+ * threaded mode, i.e. iterate over all DP cells to ensure we leave no cell
+ * un-computed.
  *  C: tile_size = 4, input = aaaaccccgggg
  *    |  0   1   2   3   4   5   6   7   8   9  10  11  12
  * ---|----------------------------------------------------
@@ -407,17 +417,20 @@ std::list<Statement::Base*> *cyk_traversal_multithread_serial(const AST &ast, St
 
   Expr::Base *row_start = (*ast.grammar()->topological_ord().begin())->right_indices.at(track)->vacc()->plus(new Expr::Const(1));
 
+  // t_0_i = row index
   CYKloop row = get_for_row(ast.grammar()->left_running_indices[track], row_start, new Expr::Const(0), false, with_checkpoint);
   if (with_checkpoint) {
     row.loop->statements.push_back(mutex_lock());
   }
-
+  // t_0_j = col index
   CYKloop col = get_for_column(ast.grammar()->right_running_indices[track], seq, new Expr::Vacc(name_maxtilen), nullptr, false, true, with_checkpoint);
   col.loop->statements.push_back(row.loop);
-
   stmts->push_back(col.loop);
   stmts->push_back(col.end_state);
 
+  // to all NTs might have both table dimensions (can be linear or constant)
+  // to save some speed, we here iterate over linear ones
+  // t_0_i = row index (and column index is set to t_0_seq.size())
   CYKloop first_row = get_for_row(ast.grammar()->left_running_indices[track], row_start, new Expr::Const(0), false, with_checkpoint);
   if (with_checkpoint) {
     first_row.loop->statements.push_back(mutex_lock());
@@ -425,6 +438,8 @@ std::list<Statement::Base*> *cyk_traversal_multithread_serial(const AST &ast, St
   stmts->push_back(first_row.loop);
   stmts->push_back(first_row.end_state);
 
+  // ... and also iterate over tables linear in other dimension
+  // t_0_j = col index (and row index is set to 0)
   CYKloop first_col = get_for_column(ast.grammar()->right_running_indices[track], seq, new Expr::Vacc(name_maxtilen), nullptr, false, true, with_checkpoint);
   if (with_checkpoint) {
     first_col.loop->statements.push_back(mutex_lock());
@@ -580,28 +595,27 @@ Fn_Def *print_CYK(const AST &ast) {
   fn_cyk->stmts.push_back(new Statement::CustomeCode("#else"));
   // FIXME generalize for multi-track ...
   if (ast.grammar()->axiom->tracks() == 1) {
+    std::string *name_maxtilen = new std::string("max_tiles_n");
+    std::vector<Statement::Var_Decl*>::const_reverse_iterator it_stmt_seq = ast.seq_decls.rbegin();
+
     // FIXME abstract from unsigned int, int -> perhaps wait for OpenMP 3
     // since OpenMP < 3 doesn't allow unsigned int in workshared fors
 
     // header
     if (ast.checkpoint && ast.checkpoint->cyk) {
-      fn_cyk->stmts.push_back(new Statement::CustomeCode("unsigned int tile_size = 32;"));
-      fn_cyk->stmts.push_back(new Statement::CustomeCode("#ifdef TILE_SIZE"));
-      fn_cyk->stmts.push_back(new Statement::CustomeCode("tile_size = TILE_SIZE;"));
-      fn_cyk->stmts.push_back(new Statement::CustomeCode("#endif"));
+      std::tuple<std::list<Statement::Base*>*, Statement::Var_Decl*> stmts_tilesize = get_tile_computation(ast, *name_maxtilen, *it_stmt_seq, true);
+      fn_cyk->stmts.insert(fn_cyk->stmts.end(), std::get<0>(stmts_tilesize)->begin(), std::get<0>(stmts_tilesize)->end());
 
-      fn_cyk->stmts.push_back(new Statement::CustomeCode("int outer_loop_1_idx_loaded = !load_checkpoint || !outer_loop_1_idx;"));
-      fn_cyk->stmts.push_back(new Statement::CustomeCode("int outer_loop_2_idx_loaded = !load_checkpoint || !outer_loop_2_idx;"));
-      fn_cyk->stmts.push_back(new Statement::CustomeCode("int inner_loop_2_idx_loaded = !load_checkpoint || !inner_loop_2_idx;"));
-      fn_cyk->stmts.push_back(new Statement::CustomeCode("int outer_loop_1_idx_start = (outer_loop_1_idx_loaded++) ? 0 : outer_loop_1_idx;"));
-      fn_cyk->stmts.push_back(new Statement::CustomeCode("int outer_loop_2_idx_start = (outer_loop_2_idx_loaded++) ? tile_size : outer_loop_2_idx;"));
-      fn_cyk->stmts.push_back(new Statement::CustomeCode("int inner_loop_2_idx_start = inner_loop_2_idx;"));
+      fn_cyk->stmts.push_back(new Statement::CustomeCode("int " + std::string(VARNAME_OuterLoop1) + "_loaded = !load_checkpoint || !" + VARNAME_OuterLoop1 + ";"));
+      fn_cyk->stmts.push_back(new Statement::CustomeCode("int " + std::string(VARNAME_OuterLoop2) + "_loaded = !load_checkpoint || !" + VARNAME_OuterLoop2 + ";"));
+      fn_cyk->stmts.push_back(new Statement::CustomeCode("int " + std::string(VARNAME_InnerLoop2) + "_loaded = !load_checkpoint || !" + VARNAME_InnerLoop2 + ";"));
+      fn_cyk->stmts.push_back(new Statement::CustomeCode("int " + std::string(VARNAME_OuterLoop1) + "_start = (" + VARNAME_OuterLoop1 + "_loaded++) ? 0 : " + VARNAME_OuterLoop1 + ";"));
+      fn_cyk->stmts.push_back(new Statement::CustomeCode("int " + std::string(VARNAME_OuterLoop2) + "_start = (" + VARNAME_OuterLoop2 + "_loaded++) ? tile_size : " + VARNAME_OuterLoop2 + ";"));
+      fn_cyk->stmts.push_back(new Statement::CustomeCode("int " + std::string(VARNAME_InnerLoop2) + "_start = " + VARNAME_InnerLoop2 + ";"));
     }
     fn_cyk->stmts.push_back(new Statement::CustomeCode("#pragma omp parallel"));
     Statement::Block *blk_parallel = new Statement::Block();
-    std::vector<Statement::Var_Decl*>::const_reverse_iterator it_stmt_seq = ast.seq_decls.rbegin();
-    std::string *name_maxtilen = new std::string("max_tiles_n");
-    std::tuple<std::list<Statement::Base*>*, Statement::Var_Decl*> stmts_tilesize = get_tile_computation(ast, *name_maxtilen, *it_stmt_seq);
+    std::tuple<std::list<Statement::Base*>*, Statement::Var_Decl*> stmts_tilesize = get_tile_computation(ast, *name_maxtilen, *it_stmt_seq, false);
     blk_parallel->statements.insert(blk_parallel->statements.end(), std::get<0>(stmts_tilesize)->begin(), std::get<0>(stmts_tilesize)->end());
     if (ast.checkpoint && ast.checkpoint->cyk) {
       blk_parallel->statements.push_back(new Statement::CustomeCode("#pragma omp for ordered schedule(dynamic)"));
