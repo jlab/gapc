@@ -99,8 +99,8 @@ class Grammar {
   /* for CYK generation: store names of left/right running boundaries for each
    * track. These names get defined in Grammar::init_indices
    */
-  std::vector<Expr::Base*> left_running_indices;
-  std::vector<Expr::Base*> right_running_indices;
+  std::vector<Expr::Vacc*> left_running_indices;
+  std::vector<Expr::Vacc*> right_running_indices;
 
 
   // Inits the grammar with the values for the AST, the grammar name,
