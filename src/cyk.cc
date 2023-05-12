@@ -59,11 +59,11 @@ std::tuple<Statement::For*, Statement::Var_Decl*> get_for_column(Expr::Vacc *run
   // create loop variable addressing the DP column (=2nd index)
   // e.g.: for (unsigned int t_0_j = 0; t_0_j < t_0_seq.size(); ++t_0_j) {
   Type::Base *t = new Type::Size();
-  if (with_checkpoint) {
+  if (with_checkpoint && !for_openMP) {
     t = new Type::External("");  // ugly hack to avoid redeclaration of variable
     col_start = new Expr::Cond(
         new Expr::Vacc(new std::string(*running_boundary->name() + "_loaded++")),
-        new Expr::Const(0),
+        !endp1 ? new Expr::Const(0) : col_start,
         running_boundary);
   }
 
@@ -97,7 +97,7 @@ std::tuple<Statement::For*, Statement::Var_Decl*> get_for_row(Expr::Vacc *runnin
   if (for_openMP) {
     t = new Type::Int();
   }
-  if (with_checkpoint) {
+  if (with_checkpoint && !for_openMP) {
     t = new Type::External("");  // ugly hack to avoid redeclaration of variable
     start = new Expr::Cond(
         new Expr::Vacc(new std::string(*running_boundary->name() + "_loaded++")),
@@ -300,8 +300,23 @@ std::list<Statement::Base*> *get_cyk_openmp_parallel(const AST &ast, Statement::
   std::tuple<Statement::For*, Statement::Var_Decl*> col = get_for_column(ast.grammar()->right_running_indices[track], seq, z, z->plus(new Expr::Vacc(*tile_size)), true, false, with_checkpoint);
   std::get<0>(col)->statements.push_back(std::get<0>(row));
 
-  Statement::For *loop_z = get_for_openMP(z, new Expr::Const(0), new Expr::Vacc(name_maxtilen), tile_size);
+  Expr::Base *start_z = new Expr::Const(0);
+  if (with_checkpoint) {
+    start_z = new Expr::Vacc(new std::string("outer_loop_1_idx_start"));
+  }
+  Statement::For *loop_z = get_for_openMP(z, start_z, new Expr::Vacc(name_maxtilen), tile_size);
+  if (with_checkpoint) {
+    loop_z->statements.push_back(new Statement::CustomeCode("mutex.lock_shared();"));
+  }
   loop_z->statements.push_back(std::get<0>(col));
+  if (with_checkpoint) {
+    loop_z->statements.push_back(new Statement::CustomeCode("#pragma omp ordered"));
+    Statement::Block *blk_omp = new Statement::Block();
+    blk_omp->statements.push_back(new Statement::CustomeCode("// force omp to wait for all threads to finish their current batch (of size tile_size)"));
+    blk_omp->statements.push_back(new Statement::CustomeCode("outer_loop_1_idx += tile_size;"));
+    blk_omp->statements.push_back(new Statement::CustomeCode("mutex.unlock_shared();"));
+    loop_z->statements.push_back(blk_omp);
+  }
 
   stmts->push_back(loop_z);
 
@@ -312,14 +327,42 @@ std::list<Statement::Base*> *get_cyk_openmp_parallel(const AST &ast, Statement::
   std::tuple<Statement::For*, Statement::Var_Decl*> colB = get_for_column(ast.grammar()->right_running_indices[track], seq, y, y->plus(new Expr::Vacc(*tile_size)), true, false, with_checkpoint);
   std::get<0>(colB)->statements.push_back(std::get<0>(rowB));
 
-  Statement::For *loop_y = get_for_openMP(y, z, new Expr::Vacc(name_maxtilen), tile_size);
+  Expr::Vacc *start_y = z;
+  if (with_checkpoint) {
+    start_y = new Expr::Vacc(new std::string("inner_loop_2_idx_loaded ? z : inner_loop_2_idx_start"));
+  }
+  Statement::For *loop_y = get_for_openMP(y, start_y, new Expr::Vacc(name_maxtilen), tile_size);
   // produce: unsigned int x = y - z + tile_size;
+  if (with_checkpoint) {
+    loop_y->statements.push_back(new Statement::CustomeCode("++inner_loop_2_idx_loaded;"));
+    loop_y->statements.push_back(new Statement::CustomeCode("mutex.lock_shared();"));
+  }
   loop_y->statements.push_back(x);
   loop_y->statements.push_back(std::get<0>(colB));
+  if (with_checkpoint) {
+    loop_y->statements.push_back(new Statement::CustomeCode("#pragma omp ordered"));
+    Statement::Block *blk_omp2 = new Statement::Block();
+    blk_omp2->statements.push_back(new Statement::CustomeCode("inner_loop_2_idx += tile_size;"));
+    blk_omp2->statements.push_back(new Statement::CustomeCode("outer_loop_2_idx = z;"));
+    blk_omp2->statements.push_back(new Statement::CustomeCode("mutex.unlock_shared();"));
+    loop_y->statements.push_back(blk_omp2);
+  }
 
-  loop_z = get_for_openMP(z, new Expr::Vacc(*tile_size), new Expr::Vacc(name_maxtilen), tile_size);
-  loop_z->statements.push_back(new Statement::CustomeCode("#pragma omp for"));
+
+  Expr::Vacc *start_z2 = new Expr::Vacc(*tile_size);
+  if (with_checkpoint) {
+    start_z2 = new Expr::Vacc(new std::string("outer_loop_2_idx_start"));
+  }
+  loop_z = get_for_openMP(z, start_z2, new Expr::Vacc(name_maxtilen), tile_size);
+  if (with_checkpoint) {
+    loop_z->statements.push_back(new Statement::CustomeCode("#pragma omp for ordered schedule(dynamic)"));
+  } else {
+    loop_z->statements.push_back(new Statement::CustomeCode("#pragma omp for"));
+  }
   loop_z->statements.push_back(loop_y);
+  if (with_checkpoint) {
+    loop_z->statements.push_back(new Statement::CustomeCode("inner_loop_2_idx = z + tile_size;"));
+  }
 
   stmts->push_back(loop_z);
 
@@ -353,22 +396,45 @@ std::list<Statement::Base*> *get_cyk_openmp_serial(const AST &ast, Statement::Va
   Expr::Base *row_start = (*ast.grammar()->topological_ord().begin())->right_indices.at(track)->vacc()->plus(new Expr::Const(1));
 
   std::tuple<Statement::For*, Statement::Var_Decl*> row = get_for_row(ast.grammar()->left_running_indices[track], seq, row_start, new Expr::Const(0), false, with_checkpoint);
-//  add_nts(ast.grammar()->axiom->tracks(), std::get<0>(row)->statements, ast.grammar()->topological_ord(), BOTH);
+  if (with_checkpoint) {
+    std::get<0>(row)->statements.push_back(new Statement::CustomeCode("mutex.lock_shared();"));
+  }
 
   std::tuple<Statement::For*, Statement::Var_Decl*> col = get_for_column(ast.grammar()->right_running_indices[track], seq, new Expr::Vacc(name_maxtilen), nullptr, false, true, with_checkpoint);
   std::get<0>(col)->statements.push_back(std::get<0>(row));
 
   stmts->push_back(std::get<0>(col));
-  stmts->push_back(std::get<1>(col));
+//  if (!with_checkpoint) {
+    stmts->push_back(std::get<1>(col));
 
-  std::tuple<Statement::For*, Statement::Var_Decl*> first_row = get_for_row(ast.grammar()->left_running_indices[track], seq, row_start, new Expr::Const(0), false, with_checkpoint);
-  stmts->push_back(std::get<0>(first_row));
-  stmts->push_back(std::get<1>(first_row));
+    std::tuple<Statement::For*, Statement::Var_Decl*> first_row = get_for_row(ast.grammar()->left_running_indices[track], seq, row_start, new Expr::Const(0), false, with_checkpoint);
+    if (with_checkpoint) {
+      std::get<0>(first_row)->statements.push_back(new Statement::CustomeCode("mutex.lock_shared();"));
+    }
+    stmts->push_back(std::get<0>(first_row));
+    stmts->push_back(std::get<1>(first_row));
 
-  std::tuple<Statement::For*, Statement::Var_Decl*> first_col = get_for_column(ast.grammar()->right_running_indices[track], seq, new Expr::Vacc(name_maxtilen), nullptr, false, true, with_checkpoint);
-  stmts->push_back(std::get<0>(first_col));
+    std::tuple<Statement::For*, Statement::Var_Decl*> first_col = get_for_column(ast.grammar()->right_running_indices[track], seq, new Expr::Vacc(name_maxtilen), nullptr, false, true, with_checkpoint);
+    if (with_checkpoint) {
+      std::get<0>(first_col)->statements.push_back(new Statement::CustomeCode("mutex.lock_shared();"));
+    }
+    stmts->push_back(std::get<0>(first_col));
+//  }
 
   return stmts;
+}
+
+size_t count_nt_calls_and_loops(Statement::For *loop) {
+  size_t res = 0;
+  for (std::list<Statement::Base*>::const_iterator i = loop->statements.begin(); i != loop->statements.end(); ++i) {
+    if ((*i)->is(Statement::FN_CALL) && (dynamic_cast<Statement::Fn_Call*>(*i)->name().find("nt_tabulate_", 0) == 0)) {
+      res++;
+    }
+    if ((*i)->is(Statement::FOR)) {
+      res++;
+    }
+  }
+  return res;
 }
 
 std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts, std::list<std::string*> *loop_vars, std::list<Symbol::NT*> orderedNTs, bool with_checkpoint, bool for_openMP, bool openMP_serial) {
@@ -401,7 +467,7 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts, st
   // remove completely empty loops
   for (std::list<Statement::Base*>::iterator s = stmts.begin(); s != stmts.end(); ++s) {
     if ((*s)->is(Statement::FOR)) {
-      if (dynamic_cast<Statement::For*>(*s)->statements.size() == 0) {
+      if (count_nt_calls_and_loops(dynamic_cast<Statement::For*>(*s)) == 0) {
         s = stmts.erase(s);
       }
     }
@@ -413,7 +479,7 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts, st
 
   // add NTs
   std::list<Statement::Base*> *nt_stmts = new std::list<Statement::Base*>();
-  if (with_checkpoint) {
+  if (with_checkpoint && !for_openMP) {
     nt_stmts->push_back(new Statement::CustomeCode("std::lock_guard<fair_mutex> lock(mutex);"));
   }
   for (std::list<Symbol::NT*>::const_iterator i = orderedNTs.begin(); i != orderedNTs.end(); ++i) {
@@ -448,13 +514,15 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts, st
       }
     }
   }
+  if (with_checkpoint && for_openMP && openMP_serial) {
+    nt_stmts->push_back(new Statement::CustomeCode("mutex.unlock_shared();"));
+  }
 
   return nt_stmts;
 }
 
 Fn_Def *print_CYK(const AST &ast) {
   Fn_Def *fn_cyk = new Fn_Def(new Type::RealVoid(), new std::string("cyk"));
-  fn_cyk->stmts.push_back(new Statement::CustomeCode("#ifndef _OPENMP"));
 
   if (ast.checkpoint && ast.checkpoint->cyk) {
   /*
@@ -487,6 +555,7 @@ Fn_Def *print_CYK(const AST &ast) {
               new Expr::Not(ast.grammar()->right_running_indices.at(track)))));
     }
   }
+  fn_cyk->stmts.push_back(new Statement::CustomeCode("#ifndef _OPENMP"));
 
   // recursively reverse iterate through tracks and create nested for loop structures
   std::list<Statement::Base*> *stmts = new std::list<Statement::Base*>();
@@ -506,13 +575,30 @@ Fn_Def *print_CYK(const AST &ast) {
     // since OpenMP < 3 doesn't allow unsigned int in workshared fors
 
     // header
+    if (ast.checkpoint && ast.checkpoint->cyk) {
+      fn_cyk->stmts.push_back(new Statement::CustomeCode("unsigned int tile_size = 32;"));
+      fn_cyk->stmts.push_back(new Statement::CustomeCode("#ifdef TILE_SIZE"));
+      fn_cyk->stmts.push_back(new Statement::CustomeCode("tile_size = TILE_SIZE;"));
+      fn_cyk->stmts.push_back(new Statement::CustomeCode("#endif"));
+
+      fn_cyk->stmts.push_back(new Statement::CustomeCode("int outer_loop_1_idx_loaded = !load_checkpoint || !outer_loop_1_idx;"));
+      fn_cyk->stmts.push_back(new Statement::CustomeCode("int outer_loop_2_idx_loaded = !load_checkpoint || !outer_loop_2_idx;"));
+      fn_cyk->stmts.push_back(new Statement::CustomeCode("int inner_loop_2_idx_loaded = !load_checkpoint || !inner_loop_2_idx;"));
+      fn_cyk->stmts.push_back(new Statement::CustomeCode("int outer_loop_1_idx_start = (outer_loop_1_idx_loaded++) ? 0 : outer_loop_1_idx;"));
+      fn_cyk->stmts.push_back(new Statement::CustomeCode("int outer_loop_2_idx_start = (outer_loop_2_idx_loaded++) ? tile_size : outer_loop_2_idx;"));
+      fn_cyk->stmts.push_back(new Statement::CustomeCode("int inner_loop_2_idx_start = inner_loop_2_idx;"));
+    }
     fn_cyk->stmts.push_back(new Statement::CustomeCode("#pragma omp parallel"));
     Statement::Block *blk_parallel = new Statement::Block();
     std::vector<Statement::Var_Decl*>::const_reverse_iterator it_stmt_seq = ast.seq_decls.rbegin();
     std::string *name_maxtilen = new std::string("max_tiles_n");
     std::tuple<std::list<Statement::Base*>*, Statement::Var_Decl*> stmts_tilesize = get_tile_computation(ast, *name_maxtilen, *it_stmt_seq);
     blk_parallel->statements.insert(blk_parallel->statements.end(), std::get<0>(stmts_tilesize)->begin(), std::get<0>(stmts_tilesize)->end());
-    blk_parallel->statements.push_back(new Statement::CustomeCode("#pragma omp for"));
+    if (ast.checkpoint && ast.checkpoint->cyk) {
+      blk_parallel->statements.push_back(new Statement::CustomeCode("#pragma omp for ordered schedule(dynamic)"));
+    } else {
+      blk_parallel->statements.push_back(new Statement::CustomeCode("#pragma omp for"));
+    }
     blk_parallel->statements.push_back(new Statement::CustomeCode("// OPENMP < 3 requires signed int here ..."));
 
     // parallel part
