@@ -98,6 +98,7 @@ check_checkpoint_eq()
   build_cpp $GRAMMAR/$1 $cpp_base $3
 
   # run command and create checkpoint archives after $6 seconds
+  old_cpp_run_flags=$RUN_CPP_FLAGS
   RUN_CPP_FLAGS="--checkpointInterval 0:0:0:$6 --keepArchives"
 
   if [ $# == 7 ]; then
@@ -135,6 +136,9 @@ check_checkpoint_eq()
     rm -f string.o $TABLE_PATH $LOGFILE_PATH
   fi
   echo +------------------------------------------------------------------------------+
+  
+  # clean up the run flags, i.e. revert to state prior to this test
+  RUN_CPP_FLAGS=$old_cpp_run_flags
 }
 
 check_new_old_eq()
