@@ -23,10 +23,18 @@
 
 #include "cyk.hh"
 
-Statement::Fn_Call mutex_lock() {
-  Statement::Fn_Call fn = Statement::Fn_Call("lock_shared");
-  fn.add_arg(new std::string("mutex"));
-  fn.is_obj = true;
+static const char *MUTEX = "mutex";
+
+Statement::Fn_Call *mutex_lock() {
+  Statement::Fn_Call *fn = new Statement::Fn_Call("lock_shared");
+  fn->add_arg(new std::string(MUTEX));
+  fn->is_obj = Bool(true);
+  return fn;
+}
+Statement::Fn_Call *mutex_unlock() {
+  Statement::Fn_Call *fn = new Statement::Fn_Call("unlock_shared");
+  fn->add_arg(new std::string(MUTEX));
+  fn->is_obj = Bool(true);
   return fn;
 }
 
@@ -287,7 +295,7 @@ std::list<Statement::Base*> *cyk_traversal_singlethread(const AST &ast) {
  *
 
  */
-std::list<Statement::Base*> *get_cyk_openmp_parallel(const AST &ast, Statement::Var_Decl *seq, Statement::Var_Decl *tile_size, std::string *name_maxtilen, bool with_checkpoint) {
+std::list<Statement::Base*> *cyk_traversal_multithread_parallel(const AST &ast, Statement::Var_Decl *seq, Statement::Var_Decl *tile_size, std::string *name_maxtilen, bool with_checkpoint) {
   size_t track = 0; // as openMP currently only works for single track grammars
   std::list<Statement::Base*> *stmts = new std::list<Statement::Base*>();
 
@@ -310,7 +318,7 @@ std::list<Statement::Base*> *get_cyk_openmp_parallel(const AST &ast, Statement::
   }
   Statement::For *loop_z = get_for_openMP(z, start_z, new Expr::Vacc(name_maxtilen), tile_size);
   if (with_checkpoint) {
-    loop_z->statements.push_back(new Statement::CustomeCode("mutex.lock_shared();"));
+    loop_z->statements.push_back(mutex_lock());
   }
   loop_z->statements.push_back(col.loop);
   if (with_checkpoint) {
@@ -318,7 +326,7 @@ std::list<Statement::Base*> *get_cyk_openmp_parallel(const AST &ast, Statement::
     Statement::Block *blk_omp = new Statement::Block();
     blk_omp->statements.push_back(new Statement::CustomeCode("// force omp to wait for all threads to finish their current batch (of size tile_size)"));
     blk_omp->statements.push_back(new Statement::CustomeCode("outer_loop_1_idx += tile_size;"));
-    blk_omp->statements.push_back(new Statement::CustomeCode("mutex.unlock_shared();"));
+    blk_omp->statements.push_back(mutex_unlock());
     loop_z->statements.push_back(blk_omp);
   }
 
@@ -339,7 +347,7 @@ std::list<Statement::Base*> *get_cyk_openmp_parallel(const AST &ast, Statement::
   // produce: unsigned int x = y - z + tile_size;
   if (with_checkpoint) {
     loop_y->statements.push_back(new Statement::CustomeCode("++inner_loop_2_idx_loaded;"));
-    loop_y->statements.push_back(new Statement::CustomeCode("mutex.lock_shared();"));
+    loop_y->statements.push_back(mutex_lock());
   }
   loop_y->statements.push_back(x);
   loop_y->statements.push_back(colB.loop);
@@ -348,7 +356,7 @@ std::list<Statement::Base*> *get_cyk_openmp_parallel(const AST &ast, Statement::
     Statement::Block *blk_omp2 = new Statement::Block();
     blk_omp2->statements.push_back(new Statement::CustomeCode("inner_loop_2_idx += tile_size;"));
     blk_omp2->statements.push_back(new Statement::CustomeCode("outer_loop_2_idx = z;"));
-    blk_omp2->statements.push_back(new Statement::CustomeCode("mutex.unlock_shared();"));
+    blk_omp2->statements.push_back(mutex_unlock());
     loop_y->statements.push_back(blk_omp2);
   }
 
@@ -393,7 +401,7 @@ std::list<Statement::Base*> *get_cyk_openmp_parallel(const AST &ast, Statement::
  * 12 |                                                156
  *
  */
-std::list<Statement::Base*> *get_cyk_openmp_serial(const AST &ast, Statement::Var_Decl *seq, Statement::Var_Decl *tile_size, std::string *name_maxtilen, bool with_checkpoint) {
+std::list<Statement::Base*> *cyk_traversal_multithread_serial(const AST &ast, Statement::Var_Decl *seq, Statement::Var_Decl *tile_size, std::string *name_maxtilen, bool with_checkpoint) {
   size_t track = 0; // as openMP currently only works for single track grammars
   std::list<Statement::Base*> *stmts = new std::list<Statement::Base*>();
 
@@ -401,29 +409,27 @@ std::list<Statement::Base*> *get_cyk_openmp_serial(const AST &ast, Statement::Va
 
   CYKloop row = get_for_row(ast.grammar()->left_running_indices[track], row_start, new Expr::Const(0), false, with_checkpoint);
   if (with_checkpoint) {
-    row.loop->statements.push_back(new Statement::CustomeCode("mutex.lock_shared();"));
+    row.loop->statements.push_back(mutex_lock());
   }
 
   CYKloop col = get_for_column(ast.grammar()->right_running_indices[track], seq, new Expr::Vacc(name_maxtilen), nullptr, false, true, with_checkpoint);
   col.loop->statements.push_back(row.loop);
 
   stmts->push_back(col.loop);
-//  if (!with_checkpoint) {
-    stmts->push_back(col.end_state);
+  stmts->push_back(col.end_state);
 
-    CYKloop first_row = get_for_row(ast.grammar()->left_running_indices[track], row_start, new Expr::Const(0), false, with_checkpoint);
-    if (with_checkpoint) {
-      first_row.loop->statements.push_back(new Statement::CustomeCode("mutex.lock_shared();"));
-    }
-    stmts->push_back(first_row.loop);
-    stmts->push_back(first_row.end_state);
+  CYKloop first_row = get_for_row(ast.grammar()->left_running_indices[track], row_start, new Expr::Const(0), false, with_checkpoint);
+  if (with_checkpoint) {
+    first_row.loop->statements.push_back(mutex_lock());
+  }
+  stmts->push_back(first_row.loop);
+  stmts->push_back(first_row.end_state);
 
-    CYKloop first_col = get_for_column(ast.grammar()->right_running_indices[track], seq, new Expr::Vacc(name_maxtilen), nullptr, false, true, with_checkpoint);
-    if (with_checkpoint) {
-      first_col.loop->statements.push_back(new Statement::CustomeCode("mutex.lock_shared();"));
-    }
-    stmts->push_back(first_col.loop);
-//  }
+  CYKloop first_col = get_for_column(ast.grammar()->right_running_indices[track], seq, new Expr::Vacc(name_maxtilen), nullptr, false, true, with_checkpoint);
+  if (with_checkpoint) {
+    first_col.loop->statements.push_back(mutex_lock());
+  }
+  stmts->push_back(first_col.loop);
 
   return stmts;
 }
@@ -519,7 +525,7 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts, st
     }
   }
   if (with_checkpoint && for_openMP && openMP_serial) {
-    nt_stmts->push_back(new Statement::CustomeCode("mutex.unlock_shared();"));
+    nt_stmts->push_back(mutex_unlock());
   }
 
   return nt_stmts;
@@ -605,7 +611,7 @@ Fn_Def *print_CYK(const AST &ast) {
     blk_parallel->statements.push_back(new Statement::CustomeCode("// OPENMP < 3 requires signed int here ..."));
 
     // parallel part
-    std::list<Statement::Base*> *stmts = get_cyk_openmp_parallel(ast, *it_stmt_seq, std::get<1>(stmts_tilesize), name_maxtilen, ast.checkpoint && ast.checkpoint->cyk);
+    std::list<Statement::Base*> *stmts = cyk_traversal_multithread_parallel(ast, *it_stmt_seq, std::get<1>(stmts_tilesize), name_maxtilen, ast.checkpoint && ast.checkpoint->cyk);
     // inject NT calls
     std::list<Statement::Base*> *new_stmts = add_nt_calls(*stmts, new std::list<std::string*>(), ast.grammar()->topological_ord(), ast.checkpoint && ast.checkpoint->cyk, true, false);
     stmts->insert(stmts->end(), new_stmts->begin(), new_stmts->end());
@@ -616,7 +622,7 @@ Fn_Def *print_CYK(const AST &ast) {
 
     // serial part
     fn_cyk->stmts.insert(fn_cyk->stmts.end(), std::get<0>(stmts_tilesize)->begin(), std::get<0>(stmts_tilesize)->end());
-    stmts = get_cyk_openmp_serial(ast, *it_stmt_seq, std::get<1>(stmts_tilesize), name_maxtilen, ast.checkpoint && ast.checkpoint->cyk);
+    stmts = cyk_traversal_multithread_serial(ast, *it_stmt_seq, std::get<1>(stmts_tilesize), name_maxtilen, ast.checkpoint && ast.checkpoint->cyk);
     // inject NT calls
     std::list<Statement::Base*> *new_serial_stmts = add_nt_calls(*stmts, new std::list<std::string*>(), ast.grammar()->topological_ord(), ast.checkpoint && ast.checkpoint->cyk, true, true);
     stmts->insert(stmts->end(), new_serial_stmts->begin(), new_serial_stmts->end());
