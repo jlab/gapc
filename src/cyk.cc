@@ -78,12 +78,9 @@ std::tuple<Statement::For*, Statement::Var_Decl*> get_for_column(Expr::Vacc *run
     dynamic_cast<Expr::Fn_Call*>(col_end)->add_arg(input_seq->name);
     dynamic_cast<Expr::Fn_Call*>(col_end)->is_obj = Bool(true);
   }
-  if (endp1) {
-    col_end = col_end->plus(new Expr::Const(1));
-  }
 
   // create condition of For loop
-  Expr::Less *cond_col = new Expr::Less(new Expr::Vacc(*var_col), col_end);
+  Expr::Less *cond_col = new Expr::Less(new Expr::Vacc(*var_col), endp1 ? col_end->plus(new Expr::Const(1)) : col_end);
 
   Statement::For *loop = new Statement::For(var_col, cond_col);
 
@@ -298,7 +295,7 @@ std::list<Statement::Base*> *get_cyk_openmp_parallel(const AST &ast, Statement::
 
   // A
   std::tuple<Statement::For*, Statement::Var_Decl*> row = get_for_row(ast.grammar()->left_running_indices[track], seq, row_start, z, true, with_checkpoint);
-  add_nts(ast.grammar()->axiom->tracks(), std::get<0>(row)->statements, ast.grammar()->topological_ord(), BOTH);
+//  add_nts(ast.grammar()->axiom->tracks(), std::get<0>(row)->statements, ast.grammar()->topological_ord(), BOTH);
 
   std::tuple<Statement::For*, Statement::Var_Decl*> col = get_for_column(ast.grammar()->right_running_indices[track], seq, z, z->plus(new Expr::Vacc(*tile_size)), true, false, with_checkpoint);
   std::get<0>(col)->statements.push_back(std::get<0>(row));
@@ -310,7 +307,7 @@ std::list<Statement::Base*> *get_cyk_openmp_parallel(const AST &ast, Statement::
 
   // B
   std::tuple<Statement::For*, Statement::Var_Decl*> rowB = get_for_row(ast.grammar()->left_running_indices[track], seq, new Expr::Vacc(*x), (new Expr::Vacc(*x))->minus(new Expr::Vacc(*tile_size)), true, with_checkpoint);
-  add_nts(ast.grammar()->axiom->tracks(), std::get<0>(rowB)->statements, ast.grammar()->topological_ord(), BOTH);
+//  add_nts(ast.grammar()->axiom->tracks(), std::get<0>(rowB)->statements, ast.grammar()->topological_ord(), BOTH);
 
   std::tuple<Statement::For*, Statement::Var_Decl*> colB = get_for_column(ast.grammar()->right_running_indices[track], seq, y, y->plus(new Expr::Vacc(*tile_size)), true, false, with_checkpoint);
   std::get<0>(colB)->statements.push_back(std::get<0>(rowB));
@@ -356,33 +353,62 @@ std::list<Statement::Base*> *get_cyk_openmp_serial(const AST &ast, Statement::Va
   Expr::Base *row_start = (*ast.grammar()->topological_ord().begin())->right_indices.at(track)->vacc()->plus(new Expr::Const(1));
 
   std::tuple<Statement::For*, Statement::Var_Decl*> row = get_for_row(ast.grammar()->left_running_indices[track], seq, row_start, new Expr::Const(0), false, with_checkpoint);
-  add_nts(ast.grammar()->axiom->tracks(), std::get<0>(row)->statements, ast.grammar()->topological_ord(), BOTH);
+//  add_nts(ast.grammar()->axiom->tracks(), std::get<0>(row)->statements, ast.grammar()->topological_ord(), BOTH);
 
   std::tuple<Statement::For*, Statement::Var_Decl*> col = get_for_column(ast.grammar()->right_running_indices[track], seq, new Expr::Vacc(name_maxtilen), nullptr, false, true, with_checkpoint);
   std::get<0>(col)->statements.push_back(std::get<0>(row));
 
   stmts->push_back(std::get<0>(col));
+  stmts->push_back(std::get<1>(col));
+
+  std::tuple<Statement::For*, Statement::Var_Decl*> first_row = get_for_row(ast.grammar()->left_running_indices[track], seq, row_start, new Expr::Const(0), false, with_checkpoint);
+  stmts->push_back(std::get<0>(first_row));
+  stmts->push_back(std::get<1>(first_row));
+
+  std::tuple<Statement::For*, Statement::Var_Decl*> first_col = get_for_column(ast.grammar()->right_running_indices[track], seq, new Expr::Vacc(name_maxtilen), nullptr, false, true, with_checkpoint);
+  stmts->push_back(std::get<0>(first_col));
 
   return stmts;
 }
 
-std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts, std::list<std::string*> *loop_vars, std::list<Symbol::NT*> orderedNTs, bool with_checkpoint) {
-  int ns = 1;
-  for (std::list<Statement::Base*>::iterator s = stmts.begin(); s != stmts.end(); ++s, ++ns) {
+std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts, std::list<std::string*> *loop_vars, std::list<Symbol::NT*> orderedNTs, bool with_checkpoint, bool for_openMP, bool openMP_serial) {
+  bool contains_nested_for = false;
+  for (std::list<Statement::Base*>::iterator s = stmts.begin(); s != stmts.end(); ++s) {
     // recurse into next for loop
     if ((*s)->is(Statement::FOR)) {
+      contains_nested_for = true;
       Statement::For *fl = dynamic_cast<Statement::For*>(*s);
       std::list<std::string*> *next_loop_vars = new std::list<std::string*>();
       next_loop_vars->insert(next_loop_vars->end(), loop_vars->begin(), loop_vars->end());
-      next_loop_vars->push_back(fl->var_decl->name);
-      std::list<Statement::Base*> *new_stmts = add_nt_calls(fl->statements, next_loop_vars, orderedNTs, with_checkpoint);
+      if (!for_openMP || (fl->var_decl->name->find("t_", 0) == 0)) {
+        // openMP code adds in loops that do not traverse NT indices. Only add
+        // loop variable, if it regard to NT indices, which all start with t_
+        // e.g. t_0_i or t_1_j
+        next_loop_vars->push_back(fl->var_decl->name);
+      }
+      std::list<Statement::Base*> *new_stmts = add_nt_calls(fl->statements, next_loop_vars, orderedNTs, with_checkpoint, for_openMP, openMP_serial);
       if (new_stmts->size() > (with_checkpoint ? 1 : 0)) {
         fl->statements.insert(fl->statements.end(), new_stmts->begin(), new_stmts->end());
       } else {
         // remove for loops without any NT calls
+        if (!contains_nested_for) {
+          s = stmts.erase(s);
+        }
+      }
+    }
+  }
+
+  // remove completely empty loops
+  for (std::list<Statement::Base*>::iterator s = stmts.begin(); s != stmts.end(); ++s) {
+    if ((*s)->is(Statement::FOR)) {
+      if (dynamic_cast<Statement::For*>(*s)->statements.size() == 0) {
         s = stmts.erase(s);
       }
     }
+  }
+
+  if (for_openMP && contains_nested_for) {
+    return new std::list<Statement::Base*>();
   }
 
   // add NTs
@@ -396,12 +422,14 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts, st
     }
     std::list<Expr::Base*> *args = new std::list<Expr::Base*>();
     size_t used_indices = 0;
+    size_t nt_has_indices = 0;
     for (size_t t = 0; t < (*i)->tracks(); ++t) {
       if (!(*i)->tables()[t].delete_left_index()) {
         Expr::Vacc *idx = (*i)->left_indices.at(t)->vacc();
         if (std::find(loop_vars->begin(), loop_vars->end(), idx->name()) != loop_vars->end()) {
           used_indices++;
         }
+        nt_has_indices++;
         args->push_back(idx->minus(new Expr::Const(1)));
       }
       if (!(*i)->tables()[t].delete_right_index()) {
@@ -409,14 +437,18 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts, st
         if (std::find(loop_vars->begin(), loop_vars->end(), idx->name()) != loop_vars->end()) {
           used_indices++;
         }
+        nt_has_indices++;
         args->push_back(idx);
       }
     }
     if (used_indices == loop_vars->size()) {
-      Statement::Fn_Call *nt_call = new Statement::Fn_Call((*(*i)->code_list().rbegin())->name, args, Loc());
-      nt_stmts->push_back(nt_call);
+      if (!openMP_serial || (nt_has_indices == loop_vars->size())) {
+        Statement::Fn_Call *nt_call = new Statement::Fn_Call((*(*i)->code_list().rbegin())->name, args, Loc());
+        nt_stmts->push_back(nt_call);
+      }
     }
   }
+
   return nt_stmts;
 }
 
@@ -463,7 +495,7 @@ Fn_Def *print_CYK(const AST &ast) {
     stmts = get_cyk_singletrack(track, ast, *it_stmt_seq, stmts, ast.checkpoint && ast.checkpoint->cyk);
   }
   // add NT calls
-  std::list<Statement::Base*> *new_stmts = add_nt_calls(*stmts, new std::list<std::string*>(), ast.grammar()->topological_ord(), ast.checkpoint && ast.checkpoint->cyk);
+  std::list<Statement::Base*> *new_stmts = add_nt_calls(*stmts, new std::list<std::string*>(), ast.grammar()->topological_ord(), ast.checkpoint && ast.checkpoint->cyk, false, false);
   stmts->insert(stmts->end(), new_stmts->begin(), new_stmts->end());
   fn_cyk->stmts.insert(fn_cyk->stmts.end(), stmts->begin(), stmts->end());
 
@@ -485,6 +517,10 @@ Fn_Def *print_CYK(const AST &ast) {
 
     // parallel part
     std::list<Statement::Base*> *stmts = get_cyk_openmp_parallel(ast, *it_stmt_seq, std::get<1>(stmts_tilesize), name_maxtilen, ast.checkpoint && ast.checkpoint->cyk);
+    // inject NT calls
+    std::list<Statement::Base*> *new_stmts = add_nt_calls(*stmts, new std::list<std::string*>(), ast.grammar()->topological_ord(), ast.checkpoint && ast.checkpoint->cyk, true, false);
+    stmts->insert(stmts->end(), new_stmts->begin(), new_stmts->end());
+
     blk_parallel->statements.insert(blk_parallel->statements.end(), stmts->begin(), stmts->end());
     blk_parallel->statements.push_back(new Statement::CustomeCode("// end parallel"));
     fn_cyk->stmts.push_back(blk_parallel);
@@ -492,6 +528,9 @@ Fn_Def *print_CYK(const AST &ast) {
     // serial part
     fn_cyk->stmts.insert(fn_cyk->stmts.end(), std::get<0>(stmts_tilesize)->begin(), std::get<0>(stmts_tilesize)->end());
     stmts = get_cyk_openmp_serial(ast, *it_stmt_seq, std::get<1>(stmts_tilesize), name_maxtilen, ast.checkpoint && ast.checkpoint->cyk);
+    // inject NT calls
+    std::list<Statement::Base*> *new_serial_stmts = add_nt_calls(*stmts, new std::list<std::string*>(), ast.grammar()->topological_ord(), ast.checkpoint && ast.checkpoint->cyk, true, true);
+    stmts->insert(stmts->end(), new_serial_stmts->begin(), new_serial_stmts->end());
     fn_cyk->stmts.insert(fn_cyk->stmts.end(), stmts->begin(), stmts->end());
   }
   fn_cyk->stmts.push_back(new Statement::CustomeCode("#endif"));
