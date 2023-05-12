@@ -366,7 +366,7 @@ std::list<Statement::Base*> *get_cyk_openmp_serial(const AST &ast, Statement::Va
   return stmts;
 }
 
-std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts, std::list<std::string*> *loop_vars, std::list<Symbol::NT*> orderedNTs) {
+std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts, std::list<std::string*> *loop_vars, std::list<Symbol::NT*> orderedNTs, bool with_checkpoint) {
   int ns = 1;
   for (std::list<Statement::Base*>::iterator s = stmts.begin(); s != stmts.end(); ++s, ++ns) {
     // recurse into next for loop
@@ -375,8 +375,8 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts, st
       std::list<std::string*> *next_loop_vars = new std::list<std::string*>();
       next_loop_vars->insert(next_loop_vars->end(), loop_vars->begin(), loop_vars->end());
       next_loop_vars->push_back(fl->var_decl->name);
-      std::list<Statement::Base*> *new_stmts = add_nt_calls(fl->statements, next_loop_vars, orderedNTs);
-      if (new_stmts->size() > 0) {
+      std::list<Statement::Base*> *new_stmts = add_nt_calls(fl->statements, next_loop_vars, orderedNTs, with_checkpoint);
+      if (new_stmts->size() > (with_checkpoint ? 1 : 0)) {
         fl->statements.insert(fl->statements.end(), new_stmts->begin(), new_stmts->end());
       } else {
         // remove for loops without any NT calls
@@ -387,6 +387,9 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts, st
 
   // add NTs
   std::list<Statement::Base*> *nt_stmts = new std::list<Statement::Base*>();
+  if (with_checkpoint) {
+    nt_stmts->push_back(new Statement::CustomeCode("std::lock_guard<fair_mutex> lock(mutex);"));
+  }
   for (std::list<Symbol::NT*>::const_iterator i = orderedNTs.begin(); i != orderedNTs.end(); ++i) {
     if (!(*i)->is_tabulated()) {
       continue;
@@ -460,7 +463,7 @@ Fn_Def *print_CYK(const AST &ast) {
     stmts = get_cyk_singletrack(track, ast, *it_stmt_seq, stmts, ast.checkpoint && ast.checkpoint->cyk);
   }
   // add NT calls
-  std::list<Statement::Base*> *new_stmts = add_nt_calls(*stmts, new std::list<std::string*>(), ast.grammar()->topological_ord());
+  std::list<Statement::Base*> *new_stmts = add_nt_calls(*stmts, new std::list<std::string*>(), ast.grammar()->topological_ord(), ast.checkpoint && ast.checkpoint->cyk);
   stmts->insert(stmts->end(), new_stmts->begin(), new_stmts->end());
   fn_cyk->stmts.insert(fn_cyk->stmts.end(), stmts->begin(), stmts->end());
 
