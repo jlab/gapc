@@ -23,6 +23,13 @@
 
 #include "cyk.hh"
 
+Statement::Fn_Call mutex_lock() {
+  Statement::Fn_Call fn = Statement::Fn_Call("lock_shared");
+  fn.add_arg(new std::string("mutex"));
+  fn.is_obj = true;
+  return fn;
+}
+
 std::tuple<std::list<Statement::Base*>*, Statement::Var_Decl*> get_tile_computation(const AST &ast, std::string name_maxtilen, Statement::Var_Decl *input_seq) {
   Statement::Var_Decl *tile_size = new Statement::Var_Decl(
         new Type::Size(),
@@ -55,6 +62,15 @@ std::tuple<std::list<Statement::Base*>*, Statement::Var_Decl*> get_tile_computat
   return std::make_tuple(res, tile_size);
 }
 
+// deep copy of a list of statements
+std::list<Statement::Base*> *copy_statements(std::list<Statement::Base*> *other) {
+  std::list<Statement::Base*> *co = new std::list<Statement::Base*>();
+  for (std::list<Statement::Base*>::iterator i = other->begin(); i != other->end(); ++i) {
+    co->push_back((*i)->copy());
+  }
+  return co;
+}
+
 /* data structure to bundle a Statement::For and a Statement::Var_Decl which
  * constitute a for loop to iterate over NT indices and the last index the loop
  * not yet iterated over.
@@ -68,42 +84,42 @@ class CYKloop {
   }
 };
 
-CYKloop get_for_column(Expr::Vacc *running_boundary, Statement::Var_Decl *input_seq, Expr::Base *col_start, Expr::Base *col_end, bool for_openMP, bool endp1, bool with_checkpoint) {
+CYKloop get_for_column(Expr::Vacc *running_boundary, Statement::Var_Decl *input_seq, Expr::Base *start, Expr::Base *end, bool for_openMP, bool endp1, bool with_checkpoint) {
   // create loop variable addressing the DP column (=2nd index)
   // e.g.: for (unsigned int t_0_j = 0; t_0_j < t_0_seq.size(); ++t_0_j) {
   Type::Base *t = new Type::Size();
   if (with_checkpoint && !for_openMP) {
     t = new Type::External("");  // ugly hack to avoid redeclaration of variable
-    col_start = new Expr::Cond(
+    start = new Expr::Cond(
         new Expr::Vacc(new std::string(*running_boundary->name() + "_loaded++")),
-        !endp1 ? new Expr::Const(0) : col_start,
+        !endp1 ? new Expr::Const(0) : start,
         running_boundary);
   }
 
   Statement::Var_Decl *var_col = new Statement::Var_Decl(
       t,
       running_boundary,
-      col_start);
+      start);
 
   // create end point for loop variable
   if (!for_openMP) {
-    col_end = new Expr::Fn_Call(new std::string("size"));
-    dynamic_cast<Expr::Fn_Call*>(col_end)->add_arg(input_seq->name);
-    dynamic_cast<Expr::Fn_Call*>(col_end)->is_obj = Bool(true);
+    end = new Expr::Fn_Call(new std::string("size"));
+    dynamic_cast<Expr::Fn_Call*>(end)->add_arg(input_seq->name);
+    dynamic_cast<Expr::Fn_Call*>(end)->is_obj = Bool(true);
   }
 
   // create condition of For loop
-  Expr::Less *cond_col = new Expr::Less(new Expr::Vacc(*var_col), endp1 ? col_end->plus(new Expr::Const(1)) : col_end);
+  Expr::Less *cond_col = new Expr::Less(new Expr::Vacc(*var_col), endp1 ? end->plus(new Expr::Const(1)) : end);
 
   Statement::For *loop = new Statement::For(var_col, cond_col);
 
   Statement::Var_Decl *var_nonloop = var_col->clone();
-  var_nonloop->rhs = col_end;
+  var_nonloop->rhs = end;
 
   return CYKloop(loop, var_nonloop);
 }
 
-CYKloop get_for_row(Expr::Vacc *running_boundary, Statement::Var_Decl *input_seq, Expr::Base *start, Expr::Base *row_end, bool for_openMP, bool with_checkpoint) {
+CYKloop get_for_row(Expr::Vacc *running_boundary, Expr::Base *start, Expr::Base *end, bool for_openMP, bool with_checkpoint) {
   // create loop variable addressing the DP row (=1st index)
   // e.g.: for (unsigned int t_0_i = t_0_j + 1; t_0_i > 1; t_0_i--) {
   Type::Base *t = new Type::Size();
@@ -122,11 +138,8 @@ CYKloop get_for_row(Expr::Vacc *running_boundary, Statement::Var_Decl *input_seq
       running_boundary,
       start);
 
-  // create end point for loop variable
-//  Expr::Const *row_end = new Expr::Const(1);
-
   // create condition of For loop
-  Expr::Greater *cond_row = new Expr::Greater(new Expr::Vacc(*var_row), row_end);
+  Expr::Greater *cond_row = new Expr::Greater(new Expr::Vacc(*var_row), end);
 
   Statement::For *loop = new Statement::For(var_row, cond_row);
   Statement::Var_Assign *x = new Statement::Var_Assign(*var_row, new Expr::Const(new Const::Int(-1)));
@@ -154,14 +167,6 @@ Statement::For *get_for_openMP(Expr::Vacc *loopvar, Expr::Base *start, Expr::Bas
   loop->inc = x;
 
   return loop;
-}
-
-std::list<Statement::Base*> *copy_statements(std::list<Statement::Base*> *other) {
-  std::list<Statement::Base*> *co = new std::list<Statement::Base*>();
-  for (std::list<Statement::Base*>::iterator i = other->begin(); i != other->end(); ++i) {
-    co->push_back((*i)->copy());
-  }
-  return co;
 }
 
 /*
@@ -194,7 +199,7 @@ std::list<Statement::Base*> *copy_statements(std::list<Statement::Base*> *other)
  * 4 |              10 16        4 |              A  C
  * 5 |                 15        5 |                 C
  */
-std::list<Statement::Base*> *cyk_traversal_singlethread(size_t track, const AST &ast, Statement::Var_Decl *seq, std::list<Statement::Base*> *nested_stmts, bool with_checkpoint) {
+std::list<Statement::Base*> *cyk_traversal_singlethread_singletrack(size_t track, const AST &ast, Statement::Var_Decl *seq, std::list<Statement::Base*> *nested_stmts, bool with_checkpoint) {
   std::list<Statement::Base*> *stmts = new std::list<Statement::Base*>();
 
   Expr::Base *row_start = (*ast.grammar()->topological_ord().begin())->right_indices.at(track)->vacc()->plus(new Expr::Const(1));
@@ -202,7 +207,7 @@ std::list<Statement::Base*> *cyk_traversal_singlethread(size_t track, const AST 
   // A: major cells in triangle below first row, left of last columns
   // A: t_x_i = row index
   std::list<Statement::Base*> *co = copy_statements(nested_stmts);
-  CYKloop row = get_for_row(ast.grammar()->left_running_indices[track], seq, row_start, new Expr::Const(1), false, with_checkpoint);
+  CYKloop row = get_for_row(ast.grammar()->left_running_indices[track], row_start, new Expr::Const(1), false, with_checkpoint);
   row.loop->statements.insert(row.loop->statements.end(), co->begin(), co->end());
 
   // A: t_x_j = column index
@@ -218,7 +223,7 @@ std::list<Statement::Base*> *cyk_traversal_singlethread(size_t track, const AST 
   stmts->push_back(col.end_state);
 
   // C: last column
-  CYKloop rowC = get_for_row(ast.grammar()->left_running_indices[track], seq, row_start, new Expr::Const(1), false, with_checkpoint);
+  CYKloop rowC = get_for_row(ast.grammar()->left_running_indices[track], row_start, new Expr::Const(1), false, with_checkpoint);
   co = copy_statements(nested_stmts);
   rowC.loop->statements.insert(rowC.loop->statements.end(), co->begin(), co->end());
   stmts->push_back(rowC.loop);
@@ -230,6 +235,19 @@ std::list<Statement::Base*> *cyk_traversal_singlethread(size_t track, const AST 
 
   return stmts;
 }
+
+// recursively reverse iterate through tracks and create nested for loop structures
+std::list<Statement::Base*> *cyk_traversal_singlethread(const AST &ast) {
+  std::list<Statement::Base*> *stmts = new std::list<Statement::Base*>();
+
+  std::vector<Statement::Var_Decl*>::const_reverse_iterator it_stmt_seq = ast.seq_decls.rbegin();
+  for (int track = ast.grammar()->axiom->tracks() - 1; track >= 0; track--, ++it_stmt_seq) {
+    stmts = cyk_traversal_singlethread_singletrack(track, ast, *it_stmt_seq, stmts, ast.checkpoint && ast.checkpoint->cyk);
+  }
+
+  return stmts;
+}
+
 
 
 /*
@@ -280,7 +298,7 @@ std::list<Statement::Base*> *get_cyk_openmp_parallel(const AST &ast, Statement::
   Statement::Var_Decl *x = new Statement::Var_Decl(new Type::Size(), "x", (y->minus(z))->plus(new Expr::Vacc(*tile_size)));
 
   // A
-  CYKloop row = get_for_row(ast.grammar()->left_running_indices[track], seq, row_start, z, true, with_checkpoint);
+  CYKloop row = get_for_row(ast.grammar()->left_running_indices[track], row_start, z, true, with_checkpoint);
 //  add_nts(ast.grammar()->axiom->tracks(), std::get<0>(row)->statements, ast.grammar()->topological_ord(), BOTH);
 
   CYKloop col = get_for_column(ast.grammar()->right_running_indices[track], seq, z, z->plus(new Expr::Vacc(*tile_size)), true, false, with_checkpoint);
@@ -307,7 +325,7 @@ std::list<Statement::Base*> *get_cyk_openmp_parallel(const AST &ast, Statement::
   stmts->push_back(loop_z);
 
   // B
-  CYKloop rowB = get_for_row(ast.grammar()->left_running_indices[track], seq, new Expr::Vacc(*x), (new Expr::Vacc(*x))->minus(new Expr::Vacc(*tile_size)), true, with_checkpoint);
+  CYKloop rowB = get_for_row(ast.grammar()->left_running_indices[track], new Expr::Vacc(*x), (new Expr::Vacc(*x))->minus(new Expr::Vacc(*tile_size)), true, with_checkpoint);
 //  add_nts(ast.grammar()->axiom->tracks(), std::get<0>(rowB)->statements, ast.grammar()->topological_ord(), BOTH);
 
   CYKloop colB = get_for_column(ast.grammar()->right_running_indices[track], seq, y, y->plus(new Expr::Vacc(*tile_size)), true, false, with_checkpoint);
@@ -381,7 +399,7 @@ std::list<Statement::Base*> *get_cyk_openmp_serial(const AST &ast, Statement::Va
 
   Expr::Base *row_start = (*ast.grammar()->topological_ord().begin())->right_indices.at(track)->vacc()->plus(new Expr::Const(1));
 
-  CYKloop row = get_for_row(ast.grammar()->left_running_indices[track], seq, row_start, new Expr::Const(0), false, with_checkpoint);
+  CYKloop row = get_for_row(ast.grammar()->left_running_indices[track], row_start, new Expr::Const(0), false, with_checkpoint);
   if (with_checkpoint) {
     row.loop->statements.push_back(new Statement::CustomeCode("mutex.lock_shared();"));
   }
@@ -393,7 +411,7 @@ std::list<Statement::Base*> *get_cyk_openmp_serial(const AST &ast, Statement::Va
 //  if (!with_checkpoint) {
     stmts->push_back(col.end_state);
 
-    CYKloop first_row = get_for_row(ast.grammar()->left_running_indices[track], seq, row_start, new Expr::Const(0), false, with_checkpoint);
+    CYKloop first_row = get_for_row(ast.grammar()->left_running_indices[track], row_start, new Expr::Const(0), false, with_checkpoint);
     if (with_checkpoint) {
       first_row.loop->statements.push_back(new Statement::CustomeCode("mutex.lock_shared();"));
     }
@@ -541,19 +559,18 @@ Fn_Def *print_CYK(const AST &ast) {
               new Expr::Not(ast.grammar()->right_running_indices.at(track)))));
     }
   }
-  fn_cyk->stmts.push_back(new Statement::CustomeCode("#ifndef _OPENMP"));
 
+  // ==== single thread version
+  fn_cyk->stmts.push_back(new Statement::CustomeCode("#ifndef _OPENMP"));
   // recursively reverse iterate through tracks and create nested for loop structures
-  std::list<Statement::Base*> *stmts = new std::list<Statement::Base*>();
-  std::vector<Statement::Var_Decl*>::const_reverse_iterator it_stmt_seq = ast.seq_decls.rbegin();
-  for (int track = ast.grammar()->axiom->tracks() - 1; track >= 0; track--, ++it_stmt_seq) {
-    stmts = cyk_traversal_singlethread(track, ast, *it_stmt_seq, stmts, ast.checkpoint && ast.checkpoint->cyk);
-  }
-  // add NT calls
+  std::list<Statement::Base*> *stmts = cyk_traversal_singlethread(ast);
+  // add NT calls to traversal structure
   std::list<Statement::Base*> *new_stmts = add_nt_calls(*stmts, new std::list<std::string*>(), ast.grammar()->topological_ord(), ast.checkpoint && ast.checkpoint->cyk, false, false);
   stmts->insert(stmts->end(), new_stmts->begin(), new_stmts->end());
+  // finally add traversal structure with NT calls to function body
   fn_cyk->stmts.insert(fn_cyk->stmts.end(), stmts->begin(), stmts->end());
 
+  // ==== multi thread version (only single-track possible for now)
   fn_cyk->stmts.push_back(new Statement::CustomeCode("#else"));
   // FIXME generalize for multi-track ...
   if (ast.grammar()->axiom->tracks() == 1) {
@@ -605,6 +622,7 @@ Fn_Def *print_CYK(const AST &ast) {
     stmts->insert(stmts->end(), new_serial_stmts->begin(), new_serial_stmts->end());
     fn_cyk->stmts.insert(fn_cyk->stmts.end(), stmts->begin(), stmts->end());
   }
+
   fn_cyk->stmts.push_back(new Statement::CustomeCode("#endif"));
 
   return fn_cyk;
