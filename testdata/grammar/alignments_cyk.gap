@@ -16,6 +16,34 @@ signature sig_alignments(alphabet, answer) {
 algebra alg_enum auto enum;
 algebra alg_count auto count;
 
+algebra alg_maxMatch implements sig_alignments(alphabet = char, answer = int) {
+  int Ins(<char a, void>, <Subsequence b, void>, int x) {
+    return x;
+  }
+  int Del(<void, char a>, <void, Subsequence b>, int x) {
+    return x;
+  }
+  int Ers(<char a, char b>, <Subsequence l1, Subsequence l2>, int x) {
+    if (a == b) {
+      return x+1;
+    } else {
+      return x;
+    }
+  }
+  int Sto(<void, void>) {
+    return 0;
+  }
+  int split(<Rope a, Rope b>, int x) {
+    return x;
+  }
+  int splitR(int x, <Rope a, Rope b>) {
+    return x;
+  }
+
+  choice [int] h([int] l) {
+    return list(maximum(l));
+  }
+}
 
 
 // pair-wise global alignment
@@ -34,3 +62,4 @@ grammar gra_NWcyk uses sig_alignments(axiom=nt_const) {
 
 
 instance count = gra_NWcyk(alg_count);
+instance maxM = gra_NWcyk(alg_maxMatch);
