@@ -375,6 +375,8 @@ class CustomeCode : public Base {
   }
 
   void print(Printer::Base &p) const;
+
+  Base *copy() const;
 };
 
 

@@ -459,3 +459,10 @@ Statement::Base *Statement::Block::copy() const {
   Block_Base::copy(*o);
   return o;
 }
+
+
+Statement::Base *Statement::CustomeCode::copy() const {
+  CustomeCode *o = new CustomeCode(*this);
+  o->line_of_code = std::string(line_of_code);
+  return o;
+}
