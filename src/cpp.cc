@@ -1969,30 +1969,6 @@ void Printer::Cpp::header(const AST &ast) {
 }
 
 
-std::string Printer::Cpp::multi_index_str(
-  const std::vector<Table> &tables, const Yield::Multi &mys) {
-  assert(tables.size() == mys.tracks());
-  std::ostringstream o;
-  size_t track = 0;
-  Yield::Multi::const_iterator j = mys.begin();
-  for (std::vector<Table>::const_iterator i = tables.begin();
-       i != tables.end(); ++i, ++j, ++track) {
-    if (!(*i).delete_left_index()) {
-      o << ", t_" << track << "_i-1";
-    }
-    if (!(*i).delete_right_index()) {
-      o << ", t_" << track << "_j";
-    }
-  }
-  std::string r(o.str());
-  if (r.size() > 2) {
-    return r.substr(2);
-  } else {
-    return r;
-  }
-}
-
-
 void Printer::Cpp::print_run_fn(const AST &ast) {
   stream << indent() << *ast.grammar()->axiom->code()->return_type;
   stream << " run() {" << endl;
