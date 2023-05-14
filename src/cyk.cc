@@ -279,6 +279,7 @@ std::list<Statement::Base*> *cyk_traversal_singlethread_singletrack(
 std::list<Statement::Base*> *cyk_traversal_singlethread(const AST &ast) {
   std::list<Statement::Base*> *stmts = new std::list<Statement::Base*>();
 
+  assert(ast.seq_decls.size() == ast.grammar()->axiom->tracks());
   std::vector<Statement::Var_Decl*>::const_reverse_iterator it_stmt_seq =
       ast.seq_decls.rbegin();
   for (int track = ast.grammar()->axiom->tracks() - 1; track >= 0;
@@ -630,6 +631,7 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
     }
     if (used_indices == loop_vars->size()) {
       if (!openMP_serial || (nt_has_indices == loop_vars->size())) {
+        assert((*i)->code_list().size() > 0);
         Statement::Fn_Call *nt_call = new Statement::Fn_Call(
             (*(*i)->code_list().rbegin())->name, args, Loc());
         nt_stmts->push_back(nt_call);
