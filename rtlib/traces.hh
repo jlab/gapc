@@ -149,11 +149,11 @@ class candidate {
     return &sub_components;
   }
 
-  answer get_value() const {
+  inline answer get_value() const {
     return value;
   }
 
-  answer get_q() const {
+  inline answer get_q() const {
     return q;
   }
 

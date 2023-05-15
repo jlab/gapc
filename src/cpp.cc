@@ -1141,6 +1141,25 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
     stream << indent() << "return array.data();" << endl;
     dec_indent();
     stream << indent() << "}" << endl << endl;
+
+    // free memory of traces, array and tabulated vectors
+    stream << indent() << "void free_table_memory() {" << endl;
+    inc_indent();
+    if (batched_input) {
+      stream << indent()
+             << "std::vector<OUTPUT_CPP_TYPE>().swap(array);" << endl;
+    } else {
+      stream << indent()
+             << "std::vector<" << dtype << ">().swap(array);" << endl;
+    }
+    if (t.for_derivatives) {
+      stream << indent()
+             << "std::vector<Traces<ANSWER_TYPE>>().swap(traces);" << endl;
+    }
+    stream << indent()
+           << "std::vector<bool>().swap(tabulated);" << endl;
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
   }
 
   // start "void init()"
@@ -1176,20 +1195,23 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
    * to allow for e.g. iterative calling of forward and backward,
    * all vectors need to be explictly reset/emptied;
    * the "clear" and "resize" methods are not required to do that,
-   * so we reassign the vectors to new zero-initialized vectors here
+   * so we swap all std::vector's with empty vectors of the same type
+   * in the "free_table_memory" method;
+   * this forces the deletion of all data previously contained in the
+   * vector objects
    */
   if (pytorch) {
-    stream << indent() << "array = std::vector<";
+    stream << indent() << "free_table_memory();" << endl;
+    stream << indent() << "array.resize(newsize";
     if (batched_input) {
-      stream << "OUTPUT_CPP_TYPE>(newsize * BATCH_SIZE);" << endl;
-    } else {
-      stream << dtype << ">(newsize);" << endl;
+      stream << " * BATCH_SIZE";
     }
+    stream << ");" << endl;
     if (t.for_derivatives) {
       stream << indent()
-             << "traces = std::vector<Traces<ANSWER_TYPE>>(newsize);" << endl;
+             << "traces.resize(newsize);" << endl;
     }
-    stream << indent() << "tabulated = std::vector<bool>(newsize);" << endl;
+    stream << indent() << "tabulated.resize(newsize);" << endl;
   } else  {
     stream << indent() << "array.resize(newsize);" << endl;
     if (t.for_derivatives) {
@@ -2592,11 +2614,31 @@ void Printer::Cpp::print_run_derivative_fn(const AST &ast) {
         }
         stream << indent() << "matrices.push_back(torch::from_blob("
                << *(nt->name) << "_table.get_array_data(), "
-               << "tensor_size, " << torch_type << ").clone());" << endl;
+               << "tensor_size, " << torch_type << ")";
+        if (ast.current_derivative == 2) {
+          stream << ".clone()";
+        }
+        stream << ");" << endl;
       }
     }
   }
   if (ast.as_pytorch_module) {
+    if (ast.current_derivative == 2) {
+      for (hashtable<std::string, Symbol::Base*>::iterator
+         i = (*ast.grammar()).NTs.begin();
+         i != (*ast.grammar()).NTs.end(); ++i) {
+        Symbol::NT *nt = dynamic_cast<Symbol::NT*>((*i).second);
+        if (nt && ast.current_derivative == 2) {
+          stream << indent() << "derivative1->"
+                 << *(nt->name) << "_table.free_table_memory();" << endl;
+          stream << indent()
+               << *(nt->name) << "_table.free_table_memory();" << endl;
+        } else if (nt && nt->is_partof_outside && ast.current_derivative == 1) {
+          stream << indent()
+                 << *(nt->name) << "_table.free_table_memory();" << endl;
+        }
+      }
+    }
     stream << indent() << "return matrices;" << endl;
   }
   dec_indent();
@@ -3454,7 +3496,11 @@ void Printer::Cpp::print_pytorch_forward_fn(const AST &ast) {
       }
       stream << indent() << "matrices.push_back(torch::from_blob("
              << *(nt->name) << "_table.get_array_data(), "
-             << "tensor_size, " << torch_type << ").clone());" << endl;
+             << "tensor_size, " << torch_type << ")";
+      if (ast.current_derivative == 2) {
+        stream << ".clone()";
+      }
+      stream << ");" << endl;
     }
   }
   stream << indent() << "return matrices;" << endl;
