@@ -61,6 +61,7 @@ class Base {
  public:
     Bool disabled_;
     Loc location;
+    bool dont_indent = false;
 
 
  protected:

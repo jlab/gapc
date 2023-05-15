@@ -79,6 +79,7 @@ void Printer::Cpp::print(const std::list<Statement::Base*> &stmts) {
 
 void Printer::Cpp::print(const Statement::For &stmt) {
   stream << indent() << "for (";
+  stmt.var_decl->dont_indent = true;
   stream << *stmt.var_decl;
   stream << ' ' << *stmt.cond << "; ";
   if (!stmt.inc) {
@@ -86,6 +87,7 @@ void Printer::Cpp::print(const Statement::For &stmt) {
   } else {
     bool t = in_fn_head;
     in_fn_head = true;
+    stmt.inc->dont_indent = true;
     stream << *stmt.inc << ")";
     in_fn_head = t;
   }
@@ -121,7 +123,7 @@ void Printer::Cpp::print(const Statement::Var_Decl &stmt) {
     return;
   }
 
-  if (!stmt.is_itr()) {
+  if (!stmt.dont_indent) {
     stream << indent();
   }
   stream << *stmt.type << ' ' << *stmt.name;
@@ -328,7 +330,9 @@ void Printer::Cpp::print(const Statement::Foreach &stmt) {
 }
 
 void Printer::Cpp::print(const Statement::Var_Assign &stmt) {
-  stream << indent();
+  if (!stmt.dont_indent) {
+    stream << indent();
+  }
   stream << *stmt.acc;
   stream << ' ' << stmt.op_str() << ' ' << *stmt.rhs;
   if (!in_fn_head)
