@@ -234,8 +234,8 @@ std::list<Statement::Base*> *cyk_traversal_singlethread_singletrack(
     std::list<Statement::Base*> *nested_stmts, bool with_checkpoint) {
   std::list<Statement::Base*> *stmts = new std::list<Statement::Base*>();
 
-  Expr::Base *row_start = (*ast.grammar()->topological_ord().begin())->
-      right_indices.at(track)->vacc()->plus(new Expr::Const(1));
+  Expr::Base *row_start = ast.grammar()->right_running_indices.at(
+      track)->plus(new Expr::Const(1));
 
   // A: major cells in triangle below first row, left of last columns
   // A: t_x_i = row index
@@ -339,8 +339,8 @@ std::list<Statement::Base*> *cyk_traversal_multithread_parallel(const AST &ast,
   size_t track = 0;  // as openMP currently only works for single track grammars
   std::list<Statement::Base*> *stmts = new std::list<Statement::Base*>();
 
-  Expr::Base *row_start = (*ast.grammar()->topological_ord().begin())->
-      right_indices.at(track)->vacc()->plus(new Expr::Const(1));
+  Expr::Base *row_start = ast.grammar()->right_running_indices.at(
+      track)->plus(new Expr::Const(1));
 
   Expr::Vacc *z = new Expr::Vacc(new std::string("z"));
   Expr::Vacc *y = new Expr::Vacc(new std::string("y"));
@@ -479,8 +479,8 @@ std::list<Statement::Base*> *cyk_traversal_multithread_serial(const AST &ast,
   size_t track = 0;  // as openMP currently only works for single track grammars
   std::list<Statement::Base*> *stmts = new std::list<Statement::Base*>();
 
-  Expr::Base *row_start = (*ast.grammar()->topological_ord().begin())->
-      right_indices.at(track)->vacc()->plus(new Expr::Const(1));
+  Expr::Base *row_start = ast.grammar()->right_running_indices.at(
+      track)->plus(new Expr::Const(1));
 
   // t_0_i = row index
   CYKloop row = get_for_row(ast.grammar()->left_running_indices[track],
