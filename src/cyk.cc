@@ -647,6 +647,13 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
 
 Fn_Def *print_CYK(const AST &ast) {
   Fn_Def *fn_cyk = new Fn_Def(new Type::RealVoid(), new std::string("cyk"));
+  if (!ast.cyk()) {
+    /* return empty function, if CYK was not requested. It is called in the
+     * generic out_main.cc source, thus it has to be defined but can remain
+     * empty.
+     */
+    return fn_cyk;
+  }
 
   if (ast.checkpoint && ast.checkpoint->cyk) {
   /*
