@@ -42,7 +42,12 @@ int main(int argc, char **argv)
   driver.ast.set_cyk();
   grammar->approx_table_conf();
   driver.ast.derive_temp_alphabet();
-  r = driver.ast.check_signature();
+
+  try {
+    r = driver.ast.check_signature();
+  } catch (LogThreshException) {
+    return 7;
+  }
   if (!r) {
     return 6;
   }
@@ -50,13 +55,23 @@ int main(int argc, char **argv)
   if (!r) {
     return 7;
   }
+  driver.ast.derive_roles();
 
   // gapc/back
   Instance *instance = driver.ast.first_instance;
+  if (instance == nullptr) {
+    std::cout << "No instance declaration in source file found.\n";
+    return 11;
+  }
+  r = driver.ast.check_instances(instance);
+  if (!r) {
+    return 9;
+  }
+
   driver.ast.update_seq_type(*instance);
   r = driver.ast.insert_instance(instance);
   if (!r) {
-    return 8;
+    return 10;
   }
   driver.ast.instance_grammar_eliminate_lists(instance);
   grammar->init_list_sizes();
