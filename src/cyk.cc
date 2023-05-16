@@ -80,7 +80,7 @@ get_tile_computation(const AST &ast, std::string name_maxtilen,
   return std::make_tuple(res, tile_size);
 }
 
-// deep copy of a list of statements
+/* deep copy of a list of statements */
 std::list<Statement::Base*> *copy_statements(
     std::list<Statement::Base*> *other) {
   std::list<Statement::Base*> *co = new std::list<Statement::Base*>();
@@ -106,18 +106,20 @@ class CYKloop {
   }
 };
 
+enum CYKmode {SINGLETHREAD, OPENMP_PARALLEL, OPENMP_SERIAL};
+
 CYKloop get_for_column(Expr::Vacc *running_boundary,
     Statement::Var_Decl *input_seq, Expr::Base *start, Expr::Base *end,
-    bool for_openMP, bool endp1, bool with_checkpoint) {
+    bool with_checkpoint, CYKmode mode) {
   // create loop variable addressing the DP column (=2nd index)
   // e.g.: for (unsigned int t_0_j = 0; t_0_j < t_0_seq.size(); ++t_0_j) {
   Type::Base *t = new Type::Size();
-  if (with_checkpoint && !for_openMP) {
+  if (with_checkpoint && (mode != CYKmode::OPENMP_PARALLEL)) {
     t = new Type::External("");  // ugly hack to avoid redeclaration of variable
     start = new Expr::Cond(
         new Expr::Vacc(new std::string(
             *running_boundary->name() + "_loaded++")),
-        !endp1 ? new Expr::Const(0) : start,
+        start,
         running_boundary);
   }
 
@@ -127,7 +129,7 @@ CYKloop get_for_column(Expr::Vacc *running_boundary,
       start);
 
   // create end point for loop variable
-  if (!for_openMP) {
+  if (mode != CYKmode::OPENMP_PARALLEL) {
     end = new Expr::Fn_Call(new std::string("size"));
     dynamic_cast<Expr::Fn_Call*>(end)->add_arg(input_seq->name);
     dynamic_cast<Expr::Fn_Call*>(end)->is_obj = Bool(true);
@@ -135,7 +137,7 @@ CYKloop get_for_column(Expr::Vacc *running_boundary,
 
   // create condition of For loop
   Expr::Less *cond_col = new Expr::Less(
-      new Expr::Vacc(*var_col), endp1 ? end->plus(new Expr::Const(1)) : end);
+      new Expr::Vacc(*var_col), end);
 
   Statement::For *loop = new Statement::For(var_col, cond_col);
 
@@ -146,14 +148,14 @@ CYKloop get_for_column(Expr::Vacc *running_boundary,
 }
 
 CYKloop get_for_row(Expr::Vacc *running_boundary, Expr::Base *start,
-    Expr::Base *end, bool for_openMP, bool with_checkpoint) {
+    Expr::Base *end, bool with_checkpoint, CYKmode mode) {
   // create loop variable addressing the DP row (=1st index)
   // e.g.: for (unsigned int t_0_i = t_0_j + 1; t_0_i > 1; t_0_i--) {
   Type::Base *t = new Type::Size();
-  if (for_openMP) {
+  if (mode == CYKmode::OPENMP_PARALLEL) {
     t = new Type::Int();
   }
-  if (with_checkpoint && !for_openMP) {
+  if (with_checkpoint && (mode != CYKmode::OPENMP_PARALLEL)) {
     t = new Type::External("");  // ugly hack to avoid redeclaration of variable
     start = new Expr::Cond(
         new Expr::Vacc(new std::string(
@@ -231,7 +233,7 @@ Statement::For *get_for_openMP(Expr::Vacc *loopvar, Expr::Base *start,
  */
 std::list<Statement::Base*> *cyk_traversal_singlethread_singletrack(
     size_t track, const AST &ast, Statement::Var_Decl *seq,
-    std::list<Statement::Base*> *nested_stmts, bool with_checkpoint) {
+    std::list<Statement::Base*> *nested_stmts, bool with_checkpoint, CYKmode mode) {
   std::list<Statement::Base*> *stmts = new std::list<Statement::Base*>();
 
   Expr::Base *row_start = ast.grammar()->right_running_indices.at(
@@ -241,13 +243,17 @@ std::list<Statement::Base*> *cyk_traversal_singlethread_singletrack(
   // A: t_x_i = row index
   std::list<Statement::Base*> *co = copy_statements(nested_stmts);
   CYKloop row = get_for_row(ast.grammar()->left_running_indices[track],
-      row_start, new Expr::Const(1), false, with_checkpoint);
+      row_start, new Expr::Const(1), with_checkpoint, mode);
   row.loop->statements.insert(
       row.loop->statements.end(), co->begin(), co->end());
 
   // A: t_x_j = column index
+  Expr::Base *alt_start = new Expr::Const(0);
+  if (mode == CYKmode::OPENMP_SERIAL) {
+    alt_start = new Expr::Vacc(new std::string("max_tiles_n"));
+  }
   CYKloop col = get_for_column(ast.grammar()->right_running_indices[track],
-      seq, new Expr::Const(0), nullptr, false, false, with_checkpoint);
+      seq, alt_start, new Expr::Const(9999), with_checkpoint, mode);
   col.loop->statements.push_back(row.loop);
   col.loop->statements.push_back(row.end_state);
 
@@ -260,7 +266,7 @@ std::list<Statement::Base*> *cyk_traversal_singlethread_singletrack(
 
   // C: last column
   CYKloop rowC = get_for_row(ast.grammar()->left_running_indices[track],
-      row_start, new Expr::Const(1), false, with_checkpoint);
+      row_start, new Expr::Const(1), with_checkpoint, mode);
   co = copy_statements(nested_stmts);
   rowC.loop->statements.insert(
       rowC.loop->statements.end(), co->begin(), co->end());
@@ -276,7 +282,7 @@ std::list<Statement::Base*> *cyk_traversal_singlethread_singletrack(
 
 // recursively reverse iterate through tracks and create nested for loop
 // structures
-std::list<Statement::Base*> *cyk_traversal_singlethread(const AST &ast) {
+std::list<Statement::Base*> *cyk_traversal_singlethread(const AST &ast, CYKmode mode) {
   std::list<Statement::Base*> *stmts = new std::list<Statement::Base*>();
 
   assert(ast.seq_decls.size() == ast.grammar()->axiom->tracks());
@@ -285,7 +291,7 @@ std::list<Statement::Base*> *cyk_traversal_singlethread(const AST &ast) {
   for (int track = ast.grammar()->axiom->tracks() - 1; track >= 0;
        track--, ++it_stmt_seq) {
     stmts = cyk_traversal_singlethread_singletrack(
-        track, ast, *it_stmt_seq, stmts, ast.checkpoint && ast.checkpoint->cyk);
+        track, ast, *it_stmt_seq, stmts, ast.checkpoint && ast.checkpoint->cyk, mode);
   }
 
   return stmts;
@@ -350,10 +356,9 @@ std::list<Statement::Base*> *cyk_traversal_multithread_parallel(const AST &ast,
   // part A: prepare for parallel tile phase, prepare predecessor DP cells for
   // later parallel computation
   CYKloop row = get_for_row(ast.grammar()->left_running_indices[track],
-      row_start, z, true, with_checkpoint);
+      row_start, z, with_checkpoint, CYKmode::OPENMP_PARALLEL);
   CYKloop col = get_for_column(ast.grammar()->right_running_indices[track],
-      seq, z, z->plus(new Expr::Vacc(*tile_size)), true, false,
-      with_checkpoint);
+      seq, z, z->plus(new Expr::Vacc(*tile_size)), with_checkpoint, CYKmode::OPENMP_PARALLEL);
   col.loop->statements.push_back(row.loop);
   Expr::Base *start_z = new Expr::Const(0);
   if (with_checkpoint) {
@@ -386,10 +391,9 @@ std::list<Statement::Base*> *cyk_traversal_multithread_parallel(const AST &ast,
   CYKloop rowB = get_for_row(ast.grammar()->left_running_indices[track],
       new Expr::Vacc(*x),
       (new Expr::Vacc(*x))->minus(new Expr::Vacc(*tile_size)),
-      true, with_checkpoint);
+      with_checkpoint, CYKmode::OPENMP_PARALLEL);
   CYKloop colB = get_for_column(ast.grammar()->right_running_indices[track],
-      seq, y, y->plus(new Expr::Vacc(*tile_size)), true, false,
-      with_checkpoint);
+      seq, y, y->plus(new Expr::Vacc(*tile_size)), with_checkpoint, CYKmode::OPENMP_PARALLEL);
   colB.loop->statements.push_back(rowB.loop);
 
   Expr::Base *start_y = z;
@@ -473,52 +477,6 @@ std::list<Statement::Base*> *cyk_traversal_multithread_parallel(const AST &ast,
  * 12 |                                                156
  *
  */
-std::list<Statement::Base*> *cyk_traversal_multithread_serial(const AST &ast,
-    Statement::Var_Decl *seq, Statement::Var_Decl *tile_size,
-    std::string *name_maxtilen, bool with_checkpoint) {
-  size_t track = 0;  // as openMP currently only works for single track grammars
-  std::list<Statement::Base*> *stmts = new std::list<Statement::Base*>();
-
-  Expr::Base *row_start = ast.grammar()->right_running_indices.at(
-      track)->plus(new Expr::Const(1));
-
-  // t_0_i = row index
-  CYKloop row = get_for_row(ast.grammar()->left_running_indices[track],
-      row_start, new Expr::Const(0), false, with_checkpoint);
-  if (with_checkpoint) {
-    row.loop->statements.push_back(mutex_lock());
-  }
-  // t_0_j = col index
-  CYKloop col = get_for_column(ast.grammar()->right_running_indices[track],
-      seq, new Expr::Vacc(name_maxtilen), nullptr, false, true,
-      with_checkpoint);
-  col.loop->statements.push_back(row.loop);
-  stmts->push_back(col.loop);
-  stmts->push_back(col.end_state);
-
-  // to all NTs might have both table dimensions (can be linear or constant)
-  // to save some speed, we here iterate over linear ones
-  // t_0_i = row index (and column index is set to t_0_seq.size())
-  CYKloop first_row = get_for_row(ast.grammar()->left_running_indices[track],
-      row_start, new Expr::Const(0), false, with_checkpoint);
-  if (with_checkpoint) {
-    first_row.loop->statements.push_back(mutex_lock());
-  }
-  stmts->push_back(first_row.loop);
-  stmts->push_back(first_row.end_state);
-
-  // ... and also iterate over tables linear in other dimension
-  // t_0_j = col index (and row index is set to 0)
-  CYKloop first_col = get_for_column(
-      ast.grammar()->right_running_indices[track], seq,
-      new Expr::Vacc(name_maxtilen), nullptr, false, true, with_checkpoint);
-  if (with_checkpoint) {
-    first_col.loop->statements.push_back(mutex_lock());
-  }
-  stmts->push_back(first_col.loop);
-
-  return stmts;
-}
 
 size_t count_nt_calls_and_loops(Statement::For *loop) {
   size_t res = 0;
@@ -554,7 +512,7 @@ size_t count_nt_calls_and_loops(Statement::For *loop) {
  */
 std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
     std::list<std::string*> *loop_vars, std::list<Symbol::NT*> orderedNTs,
-    bool with_checkpoint, bool for_openMP, bool openMP_serial) {
+    bool with_checkpoint, CYKmode mode) {
   bool contains_nested_for = false;
   for (std::list<Statement::Base*>::iterator s = stmts.begin();
        s != stmts.end(); ++s) {
@@ -565,7 +523,7 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
       std::list<std::string*> *next_loop_vars = new std::list<std::string*>();
       next_loop_vars->insert(
           next_loop_vars->end(), loop_vars->begin(), loop_vars->end());
-      if (!for_openMP || (fl->var_decl->name->find("t_", 0) == 0)) {
+      if ((mode != CYKmode::OPENMP_PARALLEL) || (fl->var_decl->name->find("t_", 0) == 0)) {
         // openMP code adds in loops that do not traverse NT indices. Only add
         // loop variable, if it regard to NT indices, which all start with t_
         // e.g. t_0_i or t_1_j
@@ -573,7 +531,7 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
       }
       std::list<Statement::Base*> *new_stmts = add_nt_calls(
           fl->statements, next_loop_vars, orderedNTs, with_checkpoint,
-          for_openMP, openMP_serial);
+          mode);
       fl->statements.insert(
           fl->statements.end(), new_stmts->begin(), new_stmts->end());
     }
@@ -589,7 +547,7 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
     }
   }
 
-  if (for_openMP && contains_nested_for) {
+  if ((mode == CYKmode::OPENMP_PARALLEL) && contains_nested_for) {
     // don't add NT calls in for loops that is not the innermost loop, if in
     // multi threaded mode.
     return new std::list<Statement::Base*>();
@@ -597,9 +555,15 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
 
   // add NTs
   std::list<Statement::Base*> *nt_stmts = new std::list<Statement::Base*>();
-  if (with_checkpoint && !for_openMP) {
-    nt_stmts->push_back(new Statement::CustomeCode(
-        "std::lock_guard<fair_mutex> lock(mutex);"));
+  if (with_checkpoint) {
+    if (mode == CYKmode::SINGLETHREAD) {
+      nt_stmts->push_back(new Statement::CustomeCode(
+          "std::lock_guard<fair_mutex> lock(mutex);"));
+    } else {
+      if (mode == CYKmode::OPENMP_SERIAL) {
+        nt_stmts->push_back(mutex_lock());
+      }
+    }
   }
   for (std::list<Symbol::NT*>::const_iterator i = orderedNTs.begin();
        i != orderedNTs.end(); ++i) {
@@ -630,16 +594,16 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
       }
     }
     if (used_indices == loop_vars->size()) {
-      if (!openMP_serial || (nt_has_indices == loop_vars->size())) {
         assert((*i)->code_list().size() > 0);
         Statement::Fn_Call *nt_call = new Statement::Fn_Call(
             (*(*i)->code_list().rbegin())->name, args, Loc());
         nt_stmts->push_back(nt_call);
-      }
     }
   }
-  if (with_checkpoint && for_openMP && openMP_serial) {
-    nt_stmts->push_back(mutex_unlock());
+  if (with_checkpoint) {
+    if (mode == CYKmode::OPENMP_SERIAL) {
+      nt_stmts->push_back(mutex_unlock());
+    }
   }
 
   return nt_stmts;
@@ -695,11 +659,11 @@ Fn_Def *print_CYK(const AST &ast) {
   fn_cyk->stmts.push_back(new Statement::CustomeCode("#ifndef _OPENMP"));
   // recursively reverse iterate through tracks and create nested for loop
   // structures
-  std::list<Statement::Base*> *stmts = cyk_traversal_singlethread(ast);
+  std::list<Statement::Base*> *stmts = cyk_traversal_singlethread(ast, CYKmode::SINGLETHREAD);
   // add NT calls to traversal structure
   std::list<Statement::Base*> *new_stmts = add_nt_calls(*stmts,
       new std::list<std::string*>(), ast.grammar()->topological_ord(),
-      ast.checkpoint && ast.checkpoint->cyk, false, false);
+      ast.checkpoint && ast.checkpoint->cyk, CYKmode::SINGLETHREAD);
   stmts->insert(stmts->end(), new_stmts->begin(), new_stmts->end());
   // finally add traversal structure with NT calls to function body
   fn_cyk->stmts.insert(fn_cyk->stmts.end(), stmts->begin(), stmts->end());
@@ -770,7 +734,7 @@ Fn_Def *print_CYK(const AST &ast) {
     // inject NT calls
     std::list<Statement::Base*> *new_stmts = add_nt_calls(*stmts,
         new std::list<std::string*>(), ast.grammar()->topological_ord(),
-        ast.checkpoint && ast.checkpoint->cyk, true, false);
+        ast.checkpoint && ast.checkpoint->cyk, CYKmode::OPENMP_PARALLEL);
     stmts->insert(stmts->end(), new_stmts->begin(), new_stmts->end());
 
     blk_parallel->statements.insert(blk_parallel->statements.end(),
@@ -783,13 +747,11 @@ Fn_Def *print_CYK(const AST &ast) {
     fn_cyk->stmts.insert(fn_cyk->stmts.end(),
         std::get<0>(stmts_tilesize)->begin(),
         std::get<0>(stmts_tilesize)->end());
-    stmts = cyk_traversal_multithread_serial(ast, *it_stmt_seq,
-        std::get<1>(stmts_tilesize), name_maxtilen,
-        ast.checkpoint && ast.checkpoint->cyk);
+    stmts = cyk_traversal_singlethread(ast, CYKmode::OPENMP_SERIAL);
     // inject NT calls
     std::list<Statement::Base*> *new_serial_stmts = add_nt_calls(
         *stmts, new std::list<std::string*>(), ast.grammar()->topological_ord(),
-        ast.checkpoint && ast.checkpoint->cyk, true, true);
+        ast.checkpoint && ast.checkpoint->cyk, CYKmode::OPENMP_SERIAL);
     stmts->insert(stmts->end(), new_serial_stmts->begin(),
         new_serial_stmts->end());
     fn_cyk->stmts.insert(fn_cyk->stmts.end(), stmts->begin(), stmts->end());
