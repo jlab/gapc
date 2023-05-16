@@ -233,7 +233,8 @@ Statement::For *get_for_openMP(Expr::Vacc *loopvar, Expr::Base *start,
  */
 std::list<Statement::Base*> *cyk_traversal_singlethread_singletrack(
     size_t track, const AST &ast, Statement::Var_Decl *seq,
-    std::list<Statement::Base*> *nested_stmts, bool with_checkpoint, CYKmode mode) {
+    std::list<Statement::Base*> *nested_stmts, bool with_checkpoint,
+    CYKmode mode) {
   std::list<Statement::Base*> *stmts = new std::list<Statement::Base*>();
 
   Expr::Base *row_start = ast.grammar()->right_running_indices.at(
@@ -282,7 +283,8 @@ std::list<Statement::Base*> *cyk_traversal_singlethread_singletrack(
 
 // recursively reverse iterate through tracks and create nested for loop
 // structures
-std::list<Statement::Base*> *cyk_traversal_singlethread(const AST &ast, CYKmode mode) {
+std::list<Statement::Base*> *cyk_traversal_singlethread(const AST &ast,
+    CYKmode mode) {
   std::list<Statement::Base*> *stmts = new std::list<Statement::Base*>();
 
   assert(ast.seq_decls.size() == ast.grammar()->axiom->tracks());
@@ -291,7 +293,8 @@ std::list<Statement::Base*> *cyk_traversal_singlethread(const AST &ast, CYKmode 
   for (int track = ast.grammar()->axiom->tracks() - 1; track >= 0;
        track--, ++it_stmt_seq) {
     stmts = cyk_traversal_singlethread_singletrack(
-        track, ast, *it_stmt_seq, stmts, ast.checkpoint && ast.checkpoint->cyk, mode);
+        track, ast, *it_stmt_seq, stmts, ast.checkpoint && ast.checkpoint->cyk,
+        mode);
   }
 
   return stmts;
@@ -358,7 +361,8 @@ std::list<Statement::Base*> *cyk_traversal_multithread_parallel(const AST &ast,
   CYKloop row = get_for_row(ast.grammar()->left_running_indices[track],
       row_start, z, with_checkpoint, CYKmode::OPENMP_PARALLEL);
   CYKloop col = get_for_column(ast.grammar()->right_running_indices[track],
-      seq, z, z->plus(new Expr::Vacc(*tile_size)), with_checkpoint, CYKmode::OPENMP_PARALLEL);
+      seq, z, z->plus(new Expr::Vacc(*tile_size)), with_checkpoint,
+      CYKmode::OPENMP_PARALLEL);
   col.loop->statements.push_back(row.loop);
   Expr::Base *start_z = new Expr::Const(0);
   if (with_checkpoint) {
@@ -393,7 +397,8 @@ std::list<Statement::Base*> *cyk_traversal_multithread_parallel(const AST &ast,
       (new Expr::Vacc(*x))->minus(new Expr::Vacc(*tile_size)),
       with_checkpoint, CYKmode::OPENMP_PARALLEL);
   CYKloop colB = get_for_column(ast.grammar()->right_running_indices[track],
-      seq, y, y->plus(new Expr::Vacc(*tile_size)), with_checkpoint, CYKmode::OPENMP_PARALLEL);
+      seq, y, y->plus(new Expr::Vacc(*tile_size)), with_checkpoint,
+      CYKmode::OPENMP_PARALLEL);
   colB.loop->statements.push_back(rowB.loop);
 
   Expr::Base *start_y = z;
@@ -523,7 +528,8 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
       std::list<std::string*> *next_loop_vars = new std::list<std::string*>();
       next_loop_vars->insert(
           next_loop_vars->end(), loop_vars->begin(), loop_vars->end());
-      if ((mode != CYKmode::OPENMP_PARALLEL) || (fl->var_decl->name->find("t_", 0) == 0)) {
+      if ((mode != CYKmode::OPENMP_PARALLEL) ||
+          (fl->var_decl->name->find("t_", 0) == 0)) {
         // openMP code adds in loops that do not traverse NT indices. Only add
         // loop variable, if it regard to NT indices, which all start with t_
         // e.g. t_0_i or t_1_j
@@ -659,7 +665,8 @@ Fn_Def *print_CYK(const AST &ast) {
   fn_cyk->stmts.push_back(new Statement::CustomeCode("#ifndef _OPENMP"));
   // recursively reverse iterate through tracks and create nested for loop
   // structures
-  std::list<Statement::Base*> *stmts = cyk_traversal_singlethread(ast, CYKmode::SINGLETHREAD);
+  std::list<Statement::Base*> *stmts = cyk_traversal_singlethread(
+      ast, CYKmode::SINGLETHREAD);
   // add NT calls to traversal structure
   std::list<Statement::Base*> *new_stmts = add_nt_calls(*stmts,
       new std::list<std::string*>(), ast.grammar()->topological_ord(),
