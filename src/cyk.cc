@@ -341,6 +341,27 @@ std::list<Statement::Base*> *cyk_traversal_singlethread(const AST &ast,
  * 11 |
  * 12 |
  *
+ * Note: the below can be constructured by the cyk_traversal_singlethread
+ * Construct the loop traversal structure for the non-parallel part in multi-
+ * threaded mode, i.e. iterate over all DP cells that fall out of the tiling
+ * pattern.
+ *  C: tile_size = 4, input = aaaaccccgggg
+ *    |  0  1  2  3  4  5  6  7  8  9 10 11 12
+ * ---|----------------------------------------
+ *  0 |                                     90
+ *  1 |                                     89
+ *  2 |                                     88
+ *  3 |                                     87
+ *  4 |                                     86
+ *  5 |                                     85
+ *  6 |                                     84
+ *  7 |                                     83
+ *  8 |                                     82
+ *  9 |                                     81
+ * 10 |                                     80
+ * 11 |                                     79
+ * 12 |                                     78
+ *
  */
 std::list<Statement::Base*> *cyk_traversal_multithread_parallel(const AST &ast,
     Statement::Var_Decl *seq, Statement::Var_Decl *tile_size,
@@ -460,28 +481,6 @@ std::list<Statement::Base*> *cyk_traversal_multithread_parallel(const AST &ast,
   return stmts;
 }
 
-
-/* Construct the loop traversal structure for the non-parallel part in multi-
- * threaded mode, i.e. iterate over all DP cells to ensure we leave no cell
- * un-computed.
- *  C: tile_size = 4, input = aaaaccccgggg
- *    |  0   1   2   3   4   5   6   7   8   9  10  11  12
- * ---|----------------------------------------------------
- *  0 | 78  80  83  87  92  98 105 113 122 132 143 155 168
- *  1 |     79  82  86  91  97 104 112 121 131 142 154 167
- *  2 |         81  85  90  96 103 111 120 130 141 153 166
- *  3 |             84  89  95 102 110 119 129 140 152 165
- *  4 |                 88  94 101 109 118 128 139 151 164
- *  5 |                     93 100 108 117 127 138 150 163
- *  6 |                         99 107 116 126 137 149 162
- *  7 |                            106 115 125 136 148 161
- *  8 |                                114 124 135 147 160
- *  9 |                                    123 134 146 159
- * 10 |                                        133 145 158
- * 11 |                                            144 157
- * 12 |                                                156
- *
- */
 
 size_t count_nt_calls_and_loops(Statement::For *loop) {
   size_t res = 0;
