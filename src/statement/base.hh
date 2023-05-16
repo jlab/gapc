@@ -50,7 +50,11 @@ namespace Statement {
 enum Type { RETURN, IF, VAR_DECL, BLOCK, FOR, FOREACH,
   VAR_ASSIGN, FN_CALL, BACKTRACE_DECL, BACKTRACE_NT_DECL,
   HASH_DECL, BREAK, MARKER_DECL, TABLE_DECL, CONTINUE, WHILE,
+<<<<<<< HEAD
               DECREASE, INCREASE, SORTER, SWITCH, CUSTOMECODE,
+=======
+              DECREASE, INCREASE, SORTER, SWITCH, CUSTOMECODE
+>>>>>>> 4b954d4b31cb7234c77b263fea5fac671076fa00
 };
 
 
@@ -61,6 +65,7 @@ class Base {
  public:
     Bool disabled_;
     Loc location;
+    bool dont_indent = false;
 
 
  protected:

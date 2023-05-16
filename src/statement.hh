@@ -377,6 +377,23 @@ class CustomeCode : public Base {
   void print(Printer::Base &p) const;
 };
 
+class CustomeCode : public Base {
+  /* A "CustomeCode" statement is an arbitrary line of string that get's
+   * injected. Handy to leave comments in the generated code or inject
+   * constructs otherwise impossible. Use with care! */
+ public:
+  std::string line_of_code;
+
+  explicit CustomeCode(std::string line_of_code) :
+      Base(CUSTOMECODE), line_of_code(line_of_code) {
+  }
+
+  void print(Printer::Base &p) const;
+
+  Base *copy() const;
+};
+
+
 }  // namespace Statement
 
 

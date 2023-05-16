@@ -37,7 +37,7 @@
 
 #include "symbol_fwd.hh"
 #include "printer_fwd.hh"
-
+#include "expr_fwd.hh"
 
 class Arg;
 class Signature;
@@ -98,6 +98,12 @@ class Grammar {
   // Holds the reference to the axiom of the grammar. This
   // is the root node of the grammar tree.
   Symbol::NT* axiom;
+
+  /* for CYK generation: store names of left/right running boundaries for each
+   * track. These names get defined in Grammar::init_indices
+   */
+  std::vector<Expr::Vacc*> left_running_indices;
+  std::vector<Expr::Vacc*> right_running_indices;
 
 
   // Inits the grammar with the values for the AST, the grammar name,
