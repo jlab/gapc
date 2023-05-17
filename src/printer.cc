@@ -67,7 +67,7 @@ void Printer::Base::print(const Statement::Sorter &stmt) {}
 void Printer::Base::print(const Statement::Var_Assign &stmt) {}
 void Printer::Base::print(const Statement::Fn_Call &stmt) {}
 void Printer::Base::print(const Statement::Block &stmt) {}
-void Printer::Base::print(const Statement::CustomeCode &stmt) {}
+void Printer::Base::print(const Statement::CustomCode &stmt) {}
 void Printer::Base::print(const Statement::Backtrace_Decl &stmt) {}
 void Printer::Base::print(const Statement::Backtrace_NT_Decl &stmt) {}
 void Printer::Base::print(const Statement::Hash_Decl &stmt) {}
