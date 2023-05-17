@@ -1007,8 +1007,22 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      stream << indent() << "#ifdef _OPENMP" << endl;
      stream << indent() << "  array_out << outer_loop_1_idx;" << endl;
      stream << indent() << "  array_out << outer_loop_2_idx;" << endl;
+
+     /*
+      * need to subtract the tile size from inner loop idx, because it is
+      * always incremented by the tile size one too many times in the
+      * parallel OpenMP loop; due to the way the parallelization works,
+      * simply subtracting the tile size once before archiving the index
+      * is the easiest workaround for this
+      */
+     stream << indent() << "#ifdef TILE_SIZE" << endl;
+     stream << indent() << "inner_loop_2_idx -= TILE_SIZE;" << endl;
+     stream << indent() << "#else" << endl;
+     stream << indent() << "inner_loop_2_idx -= 32;" << endl;
+     stream << indent() << "#endif" << endl;
      stream << indent() << "  array_out << inner_loop_2_idx;" << endl;
      stream << indent() << "#endif" << endl;
+
      stream << indent() << "array_fout.close();" << endl;
      stream << indent() << "boost::filesystem::rename(tmp_out_cyk_path, "
             << "out_cyk_path);" << endl;
