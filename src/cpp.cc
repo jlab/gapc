@@ -555,13 +555,6 @@ void Printer::Cpp::print(const Statement::Block &stmt) {
   stream << indent() << "}" << endl;
 }
 
-void Printer::Cpp::print(const Statement::CustomeCode &stmt) {
-  if (stmt.line_of_code.at(0) != '#') {
-    stream << indent();
-  }
-  stream << stmt.line_of_code;
-}
-
 void Printer::Cpp::print(const Statement::CustomCode &stmt) {
   if (stmt.line_of_code.at(0) != '#') {
     stream << indent();

@@ -182,7 +182,7 @@ void print_insideoutside_report_fn(Printer::Cpp &stream, const AST &ast) {
         stmts = &((*loops->rbegin())->statements);
       }
 
-      stmts->push_back(new Statement::CustomeCode(
+      stmts->push_back(new Statement::CustomCode(
           "out << \"start answers " + *nt->name + "(\"" + idx_param +
           "\"):\\n\";"));
 
@@ -198,7 +198,7 @@ void print_insideoutside_report_fn(Printer::Cpp &stream, const AST &ast) {
 
       // produce: out << "//end answers outside_iloop(" << t_0_i << ","
       //              << t_0_j << ")\n";
-      stmts->push_back(new Statement::CustomeCode(
+      stmts->push_back(new Statement::CustomCode(
           "out << \"//end answers " + *nt->name + "(\"" + idx_param +
           "\")\\n\";"));
 

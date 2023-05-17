@@ -372,7 +372,7 @@ class CustomCode : public Base {
   std::string line_of_code;
 
   explicit CustomCode(std::string line_of_code) :
-      Base(CUSTOMECODE), line_of_code(line_of_code) {
+      Base(CUSTOMCODE), line_of_code(line_of_code) {
   }
 
   void print(Printer::Base &p) const;
