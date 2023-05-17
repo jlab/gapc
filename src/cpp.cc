@@ -2625,8 +2625,7 @@ void Printer::Cpp::footer(const AST &ast) {
     stream << indent() << " public:" << endl;
     inc_indent();
   }
-  //print_cyk_fn(ast);
-  stream << *print_CYK(ast) << endl;
+  print_cyk_fn(ast);
 
   print_id();
 }
