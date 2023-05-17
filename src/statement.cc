@@ -138,7 +138,7 @@ void Statement::Block::print(Printer::Base &p) const {
   p.print(*this);
 }
 
-void Statement::CustomeCode::print(Printer::Base &p) const {
+void Statement::CustomCode::print(Printer::Base &p) const {
   p.print(*this);
 }
 
@@ -461,8 +461,8 @@ Statement::Base *Statement::Block::copy() const {
 }
 
 
-Statement::Base *Statement::CustomeCode::copy() const {
-  CustomeCode *o = new CustomeCode(*this);
+Statement::Base *Statement::CustomCode::copy() const {
+  CustomCode *o = new CustomCode(*this);
   o->line_of_code = std::string(line_of_code);
   return o;
 }

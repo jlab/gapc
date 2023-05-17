@@ -53,10 +53,10 @@ get_tile_computation(const AST &ast, std::string name_maxtilen,
 
   if (!(ast.checkpoint && ast.checkpoint->cyk) || just_tilesize) {
     res->push_back(tile_size);
-    res->push_back(new Statement::CustomeCode("#ifdef TILE_SIZE"));
+    res->push_back(new Statement::CustomCode("#ifdef TILE_SIZE"));
     res->push_back(new Statement::Var_Assign(*tile_size, new Expr::Vacc(
         new std::string("TILE_SIZE"))));
-    res->push_back(new Statement::CustomeCode("#endif"));
+    res->push_back(new Statement::CustomCode("#endif"));
     if (just_tilesize) {
       return std::make_tuple(res, tile_size);;
     }
@@ -398,10 +398,10 @@ std::list<Statement::Base*> *cyk_traversal_multithread_parallel(const AST &ast,
   loop_z->statements.push_back(col.loop);
   // code to wait for threads to finish
   if (with_checkpoint) {
-    loop_z->statements.push_back(new Statement::CustomeCode(
+    loop_z->statements.push_back(new Statement::CustomCode(
         "#pragma omp ordered"));
     Statement::Block *blk_omp = new Statement::Block();
-    blk_omp->statements.push_back(new Statement::CustomeCode(
+    blk_omp->statements.push_back(new Statement::CustomCode(
         "// force omp to wait for all threads to finish their current batch "
         "(of size tile_size)"));
     blk_omp->statements.push_back(new Statement::Var_Assign(
@@ -435,14 +435,14 @@ std::list<Statement::Base*> *cyk_traversal_multithread_parallel(const AST &ast,
       new Expr::Vacc(name_maxtilen), tile_size);
   // produce: unsigned int x = y - z + tile_size;
   if (with_checkpoint) {
-    loop_y->statements.push_back(new Statement::CustomeCode(
+    loop_y->statements.push_back(new Statement::CustomCode(
         "++inner_loop_2_idx_loaded;"));
     loop_y->statements.push_back(mutex_lock());
   }
   loop_y->statements.push_back(x);
   loop_y->statements.push_back(colB.loop);
   if (with_checkpoint) {
-    loop_y->statements.push_back(new Statement::CustomeCode(
+    loop_y->statements.push_back(new Statement::CustomCode(
         "#pragma omp ordered"));
     Statement::Block *blk_omp2 = new Statement::Block();
     blk_omp2->statements.push_back(new Statement::Var_Assign(
@@ -464,10 +464,10 @@ std::list<Statement::Base*> *cyk_traversal_multithread_parallel(const AST &ast,
   loop_z = get_for_openMP(z, start_z2, new Expr::Vacc(name_maxtilen),
       tile_size);
   if (with_checkpoint) {
-    loop_z->statements.push_back(new Statement::CustomeCode(
+    loop_z->statements.push_back(new Statement::CustomCode(
         "#pragma omp for ordered schedule(dynamic)"));
   } else {
-    loop_z->statements.push_back(new Statement::CustomeCode("#pragma omp for"));
+    loop_z->statements.push_back(new Statement::CustomCode("#pragma omp for"));
   }
   loop_z->statements.push_back(loop_y);
   if (with_checkpoint) {
@@ -562,7 +562,7 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
   std::list<Statement::Base*> *nt_stmts = new std::list<Statement::Base*>();
   if (with_checkpoint) {
     if (mode == CYKmode::SINGLETHREAD) {
-      nt_stmts->push_back(new Statement::CustomeCode(
+      nt_stmts->push_back(new Statement::CustomCode(
           "std::lock_guard<fair_mutex> lock(mutex);"));
     } else {
       if (mode == CYKmode::OPENMP_SERIAL) {
@@ -661,7 +661,7 @@ Fn_Def *print_CYK(const AST &ast) {
   }
 
   // ==== single thread version
-  fn_cyk->stmts.push_back(new Statement::CustomeCode("#ifndef _OPENMP"));
+  fn_cyk->stmts.push_back(new Statement::CustomCode("#ifndef _OPENMP"));
   // recursively reverse iterate through tracks and create nested for loop
   // structures
   std::list<Statement::Base*> *stmts = cyk_traversal_singlethread(
@@ -675,7 +675,7 @@ Fn_Def *print_CYK(const AST &ast) {
   fn_cyk->stmts.insert(fn_cyk->stmts.end(), stmts->begin(), stmts->end());
 
   // ==== multi thread version (only single-track possible for now)
-  fn_cyk->stmts.push_back(new Statement::CustomeCode("#else"));
+  fn_cyk->stmts.push_back(new Statement::CustomCode("#else"));
   // FIXME generalize for multi-track ...
   if (ast.grammar()->axiom->tracks() == 1) {
     std::string *name_maxtilen = new std::string("max_tiles_n");
@@ -694,28 +694,28 @@ Fn_Def *print_CYK(const AST &ast) {
           fn_cyk->stmts.end(), std::get<0>(stmts_tilesize)->begin(),
           std::get<0>(stmts_tilesize)->end());
 
-      fn_cyk->stmts.push_back(new Statement::CustomeCode(
+      fn_cyk->stmts.push_back(new Statement::CustomCode(
           "int " + std::string(VARNAME_OuterLoop1) +
           "_loaded = !load_checkpoint || !" + VARNAME_OuterLoop1 + ";"));
-      fn_cyk->stmts.push_back(new Statement::CustomeCode(
+      fn_cyk->stmts.push_back(new Statement::CustomCode(
           "int " + std::string(VARNAME_OuterLoop2) +
           "_loaded = !load_checkpoint || !" + VARNAME_OuterLoop2 + ";"));
-      fn_cyk->stmts.push_back(new Statement::CustomeCode(
+      fn_cyk->stmts.push_back(new Statement::CustomCode(
           "int " + std::string(VARNAME_InnerLoop2) +
           "_loaded = !load_checkpoint || !" + VARNAME_InnerLoop2 + ";"));
-      fn_cyk->stmts.push_back(new Statement::CustomeCode(
+      fn_cyk->stmts.push_back(new Statement::CustomCode(
           "int " + std::string(VARNAME_OuterLoop1) +
           "_start = (" + VARNAME_OuterLoop1 + "_loaded++) ? 0 : " +
           VARNAME_OuterLoop1 + ";"));
-      fn_cyk->stmts.push_back(new Statement::CustomeCode(
+      fn_cyk->stmts.push_back(new Statement::CustomCode(
           "int " + std::string(VARNAME_OuterLoop2) +
           "_start = (" + VARNAME_OuterLoop2 + "_loaded++) ? tile_size : " +
           VARNAME_OuterLoop2 + ";"));
-      fn_cyk->stmts.push_back(new Statement::CustomeCode(
+      fn_cyk->stmts.push_back(new Statement::CustomCode(
           "int " + std::string(VARNAME_InnerLoop2) +
           "_start = " + VARNAME_InnerLoop2 + ";"));
     }
-    fn_cyk->stmts.push_back(new Statement::CustomeCode("#pragma omp parallel"));
+    fn_cyk->stmts.push_back(new Statement::CustomCode("#pragma omp parallel"));
     Statement::Block *blk_parallel = new Statement::Block();
     std::tuple<std::list<Statement::Base*>*, Statement::Var_Decl*>
     stmts_tilesize = get_tile_computation(
@@ -724,13 +724,13 @@ Fn_Def *print_CYK(const AST &ast) {
         std::get<0>(stmts_tilesize)->begin(),
         std::get<0>(stmts_tilesize)->end());
     if (ast.checkpoint && ast.checkpoint->cyk) {
-      blk_parallel->statements.push_back(new Statement::CustomeCode(
+      blk_parallel->statements.push_back(new Statement::CustomCode(
           "#pragma omp for ordered schedule(dynamic)"));
     } else {
-      blk_parallel->statements.push_back(new Statement::CustomeCode(
+      blk_parallel->statements.push_back(new Statement::CustomCode(
           "#pragma omp for"));
     }
-    blk_parallel->statements.push_back(new Statement::CustomeCode(
+    blk_parallel->statements.push_back(new Statement::CustomCode(
         "// OPENMP < 3 requires signed int here ..."));
 
     // parallel part
@@ -745,7 +745,7 @@ Fn_Def *print_CYK(const AST &ast) {
 
     blk_parallel->statements.insert(blk_parallel->statements.end(),
         stmts->begin(), stmts->end());
-    blk_parallel->statements.push_back(new Statement::CustomeCode(
+    blk_parallel->statements.push_back(new Statement::CustomCode(
         "// end parallel"));
     fn_cyk->stmts.push_back(blk_parallel);
 
@@ -763,7 +763,7 @@ Fn_Def *print_CYK(const AST &ast) {
     fn_cyk->stmts.insert(fn_cyk->stmts.end(), stmts->begin(), stmts->end());
   }
 
-  fn_cyk->stmts.push_back(new Statement::CustomeCode("#endif"));
+  fn_cyk->stmts.push_back(new Statement::CustomCode("#endif"));
 
   return fn_cyk;
 }

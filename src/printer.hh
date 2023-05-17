@@ -116,7 +116,7 @@ class Base {
   virtual void print(const Statement::Var_Assign &stmt);
   virtual void print(const Statement::Fn_Call &stmt);
   virtual void print(const Statement::Block &stmt);
-  virtual void print(const Statement::CustomeCode &stmt);
+  virtual void print(const Statement::CustomCode &stmt);
   virtual void print(const Statement::Backtrace_Decl &stmt);
   virtual void print(const Statement::Backtrace_NT_Decl &stmt);
   virtual void print(const Statement::Hash_Decl &stmt);
