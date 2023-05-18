@@ -363,19 +363,6 @@ class Block : public Block_Base {
   Base *copy() const;
 };
 
-class CustomeCode : public Base {
-  /* A "CustomeCode" statement is an arbitrary line of string that get's
-   * injected. Handy to leave comments in the generated code or inject
-   * constructs otherwise impossible. Use with care! */
- public:
-  std::string line_of_code;
-
-  explicit CustomeCode(std::string line_of_code) :
-      Base(CUSTOMECODE), line_of_code(line_of_code) {
-  }
-
-  void print(Printer::Base &p) const;
-};
 
 class CustomCode : public Base {
   /* A "CustomCode" statement is an arbitrary line of string that get's
