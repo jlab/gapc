@@ -1532,7 +1532,8 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
     << indent() << indent() << "throw gapc::OptException(\"Number of input "
     << "sequences does not match.\");\n\n";
 
-  if (ast.checkpoint && !ast.checkpoint->is_buddy) {
+  bool checkpoint = ast.checkpoint && !ast.checkpoint->is_buddy;
+  if (checkpoint) {
     stream << indent() << "start_cpu_time = std::clock();"
            << endl;
     stream << indent() << "std::string binary_name = "
@@ -1554,25 +1555,6 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
            << "logfile_name;" << endl;
     stream << indent() << "load_checkpoint = "
            << "!(opts.checkpoint_in_path.empty());" << endl << endl;
-    if (ast.checkpoint->cyk) {
-      stream << indent() << "std::string cyk_archive = "
-             << "file_prefix + \"_cyk_indices\";" << endl;
-      stream << indent() << "out_cyk_path = opts.checkpoint_out_path / "
-             << "cyk_archive;" << endl;
-      stream << indent() << "tmp_out_cyk_path = opts.checkpoint_out_path / "
-             << "(cyk_archive + \"_new\");" << endl << endl;
-      for (size_t i = 0; i < ast.grammar()->axiom->tracks(); i++) {
-        stream << indent() << "t_" << i << "_i = 0;" << endl;
-        stream << indent() << "t_" << i << "_j = 0;" << endl;
-      }
-      stream << indent() << "#ifdef _OPENMP" << endl;
-      inc_indent();
-      stream << indent() << "outer_loop_1_idx = 0;" << endl;
-      stream << indent() << "outer_loop_2_idx = 0;" << endl;
-      stream << indent() << "inner_loop_2_idx = 0;" << endl;
-      dec_indent();
-      stream << indent() << "#endif" << endl;
-    }
     stream << indent() << "checkpoint_interval = opts.checkpoint_interval;"
            << endl;
     stream << indent() << "keep_archives = opts.keep_archives;" << endl;
@@ -1612,6 +1594,44 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
       default:
         assert(false);
     }
+  }
+
+  // set the tile size to the specified tile size and calculate
+  // max_tiles and max_tiles_n (max_tiles = t_0_seq.size() / tile_size,
+  //                            max_tiles_n = max_tiles * tile_size)
+  if (ast.cyk()) {
+    stream << indent() << "tile_size = opts.tile_size;" << endl;
+    stream << indent() << "max_tiles = "
+           << *ast.seq_decls.front()->name << ".size() / tile_size;" << endl;
+    stream << indent() << "max_tiles_n = max_tiles * tile_size;"
+           << endl << endl;
+  }
+
+  if (checkpoint && ast.checkpoint->cyk) {
+    stream << indent() << "std::string cyk_archive = "
+           << "file_prefix + \"_cyk_indices\";" << endl;
+    stream << indent() << "out_cyk_path = opts.checkpoint_out_path / "
+           << "cyk_archive;" << endl;
+    stream << indent() << "tmp_out_cyk_path = opts.checkpoint_out_path / "
+           << "(cyk_archive + \"_new\");" << endl << endl;
+    stream << indent() << "#ifdef _OPENMP" << endl;
+    inc_indent();
+    stream << indent() << "outer_loop_1_idx = 0;" << endl;
+    stream << indent() << "outer_loop_2_idx = 0;" << endl;
+    stream << indent() << "inner_loop_2_idx = 0;" << endl;
+    for (size_t i = 0; i < ast.grammar()->axiom->tracks(); i++) {
+      stream << indent() << "t_" << i << "_i = 0;" << endl;
+      stream << indent() << "t_" << i << "_j = max_tiles_n;" << endl;
+    }
+    dec_indent();
+    stream << indent() << "#else" << endl;
+    inc_indent();
+    for (size_t i = 0; i < ast.grammar()->axiom->tracks(); i++) {
+      stream << indent() << "t_" << i << "_i = 0;" << endl;
+      stream << indent() << "t_" << i << "_j = 0;" << endl;
+    }
+    dec_indent();
+    stream << indent() << "#endif" << endl << endl;
   }
 }
 
@@ -1741,6 +1761,7 @@ void Printer::Cpp::print_init_fn(const AST &ast) {
   print_seq_init(ast);
   print_filter_init(ast);
   print_table_init(ast);
+
   if (ast.checkpoint && !ast.checkpoint->is_buddy) {
     if (ast.checkpoint->strings ||
        ast.checkpoint->subseq || ast.checkpoint->cyk) {
@@ -1937,6 +1958,11 @@ void Printer::Cpp::header(const AST &ast) {
   }
 
   print_most_decl(*ast.grammar()->axiom);
+
+  if (ast.cyk()) {
+    stream << indent() << "unsigned int tile_size, max_tiles;" << endl;
+    stream << indent() << "int max_tiles_n;" << endl;
+  }
 
   if (ast.checkpoint && ast.checkpoint->cyk) {
     ::Type::Base *type = new Type::Size();

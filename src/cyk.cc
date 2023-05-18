@@ -472,8 +472,7 @@ std::list<Statement::Base*> *cyk_traversal_multithread_parallel(const AST &ast,
   loop_z->statements.push_back(loop_y);
   if (with_checkpoint) {
     loop_z->statements.push_back(new Statement::Var_Assign(new Var_Acc::Plain(
-        new std::string(VARNAME_InnerLoop2)),
-        z->plus(new Expr::Vacc(tile_size->var_decl()->name))));
+        new std::string(VARNAME_InnerLoop2)), z));
   }
 
   stmts->push_back(loop_z);
@@ -690,26 +689,28 @@ Fn_Def *print_CYK(const AST &ast) {
       std::tuple<std::list<Statement::Base*>*, Statement::Var_Decl*>
       stmts_tilesize = get_tile_computation(
           ast, *name_maxtilen, *it_stmt_seq, true);
-      fn_cyk->stmts.insert(
-          fn_cyk->stmts.end(), std::get<0>(stmts_tilesize)->begin(),
-          std::get<0>(stmts_tilesize)->end());
+
+      // FIXME(fymue): remove this?
+      // fn_cyk->stmts.insert(
+      //     fn_cyk->stmts.end(), std::get<0>(stmts_tilesize)->begin(),
+      //     std::get<0>(stmts_tilesize)->end());
 
       fn_cyk->stmts.push_back(new Statement::CustomCode(
-          "int " + std::string(VARNAME_OuterLoop1) +
+          "bool " + std::string(VARNAME_OuterLoop1) +
           "_loaded = !load_checkpoint || !" + VARNAME_OuterLoop1 + ";"));
       fn_cyk->stmts.push_back(new Statement::CustomCode(
-          "int " + std::string(VARNAME_OuterLoop2) +
+          "bool " + std::string(VARNAME_OuterLoop2) +
           "_loaded = !load_checkpoint || !" + VARNAME_OuterLoop2 + ";"));
       fn_cyk->stmts.push_back(new Statement::CustomCode(
           "int " + std::string(VARNAME_InnerLoop2) +
           "_loaded = !load_checkpoint || !" + VARNAME_InnerLoop2 + ";"));
       fn_cyk->stmts.push_back(new Statement::CustomCode(
           "int " + std::string(VARNAME_OuterLoop1) +
-          "_start = (" + VARNAME_OuterLoop1 + "_loaded++) ? 0 : " +
+          "_start = (" + VARNAME_OuterLoop1 + "_loaded) ? 0 : " +
           VARNAME_OuterLoop1 + ";"));
       fn_cyk->stmts.push_back(new Statement::CustomCode(
           "int " + std::string(VARNAME_OuterLoop2) +
-          "_start = (" + VARNAME_OuterLoop2 + "_loaded++) ? tile_size : " +
+          "_start = (" + VARNAME_OuterLoop2 + "_loaded) ? tile_size : " +
           VARNAME_OuterLoop2 + ";"));
       fn_cyk->stmts.push_back(new Statement::CustomCode(
           "int " + std::string(VARNAME_InnerLoop2) +
@@ -720,9 +721,12 @@ Fn_Def *print_CYK(const AST &ast) {
     std::tuple<std::list<Statement::Base*>*, Statement::Var_Decl*>
     stmts_tilesize = get_tile_computation(
         ast, *name_maxtilen, *it_stmt_seq, false);
-    blk_parallel->statements.insert(blk_parallel->statements.end(),
-        std::get<0>(stmts_tilesize)->begin(),
-        std::get<0>(stmts_tilesize)->end());
+
+    // FIXME(fymue): remove this?
+    // blk_parallel->statements.insert(blk_parallel->statements.end(),
+    //     std::get<0>(stmts_tilesize)->begin(),
+    //     std::get<0>(stmts_tilesize)->end());
+
     if (ast.checkpoint && ast.checkpoint->cyk) {
       blk_parallel->statements.push_back(new Statement::CustomCode(
           "#pragma omp for ordered schedule(dynamic)"));
@@ -750,9 +754,12 @@ Fn_Def *print_CYK(const AST &ast) {
     fn_cyk->stmts.push_back(blk_parallel);
 
     // serial part
-    fn_cyk->stmts.insert(fn_cyk->stmts.end(),
-        std::get<0>(stmts_tilesize)->begin(),
-        std::get<0>(stmts_tilesize)->end());
+
+    // FIXME(fymue): remove this?
+    // fn_cyk->stmts.insert(fn_cyk->stmts.end(),
+    //     std::get<0>(stmts_tilesize)->begin(),
+    //     std::get<0>(stmts_tilesize)->end());
+
     stmts = cyk_traversal_singlethread(ast, CYKmode::OPENMP_SERIAL);
     // inject NT calls
     std::list<Statement::Base*> *new_serial_stmts = add_nt_calls(
