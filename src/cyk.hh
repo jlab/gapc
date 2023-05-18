@@ -39,6 +39,10 @@
 #include "statement/fn_call.hh"
 #include "var_acc.hh"
 
+std::tuple<std::list<Statement::Base*>*, std::string*>
+get_tile_computation(const AST &ast, std::string *name_maxtilen,
+                     Statement::Var_Decl *input_seq, bool just_tilesize);
+
 Fn_Def *print_CYK(const AST &ast);
 
 #endif /* SRC_CYK_HH_ */

@@ -23,6 +23,7 @@
 
 #include <cmath>
 #include <set>
+#include <tuple>
 #include <utility>
 #include <boost/tokenizer.hpp>
 
@@ -49,7 +50,6 @@
 
 #include "options.hh"
 #include "cyk.hh"
-
 
 static std::string make_comments(const std::string &s, const std::string &c) {
   std::ostringstream o;
@@ -1596,15 +1596,17 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
     }
   }
 
-  // set the tile size to the specified tile size and calculate
-  // max_tiles and max_tiles_n (max_tiles = t_0_seq.size() / tile_size,
-  //                            max_tiles_n = max_tiles * tile_size)
+  // set the tile size to the specified tile size and
+  // calculate max_tiles and max_tiles_n
   if (ast.cyk()) {
-    stream << indent() << "tile_size = opts.tile_size;" << endl;
-    stream << indent() << "max_tiles = "
-           << *ast.seq_decls.front()->name << ".size() / tile_size;" << endl;
-    stream << indent() << "max_tiles_n = max_tiles * tile_size;"
-           << endl << endl;
+    std::string *max_tiles_n_var = new std::string("max_tiles_n");
+    std::tuple<std::list<Statement::Base*>*, std::string*>
+    tile_stmts = get_tile_computation(ast, max_tiles_n_var,
+                                      ast.seq_decls.front(), false);
+    for (Statement::Base *stmt : *std::get<0>(tile_stmts)) {
+      stream << *stmt << endl;
+    }
+    delete max_tiles_n_var;
   }
 
   if (checkpoint && ast.checkpoint->cyk) {
