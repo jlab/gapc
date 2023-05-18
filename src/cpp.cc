@@ -1897,6 +1897,10 @@ void Printer::Cpp::header(const AST &ast) {
     stream << "#define GAPC_VERSION_STRING \"" << gapc_version_string << "\""
            << endl << endl;
 
+    if (ast.cyk()) {
+      stream << "#define CYK_CODEGEN" << endl;
+    }
+
     if (ast.checkpoint) {
       /*
          this macro always needs to be at the top of the header file

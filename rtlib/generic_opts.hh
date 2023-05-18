@@ -200,10 +200,12 @@ class Opts {
         << "                                      after the program finished "
         << "its calculations\n"
 #endif
+#ifdef CYK_CODEGEN
         << "--tileSize,-L            N            set tile size in "
         << "multithreaded cyk \n"
         << "                                      loops (default: 32)\n"
         << "\n"
+#endif
 #if defined(GAPC_CALL_STRING) && defined(GAPC_VERSION_STRING)
         << "GAPC call:        \"" << GAPC_CALL_STRING << "\"\n"
         << "GAPC version:     \"" << GAPC_VERSION_STRING << "\"\n"
@@ -237,6 +239,9 @@ class Opts {
 #endif
 #ifdef CHECKPOINTING_INTEGRATED
               "p:I:KO:"
+#endif
+#ifdef CYK_CODEGEN
+             "L:"
 #endif
              "hd:r:k:H:", long_opts, nullptr)) != -1) {
         switch (o) {
@@ -362,9 +367,11 @@ class Opts {
             keep_archives = true;
             break;
 #endif
+#ifdef CYK_CODEGEN
           case 'L' :
             tile_size = std::atoi(optarg);
             break;
+#endif
           case '?' :
           case ':' :
             {
