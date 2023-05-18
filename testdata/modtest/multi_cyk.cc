@@ -12,6 +12,7 @@
 #include "../../src/instance.hh"
 
 #include "../../src/cpp.hh"
+#include "../../src/cyk.hh"
 
 int main(int argc, char **argv)
 {
@@ -23,6 +24,8 @@ int main(int argc, char **argv)
   Log log;
   log.set_debug(false);
   log.set_ostream(o);
+
+  // gapc/front
   Driver driver;
   std::string filename(argv[1]);
   driver.setFilename(filename);
@@ -32,58 +35,56 @@ int main(int argc, char **argv)
     return 4;
 
   Grammar *grammar = driver.ast.grammar();
-
-  //see grammar->check_semantic();
-  //
-  bool b, r = true;
-  b = grammar->init_tabulated();
-  r = r && b;
-  b = grammar->init_axiom();
-  //assert(b);
-  r = r && b;
-  if (r)
-    b = grammar->init_nt_links();
-  r = r && b;
-  grammar->remove_unreachable();
-  //assert(r);
-  b = ! grammar->has_nonproductive_NTs();
-  r = r && b;
-  //assert(r);
-  if (!r)
-    return 2;
-  b = grammar->init_tracks();
-  r = r && b;
-  //assert(r);
-  if (!r)
-    return 3;
-
-  grammar->init_multi_yield_sizes();
-
-  b = !grammar->multi_detect_loops();
-  if (!b)
-    return 4;
-
-  grammar->multi_propagate_max_filter();
-
-  grammar->init_table_dims();
-
-  grammar->init_calls();
-
-  grammar->init_self_rec();
-
-  grammar->init_in_out();
-
-  grammar->init_indices();
-
-  grammar->dep_analysis();
-
+  bool r = grammar->check_semantic();
+  if (!r) {
+    return 5;
+  }
+  driver.ast.set_cyk();
   grammar->approx_table_conf();
+  driver.ast.derive_temp_alphabet();
+
+  try {
+    r = driver.ast.check_signature();
+  } catch (LogThreshException) {
+    return 7;
+  }
+  if (!r) {
+    return 6;
+  }
+  r = driver.ast.check_algebras();
+  if (!r) {
+    return 7;
+  }
+  driver.ast.derive_roles();
+
+  // gapc/back
+  Instance *instance = driver.ast.first_instance;
+  if (instance == nullptr) {
+    std::cout << "No instance declaration in source file found.\n";
+    return 11;
+  }
+  r = driver.ast.check_instances(instance);
+  if (!r) {
+    return 9;
+  }
+
+  driver.ast.update_seq_type(*instance);
+  r = driver.ast.insert_instance(instance);
+  if (!r) {
+    return 10;
+  }
+  driver.ast.instance_grammar_eliminate_lists(instance);
+  grammar->init_list_sizes();
+  grammar->init_indices();
+  grammar->init_decls();
+  grammar->dep_analysis();
+  driver.ast.codegen();
+  instance->codegen();
 
   std::stringstream d;
-
-  driver.ast.set_cyk();
-  Printer::Cpp cpp(driver.ast, d); //std::cerr);
-  cpp.print_cyk_fn(driver.ast);
+  Printer::Cpp cpp(driver.ast, d);
+  Fn_Def *fn_cyk = print_CYK(driver.ast);
+  cpp << *fn_cyk;
 
   char buffer[100];
   while (d.getline(buffer, 100)) {
