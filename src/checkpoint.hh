@@ -1005,10 +1005,13 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
               << "(t_" << i << "_j == 0 ? 0 : t_" << i << "_j - 1);" << endl;
      }
      stream << indent() << "#ifdef _OPENMP" << endl;
-     stream << indent() << "  array_out << outer_loop_1_idx;" << endl;
-     stream << indent() << "  array_out << outer_loop_2_idx;" << endl;
-     stream << indent() << "  array_out << inner_loop_2_idx;" << endl;
+     inc_indent();
+     stream << indent() << "array_out << outer_loop_1_idx;" << endl;
+     stream << indent() << "array_out << outer_loop_2_idx;" << endl;
+     stream << indent() << "array_out << inner_loop_2_idx;" << endl;
+     dec_indent();
      stream << indent() << "#endif" << endl;
+
      stream << indent() << "array_fout.close();" << endl;
      stream << indent() << "boost::filesystem::rename(tmp_out_cyk_path, "
             << "out_cyk_path);" << endl;

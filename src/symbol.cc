@@ -856,6 +856,7 @@ void Symbol::NT::set_ret_decl_rhs(Code::Mode mode) {
       new std::string("answers"));
   post_alt_stmts.clear();
 
+  assert(datatype);
   if (!eval_decl && !datatype->simple()->is(::Type::LIST)) {
     assert(alts.size() == 1);
     Statement::Var_Assign *s = new Statement::Var_Assign(*ret_decl,
@@ -866,6 +867,7 @@ void Symbol::NT::set_ret_decl_rhs(Code::Mode mode) {
 
   for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
     Expr::Fn_Call *e = new Expr::Fn_Call(Expr::Fn_Call::NOT_EMPTY);
+    assert((*i)->ret_decl);
     e->add_arg(*(*i)->ret_decl);
     Statement::If *cond = new Statement::If(e);
 
