@@ -561,7 +561,7 @@ size_t count_nt_calls_and_loops(Statement::For *loop) {
  */
 std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
     std::list<std::string*> *loop_vars, std::list<Symbol::NT*> orderedNTs,
-    bool with_checkpoint, CYKmode mode) {
+    bool with_checkpoint, CYKmode mode, const AST &ast) {
   bool contains_nested_for = false;
   for (std::list<Statement::Base*>::iterator s = stmts.begin();
        s != stmts.end(); ++s) {
@@ -581,7 +581,7 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
       }
       std::list<Statement::Base*> *new_stmts = add_nt_calls(
           fl->statements, next_loop_vars, orderedNTs, with_checkpoint,
-          mode);
+          mode, ast);
       fl->statements.insert(
           fl->statements.end(), new_stmts->begin(), new_stmts->end());
     }
@@ -597,7 +597,7 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
     }
   }
 
-  if ((mode == CYKmode::OPENMP_PARALLEL) && contains_nested_for) {
+  if (((mode == CYKmode::OPENMP_PARALLEL) || (mode == CYKmode::SINGLETHREAD_OUTSIDE)) && contains_nested_for) {
     // don't add NT calls in for loops that is not the innermost loop, if in
     // multi threaded mode.
     return new std::list<Statement::Base*>();
@@ -620,10 +620,14 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
     if (!(*i)->is_tabulated()) {
       continue;
     }
+    if ((*i)->is_partof_outside() == (mode != CYKmode::SINGLETHREAD_OUTSIDE)) {
+      continue;
+    }
     std::list<Expr::Base*> *args = new std::list<Expr::Base*>();
     size_t used_indices = 0;
     size_t nt_has_indices = 0;
-    for (size_t t = 0; t < (*i)->tracks(); ++t) {
+    std::vector<Statement::Var_Decl*>::const_iterator it_stmt_seq = ast.seq_decls.begin();
+    for (size_t t = 0; t < (*i)->tracks(); ++t, ++it_stmt_seq) {
       if (!(*i)->tables()[t].delete_left_index()) {
         Expr::Vacc *idx = (*i)->left_indices.at(t)->vacc();
         if (std::find(loop_vars->begin(), loop_vars->end(),
@@ -631,7 +635,15 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
           used_indices++;
         }
         nt_has_indices++;
-        args->push_back(idx->minus(new Expr::Const(1)));
+        if (mode == CYKmode::SINGLETHREAD_OUTSIDE) {
+          // create t_X_seq.size() call
+          Expr::Fn_Call *seqsize = new Expr::Fn_Call(new std::string("size"));
+          dynamic_cast<Expr::Fn_Call*>(seqsize)->add_arg((*it_stmt_seq)->name);
+          dynamic_cast<Expr::Fn_Call*>(seqsize)->is_obj = Bool(true);
+          args->push_back(idx->minus(seqsize)->plus((*i)->right_indices.at(t)->vacc()));
+        } else {
+          args->push_back(idx->minus(new Expr::Const(1)));
+        }
       }
       if (!(*i)->tables()[t].delete_right_index()) {
         Expr::Vacc *idx = (*i)->right_indices.at(t)->vacc();
@@ -709,15 +721,23 @@ Fn_Def *print_CYK(const AST &ast) {
   fn_cyk->stmts.push_back(new Statement::CustomCode("#ifndef _OPENMP"));
   // recursively reverse iterate through tracks and create nested for loop
   // structures
+  // add NT calls to traversal structure
   std::list<Statement::Base*> *stmts = cyk_traversal_singlethread(
-      ast, ast.outside_generation() ? CYKmode::SINGLETHREAD_OUTSIDE : CYKmode::SINGLETHREAD);
-//  // add NT calls to traversal structure
-//  std::list<Statement::Base*> *new_stmts = add_nt_calls(*stmts,
-//      new std::list<std::string*>(), ast.grammar()->topological_ord(),
-//      ast.checkpoint && ast.checkpoint->cyk, CYKmode::SINGLETHREAD);
-//  stmts->insert(stmts->end(), new_stmts->begin(), new_stmts->end());
-//  // finally add traversal structure with NT calls to function body
+      ast, CYKmode::SINGLETHREAD);
+  std::list<Statement::Base*> *new_stmts = add_nt_calls(*stmts,
+      new std::list<std::string*>(), ast.grammar()->topological_ord(),
+      ast.checkpoint && ast.checkpoint->cyk, CYKmode::SINGLETHREAD, ast);
+  stmts->insert(stmts->end(), new_stmts->begin(), new_stmts->end());
+  // finally add traversal structure with NT calls to function body
   fn_cyk->stmts.insert(fn_cyk->stmts.end(), stmts->begin(), stmts->end());
+  if (ast.outside_generation()) {
+    stmts = cyk_traversal_singlethread(ast, CYKmode::SINGLETHREAD_OUTSIDE);
+    std::list<Statement::Base*> *new_stmts = add_nt_calls(*stmts,
+        new std::list<std::string*>(), ast.grammar()->topological_ord(),
+        ast.checkpoint && ast.checkpoint->cyk, CYKmode::SINGLETHREAD_OUTSIDE, ast);
+    stmts->insert(stmts->end(), new_stmts->begin(), new_stmts->end());
+    fn_cyk->stmts.insert(fn_cyk->stmts.end(), stmts->begin(), stmts->end());
+  }
 
   // ==== multi thread version (only single-track possible for now)
   fn_cyk->stmts.push_back(new Statement::CustomCode("#else"));
@@ -785,7 +805,7 @@ Fn_Def *print_CYK(const AST &ast) {
     // inject NT calls
     std::list<Statement::Base*> *new_stmts = add_nt_calls(*stmts,
         new std::list<std::string*>(), ast.grammar()->topological_ord(),
-        ast.checkpoint && ast.checkpoint->cyk, CYKmode::OPENMP_PARALLEL);
+        ast.checkpoint && ast.checkpoint->cyk, CYKmode::OPENMP_PARALLEL, ast);
     stmts->insert(stmts->end(), new_stmts->begin(), new_stmts->end());
 
     blk_parallel->statements.insert(blk_parallel->statements.end(),
@@ -802,7 +822,7 @@ Fn_Def *print_CYK(const AST &ast) {
     // inject NT calls
     std::list<Statement::Base*> *new_serial_stmts = add_nt_calls(
         *stmts, new std::list<std::string*>(), ast.grammar()->topological_ord(),
-        ast.checkpoint && ast.checkpoint->cyk, CYKmode::OPENMP_SERIAL);
+        ast.checkpoint && ast.checkpoint->cyk, CYKmode::OPENMP_SERIAL, ast);
     stmts->insert(stmts->end(), new_serial_stmts->begin(),
         new_serial_stmts->end());
     fn_cyk->stmts.insert(fn_cyk->stmts.end(), stmts->begin(), stmts->end());
