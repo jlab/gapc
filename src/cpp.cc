@@ -23,6 +23,7 @@
 
 #include <cmath>
 #include <set>
+#include <tuple>
 #include <utility>
 #include <boost/tokenizer.hpp>
 
@@ -48,7 +49,7 @@
 #include "grammar.hh"
 
 #include "options.hh"
-
+#include "cyk.hh"
 
 static std::string make_comments(const std::string &s, const std::string &c) {
   std::ostringstream o;
@@ -78,6 +79,7 @@ void Printer::Cpp::print(const std::list<Statement::Base*> &stmts) {
 
 void Printer::Cpp::print(const Statement::For &stmt) {
   stream << indent() << "for (";
+  stmt.var_decl->dont_indent = true;
   stream << *stmt.var_decl;
   stream << ' ' << *stmt.cond << "; ";
   if (!stmt.inc) {
@@ -85,6 +87,7 @@ void Printer::Cpp::print(const Statement::For &stmt) {
   } else {
     bool t = in_fn_head;
     in_fn_head = true;
+    stmt.inc->dont_indent = true;
     stream << *stmt.inc << ")";
     in_fn_head = t;
   }
@@ -120,7 +123,7 @@ void Printer::Cpp::print(const Statement::Var_Decl &stmt) {
     return;
   }
 
-  if (!stmt.is_itr()) {
+  if (!stmt.dont_indent) {
     stream << indent();
   }
   stream << *stmt.type << ' ' << *stmt.name;
@@ -327,7 +330,9 @@ void Printer::Cpp::print(const Statement::Foreach &stmt) {
 }
 
 void Printer::Cpp::print(const Statement::Var_Assign &stmt) {
-  stream << indent();
+  if (!stmt.dont_indent) {
+    stream << indent();
+  }
   stream << *stmt.acc;
   stream << ' ' << stmt.op_str() << ' ' << *stmt.rhs;
   if (!in_fn_head)
@@ -543,6 +548,14 @@ void Printer::Cpp::print(const Statement::Block &stmt) {
   }
   dec_indent();
   stream << indent() << "}" << endl;
+}
+
+
+void Printer::Cpp::print(const Statement::CustomCode &stmt) {
+  if (stmt.line_of_code.at(0) != '#') {
+    stream << indent();
+  }
+  stream << stmt.line_of_code;
 }
 
 
@@ -1519,7 +1532,8 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
     << indent() << indent() << "throw gapc::OptException(\"Number of input "
     << "sequences does not match.\");\n\n";
 
-  if (ast.checkpoint && !ast.checkpoint->is_buddy) {
+  bool checkpoint = ast.checkpoint && !ast.checkpoint->is_buddy;
+  if (checkpoint) {
     stream << indent() << "start_cpu_time = std::clock();"
            << endl;
     stream << indent() << "std::string binary_name = "
@@ -1541,25 +1555,6 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
            << "logfile_name;" << endl;
     stream << indent() << "load_checkpoint = "
            << "!(opts.checkpoint_in_path.empty());" << endl << endl;
-    if (ast.checkpoint->cyk) {
-      stream << indent() << "std::string cyk_archive = "
-             << "file_prefix + \"_cyk_indices\";" << endl;
-      stream << indent() << "out_cyk_path = opts.checkpoint_out_path / "
-             << "cyk_archive;" << endl;
-      stream << indent() << "tmp_out_cyk_path = opts.checkpoint_out_path / "
-             << "(cyk_archive + \"_new\");" << endl << endl;
-      for (size_t i = 0; i < ast.grammar()->axiom->tracks(); i++) {
-        stream << indent() << "t_" << i << "_i = 0;" << endl;
-        stream << indent() << "t_" << i << "_j = 0;" << endl;
-      }
-      stream << indent() << "#ifdef _OPENMP" << endl;
-      inc_indent();
-      stream << indent() << "outer_loop_1_idx = 0;" << endl;
-      stream << indent() << "outer_loop_2_idx = 0;" << endl;
-      stream << indent() << "inner_loop_2_idx = 0;" << endl;
-      dec_indent();
-      stream << indent() << "#endif" << endl;
-    }
     stream << indent() << "checkpoint_interval = opts.checkpoint_interval;"
            << endl;
     stream << indent() << "keep_archives = opts.keep_archives;" << endl;
@@ -1599,6 +1594,46 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
       default:
         assert(false);
     }
+  }
+
+  // set the tile size to the specified tile size and
+  // calculate max_tiles and max_tiles_n
+  if (ast.cyk()) {
+    std::string *max_tiles_n_var = new std::string("max_tiles_n");
+    std::tuple<std::list<Statement::Base*>*, std::string*>
+    tile_stmts = get_tile_computation(ast, max_tiles_n_var,
+                                      ast.seq_decls.front(), false);
+    for (Statement::Base *stmt : *std::get<0>(tile_stmts)) {
+      stream << *stmt << endl;
+    }
+    delete max_tiles_n_var;
+  }
+
+  if (checkpoint && ast.checkpoint->cyk) {
+    stream << indent() << "std::string cyk_archive = "
+           << "file_prefix + \"_cyk_indices\";" << endl;
+    stream << indent() << "out_cyk_path = opts.checkpoint_out_path / "
+           << "cyk_archive;" << endl;
+    stream << indent() << "tmp_out_cyk_path = opts.checkpoint_out_path / "
+           << "(cyk_archive + \"_new\");" << endl << endl;
+    stream << indent() << "#ifdef _OPENMP" << endl;
+    inc_indent();
+    stream << indent() << "outer_loop_1_idx = 0;" << endl;
+    stream << indent() << "outer_loop_2_idx = 0;" << endl;
+    stream << indent() << "inner_loop_2_idx = 0;" << endl;
+    for (size_t i = 0; i < ast.grammar()->axiom->tracks(); i++) {
+      stream << indent() << "t_" << i << "_i = 0;" << endl;
+      stream << indent() << "t_" << i << "_j = max_tiles_n;" << endl;
+    }
+    dec_indent();
+    stream << indent() << "#else" << endl;
+    inc_indent();
+    for (size_t i = 0; i < ast.grammar()->axiom->tracks(); i++) {
+      stream << indent() << "t_" << i << "_i = 0;" << endl;
+      stream << indent() << "t_" << i << "_j = 0;" << endl;
+    }
+    dec_indent();
+    stream << indent() << "#endif" << endl << endl;
   }
 }
 
@@ -1728,6 +1763,7 @@ void Printer::Cpp::print_init_fn(const AST &ast) {
   print_seq_init(ast);
   print_filter_init(ast);
   print_table_init(ast);
+
   if (ast.checkpoint && !ast.checkpoint->is_buddy) {
     if (ast.checkpoint->strings ||
        ast.checkpoint->subseq || ast.checkpoint->cyk) {
@@ -1861,6 +1897,10 @@ void Printer::Cpp::header(const AST &ast) {
     stream << "#define GAPC_VERSION_STRING \"" << gapc_version_string << "\""
            << endl << endl;
 
+    if (ast.cyk()) {
+      stream << "#define CYK_CODEGEN" << endl;
+    }
+
     if (ast.checkpoint) {
       /*
          this macro always needs to be at the top of the header file
@@ -1925,6 +1965,11 @@ void Printer::Cpp::header(const AST &ast) {
 
   print_most_decl(*ast.grammar()->axiom);
 
+  if (ast.cyk()) {
+    stream << indent() << "unsigned int tile_size, max_tiles;" << endl;
+    stream << indent() << "int max_tiles_n;" << endl;
+  }
+
   if (ast.checkpoint && ast.checkpoint->cyk) {
     ::Type::Base *type = new Type::Size();
     // store indices for cyk loops here so they can be archived/loaded
@@ -1957,540 +2002,6 @@ void Printer::Cpp::header(const AST &ast) {
   dec_indent();
   stream << indent() << " private:" << endl;
   inc_indent();
-}
-
-
-void Printer::Cpp::print_openmp_cyk_nt_calls(const AST &ast) {
-  std::list<Symbol::NT*> &tord = ast.grammar()->topological_ord();
-  assert(tord.size() <= ast.grammar()->NTs.size());
-  std::ostringstream o1;
-  for (std::list<Symbol::NT*>::iterator i = tord.begin();
-       i != tord.end(); ++i) {
-    assert(!(*i)->tables().empty());
-    if ((*i)->is_tabulated() && !(*i)->tables().front().is_cyk_right()) {
-      o1 << indent() << "nt_tabulate_" << *(*i)->name << "("
-        << multi_index_str((*i)->tables(), (*i)->multi_ys())
-        << ");\n";
-    }
-  }
-  std::string nt_calls = o1.str();
-  stream << nt_calls;
-}
-
-void Printer::Cpp::print_openmp_cyk_all_nt_calls(const AST &ast) {
-  std::list<Symbol::NT*> &tord = ast.grammar()->topological_ord();
-  std::ostringstream o2;
-  for (std::list<Symbol::NT*>::iterator i = tord.begin();
-       i != tord.end(); ++i) {
-    if ((*i)->is_tabulated()) {
-      o2 << indent() << "nt_tabulate_" << *(*i)->name << "("
-        << multi_index_str((*i)->tables(), (*i)->multi_ys())
-        << ");\n";
-    }
-  }
-  std::string all_nt_calls = o2.str();
-  stream << all_nt_calls;
-}
-
-void Printer::Cpp::print_openmp_cyk_helpervars() {
-  stream << indent() << "unsigned int n = t_0_seq.size();" << endl;
-  if (!ast->checkpoint) {
-    stream << indent() << "unsigned int tile_size = 32;" << endl;
-    stream << "#ifdef TILE_SIZE" << endl;
-    stream << indent() << "tile_size = TILE_SIZE;" << endl;
-    stream << "#endif" << endl;
-  }
-  stream << indent() << "assert(tile_size);" << endl;
-  stream << indent() << "unsigned int max_tiles = n / tile_size;" << endl;
-  stream << indent() << "int max_tiles_n = max_tiles * tile_size;" << endl;
-}
-
-// FIXME adjust for multi-track (> 1 track)
-void Printer::Cpp::print_openmp_cyk(const AST &ast) {
-  // FIXME abstract from unsigned int, int -> perhaps wait for OpenMP 3
-  // since OpenMP < 3 doesn't allow unsigned int in workshared fors
-
-  // paral_start
-  stream << indent() << "#pragma omp parallel" << endl;
-  stream << indent() << '{' << endl;
-  inc_indent();
-
-  // helper_vars
-  print_openmp_cyk_helpervars();
-
-  bool checkpoint = ast.checkpoint && ast.checkpoint->cyk;
-
-  /*
-   * need ordered clause in omp statement, because this will
-   * ensure that each thread syncs with all other threads
-   * before they process their next "batch";
-   * this is necessary to guarantee
-   * that no other thread writes if the archiving thread
-   * aquired the shared mutex and needs to read the tables
-  */
-  if (checkpoint) {
-    stream << indent() << "#pragma omp for ordered schedule(dynamic)" << endl;
-  } else {
-  stream << indent() << "#pragma omp for" << endl;
-  }
-  stream << indent() << "// OPENMP < 3 requires signed int here ..." << endl;
-  stream << indent();
-  if (checkpoint) {
-    stream << "for (int z = outer_loop_1_idx_start; "
-           << "z < max_tiles_n; z+=tile_size) {";
-  } else {
-    stream << "for (int z = 0; z < max_tiles_n; z+=tile_size) {";
-  }
-  stream << endl;
-  inc_indent();
-  if (checkpoint) {
-    stream << indent() << "mutex.lock_shared();" << endl;
-  }
-  stream << indent() << "for (unsigned int t_0_j = z; "
-         << "t_0_j < z + tile_size; ++t_0_j) {" << endl;
-  inc_indent();
-  stream << indent() << "for (int t_0_i = t_0_j + 1; "
-         << "t_0_i > z; --t_0_i) {" << endl;
-  inc_indent();
-  print_openmp_cyk_nt_calls(ast);
-  dec_indent();
-  stream << indent() << "}" << endl;
-  dec_indent();
-  stream << indent() << "}" << endl;
-  if (checkpoint) {
-    // sync all threads
-    stream << indent() << "#pragma omp ordered" << endl;
-    stream << indent() << "{" << endl;
-    inc_indent();
-    stream << indent() << "// force omp to wait for all threads to finish their"
-           << " current batch (of size tile_size)" << endl;
-    stream << indent() << "outer_loop_1_idx += tile_size;" << endl;
-    stream << indent() << "mutex.unlock_shared();" << endl;
-    dec_indent();
-    stream << indent() << "}" << endl;
-  }
-  dec_indent();
-  stream << indent() << "}" << endl;
-
-  // middle
-  stream << endl;
-  if (checkpoint) {
-    stream << indent()
-           << "for (int z = outer_loop_2_idx_start; "
-           << "z < max_tiles_n; z+=tile_size) {" << endl;
-    inc_indent();
-    stream << indent() << "#pragma omp for ordered schedule(dynamic)" << endl;
-    stream << indent() << "for (int y = inner_loop_2_idx_loaded ? "
-           << "z : inner_loop_2_idx_start;"
-           << " y < max_tiles_n; y+=tile_size) {" << endl;
-    inc_indent();
-    stream << indent() << "++inner_loop_2_idx_loaded;" << endl;
-    stream << indent() << "mutex.lock_shared();" << endl;
-  } else {
-    stream << indent()
-           << "for (int z = tile_size; "
-           << "z < max_tiles_n; z+=tile_size) {" << endl;
-    inc_indent();
-    stream << indent() << "#pragma omp for" << endl;
-    stream << indent() << "for (int y = z; y < max_tiles_n; y+=tile_size) {"
-           << endl;
-    inc_indent();
-  }
-  stream << indent() << "unsigned int x = y - z + tile_size;" << endl;
-  stream << indent()
-         << "for (unsigned int t_0_j = y; "
-         << "t_0_j < y + tile_size; ++t_0_j) {" << endl;
-  inc_indent();
-  stream << indent()
-         << "for (unsigned int t_0_i = x; "
-         << "t_0_i > x - tile_size; --t_0_i) {" << endl;
-  inc_indent();
-
-  print_openmp_cyk_nt_calls(ast);
-
-  // paral_end
-  dec_indent();
-  stream << indent() << "}" << endl;
-  dec_indent();
-  stream << indent() << "}" << endl;
-  if (checkpoint) {
-    stream << indent() << "#pragma omp ordered" << endl;
-    stream << indent() << "{" << endl;
-    inc_indent();
-    stream << indent() << "inner_loop_2_idx += tile_size;" << endl;
-    stream << indent() << "outer_loop_2_idx = z;" << endl;
-    stream << indent() << "mutex.unlock_shared();" << endl;
-    dec_indent();
-    stream << indent() << "}" << endl;
-  }
-  dec_indent();
-  stream << indent() << "}" << endl;
-  if (checkpoint) {
-    stream << indent() << "inner_loop_2_idx = z + tile_size;" << endl;
-  }
-  dec_indent();
-  stream << indent() << "}" << endl;
-  dec_indent();
-  stream << indent() << "}  // end parallel" << endl;
-  stream << endl;
-
-  // REPEAT: helper_vars
-  print_openmp_cyk_helpervars();
-
-  // single
-  if (checkpoint) {
-    stream << indent()
-           << "for (t_0_j = (t_0_j_loaded++) ? max_tiles_n : t_0_j; "
-           << "t_0_j <= n; ++t_0_j) {" << endl;
-  } else {
-    stream << indent()
-           << "for (unsigned int t_0_j = max_tiles_n; "
-           << "t_0_j <= n; ++t_0_j) {" << endl;
-  }
-  inc_indent();
-  if (checkpoint) {
-    stream << indent()
-           << "for (t_0_i = (t_0_i_loaded++) ? t_0_j + 1 : t_0_i; "
-           << "t_0_i > 0; --t_0_i) {" << endl;
-  } else {
-    stream << indent()
-           << "for (unsigned int t_0_i = t_0_j + 1; "
-           << "t_0_i > 0; --t_0_i) {" << endl;
-  }
-  inc_indent();
-
-  if (ast.checkpoint && ast.checkpoint->cyk) {
-    stream << indent() << "mutex.lock_shared();" << endl;
-  }
-
-  print_openmp_cyk_all_nt_calls(ast);
-
-  if (ast.checkpoint && ast.checkpoint->cyk) {
-    stream << indent() << "mutex.unlock_shared();" << endl;
-  }
-
-  // single_end
-  dec_indent();
-  stream << indent() << "}" << endl;
-  dec_indent();
-  stream << indent() << "}" << endl;
-}
-
-
-std::string Printer::Cpp::multi_index_str(
-  const std::vector<Table> &tables, const Yield::Multi &mys) {
-  assert(tables.size() == mys.tracks());
-  std::ostringstream o;
-  size_t track = 0;
-  Yield::Multi::const_iterator j = mys.begin();
-  for (std::vector<Table>::const_iterator i = tables.begin();
-       i != tables.end(); ++i, ++j, ++track) {
-    if (!(*i).delete_left_index()) {
-      o << ", t_" << track << "_i-1";
-    }
-    if (!(*i).delete_right_index()) {
-      o << ", t_" << track << "_j";
-    }
-  }
-  std::string r(o.str());
-  if (r.size() > 2) {
-    return r.substr(2);
-  } else {
-    return r;
-  }
-}
-
-
-void Printer::Cpp::multi_print_inner_cyk(
-  const std::list<Symbol::NT*> &l,
-  const std::list<Symbol::NT*> &tord,
-  size_t track, size_t tracks, size_t track_pos,
-  Type::Base *t, bool checkpoint) {
-  assert(track < tracks);
-  if (track+1 != tracks) {
-    multi_print_cyk(tord, track+1, tracks, track_pos, t);
-    return;
-  }
-  if (checkpoint) {
-    stream << indent() << "std::lock_guard<fair_mutex> lock(mutex);" << endl;
-  }
-  for (std::list<Symbol::NT*>::const_iterator i = l.begin();
-       i != l.end(); ++i) {
-    std::string index_str = multi_index_str((*i)->tables(), (*i)->multi_ys());
-    stream << indent() << "nt_tabulate_" << *(*i)->name << '('
-           << index_str << ");" << endl;
-  }
-}
-
-
-void Printer::Cpp::multi_partition_nts(
-  const std::list<Symbol::NT*> &tord, std::list<Symbol::NT*> &all,
-  std::list<Symbol::NT*> &inner, std::list<Symbol::NT*> &left,
-  std::list<Symbol::NT*> &right,
-  size_t track, size_t tracks, size_t track_pos) {
-  for (std::list<Symbol::NT*>::const_iterator i = tord.begin();
-       i != tord.end(); ++i) {
-    if (!(*i)->is_tabulated()) {
-      continue;
-    }
-    if ((*i)->tracks() != tracks) {
-      continue;
-    }
-    if ((*i)->track_pos() != track_pos) {
-      continue;
-    }
-    const Table &table = (*i)->tables()[track];
-
-    if (!table.is_cyk_left() && !table.is_cyk_right() &&
-        !table.is_cyk_const()) {
-      inner.push_back(*i);
-    }
-    if (!table.is_cyk_right() && !table.is_cyk_const()) {
-      left.push_back(*i);
-    }
-    if (!table.is_cyk_left() && !table.is_cyk_const()) {
-      right.push_back(*i);
-    }
-    all.push_back(*i);
-  }
-}
-
-
-void Printer::Cpp::multi_print_cyk(
-  const std::list<Symbol::NT*> &tord, size_t track, size_t tracks,
-  size_t track_pos, Type::Base *t) {
-  std::list<Symbol::NT*> all, inner, left, right;
-  multi_partition_nts(tord, all, inner, left, right, track, tracks, track_pos);
-
-  size_t real_track = !track_pos ? track : track_pos;
-
-  std::ostringstream sis, sjs, sns;
-  sis << "t_" << track << "_i";
-  sjs << "t_" << track << "_j";
-  sns << "t_" << real_track << "_n";
-  std::string is(sis.str()), js(sjs.str()), ns(sns.str());
-
-  stream << indent() << *t << " t_" << track << "_n = t_" << real_track
-    << "_seq.size();" << endl << endl;
-
-  bool checkpoint = ast->checkpoint && ast->checkpoint->cyk;
-
-  // SMJ 2023-02-18: I've added the x: xxx loops comments, but
-  // am not 100% sure if they are correct in multitrack contexts
-  if (!inner.empty()) {
-    if (checkpoint) {
-      /*
-         in checkpointing mode, the loop indices
-         (e.g. t_0_i and t_0_j in single-track mode;
-          names can differ in multi-track mode)
-         are members of the out class instead of local loop variables
-         so they can be archived/loaded;
-         if they are loaded, the loop variable (e.g. t_0_j) starts
-         from whatever value was loaded from the checkpoint,
-         which is handled through a marker
-         for every loop variable (e.g. "t_0_j_loaded");
-         initially, all of these marker values are set to 0, which will
-         set each loop variable to whatever value was loaded from the checkpoint;
-         after that, the respective marker value will be set to 1,
-         so the loop variable will be set to whatever
-         value is usually would be set to
-      */
-      stream << indent() << "for (" << js << " = (" << js << "_loaded++) "
-             << "? 0 : " << js << "; "
-             << js << " < " << ns << "; " << "++" << js << ") {"
-             << endl;
-      inc_indent();
-    } else {
-      stream << indent() << "for (" << *t << " " << js << " = 0; "
-             << js << " < " << ns << "; " << "++" << js << ") {"
-             << endl;
-      inc_indent();
-    }
-
-    stream << indent() << "// A: quadratic loops" << endl;
-    if (checkpoint) {
-      /*
-         in checkpointing mode, the inner loop variable (e.g. t_0_i)
-         is either regularly set to e.g. t_0_j + 1 or to whatever value
-         was loaded from the checkpoint archive;
-         however, this loaded checkpoint value will only be the start value
-         for t_0_i in the first inner loop pass;
-         afterwards it will regularly be set to t_0_j + 1;
-      */
-      stream << indent() << "for (" << is << " = (" << is << "_loaded++) "
-             << "? " << js << " + 1 : " << is << "; "
-             << is << " > 1; " << is << "--) {" << endl;
-      inc_indent();
-    } else {
-      stream << indent() << "for (" << *t << " " << is << " = "
-             << js << " + 1; " << is << " > 1; " << is << "--) {" << endl;
-      inc_indent();
-    }
-
-    multi_print_inner_cyk(inner, tord, track, tracks, track_pos, t, checkpoint);
-    dec_indent();
-    stream << indent() << "}" << endl << endl;
-
-    if (!left.empty()) {
-      stream << indent() << "// B: inner quadratic loops" << endl;
-      stream << indent() << *t << " " << is << " = 1;" << endl;
-      multi_print_inner_cyk(left, tord, track, tracks,
-                            track_pos, t, checkpoint);
-    }
-    dec_indent();
-    stream << indent() << "}" << endl << endl;
-  }
-  if (inner.empty() && !left.empty()) {
-    stream << indent() << "// C: linear loops" << endl;
-    if (checkpoint) {
-      stream << indent() << "for (" << js << " = (" << js << "_loaded++) "
-             << "? 0 : " << js << "; " << js << " < " << ns
-             << "; " << "++" << js << ") {" << endl;
-      inc_indent();
-    } else {
-      stream << indent() << "for (" << *t << " " << js << " = 0; "
-             << js << " < " << ns
-             << "; " << "++" << js << ") {" << endl;
-      inc_indent();
-    }
-    stream << indent() << *t << " " << is << " = 1;" << endl;
-    multi_print_inner_cyk(left, tord, track, tracks, track_pos, t, checkpoint);
-    dec_indent();
-    stream << indent() << "}" << endl << endl;
-  }
-  if (!right.empty()) {
-    stream << indent() << "// C: linear loops" << endl;
-    stream << indent() << *t << " " << js << " = " << ns << ";" << endl;
-    if (checkpoint) {
-      /*
-         in checkpointing mode, the entire quadratic loop (A) will be skipped
-         if the loaded value for t_0_j == t_0_n, so this is the loop that
-         would get executed next
-      */
-      stream << indent() << "for (" << is << " = (" << is << "_loaded++) "
-             << "? " << js << " + 1 : " << is << "; "
-             << is << " > 1; " << is << "--) {" << endl;
-      inc_indent();
-    } else {
-      stream << indent() << "for (" << *t << " "<< is << " = " << js << " + 1; "
-             << is << " > 1; " << is << "--) {" << endl;
-      inc_indent();
-    }
-    multi_print_inner_cyk(right, tord, track, tracks, track_pos, t, checkpoint);
-    dec_indent();
-    stream << indent() << "}" << endl << endl;
-  }
-
-  if (!all.empty()) {
-    stream << indent() << "// D: constant loops" << endl;
-    stream << indent() << *t << " " << is << " = 1;" << endl;
-    multi_print_inner_cyk(all, tord, track, tracks, track_pos, t, checkpoint);
-  }
-}
-
-
-void Printer::Cpp::print_cyk_fn(const AST &ast) {
-  if (fwd_decls) {
-    stream << indent() << "void cyk();" << endl << endl;
-    return;
-  }
-
-  stream << indent() << "void " << class_name << "::cyk() {" << endl;
-  inc_indent();
-  if (!ast.cyk()) {
-    dec_indent();
-    stream << indent() << '}' << endl << endl;
-    return;
-  }
-
-  if (ast.checkpoint && ast.checkpoint->cyk) {
-    /*
-       define a boolean marker (as an int) for every loop idx
-       to allow for the loading of the checkpointed loop indices;
-       if the user wants to load a checkpoint (load_checkpoint == true)
-       and the loaded idx value doesn't equal the default value 0
-       (meaning that the checkpointed program made enough progress
-        to get to the loop where the current idx lives),
-       the markers will be set to "false" (== 0), which indicates
-       that the respective loop idx hasn't been loaded yet and
-       should be loaded when it is first requested;
-       if the user does not want to load a checkpoint
-       (load_checkpoint == false) or the load idx values are still 0,
-       the respective markers will be set to "true" (== 1);
-       this means that all idx values are already assumed to be
-       loaded and won't be loaded when they are first requested;
-       this ensures that the idx values start at whatever value
-       they would normally start with
-    */
-    for (size_t track_i = 0;
-         track_i < ast.grammar()->axiom->tracks(); ++track_i) {
-      stream << indent() << "int t_" << track_i
-             << "_i_loaded = !load_checkpoint ||"
-             << " !t_" << track_i << "_i;" << endl;
-      stream << indent() << "int t_" << track_i
-             << "_j_loaded = !load_checkpoint ||"
-             << " !t_" << track_i << "_j;" << endl;
-    }
-    stream << "#ifdef _OPENMP" << endl;
-    stream << indent() << "unsigned int tile_size = 32;" << endl;
-    stream << "#ifdef TILE_SIZE" << endl;
-    stream << indent() << "tile_size = TILE_SIZE;" << endl;
-    stream << "#endif" << endl;
-    stream << indent() << "int outer_loop_1_idx_loaded = "
-           << "!load_checkpoint || !outer_loop_1_idx;" << endl;
-    stream << indent() << "int outer_loop_2_idx_loaded = "
-           << "!load_checkpoint || !outer_loop_2_idx;" << endl;
-    stream << indent() << "int inner_loop_2_idx_loaded = "
-           << "!load_checkpoint || !inner_loop_2_idx;" << endl;
-    stream << indent() << "int outer_loop_1_idx_start = "
-           << "(outer_loop_1_idx_loaded++) ? 0 : outer_loop_1_idx;" << endl;
-    stream << indent() << "int outer_loop_2_idx_start = "
-           << "(outer_loop_2_idx_loaded++) ? tile_size : outer_loop_2_idx;"
-           << endl;
-    stream << indent() << "int inner_loop_2_idx_start = inner_loop_2_idx;"
-           << endl;
-    stream << "#endif" << endl << endl;
-  }
-
-  stream << "#ifndef _OPENMP" << endl;
-
-  // FIXME?
-  Type::Base *t = new ::Type::Size();
-
-  /*
-  stream << "for (" << *t << " j = 0; j <= n; ++j)" << endl;
-  stream << "  for (" << *t << " i = j + 1; i > 0; i--) {" << endl;
-  std::list<Symbol::NT*> &tord = ast.grammar()->topological_ord();
-  assert(tord.size() <= ast.grammar()->NTs.size());
-  for (std::list<Symbol::NT*>::iterator i = tord.begin(); i != tord.end(); ++i)
-  if ((*i)->is_tabulated())
-  stream << "nt_tabulate_" << *(*i)->name << "(i-1, j);" << endl;
-  stream << endl << "}" << endl;
-  */
-  if (ast.grammar()->axiom->tracks() > 1) {
-    for (size_t track_pos = 0; track_pos < ast.grammar()->axiom->tracks();
-         ++track_pos) {
-      stream << endl << "{" << endl;
-      multi_print_cyk(ast.grammar()->topological_ord(), 0, 1, track_pos, t);
-      stream << endl << "}" << endl;
-    }
-  }
-
-  multi_print_cyk(
-    ast.grammar()->topological_ord(), 0, ast.grammar()->axiom->tracks(), 0, t);
-
-
-  stream << "#else" << endl;
-  // FIXME generalize for multi-track ...
-  if (ast.grammar()->axiom->tracks() == 1) {
-    print_openmp_cyk(ast);
-  }
-  stream << "#endif" << endl;
-
-  dec_indent();
-  stream << indent() << "}" << endl;
-
-  stream << endl;
 }
 
 
@@ -2611,7 +2122,7 @@ void Printer::Cpp::footer(const AST &ast) {
     stream << indent() << " public:" << endl;
     inc_indent();
   }
-  print_cyk_fn(ast);
+  stream << *print_CYK(ast);
 
   print_id();
 }
