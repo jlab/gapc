@@ -371,8 +371,13 @@ void Grammar::init_table_dims() {
     std::vector<Yield::Size> temp_rs(nt_list.size());
 
     axiom->init_table_dim(l, r, temp_ls, temp_rs, track);
-  }
 
+    // clear table dim ready flag for next track
+    for (std::list<Symbol::NT*>::iterator nt = this->nt_list.begin();
+         nt != this->nt_list.end(); ++nt) {
+      (*nt)->reset_table_dim();
+    }
+  }
 
 #ifndef NDEBUG
   for (std::list<Symbol::NT*>::iterator i = nt_list.begin();
@@ -878,6 +883,9 @@ struct Clear_Loops : public Visitor {
 void Grammar::init_indices() {
   Clear_Loops cl;
   traverse(cl);
+
+  assert(this->left_running_indices.size() == 0);
+  assert(this->right_running_indices.size() == 0);
   for (size_t track = 0; track < axiom->tracks(); ++track) {
     // variable access for all possible boundaries
     std::ostringstream i, j, lm, rm;

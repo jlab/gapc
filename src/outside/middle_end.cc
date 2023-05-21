@@ -213,7 +213,7 @@ void iterate_indices(bool is_left_not_right,
 #endif
     next_var = Alt::next_index_var(
         k, track, next_var, last_var, upstream_index,
-        ys, lhs, rhs, &((*i)->simple_loops), true, false, is_left_not_right);
+        ys, lhs, rhs, (*i)->simple_loops, true, false, is_left_not_right);
 
     // copy and paste from Alt::Simple::init_indices
     std::pair<Expr::Base*, Expr::Base*> res(0, 0);
@@ -328,7 +328,7 @@ void outside_init_indices(
   ys.set(0, 0);
   Expr::Base *next_var = Alt::next_index_var(k, track, left, left_most, left,
                                              ys, ys_lhs, ys_all,
-                                             &loops, true, true, true);
+                                             loops, true, true, true);
   Expr::Base *last_var = next_var;
   iterate_indices(true, &left_parser, k, track, alt->multi_ys().tracks(),
                   next_var, last_var, left, ys_all);
@@ -343,7 +343,7 @@ void outside_init_indices(
         right_parser.begin(), track);
     last_var = Alt::next_index_var(k, track, right, right_most, right,
                                    ys, ys_all, ys_rhs,
-                                   &loops, true, true, false);
+                                   loops, true, true, false);
     iterate_indices(false, &right_parser, k, track, alt->multi_ys().tracks(),
                     next_var, last_var, right, ys_all);
   }
@@ -375,7 +375,14 @@ void outside_init_indices(
   }
 
   if (alt->is(Alt::SIMPLE)) {
-    dynamic_cast<Alt::Simple*>(alt)->loops = loops;
+    Alt::Simple *asimple = dynamic_cast<Alt::Simple*>(alt);
+    for (std::list<Statement::For *>::iterator i = asimple->loops.begin(); i != asimple->loops.end(); ++i) {
+      // only add those loops, not already on the list
+      if (std::find(loops.begin(), loops.end(), *i) == loops.end()) {
+        loops.push_back(*i);
+      }
+    }
+    asimple->loops = loops;
   }
 }
 
