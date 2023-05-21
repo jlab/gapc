@@ -200,7 +200,7 @@ class Opts {
         << "                                      after the program finished "
         << "its calculations\n"
 #endif
-#ifdef CYK_CODEGEN
+#ifdef _OPENMP
         << "--tileSize,-L            N            set tile size in "
         << "multithreaded cyk \n"
         << "                                      loops (default: 32)\n"
@@ -240,7 +240,7 @@ class Opts {
 #ifdef CHECKPOINTING_INTEGRATED
               "p:I:KO:"
 #endif
-#ifdef CYK_CODEGEN
+#ifdef _OPENMP
              "L:"
 #endif
              "hd:r:k:H:", long_opts, nullptr)) != -1) {
@@ -367,7 +367,7 @@ class Opts {
             keep_archives = true;
             break;
 #endif
-#ifdef CYK_CODEGEN
+#ifdef _OPENMP
           case 'L' :
             tile_size = std::atoi(optarg);
             break;
