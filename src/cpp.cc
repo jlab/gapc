@@ -23,6 +23,7 @@
 
 #include <cmath>
 #include <set>
+#include <tuple>
 #include <utility>
 #include <boost/tokenizer.hpp>
 
@@ -50,7 +51,6 @@
 #include "options.hh"
 #include "outside/codegen.hh"
 #include "cyk.hh"
-
 
 static std::string make_comments(const std::string &s, const std::string &c) {
   std::ostringstream o;
@@ -554,6 +554,7 @@ void Printer::Cpp::print(const Statement::Block &stmt) {
   dec_indent();
   stream << indent() << "}" << endl;
 }
+
 
 void Printer::Cpp::print(const Statement::CustomCode &stmt) {
   if (stmt.line_of_code.at(0) != '#') {
@@ -1536,7 +1537,8 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
     << indent() << indent() << "throw gapc::OptException(\"Number of input "
     << "sequences does not match.\");\n\n";
 
-  if (ast.checkpoint && !ast.checkpoint->is_buddy) {
+  bool checkpoint = ast.checkpoint && !ast.checkpoint->is_buddy;
+  if (checkpoint) {
     stream << indent() << "start_cpu_time = std::clock();"
            << endl;
     stream << indent() << "std::string binary_name = "
@@ -1558,25 +1560,6 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
            << "logfile_name;" << endl;
     stream << indent() << "load_checkpoint = "
            << "!(opts.checkpoint_in_path.empty());" << endl << endl;
-    if (ast.checkpoint->cyk) {
-      stream << indent() << "std::string cyk_archive = "
-             << "file_prefix + \"_cyk_indices\";" << endl;
-      stream << indent() << "out_cyk_path = opts.checkpoint_out_path / "
-             << "cyk_archive;" << endl;
-      stream << indent() << "tmp_out_cyk_path = opts.checkpoint_out_path / "
-             << "(cyk_archive + \"_new\");" << endl << endl;
-      for (size_t i = 0; i < ast.grammar()->axiom->tracks(); i++) {
-        stream << indent() << "t_" << i << "_i = 0;" << endl;
-        stream << indent() << "t_" << i << "_j = 0;" << endl;
-      }
-      stream << indent() << "#ifdef _OPENMP" << endl;
-      inc_indent();
-      stream << indent() << "outer_loop_1_idx = 0;" << endl;
-      stream << indent() << "outer_loop_2_idx = 0;" << endl;
-      stream << indent() << "inner_loop_2_idx = 0;" << endl;
-      dec_indent();
-      stream << indent() << "#endif" << endl;
-    }
     stream << indent() << "checkpoint_interval = opts.checkpoint_interval;"
            << endl;
     stream << indent() << "keep_archives = opts.keep_archives;" << endl;
@@ -1616,6 +1599,46 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
       default:
         assert(false);
     }
+  }
+
+  // set the tile size to the specified tile size and
+  // calculate max_tiles and max_tiles_n
+  if (ast.cyk()) {
+    std::string *max_tiles_n_var = new std::string("max_tiles_n");
+    std::tuple<std::list<Statement::Base*>*, std::string*>
+    tile_stmts = get_tile_computation(ast, max_tiles_n_var,
+                                      ast.seq_decls.front(), false);
+    for (Statement::Base *stmt : *std::get<0>(tile_stmts)) {
+      stream << *stmt << endl;
+    }
+    delete max_tiles_n_var;
+  }
+
+  if (checkpoint && ast.checkpoint->cyk) {
+    stream << indent() << "std::string cyk_archive = "
+           << "file_prefix + \"_cyk_indices\";" << endl;
+    stream << indent() << "out_cyk_path = opts.checkpoint_out_path / "
+           << "cyk_archive;" << endl;
+    stream << indent() << "tmp_out_cyk_path = opts.checkpoint_out_path / "
+           << "(cyk_archive + \"_new\");" << endl << endl;
+    stream << indent() << "#ifdef _OPENMP" << endl;
+    inc_indent();
+    stream << indent() << "outer_loop_1_idx = 0;" << endl;
+    stream << indent() << "outer_loop_2_idx = 0;" << endl;
+    stream << indent() << "inner_loop_2_idx = 0;" << endl;
+    for (size_t i = 0; i < ast.grammar()->axiom->tracks(); i++) {
+      stream << indent() << "t_" << i << "_i = 0;" << endl;
+      stream << indent() << "t_" << i << "_j = max_tiles_n;" << endl;
+    }
+    dec_indent();
+    stream << indent() << "#else" << endl;
+    inc_indent();
+    for (size_t i = 0; i < ast.grammar()->axiom->tracks(); i++) {
+      stream << indent() << "t_" << i << "_i = 0;" << endl;
+      stream << indent() << "t_" << i << "_j = 0;" << endl;
+    }
+    dec_indent();
+    stream << indent() << "#endif" << endl << endl;
   }
 }
 
@@ -1745,6 +1768,7 @@ void Printer::Cpp::print_init_fn(const AST &ast) {
   print_seq_init(ast);
   print_filter_init(ast);
   print_table_init(ast);
+
   if (ast.checkpoint && !ast.checkpoint->is_buddy) {
     if (ast.checkpoint->strings ||
        ast.checkpoint->subseq || ast.checkpoint->cyk) {
@@ -1944,6 +1968,11 @@ void Printer::Cpp::header(const AST &ast) {
   }
 
   print_most_decl(*ast.grammar()->axiom);
+
+  if (ast.cyk()) {
+    stream << indent() << "unsigned int tile_size, max_tiles;" << endl;
+    stream << indent() << "int max_tiles_n;" << endl;
+  }
 
   if (ast.checkpoint && ast.checkpoint->cyk) {
     ::Type::Base *type = new Type::Size();
