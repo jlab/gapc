@@ -375,9 +375,7 @@ void outside_init_indices(
   }
 
   if (alt->is(Alt::SIMPLE)) {
-    dynamic_cast<Alt::Simple*>(alt)->loops.insert(
-        dynamic_cast<Alt::Simple*>(alt)->loops.begin(),
-        loops.begin(), loops.end());
+    dynamic_cast<Alt::Simple*>(alt)->loops = loops;
   }
 }
 
