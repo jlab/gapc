@@ -429,7 +429,7 @@ std::list<Statement::Base*> *cyk_traversal_multithread_parallel(const AST &ast,
   CYKloop row = get_for_row(ast.grammar()->left_running_indices[track],
       row_start, z, with_checkpoint, CYKmode::OPENMP_PARALLEL);
   CYKloop col = get_for_column(ast.grammar()->right_running_indices[track],
-      z, z->plus(new Expr::Vacc(*tile_size)), with_checkpoint,
+      z, z->plus(new Expr::Vacc(tile_size)), with_checkpoint,
       CYKmode::OPENMP_PARALLEL);
   col.loop->statements.push_back(row.loop);
   Expr::Base *start_z = new Expr::Const(0);
@@ -465,7 +465,7 @@ std::list<Statement::Base*> *cyk_traversal_multithread_parallel(const AST &ast,
       (new Expr::Vacc(*x))->minus(new Expr::Vacc(tile_size)),
       with_checkpoint, CYKmode::OPENMP_PARALLEL);
   CYKloop colB = get_for_column(ast.grammar()->right_running_indices[track],
-      y, y->plus(new Expr::Vacc(*tile_size)), with_checkpoint,
+      y, y->plus(new Expr::Vacc(tile_size)), with_checkpoint,
       CYKmode::OPENMP_PARALLEL);
   colB.loop->statements.push_back(rowB.loop);
 
