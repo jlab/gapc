@@ -376,7 +376,8 @@ void outside_init_indices(
 
   if (alt->is(Alt::SIMPLE)) {
     Alt::Simple *asimple = dynamic_cast<Alt::Simple*>(alt);
-    for (std::list<Statement::For *>::iterator i = asimple->loops.begin(); i != asimple->loops.end(); ++i) {
+    for (std::list<Statement::For *>::iterator i = asimple->loops.begin();
+         i != asimple->loops.end(); ++i) {
       // only add those loops, not already on the list
       if (std::find(loops.begin(), loops.end(), *i) == loops.end()) {
         loops.push_back(*i);
