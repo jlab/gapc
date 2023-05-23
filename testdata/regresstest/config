@@ -528,6 +528,10 @@ check_new_old_eq adpf.gap unused count "uacgugacguugacguguaucgguacuacgugacguugac
 GAPC="../../../gapc --cyk --checkpoint"
 check_checkpoint_eq adpf.gap unused pf "uacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguac" cyk_openmp_checkpoint 1
 
+# deactivate openMP
+CPPFLAGS_EXTRA="$DEFAULT_CPPFLAGS_EXTRA"
+LDLIBS_EXTRA="$DEFAULT_LDLIBS_EXTRA"
+
 # results have been verified against "RNAfold -p -d0 --bppmThreshold=0" v2.4.17 and Stefan's manual python outside version of nodangle
 GRAMMAR=../../grammar_outside
 GAPC="../../../gapc --outside_grammar weak --outside_grammar struct"
@@ -541,7 +545,7 @@ check_new_old_eq nodangle_withoverlay.gap unused ins_pfunc "CCaCCaaaGGaCCaaaGGaC
 
 # same as above, but with CYK code generation
 GAPC="../../../gapc --outside_grammar weak --outside_grammar struct --cyk"
-#check_new_old_eq nodangle.gap unused pfunc "CCaCCaaaGGaCCaaaGGaCCaaaGGaGG" outside
+check_new_old_eq nodangle.gap unused pfunc "CCaCCaaaGGaCCaaaGGaCCaaaGGaGG" outside
 
 
 
@@ -603,5 +607,15 @@ check_new_old_eq acmsearch_RF00005.gap unused inside "GACGGUAU" outside_acm
 GRAMMAR=../../grammar2
 GAPC="../../../gapc --outside_grammar ALL "
 check_new_old_eq_twotrack alignments_cyk.gap unused infloop "ff" outside_infloop "z"
+
+GAPC="../../../gapc --outside_grammar A "
+check_new_old_eq_twotrack alignments_cyk.gap unused infloop "frei" outside_multitrack_cyk "zeit"
+
+GAPC="../../../gapc --outside_grammar A --cyk"
+check_new_old_eq_twotrack alignments_cyk.gap unused infloop "frei" outside_multitrack_cyk "zeit"
+
+GRAMMAR=../../grammar_outside
+GAPC="../../../gapc --outside_grammar weak --cyk --checkpoint"
+check_checkpoint_eq nodangle.gap unused pfunc "GUAAAAUAGGUUUUUUACCUCGGUAUGCCUUGUGACUGGCUUGACAAGCUUUUCCUCAGCUCCGUAAACUCCUUUCAGUGGGAAAUUGUGGGGCAAAGUGGGAAUAAGGGGUGAGGCUGGCAUGUUCCGGGGAGCAACGUUAGUCAAUCUCGACAGCAAAGGGCGCUUAUCAGUGCCUACCCGUUAUCGGGAACAGCUGCUUGAGAACGCUGCCGGUCAAAUGGUUUGCACCAUUGACAUUUAUCACCCGUGCCUGCUGCUUUACCCCCUGCCUGAAUGGGAAAUUAUCGAGC" cyk_cp_outside_single 1
 
 CPPFLAGS_EXTRA=""
