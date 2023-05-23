@@ -108,7 +108,8 @@ class CYKloop {
   }
 };
 
-enum CYKmode {SINGLETHREAD, OPENMP_PARALLEL, OPENMP_SERIAL, SINGLETHREAD_OUTSIDE};
+enum CYKmode {SINGLETHREAD, OPENMP_PARALLEL, OPENMP_SERIAL,
+              SINGLETHREAD_OUTSIDE};
 
 CYKloop get_for_column(Expr::Vacc *running_boundary,
     Expr::Base *start, Expr::Base *end,
@@ -288,8 +289,25 @@ std::list<Statement::Base*> *cyk_traversal_singlethread_singletrack(
 }
 
 /*
- *   for (unsigned int t_0_i = 0; t_0_i <= t_0_seq.size(); ++t_0_i) {
-    for (unsigned int t_0_j = t_0_seq.size() - t_0_i; t_0_j <= t_0_seq.size(); ++t_0_j) {
+ * Construct the loop traversal structure for CYK parsing of one track for
+ * outside parts of a grammar, as below.
+ * Since in outside, all DP tables (except the outside_axiom) must be quadratic
+ * by definition, we can have a much simpler structure than for the inside case.
+ * Here, we don't need extra cases for tables with fewer indices that get
+ * optimized away in linear or constant table dimensions.
+ *
+ * However, we need to make sure that DP cells are filled in the correct order
+ * and this is in a triangular fashion starting top right and advancing towards
+ * the main anti diagonal, e.g.
+ *
+ *   |  0  1  2  3   4  5          |  0  1  2  3  4  5
+ * --|-------------------        --|------------------
+ * 0 | 18 13  9  6  1  0         0 |  A  A  A  A  A  A
+ * 1 |    19 14 10  4  2         1 |     A  A  A  A  A
+ * 2 |       20 15 11  5         2 |        A  A  A  A
+ * 3 |          21 16 12         3 |           A  A  A
+ * 4 |             22 17         4 |              A  A
+ * 5 |                23         5 |                 A
  *
  */
 std::list<Statement::Base*> *cyk_traversal_singlethread_singletrack_outside(
@@ -304,9 +322,11 @@ std::list<Statement::Base*> *cyk_traversal_singlethread_singletrack_outside(
   dynamic_cast<Expr::Fn_Call*>(seqend)->is_obj = Bool(true);
 
   Expr::Vacc *idx_col = new Expr::Vacc(new std::string(
-      *ast.grammar()->right_running_indices[track]->name() + OUTSIDE_IDX_SUFFIX));
+      *ast.grammar()->right_running_indices[track]->name() +
+      OUTSIDE_IDX_SUFFIX));
   Expr::Vacc *idx_row = new Expr::Vacc(new std::string(
-      *ast.grammar()->left_running_indices[track]->name() + OUTSIDE_IDX_SUFFIX));
+      *ast.grammar()->left_running_indices[track]->name() +
+      OUTSIDE_IDX_SUFFIX));
 
   CYKloop col = get_for_column(
       idx_col,
@@ -339,12 +359,12 @@ std::list<Statement::Base*> *cyk_traversal_singlethread(const AST &ast,
        track--, ++it_stmt_seq) {
     if (mode == CYKmode::SINGLETHREAD_OUTSIDE) {
       stmts = cyk_traversal_singlethread_singletrack_outside(
-          track, ast, *it_stmt_seq, stmts, ast.checkpoint && ast.checkpoint->cyk,
-          mode);
+          track, ast, *it_stmt_seq, stmts,
+          ast.checkpoint && ast.checkpoint->cyk, mode);
     } else {
       stmts = cyk_traversal_singlethread_singletrack(
-          track, ast, *it_stmt_seq, stmts, ast.checkpoint && ast.checkpoint->cyk,
-          mode);
+          track, ast, *it_stmt_seq, stmts,
+          ast.checkpoint && ast.checkpoint->cyk, mode);
     }
   }
 
@@ -603,7 +623,8 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
     }
   }
 
-  if (((mode == CYKmode::OPENMP_PARALLEL) || (mode == CYKmode::SINGLETHREAD_OUTSIDE)) && contains_nested_for) {
+  if (((mode == CYKmode::OPENMP_PARALLEL) ||
+       (mode == CYKmode::SINGLETHREAD_OUTSIDE)) && contains_nested_for) {
     // don't add NT calls in for loops that is not the innermost loop, if in
     // multi threaded mode.
     return new std::list<Statement::Base*>();
@@ -612,7 +633,8 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
   // add NTs
   std::list<Statement::Base*> *nt_stmts = new std::list<Statement::Base*>();
   if (with_checkpoint) {
-    if ((mode == CYKmode::SINGLETHREAD) || (mode == CYKmode::SINGLETHREAD_OUTSIDE)) {
+    if ((mode == CYKmode::SINGLETHREAD) ||
+        (mode == CYKmode::SINGLETHREAD_OUTSIDE)) {
       // don't add mutex on top level, as it's context would never end
       if (loop_vars->size() > 0) {
         nt_stmts->push_back(new Statement::CustomCode(
@@ -635,14 +657,17 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
     std::list<Expr::Base*> *args = new std::list<Expr::Base*>();
     size_t used_indices = 0;
     size_t nt_has_indices = 0;
-    std::vector<Statement::Var_Decl*>::const_iterator it_stmt_seq = ast.seq_decls.begin();
+    std::vector<Statement::Var_Decl*>::const_iterator it_stmt_seq =
+        ast.seq_decls.begin();
     for (size_t t = 0; t < (*i)->tracks(); ++t, ++it_stmt_seq) {
       if (!(*i)->tables()[t].delete_left_index()) {
         Expr::Vacc *idx = (*i)->left_indices.at(t)->vacc();
         if (mode == CYKmode::SINGLETHREAD_OUTSIDE) {
-          idx = new Expr::Vacc(new std::string(*idx->name() + OUTSIDE_IDX_SUFFIX));
+          idx = new Expr::Vacc(new std::string(
+              *idx->name() + OUTSIDE_IDX_SUFFIX));
         }
-        for (std::list<std::string*>::const_iterator lv = loop_vars->begin(); lv != loop_vars->end(); ++lv) {
+        for (std::list<std::string*>::const_iterator lv = loop_vars->begin();
+             lv != loop_vars->end(); ++lv) {
           if (**lv == *idx->name()) {
             used_indices++;
             break;
@@ -654,7 +679,9 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
           Expr::Fn_Call *seqsize = new Expr::Fn_Call(new std::string("size"));
           dynamic_cast<Expr::Fn_Call*>(seqsize)->add_arg((*it_stmt_seq)->name);
           dynamic_cast<Expr::Fn_Call*>(seqsize)->is_obj = Bool(true);
-          args->push_back(idx->minus(seqsize)->plus((new Expr::Vacc(new std::string(*(*i)->right_indices.at(t)->vacc()->name() + OUTSIDE_IDX_SUFFIX)))));
+          args->push_back(idx->minus(seqsize)->plus((new Expr::Vacc(
+              new std::string(*(*i)->right_indices.at(t)->vacc()->name() +
+                  OUTSIDE_IDX_SUFFIX)))));
         } else {
           args->push_back(idx->minus(new Expr::Const(1)));
         }
@@ -662,9 +689,11 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
       if (!(*i)->tables()[t].delete_right_index()) {
         Expr::Vacc *idx = (*i)->right_indices.at(t)->vacc();
         if (mode == CYKmode::SINGLETHREAD_OUTSIDE) {
-          idx = new Expr::Vacc(new std::string(*idx->name() + OUTSIDE_IDX_SUFFIX));
+          idx = new Expr::Vacc(new std::string(
+              *idx->name() + OUTSIDE_IDX_SUFFIX));
         }
-        for (std::list<std::string*>::const_iterator lv = loop_vars->begin(); lv != loop_vars->end(); ++lv) {
+        for (std::list<std::string*>::const_iterator lv = loop_vars->begin();
+             lv != loop_vars->end(); ++lv) {
           if (**lv == *idx->name()) {
             used_indices++;
             break;
@@ -728,21 +757,25 @@ Fn_Def *print_CYK(const AST &ast) {
             new Type::Int(),
             *(ast.grammar()->left_running_indices.at(track)->name()) +
               suffix, new Expr::Or(
-                new Expr::Not(new Expr::Vacc(new std::string("load_checkpoint"))),
+                new Expr::Not(new Expr::Vacc(
+                    new std::string("load_checkpoint"))),
                 new Expr::Not(idx_i))));
 
         fn_cyk->stmts.push_back(new Statement::Var_Decl(
             new Type::Int(),
             *(ast.grammar()->right_running_indices.at(track)->name()) +
             suffix, new Expr::Or(
-                new Expr::Not(new Expr::Vacc(new std::string("load_checkpoint"))),
+                new Expr::Not(new Expr::Vacc(new std::string(
+                    "load_checkpoint"))),
                 new Expr::Not(idx_j))));
         if (!ast.grammar()->is_partof_outside()) {
           break;
         } else {
           suffix = OUTSIDE_IDX_SUFFIX + suffix;
-          idx_i = new Expr::Vacc(new std::string(*idx_i->name() + OUTSIDE_IDX_SUFFIX));
-          idx_j = new Expr::Vacc(new std::string(*idx_j->name() + OUTSIDE_IDX_SUFFIX));
+          idx_i = new Expr::Vacc(new std::string(
+              *idx_i->name() + OUTSIDE_IDX_SUFFIX));
+          idx_j = new Expr::Vacc(new std::string(
+              *idx_j->name() + OUTSIDE_IDX_SUFFIX));
         }
       }
     }
@@ -775,7 +808,8 @@ Fn_Def *print_CYK(const AST &ast) {
     stmts = cyk_traversal_singlethread(ast, CYKmode::SINGLETHREAD_OUTSIDE);
     std::list<Statement::Base*> *new_stmts = add_nt_calls(*stmts,
         new std::list<std::string*>(), ast.grammar()->topological_ord(),
-        ast.checkpoint && ast.checkpoint->cyk, CYKmode::SINGLETHREAD_OUTSIDE, ast);
+        ast.checkpoint && ast.checkpoint->cyk, CYKmode::SINGLETHREAD_OUTSIDE,
+        ast);
     stmts->insert(stmts->end(), new_stmts->begin(), new_stmts->end());
     fn_cyk->stmts.insert(fn_cyk->stmts.end(), stmts->begin(), stmts->end());
   }
