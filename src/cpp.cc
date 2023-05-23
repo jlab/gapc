@@ -1634,8 +1634,16 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
     stream << indent() << "#else" << endl;
     inc_indent();
     for (size_t i = 0; i < ast.grammar()->axiom->tracks(); i++) {
-      stream << indent() << "t_" << i << "_i = 0;" << endl;
-      stream << indent() << "t_" << i << "_j = 0;" << endl;
+      std::string suffix = "";
+      for (int io = 0; io < 2; ++io) {  // iterate through inside and outside
+        stream << indent() << "t_" << i << "_i" << suffix << " = 0;" << endl;
+        stream << indent() << "t_" << i << "_j" << suffix << " = 0;" << endl;
+        if (!ast.grammar()->is_partof_outside()) {
+          break;
+        } else {
+          suffix = OUTSIDE_IDX_SUFFIX;
+        }
+      }
     }
     dec_indent();
     stream << indent() << "#endif" << endl << endl;
@@ -1979,8 +1987,18 @@ void Printer::Cpp::header(const AST &ast) {
     // store indices for cyk loops here so they can be archived/loaded
     stream << indent() << "// indices for cyk loops" << endl;
     for (size_t t = 0; t < ast.grammar()->axiom->tracks(); t++) {
-      stream << indent() << *type << " t_" << t << "_i;" << endl;
-      stream << indent() << *type << " t_" << t << "_j;" << endl;
+      std::string suffix = "";
+      for (int io = 0; io < 2; ++io) {  // iterate through inside and outside
+        stream << indent() << *type << " t_" << t << "_i" << suffix
+               << ";" << endl;
+        stream << indent() << *type << " t_" << t << "_j" << suffix
+               << ";" << endl;
+        if (!ast.grammar()->is_partof_outside()) {
+          break;
+        } else {
+          suffix = OUTSIDE_IDX_SUFFIX;
+        }
+      }
     }
     stream << "#ifdef _OPENMP" << endl;
     stream << indent() << "int outer_loop_1_idx, outer_loop_2_idx, "
@@ -2076,9 +2094,11 @@ void Printer::Cpp::header_footer(const AST &ast) {
     nt_tables &tabulated = ast.grammar()->tabulated;
     if (ast.checkpoint->cyk) {
       ast.checkpoint->archive_cyk_indices(stream,
-                                          ast.grammar()->axiom->tracks());
+                                          ast.grammar()->axiom->tracks(),
+                                          ast.grammar()->is_partof_outside());
       ast.checkpoint->load_cyk_indices(stream,
-                                       ast.grammar()->axiom->tracks());
+                                       ast.grammar()->axiom->tracks(),
+                                       ast.grammar()->is_partof_outside());
       ast.checkpoint->parse_checkpoint_log(stream, true);
     }
     ast.checkpoint->archive_periodically(stream, tabulated);

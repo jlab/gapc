@@ -303,15 +303,20 @@ std::list<Statement::Base*> *cyk_traversal_singlethread_singletrack_outside(
   dynamic_cast<Expr::Fn_Call*>(seqend)->add_arg(seq->name);
   dynamic_cast<Expr::Fn_Call*>(seqend)->is_obj = Bool(true);
 
+  Expr::Vacc *idx_col = new Expr::Vacc(new std::string(
+      *ast.grammar()->right_running_indices[track]->name() + OUTSIDE_IDX_SUFFIX));
+  Expr::Vacc *idx_row = new Expr::Vacc(new std::string(
+      *ast.grammar()->left_running_indices[track]->name() + OUTSIDE_IDX_SUFFIX));
+
   CYKloop col = get_for_column(
-      ast.grammar()->right_running_indices[track],
-      seqend->minus(ast.grammar()->left_running_indices[track]), seqend->plus(new Expr::Const(1)),
+      idx_col,
+      seqend->minus(idx_row), seqend->plus(new Expr::Const(1)),
       with_checkpoint, mode);
   std::list<Statement::Base*> *co = copy_statements(nested_stmts);
   col.loop->statements.insert(
       col.loop->statements.end(), co->begin(), co->end());
 
-  CYKloop row = get_for_row(ast.grammar()->left_running_indices[track],
+  CYKloop row = get_for_row(idx_row,
       new Expr::Const(0), seqend->plus(new Expr::Const(1)),
       with_checkpoint, mode);
   row.loop->statements.push_back(col.loop);
@@ -607,9 +612,12 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
   // add NTs
   std::list<Statement::Base*> *nt_stmts = new std::list<Statement::Base*>();
   if (with_checkpoint) {
-    if (mode == CYKmode::SINGLETHREAD) {
-      nt_stmts->push_back(new Statement::CustomCode(
+    if ((mode == CYKmode::SINGLETHREAD) || (mode == CYKmode::SINGLETHREAD_OUTSIDE)) {
+      // don't add mutex on top level, as it's context would never end
+      if (loop_vars->size() > 0) {
+        nt_stmts->push_back(new Statement::CustomCode(
           "std::lock_guard<fair_mutex> lock(mutex);"));
+      }
     } else {
       if (mode == CYKmode::OPENMP_SERIAL) {
         nt_stmts->push_back(mutex_lock());
@@ -631,9 +639,14 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
     for (size_t t = 0; t < (*i)->tracks(); ++t, ++it_stmt_seq) {
       if (!(*i)->tables()[t].delete_left_index()) {
         Expr::Vacc *idx = (*i)->left_indices.at(t)->vacc();
-        if (std::find(loop_vars->begin(), loop_vars->end(),
-            idx->name()) != loop_vars->end()) {
-          used_indices++;
+        if (mode == CYKmode::SINGLETHREAD_OUTSIDE) {
+          idx = new Expr::Vacc(new std::string(*idx->name() + OUTSIDE_IDX_SUFFIX));
+        }
+        for (std::list<std::string*>::const_iterator lv = loop_vars->begin(); lv != loop_vars->end(); ++lv) {
+          if (**lv == *idx->name()) {
+            used_indices++;
+            break;
+          }
         }
         nt_has_indices++;
         if (mode == CYKmode::SINGLETHREAD_OUTSIDE) {
@@ -641,16 +654,21 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
           Expr::Fn_Call *seqsize = new Expr::Fn_Call(new std::string("size"));
           dynamic_cast<Expr::Fn_Call*>(seqsize)->add_arg((*it_stmt_seq)->name);
           dynamic_cast<Expr::Fn_Call*>(seqsize)->is_obj = Bool(true);
-          args->push_back(idx->minus(seqsize)->plus((*i)->right_indices.at(t)->vacc()));
+          args->push_back(idx->minus(seqsize)->plus((new Expr::Vacc(new std::string(*(*i)->right_indices.at(t)->vacc()->name() + OUTSIDE_IDX_SUFFIX)))));
         } else {
           args->push_back(idx->minus(new Expr::Const(1)));
         }
       }
       if (!(*i)->tables()[t].delete_right_index()) {
         Expr::Vacc *idx = (*i)->right_indices.at(t)->vacc();
-        if (std::find(loop_vars->begin(), loop_vars->end(),
-            idx->name()) != loop_vars->end()) {
-          used_indices++;
+        if (mode == CYKmode::SINGLETHREAD_OUTSIDE) {
+          idx = new Expr::Vacc(new std::string(*idx->name() + OUTSIDE_IDX_SUFFIX));
+        }
+        for (std::list<std::string*>::const_iterator lv = loop_vars->begin(); lv != loop_vars->end(); ++lv) {
+          if (**lv == *idx->name()) {
+            used_indices++;
+            break;
+          }
         }
         nt_has_indices++;
         args->push_back(idx);
@@ -702,19 +720,31 @@ Fn_Def *print_CYK(const AST &ast) {
     they would normally start with
    */
     for (size_t track = 0; track < ast.grammar()->axiom->tracks(); ++track) {
-      fn_cyk->stmts.push_back(new Statement::Var_Decl(
-          new Type::Int(),
-          *(ast.grammar()->left_running_indices.at(track)->name()) +
-            std::string("_loaded"), new Expr::Or(
-              new Expr::Not(new Expr::Vacc(new std::string("load_checkpoint"))),
-              new Expr::Not(ast.grammar()->left_running_indices.at(track)))));
+      Expr::Vacc *idx_i = ast.grammar()->left_running_indices.at(track);
+      Expr::Vacc *idx_j = ast.grammar()->right_running_indices.at(track);
+      std::string suffix = std::string("_loaded");
+      for (int io = 0; io < 2; ++io) {  // iterate through inside and outside
+        fn_cyk->stmts.push_back(new Statement::Var_Decl(
+            new Type::Int(),
+            *(ast.grammar()->left_running_indices.at(track)->name()) +
+              suffix, new Expr::Or(
+                new Expr::Not(new Expr::Vacc(new std::string("load_checkpoint"))),
+                new Expr::Not(idx_i))));
 
-      fn_cyk->stmts.push_back(new Statement::Var_Decl(
-          new Type::Int(),
-          *(ast.grammar()->right_running_indices.at(track)->name()) +
-          std::string("_loaded"), new Expr::Or(
-              new Expr::Not(new Expr::Vacc(new std::string("load_checkpoint"))),
-              new Expr::Not(ast.grammar()->right_running_indices.at(track)))));
+        fn_cyk->stmts.push_back(new Statement::Var_Decl(
+            new Type::Int(),
+            *(ast.grammar()->right_running_indices.at(track)->name()) +
+            suffix, new Expr::Or(
+                new Expr::Not(new Expr::Vacc(new std::string("load_checkpoint"))),
+                new Expr::Not(idx_j))));
+        if (!ast.grammar()->is_partof_outside()) {
+          break;
+        } else {
+          suffix = OUTSIDE_IDX_SUFFIX + suffix;
+          idx_i = new Expr::Vacc(new std::string(*idx_i->name() + OUTSIDE_IDX_SUFFIX));
+          idx_j = new Expr::Vacc(new std::string(*idx_j->name() + OUTSIDE_IDX_SUFFIX));
+        }
+      }
     }
   }
 
@@ -730,8 +760,18 @@ Fn_Def *print_CYK(const AST &ast) {
       ast.checkpoint && ast.checkpoint->cyk, CYKmode::SINGLETHREAD, ast);
   stmts->insert(stmts->end(), new_stmts->begin(), new_stmts->end());
   // finally add traversal structure with NT calls to function body
-  fn_cyk->stmts.insert(fn_cyk->stmts.end(), stmts->begin(), stmts->end());
   if (ast.outside_generation()) {
+    fn_cyk->stmts.push_back(new Statement::CustomCode(
+      "// start computing inside DP matrices only ..."));
+  }
+  fn_cyk->stmts.insert(fn_cyk->stmts.end(), stmts->begin(), stmts->end());
+
+  if (ast.outside_generation()) {
+    fn_cyk->stmts.push_back(new Statement::CustomCode(
+      "// ... now compute outside DP matrices"));
+    fn_cyk->stmts.push_back(new Statement::CustomCode(
+      "// they are by definition quadratic as every sub-word must "
+      "be returned"));
     stmts = cyk_traversal_singlethread(ast, CYKmode::SINGLETHREAD_OUTSIDE);
     std::list<Statement::Base*> *new_stmts = add_nt_calls(*stmts,
         new std::list<std::string*>(), ast.grammar()->topological_ord(),

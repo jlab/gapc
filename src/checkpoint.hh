@@ -983,7 +983,8 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      dec_indent(); dec_indent();
   }
 
-  void archive_cyk_indices(Printer::Base &stream, size_t n_tracks) {
+  void archive_cyk_indices(Printer::Base &stream, size_t n_tracks,
+                           bool outside) {
      inc_indent();
      stream << indent() << "void archive_cyk_indices() {" << endl;
      inc_indent();
@@ -1000,9 +1001,19 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      for (size_t i = 0; i < n_tracks; i++) {
        // archive the indices of the prior iteration to ensure
        // that the whole iteration has been completed
-       stream << indent() << "array_out << t_" << i << "_i + 1;" << endl;
-       stream << indent() << "array_out << "
-              << "(t_" << i << "_j == 0 ? 0 : t_" << i << "_j - 1);" << endl;
+       std::string suffix = "";
+       for (int io = 0; io < 2; ++io) {  // iterate through inside and outside
+         stream << indent() << "array_out << t_" << i << "_i" << suffix
+                << " + 1;" << endl;
+         stream << indent() << "array_out << "
+                << "(t_" << i << "_j" << suffix << " == 0 ? 0 : t_" << i << "_j"
+                << suffix << " - 1);" << endl;
+         if (!outside) {
+           break;
+         } else {
+           suffix = "_outside";
+         }
+       }
      }
      stream << indent() << "#ifdef _OPENMP" << endl;
      inc_indent();
@@ -1045,7 +1056,7 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      dec_indent();
   }
 
-  void load_cyk_indices(Printer::Base &stream, size_t n_tracks) {
+  void load_cyk_indices(Printer::Base &stream, size_t n_tracks, bool outside) {
      inc_indent();
      stream << indent() << "void load_cyk_indices() {" << endl;
      inc_indent();
@@ -1060,8 +1071,18 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      stream << indent() << "boost::archive::text_iarchive "
                             "array_in(array_fin);" << endl;
      for (size_t i = 0; i < n_tracks; i++) {
-       stream << indent() << "array_in >> t_" << i << "_i;" << endl;
-       stream << indent() << "array_in >> t_" << i << "_j;" << endl;
+       std::string suffix = "";
+       for (int io = 0; io < 2; ++io) {
+         stream << indent() << "array_in >> t_" << i << "_i" << suffix
+                << ";" << endl;
+         stream << indent() << "array_in >> t_" << i << "_j" << suffix
+                << ";" << endl;
+         if (!outside) {
+           break;
+         } else {
+           suffix = "_outside";
+         }
+       }
      }
      stream << indent() << "#ifdef _OPENMP" << endl;
        stream << indent() << "  array_in >> outer_loop_1_idx;" << endl;
