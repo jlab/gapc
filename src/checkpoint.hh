@@ -1011,7 +1011,8 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
          if (!outside) {
            break;
          } else {
-           //TODO(sjanssen) why can't I use OUTSIDE_IDX_SUFFIX from cyk.hh here?
+           // TODO(sjanssen) why can't I use OUTSIDE_IDX_SUFFIX from cyk.hh
+           // here?
            suffix = "_outside";
          }
        }
