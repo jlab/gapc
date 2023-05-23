@@ -1004,10 +1004,10 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
        std::string suffix = "";
        for (int io = 0; io < 2; ++io) {  // iterate through inside and outside
          stream << indent() << "array_out << t_" << i << "_i" << suffix
-                << " + 1;" << endl;
+                << " " << (io == 0 ? "+" : "-") << " 1;" << endl;
          stream << indent() << "array_out << "
                 << "(t_" << i << "_j" << suffix << " == 0 ? 0 : t_" << i << "_j"
-                << suffix << " - 1);" << endl;
+                << suffix << " " << (io == 0 ? "-" : "+") << " 1);" << endl;
          if (!outside) {
            break;
          } else {
@@ -1072,7 +1072,7 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
                             "array_in(array_fin);" << endl;
      for (size_t i = 0; i < n_tracks; i++) {
        std::string suffix = "";
-       for (int io = 0; io < 2; ++io) {
+       for (int io = 0; io < 2; ++io) {  // iterate through inside and outside
          stream << indent() << "array_in >> t_" << i << "_i" << suffix
                 << ";" << endl;
          stream << indent() << "array_in >> t_" << i << "_j" << suffix
