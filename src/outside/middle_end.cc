@@ -119,17 +119,24 @@ void Fn_Arg::Alt::outside_collect_parsers(
                                track, simple_loops);
 }
 
-Yield::Size sum_ys(std::vector<Parser*> parser,
-    std::vector<Parser*>::iterator itr_start,
-    std::vector<Parser*>::iterator itr_end,
-    size_t track) {
+Yield::Size sum_ys(std::vector<Parser*> parser, size_t pos_start) {
   Yield::Size ys;
   // don't risk undefined yield sizes!
   ys.set(0, 0);
 
-  for (std::vector<Parser*>::iterator i = itr_start;
-       (i != parser.end()) && (i != itr_end); ++i) {
-    ys += (*i)->yield_size;
+  if (parser.size() <= 0) {
+    return ys;
+  }
+
+  std::vector<Parser*>::iterator x = parser.begin();
+  size_t pos = 0;
+  // skip first pos_start elements=parser
+  for (; (x != parser.end()) && (pos < pos_start); ++x, ++pos) {
+  }
+
+  // start adding yield size of elements=parser
+  for (; x != parser.end(); ++x) {
+    ys += (*x)->yield_size;
   }
 
   return ys;
@@ -201,10 +208,11 @@ void iterate_indices(bool is_left_not_right,
                      Yield::Size ys_all) {
   Yield::Size lhs;
   lhs.set(0, 0);
+  size_t pos = 0;
   for (std::vector<Parser*>::iterator i = parser->begin();
-       i != parser->end(); ++i) {
+       i != parser->end(); ++i, ++pos) {
     Yield::Size ys = (*i)->yield_size;
-    Yield::Size rhs = sum_ys(*parser, std::next(i), parser->end(), track);
+    Yield::Size rhs = sum_ys(*parser, pos+1);
     Yield::Size rhs_ys(rhs);
     rhs_ys += ys;
 
@@ -317,13 +325,12 @@ void outside_init_indices(
 
   // phase 2: based on the collected Parsers, assign left and right indices
   // to Parsers for grammar components LEFT of outside NT
-  Yield::Size ys_all = sum_ys(left_parser, left_parser.begin(),
-                              left_parser.end(), track);
+  Yield::Size ys_all = sum_ys(left_parser, 0);
 #ifdef LOOPDEBUG
   std::cerr << "1) ";
 #endif
-  Yield::Size ys_lhs = sum_ys(left_parser, left_parser.begin(),
-      left_parser.begin(), track);
+  // +99 to ensure that we skip ALL elements of the left_parser list
+  Yield::Size ys_lhs = sum_ys(left_parser, left_parser.size()+99);
   Yield::Size ys;
   ys.set(0, 0);
   Expr::Base *next_var = Alt::next_index_var(k, track, left, left_most, left,
@@ -334,13 +341,13 @@ void outside_init_indices(
                   next_var, last_var, left, ys_all);
   // for grammar components RIGHT of outside NT
   if (right_parser.size() > 0) {
-    ys_all = sum_ys(right_parser, right_parser.begin(), right_parser.end(),
-                    track);
+    ys_all = sum_ys(right_parser, 0);
 #ifdef LOOPDEBUG
   std::cerr << "3) ";
 #endif
-    Yield::Size ys_rhs = sum_ys(right_parser, right_parser.begin(),
-        right_parser.begin(), track);
+    // +99 to ensure that we skip ALL elements of the right_parser list
+    Yield::Size ys_rhs = sum_ys(right_parser, right_parser.size() + 99);
+
     last_var = Alt::next_index_var(k, track, right, right_most, right,
                                    ys, ys_all, ys_rhs,
                                    &loops, true, true, false);
@@ -420,8 +427,7 @@ void Alt::Simple::init_outside_guards() {
           new Expr::Greater_Eq(
               v.outside_link->nt->left_indices[track],
               v.outside_link->nt->left_most_indices[track]->plus(
-                  sum_ys(left_parser, left_parser.begin(),
-                         left_parser.end(), track).low())));
+                  sum_ys(left_parser, 0).low())));
       }
     }
     if (!this->outside_lhsNT->tables()[track].delete_right_index()) {
@@ -431,8 +437,7 @@ void Alt::Simple::init_outside_guards() {
         l.push_back(
         new Expr::Less_Eq(
             v.outside_link->nt->right_indices[track]->plus(
-                sum_ys(right_parser, right_parser.begin(),
-                       right_parser.end(), track).low()),
+                sum_ys(right_parser, 0).low()),
             v.outside_link->nt->right_most_indices[track]));
       }
     }
