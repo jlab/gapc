@@ -600,4 +600,8 @@ GAPC="../../../gapc --outside_grammar a_1 --outside_grammar a_47 --outside_gramm
 # not yet explored
 check_new_old_eq acmsearch_RF00005.gap unused inside "GACGGUAU" outside_acm
 
+GRAMMAR=../../grammar2
+GAPC="../../../gapc --outside_grammar ALL "
+check_new_old_eq_twotrack alignments_cyk.gap unused infloop "ff" outside_infloop "z"
+
 CPPFLAGS_EXTRA=""
