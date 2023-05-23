@@ -119,9 +119,7 @@ void Fn_Arg::Alt::outside_collect_parsers(
                                track, simple_loops);
 }
 
-Yield::Size sum_ys(std::vector<Parser*> parser,
-    size_t pos_start,
-    size_t track) {
+Yield::Size sum_ys(std::vector<Parser*> parser, size_t pos_start) {
   Yield::Size ys;
   // don't risk undefined yield sizes!
   ys.set(0, 0);
@@ -214,7 +212,7 @@ void iterate_indices(bool is_left_not_right,
   for (std::vector<Parser*>::iterator i = parser->begin();
        i != parser->end(); ++i, ++pos) {
     Yield::Size ys = (*i)->yield_size;
-    Yield::Size rhs = sum_ys(*parser, pos+1, track);
+    Yield::Size rhs = sum_ys(*parser, pos+1);
     Yield::Size rhs_ys(rhs);
     rhs_ys += ys;
 
@@ -327,12 +325,12 @@ void outside_init_indices(
 
   // phase 2: based on the collected Parsers, assign left and right indices
   // to Parsers for grammar components LEFT of outside NT
-  Yield::Size ys_all = sum_ys(left_parser, 0, track);
+  Yield::Size ys_all = sum_ys(left_parser, 0);
 #ifdef LOOPDEBUG
   std::cerr << "1) ";
 #endif
   // +99 to ensure that we skip ALL elements of the left_parser list
-  Yield::Size ys_lhs = sum_ys(left_parser, left_parser.size()+99, track);
+  Yield::Size ys_lhs = sum_ys(left_parser, left_parser.size()+99);
   Yield::Size ys;
   ys.set(0, 0);
   Expr::Base *next_var = Alt::next_index_var(k, track, left, left_most, left,
@@ -343,12 +341,12 @@ void outside_init_indices(
                   next_var, last_var, left, ys_all);
   // for grammar components RIGHT of outside NT
   if (right_parser.size() > 0) {
-    ys_all = sum_ys(right_parser, 0, track);
+    ys_all = sum_ys(right_parser, 0);
 #ifdef LOOPDEBUG
   std::cerr << "3) ";
 #endif
     // +99 to ensure that we skip ALL elements of the right_parser list
-    Yield::Size ys_rhs = sum_ys(right_parser, right_parser.size() + 99, track);
+    Yield::Size ys_rhs = sum_ys(right_parser, right_parser.size() + 99);
 
     last_var = Alt::next_index_var(k, track, right, right_most, right,
                                    ys, ys_all, ys_rhs,
@@ -429,7 +427,7 @@ void Alt::Simple::init_outside_guards() {
           new Expr::Greater_Eq(
               v.outside_link->nt->left_indices[track],
               v.outside_link->nt->left_most_indices[track]->plus(
-                  sum_ys(left_parser, 0, track).low())));
+                  sum_ys(left_parser, 0).low())));
       }
     }
     if (!this->outside_lhsNT->tables()[track].delete_right_index()) {
@@ -439,7 +437,7 @@ void Alt::Simple::init_outside_guards() {
         l.push_back(
         new Expr::Less_Eq(
             v.outside_link->nt->right_indices[track]->plus(
-                sum_ys(right_parser, 0, track).low()),
+                sum_ys(right_parser, 0).low()),
             v.outside_link->nt->right_most_indices[track]));
       }
     }
