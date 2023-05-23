@@ -60,8 +60,7 @@ void outside_init_indices(
     Expr::Vacc *left_most, Expr::Vacc *right_most);
 
 Yield::Size sum_ys(std::vector<Parser*> parser,
-    std::vector<Parser*>::iterator itr_start,
-    std::vector<Parser*>::iterator itr_end,
+    size_t pos_start,
     size_t track);
 
 struct GetOutsideLink : public Visitor {
