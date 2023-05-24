@@ -109,7 +109,8 @@ class CYKloop {
 };
 
 enum CYKmode {SINGLETHREAD, OPENMP_PARALLEL, OPENMP_SERIAL,
-              SINGLETHREAD_OUTSIDE};
+              SINGLETHREAD_OUTSIDE,
+              OPENMP_PARALLEL_OUTSIDE,OPENMP_SERIAL_OUTSIDE};
 
 CYKloop get_for_column(Expr::Vacc *running_boundary,
     Expr::Base *start, Expr::Base *end,
@@ -132,10 +133,21 @@ CYKloop get_for_column(Expr::Vacc *running_boundary,
       start);
 
   // create condition of For loop
-  Expr::Less *cond_col = new Expr::Less(
+  Expr::Base *cond_col = new Expr::Less(
       new Expr::Vacc(*var_col), end);
+  if (mode == CYKmode::OPENMP_SERIAL_OUTSIDE) {
+    cond_col = new Expr::Greater(
+        (new Expr::Vacc(*var_col))->plus(new Expr::Const(1)),
+        end);
+  }
 
   Statement::For *loop = new Statement::For(var_col, cond_col);
+  if (mode == CYKmode::OPENMP_SERIAL_OUTSIDE) {
+    Statement::Var_Assign *x = new Statement::Var_Assign(
+        *var_col, new Expr::Const(new Const::Int(-1)));
+    x->set_op(::Expr::Type::PLUS);
+    loop->inc = x;
+  }
 
   Statement::Var_Decl *var_nonloop = var_col->clone();
   var_nonloop->rhs = end;
@@ -166,14 +178,16 @@ CYKloop get_for_row(Expr::Vacc *running_boundary, Expr::Base *start,
 
   // create condition of For loop
   Expr::Two *cond_row = new Expr::Greater(new Expr::Vacc(*var_row), end);
-  if (mode == CYKmode::SINGLETHREAD_OUTSIDE) {
+  if ((mode == CYKmode::SINGLETHREAD_OUTSIDE) ||
+      (mode == CYKmode::OPENMP_SERIAL_OUTSIDE)) {
     cond_row = new Expr::Less(new Expr::Vacc(*var_row), end);
   }
 
   Statement::For *loop = new Statement::For(var_row, cond_row);
   // except for outside, we need to decrement the loop variable, i.e. t_x_i--
   // In outside, it must be ++t_x_i
-  if (mode != CYKmode::SINGLETHREAD_OUTSIDE) {
+  if ((mode != CYKmode::SINGLETHREAD_OUTSIDE) &&
+      (mode != CYKmode::OPENMP_SERIAL_OUTSIDE)) {
     Statement::Var_Assign *x = new Statement::Var_Assign(
         *var_row, new Expr::Const(new Const::Int(-1)));
     x->set_op(::Expr::Type::PLUS);
@@ -328,16 +342,26 @@ std::list<Statement::Base*> *cyk_traversal_singlethread_singletrack_outside(
       *ast.grammar()->left_running_indices[track]->name() +
       OUTSIDE_IDX_SUFFIX));
 
+  Expr::Base *col_start = seqend->minus(idx_row);
+  Expr::Base *col_end = seqend->plus(new Expr::Const(1));
+  if (mode == CYKmode::OPENMP_SERIAL_OUTSIDE) {
+    col_start = seqend;
+    col_end = seqend->minus(idx_row);
+  }
   CYKloop col = get_for_column(
       idx_col,
-      seqend->minus(idx_row), seqend->plus(new Expr::Const(1)),
+      col_start, col_end,
       with_checkpoint, mode);
   std::list<Statement::Base*> *co = copy_statements(nested_stmts);
   col.loop->statements.insert(
       col.loop->statements.end(), co->begin(), co->end());
 
+  Expr::Base *row_start = new Expr::Const(0);
+  if (mode == CYKmode::OPENMP_SERIAL_OUTSIDE) {
+    row_start = new Expr::Vacc(new std::string("max_tiles_n"));
+  }
   CYKloop row = get_for_row(idx_row,
-      new Expr::Const(0), seqend->plus(new Expr::Const(1)),
+      row_start, seqend->plus(new Expr::Const(1)),
       with_checkpoint, mode);
   row.loop->statements.push_back(col.loop);
 
@@ -357,7 +381,8 @@ std::list<Statement::Base*> *cyk_traversal_singlethread(const AST &ast,
       ast.seq_decls.rbegin();
   for (int track = ast.grammar()->axiom->tracks() - 1; track >= 0;
        track--, ++it_stmt_seq) {
-    if (mode == CYKmode::SINGLETHREAD_OUTSIDE) {
+    if ((mode == CYKmode::SINGLETHREAD_OUTSIDE) ||
+        (mode == CYKmode::OPENMP_SERIAL_OUTSIDE)) {
       stmts = cyk_traversal_singlethread_singletrack_outside(
           track, ast, *it_stmt_seq, stmts,
           ast.checkpoint && ast.checkpoint->cyk, mode);
@@ -434,15 +459,67 @@ std::list<Statement::Base*> *cyk_traversal_singlethread(const AST &ast,
  * 11 |                                     79
  * 12 |                                     78
  *
+ * ======================
+ *
+ * This function also constructs traversal structure for outside openMP code,
+ * if mode == CYKmode::OPENMP_PARALLEL_OUTSIDE. The three phases look like
+ *
+ *  A: tile_size = 4, input = aaaaccccgggg
+ *    |  0   1   2   3   4   5   6   7   8   9  10  11  12
+ * ---|----------------------------------------------------
+ *  0 |     26  23  21  20  16  13  11  10   6   3   1   0
+ *  1 |         27  24  22      17  14  12       7   4   2
+ *  2 |             28  25          18  15           8   5
+ *  3 |                 29              19               9
+ *  4 |
+ *  5 |
+ *  6 |
+ *  7 |
+ *  8 |
+ *  9 |
+ * 10 |
+ * 11 |
+ * 12 |
+ *
+ *  B: tile_size = 4, input = aaaaccccgggg
+ *    |  0   1   2   3   4   5   6   7   8   9  10  11  12
+ * ---|----------------------------------------------------
+ *  0 |
+ *  1 |                     46              30
+ *  2 |                     50  47          31  31
+ *  3 |                     54  51  48      38  35  32
+ *  4 |                     58  55  52  49  42  39  36  33
+ *  5 |                         59  56  53  62  43  40  37
+ *  6 |                             60  57  66  63  44  41
+ *  7 |                                 61  70  67  64  45
+ *  8 |                                     74  71  68  65
+ *  9 |                                         75  72  69
+ * 10 |                                             76  73
+ * 11 |                                                 77
+ * 12 |
+ *
+ *  C: tile_size = 4, input = aaaaccccgggg
+ *    |  0   1   2   3   4   5   6   7   8   9  10  11  12
+ * ---|----------------------------------------------------
+ *  0 | 78
+ *  1 |     79
+ *  2 |         80
+ *  3 |             81
+ *  4 |                 82
+ *  5 |                     83
+ *  6 |                         84
+ *  7 |                             85
+ *  8 |                                 86
+ *  9 |                                     87
+ * 10 |                                         88
+ * 11 |                                             89
+ * 12 |                                                 90
  */
 std::list<Statement::Base*> *cyk_traversal_multithread_parallel(const AST &ast,
     Statement::Var_Decl *seq, std::string *tile_size,
-    std::string *name_maxtilen, bool with_checkpoint) {
+    std::string *name_maxtilen, bool with_checkpoint, CYKmode mode) {
   size_t track = 0;  // as openMP currently only works for single track grammars
   std::list<Statement::Base*> *stmts = new std::list<Statement::Base*>();
-
-  Expr::Base *row_start = ast.grammar()->right_running_indices.at(
-      track)->plus(new Expr::Const(1));
 
   Expr::Vacc *z = new Expr::Vacc(new std::string("z"));
   Expr::Vacc *y = new Expr::Vacc(new std::string("y"));
@@ -451,11 +528,19 @@ std::list<Statement::Base*> *cyk_traversal_multithread_parallel(const AST &ast,
 
   // part A: prepare for parallel tile phase, prepare predecessor DP cells for
   // later parallel computation
-  CYKloop row = get_for_row(ast.grammar()->left_running_indices[track],
-      row_start, z, with_checkpoint, CYKmode::OPENMP_PARALLEL);
-  CYKloop col = get_for_column(ast.grammar()->right_running_indices[track],
-      z, z->plus(new Expr::Vacc(tile_size)), with_checkpoint,
-      CYKmode::OPENMP_PARALLEL);
+  Expr::Vacc *idx_row = ast.grammar()->left_running_indices[track];
+  Expr::Vacc *idx_col = ast.grammar()->right_running_indices[track];
+  if (mode == CYKmode::OPENMP_PARALLEL_OUTSIDE) {
+    idx_row = new Expr::Vacc(new std::string(
+      *idx_row->name() + OUTSIDE_IDX_SUFFIX));
+    idx_col = new Expr::Vacc(new std::string(
+      *idx_col->name() + OUTSIDE_IDX_SUFFIX));
+  }
+  Expr::Base *row_start = idx_col->plus(new Expr::Const(1));
+
+  CYKloop row = get_for_row(idx_row, row_start, z, with_checkpoint, mode);
+  CYKloop col = get_for_column(idx_col,
+      z, z->plus(new Expr::Vacc(tile_size)), with_checkpoint, mode);
   col.loop->statements.push_back(row.loop);
   Expr::Base *start_z = new Expr::Const(0);
   if (with_checkpoint) {
@@ -485,13 +570,11 @@ std::list<Statement::Base*> *cyk_traversal_multithread_parallel(const AST &ast,
   stmts->push_back(loop_z);
 
   // part B: code for the actual parallel tile computation
-  CYKloop rowB = get_for_row(ast.grammar()->left_running_indices[track],
-      new Expr::Vacc(*x),
+  CYKloop rowB = get_for_row(idx_row, new Expr::Vacc(*x),
       (new Expr::Vacc(*x))->minus(new Expr::Vacc(tile_size)),
-      with_checkpoint, CYKmode::OPENMP_PARALLEL);
-  CYKloop colB = get_for_column(ast.grammar()->right_running_indices[track],
-      y, y->plus(new Expr::Vacc(tile_size)), with_checkpoint,
-      CYKmode::OPENMP_PARALLEL);
+      with_checkpoint, mode);
+  CYKloop colB = get_for_column(idx_col,
+      y, y->plus(new Expr::Vacc(tile_size)), with_checkpoint, mode);
   colB.loop->statements.push_back(rowB.loop);
 
   Expr::Base *start_y = z;
@@ -598,7 +681,8 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
       std::list<std::string*> *next_loop_vars = new std::list<std::string*>();
       next_loop_vars->insert(
           next_loop_vars->end(), loop_vars->begin(), loop_vars->end());
-      if ((mode != CYKmode::OPENMP_PARALLEL) ||
+      if (((mode != CYKmode::OPENMP_PARALLEL) &&
+          (mode != CYKmode::OPENMP_PARALLEL_OUTSIDE)) ||
           (fl->var_decl->name->find("t_", 0) == 0)) {
         // openMP code adds in loops that do not traverse NT indices. Only add
         // loop variable, if it regard to NT indices, which all start with t_
@@ -624,7 +708,9 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
   }
 
   if (((mode == CYKmode::OPENMP_PARALLEL) ||
-       (mode == CYKmode::SINGLETHREAD_OUTSIDE)) && contains_nested_for) {
+       (mode == CYKmode::SINGLETHREAD_OUTSIDE) ||
+       (mode == CYKmode::OPENMP_PARALLEL_OUTSIDE) ||
+       (mode == CYKmode::OPENMP_SERIAL_OUTSIDE)) && contains_nested_for) {
     // don't add NT calls in for loops that is not the innermost loop, if in
     // multi threaded mode.
     return new std::list<Statement::Base*>();
@@ -651,7 +737,10 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
     if (!(*i)->is_tabulated()) {
       continue;
     }
-    if ((*i)->is_partof_outside() == (mode != CYKmode::SINGLETHREAD_OUTSIDE)) {
+    if ((*i)->is_partof_outside() == (
+        (mode != CYKmode::SINGLETHREAD_OUTSIDE) &&
+        (mode != CYKmode::OPENMP_PARALLEL_OUTSIDE) &&
+        (mode != CYKmode::OPENMP_SERIAL_OUTSIDE))) {
       continue;
     }
     std::list<Expr::Base*> *args = new std::list<Expr::Base*>();
@@ -662,7 +751,9 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
     for (size_t t = 0; t < (*i)->tracks(); ++t, ++it_stmt_seq) {
       if (!(*i)->tables()[t].delete_left_index()) {
         Expr::Vacc *idx = (*i)->left_indices.at(t)->vacc();
-        if (mode == CYKmode::SINGLETHREAD_OUTSIDE) {
+        if ((mode == CYKmode::SINGLETHREAD_OUTSIDE) ||
+            (mode == CYKmode::OPENMP_PARALLEL_OUTSIDE) ||
+            (mode == CYKmode::OPENMP_SERIAL_OUTSIDE)) {
           idx = new Expr::Vacc(new std::string(
               *idx->name() + OUTSIDE_IDX_SUFFIX));
         }
@@ -674,21 +765,28 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
           }
         }
         nt_has_indices++;
-        if (mode == CYKmode::SINGLETHREAD_OUTSIDE) {
+        if ((mode == CYKmode::SINGLETHREAD_OUTSIDE) ||
+            (mode == CYKmode::OPENMP_SERIAL_OUTSIDE)) {
           // create t_X_seq.size() call
           Expr::Fn_Call *seqsize = new Expr::Fn_Call(new std::string("size"));
           dynamic_cast<Expr::Fn_Call*>(seqsize)->add_arg((*it_stmt_seq)->name);
           dynamic_cast<Expr::Fn_Call*>(seqsize)->is_obj = Bool(true);
-          args->push_back(idx->minus(seqsize)->plus((new Expr::Vacc(
+          args->push_back(idx->plus((new Expr::Vacc(
               new std::string(*(*i)->right_indices.at(t)->vacc()->name() +
-                  OUTSIDE_IDX_SUFFIX)))));
+                  OUTSIDE_IDX_SUFFIX))))->minus(seqsize));
+        } else if ((mode == CYKmode::OPENMP_PARALLEL_OUTSIDE)) {
+          Expr::Vacc *idx_j = new Expr::Vacc(new std::string(
+              *(*i)->right_indices.at(t)->vacc()->name() + OUTSIDE_IDX_SUFFIX));
+          args->push_back(idx_j->plus(new Expr::Const(1))->minus(idx));
         } else {
           args->push_back(idx->minus(new Expr::Const(1)));
         }
       }
       if (!(*i)->tables()[t].delete_right_index()) {
         Expr::Vacc *idx = (*i)->right_indices.at(t)->vacc();
-        if (mode == CYKmode::SINGLETHREAD_OUTSIDE) {
+        if ((mode == CYKmode::SINGLETHREAD_OUTSIDE) ||
+            (mode == CYKmode::OPENMP_PARALLEL_OUTSIDE) ||
+            (mode == CYKmode::OPENMP_SERIAL_OUTSIDE)) {
           idx = new Expr::Vacc(new std::string(
               *idx->name() + OUTSIDE_IDX_SUFFIX));
         }
@@ -700,7 +798,19 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
           }
         }
         nt_has_indices++;
-        args->push_back(idx);
+        if ((mode == CYKmode::OPENMP_PARALLEL_OUTSIDE)) {
+          // create t_X_seq.size() call
+          Expr::Fn_Call *seqsize = new Expr::Fn_Call(new std::string("size"));
+          dynamic_cast<Expr::Fn_Call*>(seqsize)->add_arg((*it_stmt_seq)->name);
+          dynamic_cast<Expr::Fn_Call*>(seqsize)->is_obj = Bool(true);
+
+          Expr::Vacc *idx_i = new Expr::Vacc(new std::string(
+              *(*i)->left_indices.at(t)->vacc()->name() + OUTSIDE_IDX_SUFFIX));
+
+          args->push_back(seqsize->minus(idx_i)->plus(new Expr::Const(1)));
+        } else {
+          args->push_back(idx);
+        }
       }
     }
     if (used_indices == loop_vars->size()) {
@@ -864,7 +974,7 @@ Fn_Def *print_CYK(const AST &ast) {
     // parallel part
     std::list<Statement::Base*> *stmts = cyk_traversal_multithread_parallel(
         ast, *it_stmt_seq, &VARNAME_tile_size, name_maxtilen,
-        ast.checkpoint && ast.checkpoint->cyk);
+        ast.checkpoint && ast.checkpoint->cyk, CYKmode::OPENMP_PARALLEL);
     // inject NT calls
     std::list<Statement::Base*> *new_stmts = add_nt_calls(*stmts,
         new std::list<std::string*>(), ast.grammar()->topological_ord(),
@@ -886,6 +996,58 @@ Fn_Def *print_CYK(const AST &ast) {
     stmts->insert(stmts->end(), new_serial_stmts->begin(),
         new_serial_stmts->end());
     fn_cyk->stmts.insert(fn_cyk->stmts.end(), stmts->begin(), stmts->end());
+
+    if (ast.outside_generation()) {
+      fn_cyk->stmts.push_back(new Statement::CustomCode(
+        "// ... now compute outside DP matrices"));
+      fn_cyk->stmts.push_back(new Statement::CustomCode(
+          "#pragma omp parallel"));
+      Statement::Block *blk_parallel_outside = new Statement::Block();
+      if (ast.checkpoint && ast.checkpoint->cyk) {
+        blk_parallel_outside->statements.push_back(new Statement::CustomCode(
+            "#pragma omp for ordered schedule(dynamic)"));
+      } else {
+        blk_parallel_outside->statements.push_back(new Statement::CustomCode(
+            "#pragma omp for"));
+      }
+      blk_parallel_outside->statements.push_back(new Statement::CustomCode(
+          "// OPENMP < 3 requires signed int here ..."));
+
+    // parallel part
+      std::list<Statement::Base*> *stmts_outside =
+          cyk_traversal_multithread_parallel(ast, *it_stmt_seq,
+              &VARNAME_tile_size, name_maxtilen,
+              ast.checkpoint && ast.checkpoint->cyk,
+              CYKmode::OPENMP_PARALLEL_OUTSIDE);
+      // inject NT calls
+      std::list<Statement::Base*> *new_stmts_outside = add_nt_calls(
+          *stmts_outside, new std::list<std::string*>(),
+          ast.grammar()->topological_ord(),
+          ast.checkpoint && ast.checkpoint->cyk,
+          CYKmode::OPENMP_PARALLEL_OUTSIDE, ast);
+      stmts_outside->insert(stmts_outside->end(),
+          new_stmts_outside->begin(), new_stmts_outside->end());
+
+      blk_parallel_outside->statements.insert(
+          blk_parallel_outside->statements.end(),
+          stmts_outside->begin(), stmts_outside->end());
+      blk_parallel_outside->statements.push_back(new Statement::CustomCode(
+              "// end parallel"));
+      fn_cyk->stmts.push_back(blk_parallel_outside);
+
+    // serial part
+      stmts = cyk_traversal_singlethread(ast, CYKmode::OPENMP_SERIAL_OUTSIDE);
+      // inject NT calls
+      std::list<Statement::Base*> *new_serial_stmts = add_nt_calls(
+          *stmts, new std::list<std::string*>(),
+          ast.grammar()->topological_ord(),
+          ast.checkpoint && ast.checkpoint->cyk,
+          CYKmode::OPENMP_SERIAL_OUTSIDE, ast);
+      stmts->insert(stmts->end(), new_serial_stmts->begin(),
+          new_serial_stmts->end());
+      fn_cyk->stmts.insert(fn_cyk->stmts.end(), stmts->begin(), stmts->end());
+
+    }
   }
 
   fn_cyk->stmts.push_back(new Statement::CustomCode("#endif"));

@@ -532,6 +532,7 @@ check_checkpoint_eq adpf.gap unused pf "uacgugacguugacguguaucgguacuacgugacguugac
 CPPFLAGS_EXTRA="$DEFAULT_CPPFLAGS_EXTRA"
 LDLIBS_EXTRA="$DEFAULT_LDLIBS_EXTRA"
 
+# ======= following are test for outside code generation ======= 
 # results have been verified against "RNAfold -p -d0 --bppmThreshold=0" v2.4.17 and Stefan's manual python outside version of nodangle
 GRAMMAR=../../grammar_outside
 GAPC="../../../gapc --outside_grammar weak --outside_grammar struct"
@@ -542,23 +543,35 @@ check_new_old_eq nodangle.gap unused count "CCaCCaaaGGaCCaaaGGaCCaaaGGaGG" outsi
 # check that fn_arg (with alt) instead of only alt gets initialized
 check_new_old_eq nodangle_withoverlay.gap unused ins_pfunc "CCaCCaaaGGaCCaaaGGaCCaaaGGaGG" outside_overlay
 
-
 # same as above, but with CYK code generation
 GAPC="../../../gapc --outside_grammar weak --outside_grammar struct --cyk"
 check_new_old_eq nodangle.gap unused pfunc "CCaCCaaaGGaCCaaaGGaCCaaaGGaGG" outside
 
+# same as above, but with activated checkpointing
+GAPC="../../../gapc --outside_grammar weak --outside_grammar struct --cyk --checkpoint"
+check_new_old_eq nodangle.gap unused pfunc "CCaCCaaaGGaCCaaaGGaCCaaaGGaGG" outside
 
+# same as above, but with CYK code generation AND openMP parallelization
+GAPC="../../../gapc --outside_grammar weak --outside_grammar struct --cyk"
+CPPFLAGS_EXTRA="$DEFAULT_CPPFLAGS_EXTRA -fopenmp"
+LDLIBS_EXTRA="$DEFAULT_LDLIBS_EXTRA -fopenmp"
+if [ $(uname) = "Darwin" ]; then
+	CPPFLAGS_EXTRA="$DEFAULT_CPPFLAGS_EXTRA -Xpreprocessor -fopenmp -lomp "
+	LDLIBS_EXTRA="$DEFAULT_LDLIBS_EXTRA -Xpreprocessor -fopenmp -lomp -I\"$(brew --prefix libomp)/include\" -L\"$(brew --prefix libomp)/lib\""
+fi
+OMP_NUM_THREADS=2
+export OMP_NUM_THREADS
+check_new_old_eq nodangle.gap unused pfunc "CCaCCaaaGGaCCaaaGGaCCaaaGGaGG" outside
 
+# same as above, but with activated checkpointing
+GAPC="../../../gapc --outside_grammar weak --outside_grammar struct --cyk --checkpoint"
+check_new_old_eq nodangle.gap unused pfunc "CCaCCaaaGGaCCaaaGGaCCaaaGGaGG" outside
 
-
-
-
-
-
-
-GAPC="../../../gapc --outside_grammar ALL"
+# deactivate openMP
 CPPFLAGS_EXTRA=""
 LDLIBS_EXTRA=""
+
+GAPC="../../../gapc --outside_grammar ALL"
 check_new_old_eq hmm_sonneregen.gap unused count "SS" outside
 check_new_old_eq hmm_sonneregen.gap unused fwd "SS" outside
 check_new_old_eq hmm_sonneregen.gap unused fwd "SSRR" outside_ssrr
