@@ -110,7 +110,7 @@ class CYKloop {
 
 enum CYKmode {SINGLETHREAD, OPENMP_PARALLEL, OPENMP_SERIAL,
               SINGLETHREAD_OUTSIDE,
-              OPENMP_PARALLEL_OUTSIDE,OPENMP_SERIAL_OUTSIDE};
+              OPENMP_PARALLEL_OUTSIDE, OPENMP_SERIAL_OUTSIDE};
 
 CYKloop get_for_column(Expr::Vacc *running_boundary,
     Expr::Base *start, Expr::Base *end,
@@ -1046,7 +1046,6 @@ Fn_Def *print_CYK(const AST &ast) {
       stmts->insert(stmts->end(), new_serial_stmts->begin(),
           new_serial_stmts->end());
       fn_cyk->stmts.insert(fn_cyk->stmts.end(), stmts->begin(), stmts->end());
-
     }
   }
 
