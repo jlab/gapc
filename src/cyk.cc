@@ -616,7 +616,8 @@ Statement::For *get_triag_traversal(
   Statement::Var_Decl *lv_j = new Statement::Var_Decl(
       new Type::Size(),
       name_col,
-      new Expr::Cond(new Expr::Less(diag, tl), tl->minus(diag), new Expr::Const(0)));
+      new Expr::Cond(
+          new Expr::Less(diag, tl), tl->minus(diag), new Expr::Const(0)));
   // short cut for t_x_j for variable access
   Expr::Vacc *j = new Expr::Vacc(*lv_j);
 
@@ -631,7 +632,8 @@ Statement::For *get_triag_traversal(
       name_row,
       diag->plus(j)->minus(tl)));
   if (nested_stmts) {
-    fl_j->statements.insert(fl_j->statements.end(), nested_stmts->begin(), nested_stmts->end());
+    fl_j->statements.insert(fl_j->statements.end(),
+                            nested_stmts->begin(), nested_stmts->end());
   }
 
   Expr::Base *diag_end = tl->plus(new Expr::Const(1));
@@ -711,10 +713,10 @@ Statement::For *get_triag_traversal(
  * 12 |                                     90
  *
  */
- std::list<Statement::Base*> *cyk_traversal_multithread_outside(const AST &ast,
+std::list<Statement::Base*> *cyk_traversal_multithread_outside(const AST &ast,
      Expr::Base *seqsize, std::string *tile_size,
-     Statement::Var_Decl *max_tiles, bool with_checkpoint, CYKmode mode, std::string part) {
-
+     Statement::Var_Decl *max_tiles, bool with_checkpoint, CYKmode mode,
+     std::string part) {
 //   std::string var_ol1 = VARNAME_OuterLoop1;
 //   std::string var_ol2 = VARNAME_OuterLoop2;
 //   std::string var_il2 = VARNAME_InnerLoop2;
@@ -724,22 +726,24 @@ Statement::For *get_triag_traversal(
 //     var_il2 += OUTSIDE_IDX_SUFFIX;
 //   }
 
-   size_t track = 0;  // as openMP currently only works for single track grammars
-   std::list<Statement::Base*> *stmts = new std::list<Statement::Base*>();
+  // as openMP currently only works for single track grammars
+  size_t track = 0;
+  std::list<Statement::Base*> *stmts = new std::list<Statement::Base*>();
 
-   if (part == "A") {
+  if (part == "A") {
      // part A: square tiles
      std::list<Statement::Base*> *for_tile = new std::list<Statement::Base*>();
      for_tile->push_back(get_triag_traversal(
          std::string("tile_diag_" + std::to_string(track)),
          new Expr::Vacc(tile_size),
-         std::string(*(ast.grammar()->right_running_indices[track])->name() + OUTSIDE_IDX_SUFFIX),
-         std::string(*(ast.grammar()->left_running_indices[track])->name() + OUTSIDE_IDX_SUFFIX),
+         std::string(*(ast.grammar()->right_running_indices[track])->name() +
+             OUTSIDE_IDX_SUFFIX),
+         std::string(*(ast.grammar()->left_running_indices[track])->name() +
+             OUTSIDE_IDX_SUFFIX),
          true,
          false,
          nullptr,
-         new Expr::Const(1)
-         ));
+         new Expr::Const(1)));
 
      stmts->push_back(get_triag_traversal(
          std::string("matrix_diag_" + std::to_string(track)),
@@ -749,52 +753,60 @@ Statement::For *get_triag_traversal(
          false,
          true,
          for_tile,
-         new Expr::Const(1)
-         ));
-   }
+         new Expr::Const(1)));
+  }
 
-   if (part == "B") {
+  if (part == "B") {
      // part B: triangular tiles at edge
      Statement::For *for_tile_b = get_triag_traversal(
          std::string("tile_diag_" + std::to_string(track)),
          new Expr::Vacc(tile_size),
-         std::string(*(ast.grammar()->right_running_indices[track])->name() + OUTSIDE_IDX_SUFFIX),
-         std::string(*(ast.grammar()->left_running_indices[track])->name() + OUTSIDE_IDX_SUFFIX),
+         std::string(*(ast.grammar()->right_running_indices[track])->name() +
+             OUTSIDE_IDX_SUFFIX),
+         std::string(*(ast.grammar()->left_running_indices[track])->name() +
+             OUTSIDE_IDX_SUFFIX),
          false,
          false,
          nullptr,
-         new Expr::Const(1)
-         );
+         new Expr::Const(1));
 
      stmts->push_back(new Statement::CustomCode(
          "#pragma omp for"));
      Statement::Var_Decl *lv_diag = new Statement::Var_Decl(
-         new Type::Int(), "y", (new Expr::Const(0))->minus(new Expr::Const(1))); // one left of leftmost tile
+         // one left of leftmost tile
+         new Type::Int(), "y", (new Expr::Const(0))->minus(new Expr::Const(1)));
      Statement::For *fl_diag = new Statement::For(
          lv_diag,
          new Expr::Less(new Expr::Vacc(*lv_diag), new Expr::Vacc(*max_tiles)));
-     fl_diag->statements.push_back(new Statement::Var_Decl(new Type::Int(), "x", (new Expr::Vacc(*lv_diag))->plus(new Expr::Const(1))));
+     fl_diag->statements.push_back(new Statement::Var_Decl(
+         new Type::Int(),
+         "x",
+         (new Expr::Vacc(*lv_diag))->plus(new Expr::Const(1))));
      fl_diag->statements.push_back(for_tile_b);
      stmts->push_back(fl_diag);
-   }
+  }
 
-   if (part == "C") {
+  if (part == "C") {
      // part C: serial part to fill remaining gapc
      Statement::For *for_tile_c = get_triag_traversal(
          std::string("diag_" + std::to_string(track)),
          seqsize->plus(new Expr::Const(1)),
-         std::string(*(ast.grammar()->right_running_indices[track])->name() + OUTSIDE_IDX_SUFFIX),
-         std::string(*(ast.grammar()->left_running_indices[track])->name() + OUTSIDE_IDX_SUFFIX),
+         std::string(*(ast.grammar()->right_running_indices[track])->name() +
+             OUTSIDE_IDX_SUFFIX),
+         std::string(*(ast.grammar()->left_running_indices[track])->name() +
+             OUTSIDE_IDX_SUFFIX),
          false,
          false,
          nullptr,
-         (new Expr::Times(new Expr::Vacc(tile_size), (new Expr::Vacc(&VARNAME_num_tiles_per_axis))->plus(new Expr::Const(1))))->plus(new Expr::Const(1))
-         );
+         (new Expr::Times(
+             new Expr::Vacc(tile_size),
+             (new Expr::Vacc(&VARNAME_num_tiles_per_axis))->plus(
+                 new Expr::Const(1))))->plus(new Expr::Const(1)));
      stmts->push_back(for_tile_c);
-   }
+  }
 
-   return stmts;
- }
+  return stmts;
+}
 
 
 size_t count_nt_calls_and_loops(Statement::For *loop) {
@@ -939,7 +951,9 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
           Expr::Vacc *idx_i = new Expr::Vacc(new std::string(
               *(*i)->left_indices.at(t)->vacc()->name() + OUTSIDE_IDX_SUFFIX));
           // t_0_i_outside + x*tile_size
-          args->push_back(idx_i->plus(new Expr::Times(new Expr::Vacc(new std::string("x")), new Expr::Vacc(&VARNAME_tile_size))));
+          args->push_back(idx_i->plus(new Expr::Times(
+              new Expr::Vacc(new std::string("x")),
+              new Expr::Vacc(&VARNAME_tile_size))));
         } else if ((mode == CYKmode::OPENMP_SERIAL_OUTSIDE)) {
           Expr::Vacc *idx_i = new Expr::Vacc(new std::string(
               *(*i)->left_indices.at(t)->vacc()->name() + OUTSIDE_IDX_SUFFIX));
@@ -965,7 +979,8 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
         }
         nt_has_indices++;
         if ((mode == CYKmode::OPENMP_PARALLEL_OUTSIDE)) {
-          // (t_0_j_outside + y*tile_size + (t_0_seq.size() - num_tiles_per_axis*tile_size + 1))
+          // (t_0_j_outside + y*tile_size + (t_0_seq.size() - num_tiles_per_axis
+          // *tile_size + 1))
 
           // create t_X_seq.size() call
           Expr::Fn_Call *seqsize = new Expr::Fn_Call(new std::string("size"));
@@ -975,9 +990,12 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
           Expr::Vacc *idx_j = new Expr::Vacc(new std::string(
               *(*i)->right_indices.at(t)->vacc()->name() + OUTSIDE_IDX_SUFFIX));
 
-          args->push_back(idx_j->plus(new Expr::Times(new Expr::Vacc(new std::string("y")), new Expr::Vacc(&VARNAME_tile_size)))->plus(
-              seqsize->minus(new Expr::Times(new Expr::Vacc(&VARNAME_num_tiles_per_axis), new Expr::Vacc(&VARNAME_tile_size)))->plus(new Expr::Const(1))
-              ));
+          args->push_back(idx_j->plus(new Expr::Times(new Expr::Vacc(
+              new std::string("y")), new Expr::Vacc(&VARNAME_tile_size)))->plus(
+              seqsize->minus(new Expr::Times(
+                  new Expr::Vacc(&VARNAME_num_tiles_per_axis),
+                  new Expr::Vacc(&VARNAME_tile_size)))->plus(
+                      new Expr::Const(1))));
         } else if ((mode == CYKmode::OPENMP_SERIAL_OUTSIDE)) {
           Expr::Vacc *idx_j = new Expr::Vacc(new std::string(
               *(*i)->right_indices.at(t)->vacc()->name() + OUTSIDE_IDX_SUFFIX));
@@ -1187,16 +1205,22 @@ Fn_Def *print_CYK(const AST &ast) {
       fn_cyk->stmts.push_back(new Statement::CustomCode(
         "// ... now compute outside DP matrices"));
       Expr::Vacc *tl = new Expr::Vacc(&VARNAME_tile_size);
-      /* since tiles shall always be complete squares, we cannot touch the main anti-diagonal
-       * and thus leave a triangular space. This triangle must be at most tile_size - 1 in size.
-       * We divide (without rest, since we operate on integer) the remaining sequence size by
-       * the tile_size and multiply with tile_size to obtain the suffix of the input sequence which
-       * can be tiled */
+      /* since tiles shall always be complete squares, we cannot touch the main
+       * anti-diagonal and thus leave a triangular space. This triangle must be
+       * at most tile_size - 1 in size.
+       * We divide (without rest, since we operate on integer) the remaining
+       * sequence size by the tile_size and multiply with tile_size to obtain
+       * the suffix of the input sequence which can be tiled */
       Expr::Fn_Call *seqsize = new Expr::Fn_Call(new std::string("size"));
-        dynamic_cast<Expr::Fn_Call*>(seqsize)->add_arg((*ast.seq_decls.at(0)).name);
+        dynamic_cast<Expr::Fn_Call*>(seqsize)->add_arg(
+            (*ast.seq_decls.at(0)).name);
         dynamic_cast<Expr::Fn_Call*>(seqsize)->is_obj = Bool(true);
-      //max_tiles_n = ((t_0_seq.size() - (tile_size - 1)) / tile_size) * tile_size;
-      Statement::Var_Decl *max_tiles = new Statement::Var_Decl(new Type::Int, VARNAME_num_tiles_per_axis, new Expr::Div(seqsize->minus(tl->minus(new Expr::Const(1))), tl));
+      // max_tiles_n = ((t_0_seq.size() - (tile_size - 1)) / tile_size) *
+      // tile_size;
+      Statement::Var_Decl *max_tiles = new Statement::Var_Decl(
+          new Type::Int,
+          VARNAME_num_tiles_per_axis,
+          new Expr::Div(seqsize->minus(tl->minus(new Expr::Const(1))), tl));
       fn_cyk->stmts.push_back(max_tiles);
 
       fn_cyk->stmts.push_back(new Statement::CustomCode(
@@ -1255,7 +1279,6 @@ Fn_Def *print_CYK(const AST &ast) {
           ast.grammar()->topological_ord(),
           ast.checkpoint && ast.checkpoint->cyk,
           CYKmode::OPENMP_SERIAL_OUTSIDE, ast);
-
     }
   }
 
