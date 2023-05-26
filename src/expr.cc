@@ -128,7 +128,7 @@ void Expr::Max::put(std::ostream &s) const {
 }
 
 void Expr::Cond::put(std::ostream &s) const {
-  s << '(' << *cond << ") ? (" << *then << ") : (" << *els << ')';
+  s << "((" << *cond << ") ? (" << *then << ") : (" << *els << "))";
 }
 
 void Expr::Not::put(std::ostream &s) const {
