@@ -798,10 +798,14 @@ std::list<Statement::Base*> *cyk_traversal_multithread_outside(const AST &ast,
          false,
          false,
          nullptr,
-         (new Expr::Times(
-             new Expr::Vacc(tile_size),
-             (new Expr::Vacc(&VARNAME_num_tiles_per_axis))->plus(
-                 new Expr::Const(1))))->plus(new Expr::Const(1)));
+         new Expr::Cond(
+             // test the case that input is smaller than a single tile
+             new Expr::Greater(seqsize, new Expr::Vacc(tile_size)),
+             (new Expr::Times(
+                 new Expr::Vacc(tile_size),
+                 (new Expr::Vacc(&VARNAME_num_tiles_per_axis))->plus(
+                     new Expr::Const(1))))->plus(new Expr::Const(1)),
+             new Expr::Const(1)));
      stmts->push_back(for_tile_c);
   }
 
@@ -1220,10 +1224,15 @@ Fn_Def *print_CYK(const AST &ast) {
       Statement::Var_Decl *max_tiles = new Statement::Var_Decl(
           new Type::Int,
           VARNAME_num_tiles_per_axis,
-          new Expr::Div(seqsize->minus(tl->minus(new Expr::Const(1))), tl));
+          new Expr::Cond(
+              new Expr::Less(tl, seqsize->minus(new Expr::Const(1))),
+              new Expr::Div(seqsize->minus(tl->minus(new Expr::Const(1))), tl),
+              new Expr::Const(0)));
       fn_cyk->stmts.push_back(max_tiles);
 
-      fn_cyk->stmts.push_back(new Statement::CustomCode(
+      Statement::If *input_large_enough = new Statement::If(
+          new Expr::Greater(seqsize, tl));
+      input_large_enough->then.push_back(new Statement::CustomCode(
           "#pragma omp parallel"));
       Statement::Block *blk_parallel_outside = new Statement::Block();
       blk_parallel_outside->statements.push_back(new Statement::CustomCode(
@@ -1263,7 +1272,8 @@ Fn_Def *print_CYK(const AST &ast) {
 
       blk_parallel_outside->statements.push_back(new Statement::CustomCode(
               "// end parallel"));
-      fn_cyk->stmts.push_back(blk_parallel_outside);
+      input_large_enough->then.push_back(blk_parallel_outside);
+      fn_cyk->stmts.push_back(input_large_enough);
 
       // part C = serial part
       std::list<Statement::Base*> *stmts_outsideC =
