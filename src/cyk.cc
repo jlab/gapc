@@ -86,6 +86,30 @@ get_tile_computation(const AST &ast, std::string *name_maxtilen,
   return std::make_tuple(res, &VARNAME_tile_size);
 }
 
+/* since tiles shall always be complete squares, we cannot touch the main
+ * anti-diagonal and thus leave a triangular space. This triangle must be
+ * at most tile_size - 1 in size.
+ * We divide (without rest, since we operate on integer) the remaining
+ * sequence size by the tile_size and multiply with tile_size to obtain
+ * the suffix of the input sequence which can be tiled */
+Statement::Var_Decl *get_tile_computation_outside(
+    Statement::Var_Decl *input_seq) {
+  Expr::Fn_Call *seqsize = new Expr::Fn_Call(new std::string("size"));
+  seqsize->add_arg(input_seq->name);
+  seqsize->is_obj = Bool(true);
+
+  Expr::Vacc *tl = new Expr::Vacc(new std::string("tile_size"));
+  // max_tiles_n = ((t_0_seq.size() - (tile_size - 1)) / tile_size) *
+  // tile_size;
+  return new Statement::Var_Decl(
+      new Type::Int,
+      VARNAME_num_tiles_per_axis,
+      new Expr::Cond(
+          new Expr::Less(tl, seqsize->minus(new Expr::Const(1))),
+          new Expr::Div(seqsize->minus(tl->minus(new Expr::Const(1))), tl),
+          new Expr::Const(0)));
+}
+
 /* deep copy of a list of statements */
 std::list<Statement::Base*> *copy_statements(
     std::list<Statement::Base*> *other) {
@@ -392,7 +416,26 @@ std::list<Statement::Base*> *cyk_traversal_singlethread(const AST &ast,
   return stmts;
 }
 
+std::vector<Statement::Base*> *get_wait_omp(std::string var_outer, std::string var_inner, Expr::Base *step_size, std::string *z, bool no_inner_loop) {
+  std::vector<Statement::Base*> *stmts = new std::vector<Statement::Base*>();
 
+  stmts->push_back(new Statement::CustomCode(
+      "#pragma omp ordered"));
+  Statement::Block *blk_omp2 = new Statement::Block();
+  blk_omp2->statements.push_back(new Statement::CustomCode("// force omp to wait for all threads to finish their current batch (of size tile_size)"));
+  if (!no_inner_loop) {
+    blk_omp2->statements.push_back(new Statement::Var_Assign(
+        new Var_Acc::Plain(new std::string(var_inner)),
+        (new Expr::Vacc(new std::string(var_inner)))->plus(
+            step_size)));
+  }
+  blk_omp2->statements.push_back(new Statement::Var_Assign(
+      new Var_Acc::Plain(new std::string(var_outer)), new Expr::Vacc(z)));
+  blk_omp2->statements.push_back(mutex_unlock());
+  stmts->push_back(blk_omp2);
+
+  return stmts;
+}
 
 
 /* Construct the loop traversal structure for CYK parsing of one track in
@@ -537,17 +580,8 @@ std::list<Statement::Base*> *cyk_traversal_multithread_parallel(const AST &ast,
   loop_y->statements.push_back(x);
   loop_y->statements.push_back(colB.loop);
   if (with_checkpoint) {
-    loop_y->statements.push_back(new Statement::CustomCode(
-        "#pragma omp ordered"));
-    Statement::Block *blk_omp2 = new Statement::Block();
-    blk_omp2->statements.push_back(new Statement::Var_Assign(
-        new Var_Acc::Plain(new std::string(var_il2)),
-        (new Expr::Vacc(new std::string(var_il2)))->plus(
-            new Expr::Vacc(tile_size))));
-    blk_omp2->statements.push_back(new Statement::Var_Assign(
-        new Var_Acc::Plain(new std::string(var_ol2)), z));
-    blk_omp2->statements.push_back(mutex_unlock());
-    loop_y->statements.push_back(blk_omp2);
+    std::vector<Statement::Base*> *omp_wait = get_wait_omp(var_ol2, var_il2, new Expr::Vacc(tile_size), z->name(), false);
+    loop_y->statements.insert(loop_y->statements.end(), omp_wait->begin(), omp_wait->end());
   }
 
 
@@ -587,6 +621,7 @@ std::list<Statement::Base*> *cyk_traversal_multithread_parallel(const AST &ast,
  * This order is necessary for outside computation, as all cells on top and
  * right of a cell are predecessors.
  */
+enum OMP_OUTSIDE_CP {no, A, B, C};
 Statement::For *get_triag_traversal(
     // variable name of outer for loop that addresses the anti diagonal
     std::string name_diag,
@@ -601,23 +636,42 @@ Statement::For *get_triag_traversal(
     std::list<Statement::Base*> *nested_stmts,
     // first anti diagonal to start with. If != 1 we can skip first x cells,
     // e.g. diag_start=5 would start at cell 11 in above example
-    Expr::Base *diag_start) {
+    Expr::Base *diag_start,
+    OMP_OUTSIDE_CP cp) {
   Expr::Base *tl = diameter;
 
+  Type::Base *type_diag = new Type::Size();
+  if (cp == OMP_OUTSIDE_CP::A) {
+    diag_start = new Expr::Vacc(new std::string(std::string(VARNAME_OuterLoop2) + OUTSIDE_IDX_SUFFIX + "_start"));
+  } else if (cp == OMP_OUTSIDE_CP::C) {
+    type_diag = new Type::External(new std::string(""));
+  }
   // tile_diag_x
   Statement::Var_Decl *lv_diag = new Statement::Var_Decl(
-      new Type::Size(),
+      type_diag,
       name_diag,
       diag_start);
   // short cut for tile_diag_x for variable access
   Expr::Vacc *diag = new Expr::Vacc(*lv_diag);
 
   // t_x_j
+  Expr::Base *start_j = new Expr::Cond(
+      new Expr::Less(diag, tl), tl->minus(diag), new Expr::Const(0));
+  if (cp == OMP_OUTSIDE_CP::A) {
+    start_j = new Expr::Cond(
+        new Expr::Vacc(new std::string(std::string(VARNAME_InnerLoop2) + OUTSIDE_IDX_SUFFIX +  "_loaded")),
+        start_j,
+        new Expr::Vacc(new std::string(std::string(VARNAME_InnerLoop2) + OUTSIDE_IDX_SUFFIX + "_start")));
+  } else if (cp == OMP_OUTSIDE_CP::C) {
+    start_j = new Expr::Cond(
+        new Expr::Vacc(new std::string(name_col + "_loaded++")),
+        start_j,
+        new Expr::Vacc(new std::string(name_col)));
+  }
   Statement::Var_Decl *lv_j = new Statement::Var_Decl(
-      new Type::Size(),
+      type_diag,
       name_col,
-      new Expr::Cond(
-          new Expr::Less(diag, tl), tl->minus(diag), new Expr::Const(0)));
+      start_j);
   // short cut for t_x_j for variable access
   Expr::Vacc *j = new Expr::Vacc(*lv_j);
 
@@ -627,6 +681,12 @@ Statement::For *get_triag_traversal(
           tl,
           (new Expr::Times(tl, new Expr::Const(2)))->minus(diag)));
   Statement::For *fl_j = new Statement::For(lv_j, cond_j);
+  if ((cp == OMP_OUTSIDE_CP::A) || (cp == OMP_OUTSIDE_CP::C)) {
+    if (cp == OMP_OUTSIDE_CP::A) {
+      fl_j->statements.push_back(new Statement::CustomCode(std::string("++") + VARNAME_InnerLoop2 + OUTSIDE_IDX_SUFFIX + "_loaded;"));
+    }
+    fl_j->statements.push_back(mutex_lock());
+  }
   fl_j->push_back(new Statement::Var_Decl(
       new Type::Size(),
       name_row,
@@ -634,6 +694,10 @@ Statement::For *get_triag_traversal(
   if (nested_stmts) {
     fl_j->statements.insert(fl_j->statements.end(),
                             nested_stmts->begin(), nested_stmts->end());
+  }
+  if (cp == OMP_OUTSIDE_CP::A) {
+    std::vector<Statement::Base*> *omp_wait = get_wait_omp(std::string(VARNAME_OuterLoop2) + OUTSIDE_IDX_SUFFIX, std::string(VARNAME_InnerLoop2) + OUTSIDE_IDX_SUFFIX, new Expr::Const(1), new std::string(name_diag), false);
+    fl_j->statements.insert(fl_j->statements.end(), omp_wait->begin(), omp_wait->end());
   }
 
   Expr::Base *diag_end = tl->plus(new Expr::Const(1));
@@ -646,13 +710,21 @@ Statement::For *get_triag_traversal(
 //    blk_parallel_outside->statements.push_back(new Statement::CustomCode(
 //        "#pragma omp for ordered schedule(dynamic)"));
 //  } else {
+  std::string pragma = std::string("#pragma omp for");
+  if (cp == OMP_OUTSIDE_CP::A) {
+    pragma += " ordered schedule(dynamic)";
+  }
   if (insert_pragma) {
-    fl_diag->statements.push_back(new Statement::CustomCode(
-        "#pragma omp for"));
+    fl_diag->statements.push_back(new Statement::CustomCode(pragma));
   }
 //  }
 
   fl_diag->statements.push_back(fl_j);
+
+  if (cp == OMP_OUTSIDE_CP::A) {
+    fl_diag->statements.push_back(new Statement::Var_Assign(new Var_Acc::Plain(
+        new std::string(std::string(VARNAME_InnerLoop2) + OUTSIDE_IDX_SUFFIX)), new Expr::Vacc(new std::string(name_diag))));
+  }
 
   return fl_diag;
 }
@@ -718,7 +790,6 @@ std::list<Statement::Base*> *cyk_traversal_multithread_outside(const AST &ast,
      Statement::Var_Decl *max_tiles, bool with_checkpoint, CYKmode mode,
      std::string part) {
 //   std::string var_ol1 = VARNAME_OuterLoop1;
-//   std::string var_ol2 = VARNAME_OuterLoop2;
 //   std::string var_il2 = VARNAME_InnerLoop2;
 //   if (mode == CYKmode::OPENMP_PARALLEL_OUTSIDE) {
 //     var_ol1 += OUTSIDE_IDX_SUFFIX;
@@ -743,7 +814,8 @@ std::list<Statement::Base*> *cyk_traversal_multithread_outside(const AST &ast,
          true,
          false,
          nullptr,
-         new Expr::Const(1)));
+         new Expr::Const(1),
+         OMP_OUTSIDE_CP::no));
 
      stmts->push_back(get_triag_traversal(
          std::string("matrix_diag_" + std::to_string(track)),
@@ -753,7 +825,8 @@ std::list<Statement::Base*> *cyk_traversal_multithread_outside(const AST &ast,
          false,
          true,
          for_tile,
-         new Expr::Const(1)));
+         new Expr::Const(1),
+         with_checkpoint ? OMP_OUTSIDE_CP::A : OMP_OUTSIDE_CP::no));
   }
 
   if (part == "B") {
@@ -768,45 +841,68 @@ std::list<Statement::Base*> *cyk_traversal_multithread_outside(const AST &ast,
          false,
          false,
          nullptr,
-         new Expr::Const(1));
+         new Expr::Const(1),
+         with_checkpoint ? OMP_OUTSIDE_CP::B : OMP_OUTSIDE_CP::no);
 
-     stmts->push_back(new Statement::CustomCode(
-         "#pragma omp for"));
+     std::string pragma = "#pragma omp for";
+     Expr::Base *diag_start = (new Expr::Const(0))->minus(new Expr::Const(1));
+     if (with_checkpoint) {
+       pragma += " ordered schedule(dynamic)";
+       diag_start = new Expr::Vacc(new std::string(std::string(VARNAME_OuterLoop1) + OUTSIDE_IDX_SUFFIX));
+     }
+     stmts->push_back(new Statement::CustomCode(pragma));
      Statement::Var_Decl *lv_diag = new Statement::Var_Decl(
          // one left of leftmost tile
-         new Type::Int(), "y", (new Expr::Const(0))->minus(new Expr::Const(1)));
+         new Type::Int(), "y", diag_start);
      Statement::For *fl_diag = new Statement::For(
          lv_diag,
          new Expr::Less(new Expr::Vacc(*lv_diag), new Expr::Vacc(*max_tiles)));
+     if (with_checkpoint) {
+       fl_diag->statements.push_back(mutex_lock());
+     }
      fl_diag->statements.push_back(new Statement::Var_Decl(
          new Type::Int(),
          "x",
          (new Expr::Vacc(*lv_diag))->plus(new Expr::Const(1))));
      fl_diag->statements.push_back(for_tile_b);
+     if (with_checkpoint) {
+       std::vector<Statement::Base*> *omp_wait = get_wait_omp(std::string(VARNAME_OuterLoop1) + OUTSIDE_IDX_SUFFIX, std::string(VARNAME_InnerLoop2) + OUTSIDE_IDX_SUFFIX, new Expr::Const(1), lv_diag->name, true);
+       fl_diag->statements.insert(fl_diag->statements.end(), omp_wait->begin(), omp_wait->end());
+
+     }
      stmts->push_back(fl_diag);
   }
 
   if (part == "C") {
      // part C: serial part to fill remaining gapc
-     Statement::For *for_tile_c = get_triag_traversal(
-         std::string("diag_" + std::to_string(track)),
-         seqsize->plus(new Expr::Const(1)),
-         std::string(*(ast.grammar()->right_running_indices[track])->name() +
+    Expr::Base *start_diag = new Expr::Cond(
+         // test the case that input is smaller than a single tile
+         new Expr::Greater(seqsize, new Expr::Vacc(tile_size)),
+         (new Expr::Times(
+             new Expr::Vacc(tile_size),
+             (new Expr::Vacc(&VARNAME_num_tiles_per_axis))->plus(
+                 new Expr::Const(1))))->plus(new Expr::Const(1)),
+         new Expr::Const(1));
+    std::string diag_name = std::string("t_" + std::to_string(track) + "_diag_outside");
+    if (with_checkpoint) {
+      start_diag = new Expr::Cond(
+          new Expr::Vacc(new std::string("t_0_diag_outside_loaded++")),
+          start_diag,
+          new Expr::Vacc(new std::string(diag_name)));
+    }
+    Statement::For *for_tile_c = get_triag_traversal(
+        diag_name,
+        seqsize->plus(new Expr::Const(1)),
+        std::string(*(ast.grammar()->right_running_indices[track])->name() +
              OUTSIDE_IDX_SUFFIX),
-         std::string(*(ast.grammar()->left_running_indices[track])->name() +
+        std::string(*(ast.grammar()->left_running_indices[track])->name() +
              OUTSIDE_IDX_SUFFIX),
-         false,
-         false,
-         nullptr,
-         new Expr::Cond(
-             // test the case that input is smaller than a single tile
-             new Expr::Greater(seqsize, new Expr::Vacc(tile_size)),
-             (new Expr::Times(
-                 new Expr::Vacc(tile_size),
-                 (new Expr::Vacc(&VARNAME_num_tiles_per_axis))->plus(
-                     new Expr::Const(1))))->plus(new Expr::Const(1)),
-             new Expr::Const(1)));
-     stmts->push_back(for_tile_c);
+        false,
+        false,
+        nullptr,
+        start_diag,
+        with_checkpoint ? OMP_OUTSIDE_CP::C : OMP_OUTSIDE_CP::no);
+    stmts->push_back(for_tile_c);
   }
 
   return stmts;
@@ -859,13 +955,20 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
       next_loop_vars->insert(
           next_loop_vars->end(), loop_vars->begin(), loop_vars->end());
       if (((mode != CYKmode::OPENMP_PARALLEL) &&
-          (mode != CYKmode::OPENMP_PARALLEL_OUTSIDE) &&
-          (mode != CYKmode::OPENMP_SERIAL_OUTSIDE)) ||
+          (mode != CYKmode::OPENMP_PARALLEL_OUTSIDE)) ||
           (fl->var_decl->name->find("t_", 0) == 0)) {
         // openMP code adds in loops that do not traverse NT indices. Only add
         // loop variable, if it regard to NT indices, which all start with t_
         // e.g. t_0_i or t_1_j
-        next_loop_vars->push_back(fl->var_decl->name);
+        if (mode == CYKmode::OPENMP_SERIAL_OUTSIDE) {
+          std::string *diagname = fl->var_decl->name;
+          if (diagname->find("diag") == 0) {
+            diagname->replace(4, 4, "i");  // "diag" -> "i"
+            next_loop_vars->push_back(diagname);
+          }
+        } else {
+          next_loop_vars->push_back(fl->var_decl->name);
+        }
       }
       std::list<Statement::Base*> *new_stmts = add_nt_calls(
           fl->statements, next_loop_vars, orderedNTs, with_checkpoint,
@@ -1017,7 +1120,7 @@ std::list<Statement::Base*> *add_nt_calls(std::list<Statement::Base*> &stmts,
     }
   }
   if (with_checkpoint) {
-    if (mode == CYKmode::OPENMP_SERIAL) {
+    if ((mode == CYKmode::OPENMP_SERIAL) || (mode == CYKmode::OPENMP_SERIAL_OUTSIDE)) {
       nt_stmts->push_back(mutex_unlock());
     }
   }
@@ -1061,25 +1164,25 @@ Fn_Def *print_CYK(const AST &ast) {
       for (int io = 0; io < 2; ++io) {  // iterate through inside and outside
         fn_cyk->stmts.push_back(new Statement::Var_Decl(
             new Type::Int(),
-            *(ast.grammar()->left_running_indices.at(track)->name()) +
-              suffix, new Expr::Or(
+            *(idx_i->name()) + suffix,
+            new Expr::Or(
                 new Expr::Not(new Expr::Vacc(
                     new std::string("load_checkpoint"))),
                 new Expr::Not(idx_i))));
 
         fn_cyk->stmts.push_back(new Statement::Var_Decl(
             new Type::Int(),
-            *(ast.grammar()->right_running_indices.at(track)->name()) +
-            suffix, new Expr::Or(
+            *(idx_j->name()) + suffix,
+            new Expr::Or(
                 new Expr::Not(new Expr::Vacc(new std::string(
                     "load_checkpoint"))),
                 new Expr::Not(idx_j))));
         if (!ast.grammar()->is_partof_outside()) {
           break;
         } else {
-          suffix = OUTSIDE_IDX_SUFFIX + suffix;
           idx_i = new Expr::Vacc(new std::string(
-              *idx_i->name() + OUTSIDE_IDX_SUFFIX));
+              std::string("t_") + std::to_string(track) +
+              std::string("_diag") + OUTSIDE_IDX_SUFFIX));
           idx_j = new Expr::Vacc(new std::string(
               *idx_j->name() + OUTSIDE_IDX_SUFFIX));
         }
@@ -1134,6 +1237,7 @@ Fn_Def *print_CYK(const AST &ast) {
     // header
     if (ast.checkpoint && ast.checkpoint->cyk) {
       std::string suffix = "";
+      std::string step = "tile_size";
       for (int io = 0; io < 2; ++io) {  // iterate through inside and outside
         fn_cyk->stmts.push_back(new Statement::CustomCode(
             "bool " + std::string(VARNAME_OuterLoop1) + suffix +
@@ -1154,7 +1258,7 @@ Fn_Def *print_CYK(const AST &ast) {
         fn_cyk->stmts.push_back(new Statement::CustomCode(
             "int " + std::string(VARNAME_OuterLoop2) + suffix +
             "_start = (" + VARNAME_OuterLoop2 + suffix +
-            "_loaded) ? tile_size : " +
+            "_loaded) ? " + step + " : " +
             VARNAME_OuterLoop2 + suffix + ";"));
         fn_cyk->stmts.push_back(new Statement::CustomCode(
             "int " + std::string(VARNAME_InnerLoop2) + suffix +
@@ -1163,6 +1267,7 @@ Fn_Def *print_CYK(const AST &ast) {
           break;
         } else {
           suffix = OUTSIDE_IDX_SUFFIX;
+          step = "1";
         }
       }
     }
