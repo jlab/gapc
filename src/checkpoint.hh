@@ -1002,9 +1002,10 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
        // archive the indices of the prior iteration to ensure
        // that the whole iteration has been completed
        std::string suffix = "";
+       std::string first_index = "i";
        for (int io = 0; io < 2; ++io) {  // iterate through inside and outside
-         stream << indent() << "array_out << t_" << i << "_i" << suffix
-                << " " << (io == 0 ? "+" : "-") << " 1;" << endl;
+         stream << indent() << "array_out << t_" << i << "_" << first_index
+                << suffix << " " << (io == 0 ? "+" : "-") << " 1;" << endl;
          stream << indent() << "array_out << "
                 << "(t_" << i << "_j" << suffix << " == 0 ? 0 : t_" << i << "_j"
                 << suffix << " " << (io == 0 ? "-" : "+") << " 1);" << endl;
@@ -1014,14 +1015,23 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
            // TODO(sjanssen) why can't I use OUTSIDE_IDX_SUFFIX from cyk.hh
            // here?
            suffix = "_outside";
+           first_index = "diag";
          }
        }
      }
      stream << indent() << "#ifdef _OPENMP" << endl;
      inc_indent();
-     stream << indent() << "array_out << outer_loop_1_idx;" << endl;
-     stream << indent() << "array_out << outer_loop_2_idx;" << endl;
-     stream << indent() << "array_out << inner_loop_2_idx;" << endl;
+     std::string suffix = "";
+     for (int io = 0; io < 2; ++io) {  // iterate through inside and outside
+       stream << indent() << "array_out << outer_loop_1_idx" << suffix << ";" << endl;
+       stream << indent() << "array_out << outer_loop_2_idx" << suffix << ";" << endl;
+       stream << indent() << "array_out << inner_loop_2_idx" << suffix << ";" << endl;
+       if (!outside) {
+         break;
+       } else {
+         suffix = "_outside";
+       }
+     }
      dec_indent();
      stream << indent() << "#endif" << endl;
 
@@ -1074,23 +1084,33 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
                             "array_in(array_fin);" << endl;
      for (size_t i = 0; i < n_tracks; i++) {
        std::string suffix = "";
+       std::string first_index = "i";
        for (int io = 0; io < 2; ++io) {  // iterate through inside and outside
-         stream << indent() << "array_in >> t_" << i << "_i" << suffix
-                << ";" << endl;
+         stream << indent() << "array_in >> t_" << i << "_" << first_index
+                << suffix << ";" << endl;
          stream << indent() << "array_in >> t_" << i << "_j" << suffix
                 << ";" << endl;
          if (!outside) {
            break;
          } else {
            suffix = "_outside";
+           first_index = "diag";
          }
        }
      }
      stream << indent() << "#ifdef _OPENMP" << endl;
-       stream << indent() << "  array_in >> outer_loop_1_idx;" << endl;
-       stream << indent() << "  array_in >> outer_loop_2_idx;" << endl;
-       stream << indent() << "  array_in >> inner_loop_2_idx;" << endl;
-       stream << indent() << "#endif" << endl;
+     std::string suffix = "";
+     for (int io = 0; io < 2; ++io) {  // iterate through inside and outside
+       stream << indent() << "  array_in >> outer_loop_1_idx" << suffix << ";" << endl;
+       stream << indent() << "  array_in >> outer_loop_2_idx" << suffix << ";" << endl;
+       stream << indent() << "  array_in >> inner_loop_2_idx" << suffix << ";" << endl;
+       if (!outside) {
+          break;
+        } else {
+          suffix = "_outside";
+        }
+     }
+     stream << indent() << "#endif" << endl;
      stream << indent() << "array_fin.close();" << endl << endl;
      stream << indent() << "std::cerr << \"Info: Successfully loaded "
             << "cyk loop indices. \"" << endl;
