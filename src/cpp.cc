@@ -1649,8 +1649,10 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
       std::string first_index = "i";
       std::string start_j = "max_tiles_n";
       for (int io = 0; io < 2; ++io) {  // iterate through inside and outside
-        stream << indent() << "t_" << i << "_" << first_index << suffix << " = 0;" << endl;
-        stream << indent() << "t_" << i << "_j" << suffix << " = " << start_j << ";" << endl;
+        stream << indent() << "t_" << i << "_"
+               << first_index << suffix << " = 0;" << endl;
+        stream << indent() << "t_" << i << "_j"
+               << suffix << " = " << start_j << ";" << endl;
         if (!ast.grammar()->is_partof_outside()) {
           break;
         } else {
@@ -1675,6 +1677,10 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
         } else {
           suffix = OUTSIDE_IDX_SUFFIX;
           first_index = "diag";
+          if (io == 0) {
+            stream << indent() << "t_" << i << "_i"
+                   << suffix << " = 0;" << endl;
+          }
         }
       }
     }
@@ -2033,6 +2039,10 @@ void Printer::Cpp::header(const AST &ast) {
         } else {
           suffix = OUTSIDE_IDX_SUFFIX;
           first_index = "diag";
+          if (io == 0) {
+            stream << indent() << *type << " t_" << t << "_i" << suffix
+                   << ";" << endl;
+          }
         }
       }
     }

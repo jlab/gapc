@@ -999,16 +999,17 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      stream << indent() << "boost::archive::text_oarchive "
                             "array_out(array_fout);" << endl;
      for (size_t i = 0; i < n_tracks; i++) {
-       // archive the indices of the prior iteration to ensure
-       // that the whole iteration has been completed
+       // since a mutex is locked before every loop iteration that prevents
+       // any archiving before it is unlocked again,
+       // we can directly dump the indices without having to worry
+       // about potentially incomplete iterations
        std::string suffix = "";
        std::string first_index = "i";
        for (int io = 0; io < 2; ++io) {  // iterate through inside and outside
          stream << indent() << "array_out << t_" << i << "_" << first_index
-                << suffix << " " << (io == 0 ? "+" : "-") << " 1;" << endl;
+                << suffix << ";" << endl;
          stream << indent() << "array_out << "
-                << "(t_" << i << "_j" << suffix << " == 0 ? 0 : t_" << i << "_j"
-                << suffix << " " << (io == 0 ? "-" : "+") << " 1);" << endl;
+                << "t_" << i << "_j" << suffix << ";" << endl;
          if (!outside) {
            break;
          } else {
@@ -1016,6 +1017,10 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
            // here?
            suffix = "_outside";
            first_index = "diag";
+           if (io == 0) {
+             stream << indent() << "array_out << "
+                    << "t_" << i << "_i" << suffix << ";" << endl;
+           }
          }
        }
      }
@@ -1023,9 +1028,12 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      inc_indent();
      std::string suffix = "";
      for (int io = 0; io < 2; ++io) {  // iterate through inside and outside
-       stream << indent() << "array_out << outer_loop_1_idx" << suffix << ";" << endl;
-       stream << indent() << "array_out << outer_loop_2_idx" << suffix << ";" << endl;
-       stream << indent() << "array_out << inner_loop_2_idx" << suffix << ";" << endl;
+       stream << indent() << "array_out << outer_loop_1_idx"
+              << suffix << ";" << endl;
+       stream << indent() << "array_out << outer_loop_2_idx"
+              << suffix << ";" << endl;
+       stream << indent() << "array_out << inner_loop_2_idx"
+              << suffix << ";" << endl;
        if (!outside) {
          break;
        } else {
@@ -1095,15 +1103,22 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
          } else {
            suffix = "_outside";
            first_index = "diag";
+           if (io == 0) {
+             stream << indent() << "array_in >> "
+                    << "t_" << i << "_i" << suffix << ";" << endl;
+           }
          }
        }
      }
      stream << indent() << "#ifdef _OPENMP" << endl;
      std::string suffix = "";
      for (int io = 0; io < 2; ++io) {  // iterate through inside and outside
-       stream << indent() << "  array_in >> outer_loop_1_idx" << suffix << ";" << endl;
-       stream << indent() << "  array_in >> outer_loop_2_idx" << suffix << ";" << endl;
-       stream << indent() << "  array_in >> inner_loop_2_idx" << suffix << ";" << endl;
+       stream << indent() << "  array_in >> outer_loop_1_idx"
+              << suffix << ";" << endl;
+       stream << indent() << "  array_in >> outer_loop_2_idx"
+              << suffix << ";" << endl;
+       stream << indent() << "  array_in >> inner_loop_2_idx"
+              << suffix << ";" << endl;
        if (!outside) {
           break;
         } else {
