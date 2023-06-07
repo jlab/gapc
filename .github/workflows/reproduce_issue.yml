@@ -41,24 +41,24 @@ jobs:
 
     - name: Fynn
       run: |
-        gapc --outside_grammar ALL -o ref.cc testdata/grammar_outside/nodangle.gap
+        ./gapc --outside_grammar ALL -o ref.cc testdata/grammar_outside/nodangle.gap
         make -f ref.mf
         ./ref guugacguguacagucguagucguagucguaguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacuaucgguacuacgugacguugacguguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguagucguagcuguacgagggcuagucguagucugagucguagcugugucguagucguaucacuac > correct.txt
-        gapc --outside_grammar ALL --cyk -o ref_cyk.cc testdata/grammar_outside/nodangle.gap
+        ./gapc --outside_grammar ALL --cyk -o ref_cyk.cc testdata/grammar_outside/nodangle.gap
         make -f ref_cyk.mf
         ./ref_cyk guugacguguacagucguagucguagucguaguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacuaucgguacuacgugacguugacguguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguagucguagcuguacgagggcuagucguagucugagucguagcugugucguagucguaucacuac > cmp_1.txt
-        gapc --outside_grammar ALL --cyk -o ref_cyk_parallel.cc testdata/grammar_outside/nodangle.gap
+        ./gapc --outside_grammar ALL --cyk -o ref_cyk_parallel.cc testdata/grammar_outside/nodangle.gap
         CPPFLAGS="-fopenmp" make -f ref_cyk_parallel.mf
         ./ref_cyk_parallel guugacguguacagucguagucguagucguaguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacuaucgguacuacgugacguugacguguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguagucguagcuguacgagggcuagucguagucugagucguagcugugucguagucguaucacuac > cmp_2.txt
         diff correct.txt cmp_1.txt
         diff correct.txt cmp_2.txt
-        gapc --outside_grammar ALL --checkpoint -o cp_regular.cc testdata/grammar_outside/nodangle.gap
+        ./gapc --outside_grammar ALL --checkpoint -o cp_regular.cc testdata/grammar_outside/nodangle.gap
         make -f cp_regular.mf
         ./cp_regular guugacguguacagucguagucguagucguaguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacuaucgguacuacgugacguugacguguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguagucguagcuguacgagggcuagucguagucugagucguagcugugucguagucguaucacuac > cmp_3.txt
-        gapc --outside_grammar ALL --checkpoint -o cp_cyk.cc --cyk testdata/grammar_outside/nodangle.gap
+        ./gapc --outside_grammar ALL --checkpoint -o cp_cyk.cc --cyk testdata/grammar_outside/nodangle.gap
         make -f cp_cyk.mf
         ./cp_cyk guugacguguacagucguagucguagucguaguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacuaucgguacuacgugacguugacguguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguagucguagcuguacgagggcuagucguagucugagucguagcugugucguagucguaucacuac > cmp_4.txt
-        gapc --outside_grammar ALL --checkpoint -o cp_cyk_parallel.cc --cyk testdata/grammar_outside/nodangle.gap
+        ./gapc --outside_grammar ALL --checkpoint -o cp_cyk_parallel.cc --cyk testdata/grammar_outside/nodangle.gap
         CPPFLAGS="-fopenmp" make -f cp_cyk_parallel.mf
         ./cp_cyk_parallel guugacguguacagucguagucguagucguaguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacuaucgguacuacgugacguugacguguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguagucguagcuguacgagggcuagucguagucugagucguagcugugucguagucguaucacuac > cmp_5.txt
         diff correct.txt cmp_3.txt
@@ -99,24 +99,24 @@ jobs:
 
     - name: Fynn
       run: |
-        gapc --outside_grammar ALL -o ref.cc testdata/grammar_outside/nodangle.gap
+        ./gapc --outside_grammar ALL -o ref.cc testdata/grammar_outside/nodangle.gap
         make -f ref.mf
         ./ref guugacguguacagucguagucguagucguaguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacuaucgguacuacgugacguugacguguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguagucguagcuguacgagggcuagucguagucugagucguagcugugucguagucguaucacuac > correct.txt
-        gapc --outside_grammar ALL --cyk -o ref_cyk.cc testdata/grammar_outside/nodangle.gap
+        ./gapc --outside_grammar ALL --cyk -o ref_cyk.cc testdata/grammar_outside/nodangle.gap
         make -f ref_cyk.mf
         ./ref_cyk guugacguguacagucguagucguagucguaguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacuaucgguacuacgugacguugacguguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguagucguagcuguacgagggcuagucguagucugagucguagcugugucguagucguaucacuac > cmp_1.txt
-        gapc --outside_grammar ALL --cyk -o ref_cyk_parallel.cc testdata/grammar_outside/nodangle.gap
+        ./gapc --outside_grammar ALL --cyk -o ref_cyk_parallel.cc testdata/grammar_outside/nodangle.gap
         CPPFLAGS="-fopenmp" make -f ref_cyk_parallel.mf
         ./ref_cyk_parallel guugacguguacagucguagucguagucguaguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacuaucgguacuacgugacguugacguguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguagucguagcuguacgagggcuagucguagucugagucguagcugugucguagucguaucacuac > cmp_2.txt
         diff correct.txt cmp_1.txt
         diff correct.txt cmp_2.txt
-        gapc --outside_grammar ALL --checkpoint -o cp_regular.cc testdata/grammar_outside/nodangle.gap
+        ./gapc --outside_grammar ALL --checkpoint -o cp_regular.cc testdata/grammar_outside/nodangle.gap
         make -f cp_regular.mf
         ./cp_regular guugacguguacagucguagucguagucguaguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacuaucgguacuacgugacguugacguguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguagucguagcuguacgagggcuagucguagucugagucguagcugugucguagucguaucacuac > cmp_3.txt
-        gapc --outside_grammar ALL --checkpoint -o cp_cyk.cc --cyk testdata/grammar_outside/nodangle.gap
+        ./gapc --outside_grammar ALL --checkpoint -o cp_cyk.cc --cyk testdata/grammar_outside/nodangle.gap
         make -f cp_cyk.mf
         ./cp_cyk guugacguguacagucguagucguagucguaguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacuaucgguacuacgugacguugacguguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguagucguagcuguacgagggcuagucguagucugagucguagcugugucguagucguaucacuac > cmp_4.txt
-        gapc --outside_grammar ALL --checkpoint -o cp_cyk_parallel.cc --cyk testdata/grammar_outside/nodangle.gap
+        ./gapc --outside_grammar ALL --checkpoint -o cp_cyk_parallel.cc --cyk testdata/grammar_outside/nodangle.gap
         CPPFLAGS="-fopenmp" make -f cp_cyk_parallel.mf
         ./cp_cyk_parallel guugacguguacagucguagucguagucguaguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacuaucgguacuacgugacguugacguguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguagucguagcuguacgagggcuagucguagucugagucguagcugugucguagucguaucacuac > cmp_5.txt
         diff correct.txt cmp_3.txt
