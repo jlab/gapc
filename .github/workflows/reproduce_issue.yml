@@ -119,7 +119,9 @@ jobs:
         make -f cp_cyk.mf
         ./cp_cyk guugacguguacagucguagucguagucguaguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacuaucgguacuacgugacguugacguguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguagucguagcuguacgagggcuagucguagucugagucguagcugugucguagucguaucacuac -p 0:0:0:1 > cmp_4.txt
         ./gapc --outside_grammar ALL --checkpoint -o cp_cyk_parallel.cc --cyk testdata/grammar_outside/nodangle.gap
-        CPPFLAGS="-fopenmp" make -f cp_cyk_parallel.mf
+        CPPFLAGS_EXTRA=" -Xpreprocessor -fopenmp -lomp "
+        LDLIBS_EXTRA="-Xpreprocessor -fopenmp -lomp -I\"$(brew --prefix libomp)/include\" -L\"$(brew --prefix libomp)/lib\""
+        make -f cp_cyk_parallel.mf
         ./cp_cyk_parallel guugacguguacagucguagucguagucguaguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacuaucgguacuacgugacguugacguguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguagucguagcuguacgagggcuagucguagucugagucguagcugugucguagucguaucacuac -p 0:0:0:1 > cmp_5.txt
         diff correct.txt cmp_3.txt
         diff correct.txt cmp_4.txt
