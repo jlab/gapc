@@ -182,6 +182,14 @@ void print_insideoutside_report_fn(Printer::Cpp &stream, const AST &ast) {
         stmts = &((*loops->rbegin())->statements);
       }
 
+      // need to aquire lock before printing to stdout to avoid potential
+      // interference during simultaneous logging to stderr during archiving
+      // of checkpoints
+      if (ast.checkpoint && !ast.checkpoint->is_buddy) {
+        stmts->push_back(new Statement::CustomCode(
+          "std::lock_guard<std::mutex> lock(print_mutex);"));
+      }
+
       stmts->push_back(new Statement::CustomCode(
           "out << \"start answers " + *nt->name + "(\"" + idx_param +
           "\"):\\n\";"));
@@ -192,7 +200,7 @@ void print_insideoutside_report_fn(Printer::Cpp &stream, const AST &ast) {
 
       // produce call of "print_result"
       Statement::Fn_Call *fnp = new Statement::Fn_Call("print_result");
-      fnp->add_arg(new std::string("std::cout"));
+      fnp->add_arg(new std::string("out"));
       fnp->add_arg(res->name);
       stmts->push_back(fnp);
 

@@ -1836,8 +1836,8 @@ void Printer::Cpp::print_init_fn(const AST &ast) {
       stream << indent() << "}" << endl;
     }
     stream << indent() << "create_checkpoint_log(opts, arg_string);" << endl;
-    stream << indent() << "archive_periodically(cancel_token, ";
-    stream << "checkpoint_interval";
+    stream << indent() << "archive_periodically(cancel_token, "
+           << "checkpoint_interval, print_mutex";
     if (ast.checkpoint->cyk) {
       stream<< ", mutex";
     }
@@ -2004,6 +2004,7 @@ void Printer::Cpp::header(const AST &ast) {
     stream << indent() << "std::atomic_bool cancel_token;" << endl;
     stream << indent() << "bool keep_archives;" << endl;
     stream << indent() << "bool load_checkpoint;" << endl;
+    stream << indent() << "std::mutex print_mutex;" << endl;
     dec_indent();
   }
   stream << indent() << " public:" << endl;
@@ -2493,7 +2494,11 @@ void Printer::Cpp::print_value_pp(const AST &ast) {
     stream << indent() << '}' << endl;
     return;
   }
-
+  if (ast.checkpoint && !ast.checkpoint->is_buddy &&
+      !ast.outside_generation()) {
+    stream << indent()
+           << "std::lock_guard<std::mutex> lock(print_mutex);" << endl;
+  }
   stream << indent() << "if (isEmpty(res)) {" << endl;
   inc_indent();
   stream << indent() << "out << \"[]\\n\";" << endl;
