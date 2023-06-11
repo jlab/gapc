@@ -1316,11 +1316,12 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
                             "every interval seconds" << endl;
      stream << indent() << "cancel_token.store(true);" << endl;
      if (cyk) {
-       stream << indent() << "std::thread([=, &cancel_token, &mutex]() "
-              << "mutable {" << endl;
+       stream << indent()
+              << "std::thread([this, interval, &cancel_token, &mutex]() {"
+              << endl;
      } else {
-       stream << indent() << "std::thread([=, &cancel_token] () "
-            << "mutable {" << endl;
+       stream << indent()
+              << "std::thread([this, interval, &cancel_token] () {" << endl;
      }
      stream << indent() << "            while (cancel_token.load()) {"
             << endl;
