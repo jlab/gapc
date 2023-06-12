@@ -1,0 +1,139 @@
+name: github action build & CI
+
+on:
+  push:
+    branches: [ outside_cyk_openMPcheckpoint_issue ]
+  pull_request:
+    branches: [ outside_cyk_openMPcheckpoint_issue ]
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: true
+        default: 'warning'
+      tags:
+        description: 'Test scenario tags'
+
+jobs:
+  gapc_ubuntu:
+    strategy:
+      matrix:
+        # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
+        # as of 21st Sep 2021, ubuntu-16.04 is no longer supported by github actions: https://github.blog/changelog/2021-04-29-github-actions-ubuntu-16-04-lts-virtual-environment-will-be-removed-on-september-20-2021/
+        # 18.04 burnout: https://github.com/actions/runner-images/issues/6002
+        os: [ubuntu-20.04, ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Update apt
+      run: sudo apt-get update
+    - name: Install dependencies
+      run: sudo apt-get install flex bison make libboost-all-dev libgsl-dev python3 python3-pip
+
+    - uses: actions/checkout@v3
+      with:
+        ref: outside_cyk_openMPcheckpoint_issue
+    - name: configure
+      run: ./configure --prefix $GITHUB_WORKSPACE
+    - name: make
+      run: make -j 2
+    - name: make install
+      run: sudo make install
+
+    - name: Fynn
+      run: |
+        ./gapc --outside_grammar ALL -o ref.cc testdata/grammar_outside/nodangle.gap
+        make -f ref.mf
+        ./ref guugacguguacagucguagucguagucguaguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacuaucgguacuacgugacguugacguguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguagucguagcuguacgagggcuagucguagucugagucguagcugugucguagucguaucacuac > correct.txt
+        ./gapc --outside_grammar ALL --cyk -o ref_cyk.cc testdata/grammar_outside/nodangle.gap
+        make -f ref_cyk.mf
+        ./ref_cyk guugacguguacagucguagucguagucguaguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacuaucgguacuacgugacguugacguguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguagucguagcuguacgagggcuagucguagucugagucguagcugugucguagucguaucacuac > cmp_1.txt
+        ./gapc --outside_grammar ALL --cyk -o ref_cyk_parallel.cc testdata/grammar_outside/nodangle.gap
+        CPPFLAGS="-fopenmp" make -f ref_cyk_parallel.mf
+        ./ref_cyk_parallel guugacguguacagucguagucguagucguaguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacuaucgguacuacgugacguugacguguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguagucguagcuguacgagggcuagucguagucugagucguagcugugucguagucguaucacuac > cmp_2.txt
+        diff correct.txt cmp_1.txt
+        diff correct.txt cmp_2.txt
+        ./gapc --outside_grammar ALL --checkpoint -o cp_regular.cc testdata/grammar_outside/nodangle.gap
+        make -f cp_regular.mf
+        ./cp_regular guugacguguacagucguagucguagucguaguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacuaucgguacuacgugacguugacguguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguagucguagcuguacgagggcuagucguagucugagucguagcugugucguagucguaucacuac -p 0:0:0:1 > cmp_3.txt
+        ./gapc --outside_grammar ALL --checkpoint -o cp_cyk.cc --cyk testdata/grammar_outside/nodangle.gap
+        make -f cp_cyk.mf
+        ./cp_cyk guugacguguacagucguagucguagucguaguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacuaucgguacuacgugacguugacguguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguagucguagcuguacgagggcuagucguagucugagucguagcugugucguagucguaucacuac -p 0:0:0:1 > cmp_4.txt
+        ./gapc --outside_grammar ALL --checkpoint -o cp_cyk_parallel.cc --cyk testdata/grammar_outside/nodangle.gap
+        CPPFLAGS="-fopenmp" make -f cp_cyk_parallel.mf
+        ./cp_cyk_parallel guugacguguacagucguagucguagucguaguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacuaucgguacuacgugacguugacguguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguagucguagcuguacgagggcuagucguagucugagucguagcugugucguagucguaucacuac -p 0:0:0:1 > cmp_5.txt
+        diff correct.txt cmp_3.txt
+        diff correct.txt cmp_4.txt
+        diff correct.txt cmp_5.txt
+        
+    - name: run unger
+      run: ./gapc  testdata/grammar_outside/nodangle.gap  --outside_grammar ALL && make -f out.mf && ./out uaucgguacuacgugacguugacguguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacguga > unger_outside.res
+      
+    - name: run unger checkpoint
+      run: ./gapc  testdata/grammar_outside/nodangle.gap  --outside_grammar ALL --checkpoint && make -f out.mf && ./out uaucgguacuacgugacguugacguguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacguga -p 0:0:0:1 > unger_outside_checkpoint.res
+
+    - name: compare
+      run: diff unger_outside.res unger_outside_checkpoint.res
+      
+      
+  gapc_osx:
+    strategy:
+      matrix:
+        # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
+        os: [macos-11]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Install dependencies
+      run: brew install bison@2.7 cmake boost gsl gnu-sed libomp gmp cabal-install
+
+    - uses: actions/checkout@v3
+      with:
+        ref: outside_cyk_openMPcheckpoint_issue
+    - name: configure
+      run: ./configure --prefix $GITHUB_WORKSPACE
+    - name: patch configuration for OSX
+      run: gsed -E "s|^YACC = .+$|YACC = /usr/local/opt/bison@2.7/bin/bison|" -i config.mf && gsed -E "s|^SED = .+$|SED = /usr/local/opt/gnu-sed/libexec/gnubin/sed|" -i config.mf && gsed -E "s/ -D_XOPEN_SOURCE=500 / /" -i config.mf && gsed -E "s/ -std=c\+\+17 / -std=c\+\+11 /" -i config.mf
+    - name: make
+      run: make -j 3
+    - name: make install
+      run: sudo make install
+
+    - name: Fynn
+      run: |
+        ./gapc --outside_grammar ALL -o ref.cc testdata/grammar_outside/nodangle.gap
+        make -f ref.mf
+        ./ref guugacguguacagucguagucguagucguaguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacuaucgguacuacgugacguugacguguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguagucguagcuguacgagggcuagucguagucugagucguagcugugucguagucguaucacuac > correct.txt
+        ./gapc --outside_grammar ALL --cyk -o ref_cyk.cc testdata/grammar_outside/nodangle.gap
+        make -f ref_cyk.mf
+        ./ref_cyk guugacguguacagucguagucguagucguaguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacuaucgguacuacgugacguugacguguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguagucguagcuguacgagggcuagucguagucugagucguagcugugucguagucguaucacuac > cmp_1.txt
+        ./gapc --outside_grammar ALL --cyk -o ref_cyk_parallel.cc testdata/grammar_outside/nodangle.gap
+        CPPFLAGS_EXTRA=" -Xpreprocessor -fopenmp -lomp "
+        LDLIBS_EXTRA="-Xpreprocessor -fopenmp -lomp -I\"$(brew --prefix libomp)/include\" -L\"$(brew --prefix libomp)/lib\""
+        make -f ref_cyk_parallel.mf
+        ./ref_cyk_parallel guugacguguacagucguagucguagucguaguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacuaucgguacuacgugacguugacguguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguagucguagcuguacgagggcuagucguagucugagucguagcugugucguagucguaucacuac > cmp_2.txt
+        diff correct.txt cmp_1.txt
+        diff correct.txt cmp_2.txt
+        ./gapc --outside_grammar ALL --checkpoint -o cp_regular.cc testdata/grammar_outside/nodangle.gap
+        make -f cp_regular.mf
+        ./cp_regular guugacguguacagucguagucguagucguaguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacuaucgguacuacgugacguugacguguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguagucguagcuguacgagggcuagucguagucugagucguagcugugucguagucguaucacuac -p 0:0:0:1 > cmp_3.txt
+        ./gapc --outside_grammar ALL --checkpoint -o cp_cyk.cc --cyk testdata/grammar_outside/nodangle.gap
+        make -f cp_cyk.mf
+        ./cp_cyk guugacguguacagucguagucguagucguaguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacuaucgguacuacgugacguugacguguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguagucguagcuguacgagggcuagucguagucugagucguagcugugucguagucguaucacuac -p 0:0:0:1 > cmp_4.txt
+        ./gapc --outside_grammar ALL --checkpoint -o cp_cyk_parallel.cc --cyk testdata/grammar_outside/nodangle.gap
+        CPPFLAGS_EXTRA=" -Xpreprocessor -fopenmp -lomp "
+        LDLIBS_EXTRA="-Xpreprocessor -fopenmp -lomp -I\"$(brew --prefix libomp)/include\" -L\"$(brew --prefix libomp)/lib\""
+        make -f cp_cyk_parallel.mf
+        ./cp_cyk_parallel guugacguguacagucguagucguagucguaguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacuaucgguacuacgugacguugacguguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguagucguagcuguacgagggcuagucguagucugagucguagcugugucguagucguaucacuac -p 0:0:0:1 > cmp_5.txt
+        diff correct.txt cmp_3.txt
+        diff correct.txt cmp_4.txt
+        diff correct.txt cmp_5.txt
+        
+
+    - name: run unger
+      run: ./gapc  testdata/grammar_outside/nodangle.gap  --outside_grammar ALL && make -f out.mf && ./out uaucgguacuacgugacguugacguguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacguga > unger_outside.res
+      
+    - name: run unger checkpoint
+      run: ./gapc  testdata/grammar_outside/nodangle.gap  --outside_grammar ALL --checkpoint && make -f out.mf && ./out uaucgguacuacgugacguugacguguaucgguacuacgugaacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacgugacguugacguguaucgguacuacguga -p 0:0:0:1 > unger_outside_checkpoint.res
+
+    - name: compare
+      run: diff unger_outside.res unger_outside_checkpoint.res
+

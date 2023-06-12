@@ -1299,7 +1299,8 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
   void archive_periodically(Printer::Base &stream, const nt_tables &tables) {
      inc_indent();
      stream << indent() << "void archive_periodically(std::atomic_bool "
-                            "&cancel_token, size_t interval" << endl;
+                            "&cancel_token, size_t interval, "
+            << "std::mutex &print_mutex" << endl;
      if (cyk) {
      stream << indent() << "                          "
             << "#ifdef _OPENMP" << endl
@@ -1315,19 +1316,24 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      stream << indent() << "// save all tables to the disk periodically "
                             "every interval seconds" << endl;
      stream << indent() << "cancel_token.store(true);" << endl;
+     stream << indent()
+              << "std::thread([this, interval, &cancel_token, &print_mutex";
      if (cyk) {
-       stream << indent() << "std::thread([=, &cancel_token, &mutex]() "
-              << "mutable {" << endl;
-     } else {
-       stream << indent() << "std::thread([=, &cancel_token] () "
-            << "mutable {" << endl;
+       stream << ", &mutex";
      }
+     stream << "] {" << endl;
      stream << indent() << "            while (cancel_token.load()) {"
             << endl;
      stream << indent() << "              std::this_thread::sleep_for("
                             "std::chrono::seconds(interval));" << endl;
      stream << indent() << "              "
                             "if (!cancel_token.load()) break;" << endl;
+     stream << indent() << "              "
+            << "// need to aquire lock before printing to stderr in archive "
+            << "methods to avoid potential interference during "
+            << "simultaneous logging to stdout" << endl;
+     stream << indent() << "              "
+            << "std::lock_guard<std::mutex> print_lock(print_mutex);" << endl;
      if (cyk) {
        stream << indent() << "            #ifdef _OPENMP" << endl;
        stream << indent() << "              "
