@@ -37,7 +37,6 @@
 #include "../statement/fn_call.hh"
 #include "grammar_transformation.hh"
 
-
 void print_insideoutside_report_fn(Printer::Cpp &stream, const AST &ast);
 
 #endif  // SRC_OUTSIDE_CODEGEN_HH_

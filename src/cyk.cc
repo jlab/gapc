@@ -724,10 +724,6 @@ Statement::For *get_triag_traversal(
   }
   Expr::Less *cond_diag = new Expr::Less(diag, diag_end);
   Statement::For *fl_diag = new Statement::For(lv_diag, cond_diag);
-//  if (ast.checkpoint && ast.checkpoint->cyk) {
-//    blk_parallel_outside->statements.push_back(new Statement::CustomCode(
-//        "#pragma omp for ordered schedule(dynamic)"));
-//  } else {
   std::string pragma = std::string("#pragma omp for");
   if (cp == OMP_OUTSIDE_CP::A) {
     pragma += " ordered schedule(dynamic)";
@@ -735,7 +731,6 @@ Statement::For *get_triag_traversal(
   if (insert_pragma) {
     fl_diag->statements.push_back(new Statement::CustomCode(pragma));
   }
-//  }
 
   fl_diag->statements.push_back(fl_j);
 
@@ -808,14 +803,6 @@ std::list<Statement::Base*> *cyk_traversal_multithread_outside(const AST &ast,
      Expr::Base *seqsize, std::string *tile_size,
      Statement::Var_Decl *max_tiles, bool with_checkpoint, CYKmode mode,
      std::string part) {
-//   std::string var_ol1 = VARNAME_OuterLoop1;
-//   std::string var_il2 = VARNAME_InnerLoop2;
-//   if (mode == CYKmode::OPENMP_PARALLEL_OUTSIDE) {
-//     var_ol1 += OUTSIDE_IDX_SUFFIX;
-//     var_ol2 += OUTSIDE_IDX_SUFFIX;
-//     var_il2 += OUTSIDE_IDX_SUFFIX;
-//   }
-
   // as openMP currently only works for single track grammars
   size_t track = 0;
   std::list<Statement::Base*> *stmts = new std::list<Statement::Base*>();
