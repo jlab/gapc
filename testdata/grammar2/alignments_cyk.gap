@@ -48,7 +48,7 @@ algebra alg_maxMatch implements sig_alignments(alphabet = char, answer = int) {
 
 // pair-wise global alignment
 grammar gra_NWcyk uses sig_alignments(axiom=nt_const) {
-  nt_const = nt_left # h;
+  nt_const = nt_left | Sto(<EMPTY, EMPTY>) # h;
         
   nt_left = split(<ROPE, ROPE>, nt_right) # h;
   nt_right = splitR(A, <ROPE, ROPE>) # h;

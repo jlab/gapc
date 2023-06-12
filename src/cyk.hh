@@ -39,9 +39,14 @@
 #include "statement/fn_call.hh"
 #include "var_acc.hh"
 
+static const char *OUTSIDE_IDX_SUFFIX = "_outside";
+
 std::tuple<std::list<Statement::Base*>*, std::string*>
 get_tile_computation(const AST &ast, std::string *name_maxtilen,
                      Statement::Var_Decl *input_seq, bool just_tilesize);
+
+Statement::Var_Decl*
+get_tile_computation_outside(Statement::Var_Decl *input_seq);
 
 Fn_Def *print_CYK(const AST &ast);
 
