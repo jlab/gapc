@@ -185,6 +185,8 @@ void print_insideoutside_report_fn(Printer::Cpp &stream, const AST &ast) {
       // need to aquire lock before printing to stdout to avoid potential
       // interference during simultaneous logging to stderr during archiving
       // of checkpoints
+      // for more details see: https://github.com/jlab/gapc/pull/215 and
+      // https://github.com/jlab/gapc/pull/213
       if (ast.checkpoint && !ast.checkpoint->is_buddy) {
         stmts->push_back(new Statement::CustomCode(
           "std::lock_guard<std::mutex> lock(print_mutex);"));
