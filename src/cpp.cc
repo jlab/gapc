@@ -1611,6 +1611,7 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
     for (Statement::Base *stmt : *std::get<0>(tile_stmts)) {
       stream << *stmt << endl;
     }
+    stream << *get_tile_computation_outside(ast.seq_decls.front()) << endl;
     delete max_tiles_n_var;
   }
 
@@ -1623,25 +1624,63 @@ void Printer::Cpp::print_seq_init(const AST &ast) {
            << "(cyk_archive + \"_new\");" << endl << endl;
     stream << indent() << "#ifdef _OPENMP" << endl;
     inc_indent();
-    stream << indent() << "outer_loop_1_idx = 0;" << endl;
-    stream << indent() << "outer_loop_2_idx = 0;" << endl;
-    stream << indent() << "inner_loop_2_idx = 0;" << endl;
+    std::string suffix = "";
+    int start_ol1 = 0;
+    int start_ol2 = 0;
+    int start_il2 = 0;
+    for (int io = 0; io < 2; ++io) {  // iterate through inside and outside
+      stream << indent() << "outer_loop_1_idx" << suffix << " = "
+             << start_ol1 << ";" << endl;
+      stream << indent() << "outer_loop_2_idx" << suffix << " = "
+             << start_ol2 << ";" << endl;
+      stream << indent() << "inner_loop_2_idx" << suffix << " = "
+             << start_il2 << ";" << endl;
+      if (!ast.grammar()->is_partof_outside()) {
+        break;
+      } else {
+        suffix = OUTSIDE_IDX_SUFFIX;
+        start_ol1 = -1;
+        start_ol2 = 1;
+        start_il2 = 0;
+      }
+    }
     for (size_t i = 0; i < ast.grammar()->axiom->tracks(); i++) {
-      stream << indent() << "t_" << i << "_i = 0;" << endl;
-      stream << indent() << "t_" << i << "_j = max_tiles_n;" << endl;
+      std::string suffix = "";
+      std::string first_index = "i";
+      std::string start_j = "max_tiles_n";
+      for (int io = 0; io < 2; ++io) {  // iterate through inside and outside
+        stream << indent() << "t_" << i << "_"
+               << first_index << suffix << " = 0;" << endl;
+        stream << indent() << "t_" << i << "_j"
+               << suffix << " = " << start_j << ";" << endl;
+        if (!ast.grammar()->is_partof_outside()) {
+          break;
+        } else {
+          suffix = OUTSIDE_IDX_SUFFIX;
+          first_index = "diag";
+          start_j = "0";
+        }
+      }
     }
     dec_indent();
     stream << indent() << "#else" << endl;
     inc_indent();
     for (size_t i = 0; i < ast.grammar()->axiom->tracks(); i++) {
       std::string suffix = "";
+      std::string first_index = "i";
       for (int io = 0; io < 2; ++io) {  // iterate through inside and outside
-        stream << indent() << "t_" << i << "_i" << suffix << " = 0;" << endl;
+        stream << indent() << "t_" << i << "_" << first_index << suffix
+               << " = 0;" << endl;
         stream << indent() << "t_" << i << "_j" << suffix << " = 0;" << endl;
         if (!ast.grammar()->is_partof_outside()) {
           break;
         } else {
           suffix = OUTSIDE_IDX_SUFFIX;
+          first_index = "diag";
+          if (io == 0) {
+            stream << indent() << "t_" << i << "_i"
+                   << suffix << " = 0;" << endl;
+          }
         }
       }
     }
@@ -1797,8 +1836,8 @@ void Printer::Cpp::print_init_fn(const AST &ast) {
       stream << indent() << "}" << endl;
     }
     stream << indent() << "create_checkpoint_log(opts, arg_string);" << endl;
-    stream << indent() << "archive_periodically(cancel_token, ";
-    stream << "checkpoint_interval";
+    stream << indent() << "archive_periodically(cancel_token, "
+           << "checkpoint_interval, print_mutex";
     if (ast.checkpoint->cyk) {
       stream<< ", mutex";
     }
@@ -1965,6 +2004,7 @@ void Printer::Cpp::header(const AST &ast) {
     stream << indent() << "std::atomic_bool cancel_token;" << endl;
     stream << indent() << "bool keep_archives;" << endl;
     stream << indent() << "bool load_checkpoint;" << endl;
+    stream << indent() << "std::mutex print_mutex;" << endl;
     dec_indent();
   }
   stream << indent() << " public:" << endl;
@@ -1980,6 +2020,7 @@ void Printer::Cpp::header(const AST &ast) {
   if (ast.cyk()) {
     stream << indent() << "unsigned int tile_size, max_tiles;" << endl;
     stream << indent() << "int max_tiles_n;" << endl;
+    stream << indent() << "int num_tiles_per_axis;" << endl;
   }
 
   if (ast.checkpoint && ast.checkpoint->cyk) {
@@ -1988,21 +2029,41 @@ void Printer::Cpp::header(const AST &ast) {
     stream << indent() << "// indices for cyk loops" << endl;
     for (size_t t = 0; t < ast.grammar()->axiom->tracks(); t++) {
       std::string suffix = "";
+      std::string first_index = "i";
       for (int io = 0; io < 2; ++io) {  // iterate through inside and outside
-        stream << indent() << *type << " t_" << t << "_i" << suffix
-               << ";" << endl;
+        stream << indent() << *type << " t_" << t << "_" << first_index
+               << suffix << ";" << endl;
         stream << indent() << *type << " t_" << t << "_j" << suffix
                << ";" << endl;
         if (!ast.grammar()->is_partof_outside()) {
           break;
         } else {
           suffix = OUTSIDE_IDX_SUFFIX;
+          first_index = "diag";
+          if (io == 0) {
+            stream << indent() << *type << " t_" << t << "_i" << suffix
+                   << ";" << endl;
+          }
         }
       }
     }
     stream << "#ifdef _OPENMP" << endl;
-    stream << indent() << "int outer_loop_1_idx, outer_loop_2_idx, "
-           << "inner_loop_2_idx;" << endl;
+    stream << indent() << "int ";
+    std::string suffix = "";
+    for (int io = 0; io < 2; ++io) {  // iterate through inside and outside
+      stream << "outer_loop_1_idx" << suffix << ", "
+             << "outer_loop_2_idx" << suffix << ", "
+             << "inner_loop_2_idx" << suffix;
+      if (!ast.grammar()->is_partof_outside()) {
+        break;
+      } else {
+        if (io == 0) {
+          stream << ", ";
+        }
+        suffix = OUTSIDE_IDX_SUFFIX;
+      }
+    }
+    stream << ";" << endl;
     stream << "#endif" << endl;
     delete type;
   }
@@ -2433,7 +2494,11 @@ void Printer::Cpp::print_value_pp(const AST &ast) {
     stream << indent() << '}' << endl;
     return;
   }
-
+  if (ast.checkpoint && !ast.checkpoint->is_buddy &&
+      !ast.outside_generation()) {
+    stream << indent()
+           << "std::lock_guard<std::mutex> lock(print_mutex);" << endl;
+  }
   stream << indent() << "if (isEmpty(res)) {" << endl;
   inc_indent();
   stream << indent() << "out << \"[]\\n\";" << endl;
