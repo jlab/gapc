@@ -956,7 +956,6 @@ void Grammar::convert_to_outside() {
     }
   }
 
-  // TODO(smj): double check if this is necessary or at least do a silent test
   /* re-run "check_semantics" to properly initialize novel non-
    * terminals, links to non-terminals, update yield size analysis and
    * update table dimensions for NTs
