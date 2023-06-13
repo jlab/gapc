@@ -949,12 +949,12 @@ void Grammar::convert_to_outside() {
    * We therefore here reset the flag of all NTs to enable re-computation
    * of optimal table dimensions ... within the outside context.
    */
-  for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin();
-       i != NTs.end(); ++i) {
-    if ((*i).second->is(Symbol::NONTERMINAL)) {
-      dynamic_cast<Symbol::NT*>((*i).second)->reset_table_dim();
-    }
-  }
+//  for (hashtable<std::string, Symbol::Base*>::iterator i = NTs.begin();
+//       i != NTs.end(); ++i) {
+//    if ((*i).second->is(Symbol::NONTERMINAL)) {
+//      dynamic_cast<Symbol::NT*>((*i).second)->reset_table_dim();
+//    }
+//  }
 
   /* re-run "check_semantics" to properly initialize novel non-
    * terminals, links to non-terminals, update yield size analysis and
