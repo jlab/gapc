@@ -148,13 +148,35 @@ bool is_terminal_type(Type::Base *t) {
   if (t->is(Type::SINGLE)) {
     return t->is_terminal();
   }
+  if (t->is(Type::REFERENCABLE)) {  // a pointer to an object
+    return (dynamic_cast<Type::Referencable*>(t)->base->is_terminal());
+  }
+  if (t->is(Type::SIGNATURE) ||  // a basic ADP component
+      t->is(Type::TABLE) ||  // a DP matrix to store non-terminal results
+      t->is(Type::LIST) ||  // the answer list of an algebra function
+      t->is(Type::TUPLE) ||  // a pair of results
+      t->is(Type::CHOICE) ||  // flag an algebra function as a choice function
+      t->is(Type::RANGE) ||  // codegen, set of begin/end iterators
+      t->is(Type::SIZE)  // internal type for code generation = unsigned int
+      ) {
+    return false;
+  }
+  if ((dynamic_cast<Type::Name*>(t)) ||  // the name of a new user defined tuple
+      (dynamic_cast<Type::Def*>(t)) ||  // definition of a new user type
+      (dynamic_cast<Type::Table*>(t)) ||  // a DP matrix, see Type::TABLE
+      (dynamic_cast<Type::Generic*>(t))  // base class with a name
+     ) {
+    return false;
+  }
+  if (dynamic_cast<Type::Base*>(t)) {
+    // last resort, check if the base class is flagged a being a terminal
+    return t->is_terminal();
+  }
 
-  /* TODO(sjanssen): I need to find out if following types are either terminals
-   * or not: Signature, Table, Base, List, Name, Tuple, Def, Choice, Size,
-   *         Range, Table, Generic, Referencable
-   */
-  assert(false && "I have been lazy and did not yet define if above mentioned"
-                  " types are terminals or not");
+  throw LogError(t->location, "Unknown Type, thus I cannot determine if it is "
+                              "a terminal type or not. Please extend function "
+                              "is_terminal_type in src/outside/grammar_transfo"
+                              "rmation.cc of gapc sources!");
   return false;
 }
 
