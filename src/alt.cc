@@ -1075,25 +1075,6 @@ Expr::Base *Alt::next_index_var(unsigned &k, size_t track,
   const Yield::Size &ys, const Yield::Size &lhs, const Yield::Size &rhs,
   std::list<Statement::For*> &loops,
   bool for_outside_generation, bool outmost, bool is_left_not_right) {
-#ifdef LOOPDEBUG
-  std::cerr << "    next_index_var next_var=";
-  if (next_var) {
-    std::cerr << *next_var;
-  } else {
-    std::cerr << "NULL";
-  }
-  std::cerr << ", last_var=";
-  if (last_var) {
-    std::cerr << *last_var;
-  } else {
-    std::cerr << "NULL";
-  }
-  std::cerr << ", lhs=" << lhs;
-  std::cerr << ", ys=" << ys;
-  std::cerr << ", rhs=" << rhs;
-  std::cerr << ", outmost=" << (outmost ? "yes": "no");
-#endif
-
   /* only for outside NTs:
    * If left/right of the rhs outside NT are grammar components with at least
    * one moving boundary, we need to start leftmost/rightmost with a new
@@ -1115,15 +1096,8 @@ Expr::Base *Alt::next_index_var(unsigned &k, size_t track,
     outmost = false;
   }
 
-#ifdef LOOPDEBUG
-  std::cerr << ", outmost_l2=" << (outmost ? "yes": "no");
-#endif
-
   if ((ys.low() != ys.high()) || outmost) {
     if ((rhs.low() == rhs.high()) && !outmost) {
-#ifdef LOOPDEBUG
-      std::cerr << " --> " << *right << "\n";
-#endif
       return right;
     } else {
       std::ostringstream o;
@@ -1172,21 +1146,9 @@ Expr::Base *Alt::next_index_var(unsigned &k, size_t track,
       Statement::For *f = new Statement::For (loopvariable, cond);
       loops.push_back(f);
 
-#ifdef LOOPDEBUG
-      std::cerr << " --> " << *ivar << "\n";
-#endif
       return ivar;
     }
   } else {
-#ifdef LOOPDEBUG
-    std::cerr << " --> ";
-    if (next_var) {
-      std::cerr << *next_var;
-    } else {
-      std::cerr << "NULL";
-    }
-    std::cerr << "\n";
-#endif
     return next_var;
   }
 }

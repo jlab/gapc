@@ -21,6 +21,49 @@
 
 }}} */
 
+/* After transforming the inside grammar into a grammar that also contains
+ * outside non-terminals, we need to ensure that parser components (terminals
+ * and non-terminals) of algebra functions operate in reverse direction, i.e.
+ * from i,j towards left and right ends of the input sequence - instead of
+ * further splitting i,j into smaller pieces.
+ *
+ * For inside non-terminals we split a given subword i,j into multiple parts,
+ * e.g. bl(BASE, REGION, weak, BASE) will be split into
+ * bl({i}_BASE_{i+1}, {i+1}_REGION_{k1}, {k1}_weak_{k2}, {k2}_BASE_{k2+1})
+ * --> two moving boundaries to split i,j into two variable parts + two
+ * constant BASE parts. Yield sizes dictate positions of moving boundaries.
+ *
+ * An outside non-terminal needs to "grow" towards left/right end of the input
+ * sequence, e.g.
+ * bl({k1+1}_BASE_{k1}, {k1}_REGION_{i}, {i}_outside_weak_{j}, {j}_BASE_{j+1})
+ *
+ * It is important to know that by definition, only one outside non-terminal can
+ * occur on the r.h.s. of and outside non-terminal. Thus, this single r.h.s.
+ * outside non-terminal is the starting point from which indices need to be
+ * assigned independently towards left and right end of the input sequence.
+ * Furthermore, indices of this single r.h.s. outside non-terminal must be
+ * expanded to encompas the complete sub-word, e.g.
+ *      ..., {i}_outside_weak_{j}, ....
+ * must become
+ *      ..., {k1+1}_outside_weak_{j+1}
+ * for our example.
+ *
+ * Since production rules can be nested, e.g.
+ *     cadd(incl(dangle), ml_comps1)
+ * (see testdata/grammar_outside/mini_twoLevelIL.gap for more complex examples)
+ * we operate in three phases here:
+ *   1) identify the single r.h.s. outside non-terminal and collect all
+ *      "Parsers" (terminal or non-terminal) left and right of this pivotal
+ *      element.
+ *      functions: "outside_collect_parsers"
+ *   2) assign indices and moving boundaries from the pivotal parser towards
+ *      the left/right ends of the input sequence
+ *      function: "iterate_indices"
+ *   3) propagate the left/right-most indices to the single r.h.s. outside
+ *      non-terminal (= the pivotal parser)
+ *      functions: "outside_uppropagate_indices"
+ */
+
 #include "middle_end.hh"
 
 
@@ -216,9 +259,6 @@ void iterate_indices(bool is_left_not_right,
     Yield::Size rhs_ys(rhs);
     rhs_ys += ys;
 
-#ifdef LOOPDEBUG
-  std::cerr << (is_left_not_right ? "2" : "4") << ") ";
-#endif
     next_var = Alt::next_index_var(
         k, track, next_var, last_var, upstream_index,
         ys, lhs, rhs, (*i)->simple_loops, true, false, is_left_not_right);
@@ -293,17 +333,6 @@ void iterate_indices(bool is_left_not_right,
 void outside_init_indices(
     Alt::Base *alt, Expr::Vacc *left, Expr::Vacc *right, unsigned int &k,
     size_t track, Expr::Vacc *left_most, Expr::Vacc *right_most) {
-#ifdef LOOPDEBUG
-  if (alt->is(Alt::SIMPLE)) {
-    std::cerr << "  alt::Simple '"
-              << *(dynamic_cast<Alt::Simple*>(alt)->name) << "':\n";
-  } else if (alt->is(Alt::LINK)) {
-    std::cerr << "  alt::Link '"
-              << *(dynamic_cast<Alt::Link*>(alt)->name) << "':\n";
-  } else {
-    std::cerr << "  alt '?':\n";
-  }
-#endif
   std::vector<Parser*> left_parser;
   std::vector<Parser*> right_parser;
   unsigned int num_outside_nts = 0;
@@ -326,9 +355,6 @@ void outside_init_indices(
   // phase 2: based on the collected Parsers, assign left and right indices
   // to Parsers for grammar components LEFT of outside NT
   Yield::Size ys_all = sum_ys(left_parser, 0);
-#ifdef LOOPDEBUG
-  std::cerr << "1) ";
-#endif
   // +99 to ensure that we skip ALL elements of the left_parser list
   Yield::Size ys_lhs = sum_ys(left_parser, left_parser.size()+99);
   Yield::Size ys;
@@ -342,9 +368,6 @@ void outside_init_indices(
   // for grammar components RIGHT of outside NT
   if (right_parser.size() > 0) {
     ys_all = sum_ys(right_parser, 0);
-#ifdef LOOPDEBUG
-  std::cerr << "3) ";
-#endif
     // +99 to ensure that we skip ALL elements of the right_parser list
     Yield::Size ys_rhs = sum_ys(right_parser, right_parser.size() + 99);
 
