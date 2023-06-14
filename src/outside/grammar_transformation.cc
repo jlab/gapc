@@ -550,6 +550,11 @@ struct Flip_lhs_rhs_nonterminals : public Visitor {
     // remove all alternatives
     lhs_nt->alts.clear();
   }
+  ~Flip_lhs_rhs_nonterminals() {
+    delete alt_clones;
+    delete lhs_nt->name;
+    delete lhs_nt;
+  }
   void visit(Alt::Base &alt) {
     if (alt.top_level) {
       // record the current top level alternative. Starting point for cloning
@@ -680,6 +685,9 @@ struct Collect_and_Insert_outside_axioms : public Visitor {
       hashtable<std::string, Symbol::Base*> outside_nts) :
         outside_nts(outside_nts) {
     terminating_lhs_nts = new std::set<Symbol::NT*>();
+  }
+  ~Collect_and_Insert_outside_axioms() {
+    delete terminating_lhs_nts;
   }
 
   void visit(Alt::Link &alt) {
