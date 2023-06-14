@@ -39,7 +39,7 @@
 #include "statement/fn_call.hh"
 #include "var_acc.hh"
 
-static const char *OUTSIDE_IDX_SUFFIX = "_outside";
+static const char * const OUTSIDE_IDX_SUFFIX = "_outside";
 
 std::tuple<std::list<Statement::Base*>*, std::string*>
 get_tile_computation(const AST &ast, std::string *name_maxtilen,
