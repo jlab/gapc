@@ -225,5 +225,7 @@ void print_insideoutside_report_fn(Printer::Cpp &stream, const AST &ast) {
   stream << *fn << endl;
 
   stream.in_class = old_in_class;
+
+  delete report_nts;
 }
 
