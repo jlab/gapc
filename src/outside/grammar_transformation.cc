@@ -93,6 +93,8 @@ void Grammar::check_outside_requested_nonexisting_nts() {
     }
     throw LogError(this->location, msg);
   }
+
+  delete warn_missing_nts;
 }
 
 // traverses the grammar and collect all algebra function names used
