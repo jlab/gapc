@@ -232,7 +232,7 @@ class Grammar {
    */
   void convert_to_outside();
 
-  const bool is_partof_outside() {
+  bool is_partof_outside() const {
     return _is_partof_outside;
   }
   void set_partof_outside() {

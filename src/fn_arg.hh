@@ -150,7 +150,7 @@ class Base {
     virtual void init_multi_ys() = 0;
     virtual const Yield::Multi &multi_ys() const { return m_ys; }
 
-    const bool is_partof_outside() {
+    bool is_partof_outside() const {
       return _is_partof_outside;
     }
     void set_partof_outside() {

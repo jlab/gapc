@@ -338,7 +338,7 @@ class Base {
   virtual unsigned int* to_dot(unsigned int *nodeID, std::ostream &out,
           int plot_level);
 
-  const bool is_partof_outside() {
+  bool is_partof_outside() const {
     return _is_partof_outside;
   }
   void set_partof_outside() {
@@ -533,7 +533,7 @@ class Simple : public Base {
 
  public:
   void set_ntparas(std::list<Expr::Base*> *l);
-  const std::list<Expr::Base*> get_ntparas() {
+  std::list<Expr::Base*> get_ntparas() const {
     return ntparas;
   }
   void remove_ntparas() {
@@ -689,7 +689,7 @@ class Link : public Base {
 
  public:
   void set_ntparas(const Loc &loc, std::list<Expr::Base*> *l);
-  const std::list<Expr::Base*> get_ntparas() {
+  std::list<Expr::Base*> get_ntparas() const {
     return ntparas;
   }
   void remove_ntparas() {
