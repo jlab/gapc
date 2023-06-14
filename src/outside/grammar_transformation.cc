@@ -552,7 +552,7 @@ struct Flip_lhs_rhs_nonterminals : public Visitor {
   }
   ~Flip_lhs_rhs_nonterminals() {
     delete alt_clones;
-    delete lhs_nt->name;
+    // delete lhs_nt->name; --> leads to failing mod_test_outside?!
     delete lhs_nt;
   }
   void visit(Alt::Base &alt) {
