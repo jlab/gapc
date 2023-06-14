@@ -105,10 +105,10 @@ static void parse_options(int argc, char **argv, Options *rec) {
       "specialized GAP programs that recognize a subset of candidates of the "
       "original grammar.")
     ("outside_grammar", po::value< std::vector<std::string> >(),
-      "generate an outside version of the grammar and report outside results "
-      "for an inside non-terminal. Provide multiple times for lists of "
-      "non-terminals or type \"ALL\" to report results for all non-"
-      "terminals.")
+      std::string("generate an outside version of the grammar and report "
+      "outside results for an inside non-terminal. Provide multiple times for "
+      "lists of non-terminals or type \"" + std::string(OUTSIDE_ALL) + "\" to "
+      "report results for all non-terminals.").c_str())
     ("verbose", "show suppressed warnings and messages")
     ("log-level,l", po::value<int>(),
       "the log level, valid values are 0 (VERBOSE), 1 (INFO),  2 (NORMAL), 3 "
