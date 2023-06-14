@@ -163,8 +163,7 @@ bool is_terminal_type(Type::Base *t) {
       ) {
     return false;
   }
-  if ((dynamic_cast<Type::Name*>(t)) ||  // the name of a new user defined tuple
-      (dynamic_cast<Type::Def*>(t)) ||  // definition of a new user type
+  if ((dynamic_cast<Type::Def*>(t)) ||  // definition of a new user type
       (dynamic_cast<Type::Table*>(t)) ||  // a DP matrix, see Type::TABLE
       (dynamic_cast<Type::Generic*>(t))  // base class with a name
      ) {
