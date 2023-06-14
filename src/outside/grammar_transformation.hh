@@ -39,8 +39,8 @@
 #include "../type/multi.hh"
 #include "../fn_arg.hh"
 
-static const char *OUTSIDE_NT_PREFIX = "outside_";
-static const char *OUTSIDE_ALL = "ALL";
+static const char * const OUTSIDE_NT_PREFIX = "outside_";
+static const char * const OUTSIDE_ALL = "ALL";
 
 // check if a type (used in Signature or Algebra) belongs to a terminal parser
 // or a non-terminal parser
