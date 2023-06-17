@@ -127,8 +127,15 @@ inline bool samesize(const Basic_Sequence<a1, pos_type> &s1,
   return j1-i1 == j2-i2;
 }
 
-// for the transition from outside parts of a outside generated grammar into
-// the inside parts.
+/* only for outside grammar generation: an outside parse (= a derivation
+ * starting at one of the outside_X non-terminals) at (i,j) consumes user input
+ * towards (0,n) by either extending towards the outside with another outside
+ * non-terminal or consumes subwords within (i,j) via inside non-terminals.
+ * Once the parse is maximal, we need to transition to the original inside
+ * rule that parsed the empty word to provide the recursion basis. This is what
+ * the complete_track filter ensures: the remaining input sub-word only
+ * "consumes" the empty word at the end, i.e. (n,n).
+ */
 template<typename alphabet, typename pos_type, typename T>
 inline bool complete_track(
     const Basic_Sequence<alphabet, pos_type> &seq, T i, T j) {
