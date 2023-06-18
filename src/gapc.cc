@@ -108,7 +108,8 @@ static void parse_options(int argc, char **argv, Options *rec) {
       std::string("generate an outside version of the grammar and report "
       "outside results for an inside non-terminal. Provide multiple times for "
       "lists of non-terminals or type \"" + std::string(OUTSIDE_ALL) + "\" to "
-      "report results for all non-terminals.").c_str())
+      "report results for all non-terminals.\nRefer to --plot-grammar should "
+      "you want 'see' the generated grammar.").c_str())
     ("verbose", "show suppressed warnings and messages")
     ("log-level,l", po::value<int>(),
       "the log level, valid values are 0 (VERBOSE), 1 (INFO),  2 (NORMAL), 3 "
