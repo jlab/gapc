@@ -25,10 +25,10 @@
 
 
 std::list<Symbol::NT*> *NTs_to_report(const AST &ast) {
-  /* define which non-terminals shell be reported to the user
+  /* define which non-terminals shall be reported to the user
    * order of user arguments (--outside_grammar) shall take precedence over
    * NTs as occurring in source code of grammar.
-   * - User shell be warned, if outside version of NT has not been generated.
+   * - User shall be warned, if outside version of NT has not been generated.
    *   This happens for NTs without rhs NTs.
    * - User was already informed about NTs he/she requested but are not part of
    *   the grammar. */
