@@ -776,8 +776,6 @@ void Type::Base::to_dot(std::ostream &out) {
   this->put(dtype_stream);
   std::string dtype = dtype_stream.str();
   replaceAll(dtype, "&",  "&amp;");
-  replaceAll(dtype, "\"", "&quot;");
-  replaceAll(dtype, "\'", "&apos;");
   replaceAll(dtype, "<",  "&lt;");
   replaceAll(dtype, ">",  "&gt;");
   out << dtype;
@@ -790,8 +788,6 @@ void Fn_Arg::Base::to_dot(std::ostream &out) {
   this->print(stream);
   std::string rep = stream.str();
   replaceAll(rep, "&",  "&amp;");
-  replaceAll(rep, "\"", "&quot;");
-  replaceAll(rep, "\'", "&apos;");
   replaceAll(rep, "<",  "&lt;");
   replaceAll(rep, ">",  "&gt;");
 
