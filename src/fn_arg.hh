@@ -136,6 +136,8 @@ class Base {
 
     virtual void print(std::ostream &s) = 0;
 
+    void to_dot(std::ostream &out);
+
     virtual bool choice_set() = 0;
 
  protected:
