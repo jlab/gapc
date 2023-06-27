@@ -332,7 +332,10 @@ inline tensor matmul(const TensorSlice &lhs, const TensorSlice &rhs) {
 }
 
 
-#if defined(BATCHED_INPUT) && defined(ALL_INPUT_TENSORS_SAME)
+// these functions are helper functions that are very use-case specific
+// and can probably be removed at some point (TODO(fymue): remove these later)
+#if defined(BATCHED_INPUT) && defined(ALL_INPUT_TENSORS_SAME) \
+    && INPUT_TENSOR_DIMS == 2
 // multiply all values of "batch" with "true_scalar" where a == b,
 // else multiply with "false_scalar" where a != b
 template<typename T = float, int SIZE = MAX_BATCH_SIZE, typename SCALAR = float>
