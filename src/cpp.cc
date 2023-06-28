@@ -1105,6 +1105,12 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   if (pytorch && batched_input) {
     stream << indent() << "std::vector<OUTPUT_CPP_TYPE> array;" << endl;
   } else {
+    if (dtype.is(Type::TENSORBATCH) && !batched_input) {
+      Log::instance()->error("Can't specify a TensorBatch data type "
+                             "(I32batch, F32batch ...) as a table answer type "
+                             "if non-batched input tensors are provided.");
+      std::exit(1);
+    }
     stream << indent() << "std::vector<" << dtype << "> array;" << endl;
   }
   if (t.for_derivatives) {
@@ -3459,6 +3465,22 @@ void Printer::Cpp::print_pytorch_init_fn(const AST &ast) {
   if (ast.input.tensor_inputs.all_batched()) {
     stream << indent()
            << "BATCH_SIZE = __t_0_tensor.sizes().front();" << endl;
+    stream << indent() << "bool all_batch_sizes_same = true;" << endl;
+    std::vector<Statement::Var_Decl*>::const_iterator i = ast.seq_decls.begin();
+    ++i;
+    track = 1;
+    for (; i != ast.seq_decls.end(); ++i, ++track) {
+      stream << indent() << "all_batch_sizes_same &= __t_" << track
+             << "_tensor.sizes().front() == BATCH_SIZE;" << endl;
+    }
+    stream << indent() << "if (!all_batch_sizes_same) {" << endl;
+    inc_indent();
+    stream << indent() << "std::cerr << \"Warning: The sizes of the batch "
+           << "dimension of some input tensors are not equal!\\n Please "
+           << "provide only input tensors with equal-sized batch dimensions."
+           << "\\n\";" << endl;
+    dec_indent();
+    stream << indent() << "}" << endl;
     stream << indent() << "tensor_size.push_back(BATCH_SIZE);" << endl << endl;
   }
 

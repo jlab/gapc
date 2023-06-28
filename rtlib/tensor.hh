@@ -477,4 +477,23 @@ inline bool isEmpty(const TensorSlice &t) {
   return t.isEmpty();
 }
 
+// ### filters ###
+
+template<typename T>
+inline bool samesize(const TensorSlice &ts, T i1, T j1, T i2, T j2) {
+  assert(i1 <= j1);
+  assert(i2 <= j2);
+  return j1 - i1 == j2 - i2;
+}
+
+template<typename pos_type, typename T>
+inline bool minsize(const TensorSlice &ts, T i, T j, int l) {
+  return j - i >= static_cast<pos_type>(l);
+}
+
+template<typename pos_type, typename T>
+inline bool maxsize(const TensorSlice &ts, T i, T j, int l) {
+  return j - i <= static_cast<pos_type>(l);
+}
+
 #endif  // RTLIB_TENSOR_HH_
