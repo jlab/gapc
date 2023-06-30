@@ -1148,6 +1148,57 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
     }
     dec_indent();
     stream << indent() << "}" << endl << endl;
+    stream << indent() << "tensor convert_triu_to_tensor() {" << endl;
+    inc_indent();
+    stream << indent()
+           << "if (get_table_size() != TableSize::TRIU) {" << endl;
+    inc_indent();
+    stream << indent() << "std::cerr << \"Error: Cannot convert "
+           << "non-triangular DP table to Tensor!\\n\";" << endl;
+    stream << indent()
+           << "return torch::zeros({1}, torch::kFloat32);" << endl;
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
+    stream << indent() << "unsigned int n = t_0_right_most + 1;" << endl;
+    std::string torch_type, cpp_type, n_dims, tensor_size;
+    if (batched_input) {
+      torch_type = "OUTPUT_TORCH_TYPE";
+      cpp_type = "OUTPUT_CPP_TYPE";
+      n_dims = "3";
+      tensor_size = "{n, n, BATCH_SIZE}";
+    } else {
+      torch_type = get_torch_type(dtype);
+      cpp_type = get_macro_type(dtype).second;
+      n_dims = "2";
+      tensor_size = "{n, n}";
+    }
+    stream << indent() << "tensor t = torch::zeros(" << tensor_size
+           << ", " << torch_type << ");" << endl;
+    stream << indent() << "torch::TensorAccessor<" << cpp_type
+           << ", " << n_dims << "> t_accessor = t.accessor<"
+           << cpp_type << ", " << n_dims << ">();" << endl;
+    stream << indent()
+           << "for (unsigned int i = t_0_left_most; i < n; ++i) {" << endl;
+    inc_indent();
+    stream << indent()
+           << "for (unsigned int j = i; i < n; ++j) {" << endl;
+    inc_indent();
+    if (batched_input) {
+      stream << indent() << "TensorBatch batch = get(i, j);" << endl;
+      stream << indent() << "for (int b = 0; b < BATCH_SIZE; ++b) {" << endl;
+      inc_indent();
+      stream << indent() << "t_accessor[i][j][b] = batch[b];" << endl;
+      dec_indent();
+      stream << indent() << "}" << endl;
+    } else {
+      stream << indent() << "t_accessor[i][j] = get(i, j);" << endl;
+    }
+    dec_indent();
+    stream << indent() << "}" << endl;
+    dec_indent();
+    stream << indent() << "}" << endl << indent() << "return t;" << endl;
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
     if (batched_input) {
       stream << indent()
              << "OUTPUT_CPP_TYPE *get_array_data() {" << endl;
@@ -1171,7 +1222,7 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
     }
     if (t.for_derivatives) {
       stream << indent()
-             << "std::vector<Traces<ANSWER_TYPE>>().swap(traces);" << endl;
+             << "std::vector<Traces<" << dtype << ">>().swap(traces);" << endl;
     }
     stream << indent()
            << "std::vector<bool>().swap(tabulated);" << endl;
@@ -1230,9 +1281,6 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
     }
     stream << indent() << "tabulated.resize(newsize);" << endl << endl;
     stream << indent() << "tensor_size.clear();" << endl;
-    if (batched_input) {
-      stream << indent() << "tensor_size.push_back(BATCH_SIZE);" << endl;
-    }
     stream << indent() << "switch (get_table_size()) {" << endl;
     inc_indent();
     stream << indent() << "case TableSize::QUADRATIC :" << endl;
@@ -1242,11 +1290,9 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
       stream << indent() << "tensor_size.push_back(t_" << track
              << "_right_most + 1);" << endl;
     }
-    stream << indent() << "break;" << endl;
-    dec_indent();
-    stream << indent() << "case TableSize::TRIU :" << endl;
-    inc_indent();
-    // TODO(fymue): figure out how to handle upper triangular tables
+    if (batched_input) {
+      stream << indent() << "tensor_size.push_back(BATCH_SIZE);" << endl;
+    }
     stream << indent() << "break;" << endl;
     dec_indent();
     stream << indent() << "case TableSize::LINEAR :" << endl;
@@ -2654,6 +2700,14 @@ void Printer::Cpp::print_run_derivative_fn(const AST &ast) {
         } else {
           torch_type = get_torch_type(*nt->data_type());
         }
+        stream << indent() << "if (" << *(nt->name)
+               << "_table.get_table_size() == TableSize::TRIU) {" << endl;
+        inc_indent();
+        stream << indent() << "matrices.push_back(" << *(nt->name)
+               << "_table.convert_triu_to_tensor());" << endl;
+        dec_indent();
+        stream << indent() << "} else {" << endl;
+        inc_indent();
         stream << indent() << "matrices.push_back(torch::from_blob("
                << *(nt->name) << "_table.get_array_data(), "
                << *(nt->name) << "_table.tensor_size, "
@@ -2662,6 +2716,8 @@ void Printer::Cpp::print_run_derivative_fn(const AST &ast) {
           stream << ".clone()";
         }
         stream << ");" << endl;
+        dec_indent();
+        stream << indent() << "}" << endl;
       }
     }
   }
@@ -3402,7 +3458,7 @@ void Printer::Cpp::print_pytorch_macros(const AST &ast) {
     stream << indent() << "#define INT_TYPE       3" << endl;
     stream << indent() << "#define BIGINT_TYPE    4" << endl << endl;
     stream << indent() << "#define __OUTPUT_CPP_TYPE "
-           << get_macro_type(*shared_table_type.type) << endl;
+           << get_macro_type(*shared_table_type.type).first << endl;
     stream << indent() << "#define OUTPUT_CPP_TYPE "
            << *shared_table_type.type << endl << endl;
     stream << "#include \"rtlib/batch.hh\"" << endl;
@@ -3415,7 +3471,6 @@ void Printer::Cpp::print_pytorch_macros(const AST &ast) {
            << " TensorBatch;" << endl << endl;
     stream << "#define ANSWER_TYPE TensorBatch" << endl << endl;
   } else {
-    stream << "#define ANSWER_TYPE " << __shared_table_type << endl << endl;
     stream << "#include \"torch/extension.h\"" << endl;
     stream << "#include \"rtlib/tensor.hh\"" << endl << endl;
   }
@@ -3553,6 +3608,14 @@ void Printer::Cpp::print_pytorch_forward_fn(const AST &ast) {
       } else {
         torch_type = get_torch_type(*nt->data_type());
       }
+      stream << indent() << "if (" << *(nt->name)
+             << "_table.get_table_size() == TableSize::TRIU) {" << endl;
+      inc_indent();
+      stream << indent() << "matrices.push_back(" << *(nt->name)
+             << "_table.convert_triu_to_tensor());" << endl;
+      dec_indent();
+      stream << indent() << "} else {" << endl;
+      inc_indent();
       stream << indent() << "matrices.push_back(torch::from_blob("
              << *(nt->name) << "_table.get_array_data(), "
              << *(nt->name) << "_table.tensor_size, "
@@ -3561,6 +3624,8 @@ void Printer::Cpp::print_pytorch_forward_fn(const AST &ast) {
         stream << ".clone()";
       }
       stream << ");" << endl;
+      dec_indent();
+      stream << indent() << "}" << endl;
     }
   }
   stream << indent() << "return matrices;" << endl;
