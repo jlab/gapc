@@ -1137,6 +1137,17 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   stream << indent() << "}" << endl << endl;
 
   if (pytorch) {
+    stream << indent() << "std::vector<int64_t> tensor_size;" << endl << endl;
+    stream << indent() << "TableSize get_table_size() {" << endl;
+    inc_indent();
+    if (t.fn_get_tab().paras.size() == 1) {
+        stream << indent() << "return TableSize::LINEAR;" << endl;
+    } else if (t.fn_get_tab().paras.size() == 2) {
+      stream << indent() << "return (size() >= t_0_n * t_0_n) ? "
+             << "TableSize::QUADRATIC : TableSize::TRIU;" << endl;
+    }
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
     if (batched_input) {
       stream << indent()
              << "OUTPUT_CPP_TYPE *get_array_data() {" << endl;
@@ -1217,7 +1228,33 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
       stream << indent()
              << "traces.resize(newsize);" << endl;
     }
-    stream << indent() << "tabulated.resize(newsize);" << endl;
+    stream << indent() << "tabulated.resize(newsize);" << endl << endl;
+    stream << indent() << "tensor_size.clear();" << endl;
+    if (batched_input) {
+      stream << indent() << "tensor_size.push_back(BATCH_SIZE);" << endl;
+    }
+    stream << indent() << "switch (get_table_size()) {" << endl;
+    inc_indent();
+    stream << indent() << "case TableSize::QUADRATIC :" << endl;
+    inc_indent();
+    for (size_t track = t.nt().track_pos();
+      track < t.nt().track_pos() + t.nt().tracks(); ++track) {
+      stream << indent() << "tensor_size.push_back(t_" << track
+             << "_right_most + 1);" << endl;
+    }
+    stream << indent() << "break;" << endl;
+    dec_indent();
+    stream << indent() << "case TableSize::TRIU :" << endl;
+    inc_indent();
+    // TODO(fymue): figure out how to handle upper triangular tables
+    stream << indent() << "break;" << endl;
+    dec_indent();
+    stream << indent() << "case TableSize::LINEAR :" << endl;
+    inc_indent();
+    stream << indent() << "tensor_size.push_back(t_0_right_most + 1);"
+           << endl << indent() << "break;" << endl;
+    dec_indent(); dec_indent();
+    stream << indent() << "}" << endl;
   } else  {
     stream << indent() << "array.resize(newsize);" << endl;
     if (t.for_derivatives) {
@@ -1868,7 +1905,6 @@ void Printer::Cpp::header(const AST &ast) {
   stream << indent() << " public:" << endl;
   inc_indent();
   if (ast.as_pytorch_module) {
-    stream << indent() << "std::vector<int64_t> tensor_size;" << endl;
     stream << indent() << "InputTensor INPUT_TENSORS;" << endl;
   }
 
@@ -2620,7 +2656,8 @@ void Printer::Cpp::print_run_derivative_fn(const AST &ast) {
         }
         stream << indent() << "matrices.push_back(torch::from_blob("
                << *(nt->name) << "_table.get_array_data(), "
-               << "tensor_size, " << torch_type << ")";
+               << *(nt->name) << "_table.tensor_size, "
+               << torch_type << ")";
         if (ast.current_derivative == 2) {
           stream << ".clone()";
         }
@@ -3406,6 +3443,11 @@ void Printer::Cpp::print_pytorch_macros(const AST &ast) {
     stream << " {}" << endl;
     dec_indent();
     stream << indent() << "};" << endl << endl;
+    stream << indent() << "enum TableSize {" << endl;
+    inc_indent();
+    stream << indent() << "LINEAR, TRIU, QUADRATIC" << endl;
+    dec_indent();
+    stream << indent() << "};" << endl << endl;
   }
 }
 
@@ -3450,16 +3492,12 @@ void Printer::Cpp::print_pytorch_init_fn(const AST &ast) {
            << ".j = __t_" << track << "_tensor.sizes().back();" << endl << endl;
   }
 
-  stream << indent() << "tensor_size.clear();" << endl;
-
   size_t t = 0;
   for (std::vector<Statement::Var_Decl*>::iterator j = ns.begin();
        j != ns.end(); ++j, ++t) {
     stream << indent() << "t_" << t << "_left_most = 0;\n";
     stream << indent() << "t_" << t << "_right_most = " << "t_" << t
       << "_seq.j;\n";
-    stream << indent() << "tensor_size.push_back(t_" << t
-           << "_right_most + 1);" << endl << endl;
   }
 
   if (ast.input.tensor_inputs.all_batched()) {
@@ -3480,8 +3518,7 @@ void Printer::Cpp::print_pytorch_init_fn(const AST &ast) {
            << "provide only input tensors with equal-sized batch dimensions."
            << "\\n\";" << endl;
     dec_indent();
-    stream << indent() << "}" << endl;
-    stream << indent() << "tensor_size.push_back(BATCH_SIZE);" << endl << endl;
+    stream << indent() << "}" << endl << endl;
   }
 
   print_filter_init(ast);
@@ -3518,7 +3555,8 @@ void Printer::Cpp::print_pytorch_forward_fn(const AST &ast) {
       }
       stream << indent() << "matrices.push_back(torch::from_blob("
              << *(nt->name) << "_table.get_array_data(), "
-             << "tensor_size, " << torch_type << ")";
+             << *(nt->name) << "_table.tensor_size, "
+             << torch_type << ")";
       if (ast.current_derivative == 2) {
         stream << ".clone()";
       }

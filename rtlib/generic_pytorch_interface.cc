@@ -71,6 +71,7 @@ std::vector<torch::Tensor> forward_D1(INPUT_PARAMS) {
 
   return obj.get_forward_score_matrices();
 }
+
 std::vector<torch::Tensor> backward_D1() {
   // execute backward pass and return first derivative backward score matrices
   return obj.get_backward_score_matrices();
