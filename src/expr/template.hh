@@ -48,10 +48,9 @@ inline std::ostream &operator<<(std::ostream &stream, const TemplateArg &a) {
 }
 
 class Template : public Base {
- private:
+ public:
   std::vector<TemplateArg> args;
 
- public:
   Template() : Base(Expr::TEMPLATE) {}
 
   void put(std::ostream &s) const {
