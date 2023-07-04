@@ -3,10 +3,10 @@ import rna
 input rna
 
 signature sig_foldrna(alphabet,answer) {
-	answer nil(Subsequence); //empty structure
-	choice [answer] h([answer]);
-	answer il(Subsequence, Subsequence, answer, Subsequence, Subsequence); // an internal loop with a closing base-pair
-    answer comp(Subsequence, Subsequence, Subsequence, Subsequence, answer, Subsequence, answer);
+  answer nil(Subsequence); //empty structure
+  choice [answer] h([answer]);
+  answer il(Subsequence, Subsequence, answer, Subsequence, Subsequence); // an internal loop with a closing base-pair
+  answer comp(Subsequence, Subsequence, Subsequence, Subsequence, answer, Subsequence, answer);
 }
 
 algebra alg_count auto count;
@@ -26,27 +26,6 @@ algebra alg_mfe implements sig_foldrna(alphabet = char, answer = int) {
     return x+y;
   }
 }
-
-//algebra alg_dotBracket implements sig_foldrna(alphabet = char, answer = string) {
-//  string nil(Subsequence loc) {
-//    string r;
-//    return r;
-//  }
-//
-//  choice [string] h([string] i) {
-//    return i;
-//  }
-//
-//  string il(Subsequence lb,Subsequence lregion,string e,Subsequence rregion,Subsequence rb) {
-//    string res;
-//    append(res, '(');
-//    append(res, '.', size(lregion));
-//    append(res, e);
-//    append(res, '.', size(rregion));
-//    append(res, ')');
-//    return res;
-//  }
-//}
 
 grammar gra_nodangle uses sig_foldrna(axiom = struct) {
     struct    = nil(LOC) |
