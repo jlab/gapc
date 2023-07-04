@@ -28,6 +28,7 @@
 #include <ostream>
 #include <string>
 #include <vector>
+#include <utility>
 #include "base.hh"
 
 namespace Expr {
@@ -48,7 +49,7 @@ inline std::ostream &operator<<(std::ostream &stream, const TemplateArg &a) {
 
 class Template : public Base {
  private:
-   std::vector<TemplateArg> args;
+  std::vector<TemplateArg> args;
 
  public:
   Template() : Base(Expr::TEMPLATE) {}
