@@ -637,6 +637,11 @@ void Printer::Cpp::print(const Fn_Def &fn_def) {
     stream << ')' << endl;
   } else {
     stream << indent();
+
+    if (fn_def.template_decl) {
+      stream << *fn_def.template_decl << ' ';
+    }
+
     if (fwd_decls &&
       fn_def.name->compare(FN_NAME_DERIVATIVE_NORMALIZER) == 0) {
       /* TODO(sjanssen): why is it necessary that the function is declared

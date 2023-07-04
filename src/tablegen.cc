@@ -584,6 +584,12 @@ Fn_Def *Tablegen::gen_get_traces() {
   Fn_Def *f = new Fn_Def(dtype, new std::string("get_traces"));
   f->add_paras(paras);
 
+  // add template declaration for get_traces function so index_components
+  // objects can be provided with a compile-time constant size
+  f->template_decl = new Expr::Template();
+  Expr::TemplateArg template_arg("unsigned int", "N");
+  f->template_decl->add(template_arg);
+
   /*
    * since the "to_nt" and "to_indices" arguments are created in-place
    * in the generated code and are thus regarded as rvalue references,
@@ -595,7 +601,7 @@ Fn_Def *Tablegen::gen_get_traces() {
   f->add_para(new ::Type::External(new std::string("std::string&")),
               new std::string("to_nt"));
   ::Type::External *idx = new ::Type::External(new std::string(
-    "index_components&"));
+    "index_components<" + template_arg.name + ">&"));
   f->add_para(idx, new std::string("to_indices"));
 
   // FIXME const & in dtype -> see cpp.cc in_fn_head

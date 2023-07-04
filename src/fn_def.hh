@@ -34,6 +34,7 @@
 #include "mode.hh"
 
 #include "expr/fn_call.hh"
+#include "expr/template.hh"
 
 #include "hashtable.hh"
 
@@ -97,6 +98,9 @@ class Fn_Def : public Fn_Decl {
     // The list of parameter declarations.
     std::list<Para_Decl::Base*> paras;
 
+    // optional template declaration before function return type
+    Expr::Template *template_decl;
+
  public:
     Fn_Def *copy_head(Type::Base *t, std::string *s);
 
@@ -105,7 +109,7 @@ class Fn_Def : public Fn_Decl {
       comperator_suffix(new std::string("_comperator")),
       sorter_suffix(new std::string("_sorter")), nullary_sort_ob(NULL),
       adaptor(NULL), comparator(NULL), sorter(NULL),
-      choice_fn_type_(Expr::Fn_Call::NONE) {
+      choice_fn_type_(Expr::Fn_Call::NONE), template_decl(NULL) {
     }
 
 
@@ -114,7 +118,7 @@ class Fn_Def : public Fn_Decl {
       comperator_suffix(new std::string("_comperator")),
       sorter_suffix(new std::string("_sorter")), nullary_sort_ob(NULL),
       adaptor(NULL), comparator(NULL), sorter(NULL),
-      choice_fn_type_(Expr::Fn_Call::NONE) {
+      choice_fn_type_(Expr::Fn_Call::NONE), template_decl(NULL) {
     }
 
 
@@ -125,7 +129,7 @@ class Fn_Def : public Fn_Decl {
       comperator_suffix(new std::string("_comperator")),
       sorter_suffix(new std::string("_sorter")), nullary_sort_ob(NULL),
       adaptor(NULL), comparator(NULL),  sorter(NULL),
-      choice_fn_type_(Expr::Fn_Call::NONE) {
+      choice_fn_type_(Expr::Fn_Call::NONE), template_decl(NULL) {
     }
 
 
