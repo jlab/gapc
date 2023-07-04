@@ -58,7 +58,11 @@ extern "C" {
 inline int64_t BATCH_SIZE = 1;
 #endif
 
+// users can set MAX_BATCH_SIZE before compiling the program
+// using the MAX_BATCH_SIZE=N environment variable
+#ifndef MAX_BATCH_SIZE
 #define MAX_BATCH_SIZE 128
+#endif
 
 #if defined(__AVX2__)
 /*

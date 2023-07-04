@@ -3304,6 +3304,10 @@ void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
   // enable platform-specific optimized functions (turns on AVX2 if available)
   if (ast.input.tensor_inputs.all_batched()) {
     stream << "CXXFLAGS += \"-march=native\"" << endl;
+    // allow users to define max batch size with an environment variable
+    stream << "ifdef MAX_BATCH_SIZE" << endl;
+    stream << "CXXFLAGS += -DMAX_BATCH_SIZE=$(MAX_BATCH_SIZE)" << endl;
+    stream << "endif" << endl << endl;
   }
   // pytorch C++ extension doesn't support C++17 yet
   stream << "CXXFLAGS := $(CXXFLAGS) | sed 's/c++17/c++14/'" << endl;
@@ -3448,6 +3452,13 @@ void Printer::Cpp::print_pytorch_macros(const AST &ast) {
   const Type::Base &__shared_table_type =
     ast.grammar()->tabulated.begin()->second->table_decl->datatype();
   if (all_batched) {
+    if (!__shared_table_type.is(Type::TENSORBATCH)) {
+      std::ostringstream tmp;
+      tmp << __shared_table_type;
+      Log::instance()->error("Answer type \"" + tmp.str() +
+                             "\" isn't batch-compatible.");
+      std::exit(1);
+    }
     const Type::TensorBatch &shared_table_type =
       dynamic_cast<const Type::TensorBatch &>(__shared_table_type);
     stream << "#define BATCHED_INPUT" << endl;

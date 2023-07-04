@@ -98,9 +98,6 @@ class Fn_Def : public Fn_Decl {
     // The list of parameter declarations.
     std::list<Para_Decl::Base*> paras;
 
-    // optional template declaration before function return type
-    Expr::Template *template_decl;
-
  public:
     Fn_Def *copy_head(Type::Base *t, std::string *s);
 
@@ -252,6 +249,9 @@ class Fn_Def : public Fn_Decl {
     Expr::Fn_Call::Builtin choice_fn_type_;
 
  public:
+    // optional template declaration before function return type
+    Expr::Template *template_decl;
+
     void set_choice_fn_type(Expr::Fn_Call::Builtin x) {
       choice_fn_type_ = x;
     }
