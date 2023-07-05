@@ -74,6 +74,9 @@ class Base {
  private:
     Type type;
 
+    /* Flag this Symbol as being part of an outside grammar component */
+    bool _is_partof_outside = false;
+
  protected:
     ADP_Mode::Adp_Specialization adp_specialization;
     ADP_Mode::Adp_Join adp_join;
@@ -126,6 +129,8 @@ class Base {
     Loc location;
     std::vector<Expr::Base*> left_indices;
     std::vector<Expr::Base*> right_indices;
+    std::vector<Expr::Base*> left_most_indices;
+    std::vector<Expr::Base*> right_most_indices;
     bool is(Type t) const {
       return type == t;
     }
@@ -252,6 +257,13 @@ class Base {
     virtual unsigned int to_dot(unsigned int *nodeID, std::ostream &out,
                                 bool is_rhs, Symbol::NT *axiom,
                                 int plot_grammar);
+
+    bool is_partof_outside() const {
+      return _is_partof_outside;
+    }
+    void set_partof_outside() {
+      _is_partof_outside = true;
+    }
 };
 
 
@@ -339,6 +351,12 @@ class NT : public Base {
     std::list<Alt::Base*> alts;
     void set_alts(const std::list<Alt::Base*> &a);
 
+    // This flags the table dimension computation as invalid.
+    // Used for outside grammar generation, as table dimensions
+    // have to be re-computed after outside NTs were injected
+    void reset_table_dim() {
+      this->tab_dim_ready = false;
+    }
 
  public:
     std::string *eval_fn;
@@ -354,7 +372,7 @@ class NT : public Base {
 
     NT(std::string *n, const Loc &l);
 
-    NT *clone(size_t track_pos);
+    NT *clone(size_t track_pos, bool keepname = false);
 
     void set_grammar_index(size_t i) {
       grammar_index_ = i;
@@ -422,9 +440,11 @@ class NT : public Base {
     void inline_nts(Grammar *grammar);
     bool is_inlineable();
 
-    void init_indices(Expr::Vacc *left, Expr::Vacc *right,
-    unsigned int &k, size_t track);
-
+    void init_indices(
+        Expr::Vacc *left, Expr::Vacc *right,
+        unsigned int &k, size_t track,
+        // pass left/right user input borders for outside NTs
+        Expr::Vacc *left_most, Expr::Vacc *right_most);
 
     void gen_ys_guards(std::list<Expr::Base*> &ors) const;
     void init_guards(Code::Mode mode);

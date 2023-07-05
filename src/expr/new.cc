@@ -39,17 +39,26 @@ void Expr::This::put(std::ostream &s) const {
 
 #include "../para_decl.hh"
 
-void Expr::New::add_args(const std::list<Para_Decl::Base*> &args) {
+std::list<Expr::Base*> *sync_ntparams(const std::list<Para_Decl::Base*> &args) {
+  std::list<Expr::Base*> *expr_args = new std::list<Expr::Base*>();
   for (std::list<Para_Decl::Base*>::const_iterator i = args.begin();
-      i != args.end(); ++i) {
+       i != args.end(); ++i) {
     Para_Decl::Simple *p = dynamic_cast<Para_Decl::Simple*>(*i);
     if (p) {
-      args_.push_back(new Expr::Vacc(p->name()));
+      expr_args->push_back(new Expr::Vacc(p->name()));
     } else {
       Para_Decl::Multi *p = dynamic_cast<Para_Decl::Multi*>(*i);
-      for (std::list<Para_Decl::Simple*>::const_iterator j = p->list().begin();
-          j != p->list().end(); ++j)
-        args_.push_back(new Expr::Vacc((*j)->name()));
+      for (std::list<Para_Decl::Simple*>::const_iterator j =
+           p->list().begin();
+           j != p->list().end(); ++j) {
+        expr_args->push_back(new Expr::Vacc((*j)->name()));
+      }
     }
   }
+  return expr_args;
+}
+
+void Expr::New::add_args(const std::list<Para_Decl::Base*> &args) {
+  std::list<Expr::Base*> *params = sync_ntparams(args);
+  args_.insert(args_.end(), params->begin(), params->end());
 }

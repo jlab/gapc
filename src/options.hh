@@ -59,6 +59,8 @@ struct Options {
       specialization(0), step_option(0),
       plot_grammar(0), plotgrammar_stream_(NULL),
       checkpointing(false) {
+    // start with no requested outside NTs, i.e. no outside generation
+    outside_nt_list.clear();
   }
 
 
@@ -115,6 +117,13 @@ struct Options {
   // requested by the user. This will prompt the compiler to
   // ignore most of the other options (except the instance selector
   // and output file name).
+
+  // if not empty, automatically generate an outside version of
+  // the provided grammar and print out results of the provided
+  // list of outside non-terminals. Report ALL non-terminals,
+  // if list states 'ALL'.
+  std::vector<std::string> outside_nt_list;
+
   bool specializeGrammar;
   // flag that is used to turn on verbose mode, i.g. all suppressed
   // warnings and messages will be shown

@@ -52,6 +52,8 @@
 #include "printer/cfg_pretty_print.hh"
 #include "printer/gap.hh"
 #include "specialize_grammar/create_specialized_grammar.hh"
+#include "outside/grammar_transformation.hh"
+#include "outside/codegen.hh"
 
 namespace po = boost::program_options;
 
@@ -102,6 +104,12 @@ static void parse_options(int argc, char **argv, Options *rec) {
       "uses the selected instance and creates a GAP program which creates "
       "specialized GAP programs that recognize a subset of candidates of the "
       "original grammar.")
+    ("outside_grammar", po::value< std::vector<std::string> >(),
+      std::string("generate an outside version of the grammar and report "
+      "outside results for an inside non-terminal. Provide multiple times for "
+      "lists of non-terminals or type \"" + std::string(OUTSIDE_ALL) + "\" to "
+      "report results for all non-terminals.\nRefer to --plot-grammar should "
+      "you want 'see' the generated grammar.").c_str())
     ("verbose", "show suppressed warnings and messages")
     ("log-level,l", po::value<int>(),
       "the log level, valid values are 0 (VERBOSE), 1 (INFO),  2 (NORMAL), 3 "
@@ -234,6 +242,9 @@ static void parse_options(int argc, char **argv, Options *rec) {
   if (vm.count("specialize_grammar")) {
     rec->specializeGrammar = true;
   }
+  if (vm.count("outside_grammar"))
+    rec->outside_nt_list = vm["outside_grammar"]
+      .as< std::vector<std::string> >();
   if (vm.count("verbose"))
     rec->verbose_mode = true;
   if (vm.count("log-level")) {
@@ -354,6 +365,7 @@ class Main {
     // more information on this see the comment of the method
     // AST::select_grammar (instance_name).
     driver.ast.select_grammar(opts.instance);
+    driver.ast.set_outside_nt_list(&opts.outside_nt_list);
     driver.parse_product(opts.product);
 
     if (driver.is_failing()) {
@@ -372,6 +384,11 @@ class Main {
     bool r = grammar->check_semantic();
     if (!r) {
       throw LogError("Seen semantic errors.");
+    }
+
+    // transform inside grammar into an outside one, if user requests
+    if (driver.ast.outside_generation()) {
+      grammar->convert_to_outside();
     }
 
     // configure the window and k-best mode
@@ -682,6 +699,9 @@ class Main {
     hh.footer(driver.ast);
     hh.end_fwd_decls();
     hh.header_footer(driver.ast);
+    if (driver.ast.outside_generation()) {
+      print_insideoutside_report_fn(hh, driver.ast);
+    }
 
     // Write out the C++ implementation file of the
     // compile-result.

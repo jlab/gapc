@@ -48,7 +48,7 @@ algebra alg_maxMatch implements sig_alignments(alphabet = char, answer = int) {
 
 // pair-wise global alignment
 grammar gra_NWcyk uses sig_alignments(axiom=nt_const) {
-  nt_const = nt_left # h;
+  nt_const = nt_left | Sto(<EMPTY, EMPTY>) # h;
         
   nt_left = split(<ROPE, ROPE>, nt_right) # h;
   nt_right = splitR(A, <ROPE, ROPE>) # h;
@@ -60,6 +60,19 @@ grammar gra_NWcyk uses sig_alignments(axiom=nt_const) {
     # h;
 }
 
+grammar gra_NWcyk_infinitloop uses sig_alignments(axiom=nt_const) {
+  nt_const = nt_left  | Sto(<EMPTY, EMPTY>) # h;
+        
+  nt_left = split(<ROPE, ROPE>, nt_right) # h;
+  nt_right = splitR(A, <ROPE, ROPE>) # h;
+        
+  A = Ins(<CHAR, EMPTY>, <LOC, EMPTY>, A)
+    | Del(<EMPTY, CHAR>, <EMPTY, LOC>, A)
+    | Ers(<CHAR, CHAR>, <LOC, LOC>, A)
+    | Sto(<EMPTY, EMPTY>)
+    # h;
+}
 
 instance count = gra_NWcyk(alg_count);
 instance maxM = gra_NWcyk(alg_maxMatch);
+instance infloop = gra_NWcyk_infinitloop(alg_count);

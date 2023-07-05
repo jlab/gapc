@@ -28,6 +28,7 @@
 #include "symbol_fwd.hh"
 #include "alt_fwd.hh"
 #include "fn_arg_fwd.hh"
+#include "grammar.hh"
 
 class Visitor {
  public:
@@ -56,6 +57,11 @@ class Visitor {
 
     virtual void visit(Fn_Arg::Const &f);
     virtual void visit(Fn_Arg::Alt &f);
+
+    // first visit the subtree of Fn_Arg->Alt and only then visit this
+    virtual void visit_end(Fn_Arg::Alt &f);
+
+    virtual void visit_end(Grammar &g);
 };
 
 #endif  //  SRC_VISITOR_HH_
