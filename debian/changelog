@@ -1,6 +1,8 @@
 bellmansgapc (2023.07.05-0ubuntu0ppa1~xenial1) xenial; urgency=medium
 
    * features:
+     + --outside_grammar: automatically generate an outside grammar counterpart
+                          for user provided grammars to compute e.g. posteriors
      + --checkpoint: Thanks to Fynn Muermanns, gapc code generation can now add 
                      generic code to periodically (e.g. every hour) dump 
                      contents of the partially computed DP matrices to files. 
@@ -44,6 +46,8 @@ bellmansgapc (2023.07.05-0ubuntu0ppa1~xenial1) xenial; urgency=medium
 bellmansgapc (2023.07.05-0ubuntu0ppa1~mantic1) mantic; urgency=medium
 
    * features:
+     + --outside_grammar: automatically generate an outside grammar counterpart
+                          for user provided grammars to compute e.g. posteriors
      + --checkpoint: Thanks to Fynn Muermanns, gapc code generation can now add 
                      generic code to periodically (e.g. every hour) dump 
                      contents of the partially computed DP matrices to files. 
@@ -87,6 +91,8 @@ bellmansgapc (2023.07.05-0ubuntu0ppa1~mantic1) mantic; urgency=medium
 bellmansgapc (2023.07.05-0ubuntu0ppa1~lunar1) lunar; urgency=medium
 
    * features:
+     + --outside_grammar: automatically generate an outside grammar counterpart
+                          for user provided grammars to compute e.g. posteriors
      + --checkpoint: Thanks to Fynn Muermanns, gapc code generation can now add 
                      generic code to periodically (e.g. every hour) dump 
                      contents of the partially computed DP matrices to files. 
@@ -130,6 +136,8 @@ bellmansgapc (2023.07.05-0ubuntu0ppa1~lunar1) lunar; urgency=medium
 bellmansgapc (2023.07.05-0ubuntu0ppa1~kinetic1) kinetic; urgency=medium
 
    * features:
+     + --outside_grammar: automatically generate an outside grammar counterpart
+                          for user provided grammars to compute e.g. posteriors
      + --checkpoint: Thanks to Fynn Muermanns, gapc code generation can now add 
                      generic code to periodically (e.g. every hour) dump 
                      contents of the partially computed DP matrices to files. 
@@ -173,6 +181,8 @@ bellmansgapc (2023.07.05-0ubuntu0ppa1~kinetic1) kinetic; urgency=medium
 bellmansgapc (2023.07.05-0ubuntu0ppa1~jammy1) jammy; urgency=medium
 
    * features:
+     + --outside_grammar: automatically generate an outside grammar counterpart
+                          for user provided grammars to compute e.g. posteriors
      + --checkpoint: Thanks to Fynn Muermanns, gapc code generation can now add 
                      generic code to periodically (e.g. every hour) dump 
                      contents of the partially computed DP matrices to files. 
@@ -216,6 +226,8 @@ bellmansgapc (2023.07.05-0ubuntu0ppa1~jammy1) jammy; urgency=medium
 bellmansgapc (2023.07.05-0ubuntu0ppa1~focal1) focal; urgency=medium
 
    * features:
+     + --outside_grammar: automatically generate an outside grammar counterpart
+                          for user provided grammars to compute e.g. posteriors
      + --checkpoint: Thanks to Fynn Muermanns, gapc code generation can now add 
                      generic code to periodically (e.g. every hour) dump 
                      contents of the partially computed DP matrices to files. 
@@ -259,6 +271,8 @@ bellmansgapc (2023.07.05-0ubuntu0ppa1~focal1) focal; urgency=medium
 bellmansgapc (2023.07.05-0ubuntu0ppa1~bionic1) bionic; urgency=medium
 
    * features:
+     + --outside_grammar: automatically generate an outside grammar counterpart
+                          for user provided grammars to compute e.g. posteriors
      + --checkpoint: Thanks to Fynn Muermanns, gapc code generation can now add 
                      generic code to periodically (e.g. every hour) dump 
                      contents of the partially computed DP matrices to files. 
