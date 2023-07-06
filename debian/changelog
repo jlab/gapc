@@ -1,3 +1,318 @@
+bellmansgapc (2023.07.05-0ubuntu0ppa1~xenial1) xenial; urgency=medium
+
+   * features:
+     + --outside_grammar: automatically generate an outside grammar counterpart
+                          for user provided grammars to compute e.g. posteriors
+     + --checkpoint: Thanks to Fynn Muermanns, gapc code generation can now add 
+                     generic code to periodically (e.g. every hour) dump 
+                     contents of the partially computed DP matrices to files. 
+                     Should an execution of a long running job abort 
+                     prematurely, the binary can be restarted and pick up 
+                     computation from the last dumped checkpoint.
+     + --plot-grammar: new levels of detail available for plotting the used
+                       grammar. 4: adding yield size information for parsers,
+                       5: optimized table dimensions for non-terminals.
+     + automatically generated enum algebras will now also report non-terminal
+       parameters for better manual inspection
+     + --printCall can now be invoked with the generated binaries. Thus, the
+                   binary will tell you which gapc command led to its
+                   generation. Thanks to Fynn Muermanns.
+   
+   * maintenance:
+     + CYK code generation is now nicely abstracted into the source file
+       src/cyk.{cc,hh} instead of being intermingled in src/cpp.cc
+     + plot_grammar code is moved into a dedicated src/plot_grammar.cc file
+     + librna
+       - is exposing additional functions to support Guanine-Quadruplex energy
+         contribution calculation for RNA problems
+       - updated the ViennaRNA code base from 2.4.17 to 2.5.1, thanks to Fynn
+         Muermanns
+       - significant speed-ups due to clever hashing / pre-computation of energy
+         contributions, thanks to Fynn Muermanns.
+   
+   * fixes:
+     + --plot-grammar: 
+       - properly escape & chars
+       - unfortunately, graphviz -> dot does not necessarily preserve child
+         node ordering. Using "clusters" mitigates (but does not solve in 100%)
+         this issue significantly
+     + fixed yield size computation of constant terminal parsers
+     + guards operate on *unsigned* int borders, which sometimes led
+       to underflows.
+     + warn users about negative candidate values when using expsum
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Mon, 5 July 2023 22:30:00 +0200
+
+bellmansgapc (2023.07.05-0ubuntu0ppa1~mantic1) mantic; urgency=medium
+
+   * features:
+     + --outside_grammar: automatically generate an outside grammar counterpart
+                          for user provided grammars to compute e.g. posteriors
+     + --checkpoint: Thanks to Fynn Muermanns, gapc code generation can now add 
+                     generic code to periodically (e.g. every hour) dump 
+                     contents of the partially computed DP matrices to files. 
+                     Should an execution of a long running job abort 
+                     prematurely, the binary can be restarted and pick up 
+                     computation from the last dumped checkpoint.
+     + --plot-grammar: new levels of detail available for plotting the used
+                       grammar. 4: adding yield size information for parsers,
+                       5: optimized table dimensions for non-terminals.
+     + automatically generated enum algebras will now also report non-terminal
+       parameters for better manual inspection
+     + --printCall can now be invoked with the generated binaries. Thus, the
+                   binary will tell you which gapc command led to its
+                   generation. Thanks to Fynn Muermanns.
+   
+   * maintenance:
+     + CYK code generation is now nicely abstracted into the source file
+       src/cyk.{cc,hh} instead of being intermingled in src/cpp.cc
+     + plot_grammar code is moved into a dedicated src/plot_grammar.cc file
+     + librna
+       - is exposing additional functions to support Guanine-Quadruplex energy
+         contribution calculation for RNA problems
+       - updated the ViennaRNA code base from 2.4.17 to 2.5.1, thanks to Fynn
+         Muermanns
+       - significant speed-ups due to clever hashing / pre-computation of energy
+         contributions, thanks to Fynn Muermanns.
+   
+   * fixes:
+     + --plot-grammar: 
+       - properly escape & chars
+       - unfortunately, graphviz -> dot does not necessarily preserve child
+         node ordering. Using "clusters" mitigates (but does not solve in 100%)
+         this issue significantly
+     + fixed yield size computation of constant terminal parsers
+     + guards operate on *unsigned* int borders, which sometimes led
+       to underflows.
+     + warn users about negative candidate values when using expsum
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Mon, 5 July 2023 22:30:00 +0200
+
+bellmansgapc (2023.07.05-0ubuntu0ppa1~lunar1) lunar; urgency=medium
+
+   * features:
+     + --outside_grammar: automatically generate an outside grammar counterpart
+                          for user provided grammars to compute e.g. posteriors
+     + --checkpoint: Thanks to Fynn Muermanns, gapc code generation can now add 
+                     generic code to periodically (e.g. every hour) dump 
+                     contents of the partially computed DP matrices to files. 
+                     Should an execution of a long running job abort 
+                     prematurely, the binary can be restarted and pick up 
+                     computation from the last dumped checkpoint.
+     + --plot-grammar: new levels of detail available for plotting the used
+                       grammar. 4: adding yield size information for parsers,
+                       5: optimized table dimensions for non-terminals.
+     + automatically generated enum algebras will now also report non-terminal
+       parameters for better manual inspection
+     + --printCall can now be invoked with the generated binaries. Thus, the
+                   binary will tell you which gapc command led to its
+                   generation. Thanks to Fynn Muermanns.
+   
+   * maintenance:
+     + CYK code generation is now nicely abstracted into the source file
+       src/cyk.{cc,hh} instead of being intermingled in src/cpp.cc
+     + plot_grammar code is moved into a dedicated src/plot_grammar.cc file
+     + librna
+       - is exposing additional functions to support Guanine-Quadruplex energy
+         contribution calculation for RNA problems
+       - updated the ViennaRNA code base from 2.4.17 to 2.5.1, thanks to Fynn
+         Muermanns
+       - significant speed-ups due to clever hashing / pre-computation of energy
+         contributions, thanks to Fynn Muermanns.
+   
+   * fixes:
+     + --plot-grammar: 
+       - properly escape & chars
+       - unfortunately, graphviz -> dot does not necessarily preserve child
+         node ordering. Using "clusters" mitigates (but does not solve in 100%)
+         this issue significantly
+     + fixed yield size computation of constant terminal parsers
+     + guards operate on *unsigned* int borders, which sometimes led
+       to underflows.
+     + warn users about negative candidate values when using expsum
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Mon, 5 July 2023 22:30:00 +0200
+
+bellmansgapc (2023.07.05-0ubuntu0ppa1~kinetic1) kinetic; urgency=medium
+
+   * features:
+     + --outside_grammar: automatically generate an outside grammar counterpart
+                          for user provided grammars to compute e.g. posteriors
+     + --checkpoint: Thanks to Fynn Muermanns, gapc code generation can now add 
+                     generic code to periodically (e.g. every hour) dump 
+                     contents of the partially computed DP matrices to files. 
+                     Should an execution of a long running job abort 
+                     prematurely, the binary can be restarted and pick up 
+                     computation from the last dumped checkpoint.
+     + --plot-grammar: new levels of detail available for plotting the used
+                       grammar. 4: adding yield size information for parsers,
+                       5: optimized table dimensions for non-terminals.
+     + automatically generated enum algebras will now also report non-terminal
+       parameters for better manual inspection
+     + --printCall can now be invoked with the generated binaries. Thus, the
+                   binary will tell you which gapc command led to its
+                   generation. Thanks to Fynn Muermanns.
+   
+   * maintenance:
+     + CYK code generation is now nicely abstracted into the source file
+       src/cyk.{cc,hh} instead of being intermingled in src/cpp.cc
+     + plot_grammar code is moved into a dedicated src/plot_grammar.cc file
+     + librna
+       - is exposing additional functions to support Guanine-Quadruplex energy
+         contribution calculation for RNA problems
+       - updated the ViennaRNA code base from 2.4.17 to 2.5.1, thanks to Fynn
+         Muermanns
+       - significant speed-ups due to clever hashing / pre-computation of energy
+         contributions, thanks to Fynn Muermanns.
+   
+   * fixes:
+     + --plot-grammar: 
+       - properly escape & chars
+       - unfortunately, graphviz -> dot does not necessarily preserve child
+         node ordering. Using "clusters" mitigates (but does not solve in 100%)
+         this issue significantly
+     + fixed yield size computation of constant terminal parsers
+     + guards operate on *unsigned* int borders, which sometimes led
+       to underflows.
+     + warn users about negative candidate values when using expsum
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Mon, 5 July 2023 22:30:00 +0200
+
+bellmansgapc (2023.07.05-0ubuntu0ppa1~jammy1) jammy; urgency=medium
+
+   * features:
+     + --outside_grammar: automatically generate an outside grammar counterpart
+                          for user provided grammars to compute e.g. posteriors
+     + --checkpoint: Thanks to Fynn Muermanns, gapc code generation can now add 
+                     generic code to periodically (e.g. every hour) dump 
+                     contents of the partially computed DP matrices to files. 
+                     Should an execution of a long running job abort 
+                     prematurely, the binary can be restarted and pick up 
+                     computation from the last dumped checkpoint.
+     + --plot-grammar: new levels of detail available for plotting the used
+                       grammar. 4: adding yield size information for parsers,
+                       5: optimized table dimensions for non-terminals.
+     + automatically generated enum algebras will now also report non-terminal
+       parameters for better manual inspection
+     + --printCall can now be invoked with the generated binaries. Thus, the
+                   binary will tell you which gapc command led to its
+                   generation. Thanks to Fynn Muermanns.
+   
+   * maintenance:
+     + CYK code generation is now nicely abstracted into the source file
+       src/cyk.{cc,hh} instead of being intermingled in src/cpp.cc
+     + plot_grammar code is moved into a dedicated src/plot_grammar.cc file
+     + librna
+       - is exposing additional functions to support Guanine-Quadruplex energy
+         contribution calculation for RNA problems
+       - updated the ViennaRNA code base from 2.4.17 to 2.5.1, thanks to Fynn
+         Muermanns
+       - significant speed-ups due to clever hashing / pre-computation of energy
+         contributions, thanks to Fynn Muermanns.
+   
+   * fixes:
+     + --plot-grammar: 
+       - properly escape & chars
+       - unfortunately, graphviz -> dot does not necessarily preserve child
+         node ordering. Using "clusters" mitigates (but does not solve in 100%)
+         this issue significantly
+     + fixed yield size computation of constant terminal parsers
+     + guards operate on *unsigned* int borders, which sometimes led
+       to underflows.
+     + warn users about negative candidate values when using expsum
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Mon, 5 July 2023 22:30:00 +0200
+
+bellmansgapc (2023.07.05-0ubuntu0ppa1~focal1) focal; urgency=medium
+
+   * features:
+     + --outside_grammar: automatically generate an outside grammar counterpart
+                          for user provided grammars to compute e.g. posteriors
+     + --checkpoint: Thanks to Fynn Muermanns, gapc code generation can now add 
+                     generic code to periodically (e.g. every hour) dump 
+                     contents of the partially computed DP matrices to files. 
+                     Should an execution of a long running job abort 
+                     prematurely, the binary can be restarted and pick up 
+                     computation from the last dumped checkpoint.
+     + --plot-grammar: new levels of detail available for plotting the used
+                       grammar. 4: adding yield size information for parsers,
+                       5: optimized table dimensions for non-terminals.
+     + automatically generated enum algebras will now also report non-terminal
+       parameters for better manual inspection
+     + --printCall can now be invoked with the generated binaries. Thus, the
+                   binary will tell you which gapc command led to its
+                   generation. Thanks to Fynn Muermanns.
+   
+   * maintenance:
+     + CYK code generation is now nicely abstracted into the source file
+       src/cyk.{cc,hh} instead of being intermingled in src/cpp.cc
+     + plot_grammar code is moved into a dedicated src/plot_grammar.cc file
+     + librna
+       - is exposing additional functions to support Guanine-Quadruplex energy
+         contribution calculation for RNA problems
+       - updated the ViennaRNA code base from 2.4.17 to 2.5.1, thanks to Fynn
+         Muermanns
+       - significant speed-ups due to clever hashing / pre-computation of energy
+         contributions, thanks to Fynn Muermanns.
+   
+   * fixes:
+     + --plot-grammar: 
+       - properly escape & chars
+       - unfortunately, graphviz -> dot does not necessarily preserve child
+         node ordering. Using "clusters" mitigates (but does not solve in 100%)
+         this issue significantly
+     + fixed yield size computation of constant terminal parsers
+     + guards operate on *unsigned* int borders, which sometimes led
+       to underflows.
+     + warn users about negative candidate values when using expsum
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Mon, 5 July 2023 22:30:00 +0200
+
+bellmansgapc (2023.07.05-0ubuntu0ppa1~bionic1) bionic; urgency=medium
+
+   * features:
+     + --outside_grammar: automatically generate an outside grammar counterpart
+                          for user provided grammars to compute e.g. posteriors
+     + --checkpoint: Thanks to Fynn Muermanns, gapc code generation can now add 
+                     generic code to periodically (e.g. every hour) dump 
+                     contents of the partially computed DP matrices to files. 
+                     Should an execution of a long running job abort 
+                     prematurely, the binary can be restarted and pick up 
+                     computation from the last dumped checkpoint.
+     + --plot-grammar: new levels of detail available for plotting the used
+                       grammar. 4: adding yield size information for parsers,
+                       5: optimized table dimensions for non-terminals.
+     + automatically generated enum algebras will now also report non-terminal
+       parameters for better manual inspection
+     + --printCall can now be invoked with the generated binaries. Thus, the
+                   binary will tell you which gapc command led to its
+                   generation. Thanks to Fynn Muermanns.
+   
+   * maintenance:
+     + CYK code generation is now nicely abstracted into the source file
+       src/cyk.{cc,hh} instead of being intermingled in src/cpp.cc
+     + plot_grammar code is moved into a dedicated src/plot_grammar.cc file
+     + librna
+       - is exposing additional functions to support Guanine-Quadruplex energy
+         contribution calculation for RNA problems
+       - updated the ViennaRNA code base from 2.4.17 to 2.5.1, thanks to Fynn
+         Muermanns
+       - significant speed-ups due to clever hashing / pre-computation of energy
+         contributions, thanks to Fynn Muermanns.
+   
+   * fixes:
+     + --plot-grammar: 
+       - properly escape & chars
+       - unfortunately, graphviz -> dot does not necessarily preserve child
+         node ordering. Using "clusters" mitigates (but does not solve in 100%)
+         this issue significantly
+     + fixed yield size computation of constant terminal parsers
+     + guards operate on *unsigned* int borders, which sometimes led
+       to underflows.
+     + warn users about negative candidate values when using expsum
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Mon, 5 July 2023 22:30:00 +0200
+
 bellmansgapc (2022.07.04-0ubuntu0ppa1~bionic1) bionic; urgency=medium
 
    * the new command line parameter "plot-grammar" allows to generate an additional output file (default is out.dot) that contains GraphViz code that renders the chosen grammar in user defined level of detail (1 to 3).

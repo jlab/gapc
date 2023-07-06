@@ -288,7 +288,7 @@ unsigned int* Alt::Base::to_dot(unsigned int *nodeID, std::ostream &out,
         if (arg == simple->args.begin()) {
           out << "(";
         }
-        (*arg)->print(out);
+        (*arg)->to_dot(out);
         if (std::next(arg) != simple->args.end()) {
           out << ", ";
         } else {
@@ -805,8 +805,21 @@ void Type::Base::to_dot(std::ostream &out) {
   std::ostringstream dtype_stream;
   this->put(dtype_stream);
   std::string dtype = dtype_stream.str();
-  replaceAll(dtype, std::string("<"), std::string("&lt;"));
-  replaceAll(dtype, std::string(">"), std::string("&gt;"));
+  replaceAll(dtype, "&",  "&amp;");
+  replaceAll(dtype, "<",  "&lt;");
+  replaceAll(dtype, ">",  "&gt;");
   out << dtype;
 }
 
+// graphViz compatible text representation of Fn_Arg with parameters, e.g.
+// CHAR('&')
+void Fn_Arg::Base::to_dot(std::ostream &out) {
+  std::ostringstream stream;
+  this->print(stream);
+  std::string rep = stream.str();
+  replaceAll(rep, "&",  "&amp;");
+  replaceAll(rep, "<",  "&lt;");
+  replaceAll(rep, ">",  "&gt;");
+
+  out << rep;
+}

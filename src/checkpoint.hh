@@ -983,7 +983,8 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      dec_indent(); dec_indent();
   }
 
-  void archive_cyk_indices(Printer::Base &stream, size_t n_tracks) {
+  void archive_cyk_indices(Printer::Base &stream, size_t n_tracks,
+                           bool outside) {
      inc_indent();
      stream << indent() << "void archive_cyk_indices() {" << endl;
      inc_indent();
@@ -998,17 +999,50 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      stream << indent() << "boost::archive::text_oarchive "
                             "array_out(array_fout);" << endl;
      for (size_t i = 0; i < n_tracks; i++) {
-       // archive the indices of the prior iteration to ensure
-       // that the whole iteration has been completed
-       stream << indent() << "array_out << t_" << i << "_i + 1;" << endl;
-       stream << indent() << "array_out << "
-              << "(t_" << i << "_j == 0 ? 0 : t_" << i << "_j - 1);" << endl;
+       // since a mutex is locked before every loop iteration that prevents
+       // any archiving before it is unlocked again,
+       // we can directly dump the indices without having to worry
+       // about potentially incomplete iterations
+       std::string suffix = "";
+       std::string first_index = "i";
+       for (int io = 0; io < 2; ++io) {  // iterate through inside and outside
+         stream << indent() << "array_out << t_" << i << "_" << first_index
+                << suffix << ";" << endl;
+         stream << indent() << "array_out << "
+                << "t_" << i << "_j" << suffix << ";" << endl;
+         if (!outside) {
+           break;
+         } else {
+           // TODO(sjanssen) why can't I use OUTSIDE_IDX_SUFFIX from cyk.hh
+           // here?
+           suffix = "_outside";
+           first_index = "diag";
+           if (io == 0) {
+             stream << indent() << "array_out << "
+                    << "t_" << i << "_i" << suffix << ";" << endl;
+           }
+         }
+       }
      }
      stream << indent() << "#ifdef _OPENMP" << endl;
-     stream << indent() << "  array_out << outer_loop_1_idx;" << endl;
-     stream << indent() << "  array_out << outer_loop_2_idx;" << endl;
-     stream << indent() << "  array_out << inner_loop_2_idx;" << endl;
+     inc_indent();
+     std::string suffix = "";
+     for (int io = 0; io < 2; ++io) {  // iterate through inside and outside
+       stream << indent() << "array_out << outer_loop_1_idx"
+              << suffix << ";" << endl;
+       stream << indent() << "array_out << outer_loop_2_idx"
+              << suffix << ";" << endl;
+       stream << indent() << "array_out << inner_loop_2_idx"
+              << suffix << ";" << endl;
+       if (!outside) {
+         break;
+       } else {
+         suffix = "_outside";
+       }
+     }
+     dec_indent();
      stream << indent() << "#endif" << endl;
+
      stream << indent() << "array_fout.close();" << endl;
      stream << indent() << "boost::filesystem::rename(tmp_out_cyk_path, "
             << "out_cyk_path);" << endl;
@@ -1042,7 +1076,7 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      dec_indent();
   }
 
-  void load_cyk_indices(Printer::Base &stream, size_t n_tracks) {
+  void load_cyk_indices(Printer::Base &stream, size_t n_tracks, bool outside) {
      inc_indent();
      stream << indent() << "void load_cyk_indices() {" << endl;
      inc_indent();
@@ -1057,14 +1091,41 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      stream << indent() << "boost::archive::text_iarchive "
                             "array_in(array_fin);" << endl;
      for (size_t i = 0; i < n_tracks; i++) {
-       stream << indent() << "array_in >> t_" << i << "_i;" << endl;
-       stream << indent() << "array_in >> t_" << i << "_j;" << endl;
+       std::string suffix = "";
+       std::string first_index = "i";
+       for (int io = 0; io < 2; ++io) {  // iterate through inside and outside
+         stream << indent() << "array_in >> t_" << i << "_" << first_index
+                << suffix << ";" << endl;
+         stream << indent() << "array_in >> t_" << i << "_j" << suffix
+                << ";" << endl;
+         if (!outside) {
+           break;
+         } else {
+           suffix = "_outside";
+           first_index = "diag";
+           if (io == 0) {
+             stream << indent() << "array_in >> "
+                    << "t_" << i << "_i" << suffix << ";" << endl;
+           }
+         }
+       }
      }
      stream << indent() << "#ifdef _OPENMP" << endl;
-       stream << indent() << "  array_in >> outer_loop_1_idx;" << endl;
-       stream << indent() << "  array_in >> outer_loop_2_idx;" << endl;
-       stream << indent() << "  array_in >> inner_loop_2_idx;" << endl;
-       stream << indent() << "#endif" << endl;
+     std::string suffix = "";
+     for (int io = 0; io < 2; ++io) {  // iterate through inside and outside
+       stream << indent() << "  array_in >> outer_loop_1_idx"
+              << suffix << ";" << endl;
+       stream << indent() << "  array_in >> outer_loop_2_idx"
+              << suffix << ";" << endl;
+       stream << indent() << "  array_in >> inner_loop_2_idx"
+              << suffix << ";" << endl;
+       if (!outside) {
+          break;
+        } else {
+          suffix = "_outside";
+        }
+     }
+     stream << indent() << "#endif" << endl;
      stream << indent() << "array_fin.close();" << endl << endl;
      stream << indent() << "std::cerr << \"Info: Successfully loaded "
             << "cyk loop indices. \"" << endl;
@@ -1238,7 +1299,8 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
   void archive_periodically(Printer::Base &stream, const nt_tables &tables) {
      inc_indent();
      stream << indent() << "void archive_periodically(std::atomic_bool "
-                            "&cancel_token, size_t interval" << endl;
+                            "&cancel_token, size_t interval, "
+            << "std::mutex &print_mutex" << endl;
      if (cyk) {
      stream << indent() << "                          "
             << "#ifdef _OPENMP" << endl
@@ -1254,19 +1316,24 @@ SUPPORTED_EXTERNAL_TYPES = {"Rope", "answer_pknot_mfe", "pktype",
      stream << indent() << "// save all tables to the disk periodically "
                             "every interval seconds" << endl;
      stream << indent() << "cancel_token.store(true);" << endl;
+     stream << indent()
+              << "std::thread([this, interval, &cancel_token, &print_mutex";
      if (cyk) {
-       stream << indent() << "std::thread([=, &cancel_token, &mutex]() "
-              << "mutable {" << endl;
-     } else {
-       stream << indent() << "std::thread([=, &cancel_token] () "
-            << "mutable {" << endl;
+       stream << ", &mutex";
      }
+     stream << "] {" << endl;
      stream << indent() << "            while (cancel_token.load()) {"
             << endl;
      stream << indent() << "              std::this_thread::sleep_for("
                             "std::chrono::seconds(interval));" << endl;
      stream << indent() << "              "
                             "if (!cancel_token.load()) break;" << endl;
+     stream << indent() << "              "
+            << "// need to aquire lock before printing to stderr in archive "
+            << "methods to avoid potential interference during "
+            << "simultaneous logging to stdout" << endl;
+     stream << indent() << "              "
+            << "std::lock_guard<std::mutex> print_lock(print_mutex);" << endl;
      if (cyk) {
        stream << indent() << "            #ifdef _OPENMP" << endl;
        stream << indent() << "              "

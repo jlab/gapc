@@ -285,6 +285,12 @@ class AST {
  private:
   void set_tracks();
 
+  // if not empty, automatically generate an outside version of
+  // the provided grammar and print out results of the provided
+  // list of outside non-terminals. Report ALL non-terminals,
+  // if list states 'ALL'.
+  std::vector<std::string> *outside_nt_list;
+
  public:
   Bool window_mode;
   void set_window_mode(bool w);
@@ -298,6 +304,19 @@ class AST {
   }
 
   Printer::Checkpoint *checkpoint;
+
+  bool outside_generation() const {
+    if (!outside_nt_list) {
+      return false;
+    }
+    return outside_nt_list->size() > 0;
+  }
+  void set_outside_nt_list(std::vector<std::string> *nts) {
+    outside_nt_list = nts;
+  }
+  std::vector<std::string> *get_outside_nt_list() const {
+    return this->outside_nt_list;
+  }
 };
 
 #endif  // SRC_AST_HH_

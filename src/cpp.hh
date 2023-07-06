@@ -76,26 +76,6 @@ class Cpp : public Base {
 
     void print_window_inc_fn(const AST &ast);
 
-    void print_openmp_cyk_nt_calls(const AST &ast);
-    void print_openmp_cyk_all_nt_calls(const AST &ast);
-    void print_openmp_cyk_helpervars();
-    void print_openmp_cyk(const AST &ast);
-
-    std::string multi_index_str(const std::vector<Table> &tables,
-      const Yield::Multi &mys);
-    void multi_print_inner_cyk(const std::list<Symbol::NT*> &l,
-      const std::list<Symbol::NT*> &tord, size_t track, size_t tracks,
-      size_t track_pos, Type::Base *t, bool checkpoint);
-    void multi_partition_nts(const std::list<Symbol::NT*> &tord,
-      std::list<Symbol::NT*> &all, std::list<Symbol::NT*> &inner,
-      std::list<Symbol::NT*> &left, std::list<Symbol::NT*> &right,
-      size_t track, size_t tracks, size_t track_pos);
-    void multi_print_cyk(const std::list<Symbol::NT*> &tord,
-      size_t track, size_t tracks, size_t track_pos, Type::Base *t);
-
- public:
-    void print_cyk_fn(const AST &ast);
-
  private:
     void print_run_fn(const AST &ast);
     void print_stats_fn(const AST &ast);
@@ -144,6 +124,7 @@ class Cpp : public Base {
     void print(const Statement::Var_Assign &stmt);
     void print(const Statement::Fn_Call &stmt);
     void print(const Statement::Block &stmt);
+    void print(const Statement::CustomCode &stmt);
     void print(const Statement::Backtrace_Decl &stmt);
     void print(const Statement::Backtrace_NT_Decl &stmt);
     void print(const Statement::Hash_Decl &stmt);

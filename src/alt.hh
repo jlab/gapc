@@ -50,6 +50,7 @@
 // class Filter;
 #include  "adp_mode.hh"
 
+#include "outside/middle_end_fwd.hh"
 
 class Grammar;
 class Signature_Base;
@@ -67,6 +68,13 @@ namespace Alt {
  */
 enum Type { SIMPLE, LINK, BLOCK, MULTI };
 
+Expr::Base *next_index_var(
+    unsigned &k, size_t track,
+    Expr::Base *next_var, Expr::Base *last_var, Expr::Base *right,
+    const Yield::Size &ys, const Yield::Size &lhs, const Yield::Size &rhs,
+    std::list<Statement::For*> &loops,
+    bool for_outside_generation, bool outmost, bool is_left_not_right);
+
 class Base {
  private:
   /*
@@ -75,6 +83,9 @@ class Base {
    * see only used by the inlined method Base::is(Type t).
    */
   Type type;
+
+  /* Flag this alternative as being part of an outside grammar component */
+  bool _is_partof_outside = false;
 
  protected:
   ADP_Mode::Adp_Specialization adp_specialization;
@@ -138,6 +149,14 @@ class Base {
   std::vector<Expr::Base*> right_indices;
 
  public:
+  Expr::Base *get_left_index(size_t track) {
+    assert(left_indices.size() > track);
+    return left_indices[track];
+  }
+  Expr::Base *get_right_index(size_t track) {
+    assert(right_indices.size() > track);
+    return right_indices[track];
+  }
   Statement::Var_Decl *ret_decl;
 
   inline bool is(Type t) {
@@ -266,7 +285,8 @@ class Base {
  public:
   void set_tracks(size_t t, size_t p);
 
- protected:
+  // set to public, to allow transmission to outside pendants
+ public:
   Yield::Multi m_ys;
 
  public:
@@ -275,10 +295,9 @@ class Base {
     return m_ys;
   }
 
- private:
-  std::vector<std::list<Filter*> > multi_filter;
-
  public:
+  // analogous to filters, multi_filter should be public
+  std::vector<std::list<Filter*> > multi_filter;
   void add_multitrack_filter(
     const std::list<Filter*> &l, Filter::Type t, const Loc &loc);
   virtual bool multi_detect_loop(
@@ -318,6 +337,22 @@ class Base {
     std::ostream &out, std::vector<unsigned int> *childIDs = NULL);
   virtual unsigned int* to_dot(unsigned int *nodeID, std::ostream &out,
           int plot_level);
+
+  bool is_partof_outside() const {
+    return _is_partof_outside;
+  }
+  void set_partof_outside() {
+    _is_partof_outside = true;
+  }
+
+  virtual void outside_collect_parsers(
+      std::vector<Parser*> &left_parsers,
+      std::vector<Parser*> &right_parsers,
+      unsigned int &num_outside_nts,
+      size_t track,
+      std::list<Statement::For*> &simple_loops);
+  virtual void outside_uppropagate_indices(
+      Expr::Vacc *left, Expr::Vacc *right, size_t track);
 };
 
 
@@ -387,21 +422,20 @@ class Simple : public Base {
   void traverse(Visitor &v);
 
  private:
-  Expr::Base *next_index_var(
-    unsigned &k, size_t track, Expr::Base *next_var,
-    Expr::Base *last_var, Expr::Base *right, const Yield::Size &ys,
-    const Yield::Size &lhs, const Yield::Size &rhs);
-
   // FIXME convert callers
   Yield::Poly rhs_ys_min_rest(
     const std::list<Fn_Arg::Base*>::iterator &i,
     const std::list<Fn_Arg::Base*>::iterator &end) const;
 
+ public:
   std::list<Statement::For *> loops;
+
+ private:
   std::list<Statement::Foreach *> foreach_loops;
   std::list<Statement::Base*> body_stmts;
 
   Statement::If *guards;
+  Statement::If *guards_outside;
   void ret_decl_empty_block(Statement::If *stmt);
   void deep_erase_if_backtrace(
     Statement::If *stmt, std::vector<Fn_Arg::Base*>::iterator start,
@@ -440,6 +474,9 @@ class Simple : public Base {
   bool has_arg_list();
   void init_body(AST &ast);
   void init_guards();
+  void init_outside_guards();
+  std::list<Statement::Base*> *add_guards(
+      std::list<Statement::Base*> *stmts, bool add_outside_guards);
   void codegen(AST &ast);
 
   void print_dot_edge(std::ostream &out, Symbol::NT &nt);
@@ -496,14 +533,42 @@ class Simple : public Base {
 
  public:
   void set_ntparas(std::list<Expr::Base*> *l);
+  std::list<Expr::Base*> get_ntparas() const {
+    return ntparas;
+  }
+  void remove_ntparas() {
+    ntparas.clear();
+  }
   void ntparas_to_dot(std::ostream &out);
   unsigned int* to_dot(unsigned int *nodeID, std::ostream &out,
           int plot_level);
+
+  /* depth first traversal of a grammar subtree to collect all "Parser" (see
+   * outside/middle_end.hh comment) components left and right of the one
+   * outside NT link, to later set left/right indices */
+  void outside_collect_parsers(
+      std::vector<Parser*> &left_parsers,
+      std::vector<Parser*> &right_parsers,
+      unsigned int &num_outside_nts,
+      size_t track,
+      std::list<Statement::For*> &simple_loops);
+  void outside_uppropagate_indices(
+      Expr::Vacc *left, Expr::Vacc *right, size_t track);
 
  private:
   std::list<Statement::Base*> *insert_index_stmts(
     std::list<Statement::Base*> *stmts);
   std::list<Statement::Base*> *inner_code;
+
+  // a copy of the original inside yield sizes, without re-execution of yield
+  // size analysis with the outside compontents added to the grammar.
+  Yield::Multi m_ys_inside;
+
+ public:
+  // a reference to the left hand side non terminal from which this alternative
+  // get's "called". Necessary to construct correct outside guards, i.e.
+  // we need to know the table dimension of the lhs NT.
+  Symbol::NT *outside_lhsNT;
 };
 
 
@@ -514,6 +579,12 @@ class Simple : public Base {
 class Link : public Base {
  private:
   Runtime::Poly calls;
+
+  /* flags the one and only situation where outside grammar
+   * transitions into inside rules, i.e. user defined axiom.
+   * we need to ensure that according NT call asks for the
+   * empy word. */
+  bool _is_outside_inside_transition = false;
 
  public:
   // The name of the non-terminal this instance wrappes. This
@@ -618,12 +689,34 @@ class Link : public Base {
 
  public:
   void set_ntparas(const Loc &loc, std::list<Expr::Base*> *l);
+  std::list<Expr::Base*> get_ntparas() const {
+    return ntparas;
+  }
+  void remove_ntparas() {
+    ntparas.clear();
+  }
   void ntparas_to_dot(std::ostream &out);
   bool check_ntparas();
 
   void optimize_choice();
   unsigned int* to_dot(unsigned int *nodeID, std::ostream &out,
           int plot_level);
+
+  const bool is_outside_inside_transition() {
+    return _is_outside_inside_transition;
+  }
+  void set_outside_inside_transition() {
+    _is_outside_inside_transition = true;
+  }
+
+  void outside_collect_parsers(
+      std::vector<Parser*> &left_parsers,
+      std::vector<Parser*> &right_parsers,
+      unsigned int &num_outside_nts,
+      size_t track,
+      std::list<Statement::For*> &simple_loops);
+  void outside_uppropagate_indices(
+      Expr::Vacc *left, Expr::Vacc *right, size_t track);
 };
 
 
@@ -693,6 +786,14 @@ class Block : public Base {
   void multi_init_calls(const Runtime::Poly &p, size_t base_tracks);
   unsigned int* to_dot(unsigned int *nodeID, std::ostream &out,
           int plot_level);
+  void outside_collect_parsers(
+      std::vector<Parser*> &left_parsers,
+      std::vector<Parser*> &right_parsers,
+      unsigned int &num_outside_nts,
+      size_t track,
+      std::list<Statement::For*> &simple_loops);
+  void outside_uppropagate_indices(
+      Expr::Vacc *left, Expr::Vacc *right, size_t track);
 };
 
 
@@ -765,6 +866,14 @@ class Multi : public Base {
   void init_ret_decl(unsigned int i, const std::string &prefix);
   unsigned int* to_dot(unsigned int *nodeID, std::ostream &out,
           int plot_level);
+  void outside_collect_parsers(
+      std::vector<Parser*> &left,
+      std::vector<Parser*> &right,
+      unsigned int &num_outside_nts,
+      size_t track,
+      std::list<Statement::For*> &simple_loops);
+  void outside_uppropagate_indices(
+      Expr::Vacc *left, Expr::Vacc *right, size_t track);
 };
 
 }  // namespace Alt

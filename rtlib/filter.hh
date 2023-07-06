@@ -127,5 +127,19 @@ inline bool samesize(const Basic_Sequence<a1, pos_type> &s1,
   return j1-i1 == j2-i2;
 }
 
+/* The recursion basis for outside candidates is the empty parse via the inside
+ * part of the user provided grammar (won't work if user grammar cannot parse
+ * the empty word!). However, an empty word could in principle be parsed between
+ * every two characters of the input. To enforce that this only happens after
+ * the complete track (= input sequence) has been consumed via outside parts,
+ * we apply this filter at the transition between outside and inside grammar
+ * parts, i.e. only at location (n,n).
+ */
+template<typename alphabet, typename pos_type, typename T>
+inline bool complete_track(
+    const Basic_Sequence<alphabet, pos_type> &seq, T i, T j) {
+  return ((i == seq.n) && (j == seq.n));
+}
+
 
 #endif  // RTLIB_FILTER_HH_

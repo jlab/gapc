@@ -52,7 +52,6 @@
 #include "symbol.hh"
 
 
-
 void Grammar::add_nt(Symbol::NT *nt) {
   assert(nt->name);
   if (NTs.find(*nt->name) != NTs.end()) {
@@ -372,8 +371,13 @@ void Grammar::init_table_dims() {
     std::vector<Yield::Size> temp_rs(nt_list.size());
 
     axiom->init_table_dim(l, r, temp_ls, temp_rs, track);
-  }
 
+    // clear table dim ready flag for next track
+    for (std::list<Symbol::NT*>::iterator nt = this->nt_list.begin();
+         nt != this->nt_list.end(); ++nt) {
+      (*nt)->reset_table_dim();
+    }
+  }
 
 #ifndef NDEBUG
   for (std::list<Symbol::NT*>::iterator i = nt_list.begin();
@@ -490,6 +494,20 @@ bool Grammar::check_semantic() {
       print_links();
     }
   }
+
+  /* when outside grammar is requested, raise warning if inside grammar cannot
+   * parse the empty word, which is the recursion base for all outside
+   * candidates */
+  b = this->check_outside_parse_empty_word();
+  r = r && b;
+
+  // check that all NTs requested by the user are actually part of the grammar
+  this->check_outside_requested_nonexisting_nts();
+
+  // warn user about manual overlays that probably lead to wrong results when
+  // outside grammar generation is requested
+  this->check_overlays_exists();
+
   return r;
 }
 
@@ -655,7 +673,11 @@ void Grammar::put_table_conf(std::ostream &s) {
       hashtable<std::string, Symbol::NT*>::iterator a = tabulated.find(
         *i->second->name);
       if (a == tabulated.end()) {
-        assert(false);
+        // user might not have considered outside NTs to be tabulated in
+        // his/her manual annotated table-design
+        if (i->second->is_partof_outside() == false) {
+          assert(false);
+        }
       }
     }
   }
@@ -836,6 +858,7 @@ void Grammar::traverse(Visitor &v) {
        i != NTs.end(); ++i) {
     i->second->traverse(v);
   }
+  v.visit_end(*this);
 }
 
 
@@ -860,6 +883,9 @@ struct Clear_Loops : public Visitor {
 void Grammar::init_indices() {
   Clear_Loops cl;
   traverse(cl);
+
+  assert(this->left_running_indices.size() == 0);
+  assert(this->right_running_indices.size() == 0);
   for (size_t track = 0; track < axiom->tracks(); ++track) {
     // variable access for all possible boundaries
     std::ostringstream i, j, lm, rm;
@@ -868,7 +894,9 @@ void Grammar::init_indices() {
     lm << "t_" << track << "_left_most";
     rm << "t_" << track << "_right_most";
     Expr::Vacc *left = new Expr::Vacc(new std::string(i.str()));
+    this->left_running_indices.push_back(left);
     Expr::Vacc *right = new Expr::Vacc(new std::string(j.str()));
+    this->right_running_indices.push_back(right);
     Expr::Vacc *left_most = new Expr::Vacc(new std::string(lm.str()));
     Expr::Vacc *right_most = new Expr::Vacc(new std::string(rm.str()));
 
@@ -887,8 +915,12 @@ void Grammar::init_indices() {
 
       unsigned k = 0;
 
+      // store names for left/right most input boundaries
+      (*i)->left_most_indices.push_back(left_most);
+      (*i)->right_most_indices.push_back(right_most);
+
       // built up loops and boundaries to loop over inductively
-      (*i)->init_indices(l, r, k, idx);
+      (*i)->init_indices(l, r, k, idx, left_most, right_most);
     }
   }
 }

@@ -42,6 +42,7 @@
 #include "expr_fwd.hh"
 #include "statement_fwd.hh"
 #include "type_fwd.hh"
+#include "outside/middle_end.hh"
 
 
 class Visitor;
@@ -54,6 +55,10 @@ enum Type { ALT, CONST };
 class Base {
  private:
   Type type;
+
+  /* Flag this function argument as being part of an outside grammar
+   * component */
+  bool _is_partof_outside = false;
 
  protected:
   bool productive;
@@ -136,6 +141,8 @@ class Base {
 
     virtual void print(std::ostream &s) = 0;
 
+    void to_dot(std::ostream &out);
+
     virtual bool choice_set() = 0;
 
  protected:
@@ -144,6 +151,21 @@ class Base {
  public:
     virtual void init_multi_ys() = 0;
     virtual const Yield::Multi &multi_ys() const { return m_ys; }
+
+    bool is_partof_outside() const {
+      return _is_partof_outside;
+    }
+    void set_partof_outside() {
+      _is_partof_outside = true;
+    }
+    virtual void outside_collect_parsers(
+        std::vector<Parser*> &left_parsers,
+        std::vector<Parser*> &right_parsers,
+        unsigned int &num_outside_nts,
+        size_t track,
+        std::list<Statement::For*> &simple_loops);
+    virtual void outside_uppropagate_indices(
+        Expr::Vacc *left, Expr::Vacc *right, size_t track);
 };
 
 
@@ -193,6 +215,14 @@ class Alt : public Base {
 
     void init_ret_decl(unsigned int i, const std::string &prefix);
     bool choice_set();
+
+    void outside_collect_parsers(std::vector<Parser*> &left_parsers,
+                                 std::vector<Parser*> &right_parsers,
+                                 unsigned int &num_outside_nts,
+                                 size_t track,
+                                 std::list<Statement::For*> &simple_loops);
+    void outside_uppropagate_indices(
+        Expr::Vacc *left, Expr::Vacc *right, size_t track);
 };
 
 
@@ -202,8 +232,13 @@ class Const : public Base {
     Yield::Poly list_size_;
     ::Const::Base *expr_;
 
+    /* true for CONST_* terminal parser, which do NOT actually consume subwords
+     * of the input sequence, e.g. CONST_FLOAT(0.5), as opposed to parameterized
+     * terminal parser like CHAR('A'). */
+    bool is_inject_argument;
+
  public:
-    Const(::Const::Base *e, const Loc &l);
+    Const(::Const::Base *e, const Loc &l, const bool is_inject_argument);
 
     Base *clone();
 
@@ -239,6 +274,13 @@ class Const : public Base {
 
     void init_multi_ys();
     bool choice_set();
+    void outside_collect_parsers(std::vector<Parser*> &left_parsers,
+                                 std::vector<Parser*> &right_parsers,
+                                 unsigned int &num_outside_nts,
+                                 size_t track,
+                                 std::list<Statement::For*> &simple_loops);
+    void outside_uppropagate_indices(
+        Expr::Vacc *left, Expr::Vacc *right, size_t track);
 };
 }  // namespace Fn_Arg
 

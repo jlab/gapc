@@ -37,7 +37,7 @@
 
 #include "symbol_fwd.hh"
 #include "printer_fwd.hh"
-
+#include "expr_fwd.hh"
 
 class Arg;
 class Signature;
@@ -63,6 +63,9 @@ class Grammar {
 
   void renumber_nts();
   void move_new_nts();
+
+  /* Flag this Grammar as being converted into an outside version */
+  bool _is_partof_outside = false;
 
  public:
   // The name of the grammar as defined in the grammar name of
@@ -95,6 +98,12 @@ class Grammar {
   // Holds the reference to the axiom of the grammar. This
   // is the root node of the grammar tree.
   Symbol::NT* axiom;
+
+  /* for CYK generation: store names of left/right running boundaries for each
+   * track. These names get defined in Grammar::init_indices
+   */
+  std::vector<Expr::Vacc*> left_running_indices;
+  std::vector<Expr::Vacc*> right_running_indices;
 
 
   // Inits the grammar with the values for the AST, the grammar name,
@@ -207,6 +216,35 @@ class Grammar {
   void multi_propagate_max_filter();
 
   unsigned int to_dot(unsigned int *nodeID, std::ostream &out, int plot_level);
+
+  /* semantic check: grammar must be able to parse the empty input in
+   * order to provide recursion base for outside candidates */
+  bool check_outside_parse_empty_word();
+
+  /* input check: tests if all NTs requested by the user to be reported
+   * actually do exist in the chosen inside grammar.
+   * Throws an error if NTs are not present.
+   */
+  void check_outside_requested_nonexisting_nts();
+
+  /* not yet complete: will inject additional production rules such that
+   * the given (inside-) grammar is turned into an outside grammar.
+   */
+  void convert_to_outside();
+
+  bool is_partof_outside() const {
+    return _is_partof_outside;
+  }
+  void set_partof_outside() {
+    _is_partof_outside = true;
+  }
+
+  /* search for Alt::Simple in the grammar that are annotated with manual index
+   * overlay to warn the user when requesting outside grammar that computation
+   * most likely will be wrong, since running indices cannot be transformed
+   * from inside to outside.
+   */
+  void check_overlays_exists();
 };
 
 

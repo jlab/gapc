@@ -84,6 +84,15 @@ class Instance {
   bool replace_classified_product();
 
   void check_alphabets();
+
+  /* when outside generation is requested, grammar is modified, but not the
+   * algebra(s), nor the algebra functions. If you use e.g.
+   *   'typeA afct(BASE, typeB);' in your signature and somewhere in your
+   * inside grammar, the outside grammar will contain
+   *   'typeB = afct(BASE; typeA)' which is not defined.
+   * Thus, we need to make sure that the user does not request outside with
+   * instances that use a signature with multiple answer types */
+  bool check_multiple_answer_types(bool for_outside_generation);
 };
 
 inline std::ostream &operator<<(std::ostream &s, const Instance &i) {

@@ -43,6 +43,8 @@ jobs:
 
     - name: test-mod
       run: make test-mod TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu
+    - name: test-mod_outside
+      run: make -j 2 test-mod_outside TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu
     - name: test-regress
       run: make test-regress TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth
     - name: test-ambiguity
@@ -93,6 +95,8 @@ jobs:
 
     - name: test-mod
       run: make test-mod TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth TRUTH_SUFFIX=_osx
+    - name: test-mod_outside
+      run: make -j 2 test-mod_outside TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth TRUTH_SUFFIX=_osx
     - name: test-regress
       run: make test-regress TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth
     - name: test-ambiguity

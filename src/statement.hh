@@ -272,6 +272,7 @@ class For : public Block_Base {
   Var_Decl *var_decl;
   Expr::Base *cond;
   Statement::Base *inc;
+  bool decrement = false;
 
   For(Var_Decl *v, Expr::Base* e)
   : Block_Base(FOR), var_decl(v), cond(e), inc(NULL) {
@@ -358,6 +359,23 @@ class Block : public Block_Base {
   void push_back(Base* b) {
     statements.push_back(b);
   }
+
+  Base *copy() const;
+};
+
+
+class CustomCode : public Base {
+  /* A "CustomCode" statement is an arbitrary line of string that get's
+   * injected. Handy to leave comments in the generated code or inject
+   * constructs otherwise impossible. Use with care! */
+ public:
+  std::string line_of_code;
+
+  explicit CustomCode(std::string line_of_code) :
+      Base(CUSTOMCODE), line_of_code(line_of_code) {
+  }
+
+  void print(Printer::Base &p) const;
 
   Base *copy() const;
 };
