@@ -33,33 +33,26 @@
 #include <cassert>
 #include <array>
 
-template<unsigned int N, typename ...T>
-inline std::array<unsigned int, N> init_indices(const T&&... values) {
-  return std::array<unsigned int, N>{values...};
-}
-
 // efficiently stores NT table indices for tracing
 template<unsigned int N>
 class index_components {
  private:
-  unsigned int n;
   std::array<unsigned int, N> indices;
 
  public:
-  index_components() : n(N) {}
+  index_components() = default;
 
-  explicit index_components(unsigned int i) : n(N) {
+  explicit index_components(unsigned int i) {
     indices[0] = i;
   }
 
-  index_components(unsigned int i, unsigned int j) : n(N) {
+  index_components(unsigned int i, unsigned int j) {
     indices[0] = i;
     indices[1] = j;
   }
 
   template<typename ...Ts>
- explicit index_components(const Ts&&... values)
-    : n(N), indices(init_indices<N>(std::move(values...))) {}
+ explicit index_components(const Ts&&... values) :indices{values...} {}
 
   template<unsigned int SIZE>
   friend bool operator==(const index_components<SIZE> &lhs,
@@ -77,16 +70,7 @@ bool is_same_index(const index_components<N> &lhs_idx,
 template<unsigned int N>
 bool operator==(const index_components<N> &lhs,
                 const index_components<N> &rhs) {
-  if (lhs.n != rhs.n) {
-      return false;
-    }
-
-    bool equal = true;
-    for (unsigned int i = 0; i < lhs.n; ++i) {
-      equal &= lhs.indices[i] == rhs.indices[i];
-    }
-
-  return equal;
+  return lhs.indices == rhs.indices;
 }
 
 /* this records the use of a sub-solution of another NT result <name of other 
