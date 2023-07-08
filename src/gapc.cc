@@ -146,10 +146,14 @@ static void parse_options(int argc, char **argv, Options *rec) {
       " code generation AND tabulation of all non-terminals).  0 (default) = "
       "deactivated\n  1 = first derivative")
     ("as-torchmod", po::value<std::string>(),
-     "Generate adjusted Makefile which builds a Python/Pytorch module "
+     "Generate adjusted Makefile which builds a Python/PyTorch package "
      "providing a forward and backward function for every derivative\n"
-     "(Requirements: --derivative option has to be >= 1, torch and pip/"
-     "pip3 Python packages need to be installed for the module build step)");
+     "(Requirements: --derivative option has to be >= 1, torch and pip "
+     "Python packages need to be installed for the module build step)\n"
+     "Set the MAX_BATCH_SIZE=N environment variable to set the maximum "
+     "batch size the generated code shall be able to process.\n"
+     "Set the MALLOC_BATCH environment variable to use malloc for "
+     "memory allocation when processing batches instead of a memory pool");
   po::options_description hidden("");
   hidden.add_options()
     ("backtrack", "deprecated for --backtrace")

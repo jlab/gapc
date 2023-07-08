@@ -45,6 +45,7 @@
 
 extern "C" {
   #include <immintrin.h>
+  #include <stdlib.h>
 }
 
 #include <cstdint>
@@ -178,9 +179,21 @@ template<typename T, int SIZE>
 class BatchImpl {
  public:
   uint32_t ref_count;
-  T data[SIZE];
+#ifdef MALLOC_BATCH
+  T *data;
 
-  BatchImpl() : ref_count(1) {}
+  ~BatchImpl() {
+    delete[] data;
+  }
+#else
+  T data[SIZE];
+#endif
+
+  BatchImpl() : ref_count(1) {
+#ifdef MALLOC_BATCH
+    data = new T[BATCH_SIZE + 1];
+#endif
+  }
 
   void inc_ref() {
     ++ref_count;
@@ -191,9 +204,11 @@ class BatchImpl {
     --ref_count;
   }
 
+#ifndef MALLOC_BATCH
   void *operator new(size_t t) noexcept(false);
 
   void operator delete(void *b) noexcept(false);
+#endif
 };
 
 /*
@@ -210,7 +225,9 @@ class Batch {
   T _empty_val;
 
  public:
+#ifndef MALLOC_BATCH
   static Pool<BatchImpl<T, SIZE>> pool;
+#endif
   bool empty_;
   BatchImpl<T, SIZE> *batch;
 
@@ -416,6 +433,7 @@ class Batch {
 
 // ### new and delete overloads for BatchImpl objects ###
 
+#ifndef MALLOC_BATCH
 template<typename T, int SIZE>
 Pool<BatchImpl<T, SIZE>> Batch<T, SIZE>::pool;
 
@@ -433,6 +451,7 @@ void BatchImpl<T, SIZE>::operator delete(void *b) noexcept(false) {
   }
   Batch<T, SIZE>::pool.free(static_cast<BatchImpl<T, SIZE>*>(b));
 }
+#endif
 
 // ### non-member operator/function overloads ###
 

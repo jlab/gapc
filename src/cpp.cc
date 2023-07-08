@@ -3308,6 +3308,9 @@ void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
     stream << "ifdef MAX_BATCH_SIZE" << endl;
     stream << "CXXFLAGS += -DMAX_BATCH_SIZE=$(MAX_BATCH_SIZE)" << endl;
     stream << "endif" << endl << endl;
+    stream << "ifdef MALLOC_BATCH" << endl;
+    stream << "CXXFLAGS += -DMALLOC_BATCH" << endl;
+    stream << "endif" << endl << endl;
   }
   // pytorch C++ extension doesn't support C++17 yet
   stream << "CXXFLAGS := $(CXXFLAGS) | sed 's/c++17/c++14/'" << endl;
