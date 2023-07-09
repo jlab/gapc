@@ -1302,8 +1302,11 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
     dec_indent();
     stream << indent() << "case TableSize::LINEAR :" << endl;
     inc_indent();
-    stream << indent() << "tensor_size.push_back(t_0_right_most + 1);"
-           << endl << indent() << "break;" << endl;
+    stream << indent() << "tensor_size.push_back(t_0_right_most + 1);" << endl;
+    if (batched_input) {
+      stream << indent() << "tensor_size.push_back(BATCH_SIZE);" << endl;
+    }
+    stream << indent() << "break;" << endl;
     dec_indent(); dec_indent();
     stream << indent() << "}" << endl;
   } else  {
@@ -2716,10 +2719,7 @@ void Printer::Cpp::print_run_derivative_fn(const AST &ast) {
         stream << indent() << "matrices.push_back(torch::from_blob("
                << *(nt->name) << "_table.get_array_data(), "
                << *(nt->name) << "_table.tensor_size, "
-               << torch_type << ")";
-        if (ast.current_derivative == 2) {
-          stream << ".clone()";
-        }
+               << torch_type << ").clone()";
         stream << ");" << endl;
         dec_indent();
         stream << indent() << "}" << endl;
@@ -2727,23 +2727,22 @@ void Printer::Cpp::print_run_derivative_fn(const AST &ast) {
     }
   }
   if (ast.as_pytorch_module) {
-    if (ast.current_derivative == 2) {
-      for (hashtable<std::string, Symbol::Base*>::iterator
-         i = (*ast.grammar()).NTs.begin();
-         i != (*ast.grammar()).NTs.end(); ++i) {
-        Symbol::NT *nt = dynamic_cast<Symbol::NT*>((*i).second);
-        if (nt && ast.current_derivative == 2) {
-          stream << indent() << "derivative1->"
-                 << *(nt->name) << "_table.free_table_memory();" << endl;
-          stream << indent()
+    for (hashtable<std::string, Symbol::Base*>::iterator
+       i = (*ast.grammar()).NTs.begin();
+       i != (*ast.grammar()).NTs.end(); ++i) {
+      Symbol::NT *nt = dynamic_cast<Symbol::NT*>((*i).second);
+      if (nt && ast.current_derivative == 2) {
+        stream << indent() << "derivative1->"
                << *(nt->name) << "_table.free_table_memory();" << endl;
-        } else if (nt && nt->is_partof_outside && ast.current_derivative == 1) {
-          stream << indent()
-                 << *(nt->name) << "_table.free_table_memory();" << endl;
-        }
+        stream << indent()
+               << *(nt->name) << "_table.free_table_memory();" << endl;
+      } else if (nt && ast.current_derivative == 1 &&
+                 ast.requested_derivative == 1) {
+        stream << indent()
+               << *(nt->name) << "_table.free_table_memory();" << endl;
       }
     }
-    stream << indent() << "return matrices;" << endl;
+    stream << endl << indent() << "return matrices;" << endl;
   }
   dec_indent();
   stream << indent() << "}" << endl << endl;
@@ -3638,10 +3637,7 @@ void Printer::Cpp::print_pytorch_forward_fn(const AST &ast) {
       stream << indent() << "matrices.push_back(torch::from_blob("
              << *(nt->name) << "_table.get_array_data(), "
              << *(nt->name) << "_table.tensor_size, "
-             << torch_type << ")";
-      if (ast.current_derivative == 2) {
-        stream << ".clone()";
-      }
+             << torch_type << ").clone()";
       stream << ");" << endl;
       dec_indent();
       stream << indent() << "}" << endl;
