@@ -29,21 +29,68 @@
 #include <string>
 #include <vector>
 #include <utility>
+
 #include "base.hh"
 
 namespace Expr {
 
 struct TemplateArg {
-  std::string type, name;
+  enum Type {
+    NONE, TYPENAME, CLASS, INT, FLOAT, DOUBLE, CUSTOM
+  };
 
-  TemplateArg(const std::string &type, const std::string &name)
-    : type(type), name(name) {}
+  Type type;
+  std::string name;
+  bool is_unsigned;
+  std::string custom_type;
+
+  TemplateArg() :
+    type(TemplateArg::TYPENAME), name("T"),
+    is_unsigned(false), custom_type("") {}
+
+  TemplateArg(
+    Type type, const std::string &name,
+    bool is_unsigned = false, std::string custom_type = "") :
+    type(type), name(name),
+    is_unsigned(is_unsigned), custom_type(custom_type) { }
 
     friend std::ostream &operator<<(std::ostream &stream, const TemplateArg &a);
 };
 
-inline std::ostream &operator<<(std::ostream &stream, const TemplateArg &a) {
-  stream << a.type << ' ' << a.name;
+inline std::ostream &operator<<(std::ostream &stream, const TemplateArg &arg) {
+  switch (arg.type) {
+    case TemplateArg::TYPENAME :
+      stream << "typename";
+      break;
+    case TemplateArg::CLASS :
+      stream << "class";
+      break;
+    case TemplateArg::INT :
+      if (arg.is_unsigned) stream << "unsigned ";
+      stream << "int";
+      break;
+    case TemplateArg::FLOAT :
+      stream << "float";
+      break;
+    case TemplateArg::DOUBLE :
+      stream << "double";
+      break;
+    case TemplateArg::CUSTOM :
+      if (arg.custom_type.empty()) {
+        std::cerr << "Warning: No custom template type provided. "
+                     "Using \"typename\" instead.\n";
+        stream << "typename";
+      } else {
+        stream << arg.custom_type;
+      }
+      break;
+    case TemplateArg::NONE :
+    default :
+      std::cerr << "Error: Invalid template type provided.\n";
+      std::exit(1);
+  }
+  stream << ' ' << arg.name;
+
   return stream;
 }
 
@@ -53,7 +100,7 @@ class Template : public Base {
 
   Template() : Base(Expr::TEMPLATE) {}
 
-  void put(std::ostream &s) const {
+  void put(std::ostream &s) const override {
     if (!args.size()) {
       return;
     }

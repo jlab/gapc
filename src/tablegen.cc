@@ -588,7 +588,7 @@ Fn_Def *Tablegen::gen_get_traces() {
   // add template declaration for get_traces function so index_components
   // objects can be provided with a compile-time constant size
   f->template_decl = new Expr::Template();
-  Expr::TemplateArg template_arg("unsigned int", "N");
+  Expr::TemplateArg template_arg(Expr::TemplateArg::INT, "N", true);
   f->template_decl->add(std::move(template_arg));
 
   /*
