@@ -11,7 +11,7 @@ GAPC=../../../gapc
 MAKE="make"
 PYTHON="python3"
 PY_TEST="../test_pytorch_module.py"
-ALIGNMENTS_GAP="../../grammar/alignments_tensor.gap"
+ALIGNMENTS_GAP="../../grammar_pytorch/alignments_tensor.gap"
 
 # path/to/Truth
 TRUTH_DIR=$1
@@ -24,7 +24,7 @@ BATCHED_SUFFIX=""
 if [ $# == 2 ]; then
   BATCHED_ARG="--batched"
   BATCHED_SUFFIX="_batched"
-  ALIGNMENTS_GAP="../../grammar/alignments_tensor_batched.gap"
+  ALIGNMENTS_GAP="../../grammar_pytorch/alignments_tensor_batched.gap"
 fi
 
 TEMP="./temp"

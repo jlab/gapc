@@ -337,8 +337,5 @@ testdata/test/shrepmfesample/main:
 
 test-pytorch:
 	cd testdata/regresstest &&\
-	$(SHELL) test_pytorch_module.sh $(TRUTH_DIR)
-
-test-pytorch-batched:
-	cd testdata/regresstest &&\
+	$(SHELL) test_pytorch_module.sh $(TRUTH_DIR) &&\
 	$(SHELL) test_pytorch_module.sh $(TRUTH_DIR) ""

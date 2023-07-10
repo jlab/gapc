@@ -37,7 +37,5 @@ jobs:
     - name: Install GAPC
       run: sudo make install
 
-    - name: Test non-batched input
+    - name: Test non-batched and batched input
       run: make test-pytorch TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth/Regress
-    - name: Test batched input
-      run: make test-pytorch-batched TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth/Regress

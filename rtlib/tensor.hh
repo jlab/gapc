@@ -301,22 +301,22 @@ inline bool equal(const TensorSlice &lhs, const TensorSlice &rhs) {
 }
 
 // element-wise == comparison for i-th column of the two compared tensors
-inline tensor operator==(const TensorChar &lhs, const TensorChar &rhs) {
-  return lhs[{"...", lhs.i}] == rhs[{"...", rhs.i}];
+inline bool operator==(const TensorChar &lhs, const TensorChar &rhs) {
+  return equal(lhs, rhs);
 }
 
 // element-wise != comparison for i-th column of the two compared tensors
-inline tensor operator!=(const TensorChar &lhs, const TensorChar &rhs) {
+inline bool operator!=(const TensorChar &lhs, const TensorChar &rhs) {
   return ~(lhs == rhs);
 }
 
 // element-wise == comparison for columns [i, j) of the two compared tensors
-inline tensor operator==(const TensorSlice &lhs, const TensorSlice &rhs) {
-  return lhs[{"...", Slice(lhs.i, lhs.j)}] == rhs[{"...", Slice(rhs.i, rhs.j)}];
+inline bool operator==(const TensorSlice &lhs, const TensorSlice &rhs) {
+  return equal(lhs, rhs);
 }
 
 // element-wise != comparison for columns [i, j) of the two compared tensors
-inline tensor operator!=(const TensorSlice &lhs, const TensorSlice &rhs) {
+inline bool operator!=(const TensorSlice &lhs, const TensorSlice &rhs) {
   return ~(lhs == rhs);
 }
 

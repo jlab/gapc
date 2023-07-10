@@ -50,7 +50,9 @@
 #include <utility>
 #include <vector>
 #include <iostream>
+
 #include "type.hh"
+#include "loc.hh"
 
 #define DEFAULT_TORCH_TYPE "torch::kFloat32"
 #define DEFAULT_CPP_TYPE   "float"
@@ -101,7 +103,7 @@ class TensorMode {
    *  - input<tensorF64> : non-batched 2D tensor containing float64 values
    *  - input<batchedtensor> : batched 2D tensor containing float32 values
    */
-  static TensorMode get_tensor_mode(const std::string &input) {
+  static TensorMode get_tensor_mode(const std::string &input, const Loc &loc) {
     assert(is_tensor(input));
 
     static hashtable<std::string, std::pair<std::string, std::string>>
@@ -125,7 +127,9 @@ class TensorMode {
       try {
         n_dims = std::stoi(match[1].str());
       } catch (const std::exception &e) {
-        std::cerr << "Couldn't convert " << match[1].str() << " to a number.\n";
+        Log::instance()->error(loc, "Couldn't convert specified tensor "
+                               "dimensions (" + match[1].str() +
+                               ") to a number.");
         std::exit(1);
       }
     }
@@ -133,15 +137,21 @@ class TensorMode {
     // check the datatype of the tensor values
     std::string torch_dtype = DEFAULT_TORCH_TYPE;
     std::string cpp_dtype = DEFAULT_CPP_TYPE;
+    bool found_type = false;
 
     for (auto& key_val : torch_type) {
       if (input.find(key_val.first) != input.npos) {
+        found_type = true;
         torch_dtype = key_val.second.first;
         cpp_dtype = key_val.second.second;
         break;
       }
     }
 
+    if (!found_type) {
+      Log::instance()->warning(loc, "Couldn't determine tensor type. Using "
+                               "default type \"" + torch_dtype + "\" instead.");
+    }
     return TensorMode(batched, torch_dtype, cpp_dtype, n_dims);
   }
 };

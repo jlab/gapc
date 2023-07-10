@@ -43,7 +43,7 @@ void Input::set(const std::string &s, const Loc &l) {
 
 Input::Mode Input::str_to_mode(const std::string &s, const Loc &l) {
   if (TensorMode::is_tensor(s)) {
-    tensor_inputs.add_mode(TensorMode::get_tensor_mode(s));
+    tensor_inputs.add_mode(TensorMode::get_tensor_mode(s, l));
     return Mode(TENSOR);
   }
 
