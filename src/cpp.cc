@@ -1146,10 +1146,32 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
     stream << indent() << "TableSize get_table_size() {" << endl;
     inc_indent();
     if (t.fn_get_tab().paras.size() == 1) {
+        // if "get" function only receives 1 argument -> linear table
         stream << indent() << "return TableSize::LINEAR;" << endl;
     } else if (t.fn_get_tab().paras.size() == 2) {
-      stream << indent() << "return (size() >= t_0_n * t_0_n) ? "
-             << "TableSize::QUADRATIC : TableSize::TRIU;" << endl;
+      // if "get" function receives two arguments -> quadratic/triu matrix
+      stream << indent() << "return (size() >= t_0_n";
+      if (t.nt().tracks() > 1) {
+        /*
+         * if table as two or more input tracks, a quadratic matrix would
+         * contain at least t_0_n * t_1_n * ... * t_N_n elements
+         * (potentially a linear/constant factor more);
+         * if it has one input track, a quadratic matrix would contain at least
+         * t_0_n * t_0_n elements;
+         * a triangular matrix would contain at least t_0_n * (t_0_n + 1) / 2
+         * elements (potentially a linear/constant factor more), which is always
+         * going to be less than the number of elements a quadratic matrix would
+         * contain; so simply checking if the size of the matrix is at least
+         * t_0_n * t_1_n * ... * t_N_n is sufficient to determine whether
+         * or not it is a quadratic or a triangular matrix
+         */
+        for (size_t i = 1; i < t.nt().tracks(); ++i) {
+          stream << " * t_" << i << "_n";
+        }
+      } else {
+        stream << "t_0_n";
+      }
+      stream << ") ? TableSize::QUADRATIC : TableSize::TRIU;" << endl;
     }
     dec_indent();
     stream << indent() << "}" << endl << endl;
