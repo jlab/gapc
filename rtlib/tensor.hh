@@ -429,6 +429,14 @@ inline bool EMPTY(const TensorSlice &t, T i, T j) {
 // (parses Slice of input tensor)
 template<typename T>
 inline TensorSlice TSLICE(TensorSlice &t, T i, T j) {
+  assert(i < j);
+  return TensorSlice(t, i, j);
+}
+
+// analogous to any terminal parser with Yield 1..n
+// (parses Slice of input tensor)
+template<typename T>
+inline TensorSlice TSLICE0(TensorSlice &t, T i, T j) {
   assert(i <= j);
   return TensorSlice(t, i, j);
 }

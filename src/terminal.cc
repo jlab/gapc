@@ -122,11 +122,21 @@ void Terminal::add_predefined(Grammar &grammar) {
   grammar.NTs[*(t->name)] = t;
 
   /*
-   * Tensor with shape [:, i:j] (entire columns from [i, j))
+   * Tensor with shape [:, i:j] (i < j, entire columns from [i, j))
   */
   s = new std::string("TSLICE");
   t = new Symbol::Terminal(s, l);
   t->writeable_ys().set(1, Yield::UP);
+  t->set_data_type(new Type::TensorSlice());
+  t->setPredefinedTerminalParser(true);
+  grammar.NTs[*(t->name)] = t;
+
+  /*
+   * Tensor with shape [:, i:j] (i <= j, entire columns from [i, j))
+  */
+  s = new std::string("TSLICE0");
+  t = new Symbol::Terminal(s, l);
+  t->writeable_ys().set(0, Yield::UP);
   t->set_data_type(new Type::TensorSlice());
   t->setPredefinedTerminalParser(true);
   grammar.NTs[*(t->name)] = t;

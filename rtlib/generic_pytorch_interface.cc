@@ -94,6 +94,7 @@ std::vector<torch::Tensor> backward_D2() {
 
 // pybind11 binding instructions
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
+  m.doc() = (std::string("GAP-C call: \n") + GAPC_CALL_STRING).c_str();
   m.def("forward_D1", &forward_D1,
         "Calculate the 1st derivative score matrices for the forward pass");
   m.def("backward_D1", &backward_D1,
