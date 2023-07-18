@@ -545,34 +545,25 @@ Fn_Def *Tablegen::gen_set_traces(int forDerivative) {
    * to instruct the compiler to use the default template type (double);
    * this isn't required anymore in C++17+, but still is required in C++11
    */
-  std::string *fn_norm_name;
-  if (batched_) {
-    fn_norm_name = new std::string("normalize_traces<TensorBatch>");
-  } else {
-    fn_norm_name = new std::string("normalize_traces<>");
-  }
-
-  if (forDerivative == 2) {
-    if (batched_) {
-      fn_norm_name = new std::string("soft_max_hessian_product<TensorBatch>");
-    } else {
-      fn_norm_name = new std::string("soft_max_hessian_product<>");
-    }
-  }
-
-  Expr::Fn_Call *rhs_norm = new Expr::Fn_Call(fn_norm_name);
-  rhs_norm->add_arg(new Var_Acc::Array(new Var_Acc::Plain(
-    new std::string("&traces")), off));
-  rhs_norm->add_arg(new std::string("candidates"));
-  rhs_norm->add_arg(new std::string("e"));
+  std::string fn_norm_name;
   if (forDerivative == 1) {
-    rhs_norm->add_arg(new std::string("&" + *(new std::string(
+    fn_norm_name = batched_ ? "normalize_traces<TensorBatch>" :
+                              "normalize_traces<>";
+  } else if (forDerivative == 2) {
+    fn_norm_name = batched_ ? "soft_max_hessian_product<TensorBatch>" :
+                              "soft_max_hessian_product<>";
+  }
+
+  Statement::Fn_Call *fn_norm = new Statement::Fn_Call(fn_norm_name);
+  fn_norm->add_arg(new Var_Acc::Array(new Var_Acc::Plain(
+    new std::string("&traces")), off));
+  fn_norm->add_arg(new std::string("candidates"));
+  fn_norm->add_arg(new std::string("e"));
+  if (forDerivative == 1) {
+    fn_norm->add_arg(new std::string("&" + *(new std::string(
       FN_NAME_DERIVATIVE_NORMALIZER))));
   }
 
-  Statement::Var_Assign *fn_norm = new Statement::Var_Assign(
-    new Var_Acc::Array(new Var_Acc::Plain(new std::string("traces")), off),
-    rhs_norm);
   c.push_back(fn_norm);
 
   f->set_statements(c);
@@ -585,12 +576,6 @@ Fn_Def *Tablegen::gen_get_traces() {
   Fn_Def *f = new Fn_Def(dtype, new std::string("get_traces"));
   f->add_paras(paras);
 
-  // add template declaration for get_traces function so index_components
-  // objects can be provided with a compile-time constant size
-  f->template_decl = new Expr::Template();
-  Expr::TemplateArg template_arg(Expr::TemplateArg::INT, "N", true);
-  f->template_decl->add(std::move(template_arg));
-
   /*
    * since the "to_nt" and "to_indices" arguments are created in-place
    * in the generated code and are thus regarded as rvalue references,
@@ -601,8 +586,8 @@ Fn_Def *Tablegen::gen_get_traces() {
    */
   f->add_para(new ::Type::External(new std::string("std::string&")),
               new std::string("to_nt"));
-  ::Type::External *idx = new ::Type::External(new std::string(
-    "index_components<" + f->template_decl->args.front().name + ">&"));
+  ::Type::External *idx = new ::Type::External(
+                            new std::string("index_components&"));
   f->add_para(idx, new std::string("to_indices"));
 
   // FIXME const & in dtype -> see cpp.cc in_fn_head

@@ -1463,11 +1463,6 @@ Expr::Base *Alt::Base::inject_derivative_body(AST &ast,
       mkidx->add_arg((*s).name());
     }
   }
-
-  // add number of indices as template argument to index_components call
-  mkidx->type_param = new ::Type::External(
-                        new std::string(std::to_string(mkidx->exprs.size())));
-
   fn_call->exprs.push_back(mkidx);
 
   if (ast.current_derivative == 1) {
@@ -1562,10 +1557,6 @@ std::list<Statement::Base*> *Alt::Simple::derivative_collect_traces(
           Expr::Fn_Call *mkidx = new Expr::Fn_Call(
             new std::string("index_components"));
           alt_link->add_args(mkidx);
-
-          // add number of indices as template argument to index_components call
-          mkidx->type_param = new ::Type::External(
-                        new std::string(std::to_string(mkidx->exprs.size())));
           fn_call->exprs.push_back(mkidx);
 
           fn_call->exprs.push_back(new Expr::Const(1.0));
@@ -1805,9 +1796,6 @@ std::list<Statement::Base*> *Alt::Link::derivatives_create_candidate() {
   Expr::Fn_Call *mkidx = new Expr::Fn_Call(
     new std::string("index_components"));
   this->add_args(mkidx);
-  // add number of indices as template argument to index_components call
-  mkidx->type_param = new ::Type::External(
-                        new std::string(std::to_string(mkidx->exprs.size())));
 
   Statement::Fn_Call *fn_add = new Statement::Fn_Call(
   "add_sub_component");
@@ -1879,10 +1867,13 @@ void Alt::Base::init_derivative_recording(
           new ::Type::External(candidate_name), "cand");
         stmts_record->push_front(candidate);
 
-        Statement::Fn_Call *fn_push = new Statement::Fn_Call("push_back");
+        Statement::Fn_Call *fn_push = new Statement::Fn_Call("emplace_back");
         fn_push->add_arg(new std::string("candidates"));
         fn_push->is_obj = Bool(true);
-        fn_push->add_arg(new std::string("cand"));
+        Expr::Fn_Call *move_call = new Expr::Fn_Call(
+                                     new std::string("std::move"));
+        move_call->add_arg(new std::string("cand"));
+        fn_push->add_arg(move_call);
         stmts_record->push_back(fn_push);
 
         this->derivative_statements.insert(this->derivative_statements.end(),

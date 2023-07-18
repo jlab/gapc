@@ -1954,6 +1954,16 @@ void Printer::Cpp::header(const AST &ast) {
       stream << "#define OUTSIDE\n";
       if (ast.current_derivative == 1) {
         stream << "#define DERIVATIVES\n";
+
+        size_t mx_indices = 0;
+        for (auto &kv : ast.grammar()->tabulated) {
+          size_t curr_table_indices =
+            kv.second->table_decl->fn_get_tab().paras.size();
+          if (curr_table_indices > mx_indices) {
+            mx_indices = curr_table_indices;
+          }
+        }
+        stream << "#define MAX_INDEX_COMPONENTS " << mx_indices << endl << endl;
       } else if (ast.current_derivative == 2) {
         stream << "#define SECOND_DERIVATIVE\n";
       }
