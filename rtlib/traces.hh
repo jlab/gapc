@@ -59,14 +59,11 @@ class index_components {
   template<typename ...Ts>
   explicit index_components(const Ts&&... values) : indices{values...} {}
 
-  friend bool operator==(const index_components &lhs,
-                         const index_components &rhs);
+  friend inline bool operator==(const index_components &lhs,
+                                const index_components &rhs) {
+    return lhs.indices == rhs.indices;
+  }
 };
-
-bool operator==(const index_components &lhs,
-                const index_components &rhs) {
-  return lhs.indices == rhs.indices;
-}
 
 inline bool is_same_index(const index_components &lhs_idx,
                           const index_components &rhs_idx,
