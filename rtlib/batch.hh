@@ -496,4 +496,28 @@ inline bool isEmpty(const Batch<T, SIZE> &t) {
   return t.isEmpty();
 }
 
+// push_back functions for min/max choice functions
+
+template<typename T = float, int SIZE = MAX_BATCH_SIZE>
+inline void push_back_max(Batch<T, SIZE> &x, Batch<T, SIZE>  &e) {
+  if (isEmpty(x)) {
+    x = e;
+    return;
+  }
+  for (int i = 0; i < BATCH_SIZE; ++i) {
+    x[i] = x[i] < e[i] ? e[i] : x[i];
+  }
+}
+
+template<typename T = float, int SIZE = MAX_BATCH_SIZE>
+inline void push_back_min(Batch<T, SIZE> &x, Batch<T, SIZE>  &e) {
+  if (isEmpty(x)) {
+    x = e;
+    return;
+  }
+  for (int i = 0; i < BATCH_SIZE; ++i) {
+    x[i] = x[i] > e[i] ? e[i] : x[i];
+  }
+}
+
 #endif  // RTLIB_BATCH_HH_
