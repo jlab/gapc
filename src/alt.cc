@@ -1440,14 +1440,14 @@ Expr::Base *Alt::Base::inject_derivative_body(AST &ast,
   fn_call->is_obj = Bool(true);
 
   // abuse mkidx to obtain indices from outside-NT call, i.e. not really
-  // calling make_index
-  Expr::Fn_Call *mkidx = new Expr::Fn_Call(new std::string("*make_index"));
+  // calling index_components
+  Expr::Fn_Call *mkidx = new Expr::Fn_Call(new std::string("index_components"));
   outside_alt->add_args(mkidx);
   fn_call->exprs.insert(fn_call->exprs.end(),
                         mkidx->exprs.begin(), mkidx->exprs.end());
 
   // add name of non-terminal that requests traces
-  // together with make_index, this information is used to sub-set
+  // together with index_components, this information is used to sub-set
   // stored traces to those that actually lead to this DP cell
   fn_call->exprs.push_back(new Expr::Const((*calling_nt.name).substr(
     sizeof(OUTSIDE_NT_PREFIX)-1, (*calling_nt.name).length())));
@@ -1463,7 +1463,6 @@ Expr::Base *Alt::Base::inject_derivative_body(AST &ast,
       mkidx->add_arg((*s).name());
     }
   }
-  mkidx->add_arg(new Expr::Const(static_cast<int>(mkidx->exprs.size())), true);
   fn_call->exprs.push_back(mkidx);
 
   if (ast.current_derivative == 1) {
@@ -1550,16 +1549,14 @@ std::list<Statement::Base*> *Alt::Simple::derivative_collect_traces(
           }
 
           // add name of non-terminal that requests traces
-          // together with make_index, this information is used to sub-set
+          // together with index_components, this information is used to sub-set
           // stored traces to those that actually lead to this DP cell
           fn_call->exprs.push_back(new Expr::Const(*alt_nt->name));
 
-          // calling make_index
+          // calling index_components
           Expr::Fn_Call *mkidx = new Expr::Fn_Call(
-            new std::string("*make_index"));
+            new std::string("index_components"));
           alt_link->add_args(mkidx);
-          mkidx->add_arg(new Expr::Const(static_cast<int>(mkidx->exprs.size())),
-                         true);
           fn_call->exprs.push_back(mkidx);
 
           fn_call->exprs.push_back(new Expr::Const(1.0));
@@ -1771,37 +1768,42 @@ void Alt::Simple::init_body(AST &ast, Symbol::NT &calling_nt) {
   }
 }
 
-std::list<Statement::Base*> *Alt::Base::derivatives_create_candidate() {
-  return NULL;
+std::pair<std::list<Statement::Base*>*, std::string>
+Alt::Base::derivatives_create_candidate() {
+  return std::make_pair(nullptr, "");
 }
 
-std::list<Statement::Base*> *Alt::Simple::derivatives_create_candidate() {
+std::pair<std::list<Statement::Base*>*, std::string>
+Alt::Simple::derivatives_create_candidate() {
   std::list<Statement::Base*> *stmts_record = \
         new std::list<Statement::Base*>();
+  std::string nt_name;
 
   for (std::list<Fn_Arg::Base*>::iterator i = args.begin();
        i != args.end(); ++i) {
     if ((*i)->is(Fn_Arg::ALT) && ((*i)->alt_ref()->is(Alt::LINK))) {
       Alt::Link *alt = dynamic_cast<Alt::Link*>((*i)->alt_ref());
       if (alt->nt->is(Symbol::NONTERMINAL)) {
-        std::list<Statement::Base*> *x = alt->derivatives_create_candidate();
-        stmts_record-> insert(stmts_record->end(), x->begin(), x->end());
+        std::pair<std::list<Statement::Base*>*, std::string>
+          x = alt->derivatives_create_candidate();
+        stmts_record->insert(stmts_record->end(),
+                             x.first->begin(), x.first->end());
+        nt_name = std::move(x.second);
       }
     }
   }
 
-  return stmts_record;
+  return std::make_pair(stmts_record, std::move(nt_name));
 }
 
-std::list<Statement::Base*> *Alt::Link::derivatives_create_candidate() {
+std::pair<std::list<Statement::Base*>*, std::string>
+Alt::Link::derivatives_create_candidate() {
   std::list<Statement::Base*> *stmts_record = new std::list<Statement::Base*>();
+  std::string nt_name;
 
   Expr::Fn_Call *mkidx = new Expr::Fn_Call(
-    new std::string("make_index"));
+    new std::string("index_components"));
   this->add_args(mkidx);
-  // add number of index arguments for elipsis mechanism
-  mkidx->add_arg(new Expr::Const(
-  static_cast<int>(mkidx->exprs.size())), true);
 
   Statement::Fn_Call *fn_add = new Statement::Fn_Call(
   "add_sub_component");
@@ -1812,26 +1814,32 @@ std::list<Statement::Base*> *Alt::Link::derivatives_create_candidate() {
 
   stmts_record->push_back(fn_add);
 
-  return stmts_record;
+  return std::make_pair(stmts_record, *this->nt->name);
 }
 
-std::list<Statement::Base*> *Alt::Block::derivatives_create_candidate() {
+std::pair<std::list<Statement::Base*>*, std::string>
+Alt::Block::derivatives_create_candidate() {
   throw LogError(
     "Alt::Block::derivatives_create_candidate not properly implemented yet, "
     "as Blocks without application of choice function open up the route for"
     " huge combinatorics!");
 
   std::list<Statement::Base*> *stmts_record = new std::list<Statement::Base*>();
+  std::string nt_name;
   for (std::list<Alt::Base*>::iterator i = alts.begin(); i != alts.end(); ++i) {
-    std::list<Statement::Base*> *x = (*i)->derivatives_create_candidate();
-    stmts_record->insert(stmts_record->end(), x->begin(), x->end());
+    std::pair<std::list<Statement::Base*>*, std::string>
+      x = (*i)->derivatives_create_candidate();
+    nt_name = std::move(x.second);
+    stmts_record->insert(stmts_record->end(), x.first->begin(), x.first->end());
   }
-  return stmts_record;
+  return std::make_pair(stmts_record, std::move(nt_name));
 }
 
-std::list<Statement::Base*> *Alt::Multi::derivatives_create_candidate() {
+std::pair<std::list<Statement::Base*>*, std::string>
+Alt::Multi::derivatives_create_candidate() {
   throw LogError(
     "Alt::Multi::derivatives_create_candidate is not yet implemented!");
+  return std::make_pair(nullptr, "");
 }
 
 void Alt::Base::init_derivative_recording(
@@ -1839,8 +1847,10 @@ void Alt::Base::init_derivative_recording(
   if (ast.current_derivative > 0) {
     if (!this->is_partof_outside) {
       // test if this alternative uses sub-solutions from other non-terminals
-      std::list<Statement::Base*> *stmts_record =
-        derivatives_create_candidate();
+      std::pair<std::list<Statement::Base*>*, std::string>
+        stmts_record_p = derivatives_create_candidate();
+      const std::string &nt_name = stmts_record_p.second;
+      std::list<Statement::Base*> *stmts_record = stmts_record_p.first;
       if (stmts_record && (stmts_record->size() > 0)) {
         // TODO(sjanssen): should I use build-in functions? Also for push_back
         Statement::Fn_Call *x = new Statement::Fn_Call("set_value");
@@ -1860,14 +1870,27 @@ void Alt::Base::init_derivative_recording(
         }
         stmts_record->push_front(x);
 
+        // if batched Pytorch Tensors are processed as input,
+        // the candidate type also needs to process tensors batches
+        std::string *candidate_name;
+        if (ast.as_pytorch_module && ast.input.tensor_inputs.all_batched()) {
+          candidate_name = new std::string("candidate<TensorBatch>");
+        } else {
+          candidate_name =
+            new std::string("candidate<" + nt_name + "_table_t::AnswerType>");
+        }
+
         Statement::Var_Decl *candidate = new Statement::Var_Decl(
-          new ::Type::External(new std::string("candidate")), "cand");
+          new ::Type::External(candidate_name), "cand");
         stmts_record->push_front(candidate);
 
-        Statement::Fn_Call *fn_push = new Statement::Fn_Call("push_back");
+        Statement::Fn_Call *fn_push = new Statement::Fn_Call("emplace_back");
         fn_push->add_arg(new std::string("candidates"));
         fn_push->is_obj = Bool(true);
-        fn_push->add_arg(new std::string("cand"));
+        Expr::Fn_Call *move_call = new Expr::Fn_Call(
+                                     new std::string("std::move"));
+        move_call->add_arg(new std::string("cand"));
+        fn_push->add_arg(move_call);
         stmts_record->push_back(fn_push);
 
         this->derivative_statements.insert(this->derivative_statements.end(),

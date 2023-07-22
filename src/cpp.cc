@@ -65,7 +65,6 @@ static std::string make_comments(const std::string &s, const std::string &c) {
   return o.str();
 }
 
-
 void Printer::Cpp::print(const std::list<Statement::Base*> &stmts) {
   stream << '{' << endl;
   inc_indent();
@@ -638,6 +637,11 @@ void Printer::Cpp::print(const Fn_Def &fn_def) {
     stream << ')' << endl;
   } else {
     stream << indent();
+
+    if (fn_def.template_decl) {
+      stream << *fn_def.template_decl << ' ';
+    }
+
     if (fwd_decls &&
       fn_def.name->compare(FN_NAME_DERIVATIVE_NORMALIZER) == 0) {
       /* TODO(sjanssen): why is it necessary that the function is declared
@@ -1080,6 +1084,8 @@ void Printer::Cpp::print_window_inc(const Symbol::NT &nt) {
 void Printer::Cpp::print(const Statement::Table_Decl &t) {
   in_class = true;
   bool wmode = ast && ast->window_mode;
+  bool pytorch = ast && ast->as_pytorch_module;
+  bool batched_input = pytorch && ast->input.tensor_inputs.all_batched();
 
   std::string tname(t.name() + "_t");
   const Type::Base &dtype = t.datatype();
@@ -1088,9 +1094,12 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   const std::list<Statement::Var_Decl*> &ns = t.ns();
 
   stream << indent() << "class " << tname << " {" << endl;
-  inc_indent();
 
+  stream << indent() << " public:" << endl;
+  inc_indent();
+  stream << indent() << "using AnswerType = " << dtype << ';' << endl;
   dec_indent();
+
   stream << indent() << " private:" << endl;
   inc_indent();
 
@@ -1101,10 +1110,21 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
 
   print_most_decl(t.nt());
 
-  stream << indent() << "std::vector<" << dtype << "> array;" << endl;
+  if (pytorch && batched_input) {
+    stream << indent() << "std::vector<OUTPUT_CPP_TYPE> array;" << endl;
+  } else {
+    if (dtype.is(Type::TENSORBATCH) && !batched_input) {
+      Log::instance()->error("Can't specify a TensorBatch data type "
+                             "(I32batch, F32batch ...) as a table answer type "
+                             "if non-batched input tensors are provided.");
+      std::exit(1);
+    }
+    stream << indent() << "std::vector<" << dtype << "> array;" << endl;
+  }
   if (t.for_derivatives) {
-    stream << indent() << "std::vector<std::vector<std::tuple<std::string, "
-           << "std::vector<unsigned int>, " << dtype << "> > > traces;" << endl;
+    // Traces type is defined in traces.hh
+    stream << indent() << "std::vector<Traces<" << dtype << ">> traces;"
+           << endl;
   }
   if  (!cyk) {
     stream << indent() << "std::vector<bool> tabulated;" << endl;
@@ -1124,6 +1144,122 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   dec_indent();
   stream << indent() << "}" << endl << endl;
 
+  if (pytorch) {
+    stream << indent() << "std::vector<int64_t> tensor_size;" << endl << endl;
+    stream << indent() << "TableSize get_table_size() {" << endl;
+    inc_indent();
+    if (t.fn_get_tab().paras.size() == 1) {
+        // if "get" function only receives 1 argument -> linear table
+        stream << indent() << "return TableSize::LINEAR;" << endl;
+    } else if (t.fn_get_tab().paras.size() == 2) {
+      // if "get" function receives two arguments -> quadratic/triu matrix
+      stream << indent() << "return (size() >= t_0_n";
+      if (t.nt().tracks() > 1) {
+        /*
+         * if table as two or more input tracks, a quadratic matrix would
+         * contain at least t_0_n * t_1_n * ... * t_N_n elements
+         * (potentially a linear/constant factor more);
+         * if it has one input track, a quadratic matrix would contain at least
+         * t_0_n * t_0_n elements;
+         * a triangular matrix would contain at least t_0_n * (t_0_n + 1) / 2
+         * elements (potentially a linear/constant factor more), which is always
+         * going to be less than the number of elements a quadratic matrix would
+         * contain; so simply checking if the size of the matrix is at least
+         * t_0_n * t_1_n * ... * t_N_n is sufficient to determine whether
+         * or not it is a quadratic or a triangular matrix
+         */
+        for (size_t i = 1; i < t.nt().tracks(); ++i) {
+          stream << " * t_" << i << "_n";
+        }
+      } else {
+        stream << "t_0_n";
+      }
+      stream << ") ? TableSize::QUADRATIC : TableSize::TRIU;" << endl;
+    }
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
+    stream << indent() << "tensor convert_triu_to_tensor() {" << endl;
+    inc_indent();
+    stream << indent()
+           << "if (get_table_size() != TableSize::TRIU) {" << endl;
+    inc_indent();
+    stream << indent() << "std::cerr << \"Error: Cannot convert "
+           << "non-triangular DP table to Tensor!\\n\";" << endl;
+    stream << indent()
+           << "return torch::zeros({1}, torch::kFloat32);" << endl;
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
+    stream << indent() << "unsigned int n = t_0_right_most + 1;" << endl;
+    std::string torch_type, cpp_type, n_dims, tensor_size;
+    if (batched_input) {
+      torch_type = "OUTPUT_TORCH_TYPE";
+      cpp_type = "OUTPUT_CPP_TYPE";
+      n_dims = "3";
+      tensor_size = "{n, n, BATCH_SIZE}";
+    } else {
+      torch_type = get_torch_type(dtype);
+      cpp_type = get_macro_type(dtype).second;
+      n_dims = "2";
+      tensor_size = "{n, n}";
+    }
+    stream << indent() << "tensor t = torch::zeros(" << tensor_size
+           << ", " << torch_type << ");" << endl;
+    stream << indent() << "torch::TensorAccessor<" << cpp_type
+           << ", " << n_dims << "> t_accessor = t.accessor<"
+           << cpp_type << ", " << n_dims << ">();" << endl;
+    stream << indent()
+           << "for (unsigned int i = t_0_left_most; i < n; ++i) {" << endl;
+    inc_indent();
+    stream << indent()
+           << "for (unsigned int j = i; i < n; ++j) {" << endl;
+    inc_indent();
+    if (batched_input) {
+      stream << indent() << "TensorBatch batch = get(i, j);" << endl;
+      stream << indent() << "for (int b = 0; b < BATCH_SIZE; ++b) {" << endl;
+      inc_indent();
+      stream << indent() << "t_accessor[i][j][b] = batch[b];" << endl;
+      dec_indent();
+      stream << indent() << "}" << endl;
+    } else {
+      stream << indent() << "t_accessor[i][j] = get(i, j);" << endl;
+    }
+    dec_indent();
+    stream << indent() << "}" << endl;
+    dec_indent();
+    stream << indent() << "}" << endl << indent() << "return t;" << endl;
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
+    if (batched_input) {
+      stream << indent()
+             << "OUTPUT_CPP_TYPE *get_array_data() {" << endl;
+    } else {
+      stream << indent() << dtype << " *get_array_data() {" << endl;
+    }
+    inc_indent();
+    stream << indent() << "return array.data();" << endl;
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
+
+    // free memory of traces, array and tabulated vectors
+    stream << indent() << "void free_table_memory() {" << endl;
+    inc_indent();
+    if (batched_input) {
+      stream << indent()
+             << "std::vector<OUTPUT_CPP_TYPE>().swap(array);" << endl;
+    } else {
+      stream << indent()
+             << "std::vector<" << dtype << ">().swap(array);" << endl;
+    }
+    if (t.for_derivatives) {
+      stream << indent()
+             << "std::vector<Traces<" << dtype << ">>().swap(traces);" << endl;
+    }
+    stream << indent()
+           << "std::vector<bool>().swap(tabulated);" << endl;
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
+  }
+
   // start "void init()"
   stream << indent() << "void init(";
   print_paras(ns, '_');
@@ -1133,6 +1269,7 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   }
 
   stream << ", const std::string &tname";
+
   stream << ") {" << endl;
   inc_indent();
   print_eqs(ns, '_');
@@ -1150,16 +1287,65 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
     stream << indent() << "t_0_right_most = wsize;" << endl;
   }
 
-  stream << indent() << ptype << " newsize = size(";
-  stream << ");" << endl;
-  stream << indent() << "array.resize(newsize);" << endl;
-  if (t.for_derivatives) {
-    stream << indent() << "traces.resize(newsize);" << endl;
+  stream << indent() << ptype << " newsize = size();" << endl;
+
+  /*
+   * to allow for e.g. iterative calling of forward and backward,
+   * all vectors need to be explictly reset/emptied;
+   * the "clear" and "resize" methods are not required to do that,
+   * so we swap all std::vector's with empty vectors of the same type
+   * in the "free_table_memory" method;
+   * this forces the deletion of all data previously contained in the
+   * vector objects
+   */
+  if (pytorch) {
+    stream << indent() << "free_table_memory();" << endl;
+    stream << indent() << "array.resize(newsize";
+    if (batched_input) {
+      stream << " * BATCH_SIZE";
+    }
+    stream << ");" << endl;
+    if (t.for_derivatives) {
+      stream << indent()
+             << "traces.resize(newsize);" << endl;
+    }
+    stream << indent() << "tabulated.resize(newsize);" << endl << endl;
+    stream << indent() << "tensor_size.clear();" << endl;
+    stream << indent() << "switch (get_table_size()) {" << endl;
+    inc_indent();
+    stream << indent() << "case TableSize::QUADRATIC :" << endl;
+    inc_indent();
+    for (size_t track = t.nt().track_pos();
+      track < t.nt().track_pos() + t.nt().tracks(); ++track) {
+      stream << indent() << "tensor_size.push_back(t_" << track
+             << "_right_most + 1);" << endl;
+    }
+    if (batched_input) {
+      stream << indent() << "tensor_size.push_back(BATCH_SIZE);" << endl;
+    }
+    stream << indent() << "break;" << endl;
+    dec_indent();
+    stream << indent() << "case TableSize::LINEAR :" << endl;
+    inc_indent();
+    stream << indent() << "tensor_size.push_back(t_0_right_most + 1);" << endl;
+    if (batched_input) {
+      stream << indent() << "tensor_size.push_back(BATCH_SIZE);" << endl;
+    }
+    stream << indent() << "break;" << endl;
+    dec_indent(); dec_indent();
+    stream << indent() << "}" << endl;
+  } else  {
+    stream << indent() << "array.resize(newsize);" << endl;
+    if (t.for_derivatives) {
+      stream << indent() << "traces.clear();" << endl;
+      stream << indent() << "traces.resize(newsize);" << endl;
+    }
+    if (!cyk) {
+      stream << indent() << "tabulated.clear();" << endl;
+      stream << indent() << "tabulated.resize(newsize);" << endl;
+    }
   }
-  if (!cyk) {
-    stream << indent() << "tabulated.clear();" << endl;
-    stream << indent() << "tabulated.resize(newsize);" << endl;
-  }
+
   dec_indent();
   stream << indent() << "}" << endl << endl;
   // end "void init()"
@@ -1204,6 +1390,38 @@ void Printer::Cpp::print(const Type::Subseq &t) {
   }
 }
 
+void Printer::Cpp::print(const Type::Tensor &t) {
+  if (in_fn_head) {
+    stream << "tensor";
+  } else {
+    stream << "tensor";
+  }
+}
+
+void Printer::Cpp::print(const Type::TensorSlice &t) {
+  if (in_fn_head) {
+    stream << "const TensorSlice &";
+  } else {
+    stream << "TensorSlice";
+  }
+}
+
+void Printer::Cpp::print(const Type::TensorChar &t) {
+  if (in_fn_head) {
+    stream << "const TensorChar &";
+  } else {
+    stream << "TensorChar";
+  }
+}
+
+void Printer::Cpp::print(const Type::TensorBatch &t) {
+  if (in_fn_head) {
+    stream << "const TensorBatch &";
+  } else {
+    stream << "TensorBatch";
+  }
+}
+
 
 void Printer::Cpp::print(const Type::Shape &t) {
   if (in_fn_head) {
@@ -1239,7 +1457,7 @@ void Printer::Cpp::print(const Type::BigInt &t) {
 
 void Printer::Cpp::print(const Type::External &t) {
   if (in_fn_head) {
-    stream << "const " << *t.name << " &";
+    stream << "const " << *t.name << "&";
   } else {
     stream << *t.name;
   }
@@ -1704,11 +1922,17 @@ void Printer::Cpp::print_buddy_decls(const AST &ast) {
 
 
 void Printer::Cpp::print_subseq_typedef(const AST &ast) {
-  hashtable<std::string, Type::Base*>::const_iterator i = ast.types.find(
-    "alphabet");
-  assert(i != ast.types.end());
-  Type::Base *t = dynamic_cast<Type::Alphabet*>(i->second)->temp;
-  assert(t);
+  Type::Base *t;
+
+  if (ast.as_pytorch_module) {
+    t = new Type::Char();
+  } else {
+    hashtable<std::string, Type::Base*>::const_iterator i = ast.types.find(
+      "alphabet");
+    assert(i != ast.types.end());
+    t = dynamic_cast<Type::Alphabet*>(i->second)->temp;
+    assert(t);
+  }
 
   stream << "typedef Basic_Subsequence<" << *t
     << ", unsigned> TUSubsequence;\n\n";
@@ -1733,6 +1957,16 @@ void Printer::Cpp::header(const AST &ast) {
       stream << "#define OUTSIDE\n";
       if (ast.current_derivative == 1) {
         stream << "#define DERIVATIVES\n";
+
+        size_t mx_indices = 0;
+        for (auto &kv : ast.grammar()->tabulated) {
+          size_t curr_table_indices =
+            kv.second->table_decl->fn_get_tab().paras.size();
+          if (curr_table_indices > mx_indices) {
+            mx_indices = curr_table_indices;
+          }
+        }
+        stream << "#define MAX_INDEX_COMPONENTS " << mx_indices << endl << endl;
       } else if (ast.current_derivative == 2) {
         stream << "#define SECOND_DERIVATIVE\n";
       }
@@ -1742,6 +1976,11 @@ void Printer::Cpp::header(const AST &ast) {
            << endl;
     stream << "#define GAPC_VERSION_STRING \"" << gapc_version_string << "\""
            << endl << endl;
+
+    if (ast.as_pytorch_module) {
+      print_pytorch_macros(ast);
+    }
+
     includes();
     print_subseq_typedef(ast);
     print_type_defs(ast);
@@ -1754,10 +1993,13 @@ void Printer::Cpp::header(const AST &ast) {
   stream << indent() << "class " << class_name << " {" << endl;
   stream << indent() << " public:" << endl;
   inc_indent();
+  if (ast.as_pytorch_module) {
+    stream << indent() << "InputTensor INPUT_TENSORS;" << endl;
+  }
 
   for (std::vector<Statement::Var_Decl*>::const_iterator i =
-       ast.seq_decls.begin(); i != ast.seq_decls.end(); ++i) {
-    stream << **i << endl;
+        ast.seq_decls.begin(); i != ast.seq_decls.end(); ++i) {
+      stream << **i << endl;
   }
 
   print_most_decl(*ast.grammar()->axiom);
@@ -1781,7 +2023,11 @@ void Printer::Cpp::header(const AST &ast) {
   print_filter_decls(ast);
   print_buddy_decls(ast);
   set_tracks(ast);
-  print_init_fn(ast);
+  if (ast.as_pytorch_module) {
+    print_pytorch_init_fn(ast);
+  } else {
+    print_init_fn(ast);
+  }
   print_window_inc_fn(ast);
   dec_indent();
   stream << indent();
@@ -2379,11 +2625,13 @@ void Printer::Cpp::print_insideoutside_report_fn(
 }
 
 void Printer::Cpp::print_derivative(Symbol::NT *nt) {
-  stream << indent() << "std::cout << \"" << ast->current_derivative
-         << ". derivatives for non-terminal \\\""
-         << (*nt->name).substr(sizeof(OUTSIDE_NT_PREFIX)-1,
-                               (*nt->name).length())
-         << "\\\":\\n\";" << endl;
+  if (!ast->as_pytorch_module) {
+    stream << indent() << "std::cout << \"" << ast->current_derivative
+           << ". derivatives for non-terminal \\\""
+           << (*nt->name).substr(sizeof(OUTSIDE_NT_PREFIX)-1,
+                                 (*nt->name).length())
+           << "\\\":\\n\";" << endl;
+  }
   // aggregated level (=dim + tracks) of nested loops
   unsigned int nesting = 0;
   std::vector<std::string> *args = new std::vector<std::string>();
@@ -2410,7 +2658,9 @@ void Printer::Cpp::print_derivative(Symbol::NT *nt) {
              << track << "_left_most; t_" << track << "_j < t_" << track
              << "_i; ++t_" << track << "_j) {" << endl;
       inc_indent();
-      stream << indent() << "std::cout << \"\\t\";" << endl;
+      if (!ast->as_pytorch_module) {
+        stream << indent() << "std::cout << \"\\t\";" << endl;
+      }
       dec_indent();
       stream << indent() << "}" << endl;
       stream << indent() << "for (unsigned int t_" << track << "_j = t_"
@@ -2440,30 +2690,41 @@ void Printer::Cpp::print_derivative(Symbol::NT *nt) {
   for (std::list<Fn_Def*>::iterator i = l.begin(); i != l.end(); ++i) {
     std::string res = "res_" + *(nt->name);
     stream << indent() << *((*i)->return_type) << " " << res << " = nt_"
-           << *nt->name << "(" << list_args.str() << ");\n"
-           << indent() << "std::cout << " << res << ";" << endl;
+           << *nt->name << "(" << list_args.str() << ");" << endl;
+    if (!ast->as_pytorch_module) {
+      stream << indent() << "std::cout << " << res << ";" << endl;
+    }
     // only for first return statement
     break;
   }
 
   // close loops
   for (unsigned int d = 0; d < nesting; ++d) {
-    if (d > 0) {
-      stream << indent() << "std::cout << \"\\n\";" << endl;
-    } else {
-      stream << indent() << "std::cout << \"\\t\";" << endl;
+    if (!ast->as_pytorch_module) {
+      if (d > 0) {
+        stream << indent() << "std::cout << \"\\n\";" << endl;
+      } else {
+        stream << indent() << "std::cout << \"\\t\";" << endl;
+      }
     }
     dec_indent();
     stream << indent() << "}" << endl;
   }
-  if (nesting == 1) {
+  if (nesting == 1 && !ast->as_pytorch_module) {
     stream << indent() << "std::cout << \"\\n\";" << endl;
   }
 }
 void Printer::Cpp::print_run_derivative_fn(const AST &ast) {
-  stream << indent() << "void report_derivative(std::ostream &out) {"
-         << endl;
-  inc_indent();
+  if (ast.as_pytorch_module) {
+    stream << indent() << "std::vector<tensor> "
+           << "get_backward_score_matrices() {" << endl;
+    inc_indent();
+    stream << indent() << "std::vector<tensor> matrices;" << endl;
+  } else {
+    stream << indent() << "void report_derivative(std::ostream &out) {"
+           << endl;
+    inc_indent();
+  }
 
   stream << indent() << "// forward pass has already been executed through "
          << "obj.run(), called via XXX_main.cc" << endl;
@@ -2475,10 +2736,49 @@ void Printer::Cpp::print_run_derivative_fn(const AST &ast) {
     Symbol::NT *nt = dynamic_cast<Symbol::NT*>((*i).second);
     if (nt && nt->is_partof_outside) {
       print_derivative(nt);
+      if (ast.as_pytorch_module) {
+        std::string torch_type;
+        if (ast.input.tensor_inputs.all_batched()) {
+          torch_type = "OUTPUT_TORCH_TYPE";
+        } else {
+          torch_type = get_torch_type(*nt->data_type());
+        }
+        stream << indent() << "if (" << *(nt->name)
+               << "_table.get_table_size() == TableSize::TRIU) {" << endl;
+        inc_indent();
+        stream << indent() << "matrices.push_back(" << *(nt->name)
+               << "_table.convert_triu_to_tensor());" << endl;
+        dec_indent();
+        stream << indent() << "} else {" << endl;
+        inc_indent();
+        stream << indent() << "matrices.push_back(torch::from_blob("
+               << *(nt->name) << "_table.get_array_data(), "
+               << *(nt->name) << "_table.tensor_size, "
+               << torch_type << ").clone()";
+        stream << ");" << endl;
+        dec_indent();
+        stream << indent() << "}" << endl;
+      }
     }
   }
-
-
+  if (ast.as_pytorch_module) {
+    for (hashtable<std::string, Symbol::Base*>::iterator
+       i = (*ast.grammar()).NTs.begin();
+       i != (*ast.grammar()).NTs.end(); ++i) {
+      Symbol::NT *nt = dynamic_cast<Symbol::NT*>((*i).second);
+      if (nt && ast.current_derivative == 2) {
+        stream << indent() << "derivative1->"
+               << *(nt->name) << "_table.free_table_memory();" << endl;
+        stream << indent()
+               << *(nt->name) << "_table.free_table_memory();" << endl;
+      } else if (nt && ast.current_derivative == 1 &&
+                 ast.requested_derivative == 1) {
+        stream << indent()
+               << *(nt->name) << "_table.free_table_memory();" << endl;
+      }
+    }
+    stream << endl << indent() << "return matrices;" << endl;
+  }
   dec_indent();
   stream << indent() << "}" << endl << endl;
 }
@@ -2970,7 +3270,7 @@ void Printer::Cpp::makefile(const Options &opts, const AST &ast) {
     << base << "_main.cc : $(RTLIB)/generic_main.cc " << out_file << endl;
   if (ast.requested_derivative > 1) {
     for (unsigned int i = 1; i <= ast.requested_derivative; ++i) {
-      stream << "\techo '#include \"" << basename(remove_dir(opts.out_file))
+      stream << "\t@echo '#include \"" << basename(remove_dir(opts.out_file))
              << "_derivative" << std::to_string(i) << ".hh\"' >";
       if (i > 1) {
         stream << ">";
@@ -2978,7 +3278,7 @@ void Printer::Cpp::makefile(const Options &opts, const AST &ast) {
       stream << " $@" << endl;
     }
   } else {
-    stream << "\techo '#include " << "\"" << header_file << "\""
+    stream << "\t@echo '#include " << "\"" << header_file << "\""
            << "' > $@" << endl;
   }
 
@@ -2994,6 +3294,407 @@ void Printer::Cpp::makefile(const Options &opts, const AST &ast) {
     "\t$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@" << endl;
 }
 
+void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
+  // generate a Makefile for automatic setup.py generation
+  // and installation of a Python module of the generated GAPC code
+  stream << endl << make_comments(id_string, "#") << endl << endl;
+
+  std::string base = opts.class_name;  // basename(opts.out_file);
+  std::string out_files = "";
+  std::string header_files = "";
+  if (ast.requested_derivative > 1) {
+    for (unsigned int i = 1; i <= ast.requested_derivative; ++i) {
+      out_files += "\"" + basename(remove_dir(opts.out_file)) + \
+                  "_derivative" + std::to_string(i) + ".cc\"";
+      header_files += "\"" + basename(remove_dir(opts.header_file)) + \
+                  "_derivative" + std::to_string(i) + ".hh\"";
+      if (i < ast.requested_derivative) {
+        out_files += ", ";
+        header_files += ", ";
+      }
+    }
+  } else {
+    out_files = "\"" + remove_dir(opts.out_file) + "\"";
+    header_files = "\"" + remove_dir(opts.header_file) + "\"";
+  }
+
+  stream << "RTLIB_LDFLAGS = $(RT_LDFLAGS)\n";
+  stream << "RTLIB_LDLIBS = $(RT_LDLIBS)\n";
+  stream << "RTLIB_CPPFLAGS = $(RT_CPPFLAGS)\n\n";
+  if (*gapc::prefix) {
+    std::string mf = std::string(gapc::prefix) + "/share/gapc/config" +
+      std::string(gapc::systemsuffix) + ".mf";
+    stream << "ifeq \"$(origin NO_CONFIG_MF)\" \"undefined\"" << endl
+      << "$(info Including global makefile " << mf << ")" << endl
+      << "-include " << mf << endl
+      << "endif" << endl << endl;
+  }
+  stream << "-include gapc_local.mf" << endl << endl;
+  stream << "ifdef MF" << endl
+           << "$(info Including extra makefile $(MF))" << endl
+           << "include $(MF)" << endl
+       << "endif" << endl << endl;
+
+  // enable platform-specific optimized functions (turns on AVX2 if available)
+  if (ast.input.tensor_inputs.all_batched()) {
+    stream << "CXXFLAGS += \"-march=native\"" << endl;
+    // allow users to define max batch size with an environment variable
+    stream << "ifdef MAX_BATCH_SIZE" << endl;
+    stream << "CXXFLAGS += -DMAX_BATCH_SIZE=$(MAX_BATCH_SIZE)" << endl;
+    stream << "endif" << endl << endl;
+    stream << "ifdef MALLOC_BATCH" << endl;
+    stream << "CXXFLAGS += -DMALLOC_BATCH" << endl;
+    stream << "endif" << endl << endl;
+  }
+  // pytorch C++ extension doesn't support C++17 yet
+  stream << "CXXFLAGS := $(CXXFLAGS) | sed 's/c++17/c++14/'" << endl;
+
+  stream << "compiler_args := $(CXXFLAGS) | sed -e 's/\\s/\", \"/g'" << endl;
+  stream << "LDFLAGS := $(LDFLAGS) | sed 's/-L\\//\\//g'" << endl;
+  stream << "LDFLAGS := $(LDFLAGS) | sed -E 's/ -Xlinker -rpath -Xlinker.+//'"
+         << endl;
+  stream << "xlinker_args := $(LDFLAGS) | "
+         << "sed -e 's/\\s/\", \"-Xlinker\", \"-rpath\", \"-Xlinker\", \"/g'"
+         << endl;
+  stream << "library_dirs := $(LDFLAGS) | sed -e 's/\\s/\", \"/g'" << endl;
+  stream << "LDLIBS := $(LDLIBS) | sed 's/-l//g'" << endl;
+  stream << "libraries := $(LDLIBS) | sed -e 's/\\s/\", \"/g'" << endl;
+  stream << "CPPFLAGS := $(CPPFLAGS) | sed 's/-I\\//\\//g'" << endl;
+  stream << "include_dirs := $(CPPFLAGS) | sed -e 's/\\s/\", \"/g'"
+         << endl << endl;
+
+  stream << "gen_files: setup.py pytorch_interface.cc" << endl;
+  stream << "\t@echo 'Generated setup.py and python_interface.cc'"
+         << endl << endl;
+  stream << "install:" << endl;
+  stream << "\tpip3 install ." << endl << endl;
+
+  stream << "setup.py:" << endl;
+  stream << "\t@echo 'from setuptools import setup' > $@" << endl;
+  stream << "\t@echo -e 'from torch.utils.cpp_extension import "
+         << "BuildExtension, CppExtension\\n' >> $@" << endl;
+  stream << "\t@echo -n 'compiler_args = [\"' >> $@" << endl;
+  stream << "\t@echo -n $(compiler_args) >> $@" << endl;
+  stream << "\t@echo -e '\"]\\n' >> $@" << endl;
+  stream << "\t@echo -n 'library_dirs = [\"' >> $@" << endl;
+  stream << "\t@echo -n $(library_dirs) >> $@" << endl;
+  stream << "\t@echo -e '\"]\\n' >> $@" << endl;
+  stream << "\t@echo -n 'xlinker_args = "
+         << "[\"-Xlinker\", \"-rpath\", \"-Xlinker\", \"' >> $@"
+         << endl;
+  stream << "\t@echo -n $(xlinker_args) >> $@" << endl;
+  stream << "\t@echo -e '\"]\\n' >> $@" << endl;
+  stream << "\t@echo -n 'libraries = [\"' >> $@" << endl;
+  stream << "\t@echo -n $(libraries) >> $@" << endl;
+  stream << "\t@echo -e '\"]\\n' >> $@" << endl;
+  stream << "\t@echo -n 'include_dirs = [\"' >> $@" << endl;
+  stream << "\t@echo -n $(include_dirs) >> $@" << endl;
+  stream << "\t@echo -e '\"]\\n' >> $@" << endl;
+  stream << "\t@echo -e 'gapc_extension = CppExtension(name = \""
+         << opts.pytorch_module_mame << "\",' >> $@" << endl;
+  stream << "\t@echo -n '                              depends = [' >> $@"
+         << endl;
+  stream << "\t@echo '" << header_files << "],' >> $@" << endl;
+  stream << "\t@echo -n '                              sources = "
+         << "[\"pytorch_interface.cc\", ' >> $@" << endl;
+  stream << "\t@echo '" << out_files << "],' >> $@" << endl;
+  stream << "\t@echo -e '                              include_dirs = "
+         << "include_dirs,' >> $@" << endl;
+  stream << "\t@echo -e '                              extra_compile_args = "
+         << "compiler_args,' >> $@" << endl;
+  stream << "\t@echo -e '                              extra_link_args = "
+         << "xlinker_args,' >> $@" << endl;
+  stream << "\t@echo -e '                              libraries = "
+         << "libraries,' >> $@" << endl;
+  stream << "\t@echo -e '                              library_dirs = "
+         << "library_dirs)\\n' >> $@" << endl;
+  stream << "\t@echo 'setup(name = \"" << opts.pytorch_module_mame
+         << "\",' >> $@" << endl;
+  stream << "\t@echo '      version = \"0.0.1\",' >> $@" << endl;
+  stream << "\t@echo '      ext_modules = [gapc_extension],' >> $@" << endl;
+  stream << "\t@echo '      cmdclass = {\"build_ext\": "
+         << "BuildExtension})' >> $@" << endl << endl;
+
+  stream << "pytorch_interface.cc: $(RTLIB)/generic_pytorch_interface.cc"
+         << endl;
+  stream << "\t@rm -f $@" << endl;
+  stream << "\t@touch $@" << endl;
+  if (ast.requested_derivative > 1) {
+    for (unsigned int i = 1; i <= ast.requested_derivative; ++i) {
+      stream << "\t@echo '#include \"" << basename(remove_dir(opts.header_file))
+                + "_derivative" + std::to_string(i) + ".hh\"' >> $@" << endl;
+    }
+  } else if (ast.requested_derivative == 1) {
+    stream << "\t@echo '#include " << header_files << "' >> $@" << endl;
+  }
+  stream << "\t@cat $(RTLIB)/generic_pytorch_interface.cc >> $@"
+         << endl << endl;
+
+  stream << ".PHONY: clean" << endl << "clean:" << endl
+    << "\trm -rf build dist *.egg-info pytorch_interface.cc setup.py"
+    << endl << endl;
+}
+
+void Printer::Cpp::print_pytorch_macros(const AST &ast) {
+  stream << "#define PYTORCH_MOD" << endl;
+
+  /*
+   * define macros containing all input parameters of the forward functions;
+   * since the number of inputs can be specified in the GAP-L input<>
+   * declaration, these macros will be inserted in the forward_DX functions
+   * in generic_pytorch_interface.cc, so all forward functions receive the
+   * correct number of input paramters
+   */
+  stream << "#define INPUT_PARAMS ";
+  size_t track = 0;
+  size_t total_inputs = ast.seq_decls.size();
+  for (std::vector<Statement::Var_Decl*>::const_iterator
+       i = ast.seq_decls.begin(); i != ast.seq_decls.end(); ++i, ++track) {
+    stream << "tensor &__t_" << track << "_tensor";
+    if (track < total_inputs - 1) {
+      stream << ", ";
+    }
+  }
+  stream << endl;
+  stream << "#define INPUT_ARGS ";
+  track = 0;
+  for (std::vector<Statement::Var_Decl*>::const_iterator
+       i = ast.seq_decls.begin(); i != ast.seq_decls.end(); ++i, ++track) {
+    stream << "__t_" << track << "_tensor";
+    if (track < total_inputs - 1) {
+      stream << ", ";
+    }
+  }
+  stream << endl;
+
+  /*
+   * check if all input Tensor have the same number of dimensions
+     and contain values of the same datatype;
+     if so, fast element-wise accessors can be defined, which
+     require compile-time information regarding the number of dims
+     and the underlying datatype of tensor;
+     if not all input Tensors are the same, these accessors won't be
+     visible
+   */
+  const TensorInput &tensor_inputs = ast.input.tensor_inputs;
+  bool all_batched = tensor_inputs.all_batched();
+
+  if (tensor_inputs.same()) {
+    stream << "#define ALL_INPUT_TENSORS_SAME" << endl;
+    stream << "#define INPUT_TENSOR_DIMS "
+           << tensor_inputs.shared_ndims() << endl;
+    stream << "#define INPUT_TENSOR_TYPE "
+           << tensor_inputs.shared_cpp_dtype() << endl << endl;
+  }
+  const Type::Base &__shared_table_type =
+    ast.grammar()->tabulated.begin()->second->table_decl->datatype();
+  if (all_batched) {
+    if (!__shared_table_type.is(Type::TENSORBATCH)) {
+      std::ostringstream tmp;
+      tmp << __shared_table_type;
+      Log::instance()->error("Answer type \"" + tmp.str() +
+                             "\" isn't batch-compatible.");
+      std::exit(1);
+    }
+    const Type::TensorBatch &shared_table_type =
+      dynamic_cast<const Type::TensorBatch &>(__shared_table_type);
+    stream << "#define BATCHED_INPUT" << endl;
+    stream << "#include <cstdint>" << endl;
+    if (ast.current_derivative == 1) {
+      stream << "inline int64_t BATCH_SIZE;" << endl;
+    } else {
+      stream << "extern int64_t BATCH_SIZE;" << endl;
+    }
+    // define macros for primitive types (used in batch.hh)
+    stream << indent() << "#define FLOAT_TYPE     1" << endl;
+    stream << indent() << "#define DOUBLE_TYPE    2" << endl;
+    stream << indent() << "#define INT_TYPE       3" << endl;
+    stream << indent() << "#define BIGINT_TYPE    4" << endl << endl;
+    stream << indent() << "#define __OUTPUT_CPP_TYPE "
+           << get_macro_type(*shared_table_type.type).first << endl;
+    stream << indent() << "#define OUTPUT_CPP_TYPE "
+           << *shared_table_type.type << endl << endl;
+    stream << "#include \"rtlib/batch.hh\"" << endl;
+    stream << "#include \"torch/extension.h\"" << endl;
+    stream << "#include \"rtlib/tensor.hh\"" << endl << endl;
+    stream << indent()
+           << "#define OUTPUT_TORCH_TYPE "
+           << get_torch_type(shared_table_type) << endl;
+    stream << indent() << "typedef Batch<OUTPUT_CPP_TYPE, MAX_BATCH_SIZE>"
+           << " TensorBatch;" << endl << endl;
+    stream << "#define ANSWER_TYPE TensorBatch" << endl << endl;
+  } else {
+    stream << "#include \"torch/extension.h\"" << endl;
+    stream << "#include \"rtlib/tensor.hh\"" << endl << endl;
+  }
+  // InputTensor object will contain ptrs and accessors to
+  // all input tensors so they can be accessed from everywhere
+  if (ast.current_derivative == 1) {
+    const std::vector<TensorMode> &inp_tensors =
+      ast.input.tensor_inputs.get_modes();
+    stream << indent() << "struct InputTensor {" << endl;
+    inc_indent();
+    for (size_t i = 0; i < ast.seq_decls.size(); ++i) {
+      stream << indent() << "tensor *__" << i << ";" << endl;
+      std::string curr_cpp_type = inp_tensors[i].cpp_dtype;
+      int curr_n_dims = inp_tensors[i].n_dims;
+      stream << indent() << "torch::TensorAccessor<" << curr_cpp_type
+             << ", " << curr_n_dims << "> _" << i << ";" << endl;
+    }
+    stream << indent() << "InputTensor() : ";
+    for (size_t i = 0; i < ast.seq_decls.size(); ++i) {
+      stream << "_" << i << "(nullptr, nullptr, nullptr)";
+      if (i < ast.seq_decls.size() - 1) {
+        stream << ", ";
+      }
+    }
+    stream << " {}" << endl;
+    dec_indent();
+    stream << indent() << "};" << endl << endl;
+    stream << indent() << "enum TableSize {" << endl;
+    inc_indent();
+    stream << indent() << "LINEAR, TRIU, QUADRATIC" << endl;
+    dec_indent();
+    stream << indent() << "};" << endl << endl;
+  }
+}
+
+void Printer::Cpp::print_pytorch_init_fn(const AST &ast) {
+  // print init function which handles the
+  // inputs from Pytorch and makes them accessible
+
+  stream << indent() << "void init(";
+
+  size_t track = 0;
+  size_t total_inputs = ast.seq_decls.size();
+  for (std::vector<Statement::Var_Decl*>::const_iterator
+       i = ast.seq_decls.begin(); i != ast.seq_decls.end(); ++i, ++track) {
+    stream << "tensor &__t_" << track << "_tensor";
+    if (track < total_inputs - 1) {
+      stream << ", ";
+    }
+  }
+
+  for (unsigned int i = 1; i < ast.current_derivative; ++i) {
+    stream << ", " << get_class_name_lower_derivative(ast.current_derivative, i)
+           << " *derivative" << std::to_string(i);
+  }
+  stream << ") {" << endl;
+
+  inc_indent();
+  track = 0;
+  for (std::vector<Statement::Var_Decl*>::const_iterator
+       i = ast.seq_decls.begin(); i != ast.seq_decls.end(); ++i, ++track) {
+    const std::string &current_tensor = *(*i)->name;
+    stream << indent() << "INPUT_TENSORS.__" << track
+           << " = &__t_" << track << "_tensor;" << endl;
+    TensorMode curr_inp_tensor = ast.input.tensor_inputs.get_modes()[track];
+    stream << indent() << "INPUT_TENSORS._" << track
+           << " = INPUT_TENSORS.__" << track << "->accessor<"
+           << curr_inp_tensor.cpp_dtype << ", " << curr_inp_tensor.n_dims
+           << ">();" << endl;
+    stream << indent()
+           << current_tensor << ".t = &__t_" << track << "_tensor;" << endl;
+    stream << indent() << current_tensor << ".i = 0;" << endl;
+    stream << indent() << current_tensor
+           << ".j = __t_" << track << "_tensor.sizes().back();" << endl << endl;
+  }
+
+  size_t t = 0;
+  for (std::vector<Statement::Var_Decl*>::iterator j = ns.begin();
+       j != ns.end(); ++j, ++t) {
+    stream << indent() << "t_" << t << "_left_most = 0;\n";
+    stream << indent() << "t_" << t << "_right_most = " << "t_" << t
+      << "_seq.j;\n";
+  }
+
+  if (ast.input.tensor_inputs.all_batched()) {
+    stream << indent()
+           << "BATCH_SIZE = __t_0_tensor.sizes().front();" << endl;
+    stream << indent() << "bool all_batch_sizes_same = true;" << endl;
+    std::vector<Statement::Var_Decl*>::const_iterator i = ast.seq_decls.begin();
+    ++i;
+    track = 1;
+    for (; i != ast.seq_decls.end(); ++i, ++track) {
+      stream << indent() << "all_batch_sizes_same &= __t_" << track
+             << "_tensor.sizes().front() == BATCH_SIZE;" << endl;
+    }
+    stream << indent() << "if (!all_batch_sizes_same) {" << endl;
+    inc_indent();
+    stream << indent() << "std::cerr << \"Warning: The sizes of the batch "
+           << "dimension of some input tensors are not equal!\\n Please "
+           << "provide only input tensors with equal-sized batch dimensions."
+           << "\\n\";" << endl;
+    dec_indent();
+    stream << indent() << "}" << endl << endl;
+  }
+
+  print_filter_init(ast);
+  print_table_init(ast);
+  print_zero_init(*ast.grammar());
+
+  if (ast.requested_derivative > 0) {
+    stream << endl;
+  }
+  for (unsigned int i = 1; i < ast.current_derivative; ++i) {
+    stream << indent() << "this->derivative" << std::to_string(i)
+           << " = derivative" << std::to_string(i) << ";" << endl;
+  }
+
+  dec_indent();
+  stream << indent() << '}' << endl << endl;
+}
+
+void Printer::Cpp::print_pytorch_forward_fn(const AST &ast) {
+  // convert the forward score matrix to a Pytorch tensor
+  stream << indent() << "std::vector<tensor> get_forward_score_matrices() {"
+         << endl;
+  inc_indent();
+  stream << indent() << "std::vector<tensor> matrices;" << endl;
+  for (auto i = ast.grammar()->NTs.begin();
+      i != ast.grammar()->NTs.end(); ++i) {
+    Symbol::NT *nt = dynamic_cast<Symbol::NT*>((*i).second);
+    if (nt && !(nt->is_partof_outside)) {
+      std::string torch_type;
+      if (ast.input.tensor_inputs.all_batched()) {
+        torch_type = "OUTPUT_TORCH_TYPE";
+      } else {
+        torch_type = get_torch_type(*nt->data_type());
+      }
+      stream << indent() << "if (" << *(nt->name)
+             << "_table.get_table_size() == TableSize::TRIU) {" << endl;
+      inc_indent();
+      stream << indent() << "matrices.push_back(" << *(nt->name)
+             << "_table.convert_triu_to_tensor());" << endl;
+      dec_indent();
+      stream << indent() << "} else {" << endl;
+      inc_indent();
+      stream << indent() << "matrices.push_back(torch::from_blob("
+             << *(nt->name) << "_table.get_array_data(), "
+             << *(nt->name) << "_table.tensor_size, "
+             << torch_type << ").clone()";
+      stream << ");" << endl;
+      dec_indent();
+      stream << indent() << "}" << endl;
+    }
+  }
+  stream << indent() << "return matrices;" << endl;
+  dec_indent();
+  stream << indent() << "}" << endl << endl;
+}
+
+void Printer::Cpp::print_pytorch_backward_fn(const AST &ast) {
+  /*
+   * convert the backward score matrices to Pytorch tensors;
+   * this will get handled internally in the print_run_derivative_fn
+   * function; To avoid confusion when reading the code,
+   * this function is wrapped around the
+   * print_run_derivative_fn function to emphasize
+   * that code for a Pytorch module is going to be generated
+   * whenever this function is called
+   */
+  print_run_derivative_fn(ast);
+}
 
 void Printer::Cpp::imports(const AST &ast) {
   if (fwd_decls) {

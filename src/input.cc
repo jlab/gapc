@@ -27,10 +27,11 @@
 #include "log.hh"
 
 
-const char Input::map[][6] = {
+const char Input::map[][7] = {
   "raw",
   "rna",
-  "upper"
+  "upper",
+  "tensor"  // indicates that (pytorch) Tensors are used for input
 };
 
 
@@ -41,6 +42,11 @@ void Input::set(const std::string &s, const Loc &l) {
 
 
 Input::Mode Input::str_to_mode(const std::string &s, const Loc &l) {
+  if (TensorMode::is_tensor(s)) {
+    tensor_inputs.add_mode(TensorMode::get_tensor_mode(s, l));
+    return Mode(TENSOR);
+  }
+
   for (size_t i = 0; i <= MODE_END; ++i) {
     if (map[i] == s) {
       return Mode (i);

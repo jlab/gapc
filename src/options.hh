@@ -58,7 +58,8 @@ struct Options {
       float_acc(0),
       specialization(0), step_option(0),
       plot_grammar(0), plotgrammar_stream_(NULL),
-      derivative(0) {
+      derivative(0),
+      as_pytorch_module(false) {
   }
 
 
@@ -215,6 +216,9 @@ struct Options {
    * code for second derivative computation.
    */
   int derivative;
+
+  bool as_pytorch_module;
+  std::string pytorch_module_mame;
 
   bool check();
 };

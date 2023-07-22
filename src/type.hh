@@ -437,6 +437,61 @@ class Subseq : public Base {
     void print(Printer::Base &s) const;
 };
 
+// "Char" analogous when dealing with Tensors
+class TensorChar : public Base {
+ public:
+    MAKE_CLONE(TensorChar);
+
+    explicit TensorChar(Loc &l) : Base(TENSORCHAR, l) {}
+    TensorChar() : Base(TENSORCHAR) {}
+
+    std::ostream & put(std::ostream &s) const;
+    void print(Printer::Base &s) const;
+};
+
+// replacement for "Seq" type when dealing with Tensors
+class Tensor : public Base {
+ public:
+    MAKE_CLONE(Tensor);
+
+    Tensor() : Base(TENSOR) {}
+    explicit Tensor(Loc &l) : Base(TENSOR, l) {}
+
+    std::ostream & put(std::ostream &s) const;
+    void print(Printer::Base &s) const;
+};
+
+// "Subsequence" analogous when dealing with Tensors
+class TensorSlice : public Base {
+ public:
+    MAKE_CLONE(TensorSlice);
+
+    TensorSlice() : Base(TENSORSLICE) {}
+    explicit TensorSlice(Loc &l) : Base(TENSORSLICE, l) {}
+
+    std::ostream & put(std::ostream &s) const;
+    void print(Printer::Base &s) const;
+};
+
+// represents a batch of Tensor values
+class TensorBatch : public Base {
+ public:
+    MAKE_CLONE(TensorBatch);
+    Base *type;
+
+    TensorBatch() : Base(TENSORBATCH), type(new Single()) {}
+    explicit TensorBatch(Loc &l) : Base(TENSORBATCH, l) {}
+    explicit TensorBatch(Base *type)
+      : Base(TENSORBATCH), type(type) {}
+
+    ~TensorBatch() {
+      delete type;
+    }
+
+    std::ostream & put(std::ostream &s) const;
+    void print(Printer::Base &s) const;
+};
+
 
 class Generic : public Base {
  public:

@@ -129,6 +129,14 @@ void Fn_Decl::init_table() {
   ys = Yield::Size(Yield::Poly(1), Yield::Poly(1));
   f->set_yield_size(ys);
   builtins[*s] = f;
+
+  r = new Type::TensorChar();
+  s = new std::string("TCHAR");
+  f = new Fn_Decl(r, s, l);
+  f->types.push_back(r);
+  ys = Yield::Size(Yield::Poly(1), Yield::Poly(1));
+  f->set_yield_size(ys);
+  builtins[*s] = f;
 }
 
 

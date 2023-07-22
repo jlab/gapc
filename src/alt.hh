@@ -384,7 +384,8 @@ class Base {
 
  public:
   // for derivative code generation: add code for candidate creation
-  virtual std::list<Statement::Base*> *derivatives_create_candidate();
+  virtual std::pair<std::list<Statement::Base*>*, std::string>
+  derivatives_create_candidate();
 };
 
 
@@ -609,7 +610,8 @@ class Simple : public Base {
   std::list<Statement::Base*> *inner_code;
 
  public:
-  std::list<Statement::Base*> *derivatives_create_candidate();
+  std::pair<std::list<Statement::Base*>*, std::string>
+  derivatives_create_candidate();
 };
 
 
@@ -748,7 +750,8 @@ class Link : public Base {
   Alt::Base *find_block_parent(const Alt::Base &block);
 
  public:
-  std::list<Statement::Base*> *derivatives_create_candidate();
+  std::pair<std::list<Statement::Base*>*, std::string>
+  derivatives_create_candidate();
 };
 
 
@@ -834,7 +837,8 @@ class Block : public Base {
   Alt::Base* find_block();
   Alt::Base *find_block_parent(const Alt::Base &block);
 
-  std::list<Statement::Base*> *derivatives_create_candidate();
+  std::pair<std::list<Statement::Base*>*, std::string>
+  derivatives_create_candidate();
 };
 
 
@@ -924,7 +928,8 @@ class Multi : public Base {
   Alt::Base* find_block();
   Alt::Base *find_block_parent(const Alt::Base &block);
 
-  std::list<Statement::Base*> *derivatives_create_candidate();
+  std::pair<std::list<Statement::Base*>*, std::string>
+  derivatives_create_candidate();
 };
 
 }  // namespace Alt

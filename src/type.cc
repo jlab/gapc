@@ -150,6 +150,32 @@ void Type::add_predefined(hashtable<std::string, Base*> &table) {
   t = new ::Type::BigInt();
   s = "bigint";
   table[s] = t;
+
+  t = new ::Type::TensorSlice();
+  s = "tensorslice";
+  table[s] = t;
+
+  t = new ::Type::TensorChar();
+  s = "tensorchar";
+  table[s] = t;
+
+  // GAP-C compiles "single" answer type to float (here: F32)
+  t = new ::Type::TensorBatch(new ::Type::Single());
+  s = "F32batch";
+  table[s] = t;
+
+  // GAP-C compiles "float" answer type to double (here: F64)
+  t = new ::Type::TensorBatch(new ::Type::Float());
+  s = "F64batch";
+  table[s] = t;
+
+  t = new ::Type::TensorBatch(new ::Type::Int());
+  s = "I32batch";
+  table[s] = t;
+
+  t = new ::Type::TensorBatch(new ::Type::BigInt());
+  s = "I64batch";
+  table[s] = t;
 }
 
 
@@ -461,6 +487,25 @@ std::ostream & Type::Bool::put(std::ostream &s) const {
   return s;
 }
 
+std::ostream & Type::Tensor::put(std::ostream &s) const {
+  s << "tensor";
+  return s;
+}
+
+std::ostream & Type::TensorSlice::put(std::ostream &s) const {
+  s << "tensorslice";
+  return s;
+}
+
+std::ostream & Type::TensorChar::put(std::ostream &s) const {
+  s << "tensorchar";
+  return s;
+}
+
+std::ostream & Type::TensorBatch::put(std::ostream &s) const {
+  s << *type;
+  return s;
+}
 
 std::ostream & Type::Signature::put(std::ostream &s) const {
   Base *t = signature->var_lookup(this);
@@ -653,6 +698,22 @@ void Type::Range::print(Printer::Base &s) const {
 
 
 void Type::Table::print(Printer::Base &s) const {
+  s.print(*this);
+}
+
+void Type::Tensor::print(Printer::Base &s) const {
+  s.print(*this);
+}
+
+void Type::TensorSlice::print(Printer::Base &s) const {
+  s.print(*this);
+}
+
+void Type::TensorChar::print(Printer::Base &s) const {
+  s.print(*this);
+}
+
+void Type::TensorBatch::print(Printer::Base &s) const {
   s.print(*this);
 }
 

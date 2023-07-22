@@ -144,7 +144,16 @@ static void parse_options(int argc, char **argv, Options *rec) {
       "Using backpropagation schema, generate code to compute first "
       "derivative via forward and backward pass (internally requires outside"
       " code generation AND tabulation of all non-terminals).  0 (default) = "
-      "deactivated\n  1 = first derivative");
+      "deactivated\n  1 = first derivative")
+    ("as-torchmod", po::value<std::string>(),
+     "Generate adjusted Makefile which builds a Python/PyTorch package "
+     "providing a forward and backward function for every derivative\n"
+     "(Requirements: --derivative option has to be >= 1, torch and pip "
+     "Python packages need to be installed for the module build step)\n"
+     "Set the MAX_BATCH_SIZE=N environment variable to set the maximum "
+     "batch size the generated code shall be able to process.\n"
+     "Set the MALLOC_BATCH environment variable to use malloc for "
+     "memory allocation when processing batches instead of a memory pool");
   po::options_description hidden("");
   hidden.add_options()
     ("backtrack", "deprecated for --backtrace")
@@ -288,6 +297,16 @@ static void parse_options(int argc, char **argv, Options *rec) {
     rec->tab_everything = true;
   }
 
+  if (vm.count("as-torchmod")) {
+    if (rec->derivative < 1) {
+      throw LogError("--derivative option must be >= 1 "
+                     "for Pytorch module generation!");
+    } else {
+      rec->as_pytorch_module = true;
+      rec->pytorch_module_mame = vm["as-torchmod"].as<std::string>();
+    }
+  }
+
   bool r = rec->check();
   if (!r) {
     throw LogError("Seen improper option usage.");
@@ -370,6 +389,7 @@ class Main {
     // to be injected
     driver.ast.requested_derivative = opts.derivative;
     driver.ast.current_derivative = opts.derivative > 0 ? 1 : 0;
+    driver.ast.as_pytorch_module = opts.as_pytorch_module;
 
     if (driver.is_failing()) {
       throw LogError("Seen parse errors.");
@@ -668,7 +688,12 @@ class Main {
     hh.header_footer(driver.ast);
     if (grammar->is_outside()) {
       if (driver.ast.current_derivative > 0) {
-        hh.print_run_derivative_fn(driver.ast);
+        if (driver.ast.as_pytorch_module) {
+          hh.print_pytorch_forward_fn(driver.ast);
+          hh.print_pytorch_backward_fn(driver.ast);
+        } else {
+          hh.print_run_derivative_fn(driver.ast);
+        }
       } else {
         hh.print_insideoutside_report_fn(opts.outside_nt_list, driver.ast);
       }
@@ -737,7 +762,11 @@ class Main {
   void makefile(const AST &ast) {
     Printer::Cpp mm(driver.ast, opts.m_stream());
     mm.set_argv(argv, argc);
-    mm.makefile(opts, ast);
+    if (opts.as_pytorch_module) {
+      mm.pytorch_makefile(opts, ast);
+    } else {
+      mm.makefile(opts, ast);
+    }
   }
 
  public:

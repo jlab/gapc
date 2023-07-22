@@ -34,6 +34,7 @@
 #include "mode.hh"
 
 #include "expr/fn_call.hh"
+#include "expr/template.hh"
 
 #include "hashtable.hh"
 
@@ -105,7 +106,7 @@ class Fn_Def : public Fn_Decl {
       comperator_suffix(new std::string("_comperator")),
       sorter_suffix(new std::string("_sorter")), nullary_sort_ob(NULL),
       adaptor(NULL), comparator(NULL), sorter(NULL),
-      choice_fn_type_(Expr::Fn_Call::NONE) {
+      choice_fn_type_(Expr::Fn_Call::NONE), template_decl(NULL) {
     }
 
 
@@ -114,7 +115,7 @@ class Fn_Def : public Fn_Decl {
       comperator_suffix(new std::string("_comperator")),
       sorter_suffix(new std::string("_sorter")), nullary_sort_ob(NULL),
       adaptor(NULL), comparator(NULL), sorter(NULL),
-      choice_fn_type_(Expr::Fn_Call::NONE) {
+      choice_fn_type_(Expr::Fn_Call::NONE), template_decl(NULL) {
     }
 
 
@@ -125,7 +126,7 @@ class Fn_Def : public Fn_Decl {
       comperator_suffix(new std::string("_comperator")),
       sorter_suffix(new std::string("_sorter")), nullary_sort_ob(NULL),
       adaptor(NULL), comparator(NULL),  sorter(NULL),
-      choice_fn_type_(Expr::Fn_Call::NONE) {
+      choice_fn_type_(Expr::Fn_Call::NONE), template_decl(NULL) {
     }
 
 
@@ -248,6 +249,9 @@ class Fn_Def : public Fn_Decl {
     Expr::Fn_Call::Builtin choice_fn_type_;
 
  public:
+    // optional template declaration before function return type
+    Expr::Template *template_decl;
+
     void set_choice_fn_type(Expr::Fn_Call::Builtin x) {
       choice_fn_type_ = x;
     }

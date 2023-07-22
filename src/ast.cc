@@ -869,17 +869,43 @@ void AST::set_tracks() {
   size_t i = seq_decls.size();
   assert(i <= tracks);
   seq_decls.resize(tracks);
-  for (; i < tracks; ++i) {
-    std::ostringstream o;
-    o << "t_" << i << "_seq";
-    seq_decls[i] =
-    new Statement::Var_Decl(new Type::Seq(), new std::string(o.str()));
+
+  if (as_pytorch_module) {
+    /*
+     * if a pytorch module is supposed to be generated,
+     * inputs won't be be string (sequences) but Tensors
+     */
+    for (; i < tracks; ++i) {
+      std::ostringstream o;
+      o << "t_" << i << "_seq";
+      seq_decls[i] =
+      new Statement::Var_Decl(new Type::TensorSlice(),
+                              new std::string(o.str()));
+    }
+  } else {
+    for (; i < tracks; ++i) {
+      std::ostringstream o;
+      o << "t_" << i << "_seq";
+      seq_decls[i] =
+      new Statement::Var_Decl(new Type::Seq(), new std::string(o.str()));
+    }
   }
 }
 
 
 void AST::derive_temp_alphabet() {
   set_tracks();
+
+  if (as_pytorch_module) {
+    /*
+     * if a pytorch module is supposed to be generated,
+     * inputs won't be be string (sequences) but Tensors
+     */
+    Type::Base *res = new Type::TensorChar();
+    char_type = res;
+    update_alphabet_types(res);
+    return;
+  }
 
   Char_Visitor v;
 
@@ -932,6 +958,25 @@ void AST::update_alphabet_types(Type::Base *res) {
     assert(t);
     t->force_type(res);
   }
+
+  if (as_pytorch_module) {
+    hashtable<std::string, Symbol::Base*>::iterator j = grammar()->NTs.find(
+    "TCHAR");
+    if (j != grammar()->NTs.end()) {
+      Symbol::Terminal *t = dynamic_cast<Symbol::Terminal*>(j->second);
+      assert(t);
+      t->force_type(res);
+    }
+    hashtable<std::string, Fn_Decl*>::iterator k =
+      Fn_Decl::builtins.find("TCHAR");
+    assert(k != Fn_Decl::builtins.end());
+    if (k != Fn_Decl::builtins.end()) {
+      k->second->return_type = res;
+      k->second->types.clear();
+      k->second->types.push_back(res);
+    }
+  }
+
   hashtable<std::string, Fn_Decl*>::iterator k = Fn_Decl::builtins.find("CHAR");
   assert(k != Fn_Decl::builtins.end());
   k->second->return_type = res;
@@ -952,11 +997,13 @@ void AST::update_seq_type(Instance &inst) {
       << " CHAR() terminal parser type (" << *char_type << ").";
     throw LogError(inst.loc(), o.str());
   }
-  for (std::vector<Statement::Var_Decl*>::iterator x = seq_decls.begin();
-       x != seq_decls.end(); ++x) {
-    Type::Seq *seq = dynamic_cast<Type::Seq*>((*x)->type);
-    assert(seq);
-    seq->element_type = type;
+  if (!as_pytorch_module) {
+    for (std::vector<Statement::Var_Decl*>::iterator x = seq_decls.begin();
+         x != seq_decls.end(); ++x) {
+      Type::Seq *seq = dynamic_cast<Type::Seq*>((*x)->type);
+      assert(seq);
+      seq->element_type = type;
+    }
   }
 }
 
