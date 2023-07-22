@@ -1094,9 +1094,12 @@ void Printer::Cpp::print(const Statement::Table_Decl &t) {
   const std::list<Statement::Var_Decl*> &ns = t.ns();
 
   stream << indent() << "class " << tname << " {" << endl;
-  inc_indent();
 
+  stream << indent() << " public:" << endl;
+  inc_indent();
+  stream << indent() << "using AnswerType = " << dtype << ';' << endl;
   dec_indent();
+
   stream << indent() << " private:" << endl;
   inc_indent();
 

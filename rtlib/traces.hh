@@ -75,21 +75,21 @@ inline bool is_same_index(const index_components &lhs_idx,
 /* this records the use of a sub-solution of another NT result <name of other 
  * NT, index in other NT table with variable number of dimensions, weight 
  * of edge> */
-template<typename answer = double>
+template<typename answer>
 using Trace = std::tuple<std::string, index_components, answer>;
 /* Since a candidate can be composed of multiple sub-solutions e.g. 
  * mult(A, '*', B), we collect Traces for A and B */
-template<typename answer = double>
+template<typename answer>
 using NTtrace = std::tuple<answer, std::vector<Trace<answer>>>;
 /* collection of all traces of an NT in forward pass, together with their
  * values. This later normalized into edge weights. */
 
 // type for "traces" vector in NT tables
-template<typename answer = double>
+template<typename answer>
 using Traces = std::vector<Trace<answer>>;
 
 // answer type can be any primitve number type or "Batch"
-template<typename answer = double>
+template<typename answer>
 class candidate {
  private:
   answer value;
@@ -195,12 +195,12 @@ class candidate {
 // }
 };
 
-template<typename answer = double>
+template<typename answer>
 using NTtraces = std::vector<candidate<answer>>;
 
 // once all use of sub-solutions for candidates is finished, we need to
 // normalize their contributions
-template<typename answer = double>
+template<typename answer>
 void normalize_traces(std::vector<Trace<answer>> *tabulated,
                       const std::vector<candidate<answer>> &candidates,
                       answer eval,
@@ -214,7 +214,7 @@ void normalize_traces(std::vector<Trace<answer>> *tabulated,
 
 // overload of normalize_traces taking a function ptr argument
 // with two const reference parameters
-template<typename answer = double>
+template<typename answer>
 void normalize_traces(std::vector<Trace<answer>> *tabulated,
                       const std::vector<candidate<answer>> &candidates,
                       answer eval,
@@ -226,7 +226,7 @@ void normalize_traces(std::vector<Trace<answer>> *tabulated,
   }
 }
 
-template<typename answer = double>
+template<typename answer>
 void soft_max_hessian_product(std::vector<Trace<answer>> *tabulated,
                               const NTtraces<answer> &candidates, answer eval) {
   for (size_t i = 0; i < candidates.size(); ++i) {
@@ -236,7 +236,7 @@ void soft_max_hessian_product(std::vector<Trace<answer>> *tabulated,
   }
 }
 
-template<typename answer = double>
+template<typename answer>
 inline answer get_trace_weights(const std::vector<Trace<answer>> &traces,
                                 const std::string &to_nt,
                                 const index_components &to_indices,

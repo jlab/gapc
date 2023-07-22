@@ -511,7 +511,7 @@ Fn_Def *Tablegen::gen_set_traces(int forDerivative) {
   if (batched_) {
     nt_traces = new std::string("NTtraces<TensorBatch>");
   } else {
-    nt_traces = new std::string("NTtraces<>");
+    nt_traces = new std::string("NTtraces<AnswerType>");
   }
 
   f->add_para(new ::Type::External(nt_traces), new std::string("candidates"));
@@ -538,20 +538,11 @@ Fn_Def *Tablegen::gen_set_traces(int forDerivative) {
   a->add_arg(new Expr::Less(off, new Expr::Fn_Call(new std::string("size"))));
   c.push_back(a);
 
-  /*
-   * if batched Tensor input is processed, the templated trace functions
-   * need to know that so we need to pass "TensorBatch" as the template here;
-   * for backwards compatibility, we also need to add the empty template "<>"
-   * to instruct the compiler to use the default template type (double);
-   * this isn't required anymore in C++17+, but still is required in C++11
-   */
   std::string fn_norm_name;
   if (forDerivative == 1) {
-    fn_norm_name = batched_ ? "normalize_traces<TensorBatch>" :
-                              "normalize_traces<>";
+    fn_norm_name = "normalize_traces";
   } else if (forDerivative == 2) {
-    fn_norm_name = batched_ ? "soft_max_hessian_product<TensorBatch>" :
-                              "soft_max_hessian_product<>";
+    fn_norm_name = "soft_max_hessian_product";
   }
 
   Statement::Fn_Call *fn_norm = new Statement::Fn_Call(fn_norm_name);
@@ -625,13 +616,7 @@ Fn_Def *Tablegen::gen_get_traces() {
 
   Statement::Var_Decl *r = new Statement::Var_Decl(dtype, "res");
 
-  std::string *get_trace_weights;
-  if (batched_) {
-    get_trace_weights = new std::string("get_trace_weights<TensorBatch>");
-  } else {
-    get_trace_weights = new std::string("get_trace_weights<>");
-  }
-
+  std::string *get_trace_weights = new std::string("get_trace_weights");
   Expr::Fn_Call *fn_norm = new Expr::Fn_Call(get_trace_weights);
   fn_norm->add_arg(new Var_Acc::Array(new Var_Acc::Plain(
     new std::string("traces")), off));

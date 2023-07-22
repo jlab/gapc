@@ -1289,7 +1289,8 @@ void Symbol::NT::codegen(AST &ast) {
       if (ast.as_pytorch_module && ast.input.tensor_inputs.all_batched()) {
         nt_traces = new std::string("NTtraces<TensorBatch>");
       } else {
-        nt_traces = new std::string("NTtraces<>");
+        nt_traces =
+          new std::string("NTtraces<" + *name + "_table_t::AnswerType>");
       }
       stmts.push_back(new Statement::Var_Decl(new ::Type::External(
         nt_traces), "candidates"));
