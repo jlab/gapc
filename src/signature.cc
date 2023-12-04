@@ -149,8 +149,8 @@ Algebra *Signature::generate(std::string *n, std::string *mode) {
     return generate_count(n);
   if (*mode == "enum")
     return generate_enum(n);
-  if (*mode == "enum_graph")
-    return generate_enum_graph(n);
+  if (*mode == "trees")
+    return generate_trees(n);
   return NULL;
 }
 
@@ -421,7 +421,7 @@ Algebra *Signature::generate_enum(std::string *n) {
 //------------------------------------------------------------------------------------------------------------
 
 
-struct Generate_Enum_Graph_Stmts : public Generate_Stmts {
+struct Generate_Tree_Stmts : public Generate_Stmts {
  private:
 	// closes nodes for simple tracks
   void apply(std::list<Statement::Base*> &l, Para_Decl::Simple *s,
@@ -564,9 +564,9 @@ struct Generate_Enum_Graph_Stmts : public Generate_Stmts {
 };
 
 
-Algebra *Signature::generate_enum_graph(std::string *n) {
+Algebra *Signature::generate_trees(std::string *n) {
   return generate_algebra(n, Mode::PRETTY, new Type::External("Rope"),
-		  	  	  	  	  Generate_Enum_Graph_Stmts());
+		  	  	  	  	  Generate_Tree_Stmts());
 }
 
 
