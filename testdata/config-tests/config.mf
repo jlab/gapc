@@ -1,0 +1,281 @@
+
+include ../../config.mf
+include ../../makefiles/lexyaccxx.mf
+
+BB:=$(shell tput smso)
+BE:=$(shell tput rmso)
+bold = $(info $(BB)$(1)$(BE))
+
+
+TESTS = cc.succ cxx.succ \
+        boost.succ boost_test.succ boost_program.succ \
+        flex.succ bison.succ ksh.succ openmpxx.succ \
+        sed.succ mmap.succ
+
+CC_TEMP = cc_test cc_exec cc_pre cc_post
+CXX_TEMP = cxx_test cxx_exec cxx_pre cxx_post
+BOOST_TEST = boost_test boost_exec boost_pre boost_post
+BOOST_TEST_TEMP = boost_test_exec boost_test_pre boost_test_post # boost_test_test 
+BOOST_PROGRAM_TEMP = boost_program_test boost_program_exec boost_program_pre boost_program_post
+FLEX_TEMP = flex_test flex_test.cc flex_exec flex_pre flex_post
+BISON_TEMP = bison_test bison_test.cc bison_exec bison_pre bison_post \
+             position.hh stack.hh bison_test.output bison_test.hh location.hh
+KSH_TEMP = ksh_exec ksh_pre ksh_post
+OPENMPXX_TEMP = openmpxx_test openmpxx_exec openmpxx_pre openmpxx_post
+
+SED_TEMP = sed_pre ser_exec sed_post
+MMAP_TEMP = mmap_pre mmap_test mmap_post mmap_exec
+
+TEMP = $(CC_TEMP) $(CXX_TEMP) \
+       $(BOOST_TEST) $(BOOST_TEST_TEMP) $(BOOST_PROGRAM_TEMP) \
+       $(FLEX_TEMP) $(BISON_TEMP) $(KSH_TEMP) \
+       $(OPENMPXX_TEMP) \
+       $(SED_TEMP) $(MMAP_TEMP)
+
+
+config.finished: $(TESTS)
+	touch $@
+
+# cc
+
+cc_pre:
+	$(call bold,>>> Checking for C99 compiler ...)
+	@touch $@
+
+cc_test: C_LDFLAGS ?= $(LDFLAGS)
+
+cc_test: cc_test.c cc_pre
+	$(CC) $(CPPFLAGS) $(CFLAGS) $< $(C_LDFLAGS) $(LDLIBS) -o $@
+
+cc_exec: cc_test
+	./$< > $@
+
+cc_post: cc_exec
+	$(call bold,>>> Checking for C99 compiler ... OK)
+	@touch $@
+
+
+cc.succ: cc_pre cc_test cc_exec cc_post
+	touch $@
+
+# cc
+
+# cxx
+
+cxx_pre:
+	$(call bold,>>> Checking for ISO C++ compiler ...)
+	@touch $@
+
+cxx_test: cxx_test.cc cxx_pre
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< $(LDFLAGS) $(LDLIBS) -o $@
+
+cxx_exec: cxx_test
+	./$< > $@
+
+cxx_post: cxx_exec
+	$(call bold,>>> Checking for ISO C++ compiler ... OK)
+	@touch $@
+
+
+cxx.succ: cxx_pre cxx_test cxx_exec cxx_post
+	touch $@
+
+
+# cxx
+
+# boost
+
+
+boost_pre: cxx.succ
+	$(call bold,>>> Checking for boost header ...)
+	@touch $@
+
+boost_test: boost_test.cc boost_pre
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< $(LDFLAGS) $(LDLIBS) -o $@
+
+boost_exec: boost_test
+	./$< > $@
+
+boost_post: boost_exec
+	$(call bold,>>> Checking for boost header ... OK)
+	@touch $@
+
+boost.succ: boost_post
+	touch $@
+
+# boost
+ 
+# boost_test
+
+
+boost_test_pre: cxx.succ
+	$(call bold,>>> Checking for boost unit test framework ...)
+	@touch $@
+
+#boost_test_test: LDLIBS_EXTRA = $(BOOST_UNIT_TEST_FRAMEWORK_LIB)
+
+#boost_test_test: boost_test_test.cc boost_test_pre
+#	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< $(LDFLAGS) $(LDLIBS) -o $@
+
+boost_test_exec: 
+
+boost_test_post: boost_test_exec
+	$(call bold,>>> Checking for boost unit test framework ... OK)
+	@touch $@
+
+boost_test.succ: boost_test_post
+	touch $@
+
+# boost_test
+
+# boost_program
+
+boost_program_pre: cxx.succ
+	$(call bold,>>> Checking for boost program options ...)
+	@touch $@
+
+boost_program_test: LDLIBS_EXTRA = $(BOOST_PROGRAM_OPTIONS_LIB)
+
+boost_program_test: boost_program_test.cc boost_program_pre
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< $(LDFLAGS) $(LDLIBS) -o $@
+
+boost_program_exec: boost_program_test
+	./$< --help > $@
+
+boost_program_post: boost_program_exec
+	$(call bold,>>> Checking for boost program options... OK)
+	@touch $@
+
+boost_program.succ: boost_program_post
+	touch $@
+
+# boost_program
+
+# flex
+
+flex_pre: cxx.succ
+	$(call bold,>>> Checking for flex ...)
+	@touch $@
+
+flex_test: flex_test.cc flex_pre
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< $(LDFLAGS) $(LDLIBS) -o $@
+
+flex_exec: flex_test
+	./$< > $@
+
+flex_post: flex_exec
+	$(call bold,>>> Checking for flex ... OK)
+	@touch $@
+
+flex.succ: flex_post
+	touch $@
+
+# flex
+
+# bison
+
+bison_pre: cxx.succ
+	$(call bold,>>> Checking for bison ...)
+	@touch $@
+
+bison_test: bison_test.cc bison_pre
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< $(LDFLAGS) $(LDLIBS) -o $@
+
+bison_exec: bison_test
+	./$< > $@
+
+bison_post: bison_exec
+	$(call bold,>>> Checking for bison ... OK)
+	@touch $@
+
+bison.succ: bison_post
+	touch $@
+
+# bison
+
+# sed
+
+sed_pre:
+	$(call bold,>>> Checking for sed ...)
+	@touch $@
+
+sed_exec: sed_pre
+	./sed_test.sh $(SED)
+	touch $@
+
+sed_post: sed_exec
+	$(call bold,>>> Checking for sed ... OK)
+	@touch $@
+
+sed.succ: sed_post
+	touch $@
+
+# sed 
+
+# ksh
+
+ksh_pre:
+	$(call bold,>>> Checking for ksh compatible shell ...)
+	@touch $@
+
+ksh_exec: ksh_pre
+	$(SHELL) ksh_test.sh 1 2 3 > $@
+
+ksh_post: ksh_exec
+	$(call bold,>>> Checking for ksh compatible shell ... OK)
+	@touch $@
+
+ksh.succ: ksh_post
+	touch $@
+
+# ksh
+
+# openmpxx
+
+openmpxx_pre:
+	$(call bold,>>> Checking OpenMP with C++ compilation ...)
+	@touch $@
+
+openmpxx_test: openmpxx_test.cc openmpxx_pre
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(CXXFLAGS_OPENMP) $< $(LDFLAGS) $(LDLIBS) -o $@
+
+openmpxx_exec: openmpxx_test
+	./$< openmpxx_test.inp openmpxx_test.inp > $@
+
+openmpxx_post: openmpxx_exec
+	$(call bold,>>> Checking for OpenMP with C++ compilation ... OK)
+	@touch $@
+
+
+openmpxx.succ: openmpxx_pre openmpxx_test openmpxx_exec openmpxx_post
+	touch $@
+
+# openmpxx
+
+# mmap
+
+mmap_pre:
+	$(call bold,>>> Checking mmap ...)
+	@touch $@
+
+mmap_test: mmap_test.cc mmap_pre
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< $(LDFLAGS) $(LDLIBS) -o $@
+
+mmap_exec: mmap_test
+	./$<
+	@touch $@
+
+mmap_post: mmap_exec
+	$(call bold,>>> Checking mmap ... OK)
+	@touch $@
+
+mmap.succ: mmap_post
+	touch $@
+
+# mmap
+
+
+clean:
+	rm -f $(TESTS) $(TEMP) config.finished
+
+
