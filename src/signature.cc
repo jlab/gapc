@@ -149,8 +149,12 @@ Algebra *Signature::generate(std::string *n, std::string *mode) {
     return generate_count(n);
   if (*mode == "enum")
     return generate_enum(n);
+  if (*mode == "enum_graph")
+    return generate_enum_graph(n);
   return NULL;
 }
+
+
 
 
 struct Generate_Stmts {
@@ -411,6 +415,164 @@ Algebra *Signature::generate_enum(std::string *n) {
   return generate_algebra(n, Mode::PRETTY, new Type::External("Rope"),
                           Generate_Enum_Stmts());
 }
+
+
+
+//------------------------------------------------------------------------------------------------------------
+
+
+struct Generate_Enum_Graph_Stmts : public Generate_Stmts {
+ private:
+	// closes nodes for simple tracks
+  void apply(std::list<Statement::Base*> &l, Para_Decl::Simple *s,
+             Statement::Var_Decl *&cur) const {
+    Statement::Fn_Call *f = new Statement::Fn_Call(
+      Statement::Fn_Call::STR_APPEND);
+    f->add_arg(*cur);
+    f->add_arg(s->name());
+    l.push_back(f);
+  }
+
+  // Generating Child Nodes for grammar operations in Multitrack
+  void apply(std::list<Statement::Base*> &l, Para_Decl::Multi *m,
+             Statement::Var_Decl *&cur) const {
+    Statement::Fn_Call * f = new Statement::Fn_Call(
+      Statement::Fn_Call::STR_APPEND);
+    f->add_arg(*cur);
+	f->add_arg(new Expr::Const("child {node {")); // generating the childnode for the "chars" used in the grammar operation
+    l.push_back(f);
+
+    const std::list<Para_Decl::Simple*> &p = m->list();
+    std::list<Para_Decl::Simple*>::const_iterator j = p.begin();
+    if (j != p.end()) {
+      apply(l, *j, cur);
+      ++j;
+    }
+    for (; j != p.end(); ++j) {
+      f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
+      f->add_arg(*cur);
+      f->add_arg(new Expr::Const(", ")); // separator for tracks
+      f->add_arg(new Expr::Const(2));
+      l.push_back(f);
+      apply(l, *j, cur);
+    }
+
+    f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
+    f->add_arg(*cur);
+    f->add_arg(new Expr::Const(" ")); // used for multitrack intendation
+    f->add_arg(new Expr::Const(1));
+    l.push_back(f);
+  }
+
+  // Generating node for inner argument of grammar operation. Single & Multi track
+  void apply(std::list<Statement::Base*> &l,
+             const std::list<Para_Decl::Base*> &paras,
+             Statement::Var_Decl *&cur) const {
+    std::list<Statement::Base*> apps;
+    unsigned int a = 0;
+    for (std::list<Para_Decl::Base*>::const_iterator i = paras.begin();
+         i != paras.end(); ++i) {
+      if (a > 0 && !(a % 3)) {
+        std::ostringstream o;
+        o << "ret_" << a;
+        Type::External *str = new Type::External("Rope");
+        Statement::Var_Decl *t = new Statement::Var_Decl(str, o.str());
+        l.push_back(t);
+        Statement::Fn_Call *f =
+        new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
+        f->add_arg(*cur);
+        f->add_arg(*t);
+        cur = t;
+        apps.push_front(f);
+      }
+      Statement::Fn_Call *f = new Statement::Fn_Call(
+        Statement::Fn_Call::STR_APPEND);
+      f->add_arg(*cur);
+      Para_Decl::Multi *m = dynamic_cast<Para_Decl::Multi*>(*i);
+      if (m) {
+    	f->add_arg(new Expr::Const(' '));
+    	l.push_back(f);
+        apply(l, m, cur);
+      } else {
+        Para_Decl::Simple *s = dynamic_cast<Para_Decl::Simple*>(*i);
+        if (a % 2 == 0) {
+			f->add_arg(new Expr::Const("child {node {"));
+        } else {
+        	f->add_arg(new Expr::Const("}}"));
+        }
+
+        l.push_back(f);
+        assert(s);
+        apply(l, s, cur);
+
+      }
+      a++;
+    }
+    l.insert(l.end(), apps.begin(), apps.end());
+  }
+
+
+ public:
+  void apply(Fn_Def &fn) const {
+    if (fn.is_Choice_Fn()) {
+      Statement::Return *ret = new Statement::Return(fn.names.front());
+      fn.stmts.push_back(ret);
+      return;
+    }
+    Type::External *str = new Type::External("Rope");
+    Statement::Var_Decl *ret = new Statement::Var_Decl(str, "ret");
+    fn.stmts.push_back(ret);
+    Statement::Fn_Call *f = new Statement::Fn_Call(
+      Statement::Fn_Call::STR_APPEND);
+    f->add_arg(*ret);
+    std::string t = "child {node {" + *fn.name + "}";  // generating childnode for used grammar operation
+    f->add_arg(new Expr::Const(t));
+    f->add_arg(new Expr::Const(static_cast<int>(t.size())));
+    fn.stmts.push_back(f);
+
+    Statement::Var_Decl *cur = ret;
+    std::list<Statement::Base*> l;
+    apply(l, fn.paras, cur);
+    fn.stmts.insert(fn.stmts.end(), l.begin(), l.end());
+
+    if (fn.ntparas().size() > 0) {
+      f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
+      f->add_arg(*ret);
+      f->add_arg(new Expr::Const(';'));
+      fn.stmts.push_back(f);
+      std::list<Statement::Base*> lntparas;
+      apply(lntparas, fn.ntparas(), ret);
+      fn.stmts.insert(fn.stmts.end(), lntparas.begin(), lntparas.end());
+    }
+
+    f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
+    f->add_arg(*ret);
+    f->add_arg(new Expr::Const(' ')); // Whitespace at the end of enum output string
+    fn.stmts.push_back(f);
+
+
+
+	f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
+	f->add_arg(*ret);
+	f->add_arg(new Expr::Const('}'));
+	fn.stmts.push_back(f);
+
+
+    Statement::Return *r = new Statement::Return(*ret);
+    fn.stmts.push_back(r);
+  }
+};
+
+
+Algebra *Signature::generate_enum_graph(std::string *n) {
+  return generate_algebra(n, Mode::PRETTY, new Type::External("Rope"),
+		  	  	  	  	  Generate_Enum_Graph_Stmts());
+}
+
+
+
+
+//------------------------------------------------------------------------------------------------------------
 
 
 struct Generate_Backtrace_Stmts : public Generate_Stmts {

@@ -764,7 +764,8 @@ algebra: algebra_head '{' fn_defs '}'
 \begin{lstlisting}
 automatic_specifier:
         @enum@ |
-        @count@
+        @count@ |
+	@enum_graph@
         ;
 \end{lstlisting}
 The {\tt automatic} keyword specifies the auto generation of the
