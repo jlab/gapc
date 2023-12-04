@@ -1,0 +1,13 @@
+
+signature FS (alphabet, comp) {
+  comp ml(Subsequence, Subsequence, Subsequence, Subsequence, Subsequence);
+
+  choice [comp] h([comp]);
+}
+
+
+grammar fold uses FS(axiom = multiloop ) {
+
+  multiloop = ml( BASE, BASE, REGION, BASE, BASE) ;
+
+}

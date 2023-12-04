@@ -1,0 +1,41 @@
+
+# input var:
+#  DEPS - should contain for each .cc file the .d destination
+#
+#    e.g. DEPS = $(DEP_O:.o=.d)
+#
+# output var:
+#  NO_DEPS - defined if compiler does not support dep generation
+
+###############################################################################
+# Tracking include file dependencies
+###############################################################################
+# sun cc doesn't know the -M. options  ...
+ifneq ($(filter $(CXX),g++ icc),)
+
+# work around stupid GNU make include bug
+# (if make can create some non-existing include files, it should do it
+#  and shut up - GNU make does not do that - it complains, but creates
+#  the needed files - the -includes directive has the problem, that if
+#  make can not create the included file it gives no error, thus hides
+#  the error)
+# see https://savannah.gnu.org/bugs/?102
+-include $(DEPS)
+
+# see http://make.paulandlesley.org/autodep.html
+# why this is superior to a %d: %.cc approach
+# -MMD ignores system dirs
+# -MP creates phony targets, to avoid 'No rule to make target ...' errors
+# if boost is not installed system wide, sed removes references to boost
+# headers (since each boost header references A LOT more boost headers ...)
+
+%.o : %.cc
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< -c -o $@ 
+
+else
+
+NO_DEPS=true
+
+endif
+
+

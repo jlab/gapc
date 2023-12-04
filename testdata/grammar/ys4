@@ -1,0 +1,16 @@
+signature Align(alphabet, answer) {
+  choice [answer] h([answer]);
+}
+
+
+grammar affinelocsim uses Align(axiom = start)
+{
+
+
+  start = f(REGION) | b ;
+
+  b =  {  f(CHAR) | f(CHAR, CHAR) | f(CHAR, CHAR, CHAR) }
+           with minsize(2) with maxsize(2) ;
+
+
+}

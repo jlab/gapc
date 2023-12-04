@@ -1,0 +1,27 @@
+signature Foo(alphabet, answer) {
+  choice [answer] h([answer]);
+}
+
+
+// runtime by width n^2
+// runtime full table n
+// runtime %start -> n
+// empty table -> 2^n
+
+grammar special4 uses Foo(axiom = start)
+{
+
+   start =
+                 f1 ( CHAR ,b)         |
+                 f2 ( CHAR ,c );
+
+   b         =
+                 f3 ( CHAR ,start)  |
+                 nil ( EMPTY );
+
+   c         =
+                 f3 ( CHAR ,start)  |
+                 nil ( EMPTY );
+
+
+}

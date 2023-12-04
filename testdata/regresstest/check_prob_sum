@@ -1,0 +1,5 @@
+if [ $# != 2 ]; then
+echo $0 true-pf-sum out-file
+fi
+
+awk '/\(/ { sum+=$11 } END { 'real=$1'; printf("real: %g new: %g\n", real, sum); exit !(sum<real); }' $2

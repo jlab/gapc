@@ -1,0 +1,10 @@
+from ViennaRNA-1.7.2 (not changed):
+  energy_const.h
+  energy_par.c
+  intloops.h
+
+imported from adpc 0.9 (heavily changed):
+  adplib.[ch]
+  rnalib.[ch]
+
+

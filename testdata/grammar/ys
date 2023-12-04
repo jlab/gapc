@@ -1,0 +1,28 @@
+signature Align(alphabet, answer) {
+  choice [answer] h([answer]);
+}
+
+
+grammar affinelocsim uses Align(axiom = skipR)
+{
+
+  tabulated { alignment, xDel, xIns }
+
+  skipR = skip_right(skipR, CHAR) |
+          skipL # h ;
+
+  skipL = skip_left(CHAR, skipL) |
+          alignment # h ;
+
+  alignment = nil(CHAR, CHAR) | 
+              d(CHAR, xDel) |
+              i(xIns, CHAR) |
+              r(CHAR, alignment, CHAR) # h ;
+
+  xDel = alignment |
+         dx(CHAR, xDel) # h ;
+
+  xIns = alignment |
+         ix(xIns, CHAR) # h ;
+
+}

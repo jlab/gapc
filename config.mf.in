@@ -1,0 +1,102 @@
+
+####### Automatic Configuration
+
+#system
+SYSTEM_SUFFIX = _@host_os@
+PREFIX = @prefix@
+
+# programms
+CXX = @CXX@ 
+CC = @CC@ 
+LD = $(CC)
+LEX = @FLEX@
+YACC = @BISON@
+SED = @SED@
+INSTALL = @INSTALL@
+SHELL = @SHELL@
+HG = @HG@
+
+#flags
+# c
+CFLAGS = @CFLAGS@ 
+
+#c++
+CXXFLAGS = @CXXFLAGS@
+
+#library
+SO_SUFFIX = @SO_SUFFIX@
+SHARED_FLAGS = @SHARED_FLAGS@
+FAST_MATH = @FAST_MATH@
+PIC_FLAGS = @PIC_FLAGS@
+INSTALL_SHARED_FLAG=@INSTALL_SHARED_FLAG@
+
+#bison
+BISON_VERSION_FLAG = @BISON_VERSION_FLAG@
+
+#boost
+BOOST_CPPFLAGS = @BOOST_CPPFLAGS@
+BOOST_LDFLAGS = @BOOST_LDFLAGS@
+BOOST_PROGRAM_OPTIONS_LIB = @BOOST_PROGRAM_OPTIONS_LIB@
+BOOST_UNIT_TEST_FRAMEWORK_LIB = @BOOST_UNIT_TEST_FRAMEWORK_LIB@
+
+#gsl
+GSL_LIBS = @GSL_LIBS@
+GSL_CFLAGS = @GSL_CFLAGS@
+
+# openmp
+CXXFLAGS_OPENMP = @OPENMP_CXXFLAGS@
+
+####### Fixed Configuration
+
+AR = ar
+
+#preprocessor
+LIB_RT = rtlib
+LIB_RNA = librna
+LIB_GENERAL = 
+INCLUDE_PATH=/include
+CPPFLAGS += $(BOOST_CPPFLAGS) \
+	 $(CPPFLAGS_EXTRA) \
+	 $(RTLIB_CPPFLAGS)
+
+# c
+CFLAGS += -DNDEBUG
+
+# c++
+CXXFLAGS += -DNDEBUG $(BISON_VERSION_FLAG) $(CXXFLAGS_EXTRA)
+
+# linker
+LIB_PATH=/lib
+LDFLAGS = $(BOOST_LDFLAGS)  \
+	$(LDFLAGS_EXTRA) \
+	$(RTLIB_LDFLAGS) \
+	$(shell echo " $(BOOST_LDFLAGS) " | sed -e 's/[ ][ ]*[^ ]*\.o[ ]//g' | sed -e 's/\-L/-Xlinker -rpath -Xlinker /g') \
+	$(shell echo " $(LDFLAGS_EXTRA) " | sed -e 's/[ ][ ]*[^ ]*\.o[ ]//g' | sed -e 's/\-L/-Xlinker -rpath -Xlinker /g') \
+	$(shell echo " $(RTLIB_LDFLAGS) " | sed -e 's/[ ][ ]*[^ ]*\.o[ ]//g' | sed -e 's/\-L/-Xlinker -rpath -Xlinker /g') 
+
+LDLIBS = $(RTLIB_LDLIBS) \
+	 $(LDLIBS_EXTRA)
+
+
+
+# Options for compling GapC generated code
+# set to RTLIB_LDLIBS
+RT_LDLIBS = $(GSL_LIBS) -lrna
+# set to RTLIB_LDFLAGS
+RT_LDFLAGS = -L$(PREFIX)$(LIB_PATH)/$(LIB_GENERAL) \
+	-L$(PREFIX)$(LIB_PATH)/$(LIB_RT)  \
+	-L$(PREFIX)$(LIB_PATH)/$(LIB_RNA) \
+# set to RTLIB_CPPFLAGS
+RT_CPPFLAGS = $(GSL_CFLAGS) \
+	 -I$(PREFIX)$(INCLUDE_PATH)/$(LIB_GENERAL) \
+	 -I$(PREFIX)$(INCLUDE_PATH)/$(LIB_RT) \
+	 -I$(PREFIX)$(INCLUDE_PATH)/$(LIB_RNA) \
+
+RTLIB = $(PREFIX)$(INCLUDE_PATH)/$(LIB_RT)
+
+
+
+
+
+
+

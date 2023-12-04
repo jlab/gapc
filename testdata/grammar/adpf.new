@@ -1,0 +1,152 @@
+
+signature FS (alphabet, comp, cmpl) {
+  cmpl sadd(Subsequence, cmpl);
+  cmpl cadd(comp, cmpl);
+  comp dlr(Subsequence, comp, Subsequence);
+  comp sr(Subsequence, comp, Subsequence);
+  comp hl(Subsequence, Subsequence, Subsequence, Subsequence, Subsequence);
+  comp bl(Subsequence, Subsequence, Subsequence, comp, Subsequence, Subsequence);
+  comp br(Subsequence, Subsequence, comp, Subsequence, Subsequence, Subsequence);
+  comp il(Subsequence, Subsequence, Subsequence, comp, Subsequence, Subsequence, Subsequence);
+  comp ml(Subsequence, Subsequence, cmpl, Subsequence, Subsequence);
+
+  cmpl append(cmpl, cmpl);
+  cmpl ul(comp);
+  cmpl addss(cmpl, Subsequence);
+  cmpl ssadd(Subsequence, comp);
+
+  cmpl nil(void);
+
+  choice [comp] h([comp]);
+  choice [cmpl] h_l([cmpl]);
+  choice [cmpl] h_s([cmpl]);
+}
+
+synoptic algebra count implements FS(alphabet = char, comp = integer, cmpl = integer)
+{
+
+  // typ ist ja eigentlich klar, Vorteil: typechecking, Benuterkontrolle,
+  //    codeselbstdokumentation (nicht Zwang immer zur Signatur hochzuscrollen),
+  //    stub durch IDE generierbar ...
+  integer sadd(Subsequence lb, integer e) {
+    return e;
+  }
+
+  integer cadd(integer x, integer e) {
+    return x * e;
+  }
+
+  integer dlr(Subsequence lb, integer e, Subsequence rb) {
+    return e;
+  }
+
+  integer sr(Subsequence lb, integer e, Subsequence rb) {
+    return e;
+  }
+
+  integer hl(Subsequence lb, Subsequence f1, Subsequence r, Subsequence f2, Subsequence rb) {
+    return 1;
+  }
+
+  integer bl(Subsequence bl, Subsequence f1, Subsequence x, integer e, Subsequence f2, Subsequence br) {
+    return e;
+  }
+
+  integer br(Subsequence bl, Subsequence f1, integer e, Subsequence x, Subsequence f2, Subsequence br) {
+    return e;
+  }
+
+  integer il(Subsequence f1, Subsequence f2, Subsequence r1, integer x, Subsequence r2, Subsequence f3, Subsequence f4) {
+    return x;
+  }
+
+  integer ml(Subsequence bl, Subsequence f1, integer x, Subsequence f2, Subsequence br) {
+    return x;
+  }
+
+  integer append(integer c1, integer c) {
+    return c1 * c;
+  }
+
+  integer ul(integer c1) {
+    return c1;
+  }
+
+  integer addss(integer c1, Subsequence r) {
+    return c1;
+  }
+
+  integer ssadd(Subsequence r, integer x) {
+    return x;
+  }
+
+  integer nil(void) {
+    return 1;
+  }
+
+  choice [integer] h([integer] es) {
+    if (list_empty(es) == true)
+      return es;
+    else
+      return integer_list(integer_sum(es));
+  }
+
+  choice [integer] h_l([integer] es) {
+    if (list_empty(es) == true)
+      return es;
+    else
+      return integer_list(integer_sum(es));
+  }
+
+  choice [integer] h_s([integer] es) {
+    if (list_empty(es) == true)
+      return es;
+    else
+      return integer_list(integer_sum(es));
+  }
+
+}
+
+
+grammar fold uses FS(axiom = struct) {
+
+  tabulated {
+    struct, closed, ml_comps, ml_comps1 }
+
+  struct = sadd(BASE, struct)   |
+           cadd(dangle, struct) |
+           nil(EMPTY) # h_s ;
+
+  dangle = dlr(LOC, closed, LOC) ;
+
+  closed = { stack | hairpin | leftB | rightB | iloop | multiloop }
+           with stackpair # h ;
+
+  stack = sr(BASE, closed, BASE) ;
+
+  hairpin = hl(BASE, BASE, { REGION with minloopsize(3) }, BASE, BASE) ;
+
+  leftB = bl( BASE, BASE, REGION, closed, BASE, BASE) # h ;
+
+  rightB = br( BASE, BASE, closed, REGION, BASE, BASE) # h ;
+
+  iloop = il( BASE, BASE, REGION with maxsize(30), closed, REGION with maxsize(30), BASE, BASE) # h ;
+
+  multiloop = ml( BASE, BASE, ml_comps, BASE, BASE) ;
+
+  ml_comps = sadd(BASE, ml_comps) |
+             append( { ul(dangle) } , ml_comps1) # h_l ;
+
+  ml_comps1 = sadd(BASE, ml_comps1) |
+              append(  ul(dangle)  , ml_comps1) |
+              ul(dangle) |
+              addss( ul(dangle), REGION)  # h_l ;
+
+
+}
+
+instance foo = fold ( count ) ;
+
+// instance bar = fold ( shapes(k = 5) * pfunc ) ;
+
+

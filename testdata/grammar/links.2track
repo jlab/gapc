@@ -1,0 +1,19 @@
+input < raw, raw >
+
+signature Foo(alphabet, answer) {
+  choice [answer] h([answer]);
+}
+
+
+grammar Loop uses Foo(axiom = A)
+{
+
+  A = f ( <B, REGION> with < maxsize(23), all > , A,
+          <REGION, B> with < all, maxsize(42) > ) |
+      f ( <CHAR, CHAR>) ;
+
+  B = f (CHAR, B, REGION) |
+      f (REGION) ;
+
+
+}

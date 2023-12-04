@@ -1,0 +1,26 @@
+
+signature Sig(alphabet, answer) {
+  answer r(char, answer, char);
+  answer i(answer, char);
+  answer sl(char, answer);
+  answer sr(answer, char);
+  [answer] h([answer]);
+}
+
+grammar Pal uses Sig(axiom = pal) {
+
+pal   = match                |
+        sl(CHAR , skipl)     |
+        sr(skipr, CHAR)      # h ;
+
+skipl = match                |
+        sl(CHAR, skipl)      # h ;
+
+skipr = match                |
+        i(skipr, CHAR)       # h ;
+
+match = r(CHAR, inner, CHAR) ;
+
+inner = sep(REGION)          |
+        pal                  # h ;
+}

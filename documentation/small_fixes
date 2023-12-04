@@ -1,0 +1,90 @@
+Georg left this:
+
+TODO
+- max yield-size analysis: f(maxsize(3), maxsize(3)) -> max-ys(f) := 6 ?
+
+- name-collisions verhindern: z.B. append als algebra fn vs. append als
+  rtlib/string.hh Funktion
+
+aka kleinscheiss
+================
+
+- shortcut exit in runtime computation when going exp
+
+- move more temp code stuff into codegen.hh, analogue to backtrack.hh
+  -> easier to make codegen reentrant; less temp codegen related fields
+     in Symbol::, Ast:: etc.
+
+- use more const & instead & fn params where appropriate
+- use more private members where appropriate
+
+- make std::list<Statement*> a special class, with a clear() which deletes
+  stuff (see codegen usage in symbol/alt for example)
+
+- make Times::optimize_shuffle_products/Product::/Nop optimization
+  more generic for multiple choice functions
+
+- window mode for CYK
+- refine window mode for linear/right/left/constant tables
+- allow ' in non-terminal/algebra function names
+- minimize/maximize in tuples in .gap according to user defined
+  component, not just the first one (within the .gap file)
+
+- remove .cc from test/, if a unittest is available
+- replace UINT32_MAX with c++ limits ...
+- introduce central logging facility instead of trivial is_debug()
+  usages; perhaps logging stream ...
+- unify put_ print_ method names && no need to return stream reference
+                                    from these methods ...
+
+- Loc yy:location - non-virtual destruct; Fn_Def non-virtual destruct
+- make singleton fool proof (log)
+- make ast.hh classes friends of the parser class ... -> more private members
+- unify semantics of runtime::poly() and runtime::asm::poly()
+- use more exceptions at the right places perhaps
+
+- use for_each/mem_fun ... instead of for(iterator...) where appropriate
+  + done for obvious cases
+  -> boost/C++0x foreach ...
+
+- test stlport debug mode
+  (XXFLAGS="-Wall -g -D_STLP_DEBUG  -I/usr/include/stlport" LDLIBS="-lstlport")
+- check with mudflap (valgrind already in use)
+
+
+fixed
+-----
++ minimizing compiling dependencies
+-> split type.hh into type_base.hh type_extend.hh; type.hh includes them;
+   -> perhaps a lot of dependencies only need the base ...
+  => statement/ expr/ makefiles/lexyaccxx.mf etc.
++ use Printer for expr.cc and type.cc, too
++ use singleton Printer for operator<<(statement, expr, type)
++ add license stub into each src file
++ iterators: use ++i instead of i++ (2nd version unnessary temp object)
++ eliminate temp ast
++ stl hashtable: find; reuse iterator instead of []
+  -> not possible, if find() returns end() ...
++ make it compile with stlport
+  uint32_t is unknown to stlport
++ use *_fwd.hh headers instead of redundant fwd declarations
+  (namespace {class a; class b; ... } )
++ let all put fns return the stream argument? -> No, only needed with <<
++ move constructor def in classes with virtual functions
+  into .cc translation unit -> No, no need to
++ add some kind of visitor for some (trivial) traversing algorithms
+
+not needed
+----------
+
+no need for optimization:
+- optimise runtime computation
+  - avoid copying too much temp rt objects
+  - use auto_ptr for example
+  - if exakt table design needed benchmark use of exceptions in the exp case
+    - or disable exceptions via empty throw specification
+          and do extrea is_exp() checksvia empty 
+- optimise runtime.hh Poly operations
+  - less temporaries
+  - special cases while multiplication (* 1) etc.
+

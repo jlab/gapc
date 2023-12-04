@@ -1,0 +1,35 @@
+
+LC_ALL=C
+
+if [ $# != 4 ]; then
+echo $0 exact-file mse max-error sample-file
+exit 23
+fi
+
+EXACT=$1
+REF_MSE=$2
+MAX_ERROR=$3
+SAMPLE=$4
+
+
+awk '/\[/ { sum+=$4; array[$2] = $4; }
+     END { for(i in array) print i, array[i]/(sum); } ' $EXACT | \
+     sort -r -g -t' ' -k 2 > a
+
+awk '/\[/ { sum++; array[$4]++; }
+     END { for(i in array) print i, array[i]/(sum); } ' $SAMPLE |\
+      sort -r -g -t' ' -k 2 > b
+
+awk '{ print "a",$1,$2 }' a > x
+awk '{ print "b",$1,$2 }' b >> x
+
+MSE=`awk '/a/ { as[$2]=$3 } /b/ { bs[$2]=$3 } 
+          END { for(i in as) { e=as[i]-bs[i]; sum+=e*e;} print sum; } ' x`
+
+#../../fp_eq $MSE 0.000349275 0.00005
+../../fp_eq $MSE $REF_MSE $MAX_ERROR
+
+
+
+exit $?
+

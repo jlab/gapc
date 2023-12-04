@@ -1,0 +1,98 @@
+import rnalib
+
+type spair = (string left, string right)
+
+
+signature Bill(alphabet, answer) {
+
+  
+
+  answer add(answer, alphabet, answer);
+  answer mult(answer, alphabet, answer);
+  choice [answer] h([answer]);
+}
+
+
+// types scoreing, synoptic, classification, printing, pretty printing
+
+synoptic algebra count(int k = 2) implements Bill
+  (alphabet = char /* blah blah */,
+   answer = int) {
+
+  int add(int i, char c, int j)
+  {
+    return i * j;
+  }
+
+  int mult(int i, char c, int j)
+  {
+    return i * j;
+  }
+
+  choice [int] h([int] i)
+  {
+    return int_list(sum(i));
+  }
+
+}
+
+
+algebra buyer implements Bill(alphabet = char, answer = int) {
+  int add(int i, char c, int j)
+  {
+    return i + j;
+  }
+
+  int mult(int i, char c, int j)
+  {
+    return i * j;
+  }
+
+  [int] h([int] i)
+  {
+    return int_list(minimum(i));
+  }
+}
+
+algebra seller extends buyer {
+  [int] h([int] i)
+  {
+    return int_list(maximum(j));
+  }
+}
+
+pretty algebra pretty implements Bill(alphabet = char, answer = string) 
+{
+  string add(string i, char c, string j)
+  {
+    return string_concat(string_concat(i, char_to_string(c)), j);
+  }
+
+  string mult(string i, char c, string j)
+  {
+    return string_concat(string_concat(i, char_to_string(c)), j);
+  }
+
+  [string] h([string] i)
+  {
+    return i;
+  }
+}
+
+
+grammar bill uses Bill (axiom=formula) {
+
+  tabulated { formula, number }
+
+  formula = number with maxsize(23) |
+            add(formula, plus, formula) with maxsize(50) |
+            number with maxsize(42) |
+            mult(formula, times, formula) with maxsize(51) # h ;
+
+  number = INT;
+
+  plus = CHAR('+') ;
+  times = CHAR('*') ;
+
+}
+

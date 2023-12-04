@@ -1,0 +1,15 @@
+
+signature Bill(alphabet, answer) {
+
+  choice [answer] h([answer]);
+  
+}
+
+
+grammar bill uses Bill (axiom=start) {
+
+  start = foo(char('+'), start) ;
+
+
+}
+

@@ -1,0 +1,15 @@
+signature Foo(alphabet, answer) {
+  choice [answer] h([answer]);
+}
+
+
+grammar Dim uses Foo(axiom = start)
+{
+
+start = x(start, CHAR) |
+        x(start, CHAR, CHAR) |
+        foo ;
+
+foo = REGION ;
+
+}

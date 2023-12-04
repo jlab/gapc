@@ -1,0 +1,23 @@
+Copyright 2008-2012, Georg Sauthoff
+  gsauthof@techfak.uni-bielfeld.de or gsauthof@sdf.lonestar.org
+
+The sourcecode of the gapc compiler project is licensed under the GPLv3+.
+See the file COPYING for more information.
+
+Note that the gapc runtime headers and library source is licensed under
+GPLv3+, too.
+
+If this is a problem for your usage scenario just email me.
+
+## librna/vienna ##
+
+The source files under librna/vienna (energy parameters, tables and a parameter
+file loading routine) are copied from the ViennaRNA 2 package
+(http://www.tbi.univie.ac.at/~ivo/RNA/). The ViennaRNA package itself is
+distributed under a custom open source license (it is also available under
+librna/vienna/COPYING). See also each source file librna/vienna for special
+copyright and citation notes. It is not really clear if the Vienna-License is
+applicable to all files under librna/vienna - perhaps it does not cover
+automatically generated parameter files (i.e. *.par and source code).
+
+The object files under librna/vienna are linked into librna.so.

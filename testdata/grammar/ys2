@@ -1,0 +1,31 @@
+import rnalib
+
+type spair = (string left, string right)
+
+
+signature Bill(alphabet, answer, foo) {
+
+  
+  answer f(int);
+  answer add(answer, answer, answer);
+  answer mult(answer, alphabet, answer);
+  char bar(answer, alphabet, answer);
+  choice [answer] h([answer]);
+  choice [foo] g([foo]);
+}
+
+
+
+grammar bill uses Bill (axiom=formula) {
+
+  tabulated { formula, number }
+
+  formula = number |
+            add(formula,  plus, formula) ;
+
+  number = f(INT);
+
+  plus = add(formula, plus, formula) | f(INT) ;
+
+}
+

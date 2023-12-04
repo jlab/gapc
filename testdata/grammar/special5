@@ -1,0 +1,24 @@
+signature Foo(alphabet, answer) {
+  choice [answer] h([answer]);
+}
+
+// empty table conf -> 2^n
+// all == good == n^3
+
+grammar special5 uses Foo(axiom = start)
+{
+
+   start  =
+                 f1 ( REGION ,b)         |
+                 f2 ( REGION ,c );
+
+   b         =
+                 f3 ( REGION ,start)  |
+                 nil ( EMPTY );
+
+   c         =
+                 f3 ( REGION ,start)  |
+                 nil ( EMPTY );
+
+
+}

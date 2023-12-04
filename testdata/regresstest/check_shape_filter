@@ -1,0 +1,55 @@
+#!/bin/sh
+
+
+set -e
+set -u
+
+LC_ALL=C
+
+if [ $# != 6 ]; then
+  echo $0 prog exact-file mse max-error precision-2 input
+exit 23
+fi
+
+PROG=$1
+EXACT=$2
+REF_MSE=$3
+MAX_ERROR=$4
+PREC=$5
+INPUT=$6
+PREF=check_shape
+
+
+$PROG $INPUT > $PREF.log
+
+if [ "$PREC" = "2" ]; then
+grep '0\.0\?0\?[1-9]' $PREF.log | cut -d' ' -f 1,3 | sort > $PREF.mfe.log
+grep '0\.0\?0\?[1-9]' $EXACT | cut -d' ' -f 1,3 | sort > $PREF.mfe.old.log
+else
+grep '0\.0\?[1-9]' $PREF.log | cut -d' ' -f 1,3 | sort > $PREF.mfe.log
+grep '0\.0\?[1-9]' $EXACT | cut -d' ' -f 1,3 | sort > $PREF.mfe.old.log
+fi
+
+# check mfes
+# diff is not fuzzy enough
+#diff -u $PREF.mfe.old.log $PREF.mfe.log
+awk '{ if (a[$1]==0) a[$1]=$2; else a[$1]-=$2; }
+     END { delta=120;
+           for (i in a)
+             if (a[i] > delta || a[i] < -1*delta)
+               print i, a[i]; }' $PREF.mfe.log $PREF.mfe.old.log
+
+
+# check probs
+MSE=`awk '/\[/ { if (!f[FILENAME]) f[FILENAME]=1+x++;
+            if (f[FILENAME]==1) { a[$1]+=$2; sum_a++; }
+               else {b[$1]+=$2; sum_b++;} }
+          END { for (i in a) z[i] = 1;
+                for (i in b) z[i] = 1;
+                for (i in z) err+=(a[i]-b[i])^2;
+                sum=sum_a<sum_b?sum_b:sum_a;
+                print err/sum; }' $EXACT $PREF.log`
+../../fp_eq $MSE $REF_MSE $MAX_ERROR
+
+
+

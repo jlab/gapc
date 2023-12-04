@@ -1,0 +1,240 @@
+#tests for Marco Ruethers diploma thesis
+
+GRAMMAR=../Testcases
+
+GAPC="../../../gapc --specialize_grammar"
+
+check_specialization specialization.gap test2Inst baa
+
+check_specialization specialization.gap test3Inst baa
+
+check_specialization specialization.gap test4Inst baa
+
+check_specialization specialization.gap test5Inst baa
+
+check_specialization specialization.gap test6Inst baa
+
+check_specialization specialization.gap test7Inst baa
+
+# That is grammar 'small' from test33, ish.
+# Modification: the EMPTY parser has been replaced
+# by the CHAR parser, which results in connection
+# with the algebra in the same string grammar.
+check_specialization specialization.gap test10Inst baa
+
+# Next one is grammar 'medium' from test33.
+check_specialization specialization.gap test11Inst baa
+
+# Modification of grammar test11 in orig_rule2:
+# the first application of orig_f4 points directly
+# to orig_rule3 instead of orig_rule2. This tests
+# the detection of cycles. orig_rule2 should not
+# be part of a cycle, although it points into a
+# cycle.
+check_specialization specialization.gap test12Inst baa
+
+# Modified test11, where orig_rule2 now has a cycle which
+# consists of a non-terminal that has no algebra function
+# applied to it, and as a second step an algebra function
+# applied to the parser parts.
+check_specialization specialization.gap test13Inst baa
+
+# Modified test12, contains one cycle over the rules
+# {orig_rule2, orig_rule3, orig_rule5}, but has two alternatives
+# in orig_rule2 pointing to orig_rule3. The interesting question
+# is, if we need two differently named copies of those rules
+# involved in the cycle, one for each of both pointer going out
+# from orig_rule2.
+check_specialization specialization.gap test14Inst baa
+
+# Modified test14, now with an alternative in orig_rule2 which
+# is part of the cycle, but has also orig_rule2 as a second
+# symbol in the sequence (i.g. 'orig_f1 (orig_rule3, orig_rule2)').
+check_specialization specialization.gap test15Inst baa
+
+# A new version based on Test 15, whose main looping part
+# orig_rule3 has been replaced by two alternatives which
+# consists first of a direct loop, and second of a sequence
+# which is not reducible. This should test if the minimization
+# of the new grammar does not include the recursive part
+# while still producing the irreducible part but without
+# any annotations for the hidden non-terminal.
+check_specialization specialization.gap test16Inst baa
+
+# The same as test16 but with two alternatives of orig_rule3
+# swapped in their order.
+check_specialization specialization.gap test17Inst baa
+
+# A Grammar that test if a cyclic use and a strict use of
+# the same non-terminal in the same production is handled
+# correctly.
+check_specialization specialization.gap test18Inst baa
+
+# A Grammar that tests the mapping of original algebra function
+# parameter positions to CFG parameter positions. For this test
+# we use the special 'orig_f1_' algebra function which simply
+# switches the order its parameters.
+check_specialization specialization.gap test19Inst baa
+
+
+
+GAPC="../../../gapc --ambiguity"
+
+#The CFG of test1.gapc in connection with the algebra 'test'
+#must accept the empty word only!
+#~ check_ambiguity test01.gap testInst foo
+
+#The grammar consists of two alternatives which together create
+#a simple sequence, in a way simulating a linked list (e.g. like a
+#list in Haskell)
+#~ check_ambiguity test02.gap testInst foo
+
+#The grammar is essentially the same as that of Test2,
+#with the difference that the algebra 'testAlg2' contains
+#an other algebra function call inside the parameter list
+#of an 'append' function call. Recursion is not permitted
+#in the current version of the ambiguity-CFG generator.
+#~ check_ambiguity test03.gap testInst1 foo
+#~ check_ambiguity_errors test03.gap testInst2 foo
+
+#This grammar is a kind of Nussinov RNA folding grammar,
+#modified in a way that gapc accepts it without error
+#messages.
+#This grammar has at least one ambiguity.
+#~ check_ambiguity test04.gap testInst foo
+
+#The grammar is the same as that of test4, with the exception
+#that the alternative 'split (non_nil_seq, non_nil_seq)' is not
+#present in the definition of non-terminal 'non_nil_seq'. The
+#grammar is still ambiguous.
+#As an additional feature there is a modification to the algebra
+#rule 'right', which introduces a new local variable called
+#'dummy', which simply passes the parameter value of 'str' on
+#to the append-function call.
+#~ check_ambiguity test05.gap testInst foo
+
+#The grammar is the same as test5 but for the algebra
+#definition. This test contains helper function definitions
+#that are not defined in the signature, but only in the
+#algebra itself.
+#~ check_ambiguity test06.gap testInst foo
+
+#This test is used to find out if recursion detection
+#for algebra functions works. It is base on Test6, and creates
+#some nested algebra function calls, but no recursion!
+#This test must not result in an compile error.
+#~ check_ambiguity test07.gap testInst foo
+
+#This test is used to find out if recursion detection
+#for algebra functions works. It is base on Test6, and
+#creates a recursion which is indirectly, which means
+#that the recursion is caused by two functions calling
+#each other.
+#~ check_ambiguity_errors test08.gap testInst foo
+
+#This test creates a nested application of algebra functions
+#caused by nesting in the grammar itself. This should result
+#in a CFG which has the corresponding grammar fragment inserted
+#directly at that position where the algebra function nesting
+#took place.
+#~ check_ambiguity test09.gap testInst foo
+
+#This test incorporates a terminal parser into the
+#canonical grammar's output, which must result in a
+#regular expression.
+#~ check_ambiguity test10.gap testInst foo
+
+#This test uses BASE-parser in the grammar.
+#~ check_ambiguity test11.gap testInst foo
+
+#This test has an ambiguous grammar.
+#~ check_ambiguity test12.gap testInst foo
+
+#This test shows nested algebra function applications.
+#~ check_ambiguity test13.gap testInst foo
+
+#In this test we try to find out, if epsilon is implemented
+#correctly by simply writing out the empty string.
+#~ check_ambiguity test14.gap testInst foo
+
+#This example is taken from http://gapc.eu/grammar/optbin.gap
+#It show how to use dynamic programming for simulating binary
+#search trees.
+#~ check_ambiguity test15.gap tikz foo
+#~ check_ambiguity test15.gap pretty foo
+
+#This test incorporates a terminal parser into the
+#canonical grammar's output, which must result in a
+#regular expression.
+#~ check_ambiguity test16.gap testInst foo
+
+#This test case tests the bug-fix that limits the nesting
+#level of gapc grammar definitions. As always we will use
+#our standard grammar example (test4.gap) extended in the
+#direction of our test.
+#We observe at first that the error is not reproducible
+#by simply creating a huge nested structure.
+#~ check_ambiguity test18.gap testInst foo
+
+#This test case tests the bug-fix that limits the nesting
+#level of gapc grammar definitions. As always we will use
+#our standard grammar example (test4.gap) extended in the
+#direction of our test.
+#This is the next try we make in order to put a finger on
+#the problem.
+#~ check_ambiguity test20.gap testInst foo
+
+#This test clarifies the question whether grammar non-terminal
+#names share the same name space as algebra function names.
+#The test is carried out by using the same non-terminal name
+#as an existing algebra function.
+#Answer: yes, the name spaces are distinct. Both entities do
+#not share the same pool of names. The compiler automatically
+#uses the type information of the symbol usage (e.g. when no
+#parantheses are provided, this must be a non-terminal) to
+#distinguish both kinds in cases when for a given name both
+#a non-terminal and a algebra funtion is defined.
+#~ check_ambiguity test22.gap testInst foo
+
+#In this test we try to create an errornous file that will
+#result in a compiler error. The error we want to observe
+#will occur when unreachable statements are found in an
+#algebra funtion, e.g. any statement following a return
+#statement.
+#At the moment there is only this single situation that rises
+#an error, namely any statement that occurs in a block after
+#a return statement will cause the compiler ambiguity CFG
+#generator to throw an exception.
+#~ check_ambiguity_errors test23.gap testInst foo
+
+#In this test we test all varieties of if-statements.
+#1) with no else-branch
+#2) with both then- and else-branch
+#3) with no else-branch, but a returning then-branch
+#4) with both branches, where the then-branch returns
+#5) with both branches, where the else-branch returns
+#6) with both branches, where both branches return
+#~ check_ambiguity test24.gap testInst foo
+
+#"real world problem" of Stefan.
+#Grammars of interest are pp1, ... , pp5.
+#Results for the grammars are:
+#pp5) unabbiguous, the Ambiguituy-Checker is unsure until
+#     we increase the unfolding legen to 1 and give the
+#     hint that "L" is the left paranthesis, "J" a right
+#     paranthesis.
+#pp4) the grammar is ambiguous.
+#pp3) is exactly the same combination of grammar and algebra
+#     as pp4. Please see pp4 for more information
+#pp2) the grammar is ambiguous.
+#~ check_ambiguity shape2matcher_microstate_5.gap pp5 foo
+#~ check_ambiguity shape2matcher_microstate_5.gap pp4 foo
+#~ check_ambiguity shape2matcher_microstate_5.gap pp3 foo
+#~ check_ambiguity shape2matcher_microstate_5.gap pp2 foo
+
+#Test multiple defined grammars per one gap-file.
+#As it seems, gapc does not link the axiom of this grammar
+#correctly if it is not the first grammar of the file
+#(in textual order).
+#~ check_ambiguity test26.gap testInst1 foo
+#~ check_ambiguity test26.gap testInst2 foo

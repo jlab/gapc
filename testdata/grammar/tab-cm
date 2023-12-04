@@ -1,0 +1,505 @@
+signature Foo(alphabet, answer) {
+  choice [answer] h([answer]);
+}
+
+grammar cmGrammar uses Foo (axiom = s_0) {
+  s_0 = f_il_1(BASE, il_1) |
+    f_ir_2(ir_2, BASE) |
+    f_ml_3(BASE, ml_3) |
+    f_d_4(d_4) 
+;
+
+
+  il_1 = f_il_1(BASE, il_1) |
+    f_ir_2(ir_2, BASE) |
+    f_ml_3(BASE, ml_3) |
+    f_d_4(d_4) 
+;
+
+
+  ir_2 = f_ir_2(ir_2, BASE) |
+    f_ml_3(BASE, ml_3) |
+    f_d_4(d_4) 
+;
+
+
+  ml_3 = f_il_5(BASE, il_5) |
+    f_ml_6(BASE, ml_6) |
+    f_d_7(d_7) 
+;
+
+
+  d_4 = f_il_5(BASE, il_5) |
+    f_ml_6(BASE, ml_6) |
+    f_d_7(d_7) 
+;
+
+
+  il_5 = f_il_5(BASE, il_5) |
+    f_ml_6(BASE, ml_6) |
+    f_d_7(d_7) 
+;
+
+
+  ml_6 = f_il_8(BASE, il_8) |
+    f_ml_9(BASE, ml_9) |
+    f_d_10(d_10) 
+;
+
+
+  d_7 = f_il_8(BASE, il_8) |
+    f_ml_9(BASE, ml_9) |
+    f_d_10(d_10) 
+;
+
+
+  il_8 = f_il_8(BASE, il_8) |
+    f_ml_9(BASE, ml_9) |
+    f_d_10(d_10) 
+;
+
+
+  ml_9 = f_il_11(BASE, il_11) |
+    f_ml_12(BASE, ml_12) |
+    f_d_13(d_13) 
+;
+
+
+  d_10 = f_il_11(BASE, il_11) |
+    f_ml_12(BASE, ml_12) |
+    f_d_13(d_13) 
+;
+
+
+  il_11 = f_il_11(BASE, il_11) |
+    f_ml_12(BASE, ml_12) |
+    f_d_13(d_13) 
+;
+
+
+  ml_12 = f_il_14(BASE, il_14) |
+    f_ml_15(BASE, ml_15) |
+    f_d_16(d_16) 
+;
+
+
+  d_13 = f_il_14(BASE, il_14) |
+    f_ml_15(BASE, ml_15) |
+    f_d_16(d_16) 
+;
+
+
+  il_14 = f_il_14(BASE, il_14) |
+    f_ml_15(BASE, ml_15) |
+    f_d_16(d_16) 
+;
+
+
+  ml_15 = f_il_17(BASE, il_17) |
+    f_ml_18(BASE, ml_18) |
+    f_d_19(d_19) 
+;
+
+
+  d_16 = f_il_17(BASE, il_17) |
+    f_ml_18(BASE, ml_18) |
+    f_d_19(d_19) 
+;
+
+
+  il_17 = f_il_17(BASE, il_17) |
+    f_ml_18(BASE, ml_18) |
+    f_d_19(d_19) 
+;
+
+
+  ml_18 = f_il_20(BASE, il_20) |
+    f_ml_21(BASE, ml_21) |
+    f_d_22(d_22) 
+;
+
+
+  d_19 = f_il_20(BASE, il_20) |
+    f_ml_21(BASE, ml_21) |
+    f_d_22(d_22) 
+;
+
+
+  il_20 = f_il_20(BASE, il_20) |
+    f_ml_21(BASE, ml_21) |
+    f_d_22(d_22) 
+;
+
+
+  ml_21 = f_il_23(BASE, il_23) |
+    f_ml_24(BASE, ml_24) |
+    f_d_25(d_25) 
+;
+
+
+  d_22 = f_il_23(BASE, il_23) |
+    f_ml_24(BASE, ml_24) |
+    f_d_25(d_25) 
+;
+
+
+  il_23 = f_il_23(BASE, il_23) |
+    f_ml_24(BASE, ml_24) |
+    f_d_25(d_25) 
+;
+
+
+  ml_24 = f_il_26(BASE, il_26) |
+    f_mp_27(BASE, mp_27, BASE) |
+    f_ml_28(BASE, ml_28) |
+    f_mr_29(mr_29, BASE) |
+    f_d_30(d_30) 
+;
+
+
+  d_25 = f_il_26(BASE, il_26) |
+    f_mp_27(BASE, mp_27, BASE) |
+    f_ml_28(BASE, ml_28) |
+    f_mr_29(mr_29, BASE) |
+    f_d_30(d_30) 
+;
+
+
+  il_26 = f_il_26(BASE, il_26) |
+    f_mp_27(BASE, mp_27, BASE) |
+    f_ml_28(BASE, ml_28) |
+    f_mr_29(mr_29, BASE) |
+    f_d_30(d_30) 
+;
+
+
+  mp_27 = f_il_31(BASE, il_31) |
+    f_ir_32(ir_32, BASE) |
+    f_mp_33(BASE, mp_33, BASE) |
+    f_ml_34(BASE, ml_34) |
+    f_mr_35(mr_35, BASE) |
+    f_d_36(d_36) 
+;
+
+
+  ml_28 = f_il_31(BASE, il_31) |
+    f_ir_32(ir_32, BASE) |
+    f_mp_33(BASE, mp_33, BASE) |
+    f_ml_34(BASE, ml_34) |
+    f_mr_35(mr_35, BASE) |
+    f_d_36(d_36) 
+;
+
+
+  mr_29 = f_il_31(BASE, il_31) |
+    f_ir_32(ir_32, BASE) |
+    f_mp_33(BASE, mp_33, BASE) |
+    f_ml_34(BASE, ml_34) |
+    f_mr_35(mr_35, BASE) |
+    f_d_36(d_36) 
+;
+
+
+  d_30 = f_il_31(BASE, il_31) |
+    f_ir_32(ir_32, BASE) |
+    f_mp_33(BASE, mp_33, BASE) |
+    f_ml_34(BASE, ml_34) |
+    f_mr_35(mr_35, BASE) |
+    f_d_36(d_36) 
+;
+
+
+  il_31 = f_il_31(BASE, il_31) |
+    f_ir_32(ir_32, BASE) |
+    f_mp_33(BASE, mp_33, BASE) |
+    f_ml_34(BASE, ml_34) |
+    f_mr_35(mr_35, BASE) |
+    f_d_36(d_36) 
+;
+
+
+  ir_32 = f_ir_32(ir_32, BASE) |
+    f_mp_33(BASE, mp_33, BASE) |
+    f_ml_34(BASE, ml_34) |
+    f_mr_35(mr_35, BASE) |
+    f_d_36(d_36) 
+;
+
+
+  mp_33 = f_il_37(BASE, il_37) |
+    f_ir_38(ir_38, BASE) |
+    f_mp_39(BASE, mp_39, BASE) |
+    f_ml_40(BASE, ml_40) |
+    f_mr_41(mr_41, BASE) |
+    f_d_42(d_42) 
+;
+
+
+  ml_34 = f_il_37(BASE, il_37) |
+    f_ir_38(ir_38, BASE) |
+    f_mp_39(BASE, mp_39, BASE) |
+    f_ml_40(BASE, ml_40) |
+    f_mr_41(mr_41, BASE) |
+    f_d_42(d_42) 
+;
+
+
+  mr_35 = f_il_37(BASE, il_37) |
+    f_ir_38(ir_38, BASE) |
+    f_mp_39(BASE, mp_39, BASE) |
+    f_ml_40(BASE, ml_40) |
+    f_mr_41(mr_41, BASE) |
+    f_d_42(d_42) 
+;
+
+
+  d_36 = f_il_37(BASE, il_37) |
+    f_ir_38(ir_38, BASE) |
+    f_mp_39(BASE, mp_39, BASE) |
+    f_ml_40(BASE, ml_40) |
+    f_mr_41(mr_41, BASE) |
+    f_d_42(d_42) 
+;
+
+
+  il_37 = f_il_37(BASE, il_37) |
+    f_ir_38(ir_38, BASE) |
+    f_mp_39(BASE, mp_39, BASE) |
+    f_ml_40(BASE, ml_40) |
+    f_mr_41(mr_41, BASE) |
+    f_d_42(d_42) 
+;
+
+
+  ir_38 = f_ir_38(ir_38, BASE) |
+    f_mp_39(BASE, mp_39, BASE) |
+    f_ml_40(BASE, ml_40) |
+    f_mr_41(mr_41, BASE) |
+    f_d_42(d_42) 
+;
+
+
+  mp_39 = f_il_43(BASE, il_43) |
+    f_ir_44(ir_44, BASE) |
+    f_mp_45(BASE, mp_45, BASE) |
+    f_ml_46(BASE, ml_46) |
+    f_mr_47(mr_47, BASE) |
+    f_d_48(d_48) 
+;
+
+
+  ml_40 = f_il_43(BASE, il_43) |
+    f_ir_44(ir_44, BASE) |
+    f_mp_45(BASE, mp_45, BASE) |
+    f_ml_46(BASE, ml_46) |
+    f_mr_47(mr_47, BASE) |
+    f_d_48(d_48) 
+;
+
+
+  mr_41 = f_il_43(BASE, il_43) |
+    f_ir_44(ir_44, BASE) |
+    f_mp_45(BASE, mp_45, BASE) |
+    f_ml_46(BASE, ml_46) |
+    f_mr_47(mr_47, BASE) |
+    f_d_48(d_48) 
+;
+
+
+  d_42 = f_il_43(BASE, il_43) |
+    f_ir_44(ir_44, BASE) |
+    f_mp_45(BASE, mp_45, BASE) |
+    f_ml_46(BASE, ml_46) |
+    f_mr_47(mr_47, BASE) |
+    f_d_48(d_48) 
+;
+
+
+  il_43 = f_il_43(BASE, il_43) |
+    f_ir_44(ir_44, BASE) |
+    f_mp_45(BASE, mp_45, BASE) |
+    f_ml_46(BASE, ml_46) |
+    f_mr_47(mr_47, BASE) |
+    f_d_48(d_48) 
+;
+
+
+  ir_44 = f_ir_44(ir_44, BASE) |
+    f_mp_45(BASE, mp_45, BASE) |
+    f_ml_46(BASE, ml_46) |
+    f_mr_47(mr_47, BASE) |
+    f_d_48(d_48) 
+;
+
+
+  mp_45 = f_il_49(BASE, il_49) |
+    f_ir_50(ir_50, BASE) |
+    f_ml_51(BASE, ml_51) |
+    f_d_52(d_52) 
+;
+
+
+  ml_46 = f_il_49(BASE, il_49) |
+    f_ir_50(ir_50, BASE) |
+    f_ml_51(BASE, ml_51) |
+    f_d_52(d_52) 
+;
+
+
+  mr_47 = f_il_49(BASE, il_49) |
+    f_ir_50(ir_50, BASE) |
+    f_ml_51(BASE, ml_51) |
+    f_d_52(d_52) 
+;
+
+
+  d_48 = f_il_49(BASE, il_49) |
+    f_ir_50(ir_50, BASE) |
+    f_ml_51(BASE, ml_51) |
+    f_d_52(d_52) 
+;
+
+
+  il_49 = f_il_49(BASE, il_49) |
+    f_ir_50(ir_50, BASE) |
+    f_ml_51(BASE, ml_51) |
+    f_d_52(d_52) 
+;
+
+
+  ir_50 = f_ir_50(ir_50, BASE) |
+    f_ml_51(BASE, ml_51) |
+    f_d_52(d_52) 
+;
+
+
+  ml_51 = f_il_53(BASE, il_53) |
+    f_ml_54(BASE, ml_54) |
+    f_d_55(d_55) 
+;
+
+
+  d_52 = f_il_53(BASE, il_53) |
+    f_ml_54(BASE, ml_54) |
+    f_d_55(d_55) 
+;
+
+
+  il_53 = f_il_53(BASE, il_53) |
+    f_ml_54(BASE, ml_54) |
+    f_d_55(d_55) 
+;
+
+
+  ml_54 = f_il_56(BASE, il_56) |
+    f_ml_57(BASE, ml_57) |
+    f_d_58(d_58) 
+;
+
+
+  d_55 = f_il_56(BASE, il_56) |
+    f_ml_57(BASE, ml_57) |
+    f_d_58(d_58) 
+;
+
+
+  il_56 = f_il_56(BASE, il_56) |
+    f_ml_57(BASE, ml_57) |
+    f_d_58(d_58) 
+;
+
+
+  ml_57 = f_il_59(BASE, il_59) |
+    f_ml_60(BASE, ml_60) |
+    f_d_61(d_61) 
+;
+
+
+  d_58 = f_il_59(BASE, il_59) |
+    f_ml_60(BASE, ml_60) |
+    f_d_61(d_61) 
+;
+
+
+  il_59 = f_il_59(BASE, il_59) |
+    f_ml_60(BASE, ml_60) |
+    f_d_61(d_61) 
+;
+
+
+  ml_60 = f_il_62(BASE, il_62) |
+    f_ml_63(BASE, ml_63) |
+    f_d_64(d_64) 
+;
+
+
+  d_61 = f_il_62(BASE, il_62) |
+    f_ml_63(BASE, ml_63) |
+    f_d_64(d_64) 
+;
+
+
+  il_62 = f_il_62(BASE, il_62) |
+    f_ml_63(BASE, ml_63) |
+    f_d_64(d_64) 
+;
+
+
+  ml_63 = f_il_65(BASE, il_65) |
+    f_ml_66(BASE, ml_66) |
+    f_d_67(d_67) 
+;
+
+
+  d_64 = f_il_65(BASE, il_65) |
+    f_ml_66(BASE, ml_66) |
+    f_d_67(d_67) 
+;
+
+
+  il_65 = f_il_65(BASE, il_65) |
+    f_ml_66(BASE, ml_66) |
+    f_d_67(d_67) 
+;
+
+
+  ml_66 = f_il_68(BASE, il_68) |
+    f_ml_69(BASE, ml_69) |
+    f_d_70(d_70) 
+;
+
+
+  d_67 = f_il_68(BASE, il_68) |
+    f_ml_69(BASE, ml_69) |
+    f_d_70(d_70) 
+;
+
+
+  il_68 = f_il_68(BASE, il_68) |
+    f_ml_69(BASE, ml_69) |
+    f_d_70(d_70) 
+;
+
+
+  ml_69 = f_il_71(BASE, il_71) |
+    f_e_72(e_72) 
+;
+
+
+  d_70 = f_il_71(BASE, il_71) |
+    f_e_72(e_72) 
+;
+
+
+  il_71 = f_il_71(BASE, il_71) |
+    f_e_72(e_72) 
+;
+
+
+  e_72 = nil(EMPTY) 
+;
+
+
+
+}
+

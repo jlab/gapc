@@ -1,0 +1,21 @@
+
+signature Foo(alphabet, answer) {
+  choice [answer] h([answer]);
+}
+
+
+grammar Loop uses Foo(axiom = A)
+{
+
+  A = f (REGION, A, B with maxsize(42)  ) |
+      f (CHAR, CHAR) ;
+
+  // fixed bug: multi_init_indices
+  // first arg of hirn was called with (j-1-80, j-80)
+
+  B = hirn (CHAR, B, REGION) |
+      f (REGION) ;
+
+
+}
+

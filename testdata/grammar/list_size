@@ -1,0 +1,41 @@
+signature Foo(alphabet, answer) {
+  answer x(char, answer);
+  answer y(answer, char);
+  answer u(Subsequence, answer);
+  answer v(Subsequence, Subsequence);
+  choice [answer] h([answer]);
+}
+
+// rt(full) == rt(good) == n^2; #good < #full; rt(empty)  == n^5
+
+synoptic algebra count implements Foo (alphabet = char, answer = int)
+{
+  answer x(char a, answer b) { return a; }
+  answer y(answer a, char b) { return a; }
+  answer u(Subsequence a, answer b) { return a; }
+  answer v(Subsequence a, Subsequence b) { return a; }
+  choice [answer] h([answer] b) { return a; }
+}
+
+grammar special9 uses Foo(axiom = start)
+{
+
+   start = x(CHAR ,start) |
+               a ;
+
+   a         = x(CHAR ,a)          |
+               b ;
+
+   b         = x(CHAR ,b)          |
+               x(CHAR ,c)          |
+               y(c , CHAR ) ;
+
+   c         = u( REGION ,d ) ;
+
+   d         = v (REGION ,REGION ) ;
+
+
+}
+
+instance foo = special9 ( count ) ;
+
