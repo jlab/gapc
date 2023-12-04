@@ -1,1 +1,0 @@
-../grammar/stefan3.gap

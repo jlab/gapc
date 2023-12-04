@@ -1,8 +1,0 @@
-#!/bin/bash
-
-set -e
-set -u
-
-cd ../../test/shapemfepfx
-
-./test ./main ./nowindow.sh

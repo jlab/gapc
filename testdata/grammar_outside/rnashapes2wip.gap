@@ -1,1 +1,0 @@
-../grammar/rnashapes2wip.gap
