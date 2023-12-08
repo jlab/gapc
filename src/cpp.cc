@@ -2517,8 +2517,14 @@ void Printer::Cpp::print_value_pp_tree(const AST &ast) {
   dec_indent();
   stream << indent() << "} else {" << endl;
   inc_indent();
-  stream << indent() << "out << res << '\\n';" << endl;
-  stream << indent() << "file_stream << res << '\\n' << std::endl;" << endl;
+  stream << indent() << "out << res;" << endl;
+  stream << indent() << "file_stream << \"\\\\documentclass[tikz, border=1mm]{standalone} \" << std::endl;" << endl;
+  stream << indent() << "file_stream << \"\\\\begin{document} \" << std::endl;" << endl;
+  stream << indent() << "file_stream << \"\\\\begin{tikzpicture}\" << std::endl;" << endl;
+  stream << indent() << "file_stream << \"\\\\node {root} \" << std::endl;" << endl; // Each Root generates a subplot; Need to name them individually so they can be generated all in one file. Should be possible since the root name won't need any senseful name
+  stream << indent() << "file_stream << res;" << endl; // TO-DO -> split res on "\n"(?) so we can generate a node entry for each entry in res
+  stream << indent() << "file_stream << \"\\\\end{tikzpicture} \" << std::endl;" << endl;
+  stream << indent() << "file_stream << \"\\\\end{document} \" << std::endl;" << endl;
   indent();
   stream << indent() << '}' << endl;
   dec_indent();
