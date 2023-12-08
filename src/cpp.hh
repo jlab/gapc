@@ -81,6 +81,7 @@ class Cpp : public Base {
     void print_stats_fn(const AST &ast);
 
     void print_value_pp(const AST &ast);
+    void print_value_pp_tree(const AST &ast);
 
     void print(const std::list<Type::Base*> &types,
                const std::list<std::string*> &names);
@@ -177,6 +178,7 @@ class Cpp : public Base {
 
     void print(const Type::Multi &expr);
 
+    void enum_graph_print();
     void header(const AST &ast);
     void header_footer(const AST &ast);
     void footer(const AST &ast);
@@ -199,6 +201,7 @@ class Cpp : public Base {
 
  public:
     void backtrack_footer(const AST &ast);
+    void backtrack_tree_footer(const AST &ast);
 
  private:
     void print(const std::list<Statement::Var_Decl*> &l);

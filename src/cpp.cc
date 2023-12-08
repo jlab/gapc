@@ -1033,7 +1033,7 @@ void Printer::Cpp::print_eqs(const std::list<Statement::Var_Decl*> &l, char c) {
 }
 
 
-void Printer::Cpp::print_most_decl(const Symbol::NT &nt) {
+void Printer::Cpp::print_most_decl(const Symbol::NT &nt) { // header instance variables in class out for resulting out.hh
   ::Type::Base *type = new Type::Size();
   for (size_t t = nt.track_pos(); t < nt.track_pos() + nt.tracks(); ++t) {
     stream << indent() << *type << " t_" << t << "_left_most;" << endl;
@@ -1075,7 +1075,7 @@ void Printer::Cpp::print_window_inc(const Symbol::NT &nt) {
 }
 
 
-void Printer::Cpp::print(const Statement::Table_Decl &t) {
+void Printer::Cpp::print(const Statement::Table_Decl &t) { // Should print statements in Header of out.hh
   in_class = true;
   bool wmode = ast && ast->window_mode;
   bool checkpoint = ast && ast->checkpoint && !ast->checkpoint->is_buddy;
@@ -1928,8 +1928,11 @@ void Printer::Cpp::print_subseq_typedef(const AST &ast) {
     << ", unsigned> TUSubsequence;\n\n";
 }
 
+void Printer::Cpp::enum_graph_print(){
+	stream << indent() << "unsigned int parentID" << endl;
+}
 
-void Printer::Cpp::header(const AST &ast) {
+void Printer::Cpp::header(const AST &ast) { //generates out.hh prints
   if (!ast.code_mode().subopt_buddy()) {
     stream << endl << make_comments(id_string, "//") << endl << endl;
     stream << "#ifndef " << class_name << "_hh" << endl
@@ -2482,6 +2485,46 @@ void Printer::Cpp::backtrack_footer(const AST &ast) {
   print_subopt_fn(ast);
 }
 
+void Printer::Cpp::backtrack_tree_footer(const AST &ast) {
+	print_value_pp_tree(ast);
+	print_backtrack_fn(ast);
+	print_backtrack_pp(ast);
+	print_subopt_fn(ast);
+}
+
+//------------------------------------------------------------------------------------------------------------
+void Printer::Cpp::print_value_pp_tree(const AST &ast) {
+  stream << indent() << "template <typename Value>";
+  stream << " void  print_result(std::ostream &out, "
+         << "Value&" << " res) {" << endl;
+  inc_indent();
+  if (ast.code_mode() == Code::Mode::BACKTRACK ||
+      ast.code_mode() == Code::Mode::SUBOPT) {
+    dec_indent();
+    stream << indent() << '}' << endl;
+    return;
+  }
+  if (ast.checkpoint && !ast.checkpoint->is_buddy &&
+      !ast.outside_generation()) {
+    stream << indent()
+           << "std::lock_guard<std::mutex> lock(print_mutex);" << endl;
+  }
+  stream << indent() << "std::ofstream file_stream(\"trees.tex\");" << endl;
+
+  stream << indent() << "if (isEmpty(res)) {" << endl;
+  inc_indent();
+  stream << indent() << "out << \"[]\\n\";" << endl;
+  dec_indent();
+  stream << indent() << "} else {" << endl;
+  inc_indent();
+  stream << indent() << "out << res << '\\n';" << endl;
+  stream << indent() << "file_stream << res << '\\n' << std::endl;" << endl;
+  indent();
+  stream << indent() << '}' << endl;
+  dec_indent();
+  stream << indent() << '}' << endl << endl;
+  }
+//------------------------------------------------------------------------------------------------------------
 
 void Printer::Cpp::print_value_pp(const AST &ast) {
   stream << indent() << "template <typename Value>";
@@ -2506,9 +2549,8 @@ void Printer::Cpp::print_value_pp(const AST &ast) {
   stream << indent() << "} else {" << endl;
   inc_indent();
   stream << indent() << "out << res << '\\n';" << endl;
-  dec_indent();
+  indent();
   stream << indent() << '}' << endl;
-
   dec_indent();
   stream << indent() << '}' << endl << endl;
 }

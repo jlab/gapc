@@ -368,6 +368,9 @@ class Main {
     driver.ast.set_outside_nt_list(&opts.outside_nt_list);
     driver.parse_product(opts.product);
 
+
+
+
     if (driver.is_failing()) {
       throw LogError("Seen parse errors.");
     }
@@ -450,6 +453,7 @@ class Main {
    */
   void back(Instance *i = 0, Instance *instance_buddy = 0) {
     Instance *instance = i;
+
     if (!i || instance_buddy) {
       if (opts.backtrack || opts.subopt || opts.kbacktrack) {
         instance = driver.ast.split_instance_for_backtrack(opts.instance);
@@ -679,6 +683,8 @@ class Main {
         + opts.plot_grammar_file + " > foo.pdf' to generate a PDF.");
     }
 
+
+
     driver.ast.set_class_name(opts.class_name);
 
 
@@ -739,9 +745,14 @@ class Main {
       bt->print_header(hh, driver.ast);
       bt->print_body(cc, driver.ast);
     }
+    // Hier nach Trees checken. Dann müsste man die print funktion in backtrack_footer dynamisch wechseln können
+    // Dann müsste ich schonmal eine Datei aus dem Output generieren können
 
-    hh.backtrack_footer(driver.ast);
-
+    if (opts.product == "trees") {
+    	hh.backtrack_tree_footer(driver.ast);
+    } else {
+      hh.backtrack_footer(driver.ast);
+    }
     hh.close_class();
   }
 
