@@ -1,5 +1,5 @@
 {
-  description = "Flake utils demo";
+  description = "Bellmans Gapc in Nix Flake";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
