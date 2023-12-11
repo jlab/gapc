@@ -1,46 +1,22 @@
 {
-  description = "Bellmans Gapc in Nix Flake";
-
-  inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
-  };
+  description = "Bellman's GAP compiler";
+  inputs.nixpkgs.url = "github:nixos/nixpkgs";
+  inputs.systems.url = "github:nix-systems/default";
 
   outputs = {
     self,
+    systems,
     nixpkgs,
-    flake-utils,
-  }:
-    flake-utils.lib.eachDefaultSystem (
-      system: let
-        pkgs = nixpkgs.legacyPackages.${system};
-      in {
-        packages = rec {
-          default = let
-            version = "2023.07.05";
-          in
-            pkgs.stdenv.mkDerivation {
-              name = "gapc-${version}";
-
-              src = pkgs.fetchFromGitHub {
-                owner = "jlab";
-                repo = "gapc";
-                rev = "${version}";
-                sha256 = "sha256-OzGf8Z4BzHEPmonlOvvvg5G1y1mtrkWSxOHPfBJU7kU=";
-              };
-
-              buildInputs = with pkgs; [
-                gnumake
-                flex
-                bison
-                gsl
-                boost
-                mercurial
-              ];
-
-              configureFlags = ["--with-boost-libdir=${pkgs.boost.out}/lib"];
-            };
-        };
-      }
-    );
+  } @ inputs: let
+    importNixpkgs = system:
+      import nixpkgs {
+        inherit system;
+      };
+    systems = import inputs.systems;
+    withSystemPackages = f: nixpkgs.lib.genAttrs systems (system: f (importNixpkgs system));
+  in {
+    packages = withSystemPackages (pkgs: {
+      default = pkgs.callPackage ./package.nix {};
+    });
+  };
 }
