@@ -5,7 +5,6 @@
   bison,
   boost,
   gsl,
-  mercurial,
 }:
 stdenv.mkDerivation {
   name = "gapc-unstable";
@@ -18,7 +17,7 @@ stdenv.mkDerivation {
     sha256 = "sha256-OzGf8Z4BzHEPmonlOvvvg5G1y1mtrkWSxOHPfBJU7kU=";
   };
 
-  nativeBuildInputs = [flex bison gsl mercurial];
+  nativeBuildInputs = [flex bison gsl];
   buildInputs = [boost];
   configureFlags = ["BOOST_LDFLAGS=-L${boost}/lib"];
 }
