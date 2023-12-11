@@ -2492,46 +2492,6 @@ void Printer::Cpp::backtrack_tree_footer(const AST &ast) {
 	print_subopt_fn(ast);
 }
 
-//------------------------------------------------------------------------------------------------------------
-void Printer::Cpp::print_value_pp_tree(const AST &ast) {
-  stream << indent() << "template <typename Value>";
-  stream << " void  print_result(std::ostream &out, "
-         << "Value&" << " res) {" << endl;
-  inc_indent();
-  if (ast.code_mode() == Code::Mode::BACKTRACK ||
-      ast.code_mode() == Code::Mode::SUBOPT) {
-    dec_indent();
-    stream << indent() << '}' << endl;
-    return;
-  }
-  if (ast.checkpoint && !ast.checkpoint->is_buddy &&
-      !ast.outside_generation()) {
-    stream << indent()
-           << "std::lock_guard<std::mutex> lock(print_mutex);" << endl;
-  }
-  stream << indent() << "std::ofstream file_stream(\"trees.tex\");" << endl;
-
-  stream << indent() << "if (isEmpty(res)) {" << endl;
-  inc_indent();
-  stream << indent() << "out << \"[]\\n\";" << endl;
-  dec_indent();
-  stream << indent() << "} else {" << endl;
-  inc_indent();
-  stream << indent() << "out << res;" << endl;
-  stream << indent() << "file_stream << \"\\\\documentclass[tikz, border=1mm]{standalone} \" << std::endl;" << endl;
-  stream << indent() << "file_stream << \"\\\\begin{document} \" << std::endl;" << endl;
-  stream << indent() << "file_stream << \"\\\\begin{tikzpicture}\" << std::endl;" << endl;
-  stream << indent() << "file_stream << \"\\\\node {root} \" << std::endl;" << endl; // Each Root generates a subplot; Need to name them individually so they can be generated all in one file. Should be possible since the root name won't need any senseful name
-  stream << indent() << "file_stream << res;" << endl; // TO-DO -> split res on "\n"(?) so we can generate a node entry for each entry in res
-  stream << indent() << "file_stream << \"\\\\end{tikzpicture} \" << std::endl;" << endl;
-  stream << indent() << "file_stream << \"\\\\end{document} \" << std::endl;" << endl;
-  indent();
-  stream << indent() << '}' << endl;
-  dec_indent();
-  stream << indent() << '}' << endl << endl;
-  }
-//------------------------------------------------------------------------------------------------------------
-
 void Printer::Cpp::print_value_pp(const AST &ast) {
   stream << indent() << "template <typename Value>";
   stream << " void  print_result(std::ostream &out, "

@@ -745,14 +745,8 @@ class Main {
       bt->print_header(hh, driver.ast);
       bt->print_body(cc, driver.ast);
     }
-    // Hier nach Trees checken. Dann müsste man die print funktion in backtrack_footer dynamisch wechseln können
-    // Dann müsste ich schonmal eine Datei aus dem Output generieren können
 
-    if (opts.product == "trees") {
-    	hh.backtrack_tree_footer(driver.ast);
-    } else {
-      hh.backtrack_footer(driver.ast);
-    }
+    hh.backtrack_footer(driver.ast);
     hh.close_class();
   }
 

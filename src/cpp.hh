@@ -81,7 +81,6 @@ class Cpp : public Base {
     void print_stats_fn(const AST &ast);
 
     void print_value_pp(const AST &ast);
-    void print_value_pp_tree(const AST &ast);
 
     void print(const std::list<Type::Base*> &types,
                const std::list<std::string*> &names);
