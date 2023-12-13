@@ -469,6 +469,7 @@ struct Generate_Tree_Stmts : public Generate_Stmts {
              const std::list<Para_Decl::Base*> &paras,
              Statement::Var_Decl *&cur) const {
     std::list<Statement::Base*> apps;
+    bool childOpened;
     unsigned int a = 0;
     for (std::list<Para_Decl::Base*>::const_iterator i = paras.begin();
          i != paras.end(); ++i) {
@@ -495,22 +496,33 @@ struct Generate_Tree_Stmts : public Generate_Stmts {
         apply(l, m, cur);
       } else {
         Para_Decl::Simple *s = dynamic_cast<Para_Decl::Simple*>(*i);
-        if (a % 2 == 0) {
-			f->add_arg(new Expr::Const("child {node {"));
-        } else {
-        	f->add_arg(new Expr::Const("}}"));
-        }
 
+        if (!childOpened) {
+			f->add_arg(new Expr::Const("child {node {"));
+			childOpened = true;
+        } else {
+        	f->add_arg(new Expr::Const(" "));
+        	childOpened = false;
+        }
         l.push_back(f);
         assert(s);
         apply(l, s, cur);
 
       }
       a++;
+
+      if (childOpened) {
+
+    	         Statement::Fn_Call *g = new Statement::Fn_Call(
+    	          		  Statement::Fn_Call::STR_APPEND);
+    	        g->add_arg(*cur);
+              	g->add_arg(new Expr::Const("}}"));
+              	l.push_back(g);
+              }
     }
+
     l.insert(l.end(), apps.begin(), apps.end());
   }
-
 
  public:
   void apply(Fn_Def &fn) const {
@@ -544,12 +556,13 @@ struct Generate_Tree_Stmts : public Generate_Stmts {
       apply(lntparas, fn.ntparas(), ret);
       fn.stmts.insert(fn.stmts.end(), lntparas.begin(), lntparas.end());
     }
-
     f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
     f->add_arg(*ret);
     f->add_arg(new Expr::Const(' ')); // Whitespace at the end of enum output string
     fn.stmts.push_back(f);
 
+    //f = new Statement::Fn_Call("if (1 == 1) {\t}");
+    //fn.stmts.push_back(f);
 
 
 	f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
@@ -568,10 +581,6 @@ Algebra *Signature::generate_trees(std::string *n) {
   return generate_algebra(n, Mode::PRETTY, new Type::External("Rope"),
 		  	  	  	  	  Generate_Tree_Stmts());
 }
-
-
-
-
 //------------------------------------------------------------------------------------------------------------
 
 
