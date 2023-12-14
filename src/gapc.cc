@@ -368,9 +368,6 @@ class Main {
     driver.ast.set_outside_nt_list(&opts.outside_nt_list);
     driver.parse_product(opts.product);
 
-
-
-
     if (driver.is_failing()) {
       throw LogError("Seen parse errors.");
     }

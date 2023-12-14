@@ -2482,6 +2482,7 @@ void Printer::Cpp::backtrack_footer(const AST &ast) {
   print_subopt_fn(ast);
 }
 
+
 void Printer::Cpp::print_value_pp(const AST &ast) {
   stream << indent() << "template <typename Value>";
   stream << " void  print_result(std::ostream &out, "
@@ -2505,7 +2506,7 @@ void Printer::Cpp::print_value_pp(const AST &ast) {
   stream << indent() << "} else {" << endl;
   inc_indent();
   stream << indent() << "out << res << '\\n';" << endl;
-  indent();
+  dec_indent();
   stream << indent() << '}' << endl;
   dec_indent();
   stream << indent() << '}' << endl << endl;
