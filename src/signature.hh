@@ -97,7 +97,7 @@ class Signature : public Signature_Base {
  private:
     Algebra *generate_count(std::string *n);
     Algebra *generate_enum(std::string *n);
-    Algebra *generate_trees(std::string *n);
+    Algebra *generate_tikz(std::string *n);
     Algebra *generate_algebra(
       std::string *n, Mode::Type mode_type, Type::Base *answer_type,
       Type::Base *alph, const Generate_Stmts &generate_stmts);

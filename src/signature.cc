@@ -149,12 +149,10 @@ Algebra *Signature::generate(std::string *n, std::string *mode) {
     return generate_count(n);
   if (*mode == "enum")
     return generate_enum(n);
-  if (*mode == "trees")
-    return generate_trees(n);
+  if (*mode == "tikz")
+    return generate_tikz(n);
   return NULL;
 }
-
-
 
 
 struct Generate_Stmts {
@@ -562,7 +560,7 @@ struct Generate_TikZ_Stmts : public Generate_Stmts {
 };
 
 
-Algebra *Signature::generate_trees(std::string *n) {
+Algebra *Signature::generate_tikz(std::string *n) {
   return generate_algebra(n, Mode::PRETTY, new Type::External("Rope"),
                           Generate_TikZ_Stmts());
 }
