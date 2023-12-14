@@ -755,7 +755,7 @@ algebra: algebra_head '{' fn_defs '}'
                  driver.ast.algebras[*$2] = algebra;
                else
                  error(@4, "Unknown automatic modifier " + *$4 +
-                       ". Use something like count ...");
+                       ". Use 'count', 'enum' or 'tikz'.");
              }
            }
        ;
