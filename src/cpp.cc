@@ -2508,6 +2508,7 @@ void Printer::Cpp::print_value_pp(const AST &ast) {
   stream << indent() << "out << res << '\\n';" << endl;
   dec_indent();
   stream << indent() << '}' << endl;
+
   dec_indent();
   stream << indent() << '}' << endl << endl;
 }

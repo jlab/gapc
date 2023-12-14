@@ -450,7 +450,6 @@ class Main {
    */
   void back(Instance *i = 0, Instance *instance_buddy = 0) {
     Instance *instance = i;
-
     if (!i || instance_buddy) {
       if (opts.backtrack || opts.subopt || opts.kbacktrack) {
         instance = driver.ast.split_instance_for_backtrack(opts.instance);
@@ -680,8 +679,6 @@ class Main {
         + opts.plot_grammar_file + " > foo.pdf' to generate a PDF.");
     }
 
-
-
     driver.ast.set_class_name(opts.class_name);
 
 
@@ -744,6 +741,7 @@ class Main {
     }
 
     hh.backtrack_footer(driver.ast);
+
     hh.close_class();
   }
 
