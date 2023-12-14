@@ -2482,12 +2482,6 @@ void Printer::Cpp::backtrack_footer(const AST &ast) {
   print_subopt_fn(ast);
 }
 
-void Printer::Cpp::backtrack_tree_footer(const AST &ast) {
-  print_backtrack_fn(ast);
-  print_backtrack_pp(ast);
-  print_subopt_fn(ast);
-}
-
 void Printer::Cpp::print_value_pp(const AST &ast) {
   stream << indent() << "template <typename Value>";
   stream << " void  print_result(std::ostream &out, "
