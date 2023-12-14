@@ -459,8 +459,8 @@ struct Generate_Tree_Stmts : public Generate_Stmts {
 
     f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
     f->add_arg(*cur);
-    f->add_arg(new Expr::Const(" ")); // used for multitrack intendation
-    f->add_arg(new Expr::Const(1));
+    f->add_arg(new Expr::Const("}}")); // used for multitrack intendation
+    f->add_arg(new Expr::Const(2));
     l.push_back(f);
   }
 
@@ -469,7 +469,7 @@ struct Generate_Tree_Stmts : public Generate_Stmts {
              const std::list<Para_Decl::Base*> &paras,
              Statement::Var_Decl *&cur) const {
     std::list<Statement::Base*> apps;
-    bool childOpened;
+    //bool childOpened;
     unsigned int a = 0;
     for (std::list<Para_Decl::Base*>::const_iterator i = paras.begin();
          i != paras.end(); ++i) {
@@ -496,14 +496,7 @@ struct Generate_Tree_Stmts : public Generate_Stmts {
         apply(l, m, cur);
       } else {
         Para_Decl::Simple *s = dynamic_cast<Para_Decl::Simple*>(*i);
-
-        if (!childOpened) {
-			f->add_arg(new Expr::Const("child {node {"));
-			childOpened = true;
-        } else {
-        	f->add_arg(new Expr::Const(" "));
-        	childOpened = false;
-        }
+		f->add_arg(new Expr::Const("child {node {"));
         l.push_back(f);
         assert(s);
         apply(l, s, cur);
@@ -511,14 +504,13 @@ struct Generate_Tree_Stmts : public Generate_Stmts {
       }
       a++;
 
-      if (childOpened) {
-
-    	         Statement::Fn_Call *g = new Statement::Fn_Call(
-    	          		  Statement::Fn_Call::STR_APPEND);
-    	        g->add_arg(*cur);
-              	g->add_arg(new Expr::Const("}}"));
-              	l.push_back(g);
-              }
+      if (!m) {
+	 Statement::Fn_Call *g = new Statement::Fn_Call(
+			  Statement::Fn_Call::STR_APPEND);
+	 g->add_arg(*cur);
+	 g->add_arg(new Expr::Const("}}"));
+	 l.push_back(g);
+      }
     }
 
     l.insert(l.end(), apps.begin(), apps.end());
