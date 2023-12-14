@@ -71,7 +71,7 @@ jobs:
     strategy:
       matrix:
         # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
-        os: [macos-11]
+        os: [macos-12]
     runs-on: ${{ matrix.os }}
     steps:
     - name: Install dependencies
