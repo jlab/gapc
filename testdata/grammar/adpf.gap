@@ -103,7 +103,6 @@ algebra count auto count ;
 algebra enum auto enum ;
 algebra tikz auto tikz ;
 
-
 algebra pretty implements FS(alphabet = char, comp = string)
 {
 
@@ -709,6 +708,7 @@ instance prettyshape = fold ( pretty * shape5 ) ;
 
 instance mfepf = fold ( mfe * p_func) ;
 
+instance tikzpretty = fold ( tikz * pretty) ;
 
 
-instance tikzpretty = fold ( tikz * enum * pretty ) ;
+
