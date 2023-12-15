@@ -33,6 +33,7 @@
 #include "statement.hh"
 #include "expr/new.hh"
 #include "type/backtrace.hh"
+#include "plot_grammar.hh"
 
 
 Signature_Base::~Signature_Base() {}
@@ -426,8 +427,10 @@ struct Generate_TikZ_Stmts : public Generate_Stmts {
     } else {
       f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
       f->add_arg(*cur);
-      f->add_arg(new Expr::Const("\\\\color{blue} "));
-      f->add_arg(new Expr::Const(13));
+      std::string *color = new std::string(COLOR_TERMINAL);
+      f->add_arg(new Expr::Const(std::string("\\\\color[HTML]{") + \
+          color->substr(1, color->size()-1) + std::string("} ")));
+      f->add_arg(new Expr::Const(21));
       l.push_back(f);
     }
 
@@ -534,7 +537,9 @@ struct Generate_TikZ_Stmts : public Generate_Stmts {
     Statement::Fn_Call *f = new Statement::Fn_Call(
         Statement::Fn_Call::STR_APPEND);
     f->add_arg(*ret);
-    std::string t = "node {\\\\color{green} " + *fn.name + "} ";
+    std::string *color = new std::string(COLOR_ALGFCT);
+    std::string t = "node {\\\\color[HTML]{" + \
+        color->substr(1, color->size()-1) + "} " + *fn.name + "} ";
     f->add_arg(new Expr::Const(t));
     f->add_arg(new Expr::Const(static_cast<int>(t.size()) -1));
     fn.stmts.push_back(f);
