@@ -67,7 +67,7 @@ jobs:
         #~ GHC="ghc -package-db $package_path" make test-paral
 
   gapc_osx:
-    needs: cpplint
+    #~ needs: cpplint
     strategy:
       matrix:
         # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
