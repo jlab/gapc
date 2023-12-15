@@ -92,6 +92,15 @@ jobs:
       run: make -j 3
     - name: make install
       run: sudo make install
+      
+    - name: debug
+      run: |
+        ls -latr /Users/runner/work/gapc/gapc/lib/rtlib && True;
+        ls /Users && True;
+        ls /Users/runner && True;
+        ls /Users/runner/work && True;
+        ls /Users/runner/work/gapc && True;
+        ls /Users/runner/work/gapc/lib && True;
 
     - name: test-mod
       run: make test-mod TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth TRUTH_SUFFIX=_osx
