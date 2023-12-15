@@ -80,18 +80,18 @@ jobs:
       run: cabal update
     - name: add random Haskell lib
       run: cabal install --lib random
-    #~ - name: Checkout truth
-      #~ run: git clone --branch master https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE/../gapc-test-suite
+    - name: Checkout truth
+      run: git clone --branch master https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE/../gapc-test-suite
 
-    #~ - uses: actions/checkout@v3
-    #~ - name: configure
-      #~ run: ./configure --prefix $GITHUB_WORKSPACE
-    #~ - name: patch configuration for OSX
-      #~ run: gsed -E "s|^YACC = .+$|YACC = /usr/local/opt/bison@2.7/bin/bison|" -i config.mf && gsed -E "s|^SED = .+$|SED = /usr/local/opt/gnu-sed/libexec/gnubin/sed|" -i config.mf && gsed -E "s/ -D_XOPEN_SOURCE=500 / /" -i config.mf && gsed -E "s/ -std=c\+\+17 / -std=c\+\+11 /" -i config.mf
-    #~ - name: make
-      #~ run: make -j 3
-    #~ - name: make install
-      #~ run: sudo make install
+    - uses: actions/checkout@v3
+    - name: configure
+      run: ./configure --prefix $GITHUB_WORKSPACE
+    - name: patch configuration for OSX
+      run: gsed -E "s|^YACC = .+$|YACC = /usr/local/opt/bison@2.7/bin/bison|" -i config.mf && gsed -E "s|^SED = .+$|SED = /usr/local/opt/gnu-sed/libexec/gnubin/sed|" -i config.mf && gsed -E "s/ -D_XOPEN_SOURCE=500 / /" -i config.mf && gsed -E "s/ -std=c\+\+17 / -std=c\+\+11 /" -i config.mf
+    - name: make
+      run: make -j 3
+    - name: make install
+      run: sudo make install
 
     #~ - name: test-mod
       #~ run: make test-mod TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth TRUTH_SUFFIX=_osx
