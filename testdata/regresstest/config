@@ -640,3 +640,7 @@ check_new_old_eq_twotrack aliglob2.gap unused enumtikz "IT" tikz_nw "ST"
 
 CPPFLAGS_EXTRA=$DEFAULT_CPPFLAGS_EXTRA
 check_new_old_eq adpf.gap unused tikzpretty "CCaaaGG" tikzpretty
+
+GRAMMAR=../../grammar_outside
+check_new_old_eq hmm_sonneregen.gap unused tikz "SSRR" tikzhmm
+
