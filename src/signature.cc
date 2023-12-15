@@ -434,13 +434,20 @@ struct Generate_TikZ_Stmts : public Generate_Stmts {
       l.push_back(f);
     }
 
-    f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
-    f->add_arg(*cur);
-    if (type->base->is(Type::VOID)) {
-      f->add_arg(new Expr::Const("\\\\epsilon "));
-      f->add_arg(new Expr::Const(9));
-    } else {
+    if (type->base->is(Type::SUBSEQ)) {
+      // for RNA programs
+      f = new Statement::Fn_Call("append_deep_rna_loc");
+      f->add_arg(*cur);
       f->add_arg(s->name());
+    } else {
+      f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
+      f->add_arg(*cur);
+      if (type->base->is(Type::VOID)) {
+        f->add_arg(new Expr::Const("\\\\epsilon "));
+        f->add_arg(new Expr::Const(9));
+      } else {
+        f->add_arg(s->name());
+      }
     }
     l.push_back(f);
   }
@@ -494,23 +501,31 @@ struct Generate_TikZ_Stmts : public Generate_Stmts {
         // param in single track context
         Para_Decl::Simple *s = dynamic_cast<Para_Decl::Simple*>(*i);
         Type::Usage *type = dynamic_cast<Type::Usage*>(s->type());
-        if (type->base->is(Type::SIGNATURE)) {
-          // param to base set
-          f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
-          f->add_arg(*cur);
-          f->add_arg(new Expr::Const("child { "));
-          f->add_arg(new Expr::Const(8));
-          l.push_back(f);
-        } else {
+        // param to base set
+        f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
+        f->add_arg(*cur);
+        f->add_arg(new Expr::Const("child { "));
+        f->add_arg(new Expr::Const(8));
+        l.push_back(f);
+
+        if (not type->base->is(Type::SIGNATURE)) {
           // param to alphabet
           f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
           f->add_arg(*cur);
-          f->add_arg(new Expr::Const("node {"));
-          f->add_arg(new Expr::Const(6));
+          f->add_arg(new Expr::Const("node {$"));
+          f->add_arg(new Expr::Const(6+1));
           l.push_back(f);
         }
 
         apply(l, s, cur);
+
+        if (not type->base->is(Type::SIGNATURE)) {
+          f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
+          f->add_arg(*cur);
+          f->add_arg(new Expr::Const("$} "));
+          f->add_arg(new Expr::Const(2+1));
+          l.push_back(f);
+        }
 
         f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
         f->add_arg(*cur);

@@ -711,4 +711,4 @@ instance mfepf = fold ( mfe * p_func) ;
 
 
 
-instance tikzpretty = fold ( tikz * pretty ) ;
+instance tikzpretty = fold ( tikz * enum * pretty ) ;
