@@ -52,7 +52,7 @@ jobs:
     - name: test-unit
       run: make test-unit
     # we need to install Haskell (especially the System.Random lib) for paralell tests, since we compare Haskell ADP with gapc
-    - uses: haskell/actions/setup@v2
+    - uses: haskell-actions/setup@v2
       with:
         cabal-version: '3.6.2.0'  # pin version on 2023-02-09 to enable proper cabal installtion
       id: haskell
@@ -92,6 +92,7 @@ jobs:
       run: make -j 3
     - name: make install
       run: sudo make install
+
     - name: test-mod
       run: make test-mod TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth TRUTH_SUFFIX=_osx
     - name: test-mod_outside
