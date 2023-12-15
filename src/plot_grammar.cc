@@ -27,16 +27,7 @@
 #include "const.hh"
 #include "fn_arg.hh"
 #include "fn_def.hh"
-
-static const char *COLOR_OVERLAY = "#cc5555";
-static const char *COLOR_INDICES = "#555555";
-static const char *COLOR_FILTER = "magenta";
-static const char *COLOR_TYPE = "orange";
-static const char *COLOR_TERMINAL = "blue";
-static const char *COLOR_ALGFCT = "green";
-static const char *COLOR_NONTERMINAL = "black";
-static const char *COLOR_BLOCK = "gray";
-static const char *COLOR_EVALFCT = "purple";
+#include "plot_grammar.hh"
 
 // a mechanism to properly indent dot code
 static int indent_depth = 0;
