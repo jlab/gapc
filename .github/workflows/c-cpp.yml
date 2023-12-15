@@ -92,24 +92,6 @@ jobs:
       run: make -j 3
     - name: make install
       run: sudo make install
-      
-    - name: debug0
-      run: find / -name "*librna*"  2> /dev/null
-    - name: debug0
-      run: which -a gapc
-    - name: debug1
-      run: ls /Users
-    - name: debug2
-      run: ls /Users/runner && True;
-    - name: debug3
-      run: ls /Users/runner/work && True;
-    - name: debug4
-      run: ls /Users/runner/work/gapc && True;
-    - name: debug5
-      run: ls /Users/runner/work/gapc/lib && True;
-    - name: debug6
-      run: ls -latr /Users/runner/work/gapc/gapc/lib/rtlib && True;
-
     - name: test-mod
       run: make test-mod TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth TRUTH_SUFFIX=_osx
     - name: test-mod_outside
