@@ -93,6 +93,10 @@ jobs:
     - name: make install
       run: sudo make install
       
+    - name: debug0
+      run: find / -name "*librna*"  2> /dev/null
+    - name: debug0
+      run: which -a gapc
     - name: debug1
       run: ls /Users
     - name: debug2
