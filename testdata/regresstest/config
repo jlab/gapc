@@ -637,3 +637,6 @@ CPPFLAGS_EXTRA=""
 GRAMMAR=../../grammar
 GAPC="../../../gapc"
 check_new_old_eq_twotrack aliglob2.gap unused enumtikz "IT" tikz_nw "ST"
+
+CPPFLAGS_EXTRA=$DEFAULT_CPPFLAGS_EXTRA
+check_new_old_eq adpf.gap unused tikzpretty "CCaaaGG" tikzpretty

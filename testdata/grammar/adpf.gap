@@ -101,6 +101,7 @@ synoptic algebra icount implements FS(alphabet = char, comp = int)
 algebra count auto count ;
 
 algebra enum auto enum ;
+algebra tikz auto tikz ;
 
 
 algebra pretty implements FS(alphabet = char, comp = string)
@@ -710,3 +711,4 @@ instance mfepf = fold ( mfe * p_func) ;
 
 
 
+instance tikzpretty = fold ( tikz * pretty ) ;
