@@ -21,6 +21,9 @@
 
 }}} */
 
+#include <vector>
+#include <list>
+#include <string>
 #include "alt.hh"
 #include "symbol.hh"
 #include "expr.hh"

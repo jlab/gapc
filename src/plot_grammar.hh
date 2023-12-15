@@ -43,4 +43,4 @@ static const char * const COLOR_BLOCK = "#c4c2c4";        // "gray";
 static const char * const COLOR_EVALFCT = "#a42af4";      // "purple"
 
 
-#endif /* SRC_PLOT_GRAMMAR_HH_ */
+#endif  // SRC_PLOT_GRAMMAR_HH_

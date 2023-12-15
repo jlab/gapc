@@ -508,7 +508,7 @@ struct Generate_TikZ_Stmts : public Generate_Stmts {
         f->add_arg(new Expr::Const(8));
         l.push_back(f);
 
-        if (not type->base->is(Type::SIGNATURE)) {
+        if (!type->base->is(Type::SIGNATURE)) {
           // param to alphabet
           f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
           f->add_arg(*cur);
@@ -519,7 +519,7 @@ struct Generate_TikZ_Stmts : public Generate_Stmts {
 
         apply(l, s, cur);
 
-        if (not type->base->is(Type::SIGNATURE)) {
+        if (!type->base->is(Type::SIGNATURE)) {
           f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
           f->add_arg(*cur);
           f->add_arg(new Expr::Const("$} "));
