@@ -105,7 +105,7 @@ jobs:
         cd testdata/paraltest/temp
         ghc --version
         cat /Users/runner/.ghc/x86_64-darwin-9.6.2/environments/default
-        ghc -v --make ../ElMamunMain.lhs -i.. -hidir ./GHC -odir ./GHC -o ElMamunMain
+        ghc -package array -v --make ../ElMamunMain.lhs -i.. -hidir ./GHC -odir ./GHC -o ElMamunMain
 
     #~ - name: test-mod
       #~ run: make test-mod TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth TRUTH_SUFFIX=_osx
