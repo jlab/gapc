@@ -52,7 +52,7 @@ jobs:
     - name: test-unit
       run: make test-unit
     # we need to install Haskell (especially the System.Random lib) for paralell tests, since we compare Haskell ADP with gapc
-    - uses: haskell/actions/setup@v2
+    - uses: haskell-actions/setup@v2
       with:
         cabal-version: '3.6.2.0'  # pin version on 2023-02-09 to enable proper cabal installtion
       id: haskell
@@ -71,15 +71,17 @@ jobs:
     strategy:
       matrix:
         # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
-        os: [macos-11]
+        os: [macos-12]
     runs-on: ${{ matrix.os }}
     steps:
     - name: Install dependencies
-      run: brew install bison@2.7 cmake boost gsl gnu-sed libomp gmp cabal-install
+      run: brew install bison@2.7 cmake boost gsl gnu-sed libomp gmp cabal-install ghc
     - name: update cabal
       run: cabal update
     - name: add random Haskell lib
       run: cabal install --lib random
+    - name: add base Haskell lib containers (prelude, Data.Map, Data.Map.Strict)
+      run: cabal install --lib base
     - name: Checkout truth
       run: git clone --branch tikz https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE/../gapc-test-suite
 
