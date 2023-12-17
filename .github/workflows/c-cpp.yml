@@ -80,8 +80,8 @@ jobs:
       run: cabal update
     - name: add random Haskell lib
       run: cabal install --lib random
-    - name: add base Haskell lib and containers (prelude, Data.Array)
-      run: cabal install --lib base containers
+    - name: add base Haskell lib (prelude)
+      run: cabal install --lib base
     - name: Checkout truth
       run: git clone --branch master https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE/../gapc-test-suite
 
@@ -97,6 +97,8 @@ jobs:
 
     - name: debug
       run: which -a ghc
+    - name: debug list
+      run: ghc-pkg list
     - name: debug1
       run: |
         mkdir -p testdata/paraltest/temp
