@@ -25,6 +25,7 @@
 #include <list>
 
 #include "signature.hh"
+#include "input.hh"
 #include "arg.hh"
 #include "fn_decl.hh"
 
@@ -145,13 +146,13 @@ Type::Base *Signature::var_lookup(const Type::Alphabet *t) {
 }
 
 
-Algebra *Signature::generate(std::string *n, std::string *mode) {
+Algebra *Signature::generate(std::string *n, std::string *mode, Input inputs) {
   if (*mode == "count")
     return generate_count(n);
   if (*mode == "enum")
     return generate_enum(n);
   if (*mode == "tikz")
-    return generate_tikz(n);
+    return generate_tikz(n, inputs);
   return NULL;
 }
 
@@ -418,8 +419,16 @@ Algebra *Signature::generate_enum(std::string *n) {
 
 struct Generate_TikZ_Stmts : public Generate_Stmts {
  private:
+  Input inputs;
+
+ public:
+  Generate_TikZ_Stmts(Input inputs) {
+    this->inputs = inputs;
+  }
+
+ private:
   void apply(std::list<Statement::Base*> &l, Para_Decl::Simple *s,
-             Statement::Var_Decl *&cur) const {
+             Statement::Var_Decl *&cur, Input::Mode inp) const {
     Statement::Fn_Call *f;
 
     Type::Usage *type = dynamic_cast<Type::Usage*>(s->type());
@@ -434,7 +443,7 @@ struct Generate_TikZ_Stmts : public Generate_Stmts {
       l.push_back(f);
     }
 
-    if (type->base->is(Type::SUBSEQ)) {
+    if (type->base->is(Type::SUBSEQ) && (inp == Input::RNA)) {
       // for RNA programs
       f = new Statement::Fn_Call("append_deep_rna_loc");
       f->add_arg(*cur);
@@ -464,9 +473,10 @@ struct Generate_TikZ_Stmts : public Generate_Stmts {
     l.push_back(f);
 
     const std::list<Para_Decl::Simple*> &p = m->list();
+    std::vector<Input::Mode>::const_iterator inp = this->inputs.modes().begin();
     for (std::list<Para_Decl::Simple*>::const_iterator j = p.begin();
-         j != p.end(); ++j) {
-      apply(l, *j, cur);
+         j != p.end(); ++j, ++inp) {
+      apply(l, *j, cur, *inp);
       if (std::next(j) != p.end()) {
         f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
         f->add_arg(*cur);
@@ -517,7 +527,13 @@ struct Generate_TikZ_Stmts : public Generate_Stmts {
           l.push_back(f);
         }
 
-        apply(l, s, cur);
+        if (this->inputs.modes().size() > 0) {
+          apply(l, s, cur, *this->inputs.modes().begin());
+        } else {
+          // a user might have skiped the "input" declaration at all
+          // it then defaults to single track raw
+          apply(l, s, cur, Input::RAW);
+        }
 
         if (!type->base->is(Type::SIGNATURE)) {
           f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
@@ -580,9 +596,9 @@ struct Generate_TikZ_Stmts : public Generate_Stmts {
 };
 
 
-Algebra *Signature::generate_tikz(std::string *n) {
+Algebra *Signature::generate_tikz(std::string *n, Input inputs) {
   return generate_algebra(n, Mode::PRETTY, new Type::External("Rope"),
-                          Generate_TikZ_Stmts());
+                          Generate_TikZ_Stmts(inputs));
 }
 
 

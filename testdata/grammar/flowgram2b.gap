@@ -21,7 +21,7 @@ signature Align(alphabet, answer) {
 
 algebra count auto count ;
 algebra enum auto enum;
-
+algebra tikz auto tikz;
 algebra pretty implements Align(alphabet = single, answer = spair ) {
   spair r( <single a, single b>, spair m)
   {
@@ -242,3 +242,4 @@ instance mismatch_seqlen = flow(mismatch_seqlen);
 instance count = flow(count);
 instance enum = flow(enum);
 
+instance tikz = flow (tikz);

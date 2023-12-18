@@ -750,7 +750,7 @@ algebra: algebra_head '{' fn_defs '}'
                      + " already defined ");
                error(driver.ast.algebras[*$2]->location, "here.");
              } else {
-               Algebra *algebra = driver.ast.signature->generate($2, $4);
+               Algebra *algebra = driver.ast.signature->generate($2, $4, driver.ast.input);
                if (algebra)
                  driver.ast.algebras[*$2] = algebra;
                else
