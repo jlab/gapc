@@ -550,7 +550,7 @@ struct Generate_Tree_Stmts : public Generate_Stmts {
     f->add_arg(*ret);
     f->add_arg(new Expr::Const(' '));
     fn.stmts.push_back(f);
-	f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
+    f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
     f->add_arg(*ret);
     f->add_arg(new Expr::Const('}'));
     fn.stmts.push_back(f);
