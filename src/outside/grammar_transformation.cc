@@ -675,7 +675,14 @@ struct Collect_and_Insert_outside_axioms : public Visitor {
 
   // collects the lhs non-terminals that point to terminating rhs,
   // i.e. end point of inside = starting points of outside
-  std::set<Symbol::NT*> *terminating_lhs_nts;
+  struct cmpNTname {
+    // define sort order of std::set by name of the Symbol::NT
+    // default would probably operate on pointer value?!
+    bool operator() (Symbol::NT* const &a, Symbol::NT* const &b) const {
+      return *a->name > *b->name;
+    }
+  };
+  std::set<Symbol::NT*, cmpNTname> *terminating_lhs_nts;
 
   // a reference to the already created new outside non-terminals, into which
   // the new axiom must be added
@@ -684,7 +691,7 @@ struct Collect_and_Insert_outside_axioms : public Visitor {
   Collect_and_Insert_outside_axioms(
       hashtable<std::string, Symbol::Base*> outside_nts) :
         outside_nts(outside_nts) {
-    terminating_lhs_nts = new std::set<Symbol::NT*>();
+    terminating_lhs_nts = new std::set<Symbol::NT*, cmpNTname>();
   }
   ~Collect_and_Insert_outside_axioms() {
     delete terminating_lhs_nts;
