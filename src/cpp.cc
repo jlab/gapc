@@ -2489,7 +2489,7 @@ void Printer::Cpp::backtrack_footer(const AST &ast) {
 void Printer::Cpp::print_value_pp(const AST &ast) {
   stream << indent() << "template <typename Value>";
   stream << " void  print_result(std::ostream &out, "
-		 << "Value&" << " res) {" << endl;
+         << "Value&" << " res) {" << endl;
   inc_indent();
   if (ast.code_mode() == Code::Mode::BACKTRACK ||
       ast.code_mode() == Code::Mode::SUBOPT) {

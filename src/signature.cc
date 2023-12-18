@@ -423,7 +423,7 @@ Algebra *Signature::generate_enum(std::string *n) {
 
 struct Generate_Tree_Stmts : public Generate_Stmts {
  private:
-	// closes nodes for simple tracks
+  // closes nodes for simple tracks
   void apply(std::list<Statement::Base*> &l, Para_Decl::Simple *s,
              Statement::Var_Decl *&cur) const {
     Statement::Fn_Call *f = new Statement::Fn_Call(
@@ -439,7 +439,7 @@ struct Generate_Tree_Stmts : public Generate_Stmts {
     Statement::Fn_Call * f = new Statement::Fn_Call(
       Statement::Fn_Call::STR_APPEND);
     f->add_arg(*cur);
-	f->add_arg(new Expr::Const("child {node {")); // generating the childnode for the "chars" used in the grammar operation
+    f->add_arg(new Expr::Const("child {node {"));
     l.push_back(f);
 
     const std::list<Para_Decl::Simple*> &p = m->list();
@@ -451,7 +451,7 @@ struct Generate_Tree_Stmts : public Generate_Stmts {
     for (; j != p.end(); ++j) {
       f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
       f->add_arg(*cur);
-      f->add_arg(new Expr::Const(", ")); // separator for tracks
+      f->add_arg(new Expr::Const(", "));
       f->add_arg(new Expr::Const(2));
       l.push_back(f);
       apply(l, *j, cur);
@@ -459,17 +459,16 @@ struct Generate_Tree_Stmts : public Generate_Stmts {
 
     f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
     f->add_arg(*cur);
-    f->add_arg(new Expr::Const("}}")); // used for multitrack intendation
+    f->add_arg(new Expr::Const("}}"));
     f->add_arg(new Expr::Const(2));
     l.push_back(f);
   }
 
-  // Generating node for inner argument of grammar operation. Single & Multi track
+
   void apply(std::list<Statement::Base*> &l,
              const std::list<Para_Decl::Base*> &paras,
              Statement::Var_Decl *&cur) const {
     std::list<Statement::Base*> apps;
-    //bool childOpened;
     unsigned int a = 0;
     for (std::list<Para_Decl::Base*>::const_iterator i = paras.begin();
          i != paras.end(); ++i) {
@@ -489,27 +488,27 @@ struct Generate_Tree_Stmts : public Generate_Stmts {
       Statement::Fn_Call *f = new Statement::Fn_Call(
         Statement::Fn_Call::STR_APPEND);
       f->add_arg(*cur);
+      //f->add_arg(new Expr::Const(' '));
       Para_Decl::Multi *m = dynamic_cast<Para_Decl::Multi*>(*i);
-      if (m) {
-    	f->add_arg(new Expr::Const(' '));
-    	l.push_back(f);
+     if (m) {
+        f->add_arg(new Expr::Const(' '));
+        l.push_back(f);
         apply(l, m, cur);
       } else {
         Para_Decl::Simple *s = dynamic_cast<Para_Decl::Simple*>(*i);
-		f->add_arg(new Expr::Const("child {node {"));
-        l.push_back(f);
+	    f->add_arg(new Expr::Const("child {node {"));
+	    l.push_back(f);
         assert(s);
         apply(l, s, cur);
-
       }
       a++;
 
       if (!m) {
 	 Statement::Fn_Call *g = new Statement::Fn_Call(
-			  Statement::Fn_Call::STR_APPEND);
-	 g->add_arg(*cur);
-	 g->add_arg(new Expr::Const("}}"));
-	 l.push_back(g);
+              Statement::Fn_Call::STR_APPEND);
+     g->add_arg(*cur);
+     g->add_arg(new Expr::Const("}}"));
+     l.push_back(g);
       }
     }
 
@@ -529,7 +528,7 @@ struct Generate_Tree_Stmts : public Generate_Stmts {
     Statement::Fn_Call *f = new Statement::Fn_Call(
       Statement::Fn_Call::STR_APPEND);
     f->add_arg(*ret);
-    std::string t = "child {node {" + *fn.name + "}";  // generating childnode for used grammar operation
+    std::string t = "child {node {" + *fn.name + "}";
     f->add_arg(new Expr::Const(t));
     f->add_arg(new Expr::Const(static_cast<int>(t.size())));
     fn.stmts.push_back(f);
@@ -550,18 +549,12 @@ struct Generate_Tree_Stmts : public Generate_Stmts {
     }
     f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
     f->add_arg(*ret);
-    f->add_arg(new Expr::Const(' ')); // Whitespace at the end of enum output string
+    f->add_arg(new Expr::Const(' '));
     fn.stmts.push_back(f);
-
-    //f = new Statement::Fn_Call("if (1 == 1) {\t}");
-    //fn.stmts.push_back(f);
-
-
 	f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
 	f->add_arg(*ret);
 	f->add_arg(new Expr::Const('}'));
 	fn.stmts.push_back(f);
-
 
     Statement::Return *r = new Statement::Return(*ret);
     fn.stmts.push_back(r);
@@ -571,7 +564,7 @@ struct Generate_Tree_Stmts : public Generate_Stmts {
 
 Algebra *Signature::generate_trees(std::string *n) {
   return generate_algebra(n, Mode::PRETTY, new Type::External("Rope"),
-		  	  	  	  	  Generate_Tree_Stmts());
+                          Generate_Tree_Stmts());
 }
 //------------------------------------------------------------------------------------------------------------
 
