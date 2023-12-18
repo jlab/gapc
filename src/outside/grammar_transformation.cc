@@ -679,7 +679,7 @@ struct Collect_and_Insert_outside_axioms : public Visitor {
     // define sort order of std::set by name of the Symbol::NT
     // default would probably operate on pointer value?!
     bool operator() (Symbol::NT* const &a, Symbol::NT* const &b) const {
-      return *a->name <= *b->name;
+      return *a->name > *b->name;
     }
   };
   std::set<Symbol::NT*, cmpNTname> *terminating_lhs_nts;
