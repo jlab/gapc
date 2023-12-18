@@ -488,7 +488,6 @@ struct Generate_Tree_Stmts : public Generate_Stmts {
       Statement::Fn_Call *f = new Statement::Fn_Call(
         Statement::Fn_Call::STR_APPEND);
       f->add_arg(*cur);
-      //f->add_arg(new Expr::Const(' '));
       Para_Decl::Multi *m = dynamic_cast<Para_Decl::Multi*>(*i);
      if (m) {
         f->add_arg(new Expr::Const(' '));
@@ -496,15 +495,15 @@ struct Generate_Tree_Stmts : public Generate_Stmts {
         apply(l, m, cur);
       } else {
         Para_Decl::Simple *s = dynamic_cast<Para_Decl::Simple*>(*i);
-	    f->add_arg(new Expr::Const("child {node {"));
-	    l.push_back(f);
+        f->add_arg(new Expr::Const("child {node {"));
+        l.push_back(f);
         assert(s);
         apply(l, s, cur);
       }
       a++;
 
-      if (!m) {
-	 Statement::Fn_Call *g = new Statement::Fn_Call(
+     if (!m) {
+     Statement::Fn_Call *g = new Statement::Fn_Call(
               Statement::Fn_Call::STR_APPEND);
      g->add_arg(*cur);
      g->add_arg(new Expr::Const("}}"));
@@ -552,10 +551,9 @@ struct Generate_Tree_Stmts : public Generate_Stmts {
     f->add_arg(new Expr::Const(' '));
     fn.stmts.push_back(f);
 	f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
-	f->add_arg(*ret);
-	f->add_arg(new Expr::Const('}'));
-	fn.stmts.push_back(f);
-
+    f->add_arg(*ret);
+    f->add_arg(new Expr::Const('}'));
+    fn.stmts.push_back(f);
     Statement::Return *r = new Statement::Return(*ret);
     fn.stmts.push_back(r);
   }
