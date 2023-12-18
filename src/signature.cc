@@ -23,6 +23,7 @@
 
 #include <utility>
 #include <list>
+#include <vector>
 
 #include "signature.hh"
 #include "input.hh"
@@ -422,7 +423,7 @@ struct Generate_TikZ_Stmts : public Generate_Stmts {
   Input inputs;
 
  public:
-  Generate_TikZ_Stmts(Input inputs) {
+  explicit Generate_TikZ_Stmts(Input inputs) {
     this->inputs = inputs;
   }
 
