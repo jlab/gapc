@@ -27,6 +27,7 @@
 #include "const.hh"
 #include "fn_arg.hh"
 #include "fn_def.hh"
+#include "para_decl.hh"
 
 static const char *COLOR_OVERLAY = "#cc5555";
 static const char *COLOR_INDICES = "#555555";
@@ -517,6 +518,35 @@ unsigned int Symbol::Base::to_dot(unsigned int *nodeID, std::ostream &out,
   if (plot_grammar > 1) {
     to_dot_indices(this->left_indices, out);
     out << "<td>" << *this->name;
+    // append non-terminal parameter to nt name, like "back (alphaLeftOuter)"
+    // where "back" is the NT name and "alphaLeftOuter" the single nt parameter
+    if (this->is(Symbol::NONTERMINAL)) {
+      Symbol::NT *nt = dynamic_cast<Symbol::NT*>(this);
+      if (nt->ntargs().size() > 0) {
+        out << " (";
+        for (std::list<Para_Decl::Base*>::const_iterator i =
+             nt->ntargs().begin(); i != nt->ntargs().end(); ++i) {
+          if ((*i)->is(Para_Decl::SIMPLE)) {
+            out << *dynamic_cast<Para_Decl::Simple*>(*i)->name();
+          } else if ((*i)->is(Para_Decl::MULTI)) {
+            Para_Decl::Multi *m = dynamic_cast<Para_Decl::Multi*>(*i);
+            out << "<";
+            for (std::list<Para_Decl::Simple*>::const_iterator j =
+                 m->list().begin(); j != m->list().end(); ++j) {
+              out << *(*j)->name();
+              if (std::next(j) != m->list().end()) {
+                out << ", ";
+              }
+            }
+            out << ">";
+          }
+          if (std::next(i) != nt->ntargs().end()) {
+            out << ", ";
+          }
+        }
+        out << ")";
+      }
+    }
     if (plot_grammar > 2) {
       // if we want to also print out datatypes
       out << "<br/><font color='" << COLOR_TYPE << "'>";
