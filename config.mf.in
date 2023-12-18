@@ -82,8 +82,10 @@ LDLIBS = $(RTLIB_LDLIBS) \
 # Options for compling GapC generated code
 # set to RTLIB_LDLIBS
 RT_LDLIBS = $(GSL_LIBS) -lrna
+
 # set to RTLIB_LDFLAGS
 RT_LDFLAGS = -L$(PREFIX)$(LIB_PATH)/$(LIB_GENERAL)
+
 # set to RTLIB_CPPFLAGS
 RT_CPPFLAGS = $(GSL_CFLAGS) \
 	 -I$(PREFIX)$(INCLUDE_PATH)/$(LIB_GENERAL) \
