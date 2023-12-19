@@ -709,6 +709,7 @@ instance prettyshape = fold ( pretty * shape5 ) ;
 instance mfepf = fold ( mfe * p_func) ;
 
 instance tikzpretty = fold ( tikz * enum * pretty) ;
-
-
-
+instance identifyTikz1 = fold ( mfe * tikz * pretty );
+instance identifyTikz2 = fold ( mfe * pretty * tikz);
+instance identifyTikz3 = fold ( mfe * tikz * pretty * tikz);
+instance identifyTikz4 = fold ( tikz * mfe * pretty);
