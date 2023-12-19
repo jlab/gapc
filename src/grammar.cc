@@ -884,8 +884,8 @@ void Grammar::init_indices() {
   Clear_Loops cl;
   traverse(cl);
 
-  assert(this->left_running_indices.size() == 0);
-  assert(this->right_running_indices.size() == 0);
+  this->left_running_indices.clear();
+  this->right_running_indices.clear();
   for (size_t track = 0; track < axiom->tracks(); ++track) {
     // variable access for all possible boundaries
     std::ostringstream i, j, lm, rm;

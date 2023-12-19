@@ -647,3 +647,9 @@ check_new_old_eq hmm_sonneregen.gap unused tikz "SSRR" tikzhmm
 # check if RAW and RNA inputs are differentiated
 GRAMMAR=../../grammar
 check_new_old_eq_twotrack flowgram2b.gap unused tikz Hallo tikzflow "W"
+
+# check that backtracing does not violate assumption that left/right_running_indices must be empty
+GRAMMAR=../../grammar
+GAPC="../../../gapc --kbacktrace"
+check_new_old_eq adpf.gap unused tikzbacktrace "CCaaaGG" tikztrace
+
