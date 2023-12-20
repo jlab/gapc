@@ -93,6 +93,11 @@ class Instance {
    * Thus, we need to make sure that the user does not request outside with
    * instances that use a signature with multiple answer types */
   bool check_multiple_answer_types(bool for_outside_generation);
+
+  /* True, if one of the algebras in the product is the auto generated tikz
+   * algebra. This needs to be known, to change how output in presented.
+   */
+  bool contains_tiks();
 };
 
 inline std::ostream &operator<<(std::ostream &s, const Instance &i) {

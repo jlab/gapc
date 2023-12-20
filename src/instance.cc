@@ -192,3 +192,15 @@ void Instance::check_alphabets() {
       "Alphabet types of algebras in the product are not compatible ");
   }
 }
+
+bool Instance::contains_tiks() {
+  for (Product::iterator i = Product::begin(product);
+       i != Product::end(); ++i) {
+    if ((*i)->is(Product::SINGLE)) {
+      if ((*i)->algebra()->get_auto_role() == Algebra::TIKZ) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
