@@ -2289,24 +2289,33 @@ void Printer::Cpp::print_kbacktrack_pp(const AST &ast) {
   Type::Backtrace *bt_type = dynamic_cast<Type::Backtrace*>(
     ast.grammar()->axiom->code()->return_type);
   const Type::Base *bt_value = bt_type->value_type();
-  stream << "intrusive_ptr<Backtrace<" << *bt_value
-    << ", unsigned int> >  bt    = backtrack(";
-
+  stream << indent() << "intrusive_ptr<Backtrace<" << *bt_value
+         << ", unsigned int> > bt = backtrack(";
   print_axiom_args(ast);
+  stream << ");" << endl;
 
-  stream << ");" << endl
-    << "intrusive_ptr<Backtrace_List<" << *bt_value << ", unsigned int> > l ="
-    << endl
-    << "  boost::dynamic_pointer_cast<Backtrace_List<" << *bt_value
-    << ", unsigned int> > (bt);" << endl
-    << "assert(!bt || (bt && l));" << endl
-    << "if (l) {\n"
-    << "for (Backtrace_List<" << *bt_value
-    << ", unsigned int>::iterator i = l->begin();"
-    << endl
-    << "     i != l->end(); ++i)" << endl
-    << "  (*i)->print(out);" << endl
-    << "}\n";
+  stream << indent() << "intrusive_ptr<Backtrace_List<" << *bt_value
+         << ", unsigned int> > l = "
+         << "boost::dynamic_pointer_cast<Backtrace_List<" << *bt_value
+         << ", unsigned int> > (bt);" << endl;
+
+  stream << indent() << "assert(!bt || (bt && l));" << endl;
+
+  stream << indent() << "if (l) {" << endl;
+  inc_indent();
+
+  stream << indent() << "for (Backtrace_List<" << *bt_value
+         << ", unsigned int>::iterator i = l->begin();"
+         << " i != l->end(); ++i) {" << endl;
+  inc_indent();
+
+  stream << indent() << "(*i)->print(out);" << endl;
+  dec_indent();
+
+  stream << indent() << "}" << endl;
+  dec_indent();
+
+  stream << indent() << "}" << endl;
 }
 
 
