@@ -2521,14 +2521,14 @@ void Printer::Cpp::print_value_pp(const AST &ast) {
     // tikz block per candidate
     stream << indent() << "out << \"\\\\begin{tikzpicture}\\n  \\\\\";" << endl;
     // report other algebra results per candidate as a root node
-    stream << indent() << "out << \"node {$\\\\begin{aligned} Rank & & \" "
+    stream << indent() << "out << \"node {$\\\\begin{aligned} Rank & \\\\ \" "
            << "<< std::to_string(rank) << \" \\\\\\\\ \";" << endl;
     for (Product::iterator a = Product::begin(ast.instance_->product);
          a != Product::end(); ++a) {
       if (((*a)->is(Product::SINGLE)) &&
           (!((*a)->algebra()->get_auto_role() == Algebra::TIKZ))) {
         stream << indent() << "out << \""
-               << *(*a)->algebra()->name << " & & \" << ";
+               << *(*a)->algebra()->name << " & \\\\ \" << ";
         stream << "(*i)" << *ast.instance_->product->get_component_accessor(
             *(*a)->algebra());
         stream << " << \" \\\\\\\\ \";" << endl;
