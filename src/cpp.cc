@@ -1946,6 +1946,9 @@ void Printer::Cpp::header(const AST &ast) {
     if (ast.outside_generation()) {
       stream << "#define OUTSIDE\n";
     }
+    if (ast.instance_->contains_tiks()) {
+      stream << "#define TIKZ\n";
+    }
 
     stream << "#define GAPC_CALL_STRING \"" << gapc_call_string << "\""
            << endl;

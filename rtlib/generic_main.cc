@@ -94,7 +94,9 @@ int main(int argc, char **argv) {
   gapc::add_event("end_computation");
 
 #ifndef OUTSIDE
+#ifndef TIKZ
   std::cout << "Answer: \n";
+#endif
   obj.print_result(std::cout, res);
 #else
   obj.report_insideoutside(std::cout);
