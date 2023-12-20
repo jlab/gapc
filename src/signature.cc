@@ -24,6 +24,7 @@
 #include <utility>
 #include <list>
 #include <vector>
+#include <boost/algorithm/string/replace.hpp>
 
 #include "signature.hh"
 #include "input.hh"
@@ -576,10 +577,17 @@ struct Generate_TikZ_Stmts : public Generate_Stmts {
         Statement::Fn_Call::STR_APPEND);
     f->add_arg(*ret);
     std::string *color = new std::string(COLOR_ALGFCT);
+
+    // escape potential _ characters in algebra function names for LaTeX
+    std::string fn_name = *fn.name;
+    boost::replace_all(fn_name, "_", "\\\\_");
+    // we need to substract the number of escaped \ when computing Rope length
+    std::string::difference_type n = std::count(
+        fn.name->begin(), fn.name->end(), '_');
     std::string t = "node {\\\\color[HTML]{" + \
-        color->substr(1, color->size()-1) + "} " + *fn.name + "} ";
+        color->substr(1, color->size()-1) + "} " + fn_name + "} ";
     f->add_arg(new Expr::Const(t));
-    f->add_arg(new Expr::Const(static_cast<int>(t.size()) -1));
+    f->add_arg(new Expr::Const(static_cast<int>(t.size()) -1 - int(n)));
     fn.stmts.push_back(f);
 
     Statement::Var_Decl *cur = ret;
