@@ -587,7 +587,8 @@ struct Generate_TikZ_Stmts : public Generate_Stmts {
     std::string t = "node {\\\\color[HTML]{" + \
         color->substr(1, color->size()-1) + "} " + fn_name + "} ";
     f->add_arg(new Expr::Const(t));
-    f->add_arg(new Expr::Const(static_cast<int>(t.size()) -1 - int(n)));
+    f->add_arg(new Expr::Const(
+        static_cast<int>(t.size()) - 1 - static_cast<int>(n)));
     fn.stmts.push_back(f);
 
     Statement::Var_Decl *cur = ret;
