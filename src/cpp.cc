@@ -2499,16 +2499,76 @@ void Printer::Cpp::print_value_pp(const AST &ast) {
     stream << indent()
            << "std::lock_guard<std::mutex> lock(print_mutex);" << endl;
   }
-  stream << indent() << "if (isEmpty(res)) {" << endl;
-  inc_indent();
-  stream << indent() << "out << \"[]\\n\";" << endl;
-  dec_indent();
-  stream << indent() << "} else {" << endl;
-  inc_indent();
-  stream << indent() << "out << res << '\\n';" << endl;
-  dec_indent();
-  stream << indent() << '}' << endl;
+  if (ast.instance_->contains_tiks()) {
+    // header for latex document
+    stream << indent() << "out << \"\\\\documentclass{article}\\n\";" << endl;
+    stream << indent() << "out << \"\\\\usepackage{tikz}\\n\";" << endl;
+    stream << indent() << "out << \"\\\\usepackage{amsmath}\\n\";" << endl;
+    stream << indent() << "out << \"\\\\usepackage{verbatim}\\n\";" << endl;
+    stream << indent() << "out << \"\\\\begin{document}\\n\";" << endl;
 
+    // record rank of candidate
+    stream << indent() << "int rank = 1;" << endl;
+    // iterate through candidates
+    stream << indent() << "for ("
+           << *ast.grammar()->axiom->code()->return_type->deref()
+           << "::iterator i = res.ref().begin(); i != "
+           << "res.ref().end(); ++i, ++rank) {" << endl;
+    inc_indent();
+    // tikz block per candidate
+    stream << indent() << "out << \"\\\\begin{tikzpicture}\\n  \\\\\";" << endl;
+    // report other algebra results per candidate as a root node
+    stream << indent() << "out << \"node {$\\\\begin{aligned} Rank & & \" "
+           << "<< std::to_string(rank) << \" \\\\\\\\ \";" << endl;
+    for (Product::iterator a = Product::begin(ast.instance_->product);
+         a != Product::end(); ++a) {
+      if (((*a)->is(Product::SINGLE)) &&
+          (!((*a)->algebra()->get_auto_role() == Algebra::TIKZ))) {
+        stream << indent() << "out << \""
+               << *(*a)->algebra()->name << " & & \" << ";
+        stream << "(*i)" << *ast.instance_->product->get_component_accessor(
+            *(*a)->algebra());
+        stream << " << \" \\\\\\\\ \";" << endl;
+      }
+    }
+    stream << indent() << "out << \"\\\\end{aligned}$} child {\";" << endl;
+    // print tikz candidate string
+    for (Product::iterator a = Product::begin(ast.instance_->product);
+         a != Product::end(); ++a) {
+      if (((*a)->is(Product::SINGLE)) &&
+          (((*a)->algebra()->get_auto_role() == Algebra::TIKZ))) {
+        stream << indent() << "out << (*i)";
+        stream << *ast.instance_->product->get_component_accessor(
+            *(*a)->algebra());
+        stream << ";" << endl;
+        break;
+      }
+    }
+    stream << indent() << "out << \"}\";" << endl;
+    // close tikz block per candidate
+    stream << indent() << "out << \";\\n\\\\end{tikzpicture}\\n\\n\";" << endl;
+    dec_indent();
+    stream << indent() << "}" << endl;
+
+    // footer for latex document
+    stream << indent() << "out << \"\\\\end{document}\\n\";" << endl;
+    stream << indent() << "out << \"\\n% You computed an instance containing "
+           << "the automatically generated tikZ algebra.\\n% To 'draw' these "
+           << "candidate trees, redirect standard output into a file and "
+           << "execute pdflatex on it OR\\n% directly pipe standard output "
+           << "to pdflatex by appending ' | pdflatex' to your previous "
+           << "command.\\n\";" << endl;
+  } else {
+    stream << indent() << "if (isEmpty(res)) {" << endl;
+    inc_indent();
+    stream << indent() << "out << \"[]\\n\";" << endl;
+    dec_indent();
+    stream << indent() << "} else {" << endl;
+    inc_indent();
+    stream << indent() << "out << res << '\\n';" << endl;
+    dec_indent();
+    stream << indent() << '}' << endl;
+  }
   dec_indent();
   stream << indent() << '}' << endl << endl;
 }
