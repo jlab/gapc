@@ -51,9 +51,15 @@ class Filter;
 
 
 class Algebra : public Signature_Base {
+ public:
+  // if algebra is auto generated, it is one of three types: enum, count, tikz
+  // otherwise, it is a user defined one, i.e. not auto generated: NONE
+  enum AutoRole { NONE, ENUM, COUNT, TIKZ };
+
  private:
   std::string *default_choice_fn_mode;
   void init_choice_fns();
+  AutoRole role = AutoRole::NONE;
 
  public:
   hashtable<std::string, Fn_Def*> fns;
@@ -77,9 +83,9 @@ class Algebra : public Signature_Base {
       signature(NULL), signature_name(NULL) {
   }
 
-  explicit Algebra(std::string *n)
+  explicit Algebra(std::string *n, AutoRole role)
     :  Signature_Base(n), default_choice_fn_mode(0),
-      signature(NULL), signature_name(NULL) {
+       role(role), signature(NULL), signature_name(NULL) {
   }
 
 
@@ -139,6 +145,13 @@ class Algebra : public Signature_Base {
   void add_choice_specialisations(Product::Two &product);
 
   Algebra *copy() const;
+
+  /* return role of automatically generated algebra. None if algebra is user
+   * defined.
+   */
+  AutoRole get_auto_role() {
+    return this->role;
+  }
 };
 
 inline std::ostream &operator<<(std::ostream &s, const Algebra &a) {

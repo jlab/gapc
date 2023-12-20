@@ -166,17 +166,19 @@ struct Generate_Stmts {
 
 Algebra *Signature::generate_algebra(
   std::string *n, Mode::Type mode_type, Type::Base *answer_type,
-  const Generate_Stmts &generate_stmts) {
+  const Generate_Stmts &generate_stmts, Algebra::AutoRole role) {
   // FIXME make count/enum alphabet agnostic
   Type::Base *alph = new Type::Char();
-  return generate_algebra(n, mode_type, answer_type, alph, generate_stmts);
+  return generate_algebra(n, mode_type, answer_type, alph, generate_stmts,
+                          role);
 }
 
 
 Algebra *Signature::generate_algebra(
   std::string *n, Mode::Type mode_type, Type::Base *answer_type,
-  Type::Base *alpha, const Generate_Stmts &generate_stmts) {
-  Algebra *a = new Algebra(n);
+  Type::Base *alpha, const Generate_Stmts &generate_stmts,
+  Algebra::AutoRole role) {
+  Algebra *a = new Algebra(n, role);
   a->signature = this;
   hashtable<std::string, Type::Base*> eqs;
   Loc l;
@@ -271,7 +273,7 @@ struct Generate_Count_Stmts : public Generate_Stmts {
 
 Algebra *Signature::generate_count(std::string *n) {
   return generate_algebra(n, Mode::SYNOPTIC, new Type::BigInt(),
-                          Generate_Count_Stmts());
+                          Generate_Count_Stmts(), Algebra::COUNT);
 }
 
 
@@ -414,7 +416,7 @@ struct Generate_Enum_Stmts : public Generate_Stmts {
 
 Algebra *Signature::generate_enum(std::string *n) {
   return generate_algebra(n, Mode::PRETTY, new Type::External("Rope"),
-                          Generate_Enum_Stmts());
+                          Generate_Enum_Stmts(), Algebra::ENUM);
 }
 
 
@@ -603,7 +605,7 @@ struct Generate_TikZ_Stmts : public Generate_Stmts {
 
 Algebra *Signature::generate_tikz(std::string *n, Input inputs) {
   return generate_algebra(n, Mode::PRETTY, new Type::External("Rope"),
-                          Generate_TikZ_Stmts(inputs));
+                          Generate_TikZ_Stmts(inputs), Algebra::TIKZ);
 }
 
 
@@ -631,10 +633,10 @@ struct Generate_Backtrace_Stmts : public Generate_Stmts {
 
 Algebra *Signature::generate_backtrace(
   std::string *n, Type::Base *value_type, Type::Base *pos_type,
-  Type::Base *alph) {
+  Type::Base *alph, Algebra::AutoRole role) {
   Generate_Backtrace_Stmts gen;
   gen.value_type = value_type;
   gen.pos_type = pos_type;
   return generate_algebra(n, Mode::PRETTY,
-    new Type::Backtrace(pos_type, value_type), alph, gen);
+    new Type::Backtrace(pos_type, value_type), alph, gen, role);
 }

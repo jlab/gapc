@@ -100,15 +100,17 @@ class Signature : public Signature_Base {
     Algebra *generate_tikz(std::string *n, Input inputs);
     Algebra *generate_algebra(
       std::string *n, Mode::Type mode_type, Type::Base *answer_type,
-      Type::Base *alph, const Generate_Stmts &generate_stmts);
+      Type::Base *alph, const Generate_Stmts &generate_stmts,
+      Algebra::AutoRole role);
     Algebra *generate_algebra(
       std::string *n, Mode::Type mode_type, Type::Base *answer_type,
-      const Generate_Stmts &generate_stmts);
+      const Generate_Stmts &generate_stmts,
+      Algebra::AutoRole role);
 
  public:
     Algebra *generate_backtrace(
       std::string *n, Type::Base *value_type, Type::Base *pos_type,
-      Type::Base *alph);
+      Type::Base *alph, Algebra::AutoRole role);
 };
 
 
