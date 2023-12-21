@@ -58,6 +58,7 @@
 #include "product.hh"
 
 #include "checkpoint.hh"
+#include "instance.hh"
 
 
 class Signature;
@@ -257,6 +258,10 @@ class AST {
  private:
   // FIXME
   Product::Base *backtrack_product;
+
+  // when instance is split for backtracing, fwd_product is the part computed
+  // in the forward pass
+  Product::Base *fwd_product;
   Filter *backtrack_filter;
   Product::Two *original_product;
 
@@ -299,8 +304,11 @@ class AST {
 
   std::list<std::pair<Filter*, Expr::Fn_Call*> > sf_filter_code;
 
-  Product::Base * get_backtrack_product() {
+  Product::Base * get_backtrack_product() const {
       return backtrack_product;
+  }
+  Product::Base * get_fwd_product() const {
+    return fwd_product;
   }
 
   Printer::Checkpoint *checkpoint;
@@ -316,6 +324,12 @@ class AST {
   }
   std::vector<std::string> *get_outside_nt_list() const {
     return this->outside_nt_list;
+  }
+
+  bool uses_tikz() const {
+    return instance_->product->uses_tikz() ||
+        backtrack_product->uses_tikz() ||
+        fwd_product->uses_tikz();
   }
 };
 
