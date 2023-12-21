@@ -120,7 +120,7 @@ algebra count implements Nuss(alphabet = char, answer = int)
   
 }
 
-
+algebra tikz auto tikz;
 grammar nussinov uses Nuss (axiom=start) {
 
   tabulated { start, bp }
@@ -148,4 +148,4 @@ instance bpmax1pp = nussinov ( bpmax . pretty ) ;
 
 instance kbpmaxpp = nussinov ( bpmax2 * pretty ) ;
 
-
+instance testbt = nussinov ((bpmax * bpmax) * (tikz * pretty));
