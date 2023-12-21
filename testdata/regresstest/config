@@ -673,3 +673,4 @@ check_new_old_eq rnashapesmfe.gap unused mfetikzshape "cCCAAAGGg" tikzwindow
 GAPC="../../../gapc"
 RUN_CPP_FLAGS=""
 check_new_old_eq_twotrack aliglob2.gap unused tikz "\"#$%&\^_{}~\"" tikzEscape "X"
+check_new_old_eq_twotrack flowgram2b.gap unused tikz "#$&^" tikzEscape "O"
