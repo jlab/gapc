@@ -665,3 +665,7 @@ check_new_old_eq nussinov.gap unused testbt "CGCGCG" tikztrace
 GAPC="../../../gapc --subopt"
 RUN_CPP_FLAGS=" -d1000 "
 check_new_old_eq rnashapesmfe.gap unused mfetikzshape "CCAAAGG" tikzsubopt
+
+GAPC="../../../gapc --window"
+RUN_CPP_FLAGS=" -w7 -i1 "
+check_new_old_eq rnashapesmfe.gap unused mfetikzshape "cCCAAAGGg" tikzwindow
