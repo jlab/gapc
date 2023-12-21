@@ -2451,36 +2451,37 @@ void Printer::Cpp::print_subopt_fn(const AST &ast) {
 
   print_marker_init(ast);
 
-  stream << "  " << *score_type << " global_score = " << *f->name << "(";
-
+  stream << indent() << *score_type << " global_score = " << *f->name << "(";
   print_axiom_args(ast);
-
   stream << ");" << endl;
 
   if (!ast.code_mode().marker()) {
-    stream << "  " << *f->return_type << " l = ";
+    stream << indent() << *f->return_type << " l = ";
   }
-
   stream << f->target_name() << "(";
-
   bool b = print_axiom_args(ast);
-
   if (b) {
     stream << ", ";
   }
-
   stream << "global_score, delta);" << endl;
 
   if (!ast.code_mode().marker()) {
-    stream << "  for (" << *f->return_type->deref()
-      << "::iterator i " << endl
-      << "       = l.ref().begin(); i != l.ref().end(); ++i) {" << endl;
-    stream << "    " << *bt_type << " bt = (*i).second;" << endl
-      << "    " << *score_type << " v = (*i).first;" << endl;
-    stream << "    intrusive_ptr<Eval_List<" << *pp_type
-      << "> > elist = bt->eval();" << endl
-      << "    elist->print(out, v);" << endl;
-    stream << "  }" << endl;
+    stream << indent() << "for (" << *f->return_type->deref()
+           << "::iterator i = l.ref().begin(); "
+           << "i != l.ref().end(); ++i) {" << endl;
+    inc_indent();
+
+    stream << indent() << *bt_type << " bt = (*i).second;" << endl;
+
+    stream << indent() << *score_type << " v = (*i).first;" << endl;
+
+    stream << indent() << "intrusive_ptr<Eval_List<" << *pp_type
+           << "> > elist = bt->eval();" << endl;
+
+    stream << indent() << "elist->print(out, v);" << endl;
+
+    dec_indent();
+    stream << indent() << "}" << endl;
   }
 
   print_marker_clear(ast);
