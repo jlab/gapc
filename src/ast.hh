@@ -328,8 +328,8 @@ class AST {
 
   bool uses_tikz() const {
     return instance_->product->uses_tikz() ||
-        backtrack_product->uses_tikz() ||
-        fwd_product->uses_tikz();
+        (backtrack_product && backtrack_product->uses_tikz()) ||
+        (fwd_product && fwd_product->uses_tikz());
   }
 };
 
