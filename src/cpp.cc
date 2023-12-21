@@ -2532,10 +2532,15 @@ void Printer::Cpp::backtrack_footer(const AST &ast) {
   print_backtrack_fn(ast);
   print_backtrack_pp(ast);
   print_subopt_fn(ast);
+  print_document_header(ast);
   print_document_footer(ast);
 }
 
 void Printer::Cpp::print_document_header(const AST & ast) {
+  stream << endl << indent()
+         << "void print_document_header(std::ostream &out) {" << endl;
+  inc_indent();
+
   if (ast.uses_tikz()) {
     // header for latex document
     stream << indent() << "out << \"\\\\documentclass{article}\\n\";" << endl;
@@ -2544,6 +2549,9 @@ void Printer::Cpp::print_document_header(const AST & ast) {
     stream << indent() << "out << \"\\\\usepackage{verbatim}\\n\";" << endl;
     stream << indent() << "out << \"\\\\begin{document}\\n\";" << endl;
   }
+
+  dec_indent();
+  stream << indent() << "}" << endl;
 }
 
 void Printer::Cpp::print_document_footer(const AST & ast) {
@@ -2597,7 +2605,8 @@ bool Printer::Cpp::print_tikz_value(Product::Base *product,
 void Printer::Cpp::print_tikz_candidate(const AST &ast, std::string candidate,
                                         std::string value) {
   // tikz block per candidate
-  stream << indent() << "out << \"\\\\begin{tikzpicture}\\n  \\\\\";" << endl;
+  stream << indent() << "out << \"\\n\\\\begin{tikzpicture}\\n  \\\\\";"
+         << endl;
 
   // report other algebra results per candidate as a root node
   stream << indent() << "out << \"node {$\\\\begin{aligned} Rank & \\\\ \" "
@@ -2630,7 +2639,6 @@ void Printer::Cpp::print_value_pp(const AST &ast) {
   stream << " void  print_result(std::ostream &out, "
          << "Value&" << " res) {" << endl;
   inc_indent();
-  print_document_header(ast);
   if (ast.code_mode() == Code::Mode::BACKTRACK ||
       ast.code_mode() == Code::Mode::SUBOPT) {
     dec_indent();

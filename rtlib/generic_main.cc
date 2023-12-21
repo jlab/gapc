@@ -71,6 +71,8 @@ int main(int argc, char **argv) {
   std::cout << std::setprecision(FLOAT_ACC) << std::fixed;
 #endif
 
+  // print statements prior to result list, e.g. for TikZ document generation
+  obj.print_document_header(std::cout);
 #ifdef WINDOW_MODE
   unsigned n = obj.t_0_seq.size();
   for (unsigned int i = 0; ; i+=opts.window_increment) {
