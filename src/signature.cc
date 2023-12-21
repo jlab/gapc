@@ -432,7 +432,7 @@ struct Generate_TikZ_Stmts : public Generate_Stmts {
 
  private:
   void apply(std::list<Statement::Base*> &l, Para_Decl::Simple *s,
-             Statement::Var_Decl *&cur, Input::Mode inp) const {
+             Statement::Var_Decl *&cur, Input::Mode inp, bool isNTparam) const {
     Statement::Fn_Call *f;
 
     Type::Usage *type = dynamic_cast<Type::Usage*>(s->type());
@@ -441,6 +441,9 @@ struct Generate_TikZ_Stmts : public Generate_Stmts {
       f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
       f->add_arg(*cur);
       std::string *color = new std::string(COLOR_TERMINAL);
+      if (isNTparam) {
+        color = new std::string(COLOR_INDICES);
+      }
       f->add_arg(new Expr::Const(std::string("\\\\color[HTML]{") + \
           color->substr(1, color->size()-1) + std::string("} ")));
       f->add_arg(new Expr::Const(21));
@@ -477,7 +480,7 @@ struct Generate_TikZ_Stmts : public Generate_Stmts {
 
 
   void apply(std::list<Statement::Base*> &l, Para_Decl::Multi *m,
-             Statement::Var_Decl *&cur) const {
+             Statement::Var_Decl *&cur, bool isNTparam) const {
     Statement::Fn_Call *f;
 
     f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
@@ -490,7 +493,7 @@ struct Generate_TikZ_Stmts : public Generate_Stmts {
     std::vector<Input::Mode>::const_iterator inp = this->inputs.modes().begin();
     for (std::list<Para_Decl::Simple*>::const_iterator j = p.begin();
          j != p.end(); ++j, ++inp) {
-      apply(l, *j, cur, *inp);
+      apply(l, *j, cur, *inp, isNTparam);
       if (std::next(j) != p.end()) {
         f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
         f->add_arg(*cur);
@@ -510,7 +513,7 @@ struct Generate_TikZ_Stmts : public Generate_Stmts {
 
   void apply(std::list<Statement::Base*> &l,
              const std::list<Para_Decl::Base*> &paras,
-             Statement::Var_Decl *&cur) const {
+             Statement::Var_Decl *&cur, bool isNTparam) const {
     std::list<Statement::Base*> apps;
     Statement::Fn_Call *f;
 
@@ -520,7 +523,7 @@ struct Generate_TikZ_Stmts : public Generate_Stmts {
       Para_Decl::Multi *m = dynamic_cast<Para_Decl::Multi*>(*i);
       if (m) {
         // param in multi track context
-        apply(l, m, cur);
+        apply(l, m, cur, isNTparam);
       } else {
         // param in single track context
         Para_Decl::Simple *s = dynamic_cast<Para_Decl::Simple*>(*i);
@@ -542,11 +545,11 @@ struct Generate_TikZ_Stmts : public Generate_Stmts {
         }
 
         if (this->inputs.modes().size() > 0) {
-          apply(l, s, cur, *this->inputs.modes().begin());
+          apply(l, s, cur, *this->inputs.modes().begin(), isNTparam);
         } else {
           // a user might have skiped the "input" declaration at all
           // it then defaults to single track raw
-          apply(l, s, cur, Input::RAW);
+          apply(l, s, cur, Input::RAW, isNTparam);
         }
 
         if (!type->base->is(Type::SIGNATURE)) {
@@ -599,18 +602,12 @@ struct Generate_TikZ_Stmts : public Generate_Stmts {
 
     Statement::Var_Decl *cur = ret;
     std::list<Statement::Base*> l;
-    apply(l, fn.paras, cur);
-    fn.stmts.insert(fn.stmts.end(), l.begin(), l.end());
+    apply(l, fn.paras, cur, false);
 
-//    if (fn.ntparas().size() > 0) {
-//      f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
-//      f->add_arg(*ret);
-//      f->add_arg(new Expr::Const(';'));
-//      fn.stmts.push_back(f);
-//      std::list<Statement::Base*> lntparas;
-//      apply(lntparas, fn.ntparas(), ret);
-//      fn.stmts.insert(fn.stmts.end(), lntparas.begin(), lntparas.end());
-//    }
+    if (fn.ntparas().size() > 0) {
+      apply(l, fn.ntparas(), cur, true);
+    }
+    fn.stmts.insert(fn.stmts.end(), l.begin(), l.end());
 
     Statement::Return *r = new Statement::Return(*ret);
     fn.stmts.push_back(r);
