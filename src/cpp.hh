@@ -93,7 +93,8 @@ class Cpp : public Base {
      * the candidate tree. Return false if product does not contain tikz auto
      * generated algebra */
     bool print_tikz_value(Product::Base *product, std::string candidate);
-    void print_tikz_candidate(const AST &ast, std::string candidate);
+    void print_tikz_candidate(const AST &ast, std::string candidate,
+                                              std::string value);
     void print_value_pp(const AST &ast);
 
     void print(const std::list<Type::Base*> &types,

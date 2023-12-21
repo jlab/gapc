@@ -2320,7 +2320,7 @@ void Printer::Cpp::print_kbacktrack_pp(const AST &ast) {
            << ">::iterator part_bt = subcandidates->begin(); part_bt != "
            << "subcandidates->end(); ++part_bt) {" << endl;
     inc_indent();
-    print_tikz_candidate(ast, "(*part_bt)");
+    print_tikz_candidate(ast, "(*part_bt)", "value");
     stream << indent() << "rank++;" << endl;
     dec_indent();
     stream << indent() << "}" << endl;
@@ -2466,6 +2466,9 @@ void Printer::Cpp::print_subopt_fn(const AST &ast) {
   stream << "global_score, delta);" << endl;
 
   if (!ast.code_mode().marker()) {
+    if (ast.uses_tikz()) {
+      stream << indent() << "int rank = 1;" << endl;
+    }
     stream << indent() << "for (" << *f->return_type->deref()
            << "::iterator i = l.ref().begin(); "
            << "i != l.ref().end(); ++i) {" << endl;
@@ -2478,7 +2481,18 @@ void Printer::Cpp::print_subopt_fn(const AST &ast) {
     stream << indent() << "intrusive_ptr<Eval_List<" << *pp_type
            << "> > elist = bt->eval();" << endl;
 
-    stream << indent() << "elist->print(out, v);" << endl;
+    if (ast.uses_tikz()) {
+      stream << indent() << "for (Eval_List<" << *pp_type
+             << ">::iterator part_bt = elist->begin(); part_bt != "
+             << "elist->end(); ++part_bt) {" << endl;
+      inc_indent();
+      print_tikz_candidate(ast, "(*part_bt)", "v");
+      stream << indent() << "rank++;" << endl;
+      dec_indent();
+      stream << indent() << "}" << endl;
+    } else {
+      stream << indent() << "elist->print(out, v);" << endl;
+    }
 
     dec_indent();
     stream << indent() << "}" << endl;
@@ -2569,7 +2583,8 @@ bool Printer::Cpp::print_tikz_value(Product::Base *product,
   return false;
 }
 
-void Printer::Cpp::print_tikz_candidate(const AST &ast, std::string candidate) {
+void Printer::Cpp::print_tikz_candidate(const AST &ast, std::string candidate,
+                                        std::string value) {
   // tikz block per candidate
   stream << indent() << "out << \"\\\\begin{tikzpicture}\\n  \\\\\";" << endl;
 
@@ -2577,7 +2592,7 @@ void Printer::Cpp::print_tikz_candidate(const AST &ast, std::string candidate) {
   stream << indent() << "out << \"node {$\\\\begin{aligned} Rank & \\\\ \" "
          << "<< std::to_string(rank) << \" \\\\\\\\ \";" << endl;
   if (ast.get_backtrack_product()) {
-    print_tikz_singleAlgebraValue(ast.get_fwd_product(), std::string("value"));
+    print_tikz_singleAlgebraValue(ast.get_fwd_product(), value);
     print_tikz_singleAlgebraValue(ast.get_backtrack_product(), candidate);
   } else {
     print_tikz_singleAlgebraValue(ast.instance_->product, candidate);
@@ -2586,8 +2601,7 @@ void Printer::Cpp::print_tikz_candidate(const AST &ast, std::string candidate) {
 
   // print TikZ string
   if (ast.get_backtrack_product()) {
-    bool printed = print_tikz_value(ast.get_fwd_product(),
-                                    std::string("value"));
+    bool printed = print_tikz_value(ast.get_fwd_product(), value);
     if (!printed) {
       print_tikz_value(ast.get_backtrack_product(), candidate);
     }
@@ -2632,7 +2646,7 @@ void Printer::Cpp::print_value_pp(const AST &ast) {
            << "::iterator i = res.ref().begin(); i != "
            << "res.ref().end(); ++i, ++rank) {" << endl;
     inc_indent();
-    print_tikz_candidate(ast, "(*i)");
+    print_tikz_candidate(ast, "(*i)", "value");
     dec_indent();
     stream << indent() << "}" << endl;
     dec_indent();
