@@ -457,12 +457,18 @@ struct Generate_TikZ_Stmts : public Generate_Stmts {
       f->add_arg(*cur);
       f->add_arg(s->name());
     } else {
-      f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
-      f->add_arg(*cur);
       if (type->base->is(Type::VOID)) {
+        f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
+        f->add_arg(*cur);
         f->add_arg(new Expr::Const("\\\\epsilon "));
         f->add_arg(new Expr::Const(9));
+      } else if (type->base->is(Type::ALPHABET)) {
+        f = new Statement::Fn_Call("append_latex");
+        f->add_arg(*cur);
+        f->add_arg(s->name());
       } else {
+        f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
+        f->add_arg(*cur);
         f->add_arg(s->name());
       }
     }

@@ -33,6 +33,7 @@
 #include <sstream>
 
 #include <boost/cstdint.hpp>
+#include <boost/algorithm/string/replace.hpp>
 
 #include "../rtlib/cstr.h"
 #include "bitops.hh"
@@ -752,6 +753,27 @@ void rope::Block<X>::operator delete(void *b) noexcept(false) {
 template<class T, typename X>
 inline void append(rope::Ref<X> &str, const T &x) {
   str.append(x);
+}
+
+template<typename X>
+inline void append_latex(rope::Ref<X> &str, char &c) {
+  std::string s(1, c);
+
+  /* https://www.cespedes.org/blog/85/how-to-escape-latex-special-characters
+   * note that we are in math mode, which might use different rules than
+   * LaTeX's "normal" text mode. */
+  boost::replace_all(s, "\\", "\\backslash");
+  boost::replace_all(s, "#", "\\#");
+  boost::replace_all(s, "$", "\\$");
+  boost::replace_all(s, "%", "\\%");
+  boost::replace_all(s, "&", "\\&");
+  boost::replace_all(s, "_", "\\_");
+  boost::replace_all(s, "{", "\\{");
+  boost::replace_all(s, "}", "\\}");
+  boost::replace_all(s, "^", "\\hat{\\ }");
+  boost::replace_all(s, "~", "\\tilde{\\ }");
+
+  str.append(s.c_str(), s.size());
 }
 
 template<class T, typename X>
