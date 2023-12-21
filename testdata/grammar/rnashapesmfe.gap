@@ -49,7 +49,7 @@ algebra count auto count ;
 
 algebra enum auto enum ; 
 
-
+algebra tikz auto tikz ;
 
 algebra mfe implements Canonical_Algebra(alphabet = char, answer = mfeanswer) {
 	mfeanswer sadd(Subsequence lb,mfeanswer e) {
@@ -939,3 +939,4 @@ instance mfeppshape = canonicals_nonamb ( mfe * (pretty * shape5) ) ;
 instance mfeppen = canonicals_nonamb ( mfe * (pretty * enum) ) ;
 instance pretty = canonicals_nonamb ( pretty ) ;
 instance shape5 = canonicals_nonamb ( (shape5 * mfe) * pretty) ;
+instance mfetikzshape = canonicals_nonamb ( mfe * (tikz * shape5) ) ;

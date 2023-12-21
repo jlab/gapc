@@ -659,3 +659,7 @@ check_new_old_eq adpf.gap unused tikzbacktrace "CCaaaGG" tikztrace
 
 RUN_CPP_FLAGS=" -r2 "
 check_new_old_eq nussinov.gap unused testbt "CGCGCG" tikztrace
+
+GAPC="../../../gapc --subopt"
+RUN_CPP_FLAGS=" -d1000 "
+check_new_old_eq rnashapesmfe.gap unused mfetikzshape "CCAAAGG" tikzsubopt
