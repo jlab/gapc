@@ -452,7 +452,7 @@ struct Generate_TikZ_Stmts : public Generate_Stmts {
         // for RNA programs
         f = new Statement::Fn_Call("append_deep_rna_loc");
       } else {
-        f = new Statement::Fn_Call("append_deep");
+        f = new Statement::Fn_Call("append_latex");
       }
       f->add_arg(*cur);
       f->add_arg(s->name());

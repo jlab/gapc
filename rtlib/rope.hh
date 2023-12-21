@@ -776,6 +776,13 @@ inline void append_latex(rope::Ref<X> &str, char &c) {
 
   str.append(s.c_str(), s.size());
 }
+template<typename X>
+inline void append_latex(rope::Ref<X> &str, const Subsequence &s) {
+  for (typename Subsequence::const_iterator i = s.begin(); i != s.end(); ++i) {
+    char ichar = (*i);
+    append_latex(str, ichar);
+  }
+}
 
 template<class T, typename X>
 inline void append(rope::Ref<X> &str, char c, T i) {
