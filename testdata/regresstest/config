@@ -656,6 +656,8 @@ check_new_old_eq_twotrack flowgram2b.gap unused tikz Hallo tikzflow "W"
 GRAMMAR=../../grammar
 GAPC="../../../gapc --kbacktrace"
 check_new_old_eq adpf.gap unused tikzbacktrace "CCaaaGG" tikztrace
+GAPC="../../../gapc --backtrace"
+check_new_old_eq adpf.gap unused tikzbacktrace "CCaaaGG" tikzbatrace
 
 RUN_CPP_FLAGS=" -r2 "
 check_new_old_eq nussinov.gap unused testbt "CGCGCG" tikztrace
