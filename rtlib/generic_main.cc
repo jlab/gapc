@@ -114,6 +114,8 @@ int main(int argc, char **argv) {
   gapc::add_event("end");
 #endif
 
+  // print statements after result list, e.g. for TikZ document generation
+  obj.print_document_footer(std::cout);
 #ifdef STATS
   obj.print_stats(std::cerr);
 #endif
