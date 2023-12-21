@@ -1946,7 +1946,7 @@ void Printer::Cpp::header(const AST &ast) {
     if (ast.outside_generation()) {
       stream << "#define OUTSIDE\n";
     }
-    if (ast.instance_->contains_tiks()) {
+    if (ast.uses_tikz()) {
       stream << "#define TIKZ\n";
     }
 
@@ -2292,24 +2292,47 @@ void Printer::Cpp::print_kbacktrack_pp(const AST &ast) {
   Type::Backtrace *bt_type = dynamic_cast<Type::Backtrace*>(
     ast.grammar()->axiom->code()->return_type);
   const Type::Base *bt_value = bt_type->value_type();
-  stream << "intrusive_ptr<Backtrace<" << *bt_value
-    << ", unsigned int> >  bt    = backtrack(";
-
+  stream << indent() << "intrusive_ptr<Backtrace<" << *bt_value
+         << ", unsigned int> > bt = backtrack(";
   print_axiom_args(ast);
+  stream << ");" << endl;
 
-  stream << ");" << endl
-    << "intrusive_ptr<Backtrace_List<" << *bt_value << ", unsigned int> > l ="
-    << endl
-    << "  boost::dynamic_pointer_cast<Backtrace_List<" << *bt_value
-    << ", unsigned int> > (bt);" << endl
-    << "assert(!bt || (bt && l));" << endl
-    << "if (l) {\n"
-    << "for (Backtrace_List<" << *bt_value
-    << ", unsigned int>::iterator i = l->begin();"
-    << endl
-    << "     i != l->end(); ++i)" << endl
-    << "  (*i)->print(out);" << endl
-    << "}\n";
+  stream << indent() << "intrusive_ptr<Backtrace_List<" << *bt_value
+         << ", unsigned int> > l = "
+         << "boost::dynamic_pointer_cast<Backtrace_List<" << *bt_value
+         << ", unsigned int> > (bt);" << endl;
+
+  stream << indent() << "assert(!bt || (bt && l));" << endl;
+
+  stream << indent() << "if (l) {" << endl;
+  inc_indent();
+
+  stream << indent() << "int rank = 1;" << endl;
+  stream << indent() << "for (Backtrace_List<" << *bt_value
+         << ", unsigned int>::iterator i = l->begin();"
+         << " i != l->end(); ++i) {" << endl;
+  inc_indent();
+
+  if (ast.uses_tikz()) {
+    stream << indent() << "boost::intrusive_ptr<Eval_List<" << *bt_value
+           << "> > subcandidates = (*i)->eval();" << endl;
+    stream << indent() << "for (Eval_List<" << *bt_value
+           << ">::iterator part_bt = subcandidates->begin(); part_bt != "
+           << "subcandidates->end(); ++part_bt) {" << endl;
+    inc_indent();
+    print_tikz_candidate(ast, "(*part_bt)");
+    stream << indent() << "rank++;" << endl;
+    dec_indent();
+    stream << indent() << "}" << endl;
+  } else {
+    stream << indent() << "(*i)->print(out);" << endl;
+  }
+  dec_indent();
+
+  stream << indent() << "}" << endl;
+  dec_indent();
+
+  stream << indent() << "}" << endl;
 }
 
 
@@ -2483,14 +2506,105 @@ void Printer::Cpp::backtrack_footer(const AST &ast) {
   print_backtrack_fn(ast);
   print_backtrack_pp(ast);
   print_subopt_fn(ast);
+  print_document_footer(ast);
 }
 
+void Printer::Cpp::print_document_header(const AST & ast) {
+  if (ast.uses_tikz()) {
+    // header for latex document
+    stream << indent() << "out << \"\\\\documentclass{article}\\n\";" << endl;
+    stream << indent() << "out << \"\\\\usepackage{tikz}\\n\";" << endl;
+    stream << indent() << "out << \"\\\\usepackage{amsmath}\\n\";" << endl;
+    stream << indent() << "out << \"\\\\usepackage{verbatim}\\n\";" << endl;
+    stream << indent() << "out << \"\\\\begin{document}\\n\";" << endl;
+  }
+}
+
+void Printer::Cpp::print_document_footer(const AST & ast) {
+  stream << endl << indent()
+         << "void print_document_footer(std::ostream &out) {" << endl;
+  inc_indent();
+
+  if (ast.uses_tikz()) {
+    // footer for latex document
+    stream << indent() << "out << \"\\\\end{document}\\n\";" << endl;
+    stream << indent() << "out << \"\\n% You computed an instance containing "
+           << "the automatically generated tikZ algebra.\\n% To 'draw' these "
+           << "candidate trees, redirect standard output into a file and "
+           << "execute pdflatex on it OR\\n% directly pipe standard output "
+           << "to pdflatex by appending ' | pdflatex' to your previous "
+           << "command.\\n\";" << endl;
+  }
+
+  dec_indent();
+  stream << indent() << "}" << endl;
+}
+
+void Printer::Cpp::print_tikz_singleAlgebraValue(Product::Base *product,
+                                                 std::string candidate) {
+  for (Product::iterator a = Product::begin(product);
+       a != Product::end(); ++a) {
+    if (((*a)->is(Product::SINGLE)) && (!(*a)->uses_tikz())) {
+      stream << indent() << "out << \""
+             << *(*a)->algebra()->name << " & \\\\ \" << ";
+      stream << candidate << *product->get_component_accessor(
+          *(*a)->algebra());
+      stream << " << \" \\\\\\\\ \";" << endl;
+    }
+  }
+}
+
+bool Printer::Cpp::print_tikz_value(Product::Base *product,
+                                    std::string candidate) {
+  for (Product::iterator a = Product::begin(product);
+       a != Product::end(); ++a) {
+    if (((*a)->is(Product::SINGLE)) && ((*a)->uses_tikz())) {
+      stream << indent() << "out << " << candidate;
+      stream << *product->get_component_accessor(*(*a)->algebra());
+      stream << ";" << endl;
+      return true;
+    }
+  }
+  return false;
+}
+
+void Printer::Cpp::print_tikz_candidate(const AST &ast, std::string candidate) {
+  // tikz block per candidate
+  stream << indent() << "out << \"\\\\begin{tikzpicture}\\n  \\\\\";" << endl;
+
+  // report other algebra results per candidate as a root node
+  stream << indent() << "out << \"node {$\\\\begin{aligned} Rank & \\\\ \" "
+         << "<< std::to_string(rank) << \" \\\\\\\\ \";" << endl;
+  if (ast.get_backtrack_product()) {
+    print_tikz_singleAlgebraValue(ast.get_fwd_product(), std::string("value"));
+    print_tikz_singleAlgebraValue(ast.get_backtrack_product(), candidate);
+  } else {
+    print_tikz_singleAlgebraValue(ast.instance_->product, candidate);
+  }
+  stream << indent() << "out << \"\\\\end{aligned}$} child {\";" << endl;
+
+  // print TikZ string
+  if (ast.get_backtrack_product()) {
+    bool printed = print_tikz_value(ast.get_fwd_product(),
+                                    std::string("value"));
+    if (!printed) {
+      print_tikz_value(ast.get_backtrack_product(), candidate);
+    }
+  } else {
+    print_tikz_value(ast.instance_->product, candidate);
+  }
+  stream << indent() << "out << \"}\";" << endl;
+
+  // close tikz block per candidate
+  stream << indent() << "out << \";\\n\\\\end{tikzpicture}\\n\\n\";" << endl;
+}
 
 void Printer::Cpp::print_value_pp(const AST &ast) {
   stream << indent() << "template <typename Value>";
   stream << " void  print_result(std::ostream &out, "
          << "Value&" << " res) {" << endl;
   inc_indent();
+  print_document_header(ast);
   if (ast.code_mode() == Code::Mode::BACKTRACK ||
       ast.code_mode() == Code::Mode::SUBOPT) {
     dec_indent();
@@ -2502,14 +2616,13 @@ void Printer::Cpp::print_value_pp(const AST &ast) {
     stream << indent()
            << "std::lock_guard<std::mutex> lock(print_mutex);" << endl;
   }
-  if (ast.instance_->contains_tiks()) {
-    // header for latex document
-    stream << indent() << "out << \"\\\\documentclass{article}\\n\";" << endl;
-    stream << indent() << "out << \"\\\\usepackage{tikz}\\n\";" << endl;
-    stream << indent() << "out << \"\\\\usepackage{amsmath}\\n\";" << endl;
-    stream << indent() << "out << \"\\\\usepackage{verbatim}\\n\";" << endl;
-    stream << indent() << "out << \"\\\\begin{document}\\n\";" << endl;
-
+  if (ast.uses_tikz()) {
+    stream << indent() << "if (isEmpty(res)) {" << endl;
+    inc_indent();
+    stream << indent() << "out << \"Your result list is empty!\";" << endl;
+    dec_indent();
+    stream << indent() << "} else {" << endl;
+    inc_indent();
     // record rank of candidate
     stream << indent() << "int rank = 1;" << endl;
     // iterate through candidates
@@ -2518,49 +2631,11 @@ void Printer::Cpp::print_value_pp(const AST &ast) {
            << "::iterator i = res.ref().begin(); i != "
            << "res.ref().end(); ++i, ++rank) {" << endl;
     inc_indent();
-    // tikz block per candidate
-    stream << indent() << "out << \"\\\\begin{tikzpicture}\\n  \\\\\";" << endl;
-    // report other algebra results per candidate as a root node
-    stream << indent() << "out << \"node {$\\\\begin{aligned} Rank & \\\\ \" "
-           << "<< std::to_string(rank) << \" \\\\\\\\ \";" << endl;
-    for (Product::iterator a = Product::begin(ast.instance_->product);
-         a != Product::end(); ++a) {
-      if (((*a)->is(Product::SINGLE)) &&
-          (!((*a)->algebra()->get_auto_role() == Algebra::TIKZ))) {
-        stream << indent() << "out << \""
-               << *(*a)->algebra()->name << " & \\\\ \" << ";
-        stream << "(*i)" << *ast.instance_->product->get_component_accessor(
-            *(*a)->algebra());
-        stream << " << \" \\\\\\\\ \";" << endl;
-      }
-    }
-    stream << indent() << "out << \"\\\\end{aligned}$} child {\";" << endl;
-    // print tikz candidate string
-    for (Product::iterator a = Product::begin(ast.instance_->product);
-         a != Product::end(); ++a) {
-      if (((*a)->is(Product::SINGLE)) &&
-          (((*a)->algebra()->get_auto_role() == Algebra::TIKZ))) {
-        stream << indent() << "out << (*i)";
-        stream << *ast.instance_->product->get_component_accessor(
-            *(*a)->algebra());
-        stream << ";" << endl;
-        break;
-      }
-    }
-    stream << indent() << "out << \"}\";" << endl;
-    // close tikz block per candidate
-    stream << indent() << "out << \";\\n\\\\end{tikzpicture}\\n\\n\";" << endl;
+    print_tikz_candidate(ast, "(*i)");
     dec_indent();
     stream << indent() << "}" << endl;
-
-    // footer for latex document
-    stream << indent() << "out << \"\\\\end{document}\\n\";" << endl;
-    stream << indent() << "out << \"\\n% You computed an instance containing "
-           << "the automatically generated tikZ algebra.\\n% To 'draw' these "
-           << "candidate trees, redirect standard output into a file and "
-           << "execute pdflatex on it OR\\n% directly pipe standard output "
-           << "to pdflatex by appending ' | pdflatex' to your previous "
-           << "command.\\n\";" << endl;
+    dec_indent();
+    stream << indent() << "}" << endl;
   } else {
     stream << indent() << "if (isEmpty(res)) {" << endl;
     inc_indent();
