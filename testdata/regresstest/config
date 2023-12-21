@@ -674,3 +674,5 @@ GAPC="../../../gapc"
 RUN_CPP_FLAGS=""
 check_new_old_eq_twotrack aliglob2.gap unused tikz "\"#$%&\^_{}~\"" tikzEscape "X"
 check_new_old_eq_twotrack flowgram2b.gap unused tikz "#$&^" tikzEscape "O"
+
+check_new_old_eq pknotsRG.gap unused prettyTikzMfe "cgucgaaauaaaugccuu" tikzntparam
