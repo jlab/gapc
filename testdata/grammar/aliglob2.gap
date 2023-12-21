@@ -27,3 +27,4 @@ grammar globsim uses Alignment (axiom=alignment) {
 instance enum = globsim(enum);
 
 instance enumtikz = globsim ( enum * tikz ) ;
+instance tikz = globsim ( tikz ) ;

@@ -669,3 +669,7 @@ check_new_old_eq rnashapesmfe.gap unused mfetikzshape "CCAAAGG" tikzsubopt
 GAPC="../../../gapc --window"
 RUN_CPP_FLAGS=" -w7 -i1 "
 check_new_old_eq rnashapesmfe.gap unused mfetikzshape "cCCAAAGGg" tikzwindow
+
+GAPC="../../../gapc"
+RUN_CPP_FLAGS=""
+check_new_old_eq_twotrack aliglob2.gap unused tikz "\"#$%&\^_{}~\"" tikzEscape "X"
