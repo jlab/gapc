@@ -251,3 +251,4 @@ instance fwd = gra_weather(alg_fwd);
 instance multviterbistates = gra_weather(alg_mult * alg_viterbi * alg_states);
 instance count = gra_weather(alg_count);
 instance tikz = gra_weather(alg_tikz);
+instance tikzbtrace = gra_weather(alg_viterbi * alg_tikz);
