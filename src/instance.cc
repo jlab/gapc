@@ -193,7 +193,7 @@ void Instance::check_alphabets() {
   }
 }
 
-bool Instance::contains_tiks() {
+bool Instance::uses_tikz() {
   for (Product::iterator i = Product::begin(product);
        i != Product::end(); ++i) {
     if ((*i)->is(Product::SINGLE)) {

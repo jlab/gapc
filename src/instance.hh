@@ -97,7 +97,7 @@ class Instance {
   /* True, if one of the algebras in the product is the auto generated tikz
    * algebra. This needs to be known, to change how output in presented.
    */
-  bool contains_tiks();
+  bool uses_tikz();
 };
 
 inline std::ostream &operator<<(std::ostream &s, const Instance &i) {
