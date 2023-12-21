@@ -214,6 +214,11 @@ class Base {
    * with the call of this function.
    */
   virtual std::string *get_component_accessor(Algebra &a) = 0;
+
+  /* tests if an algebra product contains somewhere the auto generated tikZ
+   * algebra. This needs to be known to influence candidate output presentation.
+   */
+  virtual bool uses_tikz() = 0;
 };
 
 
@@ -255,6 +260,10 @@ class Single : public Base {
 
   bool contains_algebra(Algebra &a);
   std::string *get_component_accessor(Algebra &a);
+
+  bool uses_tikz() {
+    return algebra_->get_auto_role() == Algebra::TIKZ;
+  }
 };
 
 
@@ -306,6 +315,9 @@ class Two : public Base {
 
   bool contains_algebra(Algebra &a);
   std::string *get_component_accessor(Algebra &a);
+  bool uses_tikz() {
+    return l->uses_tikz() || r->uses_tikz();
+  }
 };
 
 
