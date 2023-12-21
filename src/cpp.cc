@@ -2376,11 +2376,22 @@ void Printer::Cpp::print_backtrack_pp(const AST &ast) {
     dec_indent();
 
     stream << indent() << "intrusive_ptr<Eval_List<" << *bt_type->value_type()
-      << "> > elist = bt->eval();"
-      << endl
-      << indent() << "elist->print(out, value);" << endl
-      << indent() << "erase(elist);" << endl
-      << indent() << "erase(bt);" << endl;
+           << "> > elist = bt->eval();" << endl;
+    if (ast.uses_tikz()) {
+      stream << indent() << "int rank = 1;" << endl;
+      stream << indent() << "for (Eval_List<" << *bt_type->value_type()
+             << ">::iterator part_bt = elist->begin(); part_bt != "
+             << "elist->end(); ++part_bt) {" << endl;
+      inc_indent();
+      print_tikz_candidate(ast, "(*part_bt)", "value");
+      stream << indent() << "rank++;" << endl;
+      dec_indent();
+      stream << indent() << "}" << endl;
+    } else {
+      stream << indent() << "elist->print(out, value);" << endl;
+    }
+    stream << indent() << "erase(elist);" << endl;
+    stream << indent() << "erase(bt);" << endl;
   }
 
   dec_indent();
