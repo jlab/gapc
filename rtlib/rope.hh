@@ -32,6 +32,7 @@
 #include <fstream>
 #include <sstream>
 
+#include <string>
 #include <boost/cstdint.hpp>
 #include <boost/algorithm/string/replace.hpp>
 
