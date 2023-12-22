@@ -714,3 +714,4 @@ instance identifyTikz1 = fold ( mfe * tikz * pretty );
 instance identifyTikz2 = fold ( mfe * pretty * tikz);
 instance identifyTikz3 = fold ( mfe * tikz * pretty * tikz);
 instance identifyTikz4 = fold ( tikz * mfe * pretty);
+instance pfsampletikzpp = fold ( ( (p_func | p_func_id ) * (tikz * pretty ) ) suchthat sample_filter ) ;

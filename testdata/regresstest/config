@@ -675,4 +675,9 @@ RUN_CPP_FLAGS=""
 check_new_old_eq_twotrack aliglob2.gap unused tikz "\"#$%&\^_{}~\"" tikzEscape "X"
 check_new_old_eq_twotrack flowgram2b.gap unused tikz "#$&^" tikzEscape "O"
 
+# test reporting of algebra function parameters like "back(...; int k)"
 check_new_old_eq pknotsRG.gap unused prettyTikzMfe "cgucgaaauaaaugccuu" tikzntparam
+
+GAPC="../../../gapc --sample"
+RUN_CPP_FLAGS=" -r 3 "
+check_new_old_eq adpf.gap unused pfsampletikzpp "GUAAAAUAGGUUUUUUACCUCGGUAUGCCUUGUGACUGGCUUGAC" tikzsample

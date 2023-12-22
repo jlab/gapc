@@ -2576,12 +2576,19 @@ void Printer::Cpp::print_document_footer(const AST & ast) {
 
 void Printer::Cpp::print_tikz_singleAlgebraValue(Product::Base *product,
                                                  std::string candidate) {
-  for (Product::iterator a = Product::begin(product);
+  Product::Base *wrk_product = product;
+  if (product->is(Product::OVERLAY)) {
+    /* return type of overlay product, as used for e.g. stochastic backtracing,
+     * does only hold components for the ->l part. For tikZ reporting, the
+     * ->r part must be omitted. */
+    wrk_product = product->left();
+  }
+  for (Product::iterator a = Product::begin(wrk_product);
        a != Product::end(); ++a) {
     if (((*a)->is(Product::SINGLE)) && (!(*a)->uses_tikz())) {
       stream << indent() << "out << \""
              << *(*a)->algebra()->name << " & \\\\ \" << ";
-      stream << candidate << *product->get_component_accessor(
+      stream << candidate << *wrk_product->get_component_accessor(
           *(*a)->algebra());
       stream << " << \" \\\\\\\\ \";" << endl;
     }
