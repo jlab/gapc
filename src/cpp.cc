@@ -2586,8 +2586,8 @@ void Printer::Cpp::print_tikz_singleAlgebraValue(Product::Base *product,
   for (Product::iterator a = Product::begin(wrk_product);
        a != Product::end(); ++a) {
     if (((*a)->is(Product::SINGLE)) && (!(*a)->uses_tikz())) {
-      stream << indent() << "out << \""
-             << *(*a)->algebra()->name << " & \\\\ \" << ";
+      stream << indent() << "out << latex(\""
+             << *(*a)->algebra()->name << "\") << \" & \\\\ \" << ";
       stream << candidate << *wrk_product->get_component_accessor(
           *(*a)->algebra());
       stream << " << \" \\\\\\\\ \";" << endl;

@@ -756,25 +756,33 @@ inline void append(rope::Ref<X> &str, const T &x) {
   str.append(x);
 }
 
-template<typename X>
-inline void append_latex(rope::Ref<X> &str, char &c) {
-  std::string s(1, c);
+/* accepts a string and escapes all containing characters to be compatible
+ * to LaTeX math mode. Used for tikZ generations.
+ */
+inline std::string latex(const std::string in) {
+  std::string out = std::string(in);
 
   /* https://www.cespedes.org/blog/85/how-to-escape-latex-special-characters
    * note that we are in math mode, which might use different rules than
    * LaTeX's "normal" text mode. */
-  boost::replace_all(s, "\\", "\\backslash");
-  boost::replace_all(s, "#", "\\#");
-  boost::replace_all(s, "$", "\\$");
-  boost::replace_all(s, "%", "\\%");
-  boost::replace_all(s, "&", "\\&");
-  boost::replace_all(s, "_", "\\_");
-  boost::replace_all(s, "{", "\\{");
-  boost::replace_all(s, "}", "\\}");
-  boost::replace_all(s, "^", "\\hat{\\ }");
-  boost::replace_all(s, "~", "\\tilde{\\ }");
+  boost::replace_all(out, "\\", "\\backslash");
+  boost::replace_all(out, "#", "\\#");
+  boost::replace_all(out, "$", "\\$");
+  boost::replace_all(out, "%", "\\%");
+  boost::replace_all(out, "&", "\\&");
+  boost::replace_all(out, "_", "\\_");
+  boost::replace_all(out, "{", "\\{");
+  boost::replace_all(out, "}", "\\}");
+  boost::replace_all(out, "^", "\\hat{\\ }");
+  boost::replace_all(out, "~", "\\tilde{\\ }");
 
-  str.append(s.c_str(), s.size());
+  return out;
+}
+template<typename X>
+inline void append_latex(rope::Ref<X> &str, char &c) {
+  std::string in(1, c);
+  std::string out = latex(in);
+  str.append(out.c_str(), out.size());
 }
 template<typename X>
 inline void append_latex(rope::Ref<X> &str, const Subsequence &s) {
