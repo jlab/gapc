@@ -2547,7 +2547,32 @@ void Printer::Cpp::print_document_header(const AST & ast) {
     stream << indent() << "out << \"\\\\usepackage{tikz}\\n\";" << endl;
     stream << indent() << "out << \"\\\\usepackage{amsmath}\\n\";" << endl;
     stream << indent() << "out << \"\\\\usepackage{verbatim}\\n\";" << endl;
+    stream << indent() << "out << \"\\\\usetikzlibrary{external}\\n\";" << endl;
+    stream << indent() << "out << \"\\\\tikzexternalize[mode=list and make]"
+           << "\\n\";" << endl;
+
+    stream << indent() << "out << \"\\\\tikzset{\\n\";" << endl;
+    stream << indent() << "out << \"  png export/.style={\\n\";" << endl;
+    stream << indent() << "out << \"    % First we call ImageMagick; change "
+           << "settings to requirements\\n\";" << endl;
+    stream << indent() << "out << \"    external/system call/.add={}{; convert"
+           << " -density 300 -transparent white \\\"\\\\image.pdf\\\" \\\"\\"
+           << "\\image.png\\\"},\\n\";" << endl;
+    stream << indent() << "out << \"    % Now we force the PNG figure to be "
+           << "used instead of the PDF\\n\";" << endl;
+    stream << indent() << "out << \"    /pgf/images/external info,\\n\";"
+           << endl;
+    stream << indent() << "out << \"    /pgf/images/include external/"
+           << ".code={\\n\";" << endl;
+    stream << indent() << "out << \"      \\\\includegraphics[width=\\\\pgfe"
+           << "xternalwidth,height=\\\\pgfexternalheight]{##1.png}\\n\";"
+           << endl;
+    stream << indent() << "out << \"    },\\n\";" << endl;
+    stream << indent() << "out << \"  }\\n\";" << endl;
+    stream << indent() << "out << \"}\\n\";" << endl;
+
     stream << indent() << "out << \"\\\\begin{document}\\n\";" << endl;
+    stream << indent() << "out << \"\\\\tikzset{png export}\\n\";" << endl;
   }
 
   dec_indent();
