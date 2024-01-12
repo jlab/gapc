@@ -31,6 +31,7 @@
 
 #include "macros.hh"
 
+#include "../../rtlib/subsequence.hh"
 #include "../../rtlib/rope.hh"
 #define STATS
 #include "../../rtlib/hash.hh"

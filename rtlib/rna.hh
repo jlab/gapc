@@ -183,12 +183,33 @@ inline void char_to_rna(Basic_Sequence<alphabet, pos_type> &seq) {
 
 using std::exp;
 
+/* When users choose 'rna' as input type, characters get translated into a
+ * specific alphabet to save bits (see rnalib.h base_t). If one needs to put
+ * such a substring back to normal ASCII characters, we can use this function
+ */
 template<typename X, typename alphabet, typename pos_type>
 inline void append_deep_rna(
   rope::Ref<X> &str, const Basic_Subsequence<alphabet, pos_type> &sub) {
   for (typename Basic_Subsequence<alphabet, pos_type>::const_iterator
        i = sub.begin(); i != sub.end(); ++i)
     str.append(static_cast<char>(base_to_char(*i)));
+}
+
+/* same as append_deep_rna, but LOC will leave a <X> instead of an empty
+ * string, where X is the "position" of LOC, i.e. the border between
+ * characters.
+ */
+template<typename X, typename alphabet, typename pos_type>
+inline void append_deep_rna_loc(
+  rope::Ref<X> &str, const Basic_Subsequence<alphabet, pos_type> &sub) {
+  for (typename Basic_Subsequence<alphabet, pos_type>::const_iterator
+       i = sub.begin(); i != sub.end(); ++i)
+    str.append(static_cast<char>(base_to_char(*i)));
+  if ((sub.size() == 0) && (sub.i == sub.j)) {
+    str.append('<');
+    str.append(static_cast<int>(sub.i));
+    str.append('>');
+  }
 }
 
 // ======== energy wrapper function ========

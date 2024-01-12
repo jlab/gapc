@@ -102,6 +102,6 @@ void Backtrack_Base::gen_nt_decls(const std::list<Symbol::NT*> &nts) {
 
 void Backtrack_Base::gen_algebra(Signature &signature, Type::Base *alph) {
   Algebra *a = signature.generate_backtrace
-    (new std::string("bt_algebra"), value_type, pos_type, alph);
+    (new std::string("bt_algebra"), value_type, pos_type, alph, Algebra::NONE);
   algebra = a;
 }

@@ -201,6 +201,24 @@ class Base {
   void set_sort_product(Base *sp) {
       sort_product = sp;
   }
+
+  /* A product can be a tuple of tuples of ... and one specific algebra
+   * is then nested within this structure. To test if the singular algebra is
+   * either contained in the first or second component, we need to down traverse
+   * and check the sub-structure for presence of this algebra.
+   */
+  virtual bool contains_algebra(Algebra &a) = 0;
+  /* A product can be a tuple of tuples of ...
+   * If we to generate code that accesses a specific singular algebra, it must
+   * be a concatenation of .first / .second accessors. We construct this string
+   * with the call of this function.
+   */
+  virtual std::string *get_component_accessor(Algebra &a) = 0;
+
+  /* tests if an algebra product contains somewhere the auto generated tikZ
+   * algebra. This needs to be known to influence candidate output presentation.
+   */
+  virtual bool uses_tikz() = 0;
 };
 
 
@@ -239,6 +257,13 @@ class Single : public Base {
     std::list<Statement::Base*> &compare_code) const;
 
   Base *replace_classified(bool &x);
+
+  bool contains_algebra(Algebra &a);
+  std::string *get_component_accessor(Algebra &a);
+
+  bool uses_tikz() {
+    return algebra_->get_auto_role() == Algebra::TIKZ;
+  }
 };
 
 
@@ -287,6 +312,12 @@ class Two : public Base {
   void init_vacc(Var_Acc::Base *src, Var_Acc::Base *dst);
 
   Base *replace_classified(bool &x);
+
+  bool contains_algebra(Algebra &a);
+  std::string *get_component_accessor(Algebra &a);
+  bool uses_tikz() {
+    return l->uses_tikz() || r->uses_tikz();
+  }
 };
 
 

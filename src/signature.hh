@@ -32,7 +32,7 @@
 #include "hashtable.hh"
 #include "loc.hh"
 #include "type.hh"
-
+#include "input.hh"
 #include "signature_base.hh"
 #include "algebra.hh"
 
@@ -92,22 +92,25 @@ class Signature : public Signature_Base {
 
     void reset_algebra() { algebra = NULL; }
 
-    Algebra *generate(std::string *n, std::string *mode);
+    Algebra *generate(std::string *n, std::string *mode, Input inputs);
 
  private:
     Algebra *generate_count(std::string *n);
     Algebra *generate_enum(std::string *n);
+    Algebra *generate_tikz(std::string *n, Input inputs);
     Algebra *generate_algebra(
       std::string *n, Mode::Type mode_type, Type::Base *answer_type,
-      Type::Base *alph, const Generate_Stmts &generate_stmts);
+      Type::Base *alph, const Generate_Stmts &generate_stmts,
+      Algebra::AutoRole role);
     Algebra *generate_algebra(
       std::string *n, Mode::Type mode_type, Type::Base *answer_type,
-      const Generate_Stmts &generate_stmts);
+      const Generate_Stmts &generate_stmts,
+      Algebra::AutoRole role);
 
  public:
     Algebra *generate_backtrace(
       std::string *n, Type::Base *value_type, Type::Base *pos_type,
-      Type::Base *alph);
+      Type::Base *alph, Algebra::AutoRole role);
 };
 
 

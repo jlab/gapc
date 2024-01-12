@@ -632,3 +632,52 @@ GAPC="../../../gapc --outside_grammar weak --cyk --checkpoint"
 check_checkpoint_eq nodangle.gap unused pfunc "GUAAAAUAGGUUUUUUACCUCGGUAUGCCUUGUGACUGGCUUGACAAGCUUUUCCUCAGCUCCGUAAACUCCUUUCAGUGGGAAAUUGUGGGGCAAAGUGGGAAUAAGGGGUGAGGCUGGCAUGUUCCGGGGAGCAACGUUAGUCAAUCUCGACAGCAAAGGGCGCUUAUCAGUGCCUACCCGUUAUCGGGAACAGCUGCUUGAGAACGCUGCCGGUCAAAUGGUUUGCACCAUUGACAUUUAUCACCCGUGCCUGCUGCUUUACCCCCUGCCUGAAUGGGAAAUUAUCGAGC" cyk_cp_outside_single 1
 
 CPPFLAGS_EXTRA=""
+
+# test auto generated "tikz" algebra
+GRAMMAR=../../grammar
+GAPC="../../../gapc"
+check_new_old_eq_twotrack aliglob2.gap unused enumtikz "IT" tikz_nw "ST"
+
+CPPFLAGS_EXTRA=$DEFAULT_CPPFLAGS_EXTRA
+check_new_old_eq adpf.gap unused tikzpretty "CCaaaGG" tikzpretty
+
+GRAMMAR=../../grammar_outside
+check_new_old_eq hmm_sonneregen.gap unused tikz "SSRR" tikzhmm
+check_new_old_eq hmm_sonneregen.gap unused tikzbtrace "T" tikzempty
+GAPC="../../../gapc --kbacktrace"
+check_new_old_eq hmm_sonneregen.gap unused tikzbtrace "T" tikzemptybt
+
+# check if RAW and RNA inputs are differentiated
+GAPC="../../../gapc"
+GRAMMAR=../../grammar
+check_new_old_eq_twotrack flowgram2b.gap unused tikz Hallo tikzflow "W"
+
+# check that backtracing does not violate assumption that left/right_running_indices must be empty
+GRAMMAR=../../grammar
+GAPC="../../../gapc --kbacktrace"
+check_new_old_eq adpf.gap unused tikzbacktrace "CCaaaGG" tikztrace
+GAPC="../../../gapc --backtrace"
+check_new_old_eq adpf.gap unused tikzbacktrace "CCaaaGG" tikzbatrace
+
+RUN_CPP_FLAGS=" -r2 "
+check_new_old_eq nussinov.gap unused testbt "CGCGCG" tikztrace
+
+GAPC="../../../gapc --subopt"
+RUN_CPP_FLAGS=" -d1000 "
+check_new_old_eq rnashapesmfe.gap unused mfetikzshape "CCAAAGG" tikzsubopt
+
+GAPC="../../../gapc --window"
+RUN_CPP_FLAGS=" -w7 -i1 "
+check_new_old_eq rnashapesmfe.gap unused mfetikzshape "cCCAAAGGg" tikzwindow
+
+GAPC="../../../gapc"
+RUN_CPP_FLAGS=""
+check_new_old_eq_twotrack aliglob2.gap unused tikz "\"#$%&\^_{}~\"" tikzEscape "X"
+check_new_old_eq_twotrack flowgram2b.gap unused tikz "#$&^" tikzEscape "O"
+
+# test reporting of algebra function parameters like "back(...; int k)"
+check_new_old_eq pknotsRG.gap unused prettyTikzMfe "cgucgaaauaaaugccuu" tikzntparam
+
+GAPC="../../../gapc --sample"
+RUN_CPP_FLAGS=" -r 3 "
+check_new_old_eq adpf.gap unused pfsampletikzpp "GUAAAAUAGGUUUUUUACCUCGGUAUGCCUUGUGACUGGCUUGAC" tikzsample
