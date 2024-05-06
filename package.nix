@@ -7,7 +7,7 @@
   gsl,
 }:
 stdenv.mkDerivation {
-  name = "gapc-unstable";
+  name = "gapc";
   version = "2023-07-05";
 
   src = fetchFromGitHub {
@@ -20,4 +20,7 @@ stdenv.mkDerivation {
   nativeBuildInputs = [flex bison gsl];
   buildInputs = [boost];
   configureFlags = ["BOOST_LDFLAGS=-L${boost}/lib"];
+
+  doCheck = true;
+  checkTarget = "test";
 }
