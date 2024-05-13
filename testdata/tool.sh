@@ -19,7 +19,7 @@ build_cpp()
 
 build_haskell()
 {
-  log ${GHC} --make $LHS_DIR/$1 -i$LHS_DIR -hidir ./GHC -odir ./GHC -o $2
+  log ${GHC} -package array -package containers --make $LHS_DIR/$1 -i$LHS_DIR -hidir ./GHC -odir ./GHC -o $2
 }
 
 run_cpp()

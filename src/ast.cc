@@ -61,6 +61,7 @@ AST::AST()
     signature(NULL),
     first_instance(NULL), instance_(0),
     backtrack_product(0),
+    fwd_product(0),
     backtrack_filter(0),
     original_product(0),
     char_type(0),
@@ -739,6 +740,7 @@ Instance *AST::split_instance_for_backtrack(std::string &n) {
   original_product = two;
 
   backtrack_product = two->right();
+  fwd_product = two->left();
   backtrack_filter = two->filter();
   Instance *score = new Instance(i->name(), two->left(), grammar());
   return score;

@@ -19,6 +19,7 @@ signature sig_weather(alphabet, answer) {
 
 algebra alg_enum auto enum;
 algebra alg_count auto count;
+algebra alg_tikz auto tikz;
 
 algebra alg_viterbi implements sig_weather(alphabet=char, answer=float) {
   float transition_start_hoch(float transition, float emission, float x) {
@@ -249,3 +250,5 @@ instance viterbistatesmult = gra_weather(alg_viterbi * alg_states * alg_mult);
 instance fwd = gra_weather(alg_fwd);
 instance multviterbistates = gra_weather(alg_mult * alg_viterbi * alg_states);
 instance count = gra_weather(alg_count);
+instance tikz = gra_weather(alg_tikz);
+instance tikzbtrace = gra_weather(alg_viterbi * alg_tikz);

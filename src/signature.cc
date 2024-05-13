@@ -23,8 +23,10 @@
 
 #include <utility>
 #include <list>
+#include <vector>
 
 #include "signature.hh"
+#include "input.hh"
 #include "arg.hh"
 #include "fn_decl.hh"
 
@@ -33,6 +35,7 @@
 #include "statement.hh"
 #include "expr/new.hh"
 #include "type/backtrace.hh"
+#include "plot_grammar.hh"
 
 
 Signature_Base::~Signature_Base() {}
@@ -144,11 +147,13 @@ Type::Base *Signature::var_lookup(const Type::Alphabet *t) {
 }
 
 
-Algebra *Signature::generate(std::string *n, std::string *mode) {
+Algebra *Signature::generate(std::string *n, std::string *mode, Input inputs) {
   if (*mode == "count")
     return generate_count(n);
   if (*mode == "enum")
     return generate_enum(n);
+  if (*mode == "tikz")
+    return generate_tikz(n, inputs);
   return NULL;
 }
 
@@ -161,17 +166,19 @@ struct Generate_Stmts {
 
 Algebra *Signature::generate_algebra(
   std::string *n, Mode::Type mode_type, Type::Base *answer_type,
-  const Generate_Stmts &generate_stmts) {
+  const Generate_Stmts &generate_stmts, Algebra::AutoRole role) {
   // FIXME make count/enum alphabet agnostic
   Type::Base *alph = new Type::Char();
-  return generate_algebra(n, mode_type, answer_type, alph, generate_stmts);
+  return generate_algebra(n, mode_type, answer_type, alph, generate_stmts,
+                          role);
 }
 
 
 Algebra *Signature::generate_algebra(
   std::string *n, Mode::Type mode_type, Type::Base *answer_type,
-  Type::Base *alpha, const Generate_Stmts &generate_stmts) {
-  Algebra *a = new Algebra(n);
+  Type::Base *alpha, const Generate_Stmts &generate_stmts,
+  Algebra::AutoRole role) {
+  Algebra *a = new Algebra(n, role);
   a->signature = this;
   hashtable<std::string, Type::Base*> eqs;
   Loc l;
@@ -266,7 +273,7 @@ struct Generate_Count_Stmts : public Generate_Stmts {
 
 Algebra *Signature::generate_count(std::string *n) {
   return generate_algebra(n, Mode::SYNOPTIC, new Type::BigInt(),
-                          Generate_Count_Stmts());
+                          Generate_Count_Stmts(), Algebra::COUNT);
 }
 
 
@@ -409,7 +416,211 @@ struct Generate_Enum_Stmts : public Generate_Stmts {
 
 Algebra *Signature::generate_enum(std::string *n) {
   return generate_algebra(n, Mode::PRETTY, new Type::External("Rope"),
-                          Generate_Enum_Stmts());
+                          Generate_Enum_Stmts(), Algebra::ENUM);
+}
+
+
+struct Generate_TikZ_Stmts : public Generate_Stmts {
+ private:
+  Input inputs;
+
+ public:
+  explicit Generate_TikZ_Stmts(Input inputs) {
+    this->inputs = inputs;
+  }
+
+ private:
+  void apply(std::list<Statement::Base*> &l, Para_Decl::Simple *s,
+             Statement::Var_Decl *&cur, Input::Mode inp, bool isNTparam) const {
+    Statement::Fn_Call *f;
+
+    Type::Usage *type = dynamic_cast<Type::Usage*>(s->type());
+    if (type->base->is(Type::SIGNATURE)) {
+    } else {
+      f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
+      f->add_arg(*cur);
+      std::string *color = new std::string(COLOR_TERMINAL);
+      if (isNTparam) {
+        color = new std::string(COLOR_INDICES);
+      }
+      f->add_arg(new Expr::Const(std::string("\\\\color[HTML]{") + \
+          color->substr(1, color->size()-1) + std::string("} ")));
+      f->add_arg(new Expr::Const(21));
+      l.push_back(f);
+    }
+
+    if (type->base->is(Type::SUBSEQ)) {
+      if (inp == Input::RNA) {
+        // for RNA programs
+        f = new Statement::Fn_Call("append_deep_rna_loc");
+      } else {
+        f = new Statement::Fn_Call("append_latex");
+      }
+      f->add_arg(*cur);
+      f->add_arg(s->name());
+    } else {
+      if (type->base->is(Type::VOID)) {
+        f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
+        f->add_arg(*cur);
+        f->add_arg(new Expr::Const("\\\\epsilon "));
+        f->add_arg(new Expr::Const(9));
+      } else if (type->base->is(Type::ALPHABET)) {
+        f = new Statement::Fn_Call("append_latex");
+        f->add_arg(*cur);
+        f->add_arg(s->name());
+      } else {
+        f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
+        f->add_arg(*cur);
+        f->add_arg(s->name());
+      }
+    }
+    l.push_back(f);
+  }
+
+
+  void apply(std::list<Statement::Base*> &l, Para_Decl::Multi *m,
+             Statement::Var_Decl *&cur, bool isNTparam) const {
+    Statement::Fn_Call *f;
+
+    f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
+    f->add_arg(*cur);
+    f->add_arg(new Expr::Const("child { node {$\\\\begin{aligned} "));
+    f->add_arg(new Expr::Const(31));
+    l.push_back(f);
+
+    const std::list<Para_Decl::Simple*> &p = m->list();
+    std::vector<Input::Mode>::const_iterator inp = this->inputs.modes().begin();
+    for (std::list<Para_Decl::Simple*>::const_iterator j = p.begin();
+         j != p.end(); ++j, ++inp) {
+      apply(l, *j, cur, *inp, isNTparam);
+      if (std::next(j) != p.end()) {
+        f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
+        f->add_arg(*cur);
+        f->add_arg(new Expr::Const(" \\\\\\\\ "));
+        f->add_arg(new Expr::Const(4));
+        l.push_back(f);
+      }
+    }
+
+    f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
+    f->add_arg(*cur);
+    f->add_arg(new Expr::Const("\\\\end{aligned}$ } } "));
+    f->add_arg(new Expr::Const(19));
+    l.push_back(f);
+  }
+
+
+  void apply(std::list<Statement::Base*> &l,
+             const std::list<Para_Decl::Base*> &paras,
+             Statement::Var_Decl *&cur, bool isNTparam) const {
+    std::list<Statement::Base*> apps;
+    Statement::Fn_Call *f;
+
+    for (std::list<Para_Decl::Base*>::const_iterator i = paras.begin();
+         i != paras.end(); ++i) {
+      // check if param is part of multitrack
+      Para_Decl::Multi *m = dynamic_cast<Para_Decl::Multi*>(*i);
+      if (m) {
+        // param in multi track context
+        apply(l, m, cur, isNTparam);
+      } else {
+        // param in single track context
+        Para_Decl::Simple *s = dynamic_cast<Para_Decl::Simple*>(*i);
+        Type::Usage *type = dynamic_cast<Type::Usage*>(s->type());
+        // param to base set
+        f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
+        f->add_arg(*cur);
+        f->add_arg(new Expr::Const("child { "));
+        f->add_arg(new Expr::Const(8));
+        l.push_back(f);
+
+        if (!type->base->is(Type::SIGNATURE)) {
+          // param to alphabet
+          f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
+          f->add_arg(*cur);
+          f->add_arg(new Expr::Const("node {$"));
+          f->add_arg(new Expr::Const(6+1));
+          l.push_back(f);
+        }
+
+        if (this->inputs.modes().size() > 0) {
+          apply(l, s, cur, *this->inputs.modes().begin(), isNTparam);
+        } else {
+          // a user might have skiped the "input" declaration at all
+          // it then defaults to single track raw
+          apply(l, s, cur, Input::RAW, isNTparam);
+        }
+
+        if (!type->base->is(Type::SIGNATURE)) {
+          f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
+          f->add_arg(*cur);
+          f->add_arg(new Expr::Const("$} "));
+          f->add_arg(new Expr::Const(2+1));
+          l.push_back(f);
+        }
+
+        f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
+        f->add_arg(*cur);
+        f->add_arg(new Expr::Const("} "));
+        f->add_arg(new Expr::Const(2));
+        l.push_back(f);
+      }
+    }
+    l.insert(l.end(), apps.begin(), apps.end());
+  }
+
+
+ public:
+  void apply(Fn_Def &fn) const {
+    if (fn.is_Choice_Fn()) {
+      Statement::Return *ret = new Statement::Return(fn.names.front());
+      fn.stmts.push_back(ret);
+      return;
+    }
+    Type::External *str = new Type::External("Rope");
+    Statement::Var_Decl *ret = new Statement::Var_Decl(str, "ret");
+    fn.stmts.push_back(ret);
+
+    Statement::Fn_Call *f = new Statement::Fn_Call(
+        Statement::Fn_Call::STR_APPEND);
+    f->add_arg(*ret);
+    std::string *color = new std::string(COLOR_ALGFCT);
+
+    f->add_arg(new Expr::Const("node {\\\\color[HTML]{" + \
+                               color->substr(1, color->size()-1) + "} "));
+    f->add_arg(new Expr::Const(27));
+    fn.stmts.push_back(f);
+
+    f = new Statement::Fn_Call("append_latex");
+    f->add_arg(*ret);
+    f->add_arg(new Expr::Const(*fn.name));
+    f->add_arg(new Expr::Const(static_cast<int>(fn.name->size())));
+    fn.stmts.push_back(f);
+
+    f = new Statement::Fn_Call(Statement::Fn_Call::STR_APPEND);
+    f->add_arg(*ret);
+    f->add_arg(new Expr::Const("} "));
+    f->add_arg(new Expr::Const(2));
+    fn.stmts.push_back(f);
+
+    Statement::Var_Decl *cur = ret;
+    std::list<Statement::Base*> l;
+    apply(l, fn.paras, cur, false);
+
+    if (fn.ntparas().size() > 0) {
+      apply(l, fn.ntparas(), cur, true);
+    }
+    fn.stmts.insert(fn.stmts.end(), l.begin(), l.end());
+
+    Statement::Return *r = new Statement::Return(*ret);
+    fn.stmts.push_back(r);
+  }
+};
+
+
+Algebra *Signature::generate_tikz(std::string *n, Input inputs) {
+  return generate_algebra(n, Mode::PRETTY, new Type::External("Rope"),
+                          Generate_TikZ_Stmts(inputs), Algebra::TIKZ);
 }
 
 
@@ -437,10 +648,10 @@ struct Generate_Backtrace_Stmts : public Generate_Stmts {
 
 Algebra *Signature::generate_backtrace(
   std::string *n, Type::Base *value_type, Type::Base *pos_type,
-  Type::Base *alph) {
+  Type::Base *alph, Algebra::AutoRole role) {
   Generate_Backtrace_Stmts gen;
   gen.value_type = value_type;
   gen.pos_type = pos_type;
   return generate_algebra(n, Mode::PRETTY,
-    new Type::Backtrace(pos_type, value_type), alph, gen);
+    new Type::Backtrace(pos_type, value_type), alph, gen, role);
 }

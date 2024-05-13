@@ -37,6 +37,7 @@
 #include "table.hh"
 #include "symbol_fwd.hh"
 #include "para_decl_fwd.hh"
+#include "product.hh"
 
 class Grammar;
 class AST;
@@ -80,6 +81,20 @@ class Cpp : public Base {
     void print_run_fn(const AST &ast);
     void print_stats_fn(const AST &ast);
 
+    /* generate code to print statements prior to result list, useful e.g. to
+     * include statements for LaTeX documents when generating TikZ candidates */
+    void print_document_header(const AST &ast);
+    /* generate code to print one line of the root node of a tikz candidate
+     * tree for an algebra value, e.g. let product be "(mfe * pfunc) * tikz"
+     * two lines for mfe and pfunc shall be listed in the root node */
+    void print_tikz_singleAlgebraValue(
+        Product::Base *product, std::string candidate);
+    /* generate code to print the LaTeX tikZ generated string that represents
+     * the candidate tree. Return false if product does not contain tikz auto
+     * generated algebra */
+    bool print_tikz_value(Product::Base *product, std::string candidate);
+    void print_tikz_candidate(const AST &ast, std::string candidate,
+                                              std::string value);
     void print_value_pp(const AST &ast);
 
     void print(const std::list<Type::Base*> &types,
@@ -95,6 +110,11 @@ class Cpp : public Base {
     void print_marker_clear(const AST &ast);
 
  public:
+    /* generate code to print statements after reporing the result list,
+     * useful e.g. to include statements for LaTeX documents when generating
+     * TikZ candidates */
+    void print_document_footer(const AST &ast);
+
     bool in_class;
     std::string class_name;
     Cpp()

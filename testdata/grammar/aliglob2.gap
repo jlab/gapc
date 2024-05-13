@@ -13,6 +13,7 @@ signature Alignment (alphabet, answer) {
 
 algebra count auto count;
 algebra enum auto enum;
+algebra tikz auto tikz;
 
 grammar globsim uses Alignment (axiom=alignment) {
   tabulated{alignment}        
@@ -24,3 +25,6 @@ grammar globsim uses Alignment (axiom=alignment) {
 
 
 instance enum = globsim(enum);
+
+instance enumtikz = globsim ( enum * tikz ) ;
+instance tikz = globsim ( tikz ) ;

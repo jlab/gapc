@@ -58,8 +58,8 @@ signature Algebra(alphabet, comp, compKnot) {
   choice [comp] h([comp]);
   choice [compKnot] hKnot([compKnot]);
 }
-
-
+algebra enum auto enum;
+algebra tikz auto tikz;
 algebra mfe implements Algebra(alphabet = char, comp = int, compKnot = mfeanswer) {
   int sadd(Subsequence b, int x) {
     return x;
@@ -1658,3 +1658,4 @@ acgucgaaauaaaugccuugucugcuauauucgacg
 // TODO Shape Algebren fertig bekommen
 
 /* CGGCACCCAGCCGGGGCGGAGUCCGCGAAUGGG */
+instance prettyTikzMfe = pknotsRG((enforce * mfe) * pretty * tikz);

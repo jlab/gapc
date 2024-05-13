@@ -71,6 +71,8 @@ int main(int argc, char **argv) {
   std::cout << std::setprecision(FLOAT_ACC) << std::fixed;
 #endif
 
+  // print statements prior to result list, e.g. for TikZ document generation
+  obj.print_document_header(std::cout);
 #ifdef WINDOW_MODE
   unsigned n = obj.t_0_seq.size();
   for (unsigned int i = 0; ; i+=opts.window_increment) {
@@ -94,7 +96,9 @@ int main(int argc, char **argv) {
   gapc::add_event("end_computation");
 
 #ifndef OUTSIDE
+#ifndef TIKZ
   std::cout << "Answer: \n";
+#endif
   obj.print_result(std::cout, res);
 #else
   obj.report_insideoutside(std::cout);
@@ -112,6 +116,8 @@ int main(int argc, char **argv) {
   gapc::add_event("end");
 #endif
 
+  // print statements after result list, e.g. for TikZ document generation
+  obj.print_document_footer(std::cout);
 #ifdef STATS
   obj.print_stats(std::cerr);
 #endif

@@ -32,7 +32,9 @@
 #include <fstream>
 #include <sstream>
 
+#include <string>
 #include <boost/cstdint.hpp>
+#include <boost/algorithm/string/replace.hpp>
 
 #include "../rtlib/cstr.h"
 #include "bitops.hh"
@@ -752,6 +754,49 @@ void rope::Block<X>::operator delete(void *b) noexcept(false) {
 template<class T, typename X>
 inline void append(rope::Ref<X> &str, const T &x) {
   str.append(x);
+}
+
+/* accepts a string and escapes all containing characters to be compatible
+ * to LaTeX math mode. Used for tikZ generations.
+ */
+inline std::string latex(const std::string in) {
+  std::string out = std::string(in);
+
+  /* https://www.cespedes.org/blog/85/how-to-escape-latex-special-characters
+   * note that we are in math mode, which might use different rules than
+   * LaTeX's "normal" text mode. */
+  boost::replace_all(out, "\\", "\\backslash");
+  boost::replace_all(out, "#", "\\#");
+  boost::replace_all(out, "$", "\\$");
+  boost::replace_all(out, "%", "\\%");
+  boost::replace_all(out, "&", "\\&");
+  boost::replace_all(out, "_", "\\_");
+  boost::replace_all(out, "{", "\\{");
+  boost::replace_all(out, "}", "\\}");
+  boost::replace_all(out, "^", "\\hat{\\ }");
+  boost::replace_all(out, "~", "\\tilde{\\ }");
+
+  return out;
+}
+template<typename X>
+inline void append_latex(rope::Ref<X> &str, char &c) {
+  std::string in(1, c);
+  std::string out = latex(in);
+  str.append(out.c_str(), out.size());
+}
+template<typename X>
+inline void append_latex(rope::Ref<X> &str, const Subsequence &s) {
+  for (typename Subsequence::const_iterator i = s.begin(); i != s.end(); ++i) {
+    char ichar = (*i);
+    append_latex(str, ichar);
+  }
+}
+template<typename X>
+inline void append_latex(rope::Ref<X> &str, const char *s, int slen) {
+  for (int i = 0; i < slen; ++i) {
+    char ichar = (s[i]);
+    append_latex(str, ichar);
+  }
 }
 
 template<class T, typename X>

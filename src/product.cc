@@ -1074,3 +1074,25 @@ Product::Times::Times(Base *a, Base *b, const Loc &lo) : Two(TIMES, lo, a, b) {
 
 Product::Two::Two(Type t, const Two &x) : Base(t), l(x.l), r(x.r) {
 }
+
+bool Product::Single::contains_algebra(Algebra &a) {
+  return this->algebra_ == &a;
+}
+bool Product::Two::contains_algebra(Algebra &a) {
+  return l->contains_algebra(a) || r->contains_algebra(a);
+}
+
+std::string *Product::Single::get_component_accessor(Algebra &a) {
+  return new std::string("");
+}
+std::string *Product::Two::get_component_accessor(Algebra &a) {
+  std::string *acc;
+  if (l->contains_algebra(a)) {
+    acc = new std::string(".first" + *l->get_component_accessor(a));
+  } else if (r->contains_algebra(a)) {
+    acc = new std::string(".second" + *r->get_component_accessor(a));
+  } else {
+    acc = new std::string("");
+  }
+  return acc;
+}

@@ -1,3 +1,80 @@
+bellmansgapc (2024.12.01-0ubuntu0ppa1~noble1) xenial; urgency=medium
+
+   * features:
+     + new auto generation of "tikz" algebras" to generate tikZ code to draw
+       candidate trees. Just add "algebra foo auto tikz" to your gap code, as
+       you already did for "count" or "enum".
+       Note: for lager search spaces, you will probably hit the limit of
+       recursive LaTeX environments when compiling the generated tikZ code.
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Fri, 12 Januaray 2024 11:36:00 +0200
+
+bellmansgapc (2024.12.01-0ubuntu0ppa1~mantic1) xenial; urgency=medium
+
+   * features:
+     + new auto generation of "tikz" algebras" to generate tikZ code to draw
+       candidate trees. Just add "algebra foo auto tikz" to your gap code, as
+       you already did for "count" or "enum".
+       Note: for lager search spaces, you will probably hit the limit of
+       recursive LaTeX environments when compiling the generated tikZ code.
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Fri, 12 Januaray 2024 11:36:00 +0200
+
+bellmansgapc (2024.12.01-0ubuntu0ppa1~lunar1) xenial; urgency=medium
+
+   * features:
+     + new auto generation of "tikz" algebras" to generate tikZ code to draw
+       candidate trees. Just add "algebra foo auto tikz" to your gap code, as
+       you already did for "count" or "enum".
+       Note: for lager search spaces, you will probably hit the limit of
+       recursive LaTeX environments when compiling the generated tikZ code.
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Fri, 12 Januaray 2024 11:36:00 +0200
+
+bellmansgapc (2024.12.01-0ubuntu0ppa1~jammy1) xenial; urgency=medium
+
+   * features:
+     + new auto generation of "tikz" algebras" to generate tikZ code to draw
+       candidate trees. Just add "algebra foo auto tikz" to your gap code, as
+       you already did for "count" or "enum".
+       Note: for lager search spaces, you will probably hit the limit of
+       recursive LaTeX environments when compiling the generated tikZ code.
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Fri, 12 Januaray 2024 11:36:00 +0200
+
+bellmansgapc (2024.12.01-0ubuntu0ppa1~focal1) xenial; urgency=medium
+
+   * features:
+     + new auto generation of "tikz" algebras" to generate tikZ code to draw
+       candidate trees. Just add "algebra foo auto tikz" to your gap code, as
+       you already did for "count" or "enum".
+       Note: for lager search spaces, you will probably hit the limit of
+       recursive LaTeX environments when compiling the generated tikZ code.
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Fri, 12 Januaray 2024 11:36:00 +0200
+
+bellmansgapc (2024.12.01-0ubuntu0ppa1~bionic1) xenial; urgency=medium
+
+   * features:
+     + new auto generation of "tikz" algebras" to generate tikZ code to draw
+       candidate trees. Just add "algebra foo auto tikz" to your gap code, as
+       you already did for "count" or "enum".
+       Note: for lager search spaces, you will probably hit the limit of
+       recursive LaTeX environments when compiling the generated tikZ code.
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Fri, 12 Januaray 2024 11:36:00 +0200
+
+bellmansgapc (2024.12.01-0ubuntu0ppa1~xenial1) xenial; urgency=medium
+
+   * features:
+     + new auto generation of "tikz" algebras" to generate tikZ code to draw
+       candidate trees. Just add "algebra foo auto tikz" to your gap code, as
+       you already did for "count" or "enum".
+       Note: for lager search spaces, you will probably hit the limit of
+       recursive LaTeX environments when compiling the generated tikZ code.
+
+ -- janssenlab <stefan.m.janssen@gmail.com>  Fri, 12 January 2024 11:36:00 +0200
+
 bellmansgapc (2023.07.05-0ubuntu0ppa1~xenial1) xenial; urgency=medium
 
    * features:
