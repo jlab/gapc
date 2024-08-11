@@ -23,6 +23,7 @@ jobs:
         # as of 21st Sep 2021, ubuntu-16.04 is no longer supported by github actions: https://github.blog/changelog/2021-04-29-github-actions-ubuntu-16-04-lts-virtual-environment-will-be-removed-on-september-20-2021/
         # 18.04 burnout: https://github.com/actions/runner-images/issues/6002
         os: [ubuntu-20.04, ubuntu-22.04]
+        architecture: [x86-64, arm64]
     runs-on: ${{ matrix.os }}
     steps:
     - name: Update apt
