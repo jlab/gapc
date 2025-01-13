@@ -193,6 +193,30 @@ class Increase : public Base {
   Base *copy() const;
 };
 
+/**
+ * @example sycl::buffer<int, 0> results(sycl::range<1>(n*m));
+ * @brief A function to summarize and create an buffer
+ * 
+ * @param type What type the buffer should hold
+ * @param dimension
+ * @param name
+ * @param size
+ * sycl::buffer<{type},{dimension}> {name}(sycl::range<{dimension}>({size}));
+ */
+ class SYCL_Buffer_Decl : public Base {
+  public:
+    ::Type::Base *type;
+    int *dimension;
+    std::string *name;
+    std::string *value;
+
+   SYCL_Buffer_Decl(::Type::Base *t, int *d, std::string n, std::string v) {
+    name = new std::string(n);
+    value = new std::string(d);
+   }
+
+   void print(Printer::Base &p) const;
+ };
 
 class Var_Decl : public Base {
  private:
@@ -264,7 +288,6 @@ class Var_Decl : public Base {
 
   Base *copy() const;
 };
-
 
 // probably only for target code
 class For : public Block_Base {

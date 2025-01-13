@@ -122,6 +122,7 @@ class Base {
   virtual void print(const Statement::Hash_Decl &stmt);
   virtual void print(const Statement::Marker_Decl &stmt);
   virtual void print(const Statement::Table_Decl &stmt);
+  virtual void print(const Statement::SYCL_Buffer_Decl &stmt);
 
 
   virtual void print(const Expr::Base &);
