@@ -21,6 +21,6 @@ stdenv.mkDerivation {
   buildInputs = [boost];
   configureFlags = ["BOOST_LDFLAGS=-L${boost}/lib"];
 
-  # doCheck = true;
-  # checkTarget = "test";
+  doCheck = false;
+  checkTarget = "test";
 }
