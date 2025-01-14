@@ -210,10 +210,7 @@ class Increase : public Base {
     std::string *name;
     std::string *value;
 
-   SYCL_Buffer_Decl(::Type::Base *t, int *d, std::string n, std::string v) {
-    name = new std::string(n);
-    value = new std::string(d);
-   }
+   SYCL_Buffer_Decl(::Type::Base *t, int *d, std::string *n, std::string *v);
 
    void print(Printer::Base &p) const;
  };

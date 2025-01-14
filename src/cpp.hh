@@ -34,6 +34,7 @@
 #include "printer.hh"
 #include "codegen.hh"
 
+#include "statement.hh"
 #include "table.hh"
 #include "symbol_fwd.hh"
 #include "para_decl_fwd.hh"
@@ -149,6 +150,7 @@ class Cpp : public Base {
     void print(const Statement::Backtrace_NT_Decl &stmt);
     void print(const Statement::Hash_Decl &stmt);
     void print(const Statement::Marker_Decl &stmt);
+    void print(const Statement::SYCL_Buffer_Decl &stmt);
 
     void print(const Fn_Def &fn_def);
     void print(const Operator &op);
