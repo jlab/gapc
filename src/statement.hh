@@ -206,11 +206,11 @@ class Increase : public Base {
  class SYCL_Buffer_Decl : public Base {
   public:
     ::Type::Base *type;
-    int *dimension;
-    std::string *name;
-    std::string *value;
+    int dimension;
+    std::string name;
+    std::string value;
 
-   SYCL_Buffer_Decl(::Type::Base *t, int *d, std::string *n, std::string *v);
+   SYCL_Buffer_Decl(::Type::Base *t, int d, std::string n, std::string v);
 
    void print(Printer::Base &p) const;
  };

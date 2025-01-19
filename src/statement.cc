@@ -68,9 +68,8 @@ Statement::Var_Decl::Var_Decl(::Type::Base *t, std::string *n, Expr::Base *e)
   : Base(VAR_DECL), type(t), name(n), rhs(e) {
 }
 
-Statement::SYCL_Buffer_Decl::SYCL_Buffer_Decl(::Type::Base *t, int *d, std::string &n, std::string &v)
-  : Base(CUSTOMCODE), type(t), name(n), dimension(d), value(v) {
-
+Statement::SYCL_Buffer_Decl::SYCL_Buffer_Decl(::Type::Base *t, int d, std::string n, std::string v)
+  : Base(BUFFER_DECL), type(t), name(n), dimension(d), value(v) {
    }
 
 Statement::Var_Decl *Statement::Var_Decl::clone() const {

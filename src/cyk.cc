@@ -1302,8 +1302,8 @@ Fn_Def *print_CYK(const AST &ast) {
     std::string name = "test";
     std::string value = "test_value";
 
-    fn_cyk->stmts.push_back(new Statement::Var_Decl(new Type::Int, "test", new Expr::Const(0)));
-    fn_cyk->stmts.push_back(new Statement::SYCL_Buffer_Decl(new Type::Int, &dimension, &name, &value));
+    fn_cyk->stmts.push_back(new Statement::Var_Decl(new Type::Int(), "test", new Expr::Const(0)));
+    fn_cyk->stmts.push_back(new Statement::SYCL_Buffer_Decl(new Type::Int, dimension, name, value));
     fn_cyk->stmts.push_back(new Statement::CustomCode("#pragma omp parallel // test"));
     
     Statement::Block *blk_parallel = new Statement::Block();
