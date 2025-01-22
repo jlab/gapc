@@ -150,6 +150,8 @@ class Cpp : public Base {
     void print(const Statement::Backtrace_NT_Decl &stmt);
     void print(const Statement::Hash_Decl &stmt);
     void print(const Statement::Marker_Decl &stmt);
+
+    void print(const Statement::SYCL_Submit_Kernel &stmt);
     void print(const Statement::SYCL_Buffer_Decl &stmt);
 
     void print(const Fn_Def &fn_def);
