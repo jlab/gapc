@@ -33,18 +33,6 @@
 
 #include "var_acc.hh"
 
-void Printer::CC::print(const Statement::SYCL_Buffer_Decl &stmt) {
-  assert(stmt.type);
-  assert(stmt.dimension);
-  assert(stmt.name);
-  assert(stmt.value);
-
-  stream << indent() << 
-    "sycl::buffer<" << *stmt.type << "," << *stmt.dimension << "> " <<
-    *stmt.name << "(sycl::range<" << *stmt.dimension << ">" << 
-    "(" << *stmt.value << "));" << endl;
-}
-
 void Printer::CC::print(const std::list<Statement::Base*> &stmts) {
   stream << indent() << '{' << endl;
   inc_indent();
