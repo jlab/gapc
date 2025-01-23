@@ -43,12 +43,10 @@
 
 // see also http://www.fefe.de/intof.html
 inline bool mult_uint32_t(uint32_t a, uint32_t b, uint32_t &c) {
-  uint64_t x = static_cast<uint64_t>(a * b);
-  if (x > 0xffffffff) {
-    return false;
-  }
-  c = x & 0xffffffff;
-  return true;
+  /* Update 20150422: clang and gcc 5 have builtins now for this, look for
+     __builtin_add_overflow and __builtin_mul_overflow in the documentation.
+    That makes these macros obsolete. */
+  return !__builtin_mul_overflow(a, b, &c);
 }
 
 
