@@ -202,7 +202,7 @@ Base &operator<<(Base &p, const Statement::Foreach &b) {
   return p;
 }
 
-      Base &operator<<(Base &p, const Statement::Sorter &b) {
+Base &operator<<(Base &p, const Statement::Sorter &b) {
   p.print(b);
   return p;
 }
