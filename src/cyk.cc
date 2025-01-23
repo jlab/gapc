@@ -22,6 +22,10 @@
 }}} */
 
 #include "cyk.hh"
+#include <tuple>
+#include <vector>
+#include <list>
+#include <string>
 
 static const char *MUTEX = "mutex";
 static const char *VARNAME_OuterLoop1 = "outer_loop_1_idx";

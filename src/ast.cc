@@ -25,6 +25,10 @@
 #include <sstream>
 #include <map>
 #include <algorithm>
+#include <vector>
+#include <utility>
+#include <list>
+#include <string>
 
 #include "ast.hh"
 #include "log.hh"

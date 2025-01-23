@@ -22,6 +22,7 @@
 }}} */
 
 #include <string>
+#include <list>
 #include "backtrack_base.hh"
 #include "type.hh"
 #include "product.hh"

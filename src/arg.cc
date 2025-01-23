@@ -23,6 +23,7 @@
 
 #include "arg.hh"
 
+#include <string>
 #include "hashtable.hh"
 #include "log.hh"
 #include "loc.hh"

@@ -25,6 +25,9 @@
 #include <set>
 #include <tuple>
 #include <utility>
+#include <vector>
+#include <string>
+#include <list>
 #include <boost/tokenizer.hpp>
 
 #include "cpp.hh"
@@ -2189,9 +2192,6 @@ void Printer::Cpp::header_footer(const AST &ast) {
   print_run_fn(ast);
   print_stats_fn(ast);
 }
-
-
-#include "version.hh"
 
 
 void Printer::Cpp::print_id() {

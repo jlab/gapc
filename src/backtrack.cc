@@ -22,6 +22,7 @@
 }}} */
 
 #include <string>
+#include <list>
 #include "backtrack.hh"
 
 #include "algebra.hh"

@@ -23,6 +23,9 @@
 
 
 #include <cassert>
+#include <utility>
+#include <iostream>
+#include <string>
 
 #include "algebra.hh"
 #include "log.hh"
