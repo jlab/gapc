@@ -22,6 +22,7 @@
 }}} */
 
 #include <list>
+#include <string>
 #include "instance.hh"
 #include "product.hh"
 #include "fn_def.hh"

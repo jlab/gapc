@@ -23,6 +23,9 @@
 
 #include <sstream>
 #include <algorithm>
+#include <vector>
+#include <string>
+#include <list>
 
 #include "tablegen.hh"
 #include "expr.hh"

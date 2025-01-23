@@ -23,6 +23,9 @@
 
 #include <sstream>
 #include <cassert>
+#include <iostream>
+#include <list>
+#include <string>
 
 #include "product.hh"
 #include "log.hh"

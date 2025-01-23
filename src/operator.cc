@@ -22,6 +22,7 @@
 }}} */
 
 #include "operator.hh"
+#include <string>
 #include "para_decl.hh"
 #include "statement.hh"
 

@@ -22,6 +22,8 @@
 }}} */
 
 #include <algorithm>
+#include <string>
+#include <list>
 
 #include "fn_arg.hh"
 

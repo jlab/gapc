@@ -25,7 +25,8 @@
 #include "log.hh"
 
 #include <algorithm>
-
+#include <iostream>
+#include <string>
 
 Log::Log() : seen_errs(false), debug_mode(false), error_count(0),
               logLevel(NORMAL), out(&std::cerr) {

@@ -24,6 +24,8 @@
 #include <utility>
 #include <list>
 #include <vector>
+#include <iostream>
+#include <string>
 
 #include "signature.hh"
 #include "input.hh"

@@ -23,6 +23,7 @@
 
 
 #include "runtime.hh"
+#include <vector>
 
 Runtime::Asm::Poly & Runtime::Asm::Poly::operator=(const Runtime::Poly &p) {
   if (p.is_exp()) {

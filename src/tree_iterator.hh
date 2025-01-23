@@ -31,13 +31,13 @@
 
 namespace Tree {
 
-  template <typename S, class T> inline S *left(T &t) {
-    return t.left();
-  }
+template <typename S, class T> inline S *left(T &t) {
+  return t.left();
+}
 
-  template <typename S, class T> inline S *right(T &t) {
-    return t.right();
-  }
+template <typename S, class T> inline S *right(T &t) {
+  return t.right();
+}
 
 template <class Base, class Two>
 class Iterator {
