@@ -47,6 +47,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdbool.h>
+#include <cstdio>
 
 #include "ViennaRNA/datastructures/basic.h"
 
