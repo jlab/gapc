@@ -33,6 +33,7 @@ extern "C" {
 #include <exception>
 #include <cmath>
 #include <vector>
+#include <cstdio>
 
 #include "sequence.hh"
 #include "subsequence.hh"

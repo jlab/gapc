@@ -166,14 +166,13 @@ bool operator()(const T &a, const T &b) const {
 };
 
 template <typename T,
-          class Inspector = Default_Inspector<T>,
-          typename U = uint32_t,
-          typename Hash_Policy = Multhash,
-          template<typename> class Resize_Policy = Size2pow,
-          typename Shrink_Policy = HASH_SHRINK,
-          typename Stat_Policy = HASH_STAT,
-          unsigned int load_factor = HASH_LOAD_FACTOR
-          >
+class Inspector = Default_Inspector<T>,
+typename U = uint32_t,
+typename Hash_Policy = Multhash,
+template<typename> class Resize_Policy = Size2pow,
+typename Shrink_Policy = HASH_SHRINK,
+typename Stat_Policy = HASH_STAT,
+unsigned int load_factor = HASH_LOAD_FACTOR>
 class Set {
  private:
 #if defined(CHECKPOINTING_INTEGRATED)

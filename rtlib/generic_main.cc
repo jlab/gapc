@@ -30,6 +30,7 @@
   #include <iomanip>
   #include <limits>
 #endif
+#include <algorithm>
 
 #include "rtlib/string.hh"
 #include "rtlib/list.hh"

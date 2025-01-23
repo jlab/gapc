@@ -709,22 +709,20 @@ class Ref {
 };
 
 template <typename Refcount>
-inline std::ofstream &operator<<(std::ofstream &o,
-                                 const Ref<Refcount>& r) {
+inline std::ofstream &operator<<(std::ofstream &o, const Ref<Refcount>& r) {
   r.put(o);
   return o;
 }
 
 template <typename Refcount>
 inline std::stringstream &operator<<(std::stringstream &o,
-                                     const Ref<Refcount>& r) {
+const Ref<Refcount>& r) {
   r.put(o);
   return o;
 }
 
 template <typename Refcount>
-inline std::ostream &operator<<(std::ostream &o,
-                                const Ref<Refcount>& r) {
+inline std::ostream &operator<<(std::ostream &o, const Ref<Refcount>& r) {
   r.put(o);
   return o;
 }
