@@ -23,9 +23,9 @@
 
 #include "transform_gap_to_cfg.hh"
 
-#include <boost/format.hpp>
 #include <list>
 #include <string>
+#include <boost/format.hpp>
 
 #include "../const.hh"
 #include "algebra_function_info_attribute.hh"

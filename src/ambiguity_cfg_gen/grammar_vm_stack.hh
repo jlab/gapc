@@ -66,8 +66,8 @@ class GrammarVMStack {
 // This enumeration defines the possible subclass types a
 // GrammarVMStackElement may have.
 enum GrammarVMStackElementType {PRODUCTION_FRAGMENT_ELEMENT,
-  NAMED_ACCESS_ELEMENT, VAR_DECL_INFO_ELEMENT,
-  MULTI_PRODUCTION_FRAGMENT_ELEMENT, CONTEXT_ELEMENT};
+NAMED_ACCESS_ELEMENT, VAR_DECL_INFO_ELEMENT,
+MULTI_PRODUCTION_FRAGMENT_ELEMENT, CONTEXT_ELEMENT};
 
 
 // The grammar VM stack element is a wrapper class that

@@ -25,9 +25,9 @@
 #include "grammar_vm_function_compiler.hh"
 
 #include <cassert>
-#include <boost/format.hpp>
 #include <string>
 #include <list>
+#include <boost/format.hpp>
 
 #include "../const.hh"
 #include "../hashtable.hh"
