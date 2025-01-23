@@ -24,6 +24,8 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MAIN
 #define BOOST_TEST_MODULE vector_sparse
+#include <utility>
+#include <algorithm>
 #include <boost/test/unit_test.hpp>
 #include "macros.hh"
 

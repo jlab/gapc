@@ -30,6 +30,7 @@
 #define BOOST_TEST_MODULE rtlib
 #include <algorithm>
 #include <iostream>
+#include <utility>
 
 #include <boost/test/unit_test.hpp>
 

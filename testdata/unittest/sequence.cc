@@ -28,6 +28,7 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MAIN
 #define BOOST_TEST_MODULE sequence
+#include <string>
 #include <string.h>
 #include <boost/test/unit_test.hpp>
 

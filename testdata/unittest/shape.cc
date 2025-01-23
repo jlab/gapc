@@ -26,6 +26,7 @@
 #define BOOST_TEST_MODULE shape
 #include <iostream>
 #include <ctime>
+#include <string>
 #include <boost/test/unit_test.hpp>
 
 #include "macros.hh"
