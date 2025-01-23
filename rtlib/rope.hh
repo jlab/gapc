@@ -800,7 +800,7 @@ inline void append_latex(rope::Ref<X> &str, const char *s, int slen) {
 template<class T, typename X>
 inline void append(rope::Ref<X> &str, char c, T i) {
   assert(i >= 0);
-  str.append(c, uint32_t(i));
+  str.append(c, static_cast<uint32_t>(i));
 }
 
 template<typename X>
@@ -972,7 +972,7 @@ namespace std {
 template <>
 inline
 void swap<rope::Ref<rope::Ref_Count> >(
-  rope::Ref<rope::Ref_Count> &a, rope::Ref<rope::Ref_Count> &b) {
+rope::Ref<rope::Ref_Count> &a, rope::Ref<rope::Ref_Count> &b) {
   a.swap(b);
 }
 

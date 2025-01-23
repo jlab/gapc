@@ -603,16 +603,16 @@ class Quadratic {
 };  // namespace
 
 #ifdef WINDOW_MODE
-  template <typename T,
-  template<typename, typename> class Mode = Unger,
-  typename pos_type = unsigned int>
+template <typename T,
+template<typename, typename> class Mode = Unger,
+typename pos_type = unsigned int>
 class Constant : public Quadratic<T, Mode, pos_type> {
  public:
     Constant() : Quadratic<T, Mode, pos_type>() {}
 };
-  template <typename L, typename T,
-  template<typename, typename> class Mode = Unger,
-  typename pos_type = unsigned int>
+template <typename L, typename T,
+template<typename, typename> class Mode = Unger,
+typename pos_type = unsigned int>
 class Linear : public Quadratic<T, Mode, pos_type> {
  public:
     Linear() : Quadratic<T, Mode, pos_type>() {}

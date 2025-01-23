@@ -173,7 +173,7 @@ struct djb_chars {
       }
       break;
       //
-      if (*x & uint64_t(-1)  >> (64-2))
+      if (*x & static_cast<uint64_t>(-1)  >> (64-2))
         ++x;
       else
         break;
@@ -185,8 +185,8 @@ struct sdbm {
   uint32_t initial() const { return 0; }
 
   void next(uint32_t &hash, uint64_t t) const {
-    hash = uint32_t(t) + (hash << 6) + (hash << 16) - hash;
-    hash = uint32_t(t >> 32) + (hash << 6) + (hash << 16) - hash;
+    hash = static_cast<uint32_t>(t) + (hash << 6) + (hash << 16) - hash;
+    hash = static_cast<uint32_t>(t >> 32) + (hash << 6) + (hash << 16) - hash;
   }
   template<typename T>
   void next(uint32_t &hash, T t) const {
