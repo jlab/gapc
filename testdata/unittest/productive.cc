@@ -29,7 +29,7 @@
 #define BOOST_TEST_MAIN
 #define BOOST_TEST_MODULE productive
 #include <sstream>
-Add #include <string>
+#include <string>
 #include <boost/test/unit_test.hpp>
 
 // include everything - no linking needed ...

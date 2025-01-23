@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(runtime_both) {
   CHECK_EQ(b, a);
   a = Runtime::Asm::Poly(23);
   b = Runtime::Poly(1, 23);
-  CHECK_EQ(b.degree(), uint32_t(23));
+  CHECK_EQ(b.degree(), static_cast<uint32_t>(23));
   CHECK_EQ(b, a);
   CHECK_EQ(a, b);
   b = Runtime::Poly(23, 3);

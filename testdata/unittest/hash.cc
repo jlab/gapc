@@ -83,13 +83,13 @@ BOOST_AUTO_TEST_CASE(bits) {
 
 BOOST_AUTO_TEST_CASE(next_power) {
   uint32_t t = static_cast<uint32_t>(1);
-  CHECK_EQ(size_to_next_power(t), uint32_t(1));
+  CHECK_EQ(size_to_next_power(t), static_cast<uint32_t>(1));
   uint32_t u = static_cast<uint32_t>(42);
-  CHECK_EQ(size_to_next_power(u), uint32_t(64));
+  CHECK_EQ(size_to_next_power(u), static_cast<uint32_t>(64));
   uint32_t v = static_cast<uint32_t>(128);
-  CHECK_EQ(size_to_next_power(v), uint32_t(128));
+  CHECK_EQ(size_to_next_power(v), static_cast<uint32_t>(128));
   uint32_t w = static_cast<uint32_t>(1) << 31;
-  CHECK_EQ(size_to_next_power(w), uint32_t(1) << 31);
+  CHECK_EQ(size_to_next_power(w), static_cast<uint32_t>(1) << 31);
 }
 
 BOOST_AUTO_TEST_CASE(rehash) {
