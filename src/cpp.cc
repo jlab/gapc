@@ -51,6 +51,8 @@
 #include "options.hh"
 #include "outside/codegen.hh"
 #include "cyk.hh"
+#include "version.hh"
+
 
 static std::string make_comments(const std::string &s, const std::string &c) {
   std::ostringstream o;
