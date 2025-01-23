@@ -23,6 +23,7 @@
 
 #include "new.hh"
 
+#include <list>
 #include "../type.hh"
 
 void Expr::New::put(std::ostream &s) const {

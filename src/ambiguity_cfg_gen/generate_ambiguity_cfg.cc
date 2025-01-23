@@ -23,7 +23,8 @@
 
 #include "generate_ambiguity_cfg.hh"
 
-
+#include <list>
+#include <string>
 #include <boost/format.hpp>
 
 #include "../const.hh"

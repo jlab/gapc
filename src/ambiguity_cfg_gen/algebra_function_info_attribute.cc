@@ -21,6 +21,8 @@
 
 }}} */
 
+#include <string>
+#include <list>
 #include "algebra_function_info_attribute.hh"
 
 

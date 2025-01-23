@@ -22,6 +22,8 @@
 }}} */
 
 #include <vector>
+#include <list>
+#include <string>
 #include "fn_call.hh"
 
 #include "../printer.hh"

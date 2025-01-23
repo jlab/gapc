@@ -25,6 +25,7 @@
 #include <list>
 #include <string>
 #include <utility>
+#include <iostream>
 
 #include "create_specialized_grammar.hh"
 

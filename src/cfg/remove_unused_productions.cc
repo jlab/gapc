@@ -23,7 +23,8 @@
 
 #include "remove_unused_productions.hh"
 
-
+#include <set>
+#include <string>
 #include <iostream>
 
 

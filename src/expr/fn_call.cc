@@ -23,7 +23,11 @@
 
 #include "fn_call.hh"
 
-
+#include <iostream>
+#include <map>
+#include <vector>
+#include <string>
+#include <list>
 #include "../filter.hh"
 
 #include "../fn_decl.hh"

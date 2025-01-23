@@ -22,6 +22,7 @@
 }}} */
 
 #include <cstdlib>
+#include <list>
 
 #include "base.hh"
 

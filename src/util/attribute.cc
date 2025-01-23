@@ -23,6 +23,7 @@
 
 
 #include "attribute.hh"
+#include <string>
 
 
 Util::Attribute::Attribute(std::string kindOfName)

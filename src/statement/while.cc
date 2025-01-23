@@ -28,8 +28,7 @@
 
 namespace Statement {
 
-While::While(Expr::Base *e, const Loc &l)
-  : Block_Base(WHILE), expr_(e) {
+While::While(Expr::Base *e, const Loc &l) : Block_Base(WHILE), expr_(e) {
 }
 
 void While::print(Printer::Base &p) const {

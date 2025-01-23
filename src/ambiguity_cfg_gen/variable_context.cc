@@ -24,6 +24,8 @@
 #include "variable_context.hh"
 
 #include <cassert>
+#include <vector>
+#include <string>
 
 #include "../cfg/cfg.hh"
 #include "../log.hh"

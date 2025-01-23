@@ -39,7 +39,7 @@ namespace AmbiguityCFG {
 // The base class VarInfoItem needs no constant itself because
 // no instance can be created directly from that class.
 enum InfoType {VAR_DECL_INFO, MULTI_VAR_DECL_INFO, RECORD_DECL_INFO,
-               MULTI_RECORD_DECL_INFO};
+MULTI_RECORD_DECL_INFO};
 
 
 // The base class of all variable information items. It is

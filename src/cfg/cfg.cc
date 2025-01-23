@@ -23,8 +23,11 @@
 
 #include "cfg.hh"
 
-#include "boost/format.hpp"
+#include <string>
+#include <list>
+#include <vector>
 
+#include "boost/format.hpp"
 #include "../log.hh"
 
 

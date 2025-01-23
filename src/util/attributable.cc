@@ -22,6 +22,8 @@
 }}} */
 
 #include "attributable.hh"
+#include <map>
+#include <string>
 
 
 Util::Attributable::Attributable() {

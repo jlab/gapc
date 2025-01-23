@@ -22,6 +22,7 @@
 }}} */
 
 #include "multi.hh"
+#include <list>
 
 #include "../printer.hh"
 

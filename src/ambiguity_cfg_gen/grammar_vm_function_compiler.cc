@@ -26,6 +26,8 @@
 
 #include <cassert>
 #include <boost/format.hpp>
+#include <string>
+#include <list>
 
 #include "../const.hh"
 #include "../hashtable.hh"

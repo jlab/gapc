@@ -22,6 +22,7 @@
 }}} */
 
 #include <string>
+#include <list>
 #include "table_decl.hh"
 
 #include "../printer.hh"
@@ -31,26 +32,25 @@
 namespace Statement {
 
 Table_Decl::Table_Decl(
-    Symbol::NT &nt,
-    ::Type::Base *t, std::string *n,
-        bool c,
-        Fn_Def *fn_is_tab,
-        Fn_Def *fn_tab,
-        Fn_Def *fn_get_tab,
-        Fn_Def *fn_size,
-        const std::list<Statement::Var_Decl*> &ns
-        )
-  : Base(TABLE_DECL),
-  nt_(nt),
-  type_(t),
-  pos_type_(0),
-  name_(n), cyk_(c),
-  fn_is_tab_(fn_is_tab),
-  fn_untab_(0),
-  fn_tab_(fn_tab),
-  fn_get_tab_(fn_get_tab),
-  fn_size_(fn_size),
-  ns_(ns) {
+Symbol::NT &nt,
+::Type::Base *t, std::string *n,
+bool c,
+Fn_Def *fn_is_tab,
+Fn_Def *fn_tab,
+Fn_Def *fn_get_tab,
+Fn_Def *fn_size,
+const std::list<Statement::Var_Decl*> &ns)
+: Base(TABLE_DECL),
+nt_(nt),
+type_(t),
+pos_type_(0),
+name_(n), cyk_(c),
+fn_is_tab_(fn_is_tab),
+fn_untab_(0),
+fn_tab_(fn_tab),
+fn_get_tab_(fn_get_tab),
+fn_size_(fn_size),
+ns_(ns) {
   // FIXME?
   pos_type_ = new ::Type::Size();
 }
