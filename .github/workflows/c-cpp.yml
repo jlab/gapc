@@ -23,7 +23,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
     - name: Install dependencies
-      run: brew install bison@2.7 cmake boost gsl gnu-sed libomp gmp cabal-install ghc
+      run: brew install bison@3.8 cmake boost gsl gnu-sed libomp gmp cabal-install ghc
     - name: update cabal
       run: cabal update
     - name: add random Haskell lib
