@@ -44,7 +44,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: parser
-        path: src/parser.* src/lexer.*
+        path: src/
     - name: make
       run: make -j 3
     - name: make install
