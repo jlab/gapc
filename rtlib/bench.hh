@@ -80,22 +80,17 @@ std::ostream &operator<<(std::ostream &o, const Bench &b) {
 #endif
 
 namespace gapc {
-
-  inline
-    void add_event(const std::string &s) {
+inline void add_event(const std::string &s) {
 #ifdef STATS
-      Singleton<Bench>::ref().add_event(s);
+  Singleton<Bench>::ref().add_event(s);
 #endif
-    }
+}
 
-  template <typename O>
-    inline
-    void print_events(O &o) {
+template <typename O> inline void print_events(O &o) {
 #ifdef STATS
-      o << Singleton<Bench>::ref();
+  o << Singleton<Bench>::ref();
 #endif
-    }
-
+}
 }  // namespace gapc
 
 #endif  // RTLIB_BENCH_HH_

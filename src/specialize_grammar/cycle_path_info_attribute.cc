@@ -23,6 +23,7 @@
 
 #include <utility>
 #include <string>
+#include <list>
 #include "cycle_path_info_attribute.hh"
 
 

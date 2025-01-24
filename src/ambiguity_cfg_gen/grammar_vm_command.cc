@@ -22,6 +22,8 @@
 }}} */
 
 #include "grammar_vm_command.hh"
+#include <string>
+#include <list>
 
 
 AmbiguityCFG::GrammarVMCommand::GrammarVMCommand(

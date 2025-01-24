@@ -23,6 +23,8 @@
 
 
 #include "grammar_vm_code.hh"
+#include <string>
+#include <list>
 
 
 AmbiguityCFG::GrammarVMCode::GrammarVMCode(

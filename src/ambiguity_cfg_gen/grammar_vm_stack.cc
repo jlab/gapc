@@ -25,6 +25,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <vector>
 
 
 AmbiguityCFG::GrammarVMStack::GrammarVMStack() {
@@ -64,7 +65,7 @@ void AmbiguityCFG::GrammarVMStack::reset() {
 
 
 AmbiguityCFG::GrammarVMStackElement::GrammarVMStackElement(
-  AmbiguityCFG::GrammarVMStackElementType t)
+AmbiguityCFG::GrammarVMStackElementType t)
   : type(t) {
 }
 

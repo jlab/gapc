@@ -23,7 +23,7 @@
 
 
 #include "table.hh"
-
+#include <string>
 
 
 void Table::print(std::ostream &s) const {

@@ -24,6 +24,10 @@
 
 #include <algorithm>
 #include <functional>
+#include <list>
+#include <vector>
+#include <iostream>
+#include <string>
 
 #include "symbol.hh"
 #include "signature.hh"

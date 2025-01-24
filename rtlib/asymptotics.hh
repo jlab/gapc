@@ -27,11 +27,11 @@
 #include <cmath>
 
 namespace Asymptotics {
-  template <typename T>
-  T
-  inline shape5(T length) {
-    return std::pow(1.108, static_cast<double>(length));
-  }
+template <typename T>
+T
+inline shape5(T length) {
+  return std::pow(1.108, static_cast<double>(length));
+}
 }
 
 #endif  // RTLIB_ASYMPTOTICS_HH_

@@ -22,6 +22,7 @@
 }}} */
 
 #include "cycle_attribute.hh"
+#include <set>
 
 
 Util::CycleAttribute::CycleAttribute(std::set<CycleSet*> cycleSets)

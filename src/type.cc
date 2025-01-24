@@ -23,6 +23,9 @@
 
 
 #include <cassert>
+#include <list>
+#include <utility>
+#include <string>
 
 #include "type.hh"
 #include "log.hh"
@@ -32,30 +35,30 @@
 
 namespace Type {
 
-  // Sets the type reference of the first parameter to
-  // the type the second parameter points to, under the
-  // condition, that both types are compatible. If the
-  // first type instance is NULL, it is overwritten with
-  // the second instance without checking both types.
-  bool set_if_compatible(Base * &a, Base *b, const Loc &l1, const Loc &l2) {
-    if (!a && !b) {
-      return true;
-    }
-    if (!a) {
-      a = b;
-      return true;
-    }
-    bool r = a->is_eq(*b);
-    if (!r) {
-      std::ostringstream o1;
-      o1 << "Type " << *a << " is not compatible with";
-      Log::instance()->error(l1, o1.str());
-      std::ostringstream o2;
-      o2 << "data type " << *b << '.';
-      Log::instance()->error_continue(l2, o2.str());
-    }
-    return r;
+// Sets the type reference of the first parameter to
+// the type the second parameter points to, under the
+// condition, that both types are compatible. If the
+// first type instance is NULL, it is overwritten with
+// the second instance without checking both types.
+bool set_if_compatible(Base * &a, Base *b, const Loc &l1, const Loc &l2) {
+  if (!a && !b) {
+    return true;
   }
+  if (!a) {
+    a = b;
+    return true;
+  }
+  bool r = a->is_eq(*b);
+  if (!r) {
+    std::ostringstream o1;
+    o1 << "Type " << *a << " is not compatible with";
+    Log::instance()->error(l1, o1.str());
+    std::ostringstream o2;
+    o2 << "data type " << *b << '.';
+    Log::instance()->error_continue(l2, o2.str());
+  }
+  return r;
+}
 
 }  // namespace Type
 

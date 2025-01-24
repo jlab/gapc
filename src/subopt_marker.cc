@@ -22,6 +22,7 @@
 }}} */
 
 #include <string>
+#include <list>
 #include "subopt_marker.hh"
 
 #include "algebra.hh"

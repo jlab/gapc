@@ -25,6 +25,9 @@
 #include <set>
 #include <tuple>
 #include <utility>
+#include <vector>
+#include <string>
+#include <list>
 #include <boost/tokenizer.hpp>
 
 #include "cpp.hh"
@@ -51,6 +54,8 @@
 #include "options.hh"
 #include "outside/codegen.hh"
 #include "cyk.hh"
+#include "version.hh"
+
 
 static std::string make_comments(const std::string &s, const std::string &c) {
   std::ostringstream o;
@@ -2187,9 +2192,6 @@ void Printer::Cpp::header_footer(const AST &ast) {
   print_run_fn(ast);
   print_stats_fn(ast);
 }
-
-
-#include "version.hh"
 
 
 void Printer::Cpp::print_id() {

@@ -24,6 +24,9 @@
 
 #include <iostream>
 #include <algorithm>
+#include <vector>
+#include <list>
+#include <string>
 
 #include "alt.hh"
 
@@ -527,7 +530,7 @@ const Runtime::Asm::Poly & Grammar::runtime_by_width() {
       r = t;
     }
   }
-  asm_rt =  Runtime::Asm::Poly(2 + uint32_t(r) - 1);
+  asm_rt =  Runtime::Asm::Poly(2 + static_cast<uint32_t>(r) - 1);
   return asm_rt;
 }
 

@@ -82,7 +82,7 @@ class Base {
 class Number : public Base {
  protected:
   Number(const std::string &n, Type t, const Loc &l) : Base(t, l) {
-    uint32_t i = uint32_t(n.length());
+    uint32_t i = static_cast<uint32_t>(n.length());
     ys.set(i, i);
   }
 
@@ -188,7 +188,7 @@ class String : public Base {
 
 
   String(std::string *n, const Loc &l) : Base(STRING, l), s(n) {
-    uint32_t i = uint32_t(n->length());
+    uint32_t i = static_cast<uint32_t>(n->length());
     ys.set(i, i);
     datatype = new ::Type::String();
   }

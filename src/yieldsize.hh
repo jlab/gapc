@@ -96,7 +96,7 @@ class Poly {
 
     bool operator==(int a) const {
       assert(a >= 0);
-      return !n && i == (uint32_t) a;
+      return !n && i == static_cast<uint32_t>(a);
     }
 
     bool operator!=(const Poly &p) const {
@@ -105,7 +105,7 @@ class Poly {
 
     bool operator>(int a) const {
       assert(a >= 0);
-      uint32_t b = (uint32_t) a;
+      uint32_t b = static_cast<uint32_t>(a);
       if (n) {
         return true;
       }

@@ -28,6 +28,7 @@
 #include <cassert>
 #include <exception>
 #include <memory>
+#include <utility>
 #include <boost/program_options.hpp>
 
 #include "instance.hh"

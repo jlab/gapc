@@ -23,6 +23,7 @@
 
 
 #include "const.hh"
+#include <string>
 #include "log.hh"
 
 Const::Char::Char(const std::string &n, const Loc &l)

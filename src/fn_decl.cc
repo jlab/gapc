@@ -23,6 +23,9 @@
 
 
 #include "fn_decl.hh"
+#include <utility>
+#include <string>
+#include <list>
 
 #include "log.hh"
 

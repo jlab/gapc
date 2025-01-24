@@ -25,6 +25,8 @@
 #include <functional>
 #include <vector>
 #include <utility>
+#include <string>
+#include <list>
 
 #include "alt.hh"
 
@@ -2454,7 +2456,7 @@ bool Alt::Simple::calls_terminal_parser() const {
 
 namespace Alt {
 Multi::Multi(const std::list<Alt::Base*> &t, const Loc &l) :
-  Base(MULTI, l), list(t) {
+Base(MULTI, l), list(t) {
 }
 
 

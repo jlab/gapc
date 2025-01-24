@@ -111,7 +111,7 @@ class CFG : public Util::Attributable {
 // This enum contains all types that belong to the Base-hirarchy.
 // It is part of the simple reflection implemenation.
 enum Type {BASE, SNAPSHOT, EPSILON, TERMINAL, NONTERMINAL, REGULAR_EXPRESSION,
-           PRODUCTION_SEQUENCE, PRODUCTION_ALTERNATIVE, BASE_WRAPPER};
+PRODUCTION_SEQUENCE, PRODUCTION_ALTERNATIVE, BASE_WRAPPER};
 
 
 // The common base class of terminal and non-terminal symbols. It serves

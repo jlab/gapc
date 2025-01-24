@@ -23,6 +23,9 @@
 
 #include <utility>
 #include <algorithm>
+#include <vector>
+#include <list>
+#include <string>
 
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/adjacency_list.hpp>

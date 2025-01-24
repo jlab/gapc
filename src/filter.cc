@@ -23,6 +23,7 @@
 
 
 #include "filter.hh"
+#include <string>
 
 #include "log.hh"
 #include "expr.hh"

@@ -30,6 +30,7 @@
 #include <list>
 #include <utility>
 #include <sstream>
+#include <iostream>
 #include "printer.hh"
 #include "symbol.hh"
 #include "statement/table_decl.hh"

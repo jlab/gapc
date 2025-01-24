@@ -26,6 +26,7 @@
 #define BOOST_TEST_MODULE shape
 #include <iostream>
 #include <ctime>
+#include <string>
 #include <boost/test/unit_test.hpp>
 
 #include "macros.hh"
@@ -204,7 +205,7 @@ BOOST_AUTO_TEST_CASE(shape_set) {
   std::set<Shape> s;
   s.insert(g);
   s.insert(h);
-  CHECK_EQ(s.size(), uint32_t(2));
+  CHECK_EQ(s.size(), static_cast<uint32_t>(2));
   std::set<Shape>::iterator i = s.begin();
   std::ostringstream x;
   x << *i;

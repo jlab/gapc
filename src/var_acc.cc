@@ -23,6 +23,7 @@
 
 #include <list>
 #include <utility>
+#include <string>
 #include "var_acc.hh"
 
 #include "statement.hh"

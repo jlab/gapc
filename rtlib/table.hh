@@ -128,9 +128,8 @@ class CYK<pos_type, TAG::CONSTANT> : public Unger<pos_type, TAG::CONSTANT> {
 
 
 #ifndef WINDOW_MODE
-template <typename T,
-         template<typename, typename> class Mode = Unger,
-         typename pos_type = unsigned int>
+template <typename T, template<typename, typename> class Mode = Unger,
+typename pos_type = unsigned int>
 class Constant {
  private:
     pos_type n;
@@ -242,8 +241,8 @@ struct Lin<Right, pos_type> {
 
 #ifndef WINDOW_MODE
 template <typename L, typename T,
-         template<typename, typename> class Mode = Unger,
-         typename pos_type = unsigned int>
+template<typename, typename> class Mode = Unger,
+typename pos_type = unsigned int>
 class Linear {
  private:
     pos_type n;
@@ -426,8 +425,8 @@ struct WindowIndex {
 };
 
 template <typename T,
-         template<typename, typename> class Mode = Unger,
-         typename pos_type = unsigned int, class Index = DiagIndex<pos_type> >
+template<typename, typename> class Mode = Unger,
+typename pos_type = unsigned int, class Index = DiagIndex<pos_type> >
 class Quadratic {
  private:
     pos_type n;
@@ -604,16 +603,16 @@ class Quadratic {
 };  // namespace
 
 #ifdef WINDOW_MODE
-  template <typename T,
-           template<typename, typename> class Mode = Unger,
-           typename pos_type = unsigned int>
+template <typename T,
+template<typename, typename> class Mode = Unger,
+typename pos_type = unsigned int>
 class Constant : public Quadratic<T, Mode, pos_type> {
  public:
     Constant() : Quadratic<T, Mode, pos_type>() {}
 };
-  template <typename L, typename T,
-           template<typename, typename> class Mode = Unger,
-           typename pos_type = unsigned int>
+template <typename L, typename T,
+template<typename, typename> class Mode = Unger,
+typename pos_type = unsigned int>
 class Linear : public Quadratic<T, Mode, pos_type> {
  public:
     Linear() : Quadratic<T, Mode, pos_type>() {}

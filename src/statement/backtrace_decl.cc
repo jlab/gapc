@@ -22,6 +22,8 @@
 }}} */
 
 #include <vector>
+#include <list>
+#include <string>
 #include "backtrace_decl.hh"
 
 #include "../printer.hh"

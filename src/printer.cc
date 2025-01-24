@@ -25,6 +25,8 @@
 #include <cassert>
 #include <cstring>
 #include <algorithm>
+#include <list>
+#include <string>
 
 #include "printer.hh"
 #include "statement.hh"
@@ -144,271 +146,271 @@ void Printer::Base::print(const Var_Acc::Base &va) {
 
 namespace Printer {
 
-  Base &operator<<(Base &p, const std::string &c) {
-    size_t x = std::count(c.begin(), c.end(), '\n');
-    p.line_number += x;
-    p.out << c;
-    return p;
-  }
+Base &operator<<(Base &p, const std::string &c) {
+  size_t x = std::count(c.begin(), c.end(), '\n');
+  p.line_number += x;
+  p.out << c;
+  return p;
+}
 
-  Base &operator<<(Base &p, const char *c) {
-    if (!c)
-      return p;
-    size_t x = std::count(c, c + std::strlen(c), '\n');
-    p.line_number += x;
-    p.out << c;
+Base &operator<<(Base &p, const char *c) {
+  if (!c)
     return p;
-  }
+  size_t x = std::count(c, c + std::strlen(c), '\n');
+  p.line_number += x;
+  p.out << c;
+  return p;
+}
 
 
-  Base &operator<<(Base &p, const Fn_Def &b) {
-    p.print(b);
-    return p;
-  }
-  Base &operator<<(Base &p, const Operator &b) {
-    p.print(b);
-    return p;
-  }
+Base &operator<<(Base &p, const Fn_Def &b) {
+  p.print(b);
+  return p;
+}
+Base &operator<<(Base &p, const Operator &b) {
+  p.print(b);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Statement::Base &b) {
-    p.print(b);
-    return p;
-  }
+Base &operator<<(Base &p, const Statement::Base &b) {
+  p.print(b);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Statement::Var_Decl &b) {
-    p.print(b);
-    return p;
-  }
+Base &operator<<(Base &p, const Statement::Var_Decl &b) {
+  p.print(b);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Statement::Var_Assign &b) {
-    p.print(b);
-    return p;
-  }
+Base &operator<<(Base &p, const Statement::Var_Assign &b) {
+  p.print(b);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Statement::For &b) {
-    p.print(b);
-    return p;
-  }
+Base &operator<<(Base &p, const Statement::For &b) {
+  p.print(b);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Statement::While &b) {
-    p.print(b);
-    return p;
-  }
+Base &operator<<(Base &p, const Statement::While &b) {
+  p.print(b);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Statement::Foreach &b) {
-    p.print(b);
-    return p;
-  }
+Base &operator<<(Base &p, const Statement::Foreach &b) {
+  p.print(b);
+  return p;
+}
 
-        Base &operator<<(Base &p, const Statement::Sorter &b) {
-    p.print(b);
-    return p;
-  }
+Base &operator<<(Base &p, const Statement::Sorter &b) {
+  p.print(b);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Statement::Block &b) {
-    p.print(b);
-    return p;
-  }
+Base &operator<<(Base &p, const Statement::Block &b) {
+  p.print(b);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Statement::Break &b) {
-    p.print(b);
-    return p;
-  }
+Base &operator<<(Base &p, const Statement::Break &b) {
+  p.print(b);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Statement::Decrease &b) {
-    p.print(b);
-    return p;
-  }
+Base &operator<<(Base &p, const Statement::Decrease &b) {
+  p.print(b);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Statement::Increase &b) {
-    p.print(b);
-    return p;
-  }
+Base &operator<<(Base &p, const Statement::Increase &b) {
+  p.print(b);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Statement::Continue &b) {
-    p.print(b);
-    return p;
-  }
+Base &operator<<(Base &p, const Statement::Continue &b) {
+  p.print(b);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Statement::Return &b) {
-    p.print(b);
-    return p;
-  }
+Base &operator<<(Base &p, const Statement::Return &b) {
+  p.print(b);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Statement::Fn_Call &b) {
-    p.print(b);
-    return p;
-  }
+Base &operator<<(Base &p, const Statement::Fn_Call &b) {
+  p.print(b);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Statement::If &b) {
-    p.print(b);
-    return p;
-  }
+Base &operator<<(Base &p, const Statement::If &b) {
+  p.print(b);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Statement::Switch &b) {
-    p.print(b);
-    return p;
-  }
+Base &operator<<(Base &p, const Statement::Switch &b) {
+  p.print(b);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Statement::Backtrace_Decl &b) {
-    p.print(b);
-    return p;
-  }
+Base &operator<<(Base &p, const Statement::Backtrace_Decl &b) {
+  p.print(b);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Statement::Backtrace_NT_Decl &b) {
-    p.print(b);
-    return p;
-  }
+Base &operator<<(Base &p, const Statement::Backtrace_NT_Decl &b) {
+  p.print(b);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Statement::Hash_Decl &b) {
-    p.print(b);
-    return p;
-  }
+Base &operator<<(Base &p, const Statement::Hash_Decl &b) {
+  p.print(b);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Statement::Marker_Decl &b) {
-    p.print(b);
-    return p;
-  }
+Base &operator<<(Base &p, const Statement::Marker_Decl &b) {
+  p.print(b);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Statement::Table_Decl &b) {
-    p.print(b);
-    return p;
-  }
+Base &operator<<(Base &p, const Statement::Table_Decl &b) {
+  p.print(b);
+  return p;
+}
 
-  Base &operator<<(Base &p, const std::list<Statement::Base*> &stmts) {
-    p.print(stmts);
-    return p;
-  }
+Base &operator<<(Base &p, const std::list<Statement::Base*> &stmts) {
+  p.print(stmts);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Expr::Base &b) {
-    p.print(b);
-    return p;
-  }
+Base &operator<<(Base &p, const Expr::Base &b) {
+  p.print(b);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Var_Acc::Base &b) {
-    p.print(b);
-    return p;
-  }
+Base &operator<<(Base &p, const Var_Acc::Base &b) {
+  p.print(b);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Type::Base &b) {
-    p.print(b);
-    return p;
-  }
+Base &operator<<(Base &p, const Type::Base &b) {
+  p.print(b);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Type::List &t) {
-    p.print(t);
-    return p;
-  }
+Base &operator<<(Base &p, const Type::List &t) {
+  p.print(t);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Type::Tuple &t) {
-    p.print(t);
-    return p;
-  }
+Base &operator<<(Base &p, const Type::Tuple &t) {
+  p.print(t);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Type::TupleDef &t) {
-    p.print(t);
-    return p;
-  }
+Base &operator<<(Base &p, const Type::TupleDef &t) {
+  p.print(t);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Type::Signature &t) {
-    p.print(t);
-    return p;
-  }
+Base &operator<<(Base &p, const Type::Signature &t) {
+  p.print(t);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Type::Alphabet &t) {
-    p.print(t);
-    return p;
-  }
+Base &operator<<(Base &p, const Type::Alphabet &t) {
+  p.print(t);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Type::Def &t) {
-    p.print(t);
-    return p;
-  }
+Base &operator<<(Base &p, const Type::Def &t) {
+  p.print(t);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Type::Choice &t) {
-    p.print(t);
-    return p;
-  }
+Base &operator<<(Base &p, const Type::Choice &t) {
+  p.print(t);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Type::Void &t) {
-    p.print(t);
-    return p;
-  }
+Base &operator<<(Base &p, const Type::Void &t) {
+  p.print(t);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Type::Int &t) {
-    p.print(t);
-    return p;
-  }
+Base &operator<<(Base &p, const Type::Int &t) {
+  p.print(t);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Type::Integer &t) {
-    p.print(t);
-    return p;
-  }
+Base &operator<<(Base &p, const Type::Integer &t) {
+  p.print(t);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Type::Size &t) {
-    p.print(t);
-    return p;
-  }
+Base &operator<<(Base &p, const Type::Size &t) {
+  p.print(t);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Type::Float &t) {
-    p.print(t);
-    return p;
-  }
+Base &operator<<(Base &p, const Type::Float &t) {
+  p.print(t);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Type::Single &t) {
-    p.print(t);
-    return p;
-  }
+Base &operator<<(Base &p, const Type::Single &t) {
+  p.print(t);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Type::String &t) {
-    p.print(t);
-    return p;
-  }
+Base &operator<<(Base &p, const Type::String &t) {
+  p.print(t);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Type::Char &t) {
-    p.print(t);
-    return p;
-  }
+Base &operator<<(Base &p, const Type::Char &t) {
+  p.print(t);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Type::Bool &t) {
-    p.print(t);
-    return p;
-  }
+Base &operator<<(Base &p, const Type::Bool &t) {
+  p.print(t);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Type::Usage &t) {
-    p.print(t);
-    return p;
-  }
+Base &operator<<(Base &p, const Type::Usage &t) {
+  p.print(t);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Type::Range &t) {
-    p.print(t);
-    return p;
-  }
+Base &operator<<(Base &p, const Type::Range &t) {
+  p.print(t);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Type::Seq &t) {
-    p.print(t);
-    return p;
-  }
+Base &operator<<(Base &p, const Type::Seq &t) {
+  p.print(t);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Type::Table &t) {
-    p.print(t);
-    return p;
-  }
+Base &operator<<(Base &p, const Type::Table &t) {
+  p.print(t);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Type::Eval_List &t) {
-    p.print(t);
-    return p;
-  }
+Base &operator<<(Base &p, const Type::Eval_List &t) {
+  p.print(t);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Type::Backtrace_List &t) {
-    p.print(t);
-    return p;
-  }
+Base &operator<<(Base &p, const Type::Backtrace_List &t) {
+  p.print(t);
+  return p;
+}
 
-  Base &operator<<(Base &p, const Type::Multi &t) {
-    p.print(t);
-    return p;
-  }
+Base &operator<<(Base &p, const Type::Multi &t) {
+  p.print(t);
+  return p;
+}
 
 }  // namespace Printer
 

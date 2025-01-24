@@ -23,6 +23,7 @@
 
 
 #include <algorithm>
+#include <string>
 #include "expr.hh"
 #include "yieldsize.hh"
 #include "const.hh"
