@@ -24,6 +24,8 @@ jobs:
     steps:
     - name: Install dependencies
       run: brew install bison@3.8 cmake boost gsl gnu-sed libomp gmp cabal-install ghc
+    - name: pioritize bison3.8  # over old system bison2.3 by changing dir order in PATH
+      run: echo "PATH=/usr/local/opt/bison@3.8/bin:$PATH" >> $GITHUB_ENV
     - name: update cabal
       run: cabal update
     - name: add random Haskell lib
