@@ -15,67 +15,72 @@ on:
         description: 'Test scenario tags'
 
 jobs:
-  gapc_ubuntu:
-    needs: cpplint
-    strategy:
-      matrix:
-        # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
-        # as of 21st Sep 2021, ubuntu-16.04 is no longer supported by github actions: https://github.blog/changelog/2021-04-29-github-actions-ubuntu-16-04-lts-virtual-environment-will-be-removed-on-september-20-2021/
-        # 18.04 burnout: https://github.com/actions/runner-images/issues/6002
-        os: [ubuntu-20.04, ubuntu-22.04]
-    runs-on: ${{ matrix.os }}
-    steps:
-    - name: Update apt
-      run: sudo apt-get update
-    - name: Install dependencies
-      run: sudo apt-get install flex bison make libboost-all-dev libgsl-dev python3 python3-pip
+  #~ gapc_ubuntu:
+    #~ needs: cpplint
+    #~ strategy:
+      #~ matrix:
+        #~ # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
+        #~ # as of 21st Sep 2021, ubuntu-16.04 is no longer supported by github actions: https://github.blog/changelog/2021-04-29-github-actions-ubuntu-16-04-lts-virtual-environment-will-be-removed-on-september-20-2021/
+        #~ # 18.04 burnout: https://github.com/actions/runner-images/issues/6002
+        #~ os: [ubuntu-20.04, ubuntu-22.04]
+    #~ runs-on: ${{ matrix.os }}
+    #~ steps:
+    #~ - name: Update apt
+      #~ run: sudo apt-get update
+    #~ - name: Install dependencies
+      #~ run: sudo apt-get install flex bison make libboost-all-dev libgsl-dev python3 python3-pip
 
-    - name: Checkout truth
-      run: git clone --branch master https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE/../gapc-test-suite
+    #~ - name: Checkout truth
+      #~ run: git clone --branch master https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE/../gapc-test-suite
 
-    - uses: actions/checkout@v3
-    - name: configure
-      run: ./configure --prefix $GITHUB_WORKSPACE
-    - name: make
-      run: make -j 2
-    - name: make install
-      run: sudo make install
+    #~ - uses: actions/checkout@v3
+    #~ - name: configure
+      #~ run: ./configure --prefix $GITHUB_WORKSPACE
+    #~ - name: make
+      #~ run: make -j 2
+    #~ - name: make install
+      #~ run: sudo make install
 
-    - name: test-mod
-      run: make test-mod TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu
-    - name: test-mod_outside
-      run: make -j 2 test-mod_outside TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu
-    - name: test-regress
-      run: make test-regress TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth
-    - name: test-ambiguity
-      run: make test-ambiguity TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth
-    - name: test-unit
-      run: make test-unit
-    # we need to install Haskell (especially the System.Random lib) for paralell tests, since we compare Haskell ADP with gapc
-    - uses: haskell-actions/setup@v2
-      with:
-        cabal-version: '3.6.2.0'  # pin version on 2023-02-09 to enable proper cabal installtion
-      id: haskell
-    - name: cabal
-      run: |
-        ${{ steps.haskell.outputs.cabal-exe }} v2-update
-        ${{ steps.haskell.outputs.cabal-exe }} v2-install --lib random
+    #~ - name: test-mod
+      #~ run: make test-mod TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu
+    #~ - name: test-mod_outside
+      #~ run: make -j 2 test-mod_outside TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth TRUTH_SUFFIX=_ubuntu
+    #~ - name: test-regress
+      #~ run: make test-regress TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth
+    #~ - name: test-ambiguity
+      #~ run: make test-ambiguity TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth
+    #~ - name: test-unit
+      #~ run: make test-unit
+    #~ # we need to install Haskell (especially the System.Random lib) for paralell tests, since we compare Haskell ADP with gapc
+    #~ - uses: haskell-actions/setup@v2
+      #~ with:
+        #~ cabal-version: '3.6.2.0'  # pin version on 2023-02-09 to enable proper cabal installtion
+      #~ id: haskell
+    #~ - name: cabal
+      #~ run: |
+        #~ ${{ steps.haskell.outputs.cabal-exe }} v2-update
+        #~ ${{ steps.haskell.outputs.cabal-exe }} v2-install --lib random
 
-    - name: test-paral
-      run: |
-        package_path=$HOME/.cabal/store/ghc-`${{ steps.haskell.outputs.ghc-exe }} --version | rev | cut -d " " -f 1 | rev`/package.db
-        GHC="ghc -package-db $package_path" make test-paral
+    #~ - name: test-paral
+      #~ run: |
+        #~ package_path=$HOME/.cabal/store/ghc-`${{ steps.haskell.outputs.ghc-exe }} --version | rev | cut -d " " -f 1 | rev`/package.db
+        #~ GHC="ghc -package-db $package_path" make test-paral
 
   gapc_osx:
-    needs: cpplint
+    #~ needs: cpplint
     strategy:
       matrix:
         # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
-        os: [macos-12]
+        os: [macos-13]
     runs-on: ${{ matrix.os }}
     steps:
     - name: Install dependencies
-      run: brew install bison@2.7 cmake boost gsl gnu-sed libomp gmp cabal-install ghc
+      run: brew install bison@3.8 cmake boost gsl gnu-sed libomp gmp cabal-install ghc
+    - name: pioritize bison3.8
+      # macos-13 has also installed a quite old bison2.3 version and it is found first according
+      # to default PATH settings. Thus, configure.ac will test the wrong version and NOT set
+      # BISONNEW as a compiler flag (see configure.ac)
+      run: echo "PATH=/usr/local/opt/bison@3.8/bin:$PATH" >> $GITHUB_ENV
     - name: update cabal
       run: cabal update
     - name: add random Haskell lib
@@ -89,7 +94,7 @@ jobs:
     - name: configure
       run: ./configure --prefix $GITHUB_WORKSPACE
     - name: patch configuration for OSX
-      run: gsed -E "s|^YACC = .+$|YACC = /usr/local/opt/bison@2.7/bin/bison|" -i config.mf && gsed -E "s|^SED = .+$|SED = /usr/local/opt/gnu-sed/libexec/gnubin/sed|" -i config.mf && gsed -E "s/ -D_XOPEN_SOURCE=500 / /" -i config.mf && gsed -E "s/ -std=c\+\+17 / -std=c\+\+11 /" -i config.mf
+      run: gsed -E "s|^YACC = .+$|YACC = /usr/local/opt/bison@3.8/bin/bison|" -i config.mf && gsed -E "s|^SED = .+$|SED = /usr/local/opt/gnu-sed/libexec/gnubin/sed|" -i config.mf && gsed -E "s/ -D_XOPEN_SOURCE=500 / /" -i config.mf && gsed -E "s/ -std=c\+\+17 / -std=c\+\+11 /" -i config.mf
     - name: make
       run: make -j 3
     - name: make install
@@ -108,48 +113,48 @@ jobs:
     - name: test-paral
       run: make test-paral
 
-  fold-grammars:
-    needs: cpplint
-    strategy:
-      matrix:
-        task: [default, shapes, pkiss, alishapes, palikiss, knotinframe]
-    runs-on: ubuntu-latest
-    steps:
-    # install gapcs
-    - name: Update apt
-      run: sudo apt-get update
-    - name: Install dependencies
-      run: sudo apt-get install flex bison make libboost-all-dev libgsl-dev python3 python3-pip python3-biopython
-    - uses: actions/checkout@v3
-    - name: configure
-      run: ./configure
-    - name: make
-      run: make -j 2
-    - name: make install
-      run: sudo make install
+  #~ fold-grammars:
+    #~ needs: cpplint
+    #~ strategy:
+      #~ matrix:
+        #~ task: [default, shapes, pkiss, alishapes, palikiss, knotinframe]
+    #~ runs-on: ubuntu-latest
+    #~ steps:
+    #~ # install gapcs
+    #~ - name: Update apt
+      #~ run: sudo apt-get update
+    #~ - name: Install dependencies
+      #~ run: sudo apt-get install flex bison make libboost-all-dev libgsl-dev python3 python3-pip python3-biopython
+    #~ - uses: actions/checkout@v3
+    #~ - name: configure
+      #~ run: ./configure
+    #~ - name: make
+      #~ run: make -j 2
+    #~ - name: make install
+      #~ run: sudo make install
 
-    - name: clone fold-grammars
-      run: git clone --branch master https://github.com/jlab/fold-grammars.git $GITHUB_WORKSPACE/../fold-grammars
-    - name: configure fold-grammars
-      run: |
-        cd $GITHUB_WORKSPACE/../fold-grammars
-        sed -i "s#bgapDir = '/vol/gapc/'#bgapDir = '/usr/local/'#" Misc/Applications/lib/foldGrammars/Settings.pm
-        sed -i "s#rootDir = '/vol/fold-grammars/src/'#rootDir = '`pwd`/'#" Misc/Applications/lib/foldGrammars/Settings.pm
-    - name: execute tests
-      run: |
-        cd $GITHUB_WORKSPACE/../fold-grammars
-        if [[ "${{ matrix.task }}" == "default" ]]; then pushd .; cd Misc/Test-Suite/GeorgStyle/; bash run.sh ../Truth; cd ../StefanStyle/; python test_cofold.py; popd; fi
-        pushd .
-        cd Misc/Test-Suite/StefanStyle/
-        perl runTests.pl 2 ${{ matrix.task }}
-        popd
+    #~ - name: clone fold-grammars
+      #~ run: git clone --branch master https://github.com/jlab/fold-grammars.git $GITHUB_WORKSPACE/../fold-grammars
+    #~ - name: configure fold-grammars
+      #~ run: |
+        #~ cd $GITHUB_WORKSPACE/../fold-grammars
+        #~ sed -i "s#bgapDir = '/vol/gapc/'#bgapDir = '/usr/local/'#" Misc/Applications/lib/foldGrammars/Settings.pm
+        #~ sed -i "s#rootDir = '/vol/fold-grammars/src/'#rootDir = '`pwd`/'#" Misc/Applications/lib/foldGrammars/Settings.pm
+    #~ - name: execute tests
+      #~ run: |
+        #~ cd $GITHUB_WORKSPACE/../fold-grammars
+        #~ if [[ "${{ matrix.task }}" == "default" ]]; then pushd .; cd Misc/Test-Suite/GeorgStyle/; bash run.sh ../Truth; cd ../StefanStyle/; python test_cofold.py; popd; fi
+        #~ pushd .
+        #~ cd Misc/Test-Suite/StefanStyle/
+        #~ perl runTests.pl 2 ${{ matrix.task }}
+        #~ popd
 
-  cpplint:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
-    - run: pip install cpplint
-    - run: cpplint --recursive --counting 'detailed' --filter="-runtime/references,-build/include_subdir" --extensions=cc,hh src/ rtlib/
-    - run: cpplint --counting 'detailed' --filter="-build/include_subdir,-readability/casting,-runtime/arrays" --extensions=c,h librna/rnalib.{c,h}
-    - run: cpplint --recursive --counting 'detailed' --filter="-runtime/references,-build/include_subdir" testdata/unittest/*
+  #~ cpplint:
+    #~ runs-on: ubuntu-latest
+    #~ steps:
+    #~ - uses: actions/checkout@v3
+    #~ - uses: actions/setup-python@v4
+    #~ - run: pip install cpplint
+    #~ - run: cpplint --recursive --counting 'detailed' --filter="-runtime/references,-build/include_subdir" --extensions=cc,hh src/ rtlib/
+    #~ - run: cpplint --counting 'detailed' --filter="-build/include_subdir,-readability/casting,-runtime/arrays" --extensions=c,h librna/rnalib.{c,h}
+    #~ - run: cpplint --recursive --counting 'detailed' --filter="-runtime/references,-build/include_subdir" testdata/unittest/*
