@@ -42,7 +42,7 @@ class CC : public Base {
   void print(const Statement::Var_Assign &stmt);
   void print(const Statement::Fn_Call &stmt);
   void print(const Statement::Block &stmt);
-
+  
   void print(const Fn_Def &fn_def);
 
 

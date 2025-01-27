@@ -78,6 +78,10 @@ void Printer::Base::print(const Statement::Table_Decl &stmt) {}
 void Printer::Base::print(const std::list<Statement::Base*> &stmts) {}
 
 
+void Printer::Base::print(const Statement::SYCL_Buffer_Decl &stmt) {}
+void Printer::Base::print(const Statement::SYCL_Submit_Kernel &stmt) {}
+
+
 void Printer::Base::print(const Type::List &t) {}
 void Printer::Base::print(const Type::Tuple &t) {}
 void Printer::Base::print(const Type::TupleDef &t) {}

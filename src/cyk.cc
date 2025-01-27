@@ -140,6 +140,8 @@ class CYKloop {
   }
 };
 
+
+
 enum CYKmode {SINGLETHREAD, OPENMP_PARALLEL, OPENMP_SERIAL,
               SINGLETHREAD_OUTSIDE,
               OPENMP_PARALLEL_OUTSIDE, OPENMP_SERIAL_OUTSIDE};
@@ -1299,7 +1301,20 @@ Fn_Def *print_CYK(const AST &ast) {
         }
       }
     }
-    fn_cyk->stmts.push_back(new Statement::CustomCode("#pragma omp parallel"));
+
+    int dimension = 1;
+    std::string name = "test";
+    std::string value = "test_value";
+
+    fn_cyk->stmts.push_back(new Statement::SYCL_Buffer_Decl(new Type::Int, dimension, name, value));
+    Statement::Var_Decl *queue = new Statement::Var_Decl(new Type::External("sycl::queue"), "q");
+
+    fn_cyk->stmts.push_back(queue);
+
+    Statement::SYCL_Submit_Kernel *blk_sycl = new Statement::SYCL_Submit_Kernel(queue, new Statement::Var_Decl(new Type::External("sycl::handler&"), "cgh"));
+
+    blk_sycl->statements.push_back(new Statement::CustomCode("This works"));
+
     Statement::Block *blk_parallel = new Statement::Block();
 
     if (ast.checkpoint && ast.checkpoint->cyk) {

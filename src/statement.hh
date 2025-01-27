@@ -193,6 +193,42 @@ class Increase : public Base {
   Base *copy() const;
 };
 
+/**
+ * @example q.submit([&](sycl::handler &cgh) { ... } 
+ * @brief Submit Kernel
+ * @param q The Queue to add the Kernel to
+ * @param c The Context Handler for the Kernel
+ */
+class SYCL_Submit_Kernel : public Block_Base {
+  public:
+    Var_Decl *queue;
+    Var_Decl *context;
+
+  void print(Printer::Base &p) const;
+
+  SYCL_Submit_Kernel(Var_Decl *q, Var_Decl *c);
+};
+
+/**
+ * @example sycl::buffer<int, 0> results(sycl::range<1>(n*m));
+ * @brief A function to summarize and create an buffer
+ * 
+ * @param type What type the buffer should hold
+ * @param dimension
+ * @param name
+ * @param size
+ */
+ class SYCL_Buffer_Decl : public Base {
+  public:
+    ::Type::Base *type;
+    int dimension;
+    std::string name;
+    std::string value;
+
+   SYCL_Buffer_Decl(::Type::Base *t, int d, std::string n, std::string v);
+
+   void print(Printer::Base &p) const;
+ };
 
 class Var_Decl : public Base {
  private:
@@ -264,7 +300,6 @@ class Var_Decl : public Base {
 
   Base *copy() const;
 };
-
 
 // probably only for target code
 class For : public Block_Base {

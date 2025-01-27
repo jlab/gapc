@@ -71,6 +71,9 @@ Statement::Var_Decl::Var_Decl(::Type::Base *t, std::string *n, Expr::Base *e)
   : Base(VAR_DECL), type(t), name(n), rhs(e) {
 }
 
+Statement::SYCL_Buffer_Decl::SYCL_Buffer_Decl(::Type::Base *t, int d, std::string n, std::string v)
+  : Base(BUFFER_DECL), type(t), name(n), dimension(d), value(v) {
+}
 
 Statement::Var_Decl *Statement::Var_Decl::clone() const {
   Var_Decl *ret = new Var_Decl(*this);
@@ -81,6 +84,13 @@ Statement::Var_Decl *Statement::Var_Decl::clone() const {
   return ret;
 }
 
+void Statement::SYCL_Submit_Kernel::print(Printer::Base &p) const {
+  p.print(*this);
+}
+
+void Statement::SYCL_Buffer_Decl::print(Printer::Base &p) const {
+  p.print(*this);
+}
 
 void Statement::Var_Decl::print(Printer::Base &p) const {
   p.print(*this);
@@ -339,6 +349,11 @@ std::list<Statement::Base*> *Statement::Switch::add_case(std::string *n) {
   return &cases.back().second;
 }
 
+Statement::SYCL_Submit_Kernel::SYCL_Submit_Kernel(Var_Decl *q, Var_Decl *c)
+  : Block_Base(BLOCK), queue(q), context(c) {
+    assert(queue);
+    assert(context);
+}
 
 Statement::Foreach::Foreach(Var_Decl *i, Var_Decl *l)
   : Block_Base(FOREACH), elem(i), container(l), iteration(true) {

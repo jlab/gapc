@@ -105,6 +105,30 @@ void Printer::Cpp::print(const Statement::For &stmt) {
   stream << stmt.statements;
 }
 
+
+void Printer::Cpp::print(const Statement::SYCL_Buffer_Decl &stmt) {
+  assert(stmt.type);
+  assert(stmt.dimension);
+  assert(stmt.name);
+  assert(stmt.value);
+
+  stream << indent() << 
+    "sycl::buffer<" << *stmt.type << "," << stmt.dimension << "> " <<
+    stmt.name << "(sycl::range<" << stmt.dimension << ">" << 
+    "(" << stmt.value << "));" << endl;
+}
+
+void Printer::Cpp::print(const Statement::SYCL_Submit_Kernel &stmt) {
+  assert(stmt.queue);
+  assert(stmt.context);
+  
+  stream << indent() <<
+    *stmt.queue->name << ".submit([&]sycl::handler &" << *stmt.context->name << "{" << endl;
+  inc_indent();
+  //TODO | FIXME add block content
+  stream << indent() << "}" << endl;
+}  
+
 void Printer::Cpp::print(const Statement::While &stmt) {
   stream << indent() << "while(" << stmt.expr() << ")\n";
   stream << stmt.statements;
@@ -674,7 +698,9 @@ void Printer::Cpp::print(const Fn_Def &fn_def) {
     }
 
     stream << '(';
-    print(fn_def.paras);
+    if (!fn_def.paras.empty()) {
+      print(fn_def.paras);
+    }
     if (!fn_def.paras.empty() && !fn_def.ntparas().empty()) {
       stream << ", ";
     }
