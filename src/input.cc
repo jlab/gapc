@@ -23,6 +23,8 @@
 
 
 #include "input.hh"
+#include <list>
+#include <string>
 
 #include "log.hh"
 

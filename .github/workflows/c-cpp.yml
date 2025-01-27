@@ -22,7 +22,7 @@ jobs:
         # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
         # as of 21st Sep 2021, ubuntu-16.04 is no longer supported by github actions: https://github.blog/changelog/2021-04-29-github-actions-ubuntu-16-04-lts-virtual-environment-will-be-removed-on-september-20-2021/
         # 18.04 burnout: https://github.com/actions/runner-images/issues/6002
-        os: [ubuntu-20.04, ubuntu-22.04]
+        os: [ubuntu-20.04, ubuntu-22.04, ubuntu-24.04]
     runs-on: ${{ matrix.os }}
     steps:
     - name: Update apt
@@ -71,11 +71,16 @@ jobs:
     strategy:
       matrix:
         # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
-        os: [macos-12]
+        os: [macos-13]
     runs-on: ${{ matrix.os }}
     steps:
     - name: Install dependencies
-      run: brew install bison@2.7 cmake boost gsl gnu-sed libomp gmp cabal-install ghc
+      run: brew install bison@3.8 cmake boost gsl gnu-sed libomp gmp cabal-install ghc
+    - name: pioritize bison3.8
+      # macos-13 has also installed a quite old bison2.3 version and it is found first according
+      # to default PATH settings. Thus, configure.ac will test the wrong version and NOT set
+      # BISONNEW as a compiler flag (see configure.ac)
+      run: echo "PATH=/usr/local/opt/bison@3.8/bin:$PATH" >> $GITHUB_ENV
     - name: update cabal
       run: cabal update
     - name: add random Haskell lib
@@ -89,7 +94,7 @@ jobs:
     - name: configure
       run: ./configure --prefix $GITHUB_WORKSPACE
     - name: patch configuration for OSX
-      run: gsed -E "s|^YACC = .+$|YACC = /usr/local/opt/bison@2.7/bin/bison|" -i config.mf && gsed -E "s|^SED = .+$|SED = /usr/local/opt/gnu-sed/libexec/gnubin/sed|" -i config.mf && gsed -E "s/ -D_XOPEN_SOURCE=500 / /" -i config.mf && gsed -E "s/ -std=c\+\+17 / -std=c\+\+11 /" -i config.mf
+      run: gsed -E "s|^YACC = .+$|YACC = /usr/local/opt/bison@3.8/bin/bison|" -i config.mf && gsed -E "s|^SED = .+$|SED = /usr/local/opt/gnu-sed/libexec/gnubin/sed|" -i config.mf && gsed -E "s/ -D_XOPEN_SOURCE=500 / /" -i config.mf && gsed -E "s/ -std=c\+\+17 / -std=c\+\+11 /" -i config.mf
     - name: make
       run: make -j 3
     - name: make install
@@ -151,5 +156,5 @@ jobs:
     - uses: actions/setup-python@v4
     - run: pip install cpplint
     - run: cpplint --recursive --counting 'detailed' --filter="-runtime/references,-build/include_subdir" --extensions=cc,hh src/ rtlib/
-    - run: cpplint --counting 'detailed' --filter="-build/include_subdir,-readability/casting,-runtime/arrays" --extensions=c,h librna/rnalib.{c,h}
+    - run: cpplint --counting 'detailed' --filter="-build/include_subdir,-readability/casting,-runtime/arrays,-build/include_what_you_use" --extensions=c,h librna/rnalib.{c,h}
     - run: cpplint --recursive --counting 'detailed' --filter="-runtime/references,-build/include_subdir" testdata/unittest/*

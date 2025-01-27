@@ -38,28 +38,28 @@
 namespace Type {
 
 enum Type { NONE, LIST, TUPLE, TUPLEDEF, SIGNATURE, ALPHABET, DEF,
-      CHOICE,
-      VOID, INT, INTEGER, SIZE, FLOAT, STRING, CHAR, BOOL, REALVOID,
-      USAGE,
-      RANGE,  // codegen, set of begin/end iterators
-      SEQ,
-      TABLE,
-      SUBSEQ,
-      SHAPE,
-      REFERENCABLE,  // only hint to backend
-      RATIONAL,
-      BIGINT,
-      EXTERNAL,
+CHOICE,
+VOID, INT, INTEGER, SIZE, FLOAT, STRING, CHAR, BOOL, REALVOID,
+USAGE,
+RANGE,  // codegen, set of begin/end iterators
+SEQ,
+TABLE,
+SUBSEQ,
+SHAPE,
+REFERENCABLE,  // only hint to backend
+RATIONAL,
+BIGINT,
+EXTERNAL,
 
-      BACKTRACE,
-      BACKTRACE_LIST,
-      EVAL_LIST,
+BACKTRACE,
+BACKTRACE_LIST,
+EVAL_LIST,
 
-      SINGLE,
+SINGLE,
 
-      MULTI,
-      MULTI_DECL
-      };
+MULTI,
+MULTI_DECL
+};
 
 
 class Base {

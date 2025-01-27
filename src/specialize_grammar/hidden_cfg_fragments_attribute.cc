@@ -22,6 +22,7 @@
 }}} */
 
 #include "hidden_cfg_fragments_attribute.hh"
+#include <set>
 
 
 SpecializeGrammar::HiddenCFGFragmentsAttribute::HiddenCFGFragmentsAttribute()

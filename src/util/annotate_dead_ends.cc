@@ -22,6 +22,7 @@
 }}} */
 
 #include <string>
+#include <set>
 #include "annotate_dead_ends.hh"
 
 

@@ -22,6 +22,7 @@
 }}} */
 
 #include "last_element_of_cycle_attribute.hh"
+#include <set>
 
 
 Util::LastCycleElementAttribute::LastCycleElementAttribute()

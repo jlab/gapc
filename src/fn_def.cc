@@ -25,7 +25,11 @@
 #include <cassert>
 #include <cmath>
 #include <sstream>
+#include <iostream>
 #include <vector>
+#include <utility>
+#include <list>
+#include <string>
 
 #include "fn_def.hh"
 

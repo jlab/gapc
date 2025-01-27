@@ -22,6 +22,10 @@
 }}} */
 
 #include <utility>
+#include <vector>
+#include <set>
+#include <list>
+#include <string>
 #include "grammar_transformation.hh"
 #include "../expr/new.hh"
 

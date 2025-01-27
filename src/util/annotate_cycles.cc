@@ -25,6 +25,7 @@
 #include <list>
 #include <iostream>
 #include <utility>
+#include <set>
 
 #include "annotate_cycles.hh"
 #include "annotate_the_set_first.hh"

@@ -543,7 +543,7 @@ inline void append(String &str, const T &x) {
 
 template<class T>
 inline void append(String &str, char c, T i) {
-  str.append(c, (uint32_t) i);
+  str.append(c, static_cast<uint32_t>(i));
 }
 
 inline void append(String &str, const char *c, int i) {

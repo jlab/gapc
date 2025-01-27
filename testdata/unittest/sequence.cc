@@ -29,6 +29,7 @@
 #define BOOST_TEST_MAIN
 #define BOOST_TEST_MODULE sequence
 #include <string.h>
+#include <string>
 #include <boost/test/unit_test.hpp>
 
 // include everything - no linking needed ...

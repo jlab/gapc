@@ -27,6 +27,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <utility>
 
 #include <boost/test/unit_test.hpp>
 
@@ -71,9 +72,9 @@ BOOST_AUTO_TEST_CASE(hash) {
 }
 
 BOOST_AUTO_TEST_CASE(bits) {
-  uint32_t t = uint32_t(1) << 31;
+  uint32_t t = static_cast<uint32_t>(1) << 31;
   CHECK_EQ(count_leading_zeroes(t), 0);
-  uint32_t s = uint32_t(1) << 28;
+  uint32_t s = static_cast<uint32_t>(1) << 28;
   CHECK_EQ(count_leading_zeroes(s), 3);
 
   CHECK_EQ(slow_clz(t), 0);
@@ -81,14 +82,14 @@ BOOST_AUTO_TEST_CASE(bits) {
 }
 
 BOOST_AUTO_TEST_CASE(next_power) {
-  uint32_t t = uint32_t(1);
-  CHECK_EQ(size_to_next_power(t), uint32_t(1));
-  uint32_t u = uint32_t(42);
-  CHECK_EQ(size_to_next_power(u), uint32_t(64));
-  uint32_t v = uint32_t(128);
-  CHECK_EQ(size_to_next_power(v), uint32_t(128));
-  uint32_t w = uint32_t(1) << 31;
-  CHECK_EQ(size_to_next_power(w), uint32_t(1) << 31);
+  uint32_t t = static_cast<uint32_t>(1);
+  CHECK_EQ(size_to_next_power(t), static_cast<uint32_t>(1));
+  uint32_t u = static_cast<uint32_t>(42);
+  CHECK_EQ(size_to_next_power(u), static_cast<uint32_t>(64));
+  uint32_t v = static_cast<uint32_t>(128);
+  CHECK_EQ(size_to_next_power(v), static_cast<uint32_t>(128));
+  uint32_t w = static_cast<uint32_t>(1) << 31;
+  CHECK_EQ(size_to_next_power(w), static_cast<uint32_t>(1) << 31);
 }
 
 BOOST_AUTO_TEST_CASE(rehash) {
@@ -101,7 +102,7 @@ BOOST_AUTO_TEST_CASE(rehash) {
   for (Hash::Set<size_t>::iterator j = set.begin();
        j != set.end(); ++j)
     l.push_back(*j);
-  CHECK_EQ(l.size(), uint32_t(129));
+  CHECK_EQ(l.size(), static_cast<uint32_t>(129));
   std::sort(l.begin(), l.end());
   size_t a = 0;
   for (std::vector<size_t>::iterator i = l.begin(); i != l.end(); ++i, ++a)
@@ -138,12 +139,12 @@ BOOST_AUTO_TEST_CASE(shape) {
 
 BOOST_AUTO_TEST_CASE(uint32) {
   uint64_t t = 0;
-  t |= uint64_t(1) << 23;
-  t |= uint64_t(1) << 42;
+  t |= static_cast<uint64_t>(1) << 23;
+  t |= static_cast<uint64_t>(1) << 42;
   uint32_t lower = t;
-  CHECK_EQ(lower, uint32_t(1) << 23);
+  CHECK_EQ(lower, static_cast<uint32_t>(1) << 23);
   uint32_t upper = t >> 32;
-  CHECK_EQ(upper, uint32_t(1) << 10);
+  CHECK_EQ(upper, static_cast<uint32_t>(1) << 10);
 }
 
 
@@ -201,7 +202,7 @@ BOOST_AUTO_TEST_CASE(coverage) {
   Hash::Multhash hash;
   for (int i = 0; i < 100; ++i) {
     uint32_t x = hash(i, 64);
-    CHECK_LESS(x, uint32_t(64));
+    CHECK_LESS(x, static_cast<uint32_t>(64));
     t[x] = true;
   }
   for (std::vector<bool>::iterator i = t.begin(); i != t.end(); ++i)

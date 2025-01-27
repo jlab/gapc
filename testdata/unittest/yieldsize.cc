@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(yield_poly) {
   Yield::Poly n(Yield::UP);
   CHECK_NOT_EQ(q, n);
   CHECK_EQ(p, z);
-  CHECK_EQ(q.konst(), uint32_t(23));
+  CHECK_EQ(q.konst(), static_cast<uint32_t>(23));
 
   Yield::Poly nn;
   nn.set(Yield::UP);

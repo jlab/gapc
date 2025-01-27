@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(runtime_both) {
   CHECK_EQ(b, a);
   a = Runtime::Asm::Poly(23);
   b = Runtime::Poly(1, 23);
-  CHECK_EQ(b.degree(), uint32_t(23));
+  CHECK_EQ(b.degree(), static_cast<uint32_t>(23));
   CHECK_EQ(b, a);
   CHECK_EQ(a, b);
   b = Runtime::Poly(23, 3);
@@ -102,9 +102,9 @@ BOOST_AUTO_TEST_CASE(runtime_poly) {
   CHECK_NOT_EQ(a, 3);
 
   a = Runtime::Poly(32, 3);
-  CHECK_EQ(a.degree(), uint32_t(3));
+  CHECK_EQ(a.degree(), static_cast<uint32_t>(3));
   a.divide_by_n();
-  CHECK_EQ(a.degree(), uint32_t(2));
+  CHECK_EQ(a.degree(), static_cast<uint32_t>(2));
   CHECK_EQ(false, a.is_exp());
 
   a = Runtime::Poly();
@@ -123,19 +123,19 @@ BOOST_AUTO_TEST_CASE(runtime_poly) {
   a = Runtime::Poly(4, 3);
   b = Runtime::Poly(9, 7);
   a *= b;
-  CHECK_EQ(a.degree(), uint32_t(10));
-  CHECK_EQ(a[10], uint32_t(36));
+  CHECK_EQ(a.degree(), static_cast<uint32_t>(10));
+  CHECK_EQ(a[10], static_cast<uint32_t>(36));
 
   a = Runtime::Poly(2, 3);
   a += Runtime::Poly(3, 1);
   b = Runtime::Poly(3, 8);
   b += Runtime::Poly(4, 3);
   a *= b;
-  CHECK_EQ(a.degree(), uint32_t(11));
-  CHECK_EQ(a[4], uint32_t(12));
-  CHECK_EQ(a[11], uint32_t(6));
-  CHECK_EQ(a[9], uint32_t(9));
-  CHECK_EQ(a[6], uint32_t(8));
+  CHECK_EQ(a.degree(), static_cast<uint32_t>(11));
+  CHECK_EQ(a[4], static_cast<uint32_t>(12));
+  CHECK_EQ(a[11], static_cast<uint32_t>(6));
+  CHECK_EQ(a[9], static_cast<uint32_t>(9));
+  CHECK_EQ(a[6], static_cast<uint32_t>(8));
   Runtime::Poly c = a;
   a = Runtime::Poly(2, 3);
   a += Runtime::Poly(3, 1);
@@ -270,7 +270,7 @@ BOOST_AUTO_TEST_CASE(exponential) {
   a.set(23, 3);
   a *= x;
   CHECK_NOT_EQ(a, 1);
-  CHECK_GREATER(a.degree(), uint32_t(3));
+  CHECK_GREATER(a.degree(), static_cast<uint32_t>(3));
   a = 23;
   CHECK_EQ(a, 23);
   CHECK(!a.is_exp());

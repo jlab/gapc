@@ -22,6 +22,7 @@
 }}} */
 
 #include <string>
+#include <list>
 #include "cc.hh"
 
 #include "statement.hh"

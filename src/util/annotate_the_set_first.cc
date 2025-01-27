@@ -23,6 +23,7 @@
 
 #include <list>
 #include <iostream>
+#include <string>
 
 #include "annotate_the_set_first.hh"
 

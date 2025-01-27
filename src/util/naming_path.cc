@@ -22,6 +22,7 @@
 }}} */
 
 #include "naming_path.hh"
+#include <string>
 
 
 // The separator character for the string representation

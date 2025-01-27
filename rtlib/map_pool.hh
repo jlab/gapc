@@ -92,9 +92,7 @@ struct MallocMapper {
   }
 };
 
-template <
-  typename Type
->
+template <typename Type>
 class Entry {
  private:
     typedef Entry<Type> entry_t;
@@ -110,13 +108,11 @@ class Entry {
     Type *payload() { return reinterpret_cast<Type*>(&next_ + 1); }
 };
 
-template <
-  typename Type,
-  size_t size,
+template <typename Type, size_t size,
 #ifdef NO_MMAP
-  typename Mapper = MallocMapper
+typename Mapper = MallocMapper
 #else
-  typename Mapper = MapMapper
+typename Mapper = MapMapper
 #endif
 >
 class Block {
@@ -187,10 +183,7 @@ class Block {
 // just for comparison purposes
 
 
-template <
-  typename Type = unsigned char,
-  size_t Block_Size = 23
->
+template <typename Type = unsigned char, size_t Block_Size = 23>
 class Pool {
  private:
     size_t count;
@@ -221,13 +214,12 @@ class Pool {
 
 #else
 
-template <
-  typename Type = unsigned char,
+template <typename Type = unsigned char,
 #ifdef POOL_DEBUG
-  size_t Block_Size = 23
+size_t Block_Size = 23
 #else
-  size_t Block_Size = 100 * 1024 * 1024 / (
-    sizeof(Entry<Type>*) + sizeof(Type) )
+size_t Block_Size = 100 * 1024 * 1024 / (
+sizeof(Entry<Type>*) + sizeof(Type) )
 #endif
 >
 class Pool {

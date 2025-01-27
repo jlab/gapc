@@ -22,6 +22,7 @@
 }}} */
 
 #include "mode.hh"
+#include <string>
 
 const Mode::Number Mode::map_type_to_number[] = {
   ZERO,  // NONE
@@ -47,7 +48,7 @@ hashtable<std::string, Mode::Type> Mode::table;
 
 void Mode::set(Mode::Type t) {
   number = map_type_to_number[t] > ONE ? Yield::Poly(Yield::UP) :
-    Yield::Poly((uint32_t) map_type_to_number[t]);
+    Yield::Poly(static_cast<uint32_t>(map_type_to_number[t]));
   type = t;
 }
 

@@ -25,6 +25,7 @@
 
 #include <string>
 #include <cassert>
+#include <list>
 
 #include "../log.hh"
 #include "../util/annotate_cycles.hh"

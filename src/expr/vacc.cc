@@ -24,6 +24,7 @@
 
 #include "vacc.hh"
 
+#include <string>
 #include "../statement.hh"
 #include "../var_acc.hh"
 

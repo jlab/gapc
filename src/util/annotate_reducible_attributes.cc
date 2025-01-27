@@ -22,6 +22,7 @@
 }}} */
 
 #include <list>
+#include <set>
 
 #include "annotate_reducible_attributes.hh"
 

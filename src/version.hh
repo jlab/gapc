@@ -27,7 +27,7 @@
 
 namespace gapc {
 
-  extern const char version_id[];
+extern const char version_id[];
 
 }
 

@@ -25,6 +25,9 @@
 
 
 #include <sstream>
+#include <string>
+#include <list>
+#include <vector>
 #include <boost/format.hpp>
 
 #include "../log.hh"

@@ -135,8 +135,8 @@ struct djb_slow {
   uint32_t initial() const { return 5381; }
 
   void next(uint32_t &hash, uint64_t t) const {
-    hash = hash * 33 + uint32_t(t);
-    hash = hash * 33 + uint32_t(t>>32);
+    hash = hash * 33 + static_cast<uint32_t>(t);
+    hash = hash * 33 + static_cast<uint32_t>(t>>32);
   }
 };
 
@@ -144,8 +144,8 @@ struct djb {
   uint32_t initial() const { return 5381; }
 
   void next(uint32_t &hash, uint64_t t) const {
-    hash = ((hash << 5) + hash) + uint32_t(t);
-    hash = ((hash << 5) + hash) + uint32_t(t>>32);
+    hash = ((hash << 5) + hash) + static_cast<uint32_t>(t);
+    hash = ((hash << 5) + hash) + static_cast<uint32_t>(t>>32);
   }
 
   void next(uint32_t &hash, uint32_t t) const {
@@ -153,7 +153,7 @@ struct djb {
   }
 
   void next(uint32_t &hash, char t) const {
-    hash = ((hash << 5) + hash) + uint32_t(t);
+    hash = ((hash << 5) + hash) + static_cast<uint32_t>(t);
   }
 };
 
@@ -173,7 +173,7 @@ struct djb_chars {
       }
       break;
       //
-      if (*x & uint64_t(-1)  >> (64-2))
+      if (*x & static_cast<uint64_t>(-1)  >> (64-2))
         ++x;
       else
         break;
@@ -185,8 +185,8 @@ struct sdbm {
   uint32_t initial() const { return 0; }
 
   void next(uint32_t &hash, uint64_t t) const {
-    hash = uint32_t(t) + (hash << 6) + (hash << 16) - hash;
-    hash = uint32_t(t >> 32) + (hash << 6) + (hash << 16) - hash;
+    hash = static_cast<uint32_t>(t) + (hash << 6) + (hash << 16) - hash;
+    hash = static_cast<uint32_t>(t >> 32) + (hash << 6) + (hash << 16) - hash;
   }
   template<typename T>
   void next(uint32_t &hash, T t) const {

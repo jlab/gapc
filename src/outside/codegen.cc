@@ -22,6 +22,9 @@
 }}} */
 
 #include "codegen.hh"
+#include <vector>
+#include <list>
+#include <string>
 
 
 std::list<Symbol::NT*> *NTs_to_report(const AST &ast) {

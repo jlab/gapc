@@ -25,6 +25,9 @@
 #include <cassert>
 #include <cstdlib>
 #include <algorithm>
+#include <list>
+#include <utility>
+#include <string>
 
 #include "statement.hh"
 

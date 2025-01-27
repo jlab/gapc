@@ -105,7 +105,7 @@ inline std::ostream &operator<<(std::ostream &s, const Base &b) {
 
 
 template <class ret, class expr, class Iterator> ret *seq_to_tree(
-  Iterator begin, Iterator end) {
+Iterator begin, Iterator end) {
   Iterator i = begin;
   if (i == end) {
     assert(false);

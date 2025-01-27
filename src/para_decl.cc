@@ -23,6 +23,8 @@
 
 
 #include "para_decl.hh"
+#include <list>
+#include <string>
 
 #include "log.hh"
 

@@ -65,6 +65,9 @@
  */
 
 #include "middle_end.hh"
+#include <utility>
+#include <vector>
+#include <list>
 
 
 void Alt::Base::outside_collect_parsers(

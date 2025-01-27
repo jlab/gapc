@@ -23,6 +23,8 @@
 
 #include "transform_gap_to_cfg.hh"
 
+#include <list>
+#include <string>
 #include <boost/format.hpp>
 
 #include "../const.hh"

@@ -22,6 +22,7 @@
 }}} */
 
 #include "options.hh"
+#include <string>
 
 
 std::string basename(const std::string &f) {

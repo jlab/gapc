@@ -23,6 +23,7 @@
 
 #include <utility>
 #include <string>
+#include <map>
 #include "call_trace.hh"
 
 

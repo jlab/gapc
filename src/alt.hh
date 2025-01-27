@@ -69,11 +69,11 @@ namespace Alt {
 enum Type { SIMPLE, LINK, BLOCK, MULTI };
 
 Expr::Base *next_index_var(
-    unsigned &k, size_t track,
-    Expr::Base *next_var, Expr::Base *last_var, Expr::Base *right,
-    const Yield::Size &ys, const Yield::Size &lhs, const Yield::Size &rhs,
-    std::list<Statement::For*> &loops,
-    bool for_outside_generation, bool outmost, bool is_left_not_right);
+unsigned &k, size_t track,
+Expr::Base *next_var, Expr::Base *last_var, Expr::Base *right,
+const Yield::Size &ys, const Yield::Size &lhs, const Yield::Size &rhs,
+std::list<Statement::For*> &loops,
+bool for_outside_generation, bool outmost, bool is_left_not_right);
 
 class Base {
  private:

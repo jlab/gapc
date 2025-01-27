@@ -22,6 +22,7 @@
 }}} */
 
 #include <string>
+#include <list>
 #include "cycle_set.hh"
 
 
