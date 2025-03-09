@@ -19,6 +19,7 @@ with pkgs;
 
     configureFlags = ["BOOST_LDFLAGS=-L${boost}/lib"];
     shellHook = ''
+      export BOOST_LDFLAGS=-L${boost}/lib
       ./configure --prefix=$(pwd)/debug --with-boost=yes
     '';
   }
