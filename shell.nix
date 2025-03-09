@@ -4,7 +4,7 @@ with pkgs;
     nativeBuildInputs = [flex bison gsl];
     buildInputs = [
       nixpkgs-fmt
-      (callPackage ./package.nix {})
+      #(callPackage ./package.nix {})
       gdb
       gcc
       gpp
