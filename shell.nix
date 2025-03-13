@@ -5,6 +5,7 @@ with pkgs;
     buildInputs = [
       nixpkgs-fmt
       #(callPackage ./package.nix {})
+      cpplint
       gdb
       gcc
       gpp
@@ -20,6 +21,6 @@ with pkgs;
     configureFlags = ["BOOST_LDFLAGS=-L${boost}/lib"];
     shellHook = ''
       export BOOST_LDFLAGS=-L${boost}/lib
-      ./configure --prefix=$(pwd)/debug --with-boost=yes
+      # ./configure --prefix=$(pwd)/debug --with-boost=yes
     '';
   }
