@@ -94,3 +94,8 @@ sudo apt-get install bellmansgapc
 Under Mac OS X you may want to use MacPorts to install the compiler. There is a (most likely outdated) ports description on the BiBiServ MacPorts repository. You can install GAP-C via:
 
 `$ sudo port install http://bibiserv.techfak.uni-bielefeld.de/resources/macports/ports/lang/gapc.tgz`
+
+
+# Test
+
+this is just a test to see if a clean PR from master will produce linting errors. Nothing to see here.
