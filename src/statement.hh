@@ -200,12 +200,12 @@ class Increase : public Base {
  * @param name the name of the variable you want a host accessor for
  */
 class SYCL_Host_Accessor_Decl : public Base {
-  public:
-    Var_Decl *name;
-  
+ public:
+  Var_Decl *name;
+
   void print(Printer::Base &p) const;
 
-  SYCL_Host_Accessor_Decl(Var_Decl *n);
+  explicit SYCL_Host_Accessor_Decl(Var_Decl *n);
 };
 /**
  * @example auto aResult = sycl::accessor{results, cgh, sycl::read_write};
@@ -215,8 +215,7 @@ class SYCL_Host_Accessor_Decl : public Base {
  * @param access_mode Access Mode (Read or Write)
  */
 class SYCL_Accessor_Decl : public Base {
-
-  public:
+ public:
     Var_Decl *variable;
     Var_Decl *context;
     bool *read;
@@ -234,7 +233,7 @@ class SYCL_Accessor_Decl : public Base {
  * @param context The Context Handler for the Kernel
  */
 class SYCL_Submit_Kernel : public Block_Base {
-  public:
+ public:
     Var_Decl *queue;
     Var_Decl *context;
 
@@ -252,20 +251,22 @@ class SYCL_Submit_Kernel : public Block_Base {
  * @param name
  * @param size
  */
- class SYCL_Buffer_Decl : public Base {
-  public:
+class SYCL_Buffer_Decl : public Base {
+ public:
     ::Type::Base *type;
     int dimension;
     std::string *name;
     Var_Decl *value;
 
-   SYCL_Buffer_Decl(::Type::Base *t, int d, std::string *n, Var_Decl *v);
+  SYCL_Buffer_Decl(::Type::Base *t, int d, std::string *n, Var_Decl *v);
 
-   SYCL_Buffer_Decl(::Type::Base *t, int d, Var_Decl *v, const std::string &n)
-    : Base(BUFFER_DECL), type(t), dimension(d), value(v) { name = new std::string(n); }
+  SYCL_Buffer_Decl(::Type::Base *t, int d, Var_Decl *v, const std::string &n)
+  : Base(BUFFER_DECL), type(t), dimension(d), value(v) {
+    name = new std::string(n);
+  }
 
-   void print(Printer::Base &p) const;
- };
+  void print(Printer::Base &p) const;
+};
 
 class Var_Decl : public Base {
  private:
