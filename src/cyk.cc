@@ -26,6 +26,7 @@
 #include <vector>
 #include <list>
 #include <string>
+#include "statement.hh"
 
 static const char *MUTEX = "mutex";
 static const char *VARNAME_OuterLoop1 = "outer_loop_1_idx";
@@ -1302,10 +1303,10 @@ Fn_Def *print_CYK(const AST &ast) {
 
     int dimension = 1;
     std::string name = "test";
-    std::string value = "test_value";
+    Statement::Var_Decl  *value = new Statement::Var_Decl(new Type::String, "test_value");
 
     fn_cyk->stmts.push_back(
-      new Statement::SYCL_Buffer_Decl(new Type::Int, dimension, name, value));
+      new Statement::SYCL_Buffer_Decl(new Type::Int, dimension, value, value));
 
     Statement::Var_Decl *queue = new Statement::Var_Decl(
       new Type::External("sycl::queue"), "q");

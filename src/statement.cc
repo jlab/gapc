@@ -31,6 +31,7 @@
 
 #include "statement.hh"
 
+#include "statement/base.hh"
 #include "var_acc.hh"
 
 #include "expr.hh"
@@ -71,19 +72,22 @@ Statement::Var_Decl::Var_Decl(::Type::Base *t, std::string *n, Expr::Base *e)
   : Base(VAR_DECL), type(t), name(n), rhs(e) {
 }
 
-Statement::SYCL_Buffer_Decl::SYCL_Buffer_Decl(::Type::Base *t, int d,
-          std::string *n, Var_Decl *v)
-  : Base(BUFFER_DECL), type(t), dimension(d), name(n), value(v) {
+Statement::SYCL_Buffer_Decl::SYCL_Buffer_Decl(::Type::Base *t, int d, Var_Decl *v, Var_Decl *n)
+  : Base(VAR_DECL), type(t), dimension(d), value(v), name(n) {
 }
 
-Statement::SYCL_Accessor_Decl::SYCL_Accessor_Decl(Var_Decl *v, Var_Decl *c,
-        bool *r, bool *w)
+Statement::SYCL_Accessor_Decl::SYCL_Accessor_Decl(Var_Decl *v, Var_Decl *c, bool *r, bool *w)
   : Base(VAR_DECL), variable(v), context(c), read(r), write(w) {
 }
 
 Statement::SYCL_Host_Accessor_Decl::SYCL_Host_Accessor_Decl(Var_Decl *n)
-  : Base(VAR_DECL), name(n) {
-}
+  : Base(VAR_DECL), name(n) {    
+  }
+
+Statement::SYCL_Submit_Kernel::SYCL_Submit_Kernel(Var_Decl *q, Var_Decl *c)
+  : Block_Base(BLOCK), queue(q), context(c) {
+
+  }
 
 Statement::Var_Decl *Statement::Var_Decl::clone() const {
   Var_Decl *ret = new Var_Decl(*this);
@@ -94,6 +98,18 @@ Statement::Var_Decl *Statement::Var_Decl::clone() const {
   return ret;
 }
 
+
+void Statement::SYCL_Accessor_Decl::print(Printer::Base &p) const {
+  p.print(*this);
+}
+
+void Statement::SYCL_Buffer_Decl::print(Printer::Base &p) const {
+p.print(*this);
+}
+
+void Statement::SYCL_Submit_Kernel::print(Printer::Base &p) const {
+  p.print(*this);
+}
 
 void Statement::SYCL_Host_Accessor_Decl::print(Printer::Base &p) const {
   p.print(*this);
