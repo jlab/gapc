@@ -1303,7 +1303,8 @@ Fn_Def *print_CYK(const AST &ast) {
 
     int dimension = 1;
     std::string name = "test";
-    Statement::Var_Decl  *value = new Statement::Var_Decl(new Type::String, "test_value");
+    Statement::Var_Decl  *value = new Statement::Var_Decl(
+      new Type::String, "test_value");
 
     fn_cyk->stmts.push_back(
       new Statement::SYCL_Buffer_Decl(new Type::Int, dimension, value, value));
