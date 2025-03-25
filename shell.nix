@@ -4,6 +4,7 @@ with pkgs;
     nativeBuildInputs = [flex bison gsl];
     buildInputs = [
       nixpkgs-fmt
+      unstable.adaptivecpp
       #(callPackage ./package.nix {})
       cpplint
       gdb
