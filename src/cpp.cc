@@ -3346,8 +3346,6 @@ void Printer::Cpp::pytorch_makefile(const Options &opts, const AST &ast) {
     stream << "CXXFLAGS += -DMALLOC_BATCH" << endl;
     stream << "endif" << endl << endl;
   }
-  // pytorch C++ extension doesn't support C++17 yet (but not nessecary anymore)
-//  stream << "CXXFLAGS := $(CXXFLAGS) | sed 's/c++17/c++14/'" << endl;
 
   stream << "compiler_args := $(CXXFLAGS) | sed -e 's/\\s/\", \"/g'" << endl;
   stream << "LDFLAGS := $(LDFLAGS) | sed 's/-L\\//\\//g'" << endl;
