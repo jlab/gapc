@@ -111,6 +111,46 @@ void Terminal::add_predefined(Grammar &grammar) {
   t->setPredefinedTerminalParser(true);
   grammar.NTs[*(t->name)] = t;
 
+  /*
+   * Tensor with shape [:, i] (entire i-th column)
+  */
+  s = new std::string("TCHAR");
+  t = new Symbol::Terminal(s, l);
+  t->writeable_ys().set(1, 1);
+  t->set_data_type(new Type::TensorChar());
+  t->setPredefinedTerminalParser(true);
+  grammar.NTs[*(t->name)] = t;
+
+  /*
+   * Tensor with shape [:, i:j] (i < j, entire columns from [i, j))
+  */
+  s = new std::string("TSLICE");
+  t = new Symbol::Terminal(s, l);
+  t->writeable_ys().set(1, Yield::UP);
+  t->set_data_type(new Type::TensorSlice());
+  t->setPredefinedTerminalParser(true);
+  grammar.NTs[*(t->name)] = t;
+
+  /*
+   * Tensor with shape [:, i:j] (i <= j, entire columns from [i, j))
+  */
+  s = new std::string("TSLICE0");
+  t = new Symbol::Terminal(s, l);
+  t->writeable_ys().set(0, Yield::UP);
+  t->set_data_type(new Type::TensorSlice());
+  t->setPredefinedTerminalParser(true);
+  grammar.NTs[*(t->name)] = t;
+
+  /*
+   * "empty word" Tensor
+  */
+  s = new std::string("TLOC");
+  t = new Symbol::Terminal(s, l);
+  t->writeable_ys().set(0, 0);
+  t->set_data_type(new Type::TensorSlice());
+  t->setPredefinedTerminalParser(true);
+  grammar.NTs[*(t->name)] = t;
+
   s = new std::string("LOC");
   t = new Symbol::Terminal(s, l);
   t->writeable_ys().set(0, 0);

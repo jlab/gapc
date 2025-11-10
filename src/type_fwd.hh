@@ -62,6 +62,11 @@ class Backtrace_List;
 class Name;
 
 class Multi;
+
+class Tensor;
+class TensorSlice;
+class TensorChar;
+class TensorBatch;
 }  // namespace Type
 
 #include <string>

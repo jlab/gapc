@@ -29,90 +29,110 @@
 #include <tuple>
 #include <cstdarg>
 #include <string>
+#include <utility>
+#include <cassert>
+#include <array>
+
+// max. number of indices that need to be tracked gets determined
+// at compile-time and stored in MAX_INDEX_COMPONENTS in out.hh
+#ifndef MAX_INDEX_COMPONENTS
+#define MAX_INDEX_COMPONENTS 2
+#endif
+
+// efficiently stores NT table indices for tracing
+class index_components {
+ private:
+  std::array<unsigned int, MAX_INDEX_COMPONENTS> indices;
+
+ public:
+  index_components() = default;
+
+  explicit index_components(unsigned int i) : indices{} {
+    indices[0] = i;
+  }
+
+  index_components(unsigned int i, unsigned int j) : indices{} {
+    indices[0] = i;
+    indices[1] = j;
+  }
+
+  template<typename ...Ts>
+  explicit index_components(const Ts&&... values) : indices{values...} {}
+
+  friend inline bool operator==(const index_components &lhs,
+                                const index_components &rhs) {
+    return lhs.indices == rhs.indices;
+  }
+};
+
+inline bool is_same_index(const index_components &lhs_idx,
+                          const index_components &rhs_idx,
+                          const std::string &lhs_nt,
+                          const std::string &rhs_nt) {
+  return lhs_idx == rhs_idx && lhs_nt == rhs_nt;
+}
 
 /* this records the use of a sub-solution of another NT result <name of other 
  * NT, index in other NT table with variable number of dimensions, weight 
  * of edge> */
-typedef std::tuple<std::string, std::vector<unsigned int>, double > Trace;
+template<typename answer>
+using Trace = std::tuple<std::string, index_components, answer>;
 /* Since a candidate can be composed of multiple sub-solutions e.g. 
  * mult(A, '*', B), we collect Traces for A and B */
-typedef std::tuple<double, std::vector<Trace> > NTtrace;
+template<typename answer>
+using NTtrace = std::tuple<answer, std::vector<Trace<answer>>>;
 /* collection of all traces of an NT in forward pass, together with their
  * values. This later normalized into edge weights. */
-// typedef std::vector<NTtrace> NTtraces;
 
+// type for "traces" vector in NT tables
+template<typename answer>
+using Traces = std::vector<Trace<answer>>;
 
-/* create a vector of index components (one or multitrack, linear or quadratic
- * tables) for a variable number of components therefore, the first argument
- * must be the number of those components!
- * https://stackoverflow.com/questions/1579719/variable-number-of-parameters\
- * -in-function-in-c */
-inline
-std::vector<unsigned int> *make_index(unsigned int num_components, ...) {
-  std::vector<unsigned int> *indices = new std::vector<unsigned int>();
-  // Requires the last fixed parameter (to get the address)
-  va_list idx_components;
-  va_start(idx_components, num_components);
-  for (unsigned int j = 0; j < num_components; j++) {
-    indices->push_back(va_arg(idx_components, unsigned int));
-  }
-  va_end(idx_components);
-
-  return indices;
-}
-
-inline
-bool is_same_index(std::vector<unsigned int> a, std::vector<unsigned int> b) {
-  if (a.size() != b.size()) {
-    return false;
-  }
-  std::vector<unsigned int>::const_iterator bi = b.begin();
-  for (std::vector<unsigned int>::const_iterator ai = a.begin();
-       ai != a.end(); ++ai, ++bi) {
-    if (*ai != *bi) {
-      return false;
-    }
-  }
-  return true;
-}
-
+// answer type can be any primitve number type or "Batch"
+template<typename answer>
 class candidate {
  private:
-  double value;
-  double q;
-  std::vector<Trace> sub_components;
+  answer value;
+  answer q;
+  std::vector<Trace<answer>> sub_components;
 
  public:
-  explicit candidate(double value) {
+  candidate() : value(0.0), q(0.0) {}
+  explicit candidate(answer value) : value(value), q(0.0) {}
+
+  void set_value(answer value) {
+#if defined(PYTORCH_MOD) && defined(BATCHED_INPUT)
+    // need to copy batch data here
+    this->value = answer(value.batch->data);
+#else
     this->value = value;
+#endif
   }
 
-  candidate() {
-    this->value = 0.0;
-  }
-
-  void set_value(double value) {
-    this->value = value;
-  }
-
-  void set_q(double q) {
+  void set_q(answer q) {
+#if defined(PYTORCH_MOD) && defined(BATCHED_INPUT)
+    // need to copy batch data here
+    this->q = answer(q.batch->data);
+#else
     this->q = q;
+#endif
   }
 
-  void add_sub_component(std::string otherNT,
-                         std::vector<unsigned int> *indices) {
-    sub_components.push_back({otherNT, *indices, NULL});
+  void add_sub_component(std::string &&otherNT,
+                         index_components &&indices) {
+    sub_components.emplace_back(std::move(otherNT),
+                                std::move(indices), answer());
   }
 
-  std::vector<Trace> *get_sub_components() {
+  std::vector<Trace<answer>> *get_sub_components() {
     return &sub_components;
   }
 
-  double get_value() const {
+  inline answer get_value() const {
     return value;
   }
 
-  double get_q() const {
+  inline answer get_q() const {
     return q;
   }
 
@@ -120,85 +140,117 @@ class candidate {
    * trace values can come in different flavors, depending on what the
    * user uses as scoring schema. See Algebra::check_derivative
    */
-  std::vector<Trace> get_normalized_candidate(
-    double eval, double (func)(double a, double b)) const {
-    std::vector<Trace> res;
-    for (std::vector<Trace>::const_iterator part = this->sub_components.begin();
-         part != this->sub_components.end(); ++part) {
-      res.push_back({std::get<0>(*part), std::get<1>(*part),
-                    func(this->get_value() , eval)});
+  std::vector<Trace<answer>> get_normalized_candidate(
+    answer eval, answer (func)(answer a, answer b)) const {
+    // copy sub_components content into res vector
+    std::vector<Trace<answer>> res(this->sub_components);
+
+    // calculate func result
+    answer val = func(this->get_value() , eval);
+
+    // add calculated result to every Trace of res vector
+    for (size_t i = 0; i < res.size(); ++i) {
+      std::get<2>(res[i]) = val;
     }
+
     return res;
   }
 
-  std::vector<Trace> get_soft_max_hessian_candidate(double eval) const {
-    std::vector<Trace> res;
-    for (std::vector<Trace>::const_iterator part = this->sub_components.begin();
-         part != this->sub_components.end(); ++part) {
-      res.push_back({std::get<0>(*part), std::get<1>(*part),
-                     this->get_q() - (eval * this->get_value())});
+  // overload of get_normalized_candidate taking a function ptr argument
+  // with two const reference parameters
+  std::vector<Trace<answer>> get_normalized_candidate(
+    answer eval, answer (func)(const answer &a, const answer &b)) const {
+    // copy sub_components content into res vector
+    std::vector<Trace<answer>> res(this->sub_components);
+
+    // calculate func result
+    answer val = func(this->get_value() , eval);
+
+    // add calculated result to every Trace of res vector
+    for (size_t i = 0; i < res.size(); ++i) {
+      std::get<2>(res[i]) = val;
     }
+
     return res;
   }
-//  void empty() {
-//    empty(this->value);
-//  }
+
+  std::vector<Trace<answer>> get_soft_max_hessian_candidate(
+    answer eval) const {
+    // copy sub_components content into res vector
+    std::vector<Trace<answer>> res(this->sub_components);
+
+    // calculate func result
+    answer val = this->get_q() - (eval * this->get_value());
+
+    // add calculated result to every Trace of res vector
+    for (size_t i = 0; i < res.size(); ++i) {
+      std::get<2>(res[i]) = val;
+    }
+
+    return res;
+  }
+
+// void empty() {
+//   empty(this->value);
+// }
 };
-typedef std::vector<candidate> NTtraces;
+
+template<typename answer>
+using NTtraces = std::vector<candidate<answer>>;
 
 // once all use of sub-solutions for candidates is finished, we need to
 // normalize their contributions
-inline
-std::vector<Trace> normalize_traces(std::vector<Trace> *tabulated,
-                                    const std::vector<candidate> &candidates,
-                                    double eval,
-                                    double (func)(double a, double b)) {
-  std::vector<std::tuple<std::string, std::vector<unsigned int>, double > > res;
-  for (std::vector<candidate>::const_iterator i = candidates.begin();
-       i != candidates.end(); ++i) {
-    std::vector<Trace> comp = (*i).get_normalized_candidate(eval, func);
-    res.insert(res.end(), comp.begin(), comp.end());
+template<typename answer>
+void normalize_traces(std::vector<Trace<answer>> *tabulated,
+                      const std::vector<candidate<answer>> &candidates,
+                      answer eval,
+                      answer (func)(answer a, answer b)) {
+  for (size_t i = 0; i < candidates.size(); ++i) {
+    std::vector<Trace<answer>> comp =
+      candidates[i].get_normalized_candidate(eval, func);
+    std::move(comp.begin(), comp.end(), std::back_inserter(*tabulated));
   }
-  return res;
 }
 
-inline
-std::vector<Trace> soft_max_hessian_product(std::vector<Trace> *tabulated,
-                                    const std::vector<candidate> &candidates,
-                                    double eval) {
-  std::vector<std::tuple<std::string, std::vector<unsigned int>, double > > res;
-  for (std::vector<candidate>::const_iterator i = candidates.begin();
-       i != candidates.end(); ++i) {
-    std::vector<Trace> comp = (*i).get_soft_max_hessian_candidate(eval);
-    res.insert(res.end(), comp.begin(), comp.end());
+// overload of normalize_traces taking a function ptr argument
+// with two const reference parameters
+template<typename answer>
+void normalize_traces(std::vector<Trace<answer>> *tabulated,
+                      const std::vector<candidate<answer>> &candidates,
+                      answer eval,
+                      answer (func)(const answer &a, const answer &b)) {
+  for (size_t i = 0; i < candidates.size(); ++i) {
+    std::vector<Trace<answer>> comp =
+      candidates[i].get_normalized_candidate(eval, func);
+    std::move(comp.begin(), comp.end(), std::back_inserter(*tabulated));
   }
-  return res;
 }
 
-inline
-double get_trace_weights(const std::vector<Trace> &traces,
-                         const std::string &to_nt,
-                         const std::vector<unsigned int> &to_indices,
-                         double e) {
-  double res = 0.0;
-  for (std::vector<Trace>::const_iterator trace = traces.begin();
-       trace != traces.end(); ++trace) {
-    // TODO(sjanssen): move both conditions into is_same_index
-    if (is_same_index(std::get<1>(*trace), to_indices) &&
-        (std::get<0>(*trace) == to_nt)) {
-      res += e * std::get<2>(*trace);
+template<typename answer>
+void soft_max_hessian_product(std::vector<Trace<answer>> *tabulated,
+                              const NTtraces<answer> &candidates, answer eval) {
+  for (size_t i = 0; i < candidates.size(); ++i) {
+    std::vector<Trace<answer>> comp =
+      candidates[i].get_soft_max_hessian_candidate(eval);
+    std::move(comp.begin(), comp.end(), std::back_inserter(*tabulated));
+  }
+}
+
+template<typename answer>
+inline answer get_trace_weights(const std::vector<Trace<answer>> &traces,
+                                const std::string &to_nt,
+                                const index_components &to_indices,
+                                answer e) {
+  answer res = 0.0;
+  for (size_t trace = 0; trace < traces.size(); ++trace) {
+    const Trace<answer> &curr_trace = traces[trace];
+    if (is_same_index(std::get<1>(curr_trace), to_indices,
+                      std::get<0>(curr_trace), to_nt)) {
+      res += e * std::get<2>(curr_trace);
     }
   }
 
   return res;
 }
-
-// template<typename answer>
-// using NTtraces = typename std::vector<candidate<answer> >::NTtraces;
-/* collection of all traces of an NT in forward pass, together with their
- * values. This later normalized into edge weights. */
-/* collection of all traces of an NT in forward pass, together with their
- * values. This later normalized into edge weights. */
-// typedef std::vector<candidate<double> > NTtraces;
 
 #endif  // RTLIB_TRACES_HH_

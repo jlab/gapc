@@ -253,6 +253,10 @@ class Cpp : public Base {
     void print(const Type::Eval_List &expr);
     void print(const Type::Backtrace &expr);
     void print(const Type::Backtrace_List &expr);
+    void print(const Type::Tensor &expr);
+    void print(const Type::TensorSlice &expr);
+    void print(const Type::TensorChar &expr);
+    void print(const Type::TensorBatch &expr);
 
     void print(const Type::Multi &expr);
 
@@ -268,6 +272,11 @@ class Cpp : public Base {
     void global_constants(const AST &ast);
 
     void makefile(const Options &opts, const AST &ast);
+    void pytorch_makefile(const Options &opts, const AST &ast);
+    void print_pytorch_macros(const AST &ast);
+    void print_pytorch_forward_fn(const AST &ast);
+    void print_pytorch_backward_fn(const AST &ast);
+    void print_pytorch_init_fn(const AST &ast);
 
  private:
     bool print_axiom_args(const AST &ast);

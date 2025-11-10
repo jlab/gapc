@@ -30,11 +30,12 @@ enum Type { PLUS, MINUS, TIMES, DIV, COMP, FN_CALL, VACC, CONST,
             LESS_EQ, LESS, GREATER, GREATER_EQ, EQ, NOT_EQ,
             AND, OR, NOT,
             MAX, COND,
-            NEW, THIS, MOD };
+            NEW, THIS, MOD, TEMPLATE };
 
 class Base;
 class Vacc;
 class Fn_Call;
+class Template;
 
 class New;
 

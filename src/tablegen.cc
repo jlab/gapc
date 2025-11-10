@@ -23,6 +23,7 @@
 
 #include <sstream>
 #include <algorithm>
+#include <utility>
 
 #include "tablegen.hh"
 #include "expr.hh"
@@ -348,8 +349,9 @@ void Tablegen::offset(size_t track_pos, itr f, const itr &e) {
 #include "symbol.hh"
 
 Statement::Table_Decl *Tablegen::create(Symbol::NT &nt,
-    std::string *name, bool cyk, int forDerivative) {
+    std::string *name, bool cyk, int forDerivative, bool batched) {
   cyk_ = cyk;
+  batched_ = batched;
   std::list<Expr::Base*> ors;
   nt.gen_ys_guards(ors);
   if (!ors.empty())
@@ -468,10 +470,26 @@ Fn_Def *Tablegen::gen_tab() {
   a->add_arg(new Expr::Less(off, new Expr::Fn_Call(new std::string("size"))));
   c.push_back(a);
 
-  Statement::Var_Assign *x = new Statement::Var_Assign(
-      new Var_Acc::Array(new Var_Acc::Plain(new std::string("array")), off),
-      new Expr::Vacc(new std::string("e")));
-  c.push_back(x);
+  if (batched_) {
+    // should look like this:
+    // put(array.data() + offset * BATCH_SIZE, e);
+
+    Statement::Fn_Call *put_call = new Statement::Fn_Call("put");
+    Expr::Times *offset = new Expr::Times(
+                            off, new Expr::Vacc(new std::string("BATCH_SIZE")));
+    put_call->add_arg(new Expr::Plus(
+                        new Expr::Fn_Call(new std::string("array.data")),
+                        offset));
+    put_call->add_arg(new std::string("e"));
+
+    c.push_back(put_call);
+  } else {
+    Statement::Var_Assign *x =
+      new Statement::Var_Assign(
+        new Var_Acc::Array(new Var_Acc::Plain(new std::string("array")), off),
+        new Expr::Vacc(new std::string("e")));
+    c.push_back(x);
+  }
 
   if (!cyk_) {
     Statement::Var_Assign *y = new Statement::Var_Assign(
@@ -488,8 +506,15 @@ Fn_Def *Tablegen::gen_tab() {
 Fn_Def *Tablegen::gen_set_traces(int forDerivative) {
   Fn_Def *f = new Fn_Def(new Type::RealVoid(), new std::string("set_traces"));
   f->add_paras(paras);
-  f->add_para(new ::Type::External(new std::string("NTtraces")),
-              new std::string("candidates"));
+
+  std::string *nt_traces;
+  if (batched_) {
+    nt_traces = new std::string("NTtraces<TensorBatch>");
+  } else {
+    nt_traces = new std::string("NTtraces<AnswerType>");
+  }
+
+  f->add_para(new ::Type::External(nt_traces), new std::string("candidates"));
 
   // FIXME const & in dtype -> see cpp.cc in_fn_head
   f->add_para(dtype, new std::string("e"));
@@ -513,23 +538,23 @@ Fn_Def *Tablegen::gen_set_traces(int forDerivative) {
   a->add_arg(new Expr::Less(off, new Expr::Fn_Call(new std::string("size"))));
   c.push_back(a);
 
-  std::string *fn_norm_name = new std::string("normalize_traces");
-  if (forDerivative == 2) {
-    fn_norm_name = new std::string("soft_max_hessian_product");
-  }
-  Expr::Fn_Call *rhs_norm = new Expr::Fn_Call(fn_norm_name);
-  rhs_norm->add_arg(new Var_Acc::Array(new Var_Acc::Plain(
-    new std::string("&traces")), off));
-  rhs_norm->add_arg(new std::string("candidates"));
-  rhs_norm->add_arg(new std::string("e"));
+  std::string fn_norm_name;
   if (forDerivative == 1) {
-    rhs_norm->add_arg(new std::string("&" + *(new std::string(
+    fn_norm_name = "normalize_traces";
+  } else if (forDerivative == 2) {
+    fn_norm_name = "soft_max_hessian_product";
+  }
+
+  Statement::Fn_Call *fn_norm = new Statement::Fn_Call(fn_norm_name);
+  fn_norm->add_arg(new Var_Acc::Array(new Var_Acc::Plain(
+    new std::string("&traces")), off));
+  fn_norm->add_arg(new std::string("candidates"));
+  fn_norm->add_arg(new std::string("e"));
+  if (forDerivative == 1) {
+    fn_norm->add_arg(new std::string("&" + *(new std::string(
       FN_NAME_DERIVATIVE_NORMALIZER))));
   }
 
-  Statement::Var_Assign *fn_norm = new Statement::Var_Assign(
-    new Var_Acc::Array(new Var_Acc::Plain(new std::string("traces")), off),
-    rhs_norm);
   c.push_back(fn_norm);
 
   f->set_statements(c);
@@ -541,10 +566,19 @@ Fn_Def *Tablegen::gen_get_traces() {
 
   Fn_Def *f = new Fn_Def(dtype, new std::string("get_traces"));
   f->add_paras(paras);
-  f->add_para(new ::Type::External(new std::string("std::string")),
+
+  /*
+   * since the "to_nt" and "to_indices" arguments are created in-place
+   * in the generated code and are thus regarded as rvalue references,
+   * we can specify these function args as rvalue references;
+   * this allows the compiler to move them directly into the function,
+   * which avoids an extra dereferencing step and thus saves us
+   * a little bit of time
+   */
+  f->add_para(new ::Type::External(new std::string("std::string&")),
               new std::string("to_nt"));
-  ::Type::External *idx = new ::Type::External(new std::string(
-    "std::vector<unsigned int>"));
+  ::Type::External *idx = new ::Type::External(
+                            new std::string("index_components&"));
   f->add_para(idx, new std::string("to_indices"));
 
   // FIXME const & in dtype -> see cpp.cc in_fn_head
@@ -581,8 +615,9 @@ Fn_Def *Tablegen::gen_get_traces() {
   c.push_back(a);
 
   Statement::Var_Decl *r = new Statement::Var_Decl(dtype, "res");
-  Expr::Fn_Call *fn_norm = new Expr::Fn_Call(new std::string(
-    "get_trace_weights"));
+
+  std::string *get_trace_weights = new std::string("get_trace_weights");
+  Expr::Fn_Call *fn_norm = new Expr::Fn_Call(get_trace_weights);
   fn_norm->add_arg(new Var_Acc::Array(new Var_Acc::Plain(
     new std::string("traces")), off));
   fn_norm->add_arg(new std::string("to_nt"));
@@ -592,6 +627,7 @@ Fn_Def *Tablegen::gen_get_traces() {
   c.push_back(r);
 
   Statement::Return *ret = new Statement::Return(new std::string("res"));
+
   c.push_back(ret);
 
   f->set_statements(c);
@@ -601,7 +637,12 @@ Fn_Def *Tablegen::gen_get_traces() {
 Fn_Def *Tablegen::gen_get_tab() {
   std::list<Statement::Base*> c;
 
-  Fn_Def *f = new Fn_Def(new Type::Referencable(dtype), new std::string("get"));
+  Fn_Def *f;
+  if (batched_) {
+    f = new Fn_Def(dtype, new std::string("get"));
+  } else {
+    f = new Fn_Def(new Type::Referencable(dtype), new std::string("get"));
+  }
   f->add_paras(paras);
 
   if (cond) {
@@ -623,8 +664,26 @@ Fn_Def *Tablegen::gen_get_tab() {
   a->add_arg(new Expr::Less(off, new Expr::Fn_Call(new std::string("size"))));
   c.push_back(a);
 
-  Statement::Return *ret = new Statement::Return(new Expr::Vacc(
-        new Var_Acc::Array(new Var_Acc::Plain(new std::string("array")), off)));
+  Statement::Return *ret;
+  if (batched_) {
+    // should look like this:
+    // return TensorBatch(array.data() + offset * BATCH_SIZE);
+
+    Expr::Fn_Call *copy_call = new Expr::Fn_Call(
+                                  new std::string("TensorBatch"));
+    Expr::Times *offset = new Expr::Times(
+                            off, new Expr::Vacc(new std::string("BATCH_SIZE")));
+    copy_call->add_arg(new Expr::Plus(
+                        new Expr::Fn_Call(new std::string("array.data")),
+                        offset));
+
+    ret = new Statement::Return(copy_call);
+  } else {
+    ret = new Statement::Return(new Expr::Vacc(
+            new Var_Acc::Array(
+              new Var_Acc::Plain(new std::string("array")), off)));
+  }
+
   c.push_back(ret);
 
   f->set_statements(c);

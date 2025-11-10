@@ -1092,7 +1092,8 @@ void Symbol::NT::init_table_decl(const AST &ast) {
   tg.set_window_mode(ast.window_mode);
   table_decl = tg.create(
     *this, t, ast.code_mode() == Code::Mode::CYK,
-    this->is_partof_outside ? 0 : ast.current_derivative);
+    this->is_partof_outside ? 0 : ast.current_derivative,
+    ast.as_pytorch_module && ast.input.tensor_inputs.all_batched());
 }
 
 #include <boost/algorithm/string/replace.hpp>
@@ -1238,7 +1239,20 @@ void Symbol::NT::codegen(AST &ast) {
   init_table_decl(ast);
   init_zero_decl();
   ::Type::Base *dt = datatype;
-  if (tabulated) {
+
+  /*
+   * true if regular input OR non-batched input Tensors
+   * are being processed;
+   * if batched input Tensors are being processed,
+   * the non-terminal table get functions can't return references,
+   * because batches returned from these functions have to be
+   * explicitly copied to avoid modifying the DP table in-place
+   */
+  bool not_batched = !ast.as_pytorch_module ||
+                     (ast.as_pytorch_module &&
+                      !ast.input.tensor_inputs.all_batched());
+
+  if (tabulated && not_batched) {
     dt = new ::Type::Referencable(datatype);
   }
   if (ast.cyk() && tabulated && ast.code_mode() != Code::Mode::BACKTRACK) {
@@ -1271,8 +1285,15 @@ void Symbol::NT::codegen(AST &ast) {
   stmts.push_back(ret_decl);
   if (ast.current_derivative > 0) {
     if (!this->is_partof_outside) {
+      std::string *nt_traces;
+      if (ast.as_pytorch_module && ast.input.tensor_inputs.all_batched()) {
+        nt_traces = new std::string("NTtraces<TensorBatch>");
+      } else {
+        nt_traces =
+          new std::string("NTtraces<" + *name + "_table_t::AnswerType>");
+      }
       stmts.push_back(new Statement::Var_Decl(new ::Type::External(
-        new std::string("NTtraces")), "candidates"));
+        nt_traces), "candidates"));
     }
   }
   stmts.push_back(new Statement::Fn_Call(
