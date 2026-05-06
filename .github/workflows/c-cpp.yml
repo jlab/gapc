@@ -91,8 +91,6 @@ jobs:
       run: git clone --branch master https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE/../gapc-test-suite
 
     - uses: actions/checkout@v3
-    - name: configure
-      run: ./configure --prefix $GITHUB_WORKSPACE
     - name: patch configuration for OSX
       run: |
         BOOST_PREFIX=$(brew --prefix boost)
@@ -102,6 +100,8 @@ jobs:
         gsed -E "s|^SED = .+$|SED = /usr/local/opt/gnu-sed/libexec/gnubin/sed|" -i config.mf
         gsed -E "s/ -D_XOPEN_SOURCE=500 / /" -i config.mf
         gsed -E "s/ -std=c\+\+17 / -std=c\+\+11 /" -i config.mf
+    - name: configure
+      run: ./configure --prefix $GITHUB_WORKSPACE
     - name: make
       run: make -j 3
     - name: make install
