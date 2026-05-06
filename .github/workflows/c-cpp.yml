@@ -106,7 +106,7 @@ jobs:
 
     - name: test-mod
       run: make test-mod TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth TRUTH_SUFFIX=_osx
-    - name: Export test results
+    - name: Export test-mod results
       if: failure()
       uses: actions/upload-artifact@v7
       with:
@@ -115,6 +115,13 @@ jobs:
 
     - name: test-mod_outside
       run: make -j 2 test-mod_outside TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth TRUTH_SUFFIX=_osx
+    - name: Export test-mod_outside results
+      if: failure()
+      uses: actions/upload-artifact@v7
+      with:
+        name: test-mod_outside_results
+        path: ./testdata/modtest/temp
+
     - name: test-regress
       run: make test-regress TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth
     - name: test-ambiguity
