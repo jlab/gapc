@@ -34,8 +34,6 @@
 #include <vector>
 #include <cstdint>
 
-#include <cstdint>
-
 // FIXME profile this
 #include "pool.hh"
 

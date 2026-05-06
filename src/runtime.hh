@@ -28,12 +28,10 @@
 #include <iostream>
 #include <vector>
 #include <cassert>
+#include <cstdint>
 
 #include "yieldsize.hh"
 #include "table.hh"
-
-#include <cstdint>
-
 
 #ifndef UINT32_MAX
 #define UINT32_MAX 4294967295U
