@@ -35,7 +35,7 @@
 #include <algorithm>
 #include <utility>
 
-#include <boost/cstdint.hpp>
+#include <cstdint>
 
 #include "shape_alph.hh"
 #include "bitops.hh"

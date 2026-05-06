@@ -32,8 +32,7 @@
 #include "yieldsize.hh"
 #include "table.hh"
 
-// tr1 has it
-#include <boost/cstdint.hpp>
+#include <cstdint>
 
 
 #ifndef UINT32_MAX

@@ -1,5 +1,5 @@
 
-#include <boost/cstdint.hpp>
+#include <cstdint>
 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/stats.hpp>

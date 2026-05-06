@@ -34,8 +34,7 @@
 #include <vector>
 #include <cstdint>
 
-// tr1 has it
-#include <boost/cstdint.hpp>
+#include <cstdint>
 
 // FIXME profile this
 #include "pool.hh"
