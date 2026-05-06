@@ -35,7 +35,7 @@ jobs:
 
     - uses: actions/checkout@v3
     - name: configure
-      run: ./configure --prefix $GITHUB_WORKSPACE
+      run: ./configure --prefix $GITHUB_WORKSPACE --with-boost $(brew --prefix boost)
     - name: make
       run: make -j 2
     - name: make install
@@ -91,17 +91,10 @@ jobs:
       run: git clone --branch master https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE/../gapc-test-suite
 
     - uses: actions/checkout@v3
-    - name: patch configuration for OSX
-      run: |
-        BOOST_PREFIX=$(brew --prefix boost)
-        gsed -E "s|^BOOST_CPPFLAGS = .+$|BOOST_CPPFLAGS = -I${BOOST_PREFIX}/include|" -i config.mf
-        gsed -E "s|^BOOST_LDFLAGS = .+$|BOOST_LDFLAGS = -L${BOOST_PREFIX}/lib|" -i config.mf
-        gsed -E "s|^YACC = .+$|YACC = /usr/local/opt/bison@3.8/bin/bison|" -i config.mf
-        gsed -E "s|^SED = .+$|SED = /usr/local/opt/gnu-sed/libexec/gnubin/sed|" -i config.mf
-        gsed -E "s/ -D_XOPEN_SOURCE=500 / /" -i config.mf
-        gsed -E "s/ -std=c\+\+17 / -std=c\+\+11 /" -i config.mf
     - name: configure
       run: ./configure --prefix $GITHUB_WORKSPACE
+    - name: patch configuration for OSX
+      run: gsed -E "s|^YACC = .+$|YACC = /usr/local/opt/bison@3.8/bin/bison|" -i config.mf && gsed -E "s|^SED = .+$|SED = /usr/local/opt/gnu-sed/libexec/gnubin/sed|" -i config.mf && gsed -E "s/ -D_XOPEN_SOURCE=500 / /" -i config.mf && gsed -E "s/ -std=c\+\+17 / -std=c\+\+11 /" -i config.mf
     - name: make
       run: make -j 3
     - name: make install
