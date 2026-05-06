@@ -94,7 +94,11 @@ jobs:
     - name: configure
       run: ./configure --prefix $GITHUB_WORKSPACE --with-boost=/opt/homebrew/Cellar/boost/1.90.0_1/
     - name: patch configuration for OSX
-      run: gsed -E "s|^YACC = .+$|YACC = /opt/homebrew/opt/bison/bin/bison|" -i config.mf && gsed -E "s|^SED = .+$|SED = /usr/local/opt/gnu-sed/libexec/gnubin/sed|" -i config.mf && gsed -E "s/ -D_XOPEN_SOURCE=500 / /" -i config.mf && gsed -E "s/ -std=c\+\+17 / -std=c\+\+11 /" -i config.mf
+      run: |
+        gsed -E "s|^YACC = .+$|YACC = /opt/homebrew/opt/bison/bin/bison|" -i config.mf
+        gsed -E "s|^SED = .+$|SED = /opt/homebrew/opt/gnu-sed/libexec/gnubin/sed|" -i config.mf
+        gsed -E "s/ -D_XOPEN_SOURCE=500 / /" -i config.mf
+        gsed -E "s/ -std=c\+\+17 / -std=c\+\+11 /" -i config.mf
     - name: make
       run: make -j 3
     - name: make install
