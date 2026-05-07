@@ -9,7 +9,7 @@
  | |_) |  __/ | | | | | | | (_| | | | | \__ \ | |__| |/ ____ \| |     
  |____/ \___|_|_|_| |_| |_|\__,_|_| |_| |___/  \_____/_/    \_\_|     
 ```                                                                      
-                                                                  
+                                                                    
 ## Dependencies
 
 Bellman's GAP was tested on the following dependencies.

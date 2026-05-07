@@ -88,7 +88,7 @@ jobs:
     #- name: add base Haskell lib containers (prelude, Data.Map, Data.Map.Strict)
     #  run: cabal install --lib base
     - name: Checkout truth
-      run: git clone --branch migrate_osx14 https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE/../gapc-test-suite
+      run: git clone --branch master https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE/../gapc-test-suite
 
     - uses: actions/checkout@v6
     - name: configure
