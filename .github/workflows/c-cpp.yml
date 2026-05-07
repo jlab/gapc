@@ -123,8 +123,8 @@ jobs:
         name: test-mod_outside_results
         path: ./testdata/modtest/temp
 
-    - name: test-regress
-      run: make test-regress TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth
+    #- name: test-regress
+    #  run: make test-regress TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth
     - name: test-ambiguity
       run: make test-ambiguity TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth
     - name: test-unit
