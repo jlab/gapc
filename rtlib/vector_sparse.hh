@@ -116,7 +116,7 @@ class Stapel {
 
   T &pop() {
     assert(top_);
-    return array[top_--];
+    return array[--top_];
   }
 
   T &top() {
@@ -285,7 +285,7 @@ template <typename T, typename U = size_t> class Vector_Sparse {
    public:
     typedef T value_type;
     typedef std::random_access_iterator_tag iterator_category;
-    typedef U difference_type;
+    typedef std::ptrdiff_t difference_type;
     typedef T* pointer;
     typedef T& reference;
 
@@ -343,7 +343,21 @@ template <typename T, typename U = size_t> class Vector_Sparse {
 
     Iterator operator+=(const difference_type &other) {
       i += other;
-      return Iterator(v, i);
+      return *this;
+    }
+
+    Iterator& operator-=(difference_type other) {
+      i -= other;
+      return *this;
+    }
+    reference operator[](difference_type n) {
+      return v(*(i + n));
+    }
+    pointer operator->() {
+      return &v(*i);
+    }
+    const reference operator*() const {
+      return v(*i);
     }
 
     bool operator>(const Iterator &other) const {

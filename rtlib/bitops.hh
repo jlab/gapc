@@ -26,7 +26,7 @@
 
 #include <cassert>
 
-#include <boost/cstdint.hpp>
+#include <cstdint>
 
 template <typename T>
 int

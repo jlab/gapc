@@ -33,7 +33,7 @@
 #include <sstream>
 
 #include <string>
-#include <boost/cstdint.hpp>
+#include <cstdint>
 #include <boost/algorithm/string/replace.hpp>
 
 #include "../rtlib/cstr.h"

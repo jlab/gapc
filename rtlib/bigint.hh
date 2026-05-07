@@ -33,7 +33,7 @@ typedef mpz_class BigInt;
 
 #else
 
-#include <boost/cstdint.hpp>
+#include <cstdint>
 
 typedef uint64_t BigInt;
 

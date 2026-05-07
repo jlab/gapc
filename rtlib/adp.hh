@@ -26,8 +26,7 @@
 #define RTLIB_ADP_HH_
 
 #include <algorithm>
-// needed for uint64_t (Integer ...)
-#include <boost/cstdint.hpp>
+#include <cstdint>
 
 #include "empty.hh"
 #include "algebra.hh"

@@ -1,6 +1,6 @@
 
 #include <cassert>
-#include <boost/cstdint.hpp>
+#include <cstdint>
 #define UINT32_MAX 4294967295U
 
 int main(int argc, char **argv)

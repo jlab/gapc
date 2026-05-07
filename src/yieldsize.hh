@@ -30,8 +30,7 @@
 #include <vector>
 #include <list>
 
-// tr1 has it
-#include <boost/cstdint.hpp>
+#include <cstdint>
 
 class Filter;
 

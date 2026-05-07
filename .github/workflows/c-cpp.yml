@@ -22,7 +22,7 @@ jobs:
         # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
         # as of 21st Sep 2021, ubuntu-16.04 is no longer supported by github actions: https://github.blog/changelog/2021-04-29-github-actions-ubuntu-16-04-lts-virtual-environment-will-be-removed-on-september-20-2021/
         # 18.04 burnout: https://github.com/actions/runner-images/issues/6002
-        os: [ubuntu-20.04, ubuntu-22.04, ubuntu-24.04]
+        os: [ubuntu-22.04, ubuntu-24.04]
     runs-on: ${{ matrix.os }}
     steps:
     - name: Update apt
@@ -33,7 +33,7 @@ jobs:
     - name: Checkout truth
       run: git clone --branch master https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE/../gapc-test-suite
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v6
     - name: configure
       run: ./configure --prefix $GITHUB_WORKSPACE
     - name: make
@@ -71,16 +71,16 @@ jobs:
     strategy:
       matrix:
         # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners
-        os: [macos-13]
+        os: [macos-14]
     runs-on: ${{ matrix.os }}
     steps:
     - name: Install dependencies
-      run: brew install bison@3.8 cmake boost gsl gnu-sed libomp gmp cabal-install ghc
-    - name: pioritize bison3.8
+      run: brew install bison cmake boost gsl gnu-sed libomp gmp cabal-install ghc
+    - name: pioritize homebrew bison
       # macos-13 has also installed a quite old bison2.3 version and it is found first according
       # to default PATH settings. Thus, configure.ac will test the wrong version and NOT set
       # BISONNEW as a compiler flag (see configure.ac)
-      run: echo "PATH=/usr/local/opt/bison@3.8/bin:$PATH" >> $GITHUB_ENV
+      run: echo "PATH=/opt/homebrew/opt/bison/bin:$PATH" >> $GITHUB_ENV
     - name: update cabal
       run: cabal update
     - name: add random Haskell lib
@@ -90,11 +90,16 @@ jobs:
     - name: Checkout truth
       run: git clone --branch master https://github.com/jlab/gapc-test-suite.git $GITHUB_WORKSPACE/../gapc-test-suite
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v6
     - name: configure
-      run: ./configure --prefix $GITHUB_WORKSPACE
+      run: ./configure --prefix $GITHUB_WORKSPACE --with-boost=/opt/homebrew/opt/boost/
     - name: patch configuration for OSX
-      run: gsed -E "s|^YACC = .+$|YACC = /usr/local/opt/bison@3.8/bin/bison|" -i config.mf && gsed -E "s|^SED = .+$|SED = /usr/local/opt/gnu-sed/libexec/gnubin/sed|" -i config.mf && gsed -E "s/ -D_XOPEN_SOURCE=500 / /" -i config.mf && gsed -E "s/ -std=c\+\+17 / -std=c\+\+11 /" -i config.mf
+      run: |
+        gsed -E "s|^YACC = .+$|YACC = /opt/homebrew/opt/bison/bin/bison|" -i config.mf
+        gsed -E "s|^SED = .+$|SED = /opt/homebrew/opt/gnu-sed/libexec/gnubin/sed|" -i config.mf
+        gsed -E "s/ -D_XOPEN_SOURCE=500 / /" -i config.mf
+        gsed -E "s/ -std=c\+\+17 / -std=c\+\+11 -I\/opt\/homebrew\/opt\/gmp\/include -I\/opt\/homebrew\/opt\/gsl\/include /" -i config.mf
+        gsed -E 's|\$\(LDFLAGS_EXTRA\) \\|\$\(LDFLAGS_EXTRA\) -L/opt/homebrew/opt/gmp/lib -L/opt/homebrew/opt/gsl/lib \\|' -i config.mf
     - name: make
       run: make -j 3
     - name: make install
@@ -102,8 +107,22 @@ jobs:
 
     - name: test-mod
       run: make test-mod TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth TRUTH_SUFFIX=_osx
+    - name: Export test-mod results
+      if: failure()
+      uses: actions/upload-artifact@v7
+      with:
+        name: test-mod_results
+        path: ./testdata/modtest/temp
+
     - name: test-mod_outside
       run: make -j 2 test-mod_outside TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth TRUTH_SUFFIX=_osx
+    - name: Export test-mod_outside results
+      if: failure()
+      uses: actions/upload-artifact@v7
+      with:
+        name: test-mod_outside_results
+        path: ./testdata/modtest/temp
+
     - name: test-regress
       run: make test-regress TRUTH_DIR=$GITHUB_WORKSPACE/../gapc-test-suite/Truth
     - name: test-ambiguity
@@ -125,7 +144,7 @@ jobs:
       run: sudo apt-get update
     - name: Install dependencies
       run: sudo apt-get install flex bison make libboost-all-dev libgsl-dev python3 python3-pip python3-biopython
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v6
     - name: configure
       run: ./configure
     - name: make
@@ -152,7 +171,7 @@ jobs:
   cpplint:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v6
     - uses: actions/setup-python@v4
     - run: pip install cpplint
     - run: cpplint --recursive --counting 'detailed' --filter="-runtime/references,-build/include_subdir" --extensions=cc,hh src/ rtlib/

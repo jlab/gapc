@@ -31,7 +31,7 @@
 #include <vector>
 #include <algorithm>
 #include <utility>
-#include <boost/cstdint.hpp>
+#include <cstdint>
 
 
 #include "bitops.hh"

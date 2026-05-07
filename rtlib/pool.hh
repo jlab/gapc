@@ -28,8 +28,7 @@
 #include <cassert>
 #include <cstdlib>
 
-// tr1 has it
-#include <boost/cstdint.hpp>
+#include <cstdint>
 
 #include "map_pool.hh"
 
