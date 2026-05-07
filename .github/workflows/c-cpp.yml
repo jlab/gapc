@@ -98,8 +98,8 @@ jobs:
         gsed -E "s|^YACC = .+$|YACC = /opt/homebrew/opt/bison/bin/bison|" -i config.mf
         gsed -E "s|^SED = .+$|SED = /opt/homebrew/opt/gnu-sed/libexec/gnubin/sed|" -i config.mf
         gsed -E "s/ -D_XOPEN_SOURCE=500 / /" -i config.mf
-        gsed -E "s/ -std=c\+\+17 / -std=c\+\+11 -I\/opt\/homebrew\/opt\/gmp\/include /" -i config.mf
-        gsed -E 's|\$\(LDFLAGS_EXTRA\) \\|\$\(LDFLAGS_EXTRA\) -L/opt/homebrew/opt/gmp/lib \\|' -i config.mf
+        gsed -E "s/ -std=c\+\+17 / -std=c\+\+11 -I\/opt\/homebrew\/opt\/gmp\/include -I\/opt\/homebrew\/opt\/gsl\/include /" -i config.mf
+        gsed -E 's|\$\(LDFLAGS_EXTRA\) \\|\$\(LDFLAGS_EXTRA\) -L/opt/homebrew/opt/gmp/lib -L/opt/homebrew/opt/gsl/lib \\|' -i config.mf
     - name: make
       run: make -j 3
     - name: make install
