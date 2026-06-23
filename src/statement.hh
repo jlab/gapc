@@ -194,6 +194,75 @@ class Increase : public Base {
 };
 
 
+/**
+ * @brief Declare a host accessor for Variables
+ * @example sycl::host_accessor result{results};
+ * @param name the name of the variable you want a host accessor for
+ */
+class SYCL_Host_Accessor_Decl : public Base {
+ public:
+  Var_Decl *name;
+
+  void print(Printer::Base &p) const;
+
+  explicit SYCL_Host_Accessor_Decl(Var_Decl *n);
+};
+/**
+ * @example auto aResult = sycl::accessor{results, cgh, sycl::read_write};
+ * @brief Declare a Accessor for SYCL Kernels
+ * @param variable Var_Decl name and variable to create accessor to
+ * @param context Context defaults to cgh
+ * @param access_mode Access Mode (Read or Write)
+ */
+class SYCL_Accessor_Decl : public Base {
+ public:
+    Var_Decl *variable;
+    Var_Decl *context;
+    bool *read;
+    bool *write;
+
+    void print(Printer::Base &p) const;
+
+    SYCL_Accessor_Decl(Var_Decl *v, Var_Decl *c, bool *r, bool *w);
+};
+
+/**
+ * @example q.submit([&](sycl::handler &cgh) { ... }); 
+ * @brief Submit Kernel
+ * @param queue The Queue to add the Kernel to
+ * @param context The Context Handler for the Kernel
+ */
+class SYCL_Submit_Kernel : public Block_Base {
+ public:
+    Var_Decl *queue;
+    Var_Decl *context;
+
+  void print(Printer::Base &p) const;
+
+  SYCL_Submit_Kernel(Var_Decl *q, Var_Decl *c);
+};
+
+/**
+ * @example sycl::buffer<int, 0> results(sycl::range<1>(n*m));
+ * @brief A function to summarize and create an buffer
+ * 
+ * @param type What type the buffer should hold
+ * @param dimension
+ * @param name
+ * @param size
+ */
+class SYCL_Buffer_Decl : public Base {
+ public:
+    ::Type::Base *type;
+    int dimension;
+    Var_Decl *name;
+    Var_Decl *value;
+
+  SYCL_Buffer_Decl(::Type::Base *t, int d, Var_Decl *v,  Var_Decl *n);
+
+  void print(Printer::Base &p) const;
+};
+
 class Var_Decl : public Base {
  private:
   Bool use_as_itr;
